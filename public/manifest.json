@@ -1,0 +1,14 @@
+{
+  "name": "數學寶可夢對戰",
+  "short_name": "數學對戰",
+  "description": "寶可夢風格數學對戰遊戲 - 選擇招式、回答數學題、打倒怪獸！",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#4338ca",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

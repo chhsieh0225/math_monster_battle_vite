@@ -185,18 +185,33 @@ export default function ElecEffect({ idx = 0, lvl = 1, onDone }) {
   }
 
   // --- idx 3: 終極爆破 (dark+electric) ---
+  const D = 0.5;
   const ringN = 2 + lvl;
   const boltN = 4 + lvl;
   const sc = 1.0 + lvl * 0.08;
   const bolts = [BOLT_A, BOLT_B, BOLT_C];
   return (
-    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, animation:"lightningFlash 0.8s ease" }}>
-      {/* Dark-electric pulse rings */}
+    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+      {/* Phase 1: Faint orb approach */}
+      <svg width="34" height="34" viewBox="0 0 34 34"
+        style={{
+          position:"absolute", left:"10%", bottom:"35%",
+          filter:`drop-shadow(0 0 ${glow}px #fbbf24) drop-shadow(0 0 ${glow+4}px #7c3aed)`,
+          animation:`ultApproach 0.55s ease forwards`,
+        }}>
+        <defs><radialGradient id="eOrb" cx="40%" cy="40%">
+          <stop offset="0%" stopColor="#fef9c3" stopOpacity="0.5"/>
+          <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.3"/>
+          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0"/>
+        </radialGradient></defs>
+        <circle cx="17" cy="17" r="13" fill="url(#eOrb)"/>
+      </svg>
+      {/* Phase 2: Dark-electric pulse rings */}
       {Array.from({ length: ringN }, (_, i) => (
         <svg key={`r${i}`} width="150" height="150" viewBox="0 0 150 150"
           style={{
             position:"absolute", right:"10%", top:"10%",
-            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${i*0.12}s forwards`, opacity:0,
+            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.12}s forwards`, opacity:0,
           }}>
           <circle cx="75" cy="75" r={18+i*10} fill="none"
             stroke={i%2===0?"#7c3aed":"#fbbf24"} strokeWidth={2.5-i*0.25}
@@ -213,7 +228,7 @@ export default function ElecEffect({ idx = 0, lvl = 1, onDone }) {
               top:`calc(22% + ${Math.sin(angle*Math.PI/180)*6}px)`,
               transformOrigin:"center top", transform:`rotate(${angle}deg) scale(${sc*0.7})`,
               filter:`drop-shadow(0 0 ${glow+2}px #fbbf24) drop-shadow(0 0 ${glow}px #7c3aed)`,
-              animation:`lightningStrike 0.45s ease ${0.08+i*0.04}s both`, opacity:0,
+              animation:`lightningStrike 0.45s ease ${D+0.08+i*0.04}s both`, opacity:0,
             }}>
             <defs>
               <linearGradient id={`ug${i}`} x1="50%" y1="0%" x2="50%" y2="100%">
@@ -241,7 +256,7 @@ export default function ElecEffect({ idx = 0, lvl = 1, onDone }) {
           </radialGradient>
         </defs>
         <circle cx="50" cy="50" r={16+lvl*3} fill="url(#elecCore)"
-          style={{ animation:`fireExpand ${dur/1000}s ease forwards` }}/>
+          style={{ animation:`fireExpand ${dur/1000}s ease ${D}s forwards` }}/>
       </svg>
       {/* Sparks scattered */}
       {Array.from({ length: 5 + lvl * 2 }, (_, i) => (
@@ -249,12 +264,12 @@ export default function ElecEffect({ idx = 0, lvl = 1, onDone }) {
           style={{
             position:"absolute", right:`${3+Math.random()*30}%`, top:`${3+Math.random()*35}%`,
             opacity:0, filter:`drop-shadow(0 0 3px #fbbf24)`,
-            animation:`sparkle 0.4s ease ${0.1+i*0.04}s both`,
+            animation:`sparkle 0.4s ease ${D+0.1+i*0.04}s both`,
           }}>
           <path d={SPARK} fill="#fde68a" opacity="0.6"/>
         </svg>
       ))}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 30%, rgba(251,191,36,${0.05+lvl*0.012}), rgba(124,58,237,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 30%, rgba(251,191,36,${0.05+lvl*0.012}), rgba(124,58,237,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

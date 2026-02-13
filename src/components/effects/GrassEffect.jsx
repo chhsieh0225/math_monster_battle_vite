@@ -101,7 +101,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, onDone }) {
 
   // --- idx 2: 森林風暴 (Forest Storm) ---
   if (idx === 2) {
-    const n = 4 + lvl * 2;
+    const n = 8 + lvl * 3;
     const windN = 2 + Math.floor(lvl / 2);
     return (
       <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, animation:"grassScreenFlash 0.9s ease" }}>
@@ -145,15 +145,30 @@ export default function GrassEffect({ idx = 0, lvl = 1, onDone }) {
   }
 
   // --- idx 3: 終極爆破 (dark+grass) ---
+  const D = 0.5;
   const n = 4 + lvl * 2;
   return (
-    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, animation:"grassScreenFlash 0.9s ease" }}>
-      {/* Dark-green pulse rings */}
+    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+      {/* Phase 1: Faint orb approach */}
+      <svg width="34" height="34" viewBox="0 0 34 34"
+        style={{
+          position:"absolute", left:"10%", bottom:"35%",
+          filter:`drop-shadow(0 0 ${glow}px #22c55e) drop-shadow(0 0 ${glow+4}px #15803d)`,
+          animation:`ultApproach 0.55s ease forwards`,
+        }}>
+        <defs><radialGradient id="gOrb" cx="40%" cy="40%">
+          <stop offset="0%" stopColor="#4ade80" stopOpacity="0.5"/>
+          <stop offset="50%" stopColor="#22c55e" stopOpacity="0.3"/>
+          <stop offset="100%" stopColor="#15803d" stopOpacity="0"/>
+        </radialGradient></defs>
+        <circle cx="17" cy="17" r="13" fill="url(#gOrb)"/>
+      </svg>
+      {/* Phase 2: Dark-green pulse rings */}
       {Array.from({ length: 2 + lvl }, (_, i) => (
         <svg key={`r${i}`} width="130" height="130" viewBox="0 0 130 130"
           style={{
             position:"absolute", right:"12%", top:"13%",
-            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${i*0.12}s forwards`, opacity:0,
+            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.12}s forwards`, opacity:0,
           }}>
           <circle cx="65" cy="65" r={18+i*9} fill="none"
             stroke={i%2===0?"#22c55e":"#15803d"} strokeWidth={2.5-i*0.2}
@@ -166,7 +181,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, onDone }) {
         <path d="M15,135 Q55,105 95,72 Q135,40 178,28"
           fill="none" stroke="#15803d" strokeWidth={4+lvl} strokeLinecap="round"
           strokeDasharray="300" strokeDashoffset="300"
-          style={{ animation:`vineWhipDraw ${dur/1000}s ease forwards` }}/>
+          style={{ animation:`vineWhipDraw ${dur/1000}s ease ${D}s forwards` }}/>
       </svg>
       {/* Leaf explosion from impact point */}
       {Array.from({ length: n }, (_, i) => {
@@ -179,13 +194,13 @@ export default function GrassEffect({ idx = 0, lvl = 1, onDone }) {
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #4ade80)`,
               "--lx":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--ly":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`leafSpin ${0.45+Math.random()*0.35}s ease ${0.1+i*0.035}s forwards`,
+              animation:`leafSpin ${0.45+Math.random()*0.35}s ease ${D+0.1+i*0.035}s forwards`,
             }}>
             <path d={LEAF} fill="#4ade80" transform={`rotate(${angle})`}/>
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 30%, rgba(34,197,94,${0.06+lvl*0.015}), rgba(21,128,61,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 30%, rgba(34,197,94,${0.06+lvl*0.015}), rgba(21,128,61,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

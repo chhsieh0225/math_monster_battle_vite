@@ -160,12 +160,27 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
   }
 
   // --- idx 3: 終極暗黑 (Ultimate Darkness) ---
+  const D = 0.5;
   const ringN = 3 + lvl;
   const starN = 5 + lvl * 2;
   const voidR = 24 + lvl * 5;
   return (
-    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, animation:"darkScreenFlash 1.2s ease" }}>
-      {/* Central void */}
+    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+      {/* Phase 1: Faint orb approach */}
+      <svg width="36" height="36" viewBox="0 0 36 36"
+        style={{
+          position:"absolute", left:"10%", bottom:"35%",
+          filter:`drop-shadow(0 0 ${glow}px #7c3aed) drop-shadow(0 0 ${glow+4}px #581c87)`,
+          animation:`ultApproach 0.55s ease forwards`,
+        }}>
+        <defs><radialGradient id="dOrb" cx="40%" cy="40%">
+          <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.5"/>
+          <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.3"/>
+          <stop offset="100%" stopColor="#581c87" stopOpacity="0"/>
+        </radialGradient></defs>
+        <circle cx="18" cy="18" r="14" fill="url(#dOrb)"/>
+      </svg>
+      {/* Phase 2: Central void */}
       <svg width="180" height="180" viewBox="0 0 180 180"
         style={{
           position:"absolute", right:"8%", top:"6%",
@@ -181,14 +196,14 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
           </radialGradient>
         </defs>
         <circle cx="90" cy="90" r={voidR} fill="url(#voidCore)"
-          style={{ animation:`fireExpand ${dur/1000}s ease forwards` }}/>
+          style={{ animation:`fireExpand ${dur/1000}s ease ${D}s forwards` }}/>
       </svg>
       {/* Many expanding pulse rings */}
       {Array.from({ length: ringN }, (_, i) => (
         <svg key={`r${i}`} width="160" height="160" viewBox="0 0 160 160"
           style={{
             position:"absolute", right:"8%", top:"6%",
-            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${i*0.1}s forwards`, opacity:0,
+            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.1}s forwards`, opacity:0,
           }}>
           <circle cx="80" cy="80" r={16+i*8} fill="none"
             stroke={i%3===0?"#7c3aed":i%3===1?"#a855f7":"#581c87"}
@@ -205,7 +220,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
           <path d={`M${20+i*15},${140-i*10} Q${80+i*8},${80-i*6} ${170-i*5},${15+i*4}`}
             fill="none" stroke="#a855f7" strokeWidth={2+lvl*0.4} strokeLinecap="round"
             strokeDasharray="300" strokeDashoffset="300" opacity={0.5-i*0.08}
-            style={{ animation:`vineWhipDraw ${dur/1000*0.9}s ease ${i*0.12}s forwards` }}/>
+            style={{ animation:`vineWhipDraw ${dur/1000*0.9}s ease ${D+i*0.12}s forwards` }}/>
         </svg>
       ))}
       {/* Radial star explosion from void center */}
@@ -219,7 +234,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
               "--sx":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--sy":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`darkStarSpin ${0.5+Math.random()*0.35}s ease ${0.08+i*0.035}s forwards`,
+              animation:`darkStarSpin ${0.5+Math.random()*0.35}s ease ${D+0.08+i*0.035}s forwards`,
             }}>
             <path d={i%2===0 ? STAR : SPARK4}
               fill={i%3===0?"#e9d5ff":i%3===1?"#c4b5fd":"#a855f7"}
@@ -228,8 +243,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
           </svg>
         );
       })}
-      {/* Heavy dark overlay */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 58% 28%, rgba(30,27,75,${0.07+lvl*0.015}), rgba(88,28,135,${0.04+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 58% 28%, rgba(30,27,75,${0.07+lvl*0.015}), rgba(88,28,135,${0.04+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

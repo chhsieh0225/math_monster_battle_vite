@@ -42,7 +42,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
   // --- idx 1: 水流波 (Water Wave) ---
   if (idx === 1) {
     const waveN = 1 + Math.floor(lvl / 2);
-    const waveH = 22 + lvl * 4;
+    const waveH = 16 + lvl * 3;
     return (
       <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, overflow:"hidden" }}>
         {Array.from({ length: waveN }, (_, i) => (
@@ -77,7 +77,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
     return (
       <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, overflow:"hidden" }}>
         {/* Main tsunami wave */}
-        <svg width="100%" height="75%" viewBox="0 0 200 120" preserveAspectRatio="none"
+        <svg width="85%" height="55%" viewBox="0 0 200 120" preserveAspectRatio="none"
           style={{
             position:"absolute", right:"0", top:"5%",
             filter:`drop-shadow(0 0 ${glow+4}px rgba(37,99,235,0.6))`,
@@ -97,7 +97,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
             fill="none" stroke="rgba(224,242,254,0.7)" strokeWidth="2.5"/>
         </svg>
         {/* Secondary wave */}
-        <svg width="90%" height="55%" viewBox="0 0 200 100" preserveAspectRatio="none"
+        <svg width="75%" height="40%" viewBox="0 0 200 100" preserveAspectRatio="none"
           style={{
             position:"absolute", right:"2%", top:"15%",
             filter:`drop-shadow(0 0 ${glow}px rgba(59,130,246,0.4))`,
@@ -108,7 +108,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
         </svg>
         {/* Splash droplets */}
         {Array.from({ length: splashN }, (_, i) => {
-          const r = 3 + lvl + Math.random() * 3;
+          const r = 2.5 + lvl * 0.8 + Math.random() * 2;
           const sz = r * 2 + 6;
           return (
             <svg key={`s${i}`} width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}
@@ -135,16 +135,31 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
   }
 
   // --- idx 3: 終極爆破 (dark+water) ---
+  const D = 0.5;
   const ringN = 2 + lvl;
   const burstN = 3 + lvl * 2;
   return (
     <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, overflow:"hidden" }}>
-      {/* Dark-water vortex rings */}
+      {/* Phase 1: Faint orb approach */}
+      <svg width="34" height="34" viewBox="0 0 34 34"
+        style={{
+          position:"absolute", left:"10%", bottom:"35%",
+          filter:`drop-shadow(0 0 ${glow}px #2563eb) drop-shadow(0 0 ${glow+4}px #7c3aed)`,
+          animation:`ultApproach 0.55s ease forwards`,
+        }}>
+        <defs><radialGradient id="wOrb" cx="40%" cy="40%">
+          <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.5"/>
+          <stop offset="50%" stopColor="#2563eb" stopOpacity="0.3"/>
+          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0"/>
+        </radialGradient></defs>
+        <circle cx="17" cy="17" r="13" fill="url(#wOrb)"/>
+      </svg>
+      {/* Phase 2: Dark-water vortex rings */}
       {Array.from({ length: ringN }, (_, i) => (
         <svg key={`r${i}`} width="140" height="140" viewBox="0 0 140 140"
           style={{
             position:"absolute", right:"10%", top:"12%",
-            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${i*0.12}s forwards`, opacity:0,
+            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.12}s forwards`, opacity:0,
           }}>
           <circle cx="70" cy="70" r={20+i*10} fill="none"
             stroke={i%2===0?"#2563eb":"#0ea5e9"} strokeWidth={2.5-i*0.25}
@@ -164,7 +179,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
               opacity:0, filter:`drop-shadow(0 0 4px #60a5fa)`,
               "--px":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--py":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`splashBurst 0.65s ease ${0.08+i*0.035}s forwards`,
+              animation:`splashBurst 0.65s ease ${D+0.08+i*0.035}s forwards`,
             }}>
             <circle cx={sz/2} cy={sz/2} r={r} fill="#60a5fa" opacity="0.65"/>
             <ellipse cx={sz/2-1} cy={sz/2-1} rx={r*0.25} ry={r*0.18}
@@ -172,7 +187,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 28%, rgba(37,99,235,${0.06+lvl*0.015}), rgba(14,165,233,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 28%, rgba(37,99,235,${0.06+lvl*0.015}), rgba(14,165,233,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

@@ -137,16 +137,31 @@ export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
   }
 
   // --- idx 3: 終極爆破 (dark+fire) ---
+  const D = 0.5;
   const ringN = 2 + lvl;
   const rayN = 6 + lvl * 2;
   return (
     <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
-      {/* Dark-fire pulse rings */}
+      {/* Phase 1: Faint orb approach */}
+      <svg width="36" height="36" viewBox="0 0 36 36"
+        style={{
+          position:"absolute", left:"10%", bottom:"35%",
+          filter:`drop-shadow(0 0 ${glow}px #ea580c) drop-shadow(0 0 ${glow+4}px #7c3aed)`,
+          animation:`ultApproach 0.55s ease forwards`,
+        }}>
+        <defs><radialGradient id="fOrb" cx="40%" cy="40%">
+          <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5"/>
+          <stop offset="50%" stopColor="#ea580c" stopOpacity="0.3"/>
+          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0"/>
+        </radialGradient></defs>
+        <circle cx="18" cy="18" r="14" fill="url(#fOrb)"/>
+      </svg>
+      {/* Phase 2: Dark-fire pulse rings */}
       {Array.from({ length: ringN }, (_, i) => (
         <svg key={`r${i}`} width="150" height="150" viewBox="0 0 150 150"
           style={{
             position:"absolute", right:"10%", top:"10%",
-            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${i*0.12}s forwards`, opacity:0,
+            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.12}s forwards`, opacity:0,
           }}>
           <circle cx="75" cy="75" r={18+i*10} fill="none"
             stroke={i%2===0?"#7c3aed":"#ea580c"} strokeWidth={2.5-i*0.25}
@@ -165,7 +180,7 @@ export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
               top:`calc(22% + ${Math.sin(angle*Math.PI/180)*4}px)`,
               transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #fbbf24)`,
-              animation:`sparkle ${0.4+Math.random()*0.3}s ease ${0.06+i*0.035}s both`,
+              animation:`sparkle ${0.4+Math.random()*0.3}s ease ${D+0.06+i*0.035}s both`,
             }}>
             <defs>
               <linearGradient id={`dray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
@@ -177,7 +192,7 @@ export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 30%, rgba(234,88,12,${0.06+lvl*0.015}), rgba(124,58,237,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 30%, rgba(234,88,12,${0.06+lvl*0.015}), rgba(124,58,237,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

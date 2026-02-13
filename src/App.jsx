@@ -429,8 +429,9 @@ function App() {
   const scene = SCENES[enemy.mType] || SCENES.grass;
 
   // ─── Battle Screen ───
+  const canTapAdvance = phase === "text" || phase === "victory";
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+    <div onClick={canTapAdvance ? advance : undefined} style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}>
       {dmgs.map(d => <DamagePopup key={d.id} value={d.value} x={d.x} y={d.y} color={d.color} onDone={() => rmD(d.id)} />)}
       {parts.map(p => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} onDone={() => rmP(p.id)} />)}
       {mLvlUp !== null && starter && <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: "0 4px 16px rgba(245,158,11,0.4)", whiteSpace: "nowrap" }}>{starter.moves[mLvlUp].icon} {starter.moves[mLvlUp].name} 升級到 Lv.{mLvls[mLvlUp]}！威力 → {getPow(mLvlUp)}</div>}

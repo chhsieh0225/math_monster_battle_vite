@@ -30,24 +30,41 @@ import EvolveScreen from './components/screens/EvolveScreen';
 import GameOverScreen from './components/screens/GameOverScreen';
 
 // ─── GameShell: orientation lock wrapper ───
+// 偵測是否為觸控裝置（手機/平板）
+const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
 function GameShell() {
-  const [isLs, setIsLs] = useState(() => window.innerWidth > window.innerHeight * 1.05);
+  const [showRotateHint, setShowRotateHint] = useState(false);
+
   useEffect(() => {
     try { screen.orientation.lock("portrait-primary").catch(() => {}); } catch (e) {}
-    const chk = () => setIsLs(window.innerWidth > window.innerHeight * 1.05);
+
+    const chk = () => {
+      // 只在觸控裝置（手機/平板）上顯示旋轉提示
+      const isLandscape = window.innerWidth > window.innerHeight * 1.05;
+      setShowRotateHint(isLandscape && isTouchDevice());
+    };
+    chk();
     const ochk = () => setTimeout(chk, 350);
     window.addEventListener("resize", chk);
     window.addEventListener("orientationchange", ochk);
     return () => { window.removeEventListener("resize", chk); window.removeEventListener("orientationchange", ochk); };
   }, []);
+
   return (
     <div style={{ position: "fixed", inset: 0, overflow: "hidden", background: "#000" }}>
       <App />
-      {isLs && <div style={{ position: "fixed", inset: 0, background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9999 }}>
-        <div style={{ fontSize: 56, marginBottom: 20, animation: "float 3s ease-in-out infinite" }}>📱</div>
-        <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>請將手機轉為直立方向</div>
-        <div style={{ fontSize: 13, opacity: 0.5 }}>本遊戲僅支援直向模式</div>
-      </div>}
+      {showRotateHint && (
+        <div
+          onClick={() => setShowRotateHint(false)}
+          style={{ position: "fixed", inset: 0, background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9999, cursor: "pointer" }}
+        >
+          <div style={{ fontSize: 56, marginBottom: 20, animation: "float 3s ease-in-out infinite" }}>📱</div>
+          <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>請將手機轉為直立方向</div>
+          <div style={{ fontSize: 13, opacity: 0.5 }}>本遊戲僅支援直向模式</div>
+          <div style={{ fontSize: 12, opacity: 0.35, marginTop: 24 }}>點擊任意處繼續遊戲</div>
+        </div>
+      )}
     </div>
   );
 }

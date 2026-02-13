@@ -177,7 +177,7 @@ export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 65% 28%, rgba(234,88,12,${0.15+lvl*0.04}), rgba(124,58,237,${0.08+lvl*0.02}), transparent 55%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 30%, rgba(234,88,12,${0.06+lvl*0.015}), rgba(124,58,237,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease` }}/>
     </div>
   );
 }

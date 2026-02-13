@@ -229,7 +229,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
         );
       })}
       {/* Heavy dark overlay */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 62% 26%, rgba(30,27,75,${0.2+lvl*0.04}), rgba(88,28,135,${0.12+lvl*0.03}), transparent 55%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 58% 28%, rgba(30,27,75,${0.07+lvl*0.015}), rgba(88,28,135,${0.04+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease` }}/>
     </div>
   );
 }

@@ -71,3 +71,4 @@ button:active{transform:scale(0.96)!important}
 @keyframes darkRingExpand{0%{transform:scale(0);opacity:0}25%{transform:scale(0.8);opacity:1}60%{transform:scale(1.5);opacity:0.5}100%{transform:scale(2.2);opacity:0}}
 @keyframes darkStarSpin{0%{transform:translate(0,0) rotate(0deg) scale(0);opacity:0}25%{transform:translate(calc(var(--sx)*0.3),calc(var(--sy)*0.3)) rotate(90deg) scale(1);opacity:1}100%{transform:translate(var(--sx),var(--sy)) rotate(360deg) scale(0.2);opacity:0}}
 @keyframes arcFlow{0%{stroke-dashoffset:40;opacity:0}15%{opacity:0.8}100%{stroke-dashoffset:-40;opacity:0}}
+@keyframes ultGlow{0%{opacity:0}20%{opacity:1}50%{opacity:0.6}75%{opacity:0.8}100%{opacity:0}}

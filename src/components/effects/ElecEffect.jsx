@@ -254,7 +254,7 @@ export default function ElecEffect({ idx = 0, lvl = 1, onDone }) {
           <path d={SPARK} fill="#fde68a" opacity="0.6"/>
         </svg>
       ))}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 65% 28%, rgba(251,191,36,${0.12+lvl*0.03}), rgba(124,58,237,${0.08+lvl*0.02}), transparent 55%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 30%, rgba(251,191,36,${0.05+lvl*0.012}), rgba(124,58,237,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease` }}/>
     </div>
   );
 }

@@ -185,7 +185,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, onDone }) {
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 65% 28%, rgba(34,197,94,${0.15+lvl*0.04}), transparent 55%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 30%, rgba(34,197,94,${0.06+lvl*0.015}), rgba(21,128,61,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease` }}/>
     </div>
   );
 }

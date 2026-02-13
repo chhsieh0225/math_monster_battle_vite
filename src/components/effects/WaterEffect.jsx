@@ -172,7 +172,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 65% 25%, rgba(37,99,235,${0.18+lvl*0.04}), transparent 55%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 28%, rgba(37,99,235,${0.06+lvl*0.015}), rgba(14,165,233,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease` }}/>
     </div>
   );
 }

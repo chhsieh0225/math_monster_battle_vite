@@ -1,0 +1,29 @@
+import React from 'react';
+
+const MonsterSprite = React.memo(function MonsterSprite({ svgStr, size = 120, anim = "", style = {} }) {
+  return (
+    <svg
+      width={size}
+      height={size * 100 / 120}
+      viewBox="0 0 120 100"
+      style={{ ...style, animation: anim || "none", imageRendering: "pixelated" }}
+    >
+      <defs>
+        <radialGradient id="gs" cx="35%" cy="25%">
+          <stop offset="0%" stopColor="white" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="white" stopOpacity="0" />
+        </radialGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="b" />
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <g dangerouslySetInnerHTML={{ __html: svgStr }} />
+    </svg>
+  );
+}, (a, b) => a.svgStr === b.svgStr && a.size === b.size && a.anim === b.anim);
+
+export default MonsterSprite;

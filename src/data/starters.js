@@ -19,7 +19,7 @@ export const STARTERS = [
      {name:"火花彈",icon:"🔥",type:"fire",desc:"簡單乘法",basePower:12,growth:6,range:[2,5],ops:["×"],color:"#ef4444",bg:"#fef2f2"},
      {name:"烈焰衝",icon:"🔥",type:"fire",desc:"九九乘法",basePower:20,growth:5,range:[2,9],ops:["×"],color:"#f97316",bg:"#fff7ed"},
      {name:"爆炎轟",icon:"🔥",type:"fire",desc:"大數乘法",basePower:30,growth:3,range:[4,12],ops:["×"],color:"#dc2626",bg:"#fef2f2"},
-     {name:"終極爆破",icon:"💥",type:"dark",desc:"大數乘除混合",basePower:40,growth:3,range:[3,12],ops:["×","÷"],color:"#a855f7",bg:"#faf5ff",risky:true},
+     {name:"終極爆破",icon:"💥",type:"dark",type2:"fire",desc:"暗火·乘除混合",basePower:40,growth:3,range:[3,12],ops:["×","÷"],color:"#a855f7",bg:"#faf5ff",risky:true},
    ]},
   {id:"water",name:"小水獸",type:"water",typeIcon:"💧",typeName:"水",c1:"#60a5fa",c2:"#1d4ed8",
    stages:[
@@ -31,7 +31,7 @@ export const STARTERS = [
      {name:"水泡攻擊",icon:"💧",type:"water",desc:"簡單除法",basePower:12,growth:6,range:[2,5],ops:["÷"],color:"#3b82f6",bg:"#eff6ff"},
      {name:"水流波",icon:"🌊",type:"water",desc:"進階除法",basePower:20,growth:5,range:[2,9],ops:["÷"],color:"#2563eb",bg:"#eff6ff"},
      {name:"海嘯衝擊",icon:"🌊",type:"water",desc:"大數除法",basePower:30,growth:3,range:[4,12],ops:["÷"],color:"#1d4ed8",bg:"#dbeafe"},
-     {name:"終極爆破",icon:"💥",type:"dark",desc:"大數乘除混合",basePower:40,growth:3,range:[3,12],ops:["×","÷"],color:"#a855f7",bg:"#faf5ff",risky:true},
+     {name:"終極爆破",icon:"💥",type:"dark",type2:"water",desc:"暗水·乘除混合",basePower:37,growth:3,range:[3,12],ops:["×","÷"],color:"#a855f7",bg:"#faf5ff",risky:true},
    ]},
   {id:"grass",name:"小草獸",type:"grass",typeIcon:"🌿",typeName:"草",c1:"#4ade80",c2:"#16a34a",
    stages:[
@@ -43,6 +43,6 @@ export const STARTERS = [
      {name:"葉刃切",icon:"🌿",type:"grass",desc:"加法練習",basePower:12,growth:6,range:[5,50],ops:["+"],color:"#22c55e",bg:"#f0fdf4"},
      {name:"藤鞭打",icon:"🌿",type:"grass",desc:"減法練習",basePower:20,growth:5,range:[10,80],ops:["-"],color:"#16a34a",bg:"#f0fdf4"},
      {name:"森林風暴",icon:"🌿",type:"grass",desc:"加減混合",basePower:30,growth:3,range:[10,99],ops:["+","-"],color:"#15803d",bg:"#dcfce7"},
-     {name:"終極爆破",icon:"💥",type:"dark",desc:"大數乘除混合",basePower:40,growth:3,range:[3,12],ops:["×","÷"],color:"#a855f7",bg:"#faf5ff",risky:true},
+     {name:"終極爆破",icon:"💥",type:"dark",type2:"grass",desc:"暗草·乘除混合",basePower:40,growth:3,range:[3,12],ops:["×","÷"],color:"#a855f7",bg:"#faf5ff",risky:true},
    ]},
 ];

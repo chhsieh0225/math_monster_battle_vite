@@ -25,7 +25,7 @@ export function genQ(move) {
     d = `${a} + ${b}`;
   } else if (op === "-") {
     a = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
-    b = Math.floor(Math.random() * (a + 1));
+    b = Math.floor(Math.random() * a) + 1;
     ans = a - b;
     d = `${a} - ${b}`;
   }

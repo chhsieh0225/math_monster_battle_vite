@@ -144,6 +144,8 @@ function App() {
   // --- Computed ---
   const expNext = pLvl * 30;
   const getPow = (i) => starter ? Math.min(starter.moves[i].basePower + (mLvls[i] - 1) * starter.moves[i].growth, POWER_CAPS[i]) : 0;
+  const bestTypeOf = (move) => move.type2 && enemy ? (getEff(move.type2, enemy.mType) > getEff(move.type, enemy.mType) ? move.type2 : move.type) : move.type;
+  const dualEff = (move) => { const e1 = enemy ? getEff(move.type, enemy.mType) : 1; return move.type2 && enemy ? Math.max(e1, getEff(move.type2, enemy.mType)) : e1; };
 
   // --- Damage/particle helpers ---
   const addD = (v, x, y, c) => { const id = did.current++; setDmgs(f => [...f, { id, value: v, x, y, color: c }]); };
@@ -229,7 +231,7 @@ function App() {
           if (pStg < 2 && nl % 3 === 0) {
             safeTo(() => { setPStg(s => Math.min(s + 1, 2)); setScreen("evolve"); }, 1500);
             setPHp(PLAYER_MAX_HP);
-            setMLvls(prev => prev.map(v => v + 1));
+            setMLvls(prev => prev.map(v => Math.min(v + 1, MAX_MOVE_LVL)));
           } else {
             setPHp(h => Math.min(h + 20, PLAYER_MAX_HP));
           }
@@ -289,30 +291,32 @@ function App() {
         const efxDelay = { fire: 300, electric: 200, water: 350, grass: 280, dark: 400 };
         safeTo(() => {
           setPAnim("");
-          setAtkEffect({ type: move.type, idx: selIdx, lvl: mLvls[selIdx] });
+          const bt = bestTypeOf(move);
+          setAtkEffect({ type: bt, idx: selIdx, lvl: mLvls[selIdx] });
           safeTo(() => {
             let dmg = didLvl ? Math.min(move.basePower + mLvls[selIdx] * move.growth, POWER_CAPS[selIdx]) : getPow(selIdx);
+            dmg = Math.round(dmg * (0.85 + Math.random() * 0.15));
             if (ns >= 5) dmg = Math.round(dmg * 1.8); else if (ns >= 3) dmg = Math.round(dmg * 1.5);
             dmg = Math.round(dmg * (1 + pStg * 0.15));
-            const eff = getEff(move.type, enemy.mType);
+            const eff = dualEff(move);
             dmg = Math.round(dmg * eff);
             if (eff > 1) { setEffMsg({ text: "效果絕佳！", color: "#22c55e" }); safeTo(() => setEffMsg(null), 1500); }
             else if (eff < 1) { setEffMsg({ text: "效果不好...", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
             let afterHp = Math.max(0, eHp - dmg);
             let newBurn = burnStack;
             if (starter.type === "fire" && afterHp > 0) { newBurn = Math.min(burnStack + 1, 5); setBurnStack(newBurn); const bd = newBurn * 2; afterHp = Math.max(0, afterHp - bd); safeTo(() => addD(`🔥-${bd}`, 155, 50, "#f97316"), 500); }
-            if (starter.type === "grass") { const heal = Math.round(2 + mLvls[selIdx]); setPHp(h => Math.min(h + heal, PLAYER_MAX_HP)); safeTo(() => addD(`+${heal}`, 50, 165, "#22c55e"), 500); }
+            if (starter.type === "grass") { const heal = 2 * mLvls[selIdx]; setPHp(h => Math.min(h + heal, PLAYER_MAX_HP)); safeTo(() => addD(`+${heal}`, 50, 165, "#22c55e"), 500); }
             let willFreeze = false;
             if (starter.type === "water" && afterHp > 0) { const fc = 0.25 + mLvls[selIdx] * 0.03; if (Math.random() < fc) { willFreeze = true; setFrozen(true); frozenR.current = true; safeTo(() => addD("❄️凍結", 155, 50, "#38bdf8"), 600); } }
             setEHp(afterHp);
-            setEAnim(hitAnims[move.type] || "enemyHit 0.5s ease");
-            const dmgColor = { fire: "#ef4444", electric: "#fbbf24", water: "#3b82f6", grass: "#22c55e", dark: "#a855f7" }[move.type] || "#ef4444";
+            setEAnim(hitAnims[bt] || "enemyHit 0.5s ease");
+            const dmgColor = { fire: "#ef4444", electric: "#fbbf24", water: "#3b82f6", grass: "#22c55e", dark: "#a855f7" }[bt] || "#ef4444";
             addD(`-${dmg}`, 140, 55, dmgColor);
             safeTo(() => { setEAnim(""); setAtkEffect(null); }, 800);
             if (afterHp <= 0) { safeTo(() => handleVictory(), 900); }
             else if (willFreeze) { safeTo(() => handleFreeze(), 900); }
             else safeTo(() => enemyTurn(), 900);
-          }, efxDelay[move.type] || 300);
+          }, efxDelay[bt] || 300);
         }, 400);
       }, 600);
     } else {
@@ -527,7 +531,7 @@ function App() {
             const locked = m.risky && !chargeReady;
             const lv = mLvls[i]; const pw = getPow(i);
             const atCap = lv >= MAX_MOVE_LVL || m.basePower + lv * m.growth > POWER_CAPS[i];
-            const eff = enemy ? getEff(m.type, enemy.mType) : 1;
+            const eff = dualEff(m);
             return <button key={i} onClick={() => !locked && selectMove(i)} style={{ background: locked ? "rgba(255,255,255,0.03)" : eff > 1 ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))` : eff < 1 ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))` : m.bg, border: `2px solid ${locked ? "rgba(255,255,255,0.08)" : eff > 1 ? "#22c55e66" : m.color + "44"}`, borderRadius: 12, padding: "10px 10px", textAlign: "left", opacity: locked ? 0.4 : 1, cursor: locked ? "default" : "pointer", transition: "all 0.2s", animation: `fadeSlide 0.3s ease ${i * 0.05}s both`, position: "relative", overflow: "hidden" }}>
               {lv > 1 && <div style={{ position: "absolute", top: 4, right: eff !== 1 ? 44 : 6, background: atCap ? "linear-gradient(135deg,#f59e0b,#ef4444)" : m.color, color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8, fontFamily: "'Press Start 2P',monospace" }}>Lv{lv}</div>}
               {eff > 1 && <div style={{ position: "absolute", top: 4, right: 6, background: "#22c55e", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8 }}>效果↑</div>}

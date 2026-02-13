@@ -295,6 +295,7 @@ function App() {
           setAtkEffect({ type: bt, idx: selIdx, lvl: mLvls[selIdx] });
           safeTo(() => {
             let dmg = didLvl ? Math.min(move.basePower + mLvls[selIdx] * move.growth, POWER_CAPS[selIdx]) : getPow(selIdx);
+            dmg = Math.round(dmg * (0.85 + Math.random() * 0.15));
             if (ns >= 5) dmg = Math.round(dmg * 1.8); else if (ns >= 3) dmg = Math.round(dmg * 1.5);
             dmg = Math.round(dmg * (1 + pStg * 0.15));
             const eff = dualEff(move);

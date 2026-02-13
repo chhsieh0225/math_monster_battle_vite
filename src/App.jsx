@@ -52,19 +52,21 @@ function GameShell() {
   }, []);
 
   return (
-    <div style={{ position: "fixed", inset: 0, overflow: "hidden", background: "#000" }}>
-      <App />
-      {showRotateHint && (
-        <div
-          onClick={() => setShowRotateHint(false)}
-          style={{ position: "fixed", inset: 0, background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9999, cursor: "pointer" }}
-        >
-          <div style={{ fontSize: 56, marginBottom: 20, animation: "float 3s ease-in-out infinite" }}>📱</div>
-          <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>請將手機轉為直立方向</div>
-          <div style={{ fontSize: 13, opacity: 0.5 }}>本遊戲僅支援直向模式</div>
-          <div style={{ fontSize: 12, opacity: 0.35, marginTop: 24 }}>點擊任意處繼續遊戲</div>
-        </div>
-      )}
+    <div style={{ position: "fixed", inset: 0, overflow: "hidden", background: "#0f172a", display: "flex", justifyContent: "center" }}>
+      <div style={{ width: "100%", maxWidth: 480, height: "100%", position: "relative", background: "#000", boxShadow: "0 0 40px rgba(0,0,0,0.5)" }}>
+        <App />
+        {showRotateHint && (
+          <div
+            onClick={() => setShowRotateHint(false)}
+            style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9999, cursor: "pointer" }}
+          >
+            <div style={{ fontSize: 56, marginBottom: 20, animation: "float 3s ease-in-out infinite" }}>📱</div>
+            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>請將手機轉為直立方向</div>
+            <div style={{ fontSize: 13, opacity: 0.5 }}>本遊戲僅支援直向模式</div>
+            <div style={{ fontSize: 12, opacity: 0.35, marginTop: 24 }}>點擊任意處繼續遊戲</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -105,6 +107,7 @@ function App() {
   const [tC, setTC] = useState(0);
   const [tW, setTW] = useState(0);
   const [defeated, setDefeated] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
   const [mHits, setMHits] = useState([0, 0, 0, 0]);
   const [mLvls, setMLvls] = useState([1, 1, 1, 1]);
   const [mLvlUp, setMLvlUp] = useState(null);
@@ -168,7 +171,18 @@ function App() {
     safeTo(() => enemyTurn(), 1200);
   }, [q]);
 
-  const { timerLeft, startTimer, clearTimer } = useTimer(TIMER_SEC, onTimeout);
+  const { timerLeft, paused, startTimer, clearTimer, pauseTimer, resumeTimer } = useTimer(TIMER_SEC, onTimeout);
+  const [gamePaused, setGamePaused] = useState(false);
+
+  const togglePause = useCallback(() => {
+    if (gamePaused) {
+      resumeTimer();
+      setGamePaused(false);
+    } else {
+      pauseTimer();
+      setGamePaused(true);
+    }
+  }, [gamePaused, pauseTimer, resumeTimer]);
 
   // Cleanup timer when leaving question phase
   useEffect(() => { if (phase !== "question") clearTimer(); }, [phase, clearTimer]);
@@ -193,7 +207,7 @@ function App() {
     turnRef.current++;
     clearTimer();
     setPHp(PLAYER_MAX_HP); setPExp(0); setPLvl(1); setPStg(0);
-    setStreak(0); setCharge(0); setTC(0); setTW(0); setDefeated(0);
+    setStreak(0); setCharge(0); setTC(0); setTW(0); setDefeated(0); setMaxStreak(0);
     setMHits([0, 0, 0, 0]); setMLvls([1, 1, 1, 1]); setMLvlUp(null);
     setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
     setBurnStack(0); setFrozen(false); frozenR.current = false;
@@ -256,6 +270,7 @@ function App() {
     if (correct) {
       setFb({ correct: true }); setTC(c => c + 1);
       const ns = streak + 1; setStreak(ns); setCharge(c => Math.min(c + 1, 3));
+      if (ns > maxStreak) setMaxStreak(ns);
       if (ns >= 8 && !specDef) setSpecDef(true);
       const nh = [...mHits]; nh[selIdx]++;
       const cl = mLvls[selIdx]; let didLvl = false;
@@ -412,7 +427,7 @@ function App() {
   if (screen === "gameover") return (
     <GameOverScreen
       defeated={defeated} totalEnemies={enemies.length}
-      tC={tC} tW={tW} pLvl={pLvl} timedMode={timedMode}
+      tC={tC} tW={tW} pLvl={pLvl} timedMode={timedMode} maxStreak={maxStreak}
       starter={starter} mLvls={mLvls} getPow={getPow}
       onRestart={() => starter && startGame()}
       onLeaderboard={() => setScreen("leaderboard")}
@@ -432,6 +447,12 @@ function App() {
   const canTapAdvance = phase === "text" || phase === "victory";
   return (
     <div onClick={canTapAdvance ? advance : undefined} style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}>
+      {/* 暫停遮罩 */}
+      {gamePaused && <div onClick={togglePause} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9000, cursor: "pointer", backdropFilter: "blur(4px)" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>⏸️</div>
+        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>遊戲暫停</div>
+        <div style={{ fontSize: 13, opacity: 0.5 }}>點擊任意處繼續</div>
+      </div>}
       {dmgs.map(d => <DamagePopup key={d.id} value={d.value} x={d.x} y={d.y} color={d.color} onDone={() => rmD(d.id)} />)}
       {parts.map(p => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} onDone={() => rmP(p.id)} />)}
       {mLvlUp !== null && starter && <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: "0 4px 16px rgba(245,158,11,0.4)", whiteSpace: "nowrap" }}>{starter.moves[mLvlUp].icon} {starter.moves[mLvlUp].name} 升級到 Lv.{mLvls[mLvlUp]}！威力 → {getPow(mLvlUp)}</div>}
@@ -516,7 +537,7 @@ function App() {
               {!m.risky && !atCap && <div style={{ height: 3, background: "rgba(0,0,0,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}><div style={{ width: `${(mHits[i] % (HITS_PER_LVL * mLvls[i])) / (HITS_PER_LVL * mLvls[i]) * 100}%`, height: "100%", background: m.color, borderRadius: 2, transition: "width 0.3s" }} /></div>}
             </button>;
           })}
-        </div><div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}><button onClick={quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button></div></div>}
+        </div><div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}><button onClick={togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button><button onClick={quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button></div></div>}
 
         {phase === "question" && q && <div style={{ padding: "10px 14px", animation: "fadeSlide 0.25s ease" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{starter && starter.moves[selIdx].icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{starter && starter.moves[selIdx].name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{timedMode ? "⏱️ 限時回答！" : "回答正確才能命中"}</span></div>

@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react';
 import { calcScore, saveScore } from '../../utils/leaderboard';
 
-export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, timedMode, starter, mLvls, getPow, onRestart, onLeaderboard, onHome }) {
+export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, timedMode, maxStreak = 0, starter, mLvls, getPow, onRestart, onLeaderboard, onHome }) {
   const won = defeated >= totalEnemies;
-  const finalScore = calcScore(defeated, tC, tW, pLvl, timedMode);
+  const finalScore = calcScore(defeated, tC, tW, pLvl, timedMode, maxStreak);
   const [lastRank, setLastRank] = useState(-1);
   const [nameSaved, setNameSaved] = useState(false);
   const [playerName, setPlayerName] = useState(() => {
@@ -19,7 +19,7 @@ export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, t
     const sc = finalScore;
     const nm = playerName.trim() || "???";
     try { localStorage.setItem("mathMonsterBattle_name", nm); } catch (e) {}
-    const entry = { score: sc, name: nm, defeated, correct: tC, wrong: tW, accuracy: acc, level: pLvl, timed: timedMode, completed: comp, date: new Date().toISOString() };
+    const entry = { score: sc, name: nm, defeated, correct: tC, wrong: tW, accuracy: acc, level: pLvl, timed: timedMode, maxStreak, completed: comp, date: new Date().toISOString() };
     const rank = saveScore(entry);
     setLastRank(rank);
     setNameSaved(true);
@@ -37,13 +37,15 @@ export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, t
       </div>
       {!nameSaved?<div style={{marginBottom:12,animation:"popIn 0.3s ease 0.4s both"}}><div style={{fontSize:13,opacity:0.5,marginBottom:6}}>輸入你的名字</div><div style={{display:"flex",gap:8,justifyContent:"center",alignItems:"center"}}><input value={playerName} onChange={e=>setPlayerName(e.target.value)} placeholder="???" maxLength={8} style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:10,color:"white",fontSize:16,fontWeight:700,padding:"8px 12px",textAlign:"center",width:140,outline:"none"}} onKeyDown={e=>{if(e.key==="Enter")handleSaveScore();}}/><button onClick={handleSaveScore} style={{background:"linear-gradient(135deg,#22c55e,#16a34a)",border:"none",color:"white",fontSize:14,fontWeight:700,padding:"10px 20px",borderRadius:50}}>儲存</button></div></div>:<div style={{marginBottom:12,fontSize:12,color:"#22c55e",fontWeight:700,animation:"popIn 0.3s ease"}}>✅ 已儲存！</div>}
       <div style={{background:"rgba(255,255,255,0.08)",borderRadius:16,padding:20,marginBottom:12,minWidth:260,border:"1px solid rgba(255,255,255,0.1)"}}>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,fontSize:14}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,fontSize:14}}>
           <div style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:900,color:"#22c55e"}}>{tC}</div><div style={{opacity:0.5,fontSize:12}}>答對</div></div>
           <div style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:900,color:"#ef4444"}}>{tW}</div><div style={{opacity:0.5,fontSize:12}}>答錯</div></div>
+          <div style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:900,color:"#f97316"}}>{maxStreak}</div><div style={{opacity:0.5,fontSize:12}}>最大連擊</div></div>
           <div style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:900,color:"#f59e0b"}}>{defeated}</div><div style={{opacity:0.5,fontSize:12}}>打倒怪獸</div></div>
           <div style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:900,color:"#a855f7"}}>Lv.{pLvl}</div><div style={{opacity:0.5,fontSize:12}}>最終等級</div></div>
+          <div style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:900,color:"#38bdf8"}}>{tC+tW>0?Math.round(tC/(tC+tW)*100):0}%</div><div style={{opacity:0.5,fontSize:12}}>正確率</div></div>
         </div>
-        <div style={{marginTop:12,fontSize:13,opacity:0.5}}>正確率：{tC+tW>0?Math.round(tC/(tC+tW)*100):0}%</div>
+        {maxStreak >= 5 && <div style={{marginTop:10,fontSize:12,fontWeight:700,color:"#f97316",animation:"popIn 0.3s ease"}}>🔥 連擊大師！最高 {maxStreak} 連擊 (+{maxStreak * 20}分)</div>}
       </div>
       <div style={{background:"rgba(255,255,255,0.05)",borderRadius:12,padding:"12px 16px",marginBottom:16,minWidth:260,border:"1px solid rgba(255,255,255,0.06)"}}>
         <div style={{fontSize:14,opacity:0.4,marginBottom:8}}>招式等級</div>

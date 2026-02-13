@@ -18,9 +18,10 @@ button:active{transform:scale(0.96)!important}
 @keyframes sparkle{0%{transform:scale(0) rotate(0deg);opacity:1}50%{transform:scale(1) rotate(180deg);opacity:1}100%{transform:scale(0) rotate(360deg);opacity:0}}
 @keyframes emberRise{0%{transform:translateY(0) scale(1);opacity:0.6}40%{opacity:0.9}100%{transform:translateY(-110px) scale(0.2);opacity:0}}
 @keyframes lavaGlow{0%,100%{opacity:0.18;transform:scale(1)}50%{opacity:0.35;transform:scale(1.15)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes floatFlip{0%,100%{transform:translateY(0) scaleX(-1)}50%{transform:translateY(-8px) scaleX(-1)}}
-@keyframes shadowPulse{0%,100%{transform:scaleX(1) scaleY(1);opacity:0.55}50%{transform:scaleX(0.85) scaleY(0.85);opacity:0.3}}
+@keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.03)}}
+@keyframes floatFlip{0%,100%{transform:translateY(0) scaleX(-1) scaleY(1)}50%{transform:translateY(-6px) scaleX(-1.02) scaleY(1.04)}}
+@keyframes shadowPulse{0%,100%{transform:scaleX(1) scaleY(1);opacity:0.55}50%{transform:scaleX(0.82) scaleY(0.82);opacity:0.25}}
+@keyframes bossShadowPulse{0%,100%{transform:scaleX(1) scaleY(1);opacity:0.55}25%{transform:scaleX(0.9) scaleY(0.9);opacity:0.35}50%{transform:scaleX(1) scaleY(1);opacity:0.5}75%{transform:scaleX(0.85) scaleY(0.85);opacity:0.3}}
 @keyframes shieldPulse{0%{transform:scale(0);opacity:0}20%{transform:scale(1.15);opacity:1}50%{transform:scale(1);opacity:0.85}80%{transform:scale(1.05);opacity:0.9}100%{transform:scale(1.1);opacity:0}}
 @keyframes shieldFlash{0%{background:transparent}15%{background:rgba(251,191,36,0.25)}40%{background:transparent}55%{background:rgba(251,191,36,0.15)}100%{background:transparent}}
 @keyframes dodgeSlide{0%{transform:translateX(0) scaleX(-1)}25%{transform:translateX(-60px) translateY(-20px) scaleX(-1);opacity:0.2}55%{transform:translateX(-60px) translateY(-20px) scaleX(-1);opacity:0.2}100%{transform:translateX(0) scaleX(-1);opacity:1}}

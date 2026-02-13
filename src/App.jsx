@@ -288,7 +288,7 @@ function App() {
         const hitAnims = { fire: "enemyFireHit 0.6s ease", electric: "enemyElecHit 0.6s ease", water: "enemyWaterHit 0.7s ease", grass: "enemyGrassHit 0.6s ease", dark: "enemyDarkHit 0.8s ease" };
         const efxDelay = { fire: 300, electric: 200, water: 350, grass: 280, dark: 400 };
         safeTo(() => {
-          setPAnim("none");
+          setPAnim("");
           setAtkEffect({ type: move.type, idx: selIdx, lvl: mLvls[selIdx] });
           safeTo(() => {
             let dmg = didLvl ? move.basePower + mLvls[selIdx] * 2 : getPow(selIdx);
@@ -323,7 +323,7 @@ function App() {
           const nh2 = Math.max(0, pHp - sd);
           setPHp(nh2); setPAnim("playerHit 0.5s ease");
           addD(`-${sd}`, 40, 170, "#ef4444");
-          safeTo(() => setPAnim("none"), 500);
+          safeTo(() => setPAnim(""), 500);
           setBText(`${move.name} 失控了！自己受到 ${sd} 傷害！`);
           setPhase("text");
           safeTo(() => {
@@ -362,7 +362,7 @@ function App() {
         } else if (st === "water") {
           setPAnim("dodgeSlide 0.9s ease");
           setBText("💨 完美閃避！"); addD("MISS!", 60, 170, "#38bdf8");
-          safeTo(() => { setPAnim("none"); setDefAnim(null); setPhase("menu"); setBText(""); }, 1800);
+          safeTo(() => { setPAnim(""); setDefAnim(null); setPhase("menu"); setBText(""); }, 1800);
         } else {
           const dmg = Math.round(enemy.atk * (0.8 + Math.random() * 0.4));
           const refDmg = Math.round(dmg * 1.2);
@@ -381,7 +381,7 @@ function App() {
       addD(`-${finalDmg}`, 60, 170, "#ef4444"); addP("enemy", 80, 190, 4);
       if (defEff > 1) { setEffMsg({ text: "敵人招式很有效！", color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
       else if (defEff < 1) { setEffMsg({ text: "敵人招式效果不佳", color: "#64748b" }); safeTo(() => setEffMsg(null), 1500); }
-      safeTo(() => setPAnim("none"), 500);
+      safeTo(() => setPAnim(""), 500);
       if (nh <= 0) safeTo(() => { setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }, 800);
       else safeTo(() => { setPhase("menu"); setBText(""); }, 800);
     }, 500);
@@ -501,7 +501,7 @@ function App() {
         <div style={{ position: "absolute", right: "10%", top: enemy && (enemy.mType === "ghost" || enemy.id === "boss") ? "12%" : enemy && enemy.mType === "steel" ? "16%" : "26%", zIndex: 5, animation: eAnim || (enemy && enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite") }}>
           <MonsterSprite svgStr={eSvg} size={enemy && enemy.id === "boss" ? 230 : enemy.id === "fire" || enemy.id === "dragon" || (enemy.id === "slime" && enemy.isEvolved) ? 180 : enemy.isEvolved ? 155 : 120} />
         </div>
-        {!eAnim && <div style={{ position: "absolute", right: enemy && enemy.id === "boss" ? "12%" : "14%", top: enemy && enemy.id === "boss" ? "52%" : enemy && enemy.mType === "ghost" ? "40%" : enemy && enemy.mType === "steel" ? "46%" : "54%", width: enemy && enemy.id === "boss" ? 120 : enemy && (enemy.id === "fire" || enemy.id === "dragon" || (enemy.id === "slime" && enemy.isEvolved)) ? 100 : 80, height: 12, background: "radial-gradient(ellipse,rgba(0,0,0,0.6),transparent)", borderRadius: "50%", zIndex: 4, animation: "shadowPulse 3s ease-in-out infinite" }} />}
+        {!eAnim && <div style={{ position: "absolute", right: enemy && enemy.id === "boss" ? "12%" : "14%", top: enemy && enemy.id === "boss" ? "52%" : enemy && enemy.mType === "ghost" ? "40%" : enemy && enemy.mType === "steel" ? "46%" : "54%", width: enemy && enemy.id === "boss" ? 120 : enemy && (enemy.id === "fire" || enemy.id === "dragon" || (enemy.id === "slime" && enemy.isEvolved)) ? 100 : 80, height: 12, background: "radial-gradient(ellipse,rgba(0,0,0,0.6),transparent)", borderRadius: "50%", zIndex: 4, animation: enemy && enemy.id === "boss" ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite" }} />}
         <div style={{ position: "absolute", left: "2%", bottom: "12%", width: "50%", height: 10, background: scene.platform1, borderRadius: "50%", filter: "blur(2px)", transition: "background 0.8s ease", zIndex: 3 }} />
         <div style={{ position: "absolute", bottom: 10, right: 10, left: "42%", zIndex: 10 }}>
           <HPBar cur={pHp} max={PLAYER_MAX_HP} color="#6366f1" label={`${st.name} Lv.${pLvl}`} />

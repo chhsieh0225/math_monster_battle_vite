@@ -538,12 +538,12 @@ export function useBattle() {
                 safeTo(() => addD("❄️凍結", 155, 50, "#38bdf8"), 600);
               }
             }
-            // Electric: static charge — accumulate, discharge at 5 stacks
+            // Electric: static charge — accumulate, discharge at 3 stacks
             if (starter.type === "electric" && afterHp > 0) {
-              const newStatic = Math.min(s3.staticStack + 1, 5);
+              const newStatic = Math.min(s3.staticStack + 1, 3);
               setStaticStack(newStatic);
-              if (newStatic >= 5) {
-                const sd = 5 * 4; // 5 stacks × 4 damage
+              if (newStatic >= 3) {
+                const sd = 3 * 4; // 3 stacks × 4 damage
                 afterHp = Math.max(0, afterHp - sd);
                 setStaticStack(0);
                 safeTo(() => addD(`⚡-${sd}`, 155, 50, "#fbbf24"), 500);

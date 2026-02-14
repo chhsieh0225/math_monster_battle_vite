@@ -271,7 +271,7 @@ export function useBattle() {
     updateEnc(e); // ← encyclopedia: mark encountered
     const sn = SCENE_NAMES[e.mType] || "";
     setPhase("text");
-    setBText(`【${sn}】野生的 ${e.name} Lv.${e.lvl} 出現了！`);
+    setBText(`【${sn}】野生的 ${e.name}(${e.typeIcon}${e.typeName}) Lv.${e.lvl} 出現了！`);
     setScreen("battle");
     setEAnim("slideInBattle 0.6s ease");
     setPAnim("slideInPlayer 0.6s ease");

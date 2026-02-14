@@ -185,6 +185,8 @@ export const SCENES = {
 export const SCENE_NAMES = {
   grass:"🌿 綠意草原",
   fire:"🌋 炎熱火山",
+  water:"💧 湛藍水域",
+  electric:"⚡ 雷電荒原",
   ghost:"🌙 幽暗墓地",
   steel:"⚙️ 鋼鐵要塞",
   dark:"💀 暗黑深淵"

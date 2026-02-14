@@ -4,28 +4,74 @@ import { VERSION } from '../../data/constants';
 
 export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard, onAchievements, onEncyclopedia, onDashboard }) {
   return (
-    <div style={{height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)",color:"white",padding:24,textAlign:"center",position:"relative",overflow:"hidden"}}>
-      <div style={{position:"absolute",top:"8%",left:"12%",fontSize:40,opacity:0.12,animation:"sparkle 3s ease infinite"}}>⭐</div>
-      <div style={{position:"absolute",top:"18%",right:"18%",fontSize:30,opacity:0.08,animation:"sparkle 4s ease 1s infinite"}}>✨</div>
-      <div style={{display:"flex",gap:12,marginBottom:16,alignItems:"flex-end"}}>{STARTERS.map((s,i)=><div key={s.id} style={{animation:`float ${3+i*0.4}s ease-in-out ${i*0.3}s infinite`}}><MonsterSprite svgStr={s.stages[0].svgFn(s.c1,s.c2)} size={i===1?110:95}/></div>)}</div>
-      <h1 style={{fontSize:32,fontWeight:900,marginBottom:4,letterSpacing:2,textShadow:"0 0 30px rgba(99,102,241,0.5)"}}>數學寶可夢</h1>
-      <h2 style={{fontSize:18,fontWeight:700,marginBottom:8,opacity:0.6}}>Math Monster Battle</h2>
-      <p style={{fontSize:13,opacity:0.4,marginBottom:28,lineHeight:1.7}}>選擇招式 → 回答數學題 → 打倒怪獸！<br/>持續使用同一招式可以升級威力 🔥<br/>連續答對蓄力必殺技 💪</p>
-      <div style={{display:"flex",gap:10,marginBottom:12}}>
-        <button onClick={onStartNormal} style={{background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none",color:"white",fontSize:17,fontWeight:800,padding:"14px 28px",borderRadius:50,boxShadow:"0 4px 24px rgba(99,102,241,0.4)",letterSpacing:1}}>⚔️ 一般模式</button>
-        <button onClick={onStartTimed} style={{background:"linear-gradient(135deg,#ef4444,#f59e0b)",border:"none",color:"white",fontSize:17,fontWeight:800,padding:"14px 28px",borderRadius:50,boxShadow:"0 4px 24px rgba(239,68,68,0.4)",letterSpacing:1}}>⏱️ 計時模式</button>
+    <div style={{
+      height: "100%", display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "space-between",
+      background: "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)",
+      color: "white", padding: "32px 20px 20px", textAlign: "center",
+      position: "relative", overflow: "hidden",
+    }}>
+      {/* Background sparkles */}
+      <div style={{ position: "absolute", top: "8%", left: "12%", fontSize: 40, opacity: 0.1, animation: "sparkle 3s ease infinite" }}>⭐</div>
+      <div style={{ position: "absolute", top: "18%", right: "18%", fontSize: 30, opacity: 0.06, animation: "sparkle 4s ease 1s infinite" }}>✨</div>
+      <div style={{ position: "absolute", bottom: "15%", left: "8%", fontSize: 24, opacity: 0.05, animation: "sparkle 5s ease 2s infinite" }}>⭐</div>
+
+      {/* ─── Top: Branding ─── */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 10, marginBottom: 14, alignItems: "flex-end" }}>
+          {STARTERS.map((s, i) => (
+            <div key={s.id} style={{ animation: `float ${3 + i * 0.4}s ease-in-out ${i * 0.3}s infinite` }}>
+              <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={i === 1 ? 100 : 85} />
+            </div>
+          ))}
+        </div>
+        <h1 style={{ fontSize: 30, fontWeight: 900, margin: 0, letterSpacing: 2, textShadow: "0 0 30px rgba(99,102,241,0.5)" }}>數學寶可夢</h1>
+        <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.4, marginTop: 4 }}>Math Monster Battle</div>
       </div>
-      <div style={{fontSize:11,opacity:0.3,marginBottom:8}}>計時模式：5秒內回答，否則怪獸搶先攻擊！</div>
-      <div style={{display:"flex",gap:8,marginTop:8}}>
-        <button onClick={onLeaderboard} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",color:"white",fontSize:13,fontWeight:600,padding:"8px 18px",borderRadius:50}}>🏆 排行榜</button>
-        <button onClick={onAchievements} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",color:"white",fontSize:13,fontWeight:600,padding:"8px 18px",borderRadius:50}}>⭐ 成就</button>
-        <button onClick={onEncyclopedia} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",color:"white",fontSize:13,fontWeight:600,padding:"8px 18px",borderRadius:50}}>📚 圖鑑</button>
+
+      {/* ─── Middle: Actions ─── */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: "100%", maxWidth: 320 }}>
+        {/* Play buttons */}
+        <div style={{ display: "flex", gap: 10, width: "100%" }}>
+          <button onClick={onStartNormal} style={{
+            flex: 1, background: "linear-gradient(135deg,#6366f1,#a855f7)",
+            border: "none", color: "white", fontSize: 16, fontWeight: 800,
+            padding: "14px 0", borderRadius: 14,
+            boxShadow: "0 4px 20px rgba(99,102,241,0.35)",
+          }}>⚔️ 一般模式</button>
+          <button onClick={onStartTimed} style={{
+            flex: 1, background: "linear-gradient(135deg,#ef4444,#f59e0b)",
+            border: "none", color: "white", fontSize: 16, fontWeight: 800,
+            padding: "14px 0", borderRadius: 14,
+            boxShadow: "0 4px 20px rgba(239,68,68,0.3)",
+          }}>⏱️ 計時模式</button>
+        </div>
+        <div style={{ fontSize: 11, opacity: 0.3, marginTop: -6 }}>計時模式：5 秒內回答</div>
+
+        {/* Feature grid — 2×2 icon buttons */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>
+          {[
+            { icon: "🏆", label: "排行榜", fn: onLeaderboard },
+            { icon: "⭐", label: "成就", fn: onAchievements },
+            { icon: "📚", label: "圖鑑", fn: onEncyclopedia },
+            { icon: "📊", label: "家長專區", fn: onDashboard },
+          ].map(b => (
+            <button key={b.label} onClick={b.fn} style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "white", fontSize: 13, fontWeight: 600,
+              padding: "10px 0", borderRadius: 12,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            }}>{b.icon} {b.label}</button>
+          ))}
+        </div>
       </div>
-      <div style={{marginTop:8}}>
-        <button onClick={onDashboard} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.5)",fontSize:12,fontWeight:600,padding:"6px 16px",borderRadius:50}}>📊 家長專區</button>
+
+      {/* ─── Bottom: Credits ─── */}
+      <div style={{ opacity: 0.2, fontSize: 10, lineHeight: 1.7 }}>
+        <div>設計：Chung-Han Hsieh　·　Claude (Anthropic) 協助開發</div>
+        <div style={{ fontFamily: "monospace", marginTop: 2 }}>{VERSION}</div>
       </div>
-      <div style={{display:"flex",gap:16,marginTop:16,fontSize:12,opacity:0.3}}><div>🔥 乘法</div><div>🌊 除法</div><div>💥 混合</div><div>⚡ 九九</div></div>
-      <div style={{marginTop:36,opacity:0.25,fontSize:11,lineHeight:1.8}}><div>設計：Chung-Han Hsieh</div><div style={{fontSize:10}}>✉️ ch.hsieh@mx.nthu.edu.tw</div><div>程式實作：由 Claude (Anthropic) 協助生成</div><div style={{marginTop:6,fontSize:10,opacity:0.6,fontFamily:"monospace"}}>{VERSION}</div></div>
     </div>
   );
 }

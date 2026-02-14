@@ -54,10 +54,9 @@ export default function DashboardScreen({ onBack }) {
   return (
     <div style={{ ...wrap, justifyContent: "flex-start", padding: "16px 12px", overflow: "auto" }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: 12 }}>
-        <button onClick={onBack} style={btnGhost}>← 返回</button>
-        <div style={{ fontSize: 16, fontWeight: 800 }}>📊 家長數據儀表板</div>
-        <div style={{ width: 60 }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", marginBottom: 12 }}>
+        <button onClick={onBack} style={backBtn}>←</button>
+        <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>📊 家長儀表板</div>
       </div>
 
       {/* Tab bar */}
@@ -232,9 +231,11 @@ function SettingsTab({ pinInput, setPinInput, pinMsg, setPinMsg, sessions, refre
 // Shared UI helpers
 // ═══════════════════════════════════════════════
 
-const wrap = { height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", color: "white", padding: 24, textAlign: "center" };
-const btnPrimary = { background: "linear-gradient(135deg,#6366f1,#a855f7)", border: "none", color: "white", fontSize: 14, fontWeight: 700, padding: "10px 20px", borderRadius: 50, cursor: "pointer" };
-const btnGhost = { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: 13, fontWeight: 600, padding: "8px 18px", borderRadius: 50, cursor: "pointer" };
+const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
+const wrap = { height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: PAGE_BG, color: "white", padding: 24, textAlign: "center" };
+const btnPrimary = { background: "linear-gradient(135deg,#6366f1,#a855f7)", border: "none", color: "white", fontSize: 14, fontWeight: 700, padding: "10px 20px", borderRadius: 12, cursor: "pointer" };
+const btnGhost = { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 13, fontWeight: 600, padding: "8px 18px", borderRadius: 10, cursor: "pointer" };
+const backBtn = { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 16, fontWeight: 700, width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 };
 
 function Card({ label, value, color }) {
   return (

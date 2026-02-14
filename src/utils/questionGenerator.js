@@ -110,8 +110,18 @@ function genMixed4(range) {
   return { display: d, answer: ans, op: "mixed4", steps };
 }
 
-export function genQ(move) {
-  const { range, ops } = move;
+/**
+ * @param {Object} move
+ * @param {number} [diffMod=1] - Difficulty multiplier for range (0.7~1.3)
+ */
+export function genQ(move, diffMod = 1) {
+  // Scale range by difficulty modifier
+  const baseRange = move.range;
+  const range = [
+    Math.max(1, Math.round(baseRange[0] * diffMod)),
+    Math.max(2, Math.round(baseRange[1] * diffMod)),
+  ];
+  const ops = move.ops;
   const op = ops[Math.floor(Math.random() * ops.length)];
   let a, b, ans, d, steps;
 

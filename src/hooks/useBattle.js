@@ -113,6 +113,25 @@ export function useBattle() {
   const [specDef, setSpecDef] = useState(false);
   const [defAnim, setDefAnim] = useState(null);
 
+  // ──── Adaptive difficulty ────
+  const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
+  const [diffLevel, setDiffLevel] = useState(2);     // start at normal (1.0)
+  const recentAnsRef = useRef([]);                    // sliding window of last 6 answers (true/false)
+
+  const _updateDiff = (correct) => {
+    const win = recentAnsRef.current;
+    win.push(correct);
+    if (win.length > 6) win.shift();
+    if (win.length >= 4) {
+      const rate = win.filter(Boolean).length / win.length;
+      setDiffLevel(prev => {
+        if (rate >= 0.8 && prev < 4) return prev + 1;   // doing great → harder
+        if (rate <= 0.35 && prev > 0) return prev - 1;   // struggling → easier
+        return prev;
+      });
+    }
+  };
+
   // ──── Boss mechanics ────
   const [bossPhase, setBossPhase] = useState(0);         // 0=not boss, 1/2/3
   const [bossTurn, setBossTurn] = useState(0);            // turn counter in boss fight
@@ -183,7 +202,7 @@ export function useBattle() {
     enemy, starter, eHp, pHp, pExp, pLvl, pStg,
     streak, charge, burnStack, frozen, staticStack, specDef,
     mHits, mLvls, selIdx, phase, round, q,
-    screen, timedMode,
+    screen, timedMode, diffLevel,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
   };
 
@@ -312,6 +331,7 @@ export function useBattle() {
     setSpecDef(false); setDefAnim(null);
     setBossPhase(0); setBossTurn(0); setBossCharging(false);
     setSealedMove(-1); setSealedTurns(0);
+    setDiffLevel(2); recentAnsRef.current = [];
     pendingEvolve.current = false;
     // Init session log — use override on first game since setStarter is async
     const s = starterOverride || sr.current.starter;
@@ -390,7 +410,7 @@ export function useBattle() {
     // Boss: sealed move check
     if (sr.current.sealedMove === i) return; // silently blocked, UI shows lock
     setSelIdx(i);
-    setQ(genQ(starter.moves[i]));
+    setQ(genQ(starter.moves[i], DIFF_MODS[sr.current.diffLevel]));
     setFb(null);
     setAnswered(false);
     setPhase("question");
@@ -580,6 +600,7 @@ export function useBattle() {
     // ── Session logging ──
     const ansTimeMs = Date.now() - qStartRef.current;
     _logAnswer(sessionRef.current, s.q, correct, ansTimeMs);
+    _updateDiff(correct);
 
     if (correct) {
       setFb({ correct: true }); setTC(c => c + 1);
@@ -789,7 +810,7 @@ export function useBattle() {
     phase, selIdx, q, fb, bText, answered,
     dmgs, parts, eAnim, pAnim, atkEffect, effMsg,
     burnStack, frozen, staticStack, specDef, defAnim,
-    bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
+    bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, diffLevel,
     gamePaused, timerLeft,
     expNext, chargeReady,
 

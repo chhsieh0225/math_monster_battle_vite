@@ -235,6 +235,7 @@ function App() {
         {/* Streak badge */}
         {B.streak >= 2 && <div style={{ position: "absolute", top: 10, right: 10, background: "linear-gradient(135deg,#f59e0b,#ef4444)", color: "white", padding: "3px 10px", borderRadius: 16, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease", zIndex: 20 }}>🔥 {B.streak} 連擊！</div>}
         {B.timedMode && B.streak < 2 && <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(239,68,68,0.7)", color: "white", padding: "3px 8px", borderRadius: 12, fontSize: 10, fontWeight: 700, zIndex: 20, backdropFilter: "blur(4px)" }}>⏱️ 計時</div>}
+        {B.diffLevel !== 2 && <div style={{ position: "absolute", top: (B.streak >= 2 || B.timedMode) ? 32 : 10, right: 10, background: B.diffLevel > 2 ? "rgba(239,68,68,0.7)" : "rgba(56,189,248,0.7)", color: "white", padding: "2px 8px", borderRadius: 12, fontSize: 10, fontWeight: 700, zIndex: 20, animation: "popIn 0.3s ease" }}>{B.diffLevel > 2 ? `📈難度+${B.diffLevel - 2}` : `📉難度${B.diffLevel - 2}`}</div>}
 
         {/* Charge meter */}
         <div style={{ position: "absolute", bottom: 50, left: 10, display: "flex", gap: 4, zIndex: 20, background: "rgba(0,0,0,0.3)", padding: "3px 8px", borderRadius: 10, backdropFilter: "blur(4px)" }}>

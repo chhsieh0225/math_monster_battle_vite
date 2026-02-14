@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 // SVG paths
 const LEAF = "M0,-10 C5,-10 10,-4 10,0 C10,4 5,10 0,10 C-2,6 -3,2 -3,0 C-3,-2 -2,-6 0,-10Z";
 const VEIN = "M0,-8 Q1,-3 0,0 Q-1,3 0,8";
-const DEF_TARGET = { top: "34%", right: "16%" };
+const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
 
 export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
   const dur = 700 + idx * 120 + lvl * 30;
@@ -21,8 +21,8 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
           <svg key={i} width={sz} height={sz} viewBox="-12 -12 24 24"
             style={{
               position:"absolute", left:`${8+i*6}%`, bottom:`${36+i*5}%`,
-              "--fly-x":`${100-parseFloat(T.right)-(8+i*6)}vw`,
-              "--fly-y":`${parseFloat(T.top)-(100-(36+i*5))}vh`,
+              "--fly-x":`${100-T.flyRight-(8+i*6)}vw`,
+              "--fly-y":`${T.flyTop-(100-(36+i*5))}vh`,
               filter:`drop-shadow(0 0 ${glow}px #22c55e)`,
               animation:`leafBladeFly ${dur/1000+i*0.12}s ease ${i*0.1}s forwards`, opacity:0,
             }}>
@@ -143,7 +143,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
           );
         })}
         {/* Green screen glow */}
-        <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at ${T.right} ${T.top}, rgba(34,197,94,${0.1+lvl*0.03}), transparent 60%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
+        <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(34,197,94,${0.1+lvl*0.03}), transparent 60%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
       </div>
     );
   }
@@ -159,8 +159,8 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
       <svg width="34" height="34" viewBox="0 0 34 34"
         style={{
           position:"absolute", left:"10%", bottom:"35%",
-          "--fly-x":`${100-parseFloat(T.right)-10}vw`,
-          "--fly-y":`${parseFloat(T.top)-65}vh`,
+          "--fly-x":`${100-T.flyRight-10}vw`,
+          "--fly-y":`${T.flyTop-65}vh`,
           filter:`drop-shadow(0 0 ${glow}px #7c3aed) drop-shadow(0 0 ${glow+4}px #581c87)`,
           animation:`ultApproach 0.55s ease forwards`,
         }}>

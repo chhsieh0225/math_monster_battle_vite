@@ -112,13 +112,18 @@ function App() {
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
 
   // Enemy visual center for targeting attack effects
-  const eTarget = B.enemy.id === "boss"
-    ? { top: "28%", right: "18%" }
-    : (B.enemy.mType === "ghost")
-    ? { top: "22%", right: "16%" }
-    : B.enemy.mType === "steel"
-    ? { top: "26%", right: "16%" }
-    : { top: "34%", right: "16%" };
+  // Sprite: right:10%, top varies, size varies → center = right:10%+size/2, top:topPct+size/2
+  const eSize = B.enemy.id === "boss" ? 230
+    : (B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id === "slime" && B.enemy.isEvolved)) ? 180
+    : B.enemy.isEvolved ? 155 : 120;
+  const eTopPct = (B.enemy.mType === "ghost" || B.enemy.id === "boss") ? 12
+    : B.enemy.mType === "steel" ? 16 : 26;
+  const eTarget = {
+    top: `calc(${eTopPct}% + ${eSize / 2}px)`,
+    right: `calc(10% + ${eSize / 2}px)`,
+    flyRight: 10 + eSize / 2 * 100 / 390,   // approx % for fly calc (~390px mobile width)
+    flyTop: eTopPct + eSize / 2 * 100 / 550, // approx % for fly calc (~550px battle height)
+  };
 
   return (
     <div onClick={canTapAdvance ? B.advance : undefined} style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}>

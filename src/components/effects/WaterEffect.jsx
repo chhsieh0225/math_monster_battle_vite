@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const DEF_TARGET = { top: "34%", right: "16%" };
+const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
 
 export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
   const dur = 800 + idx * 120 + lvl * 30;
@@ -20,8 +20,8 @@ export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
             <svg key={i} width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}
               style={{
                 position:"absolute", left:`${8+i*8}%`, bottom:`${30+i*5}%`,
-                "--fly-x":`${100-parseFloat(T.right)-(8+i*8)}vw`,
-                "--fly-y":`${parseFloat(T.top)-(100-(30+i*5))}vh`,
+                "--fly-x":`${100-T.flyRight-(8+i*8)}vw`,
+                "--fly-y":`${T.flyTop-(100-(30+i*5))}vh`,
                 opacity:0, filter:`drop-shadow(0 0 ${glow/2}px rgba(59,130,246,0.5))`,
                 animation:`bubbleFloat ${dur/1000+i*0.15}s ease ${i*0.1}s forwards`,
               }}>
@@ -150,8 +150,8 @@ export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
       <svg width="34" height="34" viewBox="0 0 34 34"
         style={{
           position:"absolute", left:"10%", bottom:"35%",
-          "--fly-x":`${100-parseFloat(T.right)-10}vw`,
-          "--fly-y":`${parseFloat(T.top)-65}vh`,
+          "--fly-x":`${100-T.flyRight-10}vw`,
+          "--fly-y":`${T.flyTop-65}vh`,
           filter:`drop-shadow(0 0 ${glow}px #7c3aed) drop-shadow(0 0 ${glow+4}px #581c87)`,
           animation:`ultApproach 0.55s ease forwards`,
         }}>

@@ -8,7 +8,7 @@ const BOLT_C = "M52,0 L48,18 L60,20 L44,48 L55,30 L43,28 L52,0";
 // Small spark polygon (6-pointed star)
 const SPARK = "M0,-6 L1.5,-1.5 L6,0 L1.5,1.5 L0,6 L-1.5,1.5 L-6,0 L-1.5,-1.5Z";
 
-const DEF_TARGET = { top: "34%", right: "16%" };
+const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
 
 export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
   const dur = 600 + idx * 120 + lvl * 30;
@@ -200,8 +200,8 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
       <svg width="34" height="34" viewBox="0 0 34 34"
         style={{
           position:"absolute", left:"10%", bottom:"35%",
-          "--fly-x":`${100-parseFloat(T.right)-10}vw`,
-          "--fly-y":`${parseFloat(T.top)-65}vh`,
+          "--fly-x":`${100-T.flyRight-10}vw`,
+          "--fly-y":`${T.flyTop-65}vh`,
           filter:`drop-shadow(0 0 ${glow}px #7c3aed) drop-shadow(0 0 ${glow+4}px #581c87)`,
           animation:`ultApproach 0.55s ease forwards`,
         }}>

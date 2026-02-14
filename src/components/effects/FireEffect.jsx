@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 // SVG flame shape (teardrop)
 const FLAME = "M10,28 C10,28 2,18 2,12 C2,5 5.5,0 10,0 C14.5,0 18,5 18,12 C18,18 10,28 10,28Z";
 
-const DEF_TARGET = { top: "34%", right: "16%" };
+const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
 
 export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
   const dur = 700 + idx * 120 + lvl * 30;
@@ -21,8 +21,8 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
           <svg key={i} width={sz} height={sz+4} viewBox="0 0 20 30"
             style={{
               position:"absolute", left:`${10+i*5}%`, bottom:`${36+i*4}%`,
-              "--fly-x":`${100-parseFloat(T.right)-(10+i*5)}vw`,
-              "--fly-y":`${parseFloat(T.top)-(100-(36+i*4))}vh`,
+              "--fly-x":`${100-T.flyRight-(10+i*5)}vw`,
+              "--fly-y":`${T.flyTop-(100-(36+i*4))}vh`,
               filter:`drop-shadow(0 0 ${glow}px #fbbf24) drop-shadow(0 0 ${glow+4}px #ea580c)`,
               animation:`flameFly ${dur/1000+i*0.12}s ease ${i*0.08}s forwards`, opacity:0,
             }}>
@@ -61,8 +61,8 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
           <svg key={i} width={sz} height={sz+6} viewBox="0 0 20 30"
             style={{
               position:"absolute", left:`${6+i*4}%`, bottom:`${34+i*3}%`,
-              "--fly-x":`${100-parseFloat(T.right)-(6+i*4)}vw`,
-              "--fly-y":`${parseFloat(T.top)-(100-(34+i*3))}vh`,
+              "--fly-x":`${100-T.flyRight-(6+i*4)}vw`,
+              "--fly-y":`${T.flyTop-(100-(34+i*3))}vh`,
               filter:`drop-shadow(0 0 ${glow}px #fbbf24) drop-shadow(0 0 ${glow+2}px #ea580c)`,
               animation:`flameFly ${dur/1000+i*0.07}s ease ${i*0.05}s forwards`, opacity:0,
             }}>
@@ -154,8 +154,8 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
       <svg width="36" height="36" viewBox="0 0 36 36"
         style={{
           position:"absolute", left:"10%", bottom:"35%",
-          "--fly-x":`${100-parseFloat(T.right)-10}vw`,
-          "--fly-y":`${parseFloat(T.top)-65}vh`,
+          "--fly-x":`${100-T.flyRight-10}vw`,
+          "--fly-y":`${T.flyTop-65}vh`,
           filter:`drop-shadow(0 0 ${glow}px #7c3aed) drop-shadow(0 0 ${glow+4}px #581c87)`,
           animation:`ultApproach 0.55s ease forwards`,
         }}>

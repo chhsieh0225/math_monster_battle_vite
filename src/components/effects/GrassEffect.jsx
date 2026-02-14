@@ -57,33 +57,34 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
     return (
       <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
         <svg width="100%" height="100%" viewBox="0 0 200 160" preserveAspectRatio="none"
-          style={{ position:"absolute", inset:0, filter:`drop-shadow(0 0 ${glow}px #22c55e)` }}>
+          style={{ position:"absolute", inset:0, filter:`drop-shadow(0 0 ${glow+2}px rgba(34,197,94,0.35)) blur(0.6px)` }}>
           <defs>
             <linearGradient id="vineG" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#4ade80"/><stop offset="40%" stopColor="#22c55e"/>
-              <stop offset="100%" stopColor="#15803d"/>
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="0.45"/>
+              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.35"/>
+              <stop offset="100%" stopColor="#86efac" stopOpacity="0.25"/>
             </linearGradient>
           </defs>
           {/* Main vine whip */}
           <path d="M12,135 Q50,115 85,78 Q115,45 145,38 Q165,30 185,28"
-            fill="none" stroke="url(#vineG)" strokeWidth={sw} strokeLinecap="round"
+            fill="none" stroke="url(#vineG)" strokeWidth={sw+1} strokeLinecap="round"
             strokeDasharray="300" strokeDashoffset="300"
             style={{ animation:`vineWhipDraw ${dur/1000}s ease forwards` }} />
           {/* Branch vines */}
           {branches >= 1 && <path d="M100,62 Q118,48 128,54"
-            fill="none" stroke="#4ade80" strokeWidth={sw*0.55} strokeLinecap="round"
+            fill="none" stroke="rgba(74,222,128,0.3)" strokeWidth={sw*0.55} strokeLinecap="round"
             strokeDasharray="60" strokeDashoffset="60"
-            style={{ animation:`vineWhipDraw ${dur/1000*0.7}s ease 0.2s forwards`, opacity:0.7 }} />}
+            style={{ animation:`vineWhipDraw ${dur/1000*0.7}s ease 0.2s forwards` }} />}
           {branches >= 2 && <path d="M135,42 Q150,28 160,36"
-            fill="none" stroke="#4ade80" strokeWidth={sw*0.5} strokeLinecap="round"
+            fill="none" stroke="rgba(74,222,128,0.25)" strokeWidth={sw*0.5} strokeLinecap="round"
             strokeDasharray="50" strokeDashoffset="50"
-            style={{ animation:`vineWhipDraw ${dur/1000*0.6}s ease 0.32s forwards`, opacity:0.6 }} />}
+            style={{ animation:`vineWhipDraw ${dur/1000*0.6}s ease 0.32s forwards` }} />}
           {branches >= 3 && <path d="M75,85 Q88,68 98,75"
-            fill="none" stroke="#4ade80" strokeWidth={sw*0.5} strokeLinecap="round"
+            fill="none" stroke="rgba(74,222,128,0.25)" strokeWidth={sw*0.5} strokeLinecap="round"
             strokeDasharray="50" strokeDashoffset="50"
-            style={{ animation:`vineWhipDraw ${dur/1000*0.6}s ease 0.15s forwards`, opacity:0.6 }} />}
+            style={{ animation:`vineWhipDraw ${dur/1000*0.6}s ease 0.15s forwards` }} />}
           {/* Leaf tip */}
-          <path d={LEAF} fill="#22c55e" stroke="#15803d" strokeWidth="0.3"
+          <path d={LEAF} fill="rgba(34,197,94,0.4)" stroke="none"
             transform="translate(183,26) scale(0.7) rotate(-25)"
             style={{ opacity:0, animation:`leafBladeFly ${dur/1000*0.5}s ease ${dur/1000*0.6}s forwards` }}/>
         </svg>
@@ -92,11 +93,11 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
           <svg key={`p${i}`} width="14" height="14" viewBox="-12 -12 24 24"
             style={{
               position:"absolute", right:`${10+i*4}%`, top:`${15+i*5}%`,
-              opacity:0, filter:`drop-shadow(0 0 3px #4ade80)`,
+              opacity:0, filter:`drop-shadow(0 0 4px rgba(74,222,128,0.3)) blur(0.4px)`,
               "--lx":`${-15+Math.random()*30}px`, "--ly":`${-10+Math.random()*20}px`,
               animation:`leafSpin 0.5s ease ${dur/1000*0.7+i*0.06}s forwards`,
             }}>
-            <path d={LEAF} fill="#4ade80" opacity="0.6" transform={`scale(0.35) rotate(${i*70})`}/>
+            <path d={LEAF} fill="rgba(74,222,128,0.35)" transform={`scale(0.35) rotate(${i*70})`}/>
           </svg>
         ))}
       </div>

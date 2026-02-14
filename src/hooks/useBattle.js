@@ -55,7 +55,7 @@ export function useBattle() {
       return {
         ...b,
         // Apply variant overrides for non-evolved slimes
-        ...(variant && { name: variant.name, svgFn: variant.svgFn, c1: variant.c1, c2: variant.c2, mType: variant.mType, typeIcon: variant.typeIcon, typeName: variant.typeName, drops: variant.drops }),
+        ...(variant && { id: variant.id, name: variant.name, svgFn: variant.svgFn, c1: variant.c1, c2: variant.c2, mType: variant.mType, typeIcon: variant.typeIcon, typeName: variant.typeName, drops: variant.drops }),
         name: isEvolved && b.evolvedName ? b.evolvedName : (variant ? variant.name : b.name),
         svgFn: isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn),
         hp: Math.round(b.hp * sc), maxHp: Math.round(b.hp * sc),

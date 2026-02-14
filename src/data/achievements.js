@@ -19,8 +19,8 @@ export const ACHIEVEMENTS = [
   { id:"boss_kill",     name:"暗黑終結者", icon:"👑", desc:"擊敗暗黑龍王" },
   { id:"low_hp",        name:"不死鳥",     icon:"🦅", desc:"HP ≤ 5 時擊敗敵人" },
   { id:"no_damage",     name:"完美戰役",   icon:"✨", desc:"滿血通關" },
-  { id:"enc_all",       name:"收集家",     icon:"📖", desc:"圖鑑遭遇全 9 種怪獸" },
-  { id:"enc_defeat",    name:"圖鑑獵人",   icon:"💀", desc:"圖鑑擊敗全 9 種怪獸" },
+  { id:"enc_all",       name:"收集家",     icon:"📖", desc:"圖鑑遭遇全 14 種怪獸" },
+  { id:"enc_defeat",    name:"圖鑑獵人",   icon:"💀", desc:"圖鑑擊敗全 14 種怪獸" },
 ];
 
 export const ACH_MAP = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]));

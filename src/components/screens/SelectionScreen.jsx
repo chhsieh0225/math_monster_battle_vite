@@ -16,7 +16,7 @@ export default function SelectionScreen({ onSelect, onBack }) {
       </div>
 
       {/* Starter cards */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 16px 24px", gap: 12 }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 16px 16px", gap: 8, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         {STARTERS.map((s) => (
           <button key={s.id} onClick={() => onSelect(s)} style={{
             background: `linear-gradient(135deg, ${s.c1}22, ${s.c2}18)`,

@@ -18,6 +18,9 @@ export const SPRITE_IMGS = {
   player_grass0: `${BASE}sprites/player_grass0.png`,
   player_grass1: `${BASE}sprites/player_grass1.png`,
   player_grass2: `${BASE}sprites/player_grass2.png`,
+  player_electric0: `${BASE}sprites/player_electric0.png`,
+  player_electric1: `${BASE}sprites/player_electric1.png`,
+  player_electric2: `${BASE}sprites/player_electric2.png`,
   slime_evolved: `${BASE}sprites/slime_evolved.png`,
   dragon_evolved: `${BASE}sprites/dragon_evolved.png`,
   fire_evolved: `${BASE}sprites/fire_evolved.png`,
@@ -89,3 +92,6 @@ export const playerwater2SVG = makeSvgFn('player_water2');
 export const playergrass0SVG = makeSvgFn('player_grass0');
 export const playergrass1SVG = makeSvgFn('player_grass1');
 export const playergrass2SVG = makeSvgFn('player_grass2');
+export const playerelectric0SVG = makeSvgFn('player_electric0');
+export const playerelectric1SVG = makeSvgFn('player_electric1');
+export const playerelectric2SVG = makeSvgFn('player_electric2');

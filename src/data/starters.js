@@ -2,6 +2,7 @@ import {
   playerfire0SVG, playerfire1SVG, playerfire2SVG,
   playerwater0SVG, playerwater1SVG, playerwater2SVG,
   playergrass0SVG, playergrass1SVG, playergrass2SVG,
+  playerelectric0SVG, playerelectric1SVG, playerelectric2SVG,
 } from './sprites';
 
 // growth = 每升一級增加的威力
@@ -44,5 +45,17 @@ export const STARTERS = [
      {name:"藤鞭打",icon:"🌿",type:"grass",desc:"基本減法",basePower:20,growth:5,range:[5,30],ops:["-"],color:"#16a34a",bg:"#f0fdf4"},
      {name:"森林風暴",icon:"🌿",type:"grass",desc:"大數加減",basePower:30,growth:3,range:[20,99],ops:["+","-"],color:"#15803d",bg:"#dcfce7"},
      {name:"終極爆破",icon:"💥",type:"dark",type2:"grass",desc:"暗草·乘除混合",basePower:40,growth:3,range:[3,12],ops:["×","÷"],color:"#a855f7",bg:"#faf5ff",risky:true},
+   ]},
+  {id:"electric",name:"小雷獸",type:"electric",typeIcon:"⚡",typeName:"雷",c1:"#facc15",c2:"#ca8a04",
+   stages:[
+     {name:"小雷獸",emoji:"⚡",svgFn:playerelectric0SVG},
+     {name:"雷電獸",emoji:"⚡",svgFn:playerelectric1SVG},
+     {name:"雷龍王",emoji:"⚡",svgFn:playerelectric2SVG},
+   ],
+   moves:[
+     {name:"電光彈",icon:"⚡",type:"electric",desc:"加減混合",basePower:12,growth:6,range:[2,15],ops:["mixed2"],color:"#eab308",bg:"#fefce8"},
+     {name:"雷電擊",icon:"⚡",type:"electric",desc:"乘加混合",basePower:20,growth:5,range:[2,9],ops:["mixed3"],color:"#ca8a04",bg:"#fef9c3"},
+     {name:"萬雷轟",icon:"⚡",type:"electric",desc:"四則運算",basePower:30,growth:3,range:[2,9],ops:["mixed4"],color:"#a16207",bg:"#fef08a"},
+     {name:"終極爆破",icon:"💥",type:"dark",type2:"electric",desc:"暗雷·四則混合",basePower:40,growth:3,range:[2,12],ops:["mixed4"],color:"#a855f7",bg:"#faf5ff",risky:true},
    ]},
 ];

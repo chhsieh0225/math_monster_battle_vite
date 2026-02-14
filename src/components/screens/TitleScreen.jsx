@@ -18,10 +18,10 @@ export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard
 
       {/* ─── Top: Branding ─── */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <div style={{ display: "flex", gap: 10, marginBottom: 14, alignItems: "flex-end" }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "flex-end" }}>
           {STARTERS.map((s, i) => (
             <div key={s.id} style={{ animation: `float ${3 + i * 0.4}s ease-in-out ${i * 0.3}s infinite` }}>
-              <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={i === 1 ? 100 : 85} />
+              <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={75} />
             </div>
           ))}
         </div>

@@ -602,6 +602,7 @@ export function useBattle() {
           if (sid === "fire") tryUnlock("fire_clear");
           else if (sid === "water") tryUnlock("water_clear");
           else if (sid === "grass") tryUnlock("grass_clear");
+          else if (sid === "electric") tryUnlock("electric_clear");
         }
         // Check encyclopedia completion from latest encData
         setEncData(prev => {

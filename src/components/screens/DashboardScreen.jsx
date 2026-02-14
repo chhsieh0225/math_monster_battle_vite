@@ -94,8 +94,8 @@ function OverviewTab({ sessions }) {
       {/* Per-operation accuracy */}
       <SectionTitle text="各運算正確率" />
       <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-        {["+", "-", "×", "÷"].map(op => {
-          const d = stats.opData[op];
+        {["+", "-", "×", "÷", "mixed2", "mixed3", "mixed4"].filter(op => stats.opData[op]?.attempted > 0 || ["+","-","×","÷"].includes(op)).map(op => {
+          const d = stats.opData[op] || { attempted: 0, correct: 0, acc: 0, avgTime: 0, weak: false };
           return (
             <div key={op} style={{ flex: 1, background: "rgba(255,255,255,0.06)", borderRadius: 12, padding: "10px 6px", textAlign: "center", border: d.weak ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.08)" }}>
               <div style={{ fontSize: 20, marginBottom: 4 }}>{opIcon(op)}</div>
@@ -117,8 +117,8 @@ function OverviewTab({ sessions }) {
       {/* Per-operation avg time */}
       <SectionTitle text="各運算平均回答時間" />
       <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-        {["+", "-", "×", "÷"].map(op => {
-          const d = stats.opData[op];
+        {["+", "-", "×", "÷", "mixed2", "mixed3", "mixed4"].filter(op => stats.opData[op]?.attempted > 0 || ["+","-","×","÷"].includes(op)).map(op => {
+          const d = stats.opData[op] || { attempted: 0, avgTime: 0 };
           return (
             <div key={op} style={{ flex: 1, background: "rgba(255,255,255,0.06)", borderRadius: 12, padding: "10px 6px", textAlign: "center" }}>
               <div style={{ fontSize: 14 }}>{opIcon(op)}</div>
@@ -275,13 +275,15 @@ function BarChart({ data }) {
 
 function computeStats(sessions) {
   let totalC = 0, totalW = 0, totalMs = 0, totalQ = 0;
-  const opAgg = { "+": { a: 0, c: 0, ms: 0 }, "-": { a: 0, c: 0, ms: 0 }, "×": { a: 0, c: 0, ms: 0 }, "÷": { a: 0, c: 0, ms: 0 } };
+  const ALL_OPS = ["+", "-", "×", "÷", "mixed2", "mixed3", "mixed4"];
+  const opAgg = {};
+  for (const op of ALL_OPS) opAgg[op] = { a: 0, c: 0, ms: 0 };
 
   for (const s of sessions) {
     totalC += s.tC || 0;
     totalW += s.tW || 0;
     if (s.opStats) {
-      for (const op of ["+", "-", "×", "÷"]) {
+      for (const op of ALL_OPS) {
         const d = s.opStats[op];
         if (d) {
           opAgg[op].a += d.attempted;
@@ -293,7 +295,7 @@ function computeStats(sessions) {
   }
 
   totalQ = totalC + totalW;
-  for (const op of ["+", "-", "×", "÷"]) {
+  for (const op of ALL_OPS) {
     totalMs += opAgg[op].ms;
   }
 
@@ -301,7 +303,7 @@ function computeStats(sessions) {
   const avgTimeS = totalQ > 0 ? (totalMs / totalQ / 1000).toFixed(1) : "—";
 
   const opData = {};
-  for (const op of ["+", "-", "×", "÷"]) {
+  for (const op of ALL_OPS) {
     const d = opAgg[op];
     const acc = d.a > 0 ? Math.round(d.c / d.a * 100) : 0;
     const avgTime = d.a > 0 ? (d.ms / d.a / 1000).toFixed(1) : "—";
@@ -319,8 +321,8 @@ function computeStats(sessions) {
 }
 
 function opIcon(op) {
-  return { "+": "➕", "-": "➖", "×": "✖️", "÷": "➗" }[op] || op;
+  return { "+": "➕", "-": "➖", "×": "✖️", "÷": "➗", "mixed2": "⚡", "mixed3": "⚡", "mixed4": "⚡" }[op] || op;
 }
 function opName(op) {
-  return { "+": "加法", "-": "減法", "×": "乘法", "÷": "除法" }[op] || op;
+  return { "+": "加法", "-": "減法", "×": "乘法", "÷": "除法", "mixed2": "加減混合", "mixed3": "乘加混合", "mixed4": "四則混合" }[op] || op;
 }

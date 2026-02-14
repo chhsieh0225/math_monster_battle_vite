@@ -67,7 +67,7 @@ export function initSessionLog(starter, timedMode) {
     tW: 0,
     pHp: 100,              // HP at end
     // Per-operation breakdown { "+": { attempted, correct, totalMs }, ... }
-    opStats: { "+": s(), "-": s(), "×": s(), "÷": s() },
+    opStats: { "+": s(), "-": s(), "×": s(), "÷": s(), "mixed2": s(), "mixed3": s(), "mixed4": s() },
     // Detailed answer log
     answers: [],
   };

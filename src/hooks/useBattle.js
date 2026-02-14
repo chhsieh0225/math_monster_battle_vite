@@ -16,7 +16,7 @@
  * • Achievements, Encyclopedia, and SessionLog are extracted into sub-hooks
  *   (useAchievements, useEncyclopedia, useSessionLog) to keep this file focused.
  */
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 
 import { MONSTERS, SLIME_VARIANTS, getEff } from '../data/monsters';
 import { SCENE_NAMES } from '../data/scenes';
@@ -160,15 +160,20 @@ export function useBattle() {
   const pendingEvolve = useRef(false);   // ← Bug #2 fix
   const evolveRound = useRef(0);        // round to resume after evolve screen
 
-  // ──── State ref — always points at latest values (Bug #1 fix) ────
+  // ──── State ref — always points at latest committed values ────
+  // Use useLayoutEffect so the ref is updated synchronously after DOM commit,
+  // before any setTimeout/safeTo callbacks fire. This prevents Concurrent Mode
+  // from polluting sr.current with intermediate render values.
   const sr = useRef({});
-  sr.current = {
+  const _srSnapshot = {
     enemy, starter, eHp, pHp, pExp, pLvl, pStg,
     streak, charge, burnStack, frozen, staticStack, specDef,
     mHits, mLvls, selIdx, phase, round, q,
     screen, timedMode, diffLevel,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
+    tC, tW, maxStreak, defeated,
   };
+  useLayoutEffect(() => { sr.current = _srSnapshot; });
 
   // ──── Computed ────
   const expNext = pLvl * 30;
@@ -325,23 +330,28 @@ export function useBattle() {
     setBossPhase(0); setBossTurn(0); setBossCharging(false);
     setSealedMove(-1); setSealedTurns(0);
     const xp = s.enemy.lvl * 15;
-    // Compute XP / level-up synchronously (avoid nested setState updaters
-    // which cause unreliable ref mutation timing in React 19).
-    const newExp = s.pExp + xp;
-    const threshold = s.pLvl * 30;
-    if (newExp >= threshold) {
-      const newLvl = s.pLvl + 1;
-      setPExp(newExp - threshold);
-      setPLvl(newLvl);
-      if (s.pStg < 2 && newLvl % 3 === 0) {
-        // Mark evolution pending — defer visual state updates to advance()
-        // so battle screen keeps showing pre-evolution sprite during victory.
+    // Compute XP / level-up synchronously.
+    // Use while loop to handle overflow that spans multiple level thresholds
+    // (e.g. pLvl=2, pExp=50, xp=135 → should gain 2 levels, not 1).
+    let curExp = s.pExp + xp;
+    let curLvl = s.pLvl;
+    let curStg = s.pStg;
+    let hpBonus = 0;
+    while (curExp >= curLvl * 30) {
+      curExp -= curLvl * 30;
+      curLvl++;
+      if (curStg < 2 && curLvl % 3 === 0) {
+        // Evolution — defer visual updates to advance(), only set flag here.
         pendingEvolve.current = true; sfx.play("evolve");
+        curStg++;       // track locally so second evolution in same burst also works
       } else {
-        setPHp(h => Math.min(h + 20, PLAYER_MAX_HP));
+        hpBonus += 20;  // accumulate HP bonus for non-evolve level-ups
       }
-    } else {
-      setPExp(newExp);
+    }
+    setPExp(curExp);
+    if (curLvl !== s.pLvl) {
+      setPLvl(curLvl);
+      if (hpBonus > 0) setPHp(h => Math.min(h + hpBonus, PLAYER_MAX_HP));
     }
     setDefeated(d => d + 1);
     updateEncDefeated(s.enemy); // ← encyclopedia: mark defeated
@@ -729,37 +739,39 @@ export function useBattle() {
       }
       const nx = round + 1;
       if (nx >= enemies.length) {
-        // ── Game-completion achievements ──
-        const s = sr.current;
-        if (s.tW === 0) tryUnlock("perfect");
-        if (s.timedMode) tryUnlock("timed_clear");
-        if (s.pHp >= PLAYER_MAX_HP) tryUnlock("no_damage");
-        if (s.starter) {
-          const sid = s.starter.id;
-          if (sid === "fire") tryUnlock("fire_clear");
-          else if (sid === "water") tryUnlock("water_clear");
-          else if (sid === "grass") tryUnlock("grass_clear");
-          else if (sid === "electric") tryUnlock("electric_clear");
-        }
-        // Check encyclopedia completion from latest encData
-        setEncData(prev => {
-          if (Object.keys(prev.encountered).length >= ENC_TOTAL) tryUnlock("enc_all");
-          if (Object.keys(prev.defeated).length >= ENC_TOTAL) tryUnlock("enc_defeat");
-          return prev;
-        });
-        _endSession(true);  // ← save completed session
-        setScreen("gameover");
+        _finishGame();
       }
       else { setPHp(h => Math.min(h + 10, PLAYER_MAX_HP)); startBattle(nx); }
     }
+  };
+
+  // --- Shared game-completion logic (achievements + session save) ---
+  const _finishGame = () => {
+    const s = sr.current;
+    if (s.tW === 0) tryUnlock("perfect");
+    if (s.timedMode) tryUnlock("timed_clear");
+    if (s.pHp >= PLAYER_MAX_HP) tryUnlock("no_damage");
+    if (s.starter) {
+      const sid = s.starter.id;
+      if (sid === "fire") tryUnlock("fire_clear");
+      else if (sid === "water") tryUnlock("water_clear");
+      else if (sid === "grass") tryUnlock("grass_clear");
+      else if (sid === "electric") tryUnlock("electric_clear");
+    }
+    setEncData(prev => {
+      if (Object.keys(prev.encountered).length >= ENC_TOTAL) tryUnlock("enc_all");
+      if (Object.keys(prev.defeated).length >= ENC_TOTAL) tryUnlock("enc_defeat");
+      return prev;
+    });
+    _endSession(true);
+    setScreen("gameover");
   };
 
   // --- Continue from evolve screen → start next battle ---
   const continueAfterEvolve = () => {
     const nx = evolveRound.current + 1;
     if (nx >= enemies.length) {
-      _endSession(true);
-      setScreen("gameover");
+      _finishGame();
     } else {
       startBattle(nx);
     }

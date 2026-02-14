@@ -34,6 +34,10 @@ import SelectionScreen from './components/screens/SelectionScreen';
 import LeaderboardScreen from './components/screens/LeaderboardScreen';
 import EvolveScreen from './components/screens/EvolveScreen';
 import GameOverScreen from './components/screens/GameOverScreen';
+import AchievementScreen from './components/screens/AchievementScreen';
+import EncyclopediaScreen from './components/screens/EncyclopediaScreen';
+import AchievementPopup from './components/ui/AchievementPopup';
+import { ACH_MAP } from './data/achievements';
 
 // ─── GameShell: orientation lock wrapper ───
 const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -80,7 +84,15 @@ function App() {
       onStartNormal={() => { B.setTimedMode(false); B.setScreen("selection"); }}
       onStartTimed={() => { B.setTimedMode(true); B.setScreen("selection"); }}
       onLeaderboard={() => B.setScreen("leaderboard")}
+      onAchievements={() => B.setScreen("achievements")}
+      onEncyclopedia={() => B.setScreen("encyclopedia")}
     />
+  );
+  if (B.screen === "achievements") return (
+    <AchievementScreen unlockedIds={B.achUnlocked} onBack={() => B.setScreen("title")} />
+  );
+  if (B.screen === "encyclopedia") return (
+    <EncyclopediaScreen encData={B.encData} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "leaderboard") return (
     <LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen("title")} />
@@ -140,6 +152,8 @@ function App() {
 
       {/* Move level-up toast */}
       {B.mLvlUp !== null && B.starter && <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: "0 4px 16px rgba(245,158,11,0.4)", whiteSpace: "nowrap" }}>{B.starter.moves[B.mLvlUp].icon} {B.starter.moves[B.mLvlUp].name} 升級到 Lv.{B.mLvls[B.mLvlUp]}！威力 → {B.getPow(B.mLvlUp)}</div>}
+      {/* Achievement popup */}
+      {B.achPopup && ACH_MAP[B.achPopup] && <AchievementPopup achievement={ACH_MAP[B.achPopup]} onDone={B.dismissAch} />}
 
       {/* Attack effects */}
       {B.atkEffect && B.atkEffect.type === "fire" && <FireEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}

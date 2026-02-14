@@ -29,6 +29,8 @@ import {
   calcAttackDamage, calcEnemyDamage, freezeChance,
 } from '../utils/damageCalc';
 import { useTimer } from './useTimer';
+import { loadAch, saveAch, loadEnc, saveEnc } from '../utils/achievementStore';
+import { ENC_TOTAL } from '../data/encyclopedia';
 
 // ═══════════════════════════════════════════════════════════════════
 export function useBattle() {
@@ -94,6 +96,53 @@ export function useBattle() {
   const frozenR = useRef(false);
   const [specDef, setSpecDef] = useState(false);
   const [defAnim, setDefAnim] = useState(null);
+
+  // ──── Achievements & Encyclopedia ────
+  const [achUnlocked, setAchUnlocked] = useState(() => loadAch());
+  const [achPopup, setAchPopup] = useState(null);
+  const [encData, setEncData] = useState(() => loadEnc());
+  const achRef = useRef(new Set(loadAch()));
+
+  const tryUnlock = (id) => {
+    if (achRef.current.has(id)) return;
+    achRef.current.add(id);
+    const arr = [...achRef.current];
+    setAchUnlocked(arr);
+    saveAch(arr);
+    setAchPopup(id);
+  };
+  const dismissAch = useCallback(() => setAchPopup(null), []);
+
+  const updateEnc = (enemyObj) => {
+    setEncData(prev => {
+      const key = enemyObj.isEvolved ? enemyObj.id + "Evolved" : enemyObj.id;
+      const next = {
+        encountered: { ...prev.encountered, [key]: (prev.encountered[key] || 0) + 1 },
+        defeated: { ...prev.defeated },
+      };
+      // Also mark base form as encountered if evolved
+      if (enemyObj.isEvolved) {
+        next.encountered[enemyObj.id] = (prev.encountered[enemyObj.id] || 0);
+        if (!next.encountered[enemyObj.id]) next.encountered[enemyObj.id] = 1;
+      }
+      saveEnc(next);
+      return next;
+    });
+  };
+  const updateEncDefeated = (enemyObj) => {
+    setEncData(prev => {
+      const key = enemyObj.isEvolved ? enemyObj.id + "Evolved" : enemyObj.id;
+      const next = {
+        encountered: { ...prev.encountered },
+        defeated: { ...prev.defeated, [key]: (prev.defeated[key] || 0) + 1 },
+      };
+      if (enemyObj.isEvolved) {
+        if (!next.defeated[enemyObj.id]) next.defeated[enemyObj.id] = 0;
+      }
+      saveEnc(next);
+      return next;
+    });
+  };
 
   // ──── Internal refs ────
   const did = useRef(0);
@@ -197,6 +246,7 @@ export function useBattle() {
     setSpecDef(false);
     setDefAnim(null);
     setRound(idx);
+    updateEnc(e); // ← encyclopedia: mark encountered
     const sn = SCENE_NAMES[e.mType] || "";
     setPhase("text");
     setBText(`【${sn}】野生的 ${e.name} Lv.${e.lvl} 出現了！`);
@@ -238,7 +288,7 @@ export function useBattle() {
           if (s.pStg < 2 && nl % 3 === 0) {
             // Mark evolution pending — screen transition happens in advance()
             pendingEvolve.current = true;
-            setPStg(st => Math.min(st + 1, 2));
+            setPStg(st => { if (st + 1 >= 2) tryUnlock("evolve_max"); return Math.min(st + 1, 2); });
             setPHp(PLAYER_MAX_HP);
             setMLvls(prev => prev.map(v => Math.min(v + 1, MAX_MOVE_LVL)));
           } else {
@@ -251,6 +301,11 @@ export function useBattle() {
       return ne;
     });
     setDefeated(d => d + 1);
+    updateEncDefeated(s.enemy); // ← encyclopedia: mark defeated
+    // ── Achievement checks on victory ──
+    tryUnlock("first_win");
+    if (s.enemy.id === "boss") tryUnlock("boss_kill");
+    if (s.pHp <= 5) tryUnlock("low_hp");
     const drop = s.enemy.drops[Math.floor(Math.random() * s.enemy.drops.length)];
     setBText(`${s.enemy.name} ${verb}！獲得 ${xp} 經驗值 ${drop}`);
     setPhase("victory");
@@ -344,7 +399,11 @@ export function useBattle() {
       const ns = s.streak + 1;
       setStreak(ns); setCharge(c => Math.min(c + 1, 3));
       if (ns > s.maxStreak) setMaxStreak(ns);
-      if (ns >= 8 && !s.specDef) setSpecDef(true);
+      if (ns >= 8 && !s.specDef) { setSpecDef(true); tryUnlock("spec_def"); }
+
+      // ── Achievement: streak milestones ──
+      if (ns >= 5) tryUnlock("streak_5");
+      if (ns >= 10) tryUnlock("streak_10");
 
       // Move hit tracking & level-up check
       const nh = [...s.mHits]; nh[s.selIdx]++;
@@ -356,6 +415,8 @@ export function useBattle() {
           const nl = [...s.mLvls]; nl[s.selIdx]++; setMLvls(nl);
           didLvl = true; nh[s.selIdx] = 0;
           setMLvlUp(s.selIdx); safeTo(() => setMLvlUp(null), 2000);
+          if (nl[s.selIdx] >= MAX_MOVE_LVL) tryUnlock("move_max");
+          if (nl.every(v => v >= MAX_MOVE_LVL)) tryUnlock("all_moves_max");
         }
       }
       setMHits(nh);
@@ -423,6 +484,8 @@ export function useBattle() {
             addD(`-${dmg}`, 140, 55, dmgColor);
             safeTo(() => { setEAnim(""); setAtkEffect(null); }, 800);
 
+            // Achievement: one-hit KO (dealt damage >= enemy maxHp)
+            if (afterHp <= 0 && dmg >= s3.enemy.maxHp) tryUnlock("one_hit");
             if (afterHp <= 0) safeTo(() => handleVictory(), 900);
             else if (willFreeze) safeTo(() => handleFreeze(), 900);
             else safeTo(() => doEnemyTurn(), 900);
@@ -481,7 +544,26 @@ export function useBattle() {
         return;
       }
       const nx = round + 1;
-      if (nx >= enemies.length) { setScreen("gameover"); }
+      if (nx >= enemies.length) {
+        // ── Game-completion achievements ──
+        const s = sr.current;
+        if (s.tW === 0) tryUnlock("perfect");
+        if (s.timedMode) tryUnlock("timed_clear");
+        if (s.pHp >= PLAYER_MAX_HP) tryUnlock("no_damage");
+        if (s.starter) {
+          const sid = s.starter.id;
+          if (sid === "fire") tryUnlock("fire_clear");
+          else if (sid === "water") tryUnlock("water_clear");
+          else if (sid === "grass") tryUnlock("grass_clear");
+        }
+        // Check encyclopedia completion from latest encData
+        setEncData(prev => {
+          if (Object.keys(prev.encountered).length >= ENC_TOTAL) tryUnlock("enc_all");
+          if (Object.keys(prev.defeated).length >= ENC_TOTAL) tryUnlock("enc_defeat");
+          return prev;
+        });
+        setScreen("gameover");
+      }
       else { setPHp(h => Math.min(h + 10, PLAYER_MAX_HP)); startBattle(nx); }
     }
   };
@@ -501,6 +583,9 @@ export function useBattle() {
     burnStack, frozen, specDef, defAnim,
     gamePaused, timerLeft,
     expNext, chargeReady,
+
+    // ── Achievements & Encyclopedia ──
+    achUnlocked, achPopup, encData, dismissAch,
 
     // ── Actions ──
     setTimedMode, setScreen, setStarter,

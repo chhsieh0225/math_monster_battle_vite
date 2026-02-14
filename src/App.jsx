@@ -275,6 +275,16 @@ function App() {
             {B.timedMode && !B.answered && <div style={{ fontSize: 11, fontWeight: 700, color: B.timerLeft <= 1.5 ? "#ef4444" : B.timerLeft <= 3 ? "#f59e0b" : "rgba(255,255,255,0.4)", marginTop: 2, fontFamily: "'Press Start 2P',monospace", transition: "color 0.3s" }}>{B.timerLeft.toFixed(1)}s</div>}
           </div>
           {B.fb && <div style={{ textAlign: "center", marginBottom: 4, fontSize: 16, fontWeight: 700, color: B.fb.correct ? "#22c55e" : "#ef4444", animation: "popIn 0.2s ease" }}>{B.fb.correct ? "✅ 命中！" : `❌ 答案是 ${B.fb.answer}`}</div>}
+          {B.fb && !B.fb.correct && B.fb.steps && B.fb.steps.length > 0 && (
+            <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "8px 12px", marginBottom: 6, animation: "fadeIn 0.4s ease" }}>
+              <div style={{ fontSize: 11, color: "#fca5a5", fontWeight: 700, marginBottom: 4 }}>📝 解題過程：</div>
+              {B.fb.steps.map((step, i) => (
+                <div key={i} style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: 600, lineHeight: 1.8, fontFamily: "monospace" }}>
+                  {B.fb.steps.length > 1 && <span style={{ color: "#fca5a5", fontSize: 11, marginRight: 4 }}>Step {i + 1}.</span>}{step}
+                </div>
+              ))}
+            </div>
+          )}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
             {B.q.choices.map((c, i) => {
               let bg = "rgba(255,255,255,0.08)", bd = "rgba(255,255,255,0.15)", co = "white";

@@ -226,7 +226,7 @@ export function useBattle() {
   // ═══════════════════════════════════════════════════════════════
   const onTimeout = useCallback(() => {
     setAnswered(true);
-    setFb({ correct: false, answer: sr.current.q?.answer });
+    setFb({ correct: false, answer: sr.current.q?.answer, steps: sr.current.q?.steps || [] });
     setTW(w => w + 1);
     setStreak(0);
     setCharge(0);
@@ -236,7 +236,7 @@ export function useBattle() {
     setBText("⏰ 時間到！來不及出招！");
     setPhase("text");
     // Read enemy from stateRef so we never hit a stale closure
-    safeTo(() => doEnemyTurn(), 1200);
+    safeTo(() => doEnemyTurn(), 1500);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const {
@@ -566,7 +566,7 @@ export function useBattle() {
       }, 600);
     } else {
       // Wrong answer
-      setFb({ correct: false, answer: s.q.answer });
+      setFb({ correct: false, answer: s.q.answer, steps: s.q.steps || [] });
       setTW(w => w + 1); setStreak(0); setCharge(0);
       safeTo(() => {
         const s2 = sr.current;
@@ -600,7 +600,7 @@ export function useBattle() {
           if (frozenR.current) safeTo(() => handleFreeze(), 1200);
           else safeTo(() => doEnemyTurn(), 1200);
         }
-      }, 1000);
+      }, 2500);
     }
   };
 

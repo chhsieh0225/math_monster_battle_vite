@@ -1,7 +1,8 @@
 /**
  * Generate a math question based on move configuration.
  * @param {Object} move - Move object with range, ops properties
- * @returns {Object} { display, answer, choices, op }
+ * @returns {Object} { display, answer, choices, op, steps }
+ *   steps: array of strings showing the solution process (shown on wrong answer)
  */
 
 // Helper: random int in [lo, hi]
@@ -21,19 +22,18 @@ function genMixed2(range) {
   const c = rr(range[0], range[1]);
   const op1 = Math.random() < 0.5 ? "+" : "-";
   const op2 = Math.random() < 0.5 ? "+" : "-";
-  let ans = a;
-  ans = op1 === "+" ? ans + b : ans - b;
-  ans = op2 === "+" ? ans + c : ans - c;
-  // Ensure non-negative answer; retry with addition if negative
-  if (ans < 0) {
-    return genMixed2(range);
-  }
-  return { display: `${a} ${op1} ${b} ${op2} ${c}`, answer: ans, op: "mixed2" };
+  const step1 = op1 === "+" ? a + b : a - b;
+  const ans = op2 === "+" ? step1 + c : step1 - c;
+  if (ans < 0) return genMixed2(range);
+  const steps = [
+    `${a} ${op1} ${b} = ${step1}`,
+    `${step1} ${op2} ${c} = ${ans}`,
+  ];
+  return { display: `${a} ${op1} ${b} ${op2} ${c}`, answer: ans, op: "mixed2", steps };
 }
 
 /**
  * mixed3: a × b ± c  (乘加/乘減混合，考驗運算優先順序)
- * Display: "a × b + c" — student must do multiplication first
  */
 function genMixed3(range) {
   const a = rr(range[0], range[1]);
@@ -43,20 +43,19 @@ function genMixed3(range) {
   const product = a * b;
   const ans = op2 === "+" ? product + c : product - c;
   if (ans < 0) return genMixed3(range);
-  return { display: `${a} × ${b} ${op2} ${c}`, answer: ans, op: "mixed3" };
+  const steps = [
+    `先算乘法：${a} × ${b} = ${product}`,
+    `再算${op2 === "+" ? "加" : "減"}法：${product} ${op2} ${c} = ${ans}`,
+  ];
+  return { display: `${a} × ${b} ${op2} ${c}`, answer: ans, op: "mixed3", steps };
 }
 
 /**
  * mixed4: full 四則運算 with order-of-operations
- * Patterns:
- *   (1) a + b × c      → a + (b*c)
- *   (2) a × b + c × d  → (a*b) + (c*d)  (rare, harder)
- *   (3) a × b - c      → (a*b) - c
- *   (4) a + b × c - d  → a + (b*c) - d
  */
 function genMixed4(range) {
   const pattern = Math.random();
-  let d, ans;
+  let d, ans, steps;
 
   if (pattern < 0.4) {
     // a ± b × c
@@ -64,9 +63,14 @@ function genMixed4(range) {
     const b = rr(range[0], range[1]);
     const c = rr(range[0], range[1]);
     const op = Math.random() < 0.5 ? "+" : "-";
-    ans = op === "+" ? a + b * c : a - b * c;
+    const prod = b * c;
+    ans = op === "+" ? a + prod : a - prod;
     if (ans < 0) return genMixed4(range);
     d = `${a} ${op} ${b} × ${c}`;
+    steps = [
+      `先算乘法：${b} × ${c} = ${prod}`,
+      `再算${op === "+" ? "加" : "減"}法：${a} ${op} ${prod} = ${ans}`,
+    ];
   } else if (pattern < 0.7) {
     // a × b ± c × d
     const a = rr(range[0], Math.min(range[1], 6));
@@ -74,9 +78,15 @@ function genMixed4(range) {
     const c = rr(range[0], Math.min(range[1], 6));
     const dd = rr(range[0], Math.min(range[1], 6));
     const op = Math.random() < 0.6 ? "+" : "-";
-    ans = op === "+" ? a * b + c * dd : a * b - c * dd;
+    const p1 = a * b, p2 = c * dd;
+    ans = op === "+" ? p1 + p2 : p1 - p2;
     if (ans < 0) return genMixed4(range);
     d = `${a} × ${b} ${op} ${c} × ${dd}`;
+    steps = [
+      `先算乘法：${a} × ${b} = ${p1}`,
+      `再算乘法：${c} × ${dd} = ${p2}`,
+      `最後${op === "+" ? "加" : "減"}法：${p1} ${op} ${p2} = ${ans}`,
+    ];
   } else {
     // a ± b × c ± d
     const a = rr(range[0] + 5, range[1] * 3);
@@ -85,20 +95,25 @@ function genMixed4(range) {
     const dd = rr(range[0], range[1]);
     const op1 = Math.random() < 0.5 ? "+" : "-";
     const op2 = Math.random() < 0.5 ? "+" : "-";
-    ans = a;
-    ans = op1 === "+" ? ans + b * c : ans - b * c;
-    ans = op2 === "+" ? ans + dd : ans - dd;
+    const prod = b * c;
+    const mid = op1 === "+" ? a + prod : a - prod;
+    ans = op2 === "+" ? mid + dd : mid - dd;
     if (ans < 0) return genMixed4(range);
     d = `${a} ${op1} ${b} × ${c} ${op2} ${dd}`;
+    steps = [
+      `先算乘法：${b} × ${c} = ${prod}`,
+      `再算${op1 === "+" ? "加" : "減"}法：${a} ${op1} ${prod} = ${mid}`,
+      `最後${op2 === "+" ? "加" : "減"}法：${mid} ${op2} ${dd} = ${ans}`,
+    ];
   }
 
-  return { display: d, answer: ans, op: "mixed4" };
+  return { display: d, answer: ans, op: "mixed4", steps };
 }
 
 export function genQ(move) {
   const { range, ops } = move;
   const op = ops[Math.floor(Math.random() * ops.length)];
-  let a, b, ans, d;
+  let a, b, ans, d, steps;
 
   // ── Mixed operations (electric starter) ──
   if (op === "mixed2") {
@@ -120,16 +135,23 @@ export function genQ(move) {
     b = rr(range[0], range[1]);
     ans = a * b;
     d = `${a} × ${b}`;
+    steps = [`${a} × ${b} = ${ans}`];
   } else if (op === "÷") {
     b = Math.max(1, rr(range[0], range[1]));
     ans = Math.max(1, rr(range[0], range[1]));
     a = b * ans;
     d = `${a} ÷ ${b}`;
+    steps = [
+      `想一想：${b} × ? = ${a}`,
+      `${b} × ${ans} = ${a}`,
+      `所以 ${a} ÷ ${b} = ${ans}`,
+    ];
   } else if (op === "+") {
     a = rr(range[0], range[1]);
     b = rr(range[0], range[1]);
     ans = a + b;
     d = `${a} + ${b}`;
+    steps = [`${a} + ${b} = ${ans}`];
   } else if (op === "-") {
     let x = rr(range[0], range[1]);
     let y = rr(range[0], range[1]);
@@ -138,15 +160,16 @@ export function genQ(move) {
     b = Math.min(x, y);
     ans = a - b;
     d = `${a} - ${b}`;
+    steps = [`${a} - ${b} = ${ans}`];
   }
 
-  return makeChoices({ display: d, answer: ans, op });
+  return makeChoices({ display: d, answer: ans, op, steps });
 }
 
 /**
- * Wrap a {display, answer, op} object with 4 shuffled answer choices.
+ * Wrap a {display, answer, op, steps} object with 4 shuffled answer choices.
  */
-function makeChoices({ display, answer, op }) {
+function makeChoices({ display, answer, op, steps }) {
   const spread = Math.max(5, Math.ceil(Math.abs(answer) * 0.2));
   const ch = new Set([answer]);
   let guard = 0;
@@ -164,5 +187,5 @@ function makeChoices({ display, answer, op }) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return { display, answer, choices: arr, op };
+  return { display, answer, choices: arr, op, steps: steps || [] };
 }

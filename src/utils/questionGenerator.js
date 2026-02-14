@@ -14,8 +14,9 @@ export function genQ(move) {
     ans = a * b;
     d = `${a} × ${b}`;
   } else if (op === "÷") {
-    b = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
-    ans = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
+    // Guard: ensure divisor b >= 1 and quotient ans >= 1 to prevent division-by-zero
+    b = Math.max(1, Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0]);
+    ans = Math.max(1, Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0]);
     a = b * ans;
     d = `${a} ÷ ${b}`;
   } else if (op === "+") {

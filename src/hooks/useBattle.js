@@ -35,6 +35,7 @@ import {
   initSessionLog, logAnswer as _logAnswer,
   finalizeSession, saveSession,
 } from '../utils/sessionLogger';
+import sfx from '../utils/sfx';
 
 // ═══════════════════════════════════════════════════════════════════
 export function useBattle() {
@@ -254,6 +255,7 @@ export function useBattle() {
   const onTimeout = useCallback(() => {
     setAnswered(true);
     setFb({ correct: false, answer: sr.current.q?.answer, steps: sr.current.q?.steps || [] });
+    sfx.play("timeout");
     setTW(w => w + 1);
     setStreak(0);
     setCharge(0);
@@ -371,7 +373,7 @@ export function useBattle() {
           const nl = l + 1;
           if (s.pStg < 2 && nl % 3 === 0) {
             // Mark evolution pending — screen transition happens in advance()
-            pendingEvolve.current = true;
+            pendingEvolve.current = true; sfx.play("evolve");
             setPStg(st => { if (st + 1 >= 2) tryUnlock("evolve_max"); return Math.min(st + 1, 2); });
             setPHp(PLAYER_MAX_HP);
             setMLvls(prev => prev.map(v => Math.min(v + 1, MAX_MOVE_LVL)));
@@ -392,7 +394,7 @@ export function useBattle() {
     if (s.pHp <= 5) tryUnlock("low_hp");
     const drop = s.enemy.drops[Math.floor(Math.random() * s.enemy.drops.length)];
     setBText(`${s.enemy.name} ${verb}！獲得 ${xp} 經驗值 ${drop}`);
-    setPhase("victory");
+    setPhase("victory"); sfx.play("victory");
   };
 
   // --- Frozen enemy skips turn ---
@@ -409,6 +411,7 @@ export function useBattle() {
     if (phase !== "menu" || !starter) return;
     // Boss: sealed move check
     if (sr.current.sealedMove === i) return; // silently blocked, UI shows lock
+    sfx.play("select");
     setSelIdx(i);
     setQ(genQ(starter.moves[i], DIFF_MODS[sr.current.diffLevel]));
     setFb(null);
@@ -478,7 +481,7 @@ export function useBattle() {
     // ── Boss charging mechanic: release big attack ──
     if (isBoss && s.bossCharging) {
       setBossCharging(false);
-      setBText(`💀 暗黑龍王釋放暗黑吐息！`);
+      setBText(`💀 暗黑龍王釋放暗黑吐息！`); sfx.play("bossBoom");
       setPhase("enemyAtk");
       setEAnim("enemyAttackLunge 0.6s ease");
       safeTo(() => {
@@ -497,7 +500,7 @@ export function useBattle() {
 
     // ── Boss: start charging every 4 turns ──
     if (isBoss && turnCount > 0 && turnCount % 4 === 0 && !s.bossCharging) {
-      setBossCharging(true);
+      setBossCharging(true); sfx.play("bossCharge");
       setBText("⚠️ 暗黑龍王正在蓄力！下回合將釋放大招！");
       setPhase("text");
       setEAnim("bossShake 0.5s ease infinite");
@@ -508,7 +511,7 @@ export function useBattle() {
     // ── Boss Phase 2+: seal a random move ──
     if (isBoss && bp >= 2 && s.sealedMove < 0 && turnCount > 0 && turnCount % 3 === 0) {
       const sealIdx = Math.floor(Math.random() * 3); // only seal moves 0-2, not ultimate
-      setSealedMove(sealIdx);
+      setSealedMove(sealIdx); sfx.play("seal");
       setSealedTurns(2);
       const moveName = s.starter.moves[sealIdx]?.name || "???";
       setBText(`💀 暗黑龍王封印了你的「${moveName}」！（2回合）`);
@@ -578,12 +581,12 @@ export function useBattle() {
       const dmg = calcEnemyDamage(scaledAtk, getEff(s2.enemy.mType, s2.starter.type));
       const defEff = getEff(s2.enemy.mType, s2.starter.type);
       const nh = Math.max(0, s2.pHp - dmg);
-      setPHp(nh); setPAnim("playerHit 0.5s ease");
+      setPHp(nh); setPAnim("playerHit 0.5s ease"); sfx.play("playerHit");
       addD(`-${dmg}`, 60, 170, "#ef4444"); addP("enemy", 80, 190, 4);
       if (defEff > 1) { setEffMsg({ text: "敵人招式很有效！", color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
       else if (defEff < 1) { setEffMsg({ text: "敵人招式效果不佳", color: "#64748b" }); safeTo(() => setEffMsg(null), 1500); }
       safeTo(() => setPAnim(""), 500);
-      if (nh <= 0) safeTo(() => { _endSession(false); setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }, 800);
+      if (nh <= 0) safeTo(() => { sfx.play("ko"); _endSession(false); setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }, 800);
       else safeTo(() => { setPhase("menu"); setBText(""); }, 800);
     }, 500);
   };
@@ -605,9 +608,10 @@ export function useBattle() {
     if (correct) {
       setFb({ correct: true }); setTC(c => c + 1);
       const ns = s.streak + 1;
+      sfx.play(ns >= 5 ? "crit" : "hit");
       setStreak(ns); setCharge(c => Math.min(c + 1, 3));
       if (ns > s.maxStreak) setMaxStreak(ns);
-      if (ns >= 8 && !s.specDef) { setSpecDef(true); tryUnlock("spec_def"); }
+      if (ns >= 8 && !s.specDef) { setSpecDef(true); tryUnlock("spec_def"); sfx.play("specDef"); }
 
       // ── Achievement: streak milestones ──
       if (ns >= 5) tryUnlock("streak_5");
@@ -622,7 +626,7 @@ export function useBattle() {
         if (np <= POWER_CAPS[s.selIdx]) {
           const nl = [...s.mLvls]; nl[s.selIdx]++; setMLvls(nl);
           didLvl = true; nh[s.selIdx] = 0;
-          setMLvlUp(s.selIdx); safeTo(() => setMLvlUp(null), 2000);
+          setMLvlUp(s.selIdx); safeTo(() => setMLvlUp(null), 2000); sfx.play("levelUp");
           if (nl[s.selIdx] >= MAX_MOVE_LVL) tryUnlock("move_max");
           if (nl.every(v => v >= MAX_MOVE_LVL)) tryUnlock("all_moves_max");
         }
@@ -644,6 +648,7 @@ export function useBattle() {
           const s2 = sr.current;
           const bt = bestAttackType(move, s2.enemy);
           setAtkEffect({ type: bt, idx: s2.selIdx, lvl: s2.mLvls[s2.selIdx] });
+          sfx.play(bt); // type-specific attack sound
 
           safeTo(() => {
             const s3 = sr.current;
@@ -682,14 +687,14 @@ export function useBattle() {
             // Grass: heal
             if (starter.type === "grass") {
               const heal = 2 * s3.mLvls[s3.selIdx];
-              setPHp(h => Math.min(h + heal, PLAYER_MAX_HP));
+              setPHp(h => Math.min(h + heal, PLAYER_MAX_HP)); sfx.play("heal");
               safeTo(() => addD(`+${heal}`, 50, 165, "#22c55e"), 500);
             }
             // Water: freeze
             let willFreeze = false;
             if (starter.type === "water" && afterHp > 0) {
               if (Math.random() < freezeChance(s3.mLvls[s3.selIdx])) {
-                willFreeze = true; setFrozen(true); frozenR.current = true;
+                willFreeze = true; setFrozen(true); frozenR.current = true; sfx.play("freeze");
                 safeTo(() => addD("❄️凍結", 155, 50, "#38bdf8"), 600);
               }
             }
@@ -700,7 +705,7 @@ export function useBattle() {
               if (newStatic >= 3) {
                 const sd = 3 * 4; // 3 stacks × 4 damage
                 afterHp = Math.max(0, afterHp - sd);
-                setStaticStack(0);
+                setStaticStack(0); sfx.play("staticDischarge");
                 safeTo(() => addD(`⚡-${sd}`, 155, 50, "#fbbf24"), 500);
               }
             }
@@ -721,7 +726,7 @@ export function useBattle() {
       }, 600);
     } else {
       // Wrong answer
-      setFb({ correct: false, answer: s.q.answer, steps: s.q.steps || [] });
+      setFb({ correct: false, answer: s.q.answer, steps: s.q.steps || [] }); sfx.play("wrong");
       setTW(w => w + 1); setStreak(0); setCharge(0);
       safeTo(() => {
         const s2 = sr.current;
@@ -825,5 +830,7 @@ export function useBattle() {
     // ── Helpers exposed for render ──
     getPow, dualEff,
     rmD, rmP,
+    // ── SFX ──
+    sfx,
   };
 }

@@ -78,6 +78,8 @@ function GameShell() {
 // ─── App: main game component (render only) ───
 function App() {
   const B = useBattle();
+  const [sfxMuted, setSfxMuted] = useState(false);
+  const toggleSfxMute = () => { const m = B.sfx.toggleMute(); setSfxMuted(m); };
 
   // ─── Screen routing ───
   if (B.screen === "title") return (
@@ -103,7 +105,7 @@ function App() {
     <LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "selection") return (
-    <SelectionScreen onSelect={(s) => { B.setStarter(s); B.startGame(s); }} onBack={() => B.setScreen("title")} />
+    <SelectionScreen onSelect={(s) => { B.sfx.init(); B.setStarter(s); B.startGame(s); }} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "evolve") return (
     <EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={() => { B.setScreen("battle"); }} />
@@ -270,7 +272,7 @@ function App() {
               {!m.risky && !atCap && <div style={{ height: 3, background: "rgba(0,0,0,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}><div style={{ width: `${(B.mHits[i] % (HITS_PER_LVL * B.mLvls[i])) / (HITS_PER_LVL * B.mLvls[i]) * 100}%`, height: "100%", background: m.color, borderRadius: 2, transition: "width 0.3s" }} /></div>}
             </button>;
           })}
-        </div><div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}><button onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button><button onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button></div></div>}
+        </div><div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}><button onClick={toggleSfxMute} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>{sfxMuted ? "🔇" : "🔊"}</button><button onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button><button onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button></div></div>}
 
         {/* Question panel */}
         {B.phase === "question" && B.q && <div style={{ padding: "10px 14px", animation: "fadeSlide 0.25s ease" }}>

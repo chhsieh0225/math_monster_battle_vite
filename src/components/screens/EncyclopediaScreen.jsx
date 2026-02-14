@@ -367,8 +367,8 @@ function StarterDetailModal({ entry, onClose }) {
                 }}>
                   <div style={{ fontSize: 20 }}>{m.icon}</div>
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: m.color }}>{m.label}</div>
-                    <div style={{ fontSize: 9, opacity: 0.4 }}>{m.op === "mixed2" ? "混合二則" : m.op === "mixed3" ? "混合三則" : m.op === "mixed4" ? "混合四則" : m.op}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: m.color }}>{m.name}</div>
+                    <div style={{ fontSize: 9, opacity: 0.4 }}>{m.desc}</div>
                   </div>
                 </div>
               ))}

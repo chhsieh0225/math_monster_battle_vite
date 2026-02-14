@@ -70,6 +70,7 @@ export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard
       {/* ─── Bottom: Credits ─── */}
       <div style={{ opacity: 0.2, fontSize: 10, lineHeight: 1.7 }}>
         <div>設計：Chung-Han Hsieh　·　Claude (Anthropic) 協助開發</div>
+        <div style={{ marginTop: 2 }}>ch.hsieh@mx.nthu.edu.tw</div>
         <div style={{ fontFamily: "monospace", marginTop: 2 }}>{VERSION}</div>
       </div>
     </div>

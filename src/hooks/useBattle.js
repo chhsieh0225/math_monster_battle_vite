@@ -109,6 +109,7 @@ export function useBattle() {
   const [burnStack, setBurnStack] = useState(0);
   const [frozen, setFrozen] = useState(false);
   const frozenR = useRef(false);
+  const [staticStack, setStaticStack] = useState(0);   // electric: static charge
   const [specDef, setSpecDef] = useState(false);
   const [defAnim, setDefAnim] = useState(null);
 
@@ -173,7 +174,7 @@ export function useBattle() {
   const sr = useRef({});
   sr.current = {
     enemy, starter, eHp, pHp, pExp, pLvl, pStg,
-    streak, charge, burnStack, frozen, specDef,
+    streak, charge, burnStack, frozen, staticStack, specDef,
     mHits, mLvls, selIdx, phase, round, q,
     screen, timedMode,
   };
@@ -264,6 +265,7 @@ export function useBattle() {
     setEnemy(e);
     setEHp(e.maxHp);
     setBurnStack(0);
+    setStaticStack(0);
     setFrozen(false);
     frozenR.current = false;
     setSpecDef(false);
@@ -291,7 +293,7 @@ export function useBattle() {
     setDefeated(0); setMaxStreak(0);
     setMHits([0, 0, 0, 0]); setMLvls([1, 1, 1, 1]); setMLvlUp(null);
     setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
-    setBurnStack(0); setFrozen(false); frozenR.current = false;
+    setBurnStack(0); setStaticStack(0); setFrozen(false); frozenR.current = false;
     setSpecDef(false); setDefAnim(null);
     pendingEvolve.current = false;
     // Init session log — use override on first game since setStarter is async
@@ -320,7 +322,7 @@ export function useBattle() {
   // --- Handle a defeated enemy ---
   const handleVictory = (verb = "被打倒了") => {
     const s = sr.current;
-    setBurnStack(0); setFrozen(false); frozenR.current = false;
+    setBurnStack(0); setStaticStack(0); setFrozen(false); frozenR.current = false;
     const xp = s.enemy.lvl * 15;
     setPExp(prev => {
       const ne = prev + xp;
@@ -536,6 +538,17 @@ export function useBattle() {
                 safeTo(() => addD("❄️凍結", 155, 50, "#38bdf8"), 600);
               }
             }
+            // Electric: static charge — accumulate, discharge at 5 stacks
+            if (starter.type === "electric" && afterHp > 0) {
+              const newStatic = Math.min(s3.staticStack + 1, 5);
+              setStaticStack(newStatic);
+              if (newStatic >= 5) {
+                const sd = 5 * 4; // 5 stacks × 4 damage
+                afterHp = Math.max(0, afterHp - sd);
+                setStaticStack(0);
+                safeTo(() => addD(`⚡-${sd}`, 155, 50, "#fbbf24"), 500);
+              }
+            }
 
             setEHp(afterHp);
             setEAnim(hitAnims[bt] || "enemyHit 0.5s ease");
@@ -641,7 +654,7 @@ export function useBattle() {
     mHits, mLvls, mLvlUp,
     phase, selIdx, q, fb, bText, answered,
     dmgs, parts, eAnim, pAnim, atkEffect, effMsg,
-    burnStack, frozen, specDef, defAnim,
+    burnStack, frozen, staticStack, specDef, defAnim,
     gamePaused, timerLeft,
     expNext, chargeReady,
 

@@ -397,21 +397,15 @@ export function useBattle() {
           setBText("💨 完美閃避！"); addD("MISS!", 60, 170, "#38bdf8");
           safeTo(() => { setPAnim(""); setDefAnim(null); setPhase("menu"); setBText(""); }, 1800);
         } else if (st === "electric") {
-          // Electric: counter-shock — paralyse enemy, deal small damage
-          const rawDmg = Math.round(s2.enemy.atk * (0.8 + Math.random() * 0.4));
-          const shockDmg = Math.round(rawDmg * 0.8);
-          const nh = Math.max(0, sr.current.eHp - shockDmg);
-          setEHp(nh);
-          setBText("⚡ 反擊電流！"); addD("⚡SHOCK", 60, 170, "#fbbf24");
-          safeTo(() => {
-            addD(`-${shockDmg}`, 155, 50, "#fbbf24");
-            setEAnim("enemyElecHit 0.6s ease");
-            addP("electric", 155, 80, 5);
-          }, 500);
+          // Electric: paralyse — block attack and enemy skips next turn
+          setBText("⚡ 電流麻痺！敵人無法行動！"); addD("⚡麻痺", 60, 170, "#fbbf24");
+          setEAnim("enemyElecHit 0.6s ease");
+          addP("electric", 155, 80, 5);
           safeTo(() => {
             setEAnim(""); setDefAnim(null);
-            if (nh <= 0) { safeTo(() => handleVictory("被反擊電流打倒了"), 500); }
-            else { setPhase("menu"); setBText(""); }
+            setBText(`⚡ ${sr.current.enemy.name} 被麻痺了，無法攻擊！`);
+            setPhase("text");
+            safeTo(() => { setPhase("menu"); setBText(""); }, 1500);
           }, 1800);
         } else {
           const rawDmg = Math.round(s2.enemy.atk * (0.8 + Math.random() * 0.4));

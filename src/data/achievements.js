@@ -16,7 +16,7 @@ export const ACHIEVEMENTS = [
   { id:"fire_clear",    name:"火焰大師",   icon:"🔥", desc:"使用火系通關" },
   { id:"water_clear",   name:"水流大師",   icon:"💧", desc:"使用水系通關" },
   { id:"grass_clear",   name:"森林大師",   icon:"🌿", desc:"使用草系通關" },
-  { id:"boss_kill",     name:"暗黑終結者", icon:"👑", desc:"擊敗暗黑魔王" },
+  { id:"boss_kill",     name:"暗黑終結者", icon:"👑", desc:"擊敗暗黑龍王" },
   { id:"low_hp",        name:"不死鳥",     icon:"🦅", desc:"HP ≤ 5 時擊敗敵人" },
   { id:"no_damage",     name:"完美戰役",   icon:"✨", desc:"滿血通關" },
   { id:"enc_all",       name:"收集家",     icon:"📖", desc:"圖鑑遭遇全 9 種怪獸" },

@@ -6,7 +6,7 @@ export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard
   return (
     <div style={{
       height: "100%", display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "space-between",
+      alignItems: "center", justifyContent: "center", gap: 28,
       background: "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)",
       color: "white", padding: "32px 20px 20px", textAlign: "center",
       position: "relative", overflow: "hidden",

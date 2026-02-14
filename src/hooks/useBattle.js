@@ -16,7 +16,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-import { MONSTERS, getEff } from '../data/monsters';
+import { MONSTERS, SLIME_VARIANTS, getEff } from '../data/monsters';
 import { SCENES, SCENE_NAMES } from '../data/scenes';
 import {
   MAX_MOVE_LVL, POWER_CAPS, HITS_PER_LVL,
@@ -45,10 +45,19 @@ export function useBattle() {
       const b = MONSTERS[idx];
       const sc = 1 + i * 0.12;
       const isEvolved = b.evolveLvl && (i + 1) >= b.evolveLvl;
+
+      // Slime colour variant — random type each non-evolved encounter
+      let variant = null;
+      if (idx === 0 && !isEvolved) {
+        variant = SLIME_VARIANTS[Math.floor(Math.random() * SLIME_VARIANTS.length)];
+      }
+
       return {
         ...b,
-        name: isEvolved && b.evolvedName ? b.evolvedName : b.name,
-        svgFn: isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : b.svgFn,
+        // Apply variant overrides for non-evolved slimes
+        ...(variant && { name: variant.name, svgFn: variant.svgFn, c1: variant.c1, c2: variant.c2, mType: variant.mType, typeIcon: variant.typeIcon, typeName: variant.typeName, drops: variant.drops }),
+        name: isEvolved && b.evolvedName ? b.evolvedName : (variant ? variant.name : b.name),
+        svgFn: isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn),
         hp: Math.round(b.hp * sc), maxHp: Math.round(b.hp * sc),
         atk: Math.round(b.atk * sc), lvl: i + 1, isEvolved,
       };

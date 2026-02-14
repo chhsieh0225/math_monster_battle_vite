@@ -38,6 +38,40 @@ function makeSvgFn(key, rendering = 'auto') {
 }
 
 export const slimeSVG = makeSvgFn('slime', 'pixelated');
+
+/**
+ * Tinted slime variant — applies SVG feColorMatrix to recolour the green slime PNG.
+ * Each variant gets a unique filter ID to avoid SVG id collisions.
+ */
+let _svC = 0;
+export function makeSlimeVariantSvg(matrix) {
+  const fid = `sv${_svC++}`;
+  return () =>
+    `<defs><filter id="${fid}"><feColorMatrix type="matrix" values="${matrix.join(' ')}"/></filter></defs>` +
+    `<image href="${SPRITE_IMGS.slime}" x="0" y="0" width="120" height="100" style="image-rendering:pixelated" filter="url(#${fid})"/>`;
+}
+
+// Red slime (火): green→red
+export const slimeRedSVG = makeSlimeVariantSvg([
+  0,1,0,0,0,  0,0.2,0,0,0,  0,0,0.2,0,0,  0,0,0,1,0,
+]);
+// Blue slime (水): green→blue
+export const slimeBlueSVG = makeSlimeVariantSvg([
+  0.2,0,0,0,0,  0,0.3,0,0,0,  0,1,0.3,0,0,  0,0,0,1,0,
+]);
+// Yellow slime (電): green→yellow
+export const slimeYellowSVG = makeSlimeVariantSvg([
+  0,1,0,0,0.1,  0,1,0,0,0,  0,0,0.15,0,0,  0,0,0,1,0,
+]);
+// Black slime (暗): desaturate+darken
+export const slimeDarkSVG = makeSlimeVariantSvg([
+  0.15,0.15,0.15,0,0,  0.1,0.1,0.1,0,0,  0.12,0.12,0.12,0,0,  0,0,0,1,0,
+]);
+// Steel slime (鋼): desaturate+lighten
+export const slimeSteelSVG = makeSlimeVariantSvg([
+  0.35,0.35,0.35,0,0.05,  0.33,0.33,0.33,0,0.05,  0.38,0.38,0.38,0,0.08,  0,0,0,1,0,
+]);
+
 export const fireLizardSVG = makeSvgFn('fire');
 export const ghostSVG = makeSvgFn('ghost');
 export const dragonSVG = makeSvgFn('dragon', 'pixelated');

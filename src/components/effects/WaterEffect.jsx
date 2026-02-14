@@ -139,62 +139,100 @@ export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
     );
   }
 
-  // --- idx 3: 終極爆破 (dark+water) ---
+  // --- idx 3: 終極爆破 — purple core + water splashes ---
   const D = 0.5;
-  const ringN = 2 + lvl;
-  const burstN = 3 + lvl * 2;
+  const ringN = 3 + lvl;
+  const rayN = 8 + lvl * 2;
+  const splashN = 5 + lvl * 2;
   return (
-    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, overflow:"hidden" }}>
-      {/* Phase 1: Faint orb approach */}
+    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+      {/* Phase 1: Purple orb approach */}
       <svg width="34" height="34" viewBox="0 0 34 34"
         style={{
           position:"absolute", left:"10%", bottom:"35%",
           "--fly-x":`${100-parseFloat(T.right)-10}vw`,
           "--fly-y":`${parseFloat(T.top)-65}vh`,
-          filter:`drop-shadow(0 0 ${glow}px #2563eb) drop-shadow(0 0 ${glow+4}px #7c3aed)`,
+          filter:`drop-shadow(0 0 ${glow}px #7c3aed) drop-shadow(0 0 ${glow+4}px #581c87)`,
           animation:`ultApproach 0.55s ease forwards`,
         }}>
         <defs><radialGradient id="wOrb" cx="40%" cy="40%">
-          <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.5"/>
-          <stop offset="50%" stopColor="#2563eb" stopOpacity="0.3"/>
-          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0"/>
+          <stop offset="0%" stopColor="#e9d5ff" stopOpacity="0.6"/>
+          <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.4"/>
+          <stop offset="100%" stopColor="#581c87" stopOpacity="0"/>
         </radialGradient></defs>
         <circle cx="17" cy="17" r="13" fill="url(#wOrb)"/>
       </svg>
-      {/* Phase 2: Dark-water vortex rings */}
+      {/* Phase 2: Purple void core */}
+      <svg width="160" height="160" viewBox="0 0 160 160"
+        style={{
+          position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
+          filter:`drop-shadow(0 0 ${glow+6}px #581c87) drop-shadow(0 0 ${glow+10}px #7c3aed)`,
+        }}>
+        <defs><radialGradient id="wVoid" cx="50%" cy="50%">
+          <stop offset="0%" stopColor="#1e1b4b" stopOpacity="0.9"/>
+          <stop offset="35%" stopColor="#581c87" stopOpacity="0.7"/>
+          <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.4"/>
+          <stop offset="100%" stopColor="#a855f7" stopOpacity="0"/>
+        </radialGradient></defs>
+        <circle cx="80" cy="80" r={20+lvl*4} fill="url(#wVoid)"
+          style={{ animation:`fireExpand ${dur/1000}s ease ${D}s forwards` }}/>
+      </svg>
+      {/* Phase 3: Purple pulse rings */}
       {Array.from({ length: ringN }, (_, i) => (
-        <svg key={`r${i}`} width="140" height="140" viewBox="0 0 140 140"
+        <svg key={`r${i}`} width="160" height="160" viewBox="0 0 160 160"
           style={{
             position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
-            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.12}s forwards`, opacity:0,
+            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.1}s forwards`, opacity:0,
           }}>
-          <circle cx="70" cy="70" r={20+i*10} fill="none"
-            stroke={i%2===0?"#2563eb":"#0ea5e9"} strokeWidth={2.5-i*0.25}
-            style={{ filter:`drop-shadow(0 0 ${glow}px #1d4ed8)` }} opacity={1-i*0.1}/>
+          <circle cx="80" cy="80" r={16+i*9} fill="none"
+            stroke={i%2===0?"#7c3aed":"#a855f7"} strokeWidth={2.5-i*0.2}
+            style={{ filter:`drop-shadow(0 0 ${glow}px #7c3aed)` }} opacity={0.85-i*0.06}/>
         </svg>
       ))}
-      {/* Radial splash burst */}
-      {Array.from({ length: burstN }, (_, i) => {
-        const angle = (i / burstN) * 360;
-        const dist = 30 + Math.random() * 50;
+      {/* Phase 4: Purple radial light rays */}
+      {Array.from({ length: rayN }, (_, i) => {
+        const angle = (i / rayN) * 360;
+        const len = 24 + lvl * 6;
+        const w = 3.5 + lvl * 0.4;
+        return (
+          <svg key={`ray${i}`} width={w+4} height={len} viewBox={`0 0 ${w+4} ${len}`}
+            style={{
+              position:"absolute", right:`calc(${T.right} + ${Math.cos(angle*Math.PI/180)*4}px)`,
+              top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
+              transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
+              opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
+              animation:`sparkle ${0.4+Math.random()*0.3}s ease ${D+0.06+i*0.03}s both`,
+            }}>
+            <defs><linearGradient id={`wray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
+              <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.8"/>
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0"/>
+            </linearGradient></defs>
+            <rect x="1" y="0" width={w} height={len} rx={w/2} fill={`url(#wray${i})`}/>
+          </svg>
+        );
+      })}
+      {/* Phase 5: Water-specific splash droplets */}
+      {Array.from({ length: splashN }, (_, i) => {
+        const angle = (i / splashN) * 360;
+        const dist = 28 + Math.random() * 45;
         const r = 4 + lvl + Math.random() * 2;
         const sz = r * 2 + 6;
         return (
-          <svg key={`b${i}`} width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}
+          <svg key={`sp${i}`} width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}
             style={{
               position:"absolute", right:T.right, top:T.top,
               opacity:0, filter:`drop-shadow(0 0 4px #60a5fa)`,
               "--px":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--py":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`splashBurst 0.65s ease ${D+0.08+i*0.035}s forwards`,
+              animation:`splashBurst 0.65s ease ${D+0.1+i*0.04}s forwards`,
             }}>
-            <circle cx={sz/2} cy={sz/2} r={r} fill="#60a5fa" opacity="0.65"/>
-            <ellipse cx={sz/2-1} cy={sz/2-1} rx={r*0.25} ry={r*0.18}
-              fill="rgba(255,255,255,0.4)"/>
+            <circle cx={sz/2} cy={sz/2} r={r} fill={i%2===0?"#60a5fa":"#93c5fd"} opacity="0.7"/>
+            <ellipse cx={sz/2-1} cy={sz/2-1} rx={r*0.25} ry={r*0.18} fill="rgba(255,255,255,0.4)"/>
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(37,99,235,${0.06+lvl*0.015}), rgba(14,165,233,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+      {/* Phase 6: Purple glow */}
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(124,58,237,${0.08+lvl*0.02}), rgba(88,28,135,${0.04+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

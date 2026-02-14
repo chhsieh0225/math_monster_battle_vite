@@ -148,65 +148,97 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
     );
   }
 
-  // --- idx 3: 終極爆破 (dark+grass) ---
+  // --- idx 3: 終極爆破 — purple core + leaf particles ---
   const D = 0.5;
-  const n = 4 + lvl * 2;
+  const ringN = 3 + lvl;
+  const rayN = 8 + lvl * 2;
+  const leafN = 5 + lvl * 2;
   return (
     <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
-      {/* Phase 1: Faint orb approach */}
+      {/* Phase 1: Purple orb approach */}
       <svg width="34" height="34" viewBox="0 0 34 34"
         style={{
           position:"absolute", left:"10%", bottom:"35%",
           "--fly-x":`${100-parseFloat(T.right)-10}vw`,
           "--fly-y":`${parseFloat(T.top)-65}vh`,
-          filter:`drop-shadow(0 0 ${glow}px #22c55e) drop-shadow(0 0 ${glow+4}px #15803d)`,
+          filter:`drop-shadow(0 0 ${glow}px #7c3aed) drop-shadow(0 0 ${glow+4}px #581c87)`,
           animation:`ultApproach 0.55s ease forwards`,
         }}>
         <defs><radialGradient id="gOrb" cx="40%" cy="40%">
-          <stop offset="0%" stopColor="#4ade80" stopOpacity="0.5"/>
-          <stop offset="50%" stopColor="#22c55e" stopOpacity="0.3"/>
-          <stop offset="100%" stopColor="#15803d" stopOpacity="0"/>
+          <stop offset="0%" stopColor="#e9d5ff" stopOpacity="0.6"/>
+          <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.4"/>
+          <stop offset="100%" stopColor="#581c87" stopOpacity="0"/>
         </radialGradient></defs>
         <circle cx="17" cy="17" r="13" fill="url(#gOrb)"/>
       </svg>
-      {/* Phase 2: Dark-green pulse rings */}
-      {Array.from({ length: 2 + lvl }, (_, i) => (
-        <svg key={`r${i}`} width="130" height="130" viewBox="0 0 130 130"
+      {/* Phase 2: Purple void core */}
+      <svg width="160" height="160" viewBox="0 0 160 160"
+        style={{
+          position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
+          filter:`drop-shadow(0 0 ${glow+6}px #581c87) drop-shadow(0 0 ${glow+10}px #7c3aed)`,
+        }}>
+        <defs><radialGradient id="gVoid" cx="50%" cy="50%">
+          <stop offset="0%" stopColor="#1e1b4b" stopOpacity="0.9"/>
+          <stop offset="35%" stopColor="#581c87" stopOpacity="0.7"/>
+          <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.4"/>
+          <stop offset="100%" stopColor="#a855f7" stopOpacity="0"/>
+        </radialGradient></defs>
+        <circle cx="80" cy="80" r={20+lvl*4} fill="url(#gVoid)"
+          style={{ animation:`fireExpand ${dur/1000}s ease ${D}s forwards` }}/>
+      </svg>
+      {/* Phase 3: Purple pulse rings */}
+      {Array.from({ length: ringN }, (_, i) => (
+        <svg key={`r${i}`} width="160" height="160" viewBox="0 0 160 160"
           style={{
             position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
-            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.12}s forwards`, opacity:0,
+            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.1}s forwards`, opacity:0,
           }}>
-          <circle cx="65" cy="65" r={18+i*9} fill="none"
-            stroke={i%2===0?"#22c55e":"#15803d"} strokeWidth={2.5-i*0.2}
-            style={{ filter:`drop-shadow(0 0 ${glow}px #15803d)` }} opacity={1-i*0.12}/>
+          <circle cx="80" cy="80" r={16+i*9} fill="none"
+            stroke={i%2===0?"#7c3aed":"#a855f7"} strokeWidth={2.5-i*0.2}
+            style={{ filter:`drop-shadow(0 0 ${glow}px #7c3aed)` }} opacity={0.85-i*0.06}/>
         </svg>
       ))}
-      {/* Central vine spiral */}
-      <svg width="100%" height="100%" viewBox="0 0 200 160" preserveAspectRatio="none"
-        style={{ position:"absolute", inset:0, filter:`drop-shadow(0 0 ${glow+4}px #22c55e)` }}>
-        <path d="M15,135 Q55,105 95,72 Q135,40 178,28"
-          fill="none" stroke="#15803d" strokeWidth={4+lvl} strokeLinecap="round"
-          strokeDasharray="300" strokeDashoffset="300"
-          style={{ animation:`vineWhipDraw ${dur/1000}s ease ${D}s forwards` }}/>
-      </svg>
-      {/* Leaf explosion from impact point */}
-      {Array.from({ length: n }, (_, i) => {
-        const angle = (i / n) * 360;
-        const dist = 35 + Math.random() * 55;
+      {/* Phase 4: Purple radial light rays */}
+      {Array.from({ length: rayN }, (_, i) => {
+        const angle = (i / rayN) * 360;
+        const len = 24 + lvl * 6;
+        const w = 3.5 + lvl * 0.4;
         return (
-          <svg key={`l${i}`} width="22" height="22" viewBox="-12 -12 24 24"
+          <svg key={`ray${i}`} width={w+4} height={len} viewBox={`0 0 ${w+4} ${len}`}
+            style={{
+              position:"absolute", right:`calc(${T.right} + ${Math.cos(angle*Math.PI/180)*4}px)`,
+              top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
+              transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
+              opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
+              animation:`sparkle ${0.4+Math.random()*0.3}s ease ${D+0.06+i*0.03}s both`,
+            }}>
+            <defs><linearGradient id={`gray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
+              <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.8"/>
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0"/>
+            </linearGradient></defs>
+            <rect x="1" y="0" width={w} height={len} rx={w/2} fill={`url(#gray${i})`}/>
+          </svg>
+        );
+      })}
+      {/* Phase 5: Grass-specific leaf explosion */}
+      {Array.from({ length: leafN }, (_, i) => {
+        const angle = (i / leafN) * 360;
+        const dist = 30 + Math.random() * 50;
+        return (
+          <svg key={`lf${i}`} width="22" height="22" viewBox="-12 -12 24 24"
             style={{
               position:"absolute", right:T.right, top:T.top,
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #4ade80)`,
               "--lx":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--ly":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`leafSpin ${0.45+Math.random()*0.35}s ease ${D+0.1+i*0.035}s forwards`,
+              animation:`leafSpin ${0.5+Math.random()*0.35}s ease ${D+0.1+i*0.04}s forwards`,
             }}>
-            <path d={LEAF} fill="#4ade80" transform={`rotate(${angle})`}/>
+            <path d={LEAF} fill={i%2===0?"#4ade80":"#22c55e"} transform={`rotate(${angle})`}/>
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at ${T.right} ${T.top}, rgba(34,197,94,${0.06+lvl*0.015}), rgba(21,128,61,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+      {/* Phase 6: Purple glow */}
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(124,58,237,${0.08+lvl*0.02}), rgba(88,28,135,${0.04+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

@@ -26,13 +26,26 @@ const FIREFLY_R = [...Array(12)].map((_,i) => ({
   del: i * 0.35,
 }));
 
-const SPARK_R = [...Array(6)].map((_,i) => ({
-  top: 10 + ((i * 13) % 50),
-  left: 8 + ((i * 15) % 75),
+const SPARK_R = [...Array(4)].map((_,i) => ({
+  top: 15 + ((i * 17) % 45),
+  left: 10 + ((i * 20) % 70),
   w: 2 + (i % 2),
-  color: ["#fbbf24","#f8fafc","#94a3b8","#fbbf24","#e2e8f0","#f59e0b"][i],
-  dur: 1.5 + i * 0.6,
-  del: i * 0.5,
+  color: ["#fbbf24","#f8fafc","#94a3b8","#e2e8f0"][i],
+  dur: 1.8 + i * 0.7,
+  del: i * 0.6,
+}));
+
+const SMOKE_R = [...Array(6)].map((_,i) => ({
+  bottom: 2 + ((i * 5) % 28),
+  left: -5 + ((i * 16) % 80),
+  w: 60 + (i % 3) * 30,
+  h: 20 + (i % 2) * 15,
+  dx: 30 + (i % 3) * 15,
+  dy: -(8 + (i % 4) * 5),
+  sc: 0.8 + (i % 3) * 0.3,
+  op: 0.05 + (i % 3) * 0.025,
+  dur: 6 + i * 1.2,
+  del: i * 1.0,
 }));
 
 export const SCENES = {
@@ -103,27 +116,46 @@ export const SCENES = {
     </>
   },
 
-  /* ═══ Steel — spark particles + structural lines (emoji removed) ═══ */
+  /* ═══ Steel — smoke wisps + industrial lights + faint sparks ═══ */
   steel:{
     bgImg:BG_IMGS.steel,
     sky:"linear-gradient(180deg,#64748b 0%,#94a3b8 20%,#cbd5e1 45%,#94a3b8 70%,#6b7280 100%)",
     ground:"linear-gradient(180deg,transparent,rgba(100,116,139,0.1) 40%,rgba(75,85,99,0.2))",
     platform1:"rgba(100,116,139,0.3)",platform2:"rgba(100,116,139,0.2)",
     deco:()=><>
-      {/* Steel sparks */}
+      {/* Drifting smoke wisps */}
+      {SMOKE_R.map((r,i)=><div key={`sm${i}`} style={{
+        position:"absolute",bottom:`${r.bottom}%`,left:`${r.left}%`,
+        width:r.w,height:r.h,
+        background:"radial-gradient(ellipse,rgba(203,213,225,0.5),rgba(148,163,184,0.2),transparent)",
+        borderRadius:"50%",filter:`blur(${8+i*2}px)`,
+        "--sm-dx":`${r.dx}px`,"--sm-dy":`${r.dy}px`,
+        "--sm-s":`${r.sc}`,"--sm-op":`${r.op}`,
+        animation:`smokeDrift ${r.dur}s ease-in-out ${r.del}s infinite`
+      }}/>)}
+      {/* Overhead industrial light cones */}
+      <div style={{position:"absolute",top:"0%",left:"18%",width:80,height:"45%",
+        background:"linear-gradient(180deg,rgba(251,191,36,0.07),rgba(251,191,36,0.02) 60%,transparent)",
+        clipPath:"polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)",
+        "--lp-lo":"0.04","--lp-hi":"0.09",
+        animation:"lightPulse 4s ease-in-out infinite"}}/>
+      <div style={{position:"absolute",top:"0%",right:"22%",width:70,height:"40%",
+        background:"linear-gradient(180deg,rgba(248,250,252,0.06),rgba(203,213,225,0.02) 60%,transparent)",
+        clipPath:"polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)",
+        "--lp-lo":"0.03","--lp-hi":"0.08",
+        animation:"lightPulse 5s ease-in-out 1.5s infinite"}}/>
+      {/* Light source dots at ceiling */}
+      <div style={{position:"absolute",top:"1%",left:"22%",width:10,height:4,background:"rgba(251,191,36,0.15)",borderRadius:"50%",boxShadow:"0 0 12px rgba(251,191,36,0.1)"}}/>
+      <div style={{position:"absolute",top:"1%",right:"26%",width:8,height:3,background:"rgba(248,250,252,0.12)",borderRadius:"50%",boxShadow:"0 0 10px rgba(248,250,252,0.08)"}}/>
+      {/* Faint sparks (reduced) */}
       {SPARK_R.map((r,i)=><div key={`sp${i}`} style={{
         position:"absolute",top:`${r.top}%`,left:`${r.left}%`,
         width:r.w,height:r.w,background:r.color,borderRadius:"50%",
         boxShadow:`0 0 ${r.w*2}px ${r.color}`,
         animation:`steelSpark ${r.dur}s ease ${r.del}s infinite`
       }}/>)}
-      {/* Structural beams */}
-      <div style={{position:"absolute",bottom:"5%",left:"2%",width:"96%",height:8,background:"linear-gradient(90deg,#6b7280,#9ca3af,#6b7280)",opacity:0.15,borderRadius:2}}/>
-      <div style={{position:"absolute",bottom:"5%",left:"10%",width:4,height:"30%",background:"linear-gradient(180deg,transparent,#6b7280)",opacity:0.1}}/>
-      <div style={{position:"absolute",bottom:"5%",right:"15%",width:4,height:"25%",background:"linear-gradient(180deg,transparent,#6b7280)",opacity:0.1}}/>
-      {/* Faint arc circle */}
-      <div style={{position:"absolute",top:"8%",right:"20%",width:80,height:80,border:"2px solid rgba(148,163,184,0.08)",borderRadius:"50%"}}/>
-      <div style={{position:"absolute",top:"6%",left:"10%",width:50,height:3,background:"rgba(148,163,184,0.1)",transform:"rotate(-15deg)"}}/>
+      {/* Structural beam (subtle) */}
+      <div style={{position:"absolute",bottom:"5%",left:"2%",width:"96%",height:6,background:"linear-gradient(90deg,#6b7280,#9ca3af,#6b7280)",opacity:0.1,borderRadius:2}}/>
     </>
   },
 

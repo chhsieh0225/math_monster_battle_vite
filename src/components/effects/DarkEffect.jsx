@@ -163,14 +163,14 @@ export default function DarkEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
     );
   }
 
-  // --- idx 3: 終極暗黑 (Ultimate Darkness) ---
+  // --- idx 3: 終極爆破 — purple core + dark stars ---
   const D = 0.5;
   const ringN = 3 + lvl;
-  const starN = 5 + lvl * 2;
-  const voidR = 24 + lvl * 5;
+  const rayN = 8 + lvl * 2;
+  const starN = 6 + lvl * 2;
   return (
     <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
-      {/* Phase 1: Faint orb approach */}
+      {/* Phase 1: Purple orb approach */}
       <svg width="36" height="36" viewBox="0 0 36 36"
         style={{
           position:"absolute", left:"10%", bottom:"35%",
@@ -180,76 +180,82 @@ export default function DarkEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
           animation:`ultApproach 0.55s ease forwards`,
         }}>
         <defs><radialGradient id="dOrb" cx="40%" cy="40%">
-          <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.5"/>
-          <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.3"/>
+          <stop offset="0%" stopColor="#e9d5ff" stopOpacity="0.6"/>
+          <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.4"/>
           <stop offset="100%" stopColor="#581c87" stopOpacity="0"/>
         </radialGradient></defs>
         <circle cx="18" cy="18" r="14" fill="url(#dOrb)"/>
       </svg>
-      {/* Phase 2: Central void */}
-      <svg width="180" height="180" viewBox="0 0 180 180"
+      {/* Phase 2: Purple void core */}
+      <svg width="160" height="160" viewBox="0 0 160 160"
         style={{
           position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
-          filter:`drop-shadow(0 0 ${glow+8}px #581c87) drop-shadow(0 0 ${glow+12}px #7c3aed)`,
+          filter:`drop-shadow(0 0 ${glow+6}px #581c87) drop-shadow(0 0 ${glow+10}px #7c3aed)`,
         }}>
-        <defs>
-          <radialGradient id="voidCore" cx="50%" cy="50%">
-            <stop offset="0%" stopColor="#1e1b4b" stopOpacity="0.95"/>
-            <stop offset="30%" stopColor="#581c87" stopOpacity="0.8"/>
-            <stop offset="55%" stopColor="#7c3aed" stopOpacity="0.5"/>
-            <stop offset="80%" stopColor="#a855f7" stopOpacity="0.2"/>
-            <stop offset="100%" stopColor="#c4b5fd" stopOpacity="0"/>
-          </radialGradient>
-        </defs>
-        <circle cx="90" cy="90" r={voidR} fill="url(#voidCore)"
+        <defs><radialGradient id="dVoid" cx="50%" cy="50%">
+          <stop offset="0%" stopColor="#1e1b4b" stopOpacity="0.95"/>
+          <stop offset="30%" stopColor="#581c87" stopOpacity="0.8"/>
+          <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.5"/>
+          <stop offset="100%" stopColor="#a855f7" stopOpacity="0"/>
+        </radialGradient></defs>
+        <circle cx="80" cy="80" r={22+lvl*5} fill="url(#dVoid)"
           style={{ animation:`fireExpand ${dur/1000}s ease ${D}s forwards` }}/>
       </svg>
-      {/* Many expanding pulse rings */}
+      {/* Phase 3: Purple pulse rings */}
       {Array.from({ length: ringN }, (_, i) => (
         <svg key={`r${i}`} width="160" height="160" viewBox="0 0 160 160"
           style={{
             position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
             animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.1}s forwards`, opacity:0,
           }}>
-          <circle cx="80" cy="80" r={16+i*8} fill="none"
-            stroke={i%3===0?"#7c3aed":i%3===1?"#a855f7":"#581c87"}
-            strokeWidth={2.8-i*0.2}
-            style={{ filter:`drop-shadow(0 0 ${glow+2}px ${i%2===0?"#7c3aed":"#a855f7"})` }}
-            opacity={0.85-i*0.06}/>
+          <circle cx="80" cy="80" r={16+i*9} fill="none"
+            stroke={i%2===0?"#7c3aed":"#a855f7"} strokeWidth={2.5-i*0.2}
+            style={{ filter:`drop-shadow(0 0 ${glow}px #7c3aed)` }} opacity={0.85-i*0.06}/>
         </svg>
       ))}
-      {/* Shadow slash lines */}
-      {Array.from({ length: 2 + Math.floor(lvl / 2) }, (_, i) => (
-        <svg key={`sl${i}`} width="100%" height="100%" viewBox="0 0 200 160"
-          preserveAspectRatio="none"
-          style={{ position:"absolute", inset:0, filter:`drop-shadow(0 0 ${glow}px #7c3aed)` }}>
-          <path d={`M${20+i*15},${140-i*10} Q${80+i*8},${80-i*6} ${170-i*5},${15+i*4}`}
-            fill="none" stroke="#a855f7" strokeWidth={2+lvl*0.4} strokeLinecap="round"
-            strokeDasharray="300" strokeDashoffset="300" opacity={0.5-i*0.08}
-            style={{ animation:`vineWhipDraw ${dur/1000*0.9}s ease ${D+i*0.12}s forwards` }}/>
-        </svg>
-      ))}
-      {/* Radial star explosion from void center */}
+      {/* Phase 4: Purple radial light rays */}
+      {Array.from({ length: rayN }, (_, i) => {
+        const angle = (i / rayN) * 360;
+        const len = 24 + lvl * 6;
+        const w = 3.5 + lvl * 0.4;
+        return (
+          <svg key={`ray${i}`} width={w+4} height={len} viewBox={`0 0 ${w+4} ${len}`}
+            style={{
+              position:"absolute", right:`calc(${T.right} + ${Math.cos(angle*Math.PI/180)*4}px)`,
+              top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
+              transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
+              opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
+              animation:`sparkle ${0.4+Math.random()*0.3}s ease ${D+0.06+i*0.03}s both`,
+            }}>
+            <defs><linearGradient id={`dray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
+              <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.8"/>
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0"/>
+            </linearGradient></defs>
+            <rect x="1" y="0" width={w} height={len} rx={w/2} fill={`url(#dray${i})`}/>
+          </svg>
+        );
+      })}
+      {/* Phase 5: Dark-specific star explosion */}
       {Array.from({ length: starN }, (_, i) => {
         const angle = (i / starN) * 360;
-        const dist = 35 + Math.random() * 60;
+        const dist = 30 + Math.random() * 55;
         return (
-          <svg key={`s${i}`} width="22" height="22" viewBox="-10 -10 20 20"
+          <svg key={`st${i}`} width="22" height="22" viewBox="-10 -10 20 20"
             style={{
               position:"absolute", right:T.right, top:T.top,
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
               "--sx":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--sy":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`darkStarSpin ${0.5+Math.random()*0.35}s ease ${D+0.08+i*0.035}s forwards`,
+              animation:`darkStarSpin ${0.5+Math.random()*0.35}s ease ${D+0.1+i*0.035}s forwards`,
             }}>
             <path d={i%2===0 ? STAR : SPARK4}
               fill={i%3===0?"#e9d5ff":i%3===1?"#c4b5fd":"#a855f7"}
-              opacity={0.65+lvl*0.04}
-              transform={`rotate(${angle})`}/>
+              opacity={0.7+lvl*0.04} transform={`rotate(${angle})`}/>
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at ${parseInt(T.right)}% ${parseInt(T.top)}%, rgba(30,27,75,${0.07+lvl*0.015}), rgba(88,28,135,${0.04+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+      {/* Phase 6: Purple glow (deeper for dark) */}
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(30,27,75,${0.1+lvl*0.02}), rgba(88,28,135,${0.05+lvl*0.015}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

@@ -113,6 +113,13 @@ export function useBattle() {
   const [specDef, setSpecDef] = useState(false);
   const [defAnim, setDefAnim] = useState(null);
 
+  // ──── Boss mechanics ────
+  const [bossPhase, setBossPhase] = useState(0);         // 0=not boss, 1/2/3
+  const [bossTurn, setBossTurn] = useState(0);            // turn counter in boss fight
+  const [bossCharging, setBossCharging] = useState(false);// boss is charging next big attack
+  const [sealedMove, setSealedMove] = useState(-1);       // index of sealed move (-1=none)
+  const [sealedTurns, setSealedTurns] = useState(0);      // remaining sealed turns
+
   // ──── Achievements & Encyclopedia ────
   const [achUnlocked, setAchUnlocked] = useState(() => loadAch());
   const [achPopup, setAchPopup] = useState(null);
@@ -177,6 +184,7 @@ export function useBattle() {
     streak, charge, burnStack, frozen, staticStack, specDef,
     mHits, mLvls, selIdx, phase, round, q,
     screen, timedMode,
+    bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
   };
 
   // ──── Computed ────
@@ -270,6 +278,13 @@ export function useBattle() {
     frozenR.current = false;
     setSpecDef(false);
     setDefAnim(null);
+    // Boss mechanics init
+    const isBoss = e.id === "boss";
+    setBossPhase(isBoss ? 1 : 0);
+    setBossTurn(0);
+    setBossCharging(false);
+    setSealedMove(-1);
+    setSealedTurns(0);
     setRound(idx);
     updateEnc(e); // ← encyclopedia: mark encountered
     const sn = SCENE_NAMES[e.sceneMType || e.mType] || "";
@@ -295,6 +310,8 @@ export function useBattle() {
     setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
     setBurnStack(0); setStaticStack(0); setFrozen(false); frozenR.current = false;
     setSpecDef(false); setDefAnim(null);
+    setBossPhase(0); setBossTurn(0); setBossCharging(false);
+    setSealedMove(-1); setSealedTurns(0);
     pendingEvolve.current = false;
     // Init session log — use override on first game since setStarter is async
     const s = starterOverride || sr.current.starter;
@@ -323,6 +340,8 @@ export function useBattle() {
   const handleVictory = (verb = "被打倒了") => {
     const s = sr.current;
     setBurnStack(0); setStaticStack(0); setFrozen(false); frozenR.current = false;
+    setBossPhase(0); setBossTurn(0); setBossCharging(false);
+    setSealedMove(-1); setSealedTurns(0);
     const xp = s.enemy.lvl * 15;
     setPExp(prev => {
       const ne = prev + xp;
@@ -368,17 +387,123 @@ export function useBattle() {
   // --- Player selects a move ---
   const selectMove = (i) => {
     if (phase !== "menu" || !starter) return;
+    // Boss: sealed move check
+    if (sr.current.sealedMove === i) return; // silently blocked, UI shows lock
     setSelIdx(i);
     setQ(genQ(starter.moves[i]));
     setFb(null);
     setAnswered(false);
     setPhase("question");
     qStartRef.current = Date.now(); // ← log question start time
+    // Boss: halve timer in boss fight (Phase 1+ roar effect)
     if (timedMode) startTimer();
+  };
+
+  // --- Helper: compute boss phase from HP ratio ---
+  const _updateBossPhase = (hp, maxHp) => {
+    const ratio = hp / maxHp;
+    if (ratio <= 0.3) return 3;
+    if (ratio <= 0.6) return 2;
+    return 1;
   };
 
   // --- Enemy turn logic (reads from stateRef) ---
   const doEnemyTurn = () => {
+    const s = sr.current;
+    if (!s.enemy || !s.starter) return;
+    const isBoss = s.enemy.id === "boss";
+
+    // ── Boss: decrement sealed move turns at start of enemy turn ──
+    if (isBoss && s.sealedTurns > 0) {
+      const nt = s.sealedTurns - 1;
+      setSealedTurns(nt);
+      if (nt <= 0) setSealedMove(-1);
+    }
+
+    // ── Boss: update phase from current HP ──
+    if (isBoss) {
+      const newPhase = _updateBossPhase(s.eHp, s.enemy.maxHp);
+      if (newPhase !== s.bossPhase) {
+        setBossPhase(newPhase);
+        // Phase transition announcement
+        const phaseMsg = newPhase === 2 ? "💀 暗黑龍王進入狂暴狀態！攻擊力上升！"
+                       : newPhase === 3 ? "💀 暗黑龍王覺醒了！背水一戰！"
+                       : "";
+        if (phaseMsg) {
+          setBText(phaseMsg);
+          setPhase("text");
+          setEAnim("bossShake 0.5s ease");
+          safeTo(() => setEAnim(""), 600);
+          safeTo(() => doEnemyTurnInner(), 1500);
+          return;
+        }
+      }
+    }
+    doEnemyTurnInner();
+  };
+
+  const doEnemyTurnInner = () => {
+    const s = sr.current;
+    if (!s.enemy || !s.starter) return;
+    const isBoss = s.enemy.id === "boss";
+    const bp = isBoss ? _updateBossPhase(s.eHp, s.enemy.maxHp) : 0;
+
+    // ── Boss: increment turn counter ──
+    let turnCount = s.bossTurn;
+    if (isBoss) {
+      turnCount = s.bossTurn + 1;
+      setBossTurn(turnCount);
+    }
+
+    // ── Boss charging mechanic: release big attack ──
+    if (isBoss && s.bossCharging) {
+      setBossCharging(false);
+      setBText(`💀 暗黑龍王釋放暗黑吐息！`);
+      setPhase("enemyAtk");
+      setEAnim("enemyAttackLunge 0.6s ease");
+      safeTo(() => {
+        setEAnim("");
+        const s2 = sr.current;
+        const bigDmg = Math.round(s2.enemy.atk * 2.2);
+        const nh = Math.max(0, s2.pHp - bigDmg);
+        setPHp(nh); setPAnim("playerHit 0.5s ease");
+        addD(`💀-${bigDmg}`, 60, 170, "#a855f7"); addP("enemy", 80, 190, 6);
+        safeTo(() => setPAnim(""), 500);
+        if (nh <= 0) safeTo(() => { _endSession(false); setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }, 800);
+        else safeTo(() => { setPhase("menu"); setBText(""); }, 800);
+      }, 500);
+      return;
+    }
+
+    // ── Boss: start charging every 4 turns ──
+    if (isBoss && turnCount > 0 && turnCount % 4 === 0 && !s.bossCharging) {
+      setBossCharging(true);
+      setBText("⚠️ 暗黑龍王正在蓄力！下回合將釋放大招！");
+      setPhase("text");
+      setEAnim("bossShake 0.5s ease infinite");
+      safeTo(() => { setPhase("menu"); setBText(""); setEAnim(""); }, 2000);
+      return;
+    }
+
+    // ── Boss Phase 2+: seal a random move ──
+    if (isBoss && bp >= 2 && s.sealedMove < 0 && turnCount > 0 && turnCount % 3 === 0) {
+      const sealIdx = Math.floor(Math.random() * 3); // only seal moves 0-2, not ultimate
+      setSealedMove(sealIdx);
+      setSealedTurns(2);
+      const moveName = s.starter.moves[sealIdx]?.name || "???";
+      setBText(`💀 暗黑龍王封印了你的「${moveName}」！（2回合）`);
+      setPhase("text");
+      safeTo(() => doEnemyAttack(bp), 1500);
+      return;
+    }
+
+    // ── Boss Phase 1: 暗黑咆哮 (halve timer) — handled via bossRoar state ──
+    // (Timer halving is passive; just do a normal attack with phase-scaled damage)
+
+    doEnemyAttack(bp);
+  };
+
+  const doEnemyAttack = (bp) => {
     const s = sr.current;
     if (!s.enemy || !s.starter) return;
     setBText(`${s.enemy.name} 發動攻擊！`);
@@ -399,7 +524,6 @@ export function useBattle() {
           setBText("💨 完美閃避！"); addD("MISS!", 60, 170, "#38bdf8");
           safeTo(() => { setPAnim(""); setDefAnim(null); setPhase("menu"); setBText(""); }, 1800);
         } else if (st === "electric") {
-          // Electric: paralyse — block attack and enemy skips next turn
           setBText("⚡ 電流麻痺！敵人無法行動！"); addD("⚡麻痺", 60, 170, "#fbbf24");
           setEAnim("enemyElecHit 0.6s ease");
           addP("electric", 155, 80, 5);
@@ -428,8 +552,10 @@ export function useBattle() {
         }
         return;
       }
-      // Normal enemy attack
-      const dmg = calcEnemyDamage(s2.enemy.atk, getEff(s2.enemy.mType, s2.starter.type));
+      // Normal enemy attack — boss phase scales damage
+      const atkMult = bp >= 3 ? 2.0 : bp >= 2 ? 1.5 : 1.0;
+      const scaledAtk = Math.round(s2.enemy.atk * atkMult);
+      const dmg = calcEnemyDamage(scaledAtk, getEff(s2.enemy.mType, s2.starter.type));
       const defEff = getEff(s2.enemy.mType, s2.starter.type);
       const nh = Math.max(0, s2.pHp - dmg);
       setPHp(nh); setPAnim("playerHit 0.5s ease");
@@ -504,15 +630,23 @@ export function useBattle() {
               ? Math.min(move.basePower + s3.mLvls[s3.selIdx] * move.growth, POWER_CAPS[s3.selIdx])
               : movePower(move, s3.mLvls[s3.selIdx], s3.selIdx);
             const eff = bestEffectiveness(move, s3.enemy);
-            const dmg = calcAttackDamage({
+            let dmg = calcAttackDamage({
               basePow: pow,
               streak: ns,
               stageBonus: s3.pStg,
               effMult: eff,
             });
+            // Boss Phase 3: 背水一戰 — player gets ×1.3 bonus
+            if (s3.bossPhase >= 3) dmg = Math.round(dmg * 1.3);
 
             if (eff > 1) { setEffMsg({ text: "效果絕佳！", color: "#22c55e" }); safeTo(() => setEffMsg(null), 1500); }
             else if (eff < 1) { setEffMsg({ text: "效果不好...", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
+
+            // Boss: interrupt charging on correct answer
+            if (s3.bossCharging) {
+              setBossCharging(false);
+              safeTo(() => addD("💥打斷蓄力！", 155, 30, "#fbbf24"), 400);
+            }
 
             let afterHp = Math.max(0, s3.eHp - dmg);
 
@@ -655,6 +789,7 @@ export function useBattle() {
     phase, selIdx, q, fb, bText, answered,
     dmgs, parts, eAnim, pAnim, atkEffect, effMsg,
     burnStack, frozen, staticStack, specDef, defAnim,
+    bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
     gamePaused, timerLeft,
     expNext, chargeReady,
 

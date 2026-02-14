@@ -158,6 +158,7 @@ export function useBattle() {
   const pid = useRef(0);
   const turnRef = useRef(0);
   const pendingEvolve = useRef(false);   // ← Bug #2 fix
+  const evolveRound = useRef(0);        // round to resume after evolve screen
 
   // ──── State ref — always points at latest values (Bug #1 fix) ────
   const sr = useRef({});
@@ -324,25 +325,24 @@ export function useBattle() {
     setBossPhase(0); setBossTurn(0); setBossCharging(false);
     setSealedMove(-1); setSealedTurns(0);
     const xp = s.enemy.lvl * 15;
-    setPExp(prev => {
-      const ne = prev + xp;
-      const threshold = s.pLvl * 30; // use stateRef for current level
-      if (ne >= threshold) {
-        setPLvl(l => {
-          const nl = l + 1;
-          if (s.pStg < 2 && nl % 3 === 0) {
-            // Mark evolution pending — defer ALL visual state updates to advance()
-            // so the battle screen keeps showing the pre-evolution sprite during victory.
-            pendingEvolve.current = true; sfx.play("evolve");
-          } else {
-            setPHp(h => Math.min(h + 20, PLAYER_MAX_HP));
-          }
-          return nl;
-        });
-        return ne - threshold;
+    // Compute XP / level-up synchronously (avoid nested setState updaters
+    // which cause unreliable ref mutation timing in React 19).
+    const newExp = s.pExp + xp;
+    const threshold = s.pLvl * 30;
+    if (newExp >= threshold) {
+      const newLvl = s.pLvl + 1;
+      setPExp(newExp - threshold);
+      setPLvl(newLvl);
+      if (s.pStg < 2 && newLvl % 3 === 0) {
+        // Mark evolution pending — defer visual state updates to advance()
+        // so battle screen keeps showing pre-evolution sprite during victory.
+        pendingEvolve.current = true; sfx.play("evolve");
+      } else {
+        setPHp(h => Math.min(h + 20, PLAYER_MAX_HP));
       }
-      return ne;
-    });
+    } else {
+      setPExp(newExp);
+    }
     setDefeated(d => d + 1);
     updateEncDefeated(s.enemy); // ← encyclopedia: mark defeated
     // ── Achievement checks on victory ──
@@ -723,6 +723,7 @@ export function useBattle() {
         setPStg(st => { if (st + 1 >= 2) tryUnlock("evolve_max"); return Math.min(st + 1, 2); });
         setPHp(PLAYER_MAX_HP);
         setMLvls(prev => prev.map(v => Math.min(v + 1, MAX_MOVE_LVL)));
+        evolveRound.current = round;   // remember which round to resume from
         setScreen("evolve");
         return;
       }
@@ -753,6 +754,17 @@ export function useBattle() {
     }
   };
 
+  // --- Continue from evolve screen → start next battle ---
+  const continueAfterEvolve = () => {
+    const nx = evolveRound.current + 1;
+    if (nx >= enemies.length) {
+      _endSession(true);
+      setScreen("gameover");
+    } else {
+      startBattle(nx);
+    }
+  };
+
   // ═══════════════════════════════════════════════════════════════
   //  PUBLIC API
   // ═══════════════════════════════════════════════════════════════
@@ -775,7 +787,7 @@ export function useBattle() {
 
     // ── Actions ──
     setTimedMode, setScreen, setStarter,
-    startGame, selectMove, onAns, advance,
+    startGame, selectMove, onAns, advance, continueAfterEvolve,
     quitGame, togglePause,
 
     // ── Helpers exposed for render ──

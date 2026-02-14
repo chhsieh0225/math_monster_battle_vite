@@ -108,7 +108,7 @@ function App() {
     <SelectionScreen onSelect={(s) => { B.sfx.init(); B.setStarter(s); B.startGame(s); }} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "evolve") return (
-    <EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={() => { B.setScreen("battle"); }} />
+    <EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={B.continueAfterEvolve} />
   );
   if (B.screen === "gameover") return (
     <GameOverScreen

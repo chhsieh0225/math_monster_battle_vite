@@ -38,8 +38,8 @@ import {
 
 // ═══════════════════════════════════════════════════════════════════
 export function useBattle() {
-  // ──── Enemy roster (generated once per mount) ────
-  const [enemies] = useState(() => {
+  // ──── Enemy roster (regenerated each game for slime variant randomisation) ────
+  const buildRoster = () => {
     const order = [0, 1, 0, 2, 0, 1, 3, 2, 3, 4];
     return order.map((idx, i) => {
       const b = MONSTERS[idx];
@@ -62,7 +62,8 @@ export function useBattle() {
         atk: Math.round(b.atk * sc), lvl: i + 1, isEvolved,
       };
     });
-  });
+  };
+  const [enemies, setEnemies] = useState(buildRoster);
 
   // ──── Screen & mode ────
   const [screen, setScreen] = useState("title");
@@ -255,9 +256,10 @@ export function useBattle() {
   //  BATTLE FLOW
   // ═══════════════════════════════════════════════════════════════
 
-  // --- Start a battle against enemies[idx] ---
-  const startBattle = (idx) => {
-    const e = enemies[idx];
+  // --- Start a battle against enemies[idx], optionally from a fresh roster ---
+  const startBattle = (idx, roster) => {
+    const list = roster || enemies;
+    const e = list[idx];
     setEnemy(e);
     setEHp(e.maxHp);
     setBurnStack(0);
@@ -280,6 +282,9 @@ export function useBattle() {
   const startGame = () => {
     turnRef.current++;
     clearTimer();
+    // Regenerate roster so slime variants are re-randomised each game
+    const newRoster = buildRoster();
+    setEnemies(newRoster);
     setPHp(PLAYER_MAX_HP); setPExp(0); setPLvl(1); setPStg(0);
     setStreak(0); setCharge(0); setTC(0); setTW(0);
     setDefeated(0); setMaxStreak(0);
@@ -291,7 +296,7 @@ export function useBattle() {
     // Init session log
     sessionRef.current = initSessionLog(sr.current.starter, sr.current.timedMode);
     setScreen("battle");
-    startBattle(0);
+    startBattle(0, newRoster);
   };
 
   // ── Finalize and persist session log ──

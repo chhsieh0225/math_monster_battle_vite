@@ -31,6 +31,10 @@ import {
 import { useTimer } from './useTimer';
 import { loadAch, saveAch, loadEnc, saveEnc } from '../utils/achievementStore';
 import { ENC_TOTAL } from '../data/encyclopedia';
+import {
+  initSessionLog, logAnswer as _logAnswer,
+  finalizeSession, saveSession,
+} from '../utils/sessionLogger';
 
 // ═══════════════════════════════════════════════════════════════════
 export function useBattle() {
@@ -144,6 +148,10 @@ export function useBattle() {
     });
   };
 
+  // ──── Session logging (parent dashboard) ────
+  const sessionRef = useRef(null);        // mutable session log object
+  const qStartRef  = useRef(0);           // timestamp when question was shown
+
   // ──── Internal refs ────
   const did = useRef(0);
   const pid = useRef(0);
@@ -210,6 +218,9 @@ export function useBattle() {
     setTW(w => w + 1);
     setStreak(0);
     setCharge(0);
+    // ── Session logging: timeout counts as wrong ──
+    const ansTimeMs = Date.now() - qStartRef.current;
+    _logAnswer(sessionRef.current, sr.current.q, false, ansTimeMs);
     setBText("⏰ 時間到！來不及出招！");
     setPhase("text");
     // Read enemy from stateRef so we never hit a stale closure
@@ -268,11 +279,27 @@ export function useBattle() {
     setBurnStack(0); setFrozen(false); frozenR.current = false;
     setSpecDef(false); setDefAnim(null);
     pendingEvolve.current = false;
+    // Init session log
+    sessionRef.current = initSessionLog(sr.current.starter, sr.current.timedMode);
     setScreen("battle");
     startBattle(0);
   };
 
-  const quitGame = () => { clearTimer(); setScreen("gameover"); };
+  // ── Finalize and persist session log ──
+  const _endSession = (isCompleted) => {
+    const s = sr.current;
+    const done = finalizeSession(sessionRef.current, {
+      defeated: s.defeated || 0,
+      finalLevel: s.pLvl || 1,
+      maxStreak: s.maxStreak || 0,
+      pHp: s.pHp || 0,
+      completed: !!isCompleted,
+    });
+    if (done) saveSession(done);
+    sessionRef.current = null;
+  };
+
+  const quitGame = () => { clearTimer(); _endSession(false); setScreen("gameover"); };
 
   // --- Handle a defeated enemy ---
   const handleVictory = (verb = "被打倒了") => {
@@ -328,6 +355,7 @@ export function useBattle() {
     setFb(null);
     setAnswered(false);
     setPhase("question");
+    qStartRef.current = Date.now(); // ← log question start time
     if (timedMode) startTimer();
   };
 
@@ -380,7 +408,7 @@ export function useBattle() {
       if (defEff > 1) { setEffMsg({ text: "敵人招式很有效！", color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
       else if (defEff < 1) { setEffMsg({ text: "敵人招式效果不佳", color: "#64748b" }); safeTo(() => setEffMsg(null), 1500); }
       safeTo(() => setPAnim(""), 500);
-      if (nh <= 0) safeTo(() => { setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }, 800);
+      if (nh <= 0) safeTo(() => { _endSession(false); setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }, 800);
       else safeTo(() => { setPhase("menu"); setBText(""); }, 800);
     }, 500);
   };
@@ -393,6 +421,10 @@ export function useBattle() {
     const s = sr.current;
     const move = starter.moves[s.selIdx];
     const correct = choice === s.q.answer;
+
+    // ── Session logging ──
+    const ansTimeMs = Date.now() - qStartRef.current;
+    _logAnswer(sessionRef.current, s.q, correct, ansTimeMs);
 
     if (correct) {
       setFb({ correct: true }); setTC(c => c + 1);
@@ -507,7 +539,7 @@ export function useBattle() {
           setBText(`${move.name} 失控了！自己受到 ${sd} 傷害！`);
           setPhase("text");
           safeTo(() => {
-            if (nh2 <= 0) { setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }
+            if (nh2 <= 0) { _endSession(false); setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }
             else if (frozenR.current) handleFreeze();
             else doEnemyTurn();
           }, 1500);
@@ -562,6 +594,7 @@ export function useBattle() {
           if (Object.keys(prev.defeated).length >= ENC_TOTAL) tryUnlock("enc_defeat");
           return prev;
         });
+        _endSession(true);  // ← save completed session
         setScreen("gameover");
       }
       else { setPHp(h => Math.min(h + 10, PLAYER_MAX_HP)); startBattle(nx); }

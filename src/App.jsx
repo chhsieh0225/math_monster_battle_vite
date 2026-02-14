@@ -36,6 +36,7 @@ import EvolveScreen from './components/screens/EvolveScreen';
 import GameOverScreen from './components/screens/GameOverScreen';
 import AchievementScreen from './components/screens/AchievementScreen';
 import EncyclopediaScreen from './components/screens/EncyclopediaScreen';
+import DashboardScreen from './components/screens/DashboardScreen';
 import AchievementPopup from './components/ui/AchievementPopup';
 import { ACH_MAP } from './data/achievements';
 
@@ -86,6 +87,7 @@ function App() {
       onLeaderboard={() => B.setScreen("leaderboard")}
       onAchievements={() => B.setScreen("achievements")}
       onEncyclopedia={() => B.setScreen("encyclopedia")}
+      onDashboard={() => B.setScreen("dashboard")}
     />
   );
   if (B.screen === "achievements") return (
@@ -93,6 +95,9 @@ function App() {
   );
   if (B.screen === "encyclopedia") return (
     <EncyclopediaScreen encData={B.encData} onBack={() => B.setScreen("title")} />
+  );
+  if (B.screen === "dashboard") return (
+    <DashboardScreen onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "leaderboard") return (
     <LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen("title")} />

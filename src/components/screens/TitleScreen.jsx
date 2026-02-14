@@ -2,7 +2,7 @@ import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters';
 import { VERSION } from '../../data/constants';
 
-export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard, onAchievements, onEncyclopedia }) {
+export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard, onAchievements, onEncyclopedia, onDashboard }) {
   return (
     <div style={{height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)",color:"white",padding:24,textAlign:"center",position:"relative",overflow:"hidden"}}>
       <div style={{position:"absolute",top:"8%",left:"12%",fontSize:40,opacity:0.12,animation:"sparkle 3s ease infinite"}}>⭐</div>
@@ -20,6 +20,9 @@ export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard
         <button onClick={onLeaderboard} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",color:"white",fontSize:13,fontWeight:600,padding:"8px 18px",borderRadius:50}}>🏆 排行榜</button>
         <button onClick={onAchievements} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",color:"white",fontSize:13,fontWeight:600,padding:"8px 18px",borderRadius:50}}>⭐ 成就</button>
         <button onClick={onEncyclopedia} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",color:"white",fontSize:13,fontWeight:600,padding:"8px 18px",borderRadius:50}}>📚 圖鑑</button>
+      </div>
+      <div style={{marginTop:8}}>
+        <button onClick={onDashboard} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.5)",fontSize:12,fontWeight:600,padding:"6px 16px",borderRadius:50}}>📊 家長專區</button>
       </div>
       <div style={{display:"flex",gap:16,marginTop:16,fontSize:12,opacity:0.3}}><div>🔥 乘法</div><div>🌊 除法</div><div>💥 混合</div><div>⚡ 九九</div></div>
       <div style={{marginTop:36,opacity:0.25,fontSize:11,lineHeight:1.8}}><div>設計：Chung-Han Hsieh</div><div style={{fontSize:10}}>✉️ ch.hsieh@mx.nthu.edu.tw</div><div>程式實作：由 Claude (Anthropic) 協助生成</div><div style={{marginTop:6,fontSize:10,opacity:0.6,fontFamily:"monospace"}}>{VERSION}</div></div>

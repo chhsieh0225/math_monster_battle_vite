@@ -24,6 +24,8 @@ export default function DarkEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
             viewBox={`0 0 ${coreR*2+16} ${coreR*2+16}`}
             style={{
               position:"absolute", left:`${8+i*8}%`, bottom:`${32+i*6}%`,
+              "--fly-x":`${100-parseFloat(T.right)-(8+i*8)}vw`,
+              "--fly-y":`${parseFloat(T.top)-(100-(32+i*6))}vh`,
               filter:`drop-shadow(0 0 ${glow}px #7c3aed) drop-shadow(0 0 ${glow+3}px #581c87)`,
               animation:`flameFly ${dur/1000+i*0.15}s ease ${i*0.1}s forwards`, opacity:0,
             }}>
@@ -172,6 +174,8 @@ export default function DarkEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
       <svg width="36" height="36" viewBox="0 0 36 36"
         style={{
           position:"absolute", left:"10%", bottom:"35%",
+          "--fly-x":`${100-parseFloat(T.right)-10}vw`,
+          "--fly-y":`${parseFloat(T.top)-65}vh`,
           filter:`drop-shadow(0 0 ${glow}px #7c3aed) drop-shadow(0 0 ${glow+4}px #581c87)`,
           animation:`ultApproach 0.55s ease forwards`,
         }}>

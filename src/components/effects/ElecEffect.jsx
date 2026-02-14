@@ -199,6 +199,8 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
       <svg width="34" height="34" viewBox="0 0 34 34"
         style={{
           position:"absolute", left:"10%", bottom:"35%",
+          "--fly-x":`${100-parseFloat(T.right)-10}vw`,
+          "--fly-y":`${parseFloat(T.top)-65}vh`,
           filter:`drop-shadow(0 0 ${glow}px #fbbf24) drop-shadow(0 0 ${glow+4}px #7c3aed)`,
           animation:`ultApproach 0.55s ease forwards`,
         }}>

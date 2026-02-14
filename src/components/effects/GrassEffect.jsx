@@ -21,6 +21,8 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
           <svg key={i} width={sz} height={sz} viewBox="-12 -12 24 24"
             style={{
               position:"absolute", left:`${8+i*6}%`, bottom:`${36+i*5}%`,
+              "--fly-x":`${100-parseFloat(T.right)-(8+i*6)}vw`,
+              "--fly-y":`${parseFloat(T.top)-(100-(36+i*5))}vh`,
               filter:`drop-shadow(0 0 ${glow}px #22c55e)`,
               animation:`leafBladeFly ${dur/1000+i*0.12}s ease ${i*0.1}s forwards`, opacity:0,
             }}>
@@ -155,6 +157,8 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
       <svg width="34" height="34" viewBox="0 0 34 34"
         style={{
           position:"absolute", left:"10%", bottom:"35%",
+          "--fly-x":`${100-parseFloat(T.right)-10}vw`,
+          "--fly-y":`${parseFloat(T.top)-65}vh`,
           filter:`drop-shadow(0 0 ${glow}px #22c55e) drop-shadow(0 0 ${glow+4}px #15803d)`,
           animation:`ultApproach 0.55s ease forwards`,
         }}>

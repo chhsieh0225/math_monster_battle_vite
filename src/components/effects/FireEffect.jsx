@@ -21,6 +21,8 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
           <svg key={i} width={sz} height={sz+4} viewBox="0 0 20 30"
             style={{
               position:"absolute", left:`${10+i*5}%`, bottom:`${36+i*4}%`,
+              "--fly-x":`${100-parseFloat(T.right)-(10+i*5)}vw`,
+              "--fly-y":`${parseFloat(T.top)-(100-(36+i*4))}vh`,
               filter:`drop-shadow(0 0 ${glow}px #fbbf24) drop-shadow(0 0 ${glow+4}px #ea580c)`,
               animation:`flameFly ${dur/1000+i*0.12}s ease ${i*0.08}s forwards`, opacity:0,
             }}>
@@ -59,6 +61,8 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
           <svg key={i} width={sz} height={sz+6} viewBox="0 0 20 30"
             style={{
               position:"absolute", left:`${6+i*4}%`, bottom:`${34+i*3}%`,
+              "--fly-x":`${100-parseFloat(T.right)-(6+i*4)}vw`,
+              "--fly-y":`${parseFloat(T.top)-(100-(34+i*3))}vh`,
               filter:`drop-shadow(0 0 ${glow}px #fbbf24) drop-shadow(0 0 ${glow+2}px #ea580c)`,
               animation:`flameFly ${dur/1000+i*0.07}s ease ${i*0.05}s forwards`, opacity:0,
             }}>
@@ -149,6 +153,8 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
       <svg width="36" height="36" viewBox="0 0 36 36"
         style={{
           position:"absolute", left:"10%", bottom:"35%",
+          "--fly-x":`${100-parseFloat(T.right)-10}vw`,
+          "--fly-y":`${parseFloat(T.top)-65}vh`,
           filter:`drop-shadow(0 0 ${glow}px #ea580c) drop-shadow(0 0 ${glow+4}px #7c3aed)`,
           animation:`ultApproach 0.55s ease forwards`,
         }}>

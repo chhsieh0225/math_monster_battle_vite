@@ -19,7 +19,9 @@ export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
           return (
             <svg key={i} width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}
               style={{
-                position:"absolute", left:`${8+i*8}%`, bottom:`${30+i*5+Math.random()*8}%`,
+                position:"absolute", left:`${8+i*8}%`, bottom:`${30+i*5}%`,
+                "--fly-x":`${100-parseFloat(T.right)-(8+i*8)}vw`,
+                "--fly-y":`${parseFloat(T.top)-(100-(30+i*5))}vh`,
                 opacity:0, filter:`drop-shadow(0 0 ${glow/2}px rgba(59,130,246,0.5))`,
                 animation:`bubbleFloat ${dur/1000+i*0.15}s ease ${i*0.1}s forwards`,
               }}>
@@ -147,6 +149,8 @@ export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
       <svg width="34" height="34" viewBox="0 0 34 34"
         style={{
           position:"absolute", left:"10%", bottom:"35%",
+          "--fly-x":`${100-parseFloat(T.right)-10}vw`,
+          "--fly-y":`${parseFloat(T.top)-65}vh`,
           filter:`drop-shadow(0 0 ${glow}px #2563eb) drop-shadow(0 0 ${glow+4}px #7c3aed)`,
           animation:`ultApproach 0.55s ease forwards`,
         }}>

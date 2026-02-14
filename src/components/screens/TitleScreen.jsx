@@ -69,8 +69,9 @@ export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard
 
       {/* ─── Bottom: Credits ─── */}
       <div style={{ opacity: 0.2, fontSize: 10, lineHeight: 1.7 }}>
-        <div>設計：Chung-Han Hsieh　·　Claude (Anthropic) 協助開發</div>
-        <div style={{ marginTop: 2 }}>ch.hsieh@mx.nthu.edu.tw</div>
+        <div>設計：Chung-Han Hsieh (ch.hsieh@mx.nthu.edu.tw)</div>
+        <div>Claude (Anthropic) 協助開發</div>
+        <div style={{ marginTop: 2 }}>© 2025 Chung-Han Hsieh. All rights reserved.</div>
         <div style={{ fontFamily: "monospace", marginTop: 2 }}>{VERSION}</div>
       </div>
     </div>

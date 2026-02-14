@@ -1,16 +1,16 @@
 import { BG_IMGS } from './sprites';
 
 /* ─── Pre-computed random seeds (avoid Math.random() in render) ─── */
-const LEAF_R = [...Array(10)].map((_,i) => ({
-  left: 5 + i * 9,
-  bottom: 2 + (i % 5) * 6,
-  w: 4 + (i % 3) * 2,
-  h: 3 + (i % 2) * 2,
-  color: ["#22c55e","#4ade80","#86efac","#166534","#15803d","#a3e635","#65a30d","#22c55e","#4ade80","#86efac"][i],
-  ldx: 20 + (i % 4) * 15,          // --ldx  horizontal drift px
-  ldy: -(30 + (i % 3) * 25),       // --ldy  vertical drift px (upward)
-  dur: 3 + i * 0.5,
-  del: i * 0.4,
+const LEAF_R = [...Array(8)].map((_,i) => ({
+  left: 5 + i * 11,
+  bottom: 4 + (i % 4) * 7,
+  w: 2 + (i % 2),
+  h: 2 + (i % 2),
+  color: ["#4ade80","#86efac","#22c55e","#a3e635","#4ade80","#86efac","#22c55e","#65a30d"][i],
+  ldx: 15 + (i % 4) * 12,
+  ldy: -(20 + (i % 3) * 18),
+  dur: 3.5 + i * 0.6,
+  del: i * 0.5,
 }));
 
 const FIREFLY_R = [...Array(12)].map((_,i) => ({
@@ -43,17 +43,17 @@ export const SCENES = {
     ground:"linear-gradient(180deg,transparent,rgba(34,197,94,0.08) 40%,rgba(34,197,94,0.15))",
     platform1:"rgba(34,197,94,0.25)",platform2:"rgba(34,197,94,0.2)",
     deco:()=><>
-      {/* Drifting leaf particles */}
+      {/* Drifting leaf particles — small, subtle */}
       {LEAF_R.map((r,i)=><div key={`lf${i}`} style={{
         position:"absolute",bottom:`${r.bottom}%`,left:`${r.left}%`,
         width:r.w,height:r.h,background:r.color,borderRadius:"50% 0 50% 0",
-        opacity:0.7,
+        opacity:0,
         "--ldx":`${r.ldx}px`,"--ldy":`${r.ldy}px`,
         animation:`leafDrift ${r.dur}s ease-in-out ${r.del}s infinite`
       }}/>)}
-      {/* Soft wind streaks */}
-      <div style={{position:"absolute",top:"30%",left:0,width:"100%",height:2,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent)",animation:"windSweep 6s ease-in-out infinite"}}/>
-      <div style={{position:"absolute",top:"55%",left:0,width:"100%",height:1.5,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent)",animation:"windSweep 8s ease-in-out 2s infinite"}}/>
+      {/* Soft wind streaks — barely visible */}
+      <div style={{position:"absolute",top:"30%",left:0,width:"100%",height:1,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.03),transparent)",animation:"windSweep 6s ease-in-out infinite"}}/>
+      <div style={{position:"absolute",top:"55%",left:0,width:"100%",height:1,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.02),transparent)",animation:"windSweep 8s ease-in-out 2s infinite"}}/>
     </>
   },
 

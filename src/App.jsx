@@ -230,9 +230,9 @@ function App() {
 
         {/* Player sprite */}
         <div style={{ position: "absolute", left: "6%", bottom: "14%", transform: "scaleX(-1)", zIndex: 5, animation: B.pAnim || "floatFlip 3s ease-in-out infinite" }}>
-          <MonsterSprite svgStr={pSvg} size={B.pStg >= 2 ? 200 : B.pStg >= 1 ? 170 : 155} />
+          <MonsterSprite svgStr={pSvg} size={B.pStg >= 2 ? 200 : B.pStg >= 1 ? 170 : 120} />
         </div>
-        {!B.pAnim && <div style={{ position: "absolute", left: "10%", bottom: "12%", width: B.pStg >= 2 ? 100 : B.pStg >= 1 ? 85 : 70, height: 10, background: "radial-gradient(ellipse,rgba(0,0,0,0.55),transparent)", borderRadius: "50%", zIndex: 4, animation: "shadowPulse 3s ease-in-out infinite" }} />}
+        {!B.pAnim && <div style={{ position: "absolute", left: "10%", bottom: "12%", width: B.pStg >= 2 ? 100 : B.pStg >= 1 ? 85 : 55, height: 10, background: "radial-gradient(ellipse,rgba(0,0,0,0.55),transparent)", borderRadius: "50%", zIndex: 4, animation: "shadowPulse 3s ease-in-out infinite" }} />}
 
         {/* Streak badge */}
         {B.streak >= 2 && <div style={{ position: "absolute", top: 10, right: 10, background: "linear-gradient(135deg,#f59e0b,#ef4444)", color: "white", padding: "3px 10px", borderRadius: 16, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease", zIndex: 20 }}>🔥 {B.streak} 連擊！</div>}

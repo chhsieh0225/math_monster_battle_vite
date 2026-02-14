@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
-import { ENC_ENTRIES, ENC_TOTAL } from '../../data/encyclopedia';
+import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia';
 
 const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
 
@@ -16,7 +16,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }) {
   const encCount = Object.keys(enc).length;
   const pct = Math.round(encCount / ENC_TOTAL * 100);
 
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(null);   // { entry, kind: "enemy"|"starter" }
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", overflow: "hidden" }}>
@@ -33,15 +33,18 @@ export default function EncyclopediaScreen({ encData = {}, onBack }) {
         </div>
       </div>
 
-      {/* Grid */}
+      {/* Scrollable content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "6px 10px 16px", WebkitOverflowScrolling: "touch" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+
+        {/* ─── Section: Enemy Monsters ─── */}
+        <SectionDivider icon="🐾" label="野生怪獸" sub={`${encCount}/${ENC_TOTAL} 發現`} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 18 }}>
           {ENC_ENTRIES.map(e => {
             const seen = !!enc[e.key];
             const killed = !!def[e.key];
             return (
               <div key={e.key}
-                onClick={() => seen && setSelected(e)}
+                onClick={() => seen && setSelected({ entry: e, kind: "enemy" })}
                 style={{
                   background: seen ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)",
                   border: killed ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(255,255,255,0.06)",
@@ -66,10 +69,37 @@ export default function EncyclopediaScreen({ encData = {}, onBack }) {
             );
           })}
         </div>
+
+        {/* ─── Section: Player Starters ─── */}
+        <SectionDivider icon="⚔️" label="夥伴角色" sub={`${STARTER_ENTRIES.length} 種形態`} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          {STARTER_ENTRIES.map(e => (
+            <div key={e.key}
+              onClick={() => setSelected({ entry: e, kind: "starter" })}
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: `1px solid ${(TYPE_COLORS[e.mType] || "#6366f1")}22`,
+                borderRadius: 12, padding: "10px 6px 8px", textAlign: "center",
+                cursor: "pointer",
+                transition: "transform 0.15s, box-shadow 0.15s",
+              }}>
+              <div style={{
+                margin: "0 auto 6px", width: 56, height: 48,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} />
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{e.name}</div>
+              <div style={{ fontSize: 10, opacity: 0.5 }}>{e.typeIcon} {e.typeName}</div>
+              <div style={{ fontSize: 9, opacity: 0.3, marginTop: 3 }}>{e.stageLabel}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* ─── Detail Modal ─── */}
-      {selected && <DetailModal entry={selected} enc={enc} def={def} onClose={() => setSelected(null)} />}
+      {/* ─── Detail Modals ─── */}
+      {selected?.kind === "enemy" && <DetailModal entry={selected.entry} enc={enc} def={def} onClose={() => setSelected(null)} />}
+      {selected?.kind === "starter" && <StarterDetailModal entry={selected.entry} onClose={() => setSelected(null)} />}
     </div>
   );
 }
@@ -230,6 +260,122 @@ function StatBox({ icon, label, value, color, sub }) {
       {value !== "" && <div style={{ fontSize: 18, fontWeight: 900, color }}>{value}</div>}
       {sub && <div style={{ fontSize: 10, fontWeight: 600, color, lineHeight: 1.3 }}>{sub}</div>}
       <div style={{ fontSize: 9, opacity: 0.4, marginTop: 1 }}>{label}</div>
+    </div>
+  );
+}
+
+// ── Section divider ──
+function SectionDivider({ icon, label, sub }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "10px 0 8px", padding: "0 2px" }}>
+      <div style={{ fontSize: 16 }}>{icon}</div>
+      <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: 1 }}>{label}</div>
+      {sub && <div style={{ fontSize: 10, opacity: 0.35 }}>{sub}</div>}
+      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)", marginLeft: 4 }} />
+    </div>
+  );
+}
+
+// ── Starter detail overlay ──
+function StarterDetailModal({ entry, onClose }) {
+  const e = entry;
+  const tc = TYPE_COLORS[e.mType] || "#6366f1";
+
+  return (
+    <div onClick={onClose} style={{
+      position: "absolute", inset: 0, zIndex: 200,
+      background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: 16, animation: "fadeIn 0.2s ease",
+    }}>
+      <div onClick={ev => ev.stopPropagation()} style={{
+        width: "100%", maxWidth: 380, maxHeight: "90%",
+        background: "linear-gradient(180deg,#1e1b4b,#0f172a)",
+        borderRadius: 20, border: `2px solid ${tc}33`,
+        boxShadow: `0 8px 40px ${tc}22, 0 0 80px ${tc}11`,
+        overflowY: "auto", WebkitOverflowScrolling: "touch",
+        animation: "popIn 0.3s ease",
+      }}>
+        {/* Top banner */}
+        <div style={{
+          position: "relative", padding: "28px 20px 16px", textAlign: "center",
+          background: `radial-gradient(ellipse at 50% 80%, ${tc}18, transparent 70%)`,
+        }}>
+          <button onClick={onClose} style={{
+            position: "absolute", top: 12, right: 12,
+            background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
+            color: "white", fontSize: 16, fontWeight: 700, width: 32, height: 32,
+            borderRadius: 10, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+          }}>✕</button>
+
+          {/* Stage label */}
+          <div style={{ fontSize: 12, color: tc, fontWeight: 700, letterSpacing: 2, marginBottom: 8, opacity: 0.8 }}>
+            {["⭐", "⭐⭐", "⭐⭐⭐"][e.stageIdx]} {e.stageLabel}
+          </div>
+
+          {/* Large sprite */}
+          <div style={{
+            display: "inline-block", position: "relative",
+            filter: `drop-shadow(0 0 20px ${tc}55)`,
+            animation: "float 3s ease-in-out infinite",
+          }}>
+            <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={160} />
+          </div>
+
+          {/* Name + type */}
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: 2, textShadow: `0 0 20px ${tc}55` }}>{e.name}</div>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 6, flexWrap: "wrap", justifyContent: "center" }}>
+              <span style={{
+                background: `${tc}25`, border: `1px solid ${tc}44`,
+                padding: "3px 12px", borderRadius: 20, fontSize: 13, fontWeight: 700, color: tc,
+              }}>{e.typeIcon} {e.typeName}系</span>
+              <span style={{
+                background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.25)",
+                padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, color: "#a5b4fc",
+              }}>{e.skill}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Info sections */}
+        <div style={{ padding: "0 18px 20px" }}>
+
+          {/* Description */}
+          {e.desc && <div style={{
+            background: "rgba(255,255,255,0.04)", borderRadius: 12,
+            padding: "12px 14px", marginBottom: 12,
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}>
+            <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 4 }}>📖 圖鑑說明</div>
+            <div style={{ fontSize: 13, lineHeight: 1.7, opacity: 0.8 }}>{e.desc}</div>
+          </div>}
+
+          {/* Moves */}
+          {e.moves && e.moves.length > 0 && <div style={{
+            background: "rgba(255,255,255,0.04)", borderRadius: 12,
+            padding: "12px 14px", marginBottom: 12,
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}>
+            <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8 }}>🎯 專屬招式</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {e.moves.map((m, i) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "8px 10px",
+                  border: `1px solid ${m.color}22`,
+                }}>
+                  <div style={{ fontSize: 20 }}>{m.icon}</div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: m.color }}>{m.label}</div>
+                    <div style={{ fontSize: 9, opacity: 0.4 }}>{m.op === "mixed2" ? "混合二則" : m.op === "mixed3" ? "混合三則" : m.op === "mixed4" ? "混合四則" : m.op}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>}
+        </div>
+      </div>
     </div>
   );
 }

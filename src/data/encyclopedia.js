@@ -1,8 +1,14 @@
 /**
- * Encyclopedia entries — derived from MONSTERS but includes evolved forms as
- * separate entries.  The `key` field is what we store in localStorage.
+ * Encyclopedia entries — derived from MONSTERS (enemies) and STARTERS (player).
+ * Includes evolved forms as separate entries.
+ * The `key` field is what we store in localStorage.
+ *
+ * Two exported arrays:
+ *   ENC_ENTRIES       — enemy monsters (used for "collect all" achievement)
+ *   STARTER_ENTRIES   — player starters × 3 stages (always visible, no unlock)
  */
 import { MONSTERS, SLIME_VARIANTS, TYPE_EFF } from './monsters';
+import { STARTERS } from './starters';
 
 function weaknesses(mType) {
   const weak = [];
@@ -150,5 +156,59 @@ MONSTERS.forEach(m => {
   }
 });
 
-// Total count for "collect all" achievement
-export const ENC_TOTAL = ENC_ENTRIES.length; // 14 (6 slime variants + 1 evolved + 4 base + 3 evolved)
+// Total count for "collect all" achievement (enemy monsters only)
+export const ENC_TOTAL = ENC_ENTRIES.length;
+
+// ═══════════════════════════════════════════════════════════════
+//  Player starter entries (always visible — no unlock required)
+// ═══════════════════════════════════════════════════════════════
+
+const STARTER_DESCS = {
+  // ── Fire ──
+  fire_0: "從火山蛋中孵化的幼獸。尾巴上的小火苗是生命力的象徵，開心時火焰會變大。擅長用簡單乘法快速發射火花彈。",
+  fire_1: "小火獸成長後的形態。背部長出了堅硬的鱗甲，能發出更猛烈的火焰。九九乘法對牠來說已經是小菜一碟。",
+  fire_2: "烈焰獸覺醒後的最終型態。展開雙翼翱翔天際，口吐熊熊烈焰。傳說中只有精通大數乘法的訓練師才能駕馭牠。",
+  // ── Water ──
+  water_0: "在清澈溪流中誕生的可愛水獸。能吐出小水泡進行攻擊。需要練習簡單除法來控制水流的力量。",
+  water_1: "小水獸歷經風浪後進化而成。能操控強勁的水流波，攻擊範圍擴大。除法運算越精確，水壓越強。",
+  water_2: "波濤獸稱霸深海後的終極型態。一聲怒吼便能掀起海嘯。只有駕馭大數除法的訓練師才能喚醒牠的全部力量。",
+  // ── Grass ──
+  grass_0: "誕生於陽光森林的幼苗精靈。以光合作用維生，性格溫順。用簡單加法累積自然能量進行攻擊。",
+  grass_1: "小草獸吸收大量日光後綻放花朵。藤蔓變得又長又結實，可以猛烈抽打。減法運算讓牠學會如何精準削弱敵人。",
+  grass_2: "花葉獸融合了整座森林的力量後成為森林王。一步一草木，大數加減在牠面前如同呼吸般自然。",
+  // ── Electric ──
+  electric_0: "在雷雨天誕生的電氣幼獸。毛茸茸的身體會蓄積靜電。學習加減混合運算來精確控制放電頻率。",
+  electric_1: "小雷獸掌握了雷電之力後的進化。全身電弧環繞，速度大幅提升。乘加混合運算讓攻擊變化多端。",
+  electric_2: "雷電獸引發天雷後的終極覺醒。據說一道閃電就能劈開山脈。四則運算的全方位掌握就是牠的無限電力。",
+};
+
+const STARTER_SKILLS = {
+  fire:     "🔥 火屬性·乘法系",
+  water:    "💧 水屬性·除法系",
+  grass:    "🌿 草屬性·加減法系",
+  electric: "⚡ 雷屬性·四則運算系",
+};
+
+export const STARTER_ENTRIES = [];
+
+STARTERS.forEach(st => {
+  st.stages.forEach((stage, idx) => {
+    STARTER_ENTRIES.push({
+      key: `starter_${st.id}_${idx}`,
+      starterId: st.id,
+      stageIdx: idx,
+      name: stage.name,
+      emoji: stage.emoji,
+      mType: st.type,
+      typeIcon: st.typeIcon,
+      typeName: st.typeName,
+      svgFn: stage.svgFn,
+      c1: st.c1,
+      c2: st.c2,
+      desc: STARTER_DESCS[`${st.id}_${idx}`] || "",
+      skill: STARTER_SKILLS[st.id] || "",
+      stageLabel: ["一階", "二階", "三階"][idx],
+      moves: st.moves,
+    });
+  });
+});

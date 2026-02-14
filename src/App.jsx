@@ -169,7 +169,7 @@ function App() {
         <div style={{ position: "absolute", inset: 0, background: scene.sky, opacity: 0.25, zIndex: 1, transition: "background 1s ease" }} />
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "45%", background: scene.ground, transition: "background 1s ease", zIndex: 2 }} />
         <div style={{ position: "absolute", right: "5%", top: "8%", width: "55%", height: 12, background: scene.platform2, borderRadius: "50%", filter: "blur(2px)", zIndex: 3 }} />
-        <div style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}>{scene.deco && scene.deco()}</div>
+        <div style={{ position: "absolute", inset: 0, zIndex: 4, pointerEvents: "none" }}>{scene.deco && scene.deco()}</div>
 
         {/* Enemy info */}
         <div style={{ position: "absolute", top: 10, left: 10, right: "42%", zIndex: 10 }}>

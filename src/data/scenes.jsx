@@ -36,14 +36,14 @@ const SPARK_R = [...Array(4)].map((_,i) => ({
 }));
 
 const SMOKE_R = [...Array(6)].map((_,i) => ({
-  bottom: 2 + ((i * 5) % 28),
+  bottom: 4 + ((i * 8) % 45),
   left: -5 + ((i * 16) % 80),
-  w: 60 + (i % 3) * 30,
-  h: 20 + (i % 2) * 15,
+  w: 70 + (i % 3) * 35,
+  h: 25 + (i % 2) * 18,
   dx: 30 + (i % 3) * 15,
-  dy: -(8 + (i % 4) * 5),
+  dy: -(10 + (i % 4) * 6),
   sc: 0.8 + (i % 3) * 0.3,
-  op: 0.05 + (i % 3) * 0.025,
+  op: 0.12 + (i % 3) * 0.05,
   dur: 6 + i * 1.2,
   del: i * 1.0,
 }));
@@ -134,19 +134,19 @@ export const SCENES = {
         animation:`smokeDrift ${r.dur}s ease-in-out ${r.del}s infinite`
       }}/>)}
       {/* Overhead industrial light cones */}
-      <div style={{position:"absolute",top:"0%",left:"18%",width:80,height:"45%",
-        background:"linear-gradient(180deg,rgba(251,191,36,0.07),rgba(251,191,36,0.02) 60%,transparent)",
+      <div style={{position:"absolute",top:"0%",left:"18%",width:90,height:"50%",
+        background:"linear-gradient(180deg,rgba(251,191,36,0.14),rgba(251,191,36,0.04) 60%,transparent)",
         clipPath:"polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)",
-        "--lp-lo":"0.04","--lp-hi":"0.09",
+        "--lp-lo":"0.6","--lp-hi":"1",
         animation:"lightPulse 4s ease-in-out infinite"}}/>
-      <div style={{position:"absolute",top:"0%",right:"22%",width:70,height:"40%",
-        background:"linear-gradient(180deg,rgba(248,250,252,0.06),rgba(203,213,225,0.02) 60%,transparent)",
+      <div style={{position:"absolute",top:"0%",right:"22%",width:80,height:"45%",
+        background:"linear-gradient(180deg,rgba(248,250,252,0.12),rgba(203,213,225,0.03) 60%,transparent)",
         clipPath:"polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)",
-        "--lp-lo":"0.03","--lp-hi":"0.08",
+        "--lp-lo":"0.5","--lp-hi":"1",
         animation:"lightPulse 5s ease-in-out 1.5s infinite"}}/>
       {/* Light source dots at ceiling */}
-      <div style={{position:"absolute",top:"1%",left:"22%",width:10,height:4,background:"rgba(251,191,36,0.15)",borderRadius:"50%",boxShadow:"0 0 12px rgba(251,191,36,0.1)"}}/>
-      <div style={{position:"absolute",top:"1%",right:"26%",width:8,height:3,background:"rgba(248,250,252,0.12)",borderRadius:"50%",boxShadow:"0 0 10px rgba(248,250,252,0.08)"}}/>
+      <div style={{position:"absolute",top:"1%",left:"22%",width:12,height:5,background:"rgba(251,191,36,0.3)",borderRadius:"50%",boxShadow:"0 0 16px rgba(251,191,36,0.2)"}}/>
+      <div style={{position:"absolute",top:"1%",right:"26%",width:10,height:4,background:"rgba(248,250,252,0.25)",borderRadius:"50%",boxShadow:"0 0 14px rgba(248,250,252,0.15)"}}/>
       {/* Faint sparks (reduced) */}
       {SPARK_R.map((r,i)=><div key={`sp${i}`} style={{
         position:"absolute",top:`${r.top}%`,left:`${r.left}%`,

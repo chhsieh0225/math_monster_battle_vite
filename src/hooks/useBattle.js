@@ -279,8 +279,8 @@ export function useBattle() {
     safeTo(() => { setEAnim(""); setPAnim(""); }, 700);
   };
 
-  // --- Full game reset ---
-  const startGame = () => {
+  // --- Full game reset (starterOverride used on first game when setStarter hasn't rendered yet) ---
+  const startGame = (starterOverride) => {
     turnRef.current++;
     clearTimer();
     // Regenerate roster so slime variants are re-randomised each game
@@ -294,8 +294,9 @@ export function useBattle() {
     setBurnStack(0); setFrozen(false); frozenR.current = false;
     setSpecDef(false); setDefAnim(null);
     pendingEvolve.current = false;
-    // Init session log
-    sessionRef.current = initSessionLog(sr.current.starter, sr.current.timedMode);
+    // Init session log — use override on first game since setStarter is async
+    const s = starterOverride || sr.current.starter;
+    sessionRef.current = initSessionLog(s, sr.current.timedMode);
     setScreen("battle");
     startBattle(0, newRoster);
   };
@@ -395,6 +396,23 @@ export function useBattle() {
           setPAnim("dodgeSlide 0.9s ease");
           setBText("💨 完美閃避！"); addD("MISS!", 60, 170, "#38bdf8");
           safeTo(() => { setPAnim(""); setDefAnim(null); setPhase("menu"); setBText(""); }, 1800);
+        } else if (st === "electric") {
+          // Electric: counter-shock — paralyse enemy, deal small damage
+          const rawDmg = Math.round(s2.enemy.atk * (0.8 + Math.random() * 0.4));
+          const shockDmg = Math.round(rawDmg * 0.8);
+          const nh = Math.max(0, sr.current.eHp - shockDmg);
+          setEHp(nh);
+          setBText("⚡ 反擊電流！"); addD("⚡SHOCK", 60, 170, "#fbbf24");
+          safeTo(() => {
+            addD(`-${shockDmg}`, 155, 50, "#fbbf24");
+            setEAnim("enemyElecHit 0.6s ease");
+            addP("electric", 155, 80, 5);
+          }, 500);
+          safeTo(() => {
+            setEAnim(""); setDefAnim(null);
+            if (nh <= 0) { safeTo(() => handleVictory("被反擊電流打倒了"), 500); }
+            else { setPhase("menu"); setBText(""); }
+          }, 1800);
         } else {
           const rawDmg = Math.round(s2.enemy.atk * (0.8 + Math.random() * 0.4));
           const refDmg = Math.round(rawDmg * 1.2);

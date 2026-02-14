@@ -103,7 +103,7 @@ function App() {
     <LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "selection") return (
-    <SelectionScreen onSelect={(s) => { B.setStarter(s); B.startGame(); }} onBack={() => B.setScreen("title")} />
+    <SelectionScreen onSelect={(s) => { B.setStarter(s); B.startGame(s); }} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "evolve") return (
     <EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={() => { B.setScreen("battle"); }} />
@@ -133,8 +133,9 @@ function App() {
   const eSize = B.enemy.id === "boss" ? 230
     : (B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id === "slime" && B.enemy.isEvolved)) ? 180
     : B.enemy.isEvolved ? 155 : 120;
-  const eTopPct = (B.enemy.mType === "ghost" || B.enemy.id === "boss") ? 12
-    : B.enemy.mType === "steel" ? 16 : 26;
+  const eSceneType = B.enemy.sceneMType || B.enemy.mType;
+  const eTopPct = (eSceneType === "ghost" || B.enemy.id === "boss") ? 12
+    : eSceneType === "steel" ? 16 : 26;
   const eTarget = {
     top: `calc(${eTopPct}% + ${eSize / 2}px)`,
     right: `calc(10% + ${eSize / 2}px)`,
@@ -182,7 +183,12 @@ function App() {
         <div style={{ position: "absolute", inset: -5, borderRadius: "50%", border: "3px solid rgba(34,197,94,0.5)", animation: "vineCounter 1.4s ease 0.1s forwards", opacity: 0 }} />
         <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 44, animation: "popIn 0.3s ease", filter: "drop-shadow(0 0 10px rgba(34,197,94,0.8))" }}>🌿</div>
       </div>}
-      {B.defAnim && <div style={{ position: "absolute", inset: 0, zIndex: 45, pointerEvents: "none", animation: B.defAnim === "fire" ? "shieldFlash 0.8s ease" : B.defAnim === "water" ? "dodgeFlash 0.8s ease" : "counterFlash 0.8s ease" }} />}
+      {B.defAnim === "electric" && <div style={{ position: "absolute", left: "6%", bottom: "14%", width: 160, height: 160, zIndex: 50, pointerEvents: "none" }}>
+        <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle,rgba(251,191,36,0.5),rgba(234,179,8,0.15),transparent 70%)", animation: "shieldPulse 1.2s ease forwards" }} />
+        <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: "3px solid rgba(251,191,36,0.6)", animation: "shieldPulse 1.2s ease 0.1s forwards", opacity: 0 }} />
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 48, animation: "popIn 0.3s ease", filter: "drop-shadow(0 0 12px rgba(251,191,36,0.8))" }}>⚡</div>
+      </div>}
+      {B.defAnim && <div style={{ position: "absolute", inset: 0, zIndex: 45, pointerEvents: "none", animation: B.defAnim === "fire" ? "shieldFlash 0.8s ease" : B.defAnim === "water" ? "dodgeFlash 0.8s ease" : B.defAnim === "electric" ? "shieldFlash 0.8s ease" : "counterFlash 0.8s ease" }} />}
 
       {/* Type effectiveness popup */}
       {B.effMsg && <div style={{ position: "absolute", top: "38%", left: "50%", transform: "translateX(-50%)", background: B.effMsg.color === "#22c55e" ? "linear-gradient(135deg,rgba(34,197,94,0.95),rgba(22,163,74,0.95))" : "linear-gradient(135deg,rgba(100,116,139,0.9),rgba(71,85,105,0.9))", color: "white", padding: "6px 20px", borderRadius: 20, fontSize: 14, fontWeight: 800, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: `0 4px 16px ${B.effMsg.color}44`, letterSpacing: 1 }}>{B.effMsg.text}</div>}
@@ -205,10 +211,10 @@ function App() {
         </div>
 
         {/* Enemy sprite */}
-        <div style={{ position: "absolute", right: "10%", top: B.enemy && (B.enemy.mType === "ghost" || B.enemy.id === "boss") ? "12%" : B.enemy && B.enemy.mType === "steel" ? "16%" : "26%", zIndex: 5, animation: B.eAnim || (B.enemy && B.enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite") }}>
+        <div style={{ position: "absolute", right: "10%", top: B.enemy && (eSceneType === "ghost" || B.enemy.id === "boss") ? "12%" : B.enemy && eSceneType === "steel" ? "16%" : "26%", zIndex: 5, animation: B.eAnim || (B.enemy && B.enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite") }}>
           <MonsterSprite svgStr={eSvg} size={B.enemy && B.enemy.id === "boss" ? 230 : B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id === "slime" && B.enemy.isEvolved) ? 180 : B.enemy.isEvolved ? 155 : 120} />
         </div>
-        {!B.eAnim && <div style={{ position: "absolute", right: B.enemy && B.enemy.id === "boss" ? "12%" : "14%", top: B.enemy && B.enemy.id === "boss" ? "52%" : B.enemy && B.enemy.mType === "ghost" ? "40%" : B.enemy && B.enemy.mType === "steel" ? "46%" : "54%", width: B.enemy && B.enemy.id === "boss" ? 120 : B.enemy && (B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id === "slime" && B.enemy.isEvolved)) ? 100 : 80, height: 12, background: "radial-gradient(ellipse,rgba(0,0,0,0.6),transparent)", borderRadius: "50%", zIndex: 4, animation: B.enemy && B.enemy.id === "boss" ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite" }} />}
+        {!B.eAnim && <div style={{ position: "absolute", right: B.enemy && B.enemy.id === "boss" ? "12%" : "14%", top: B.enemy && B.enemy.id === "boss" ? "52%" : B.enemy && eSceneType === "ghost" ? "40%" : B.enemy && eSceneType === "steel" ? "46%" : "54%", width: B.enemy && B.enemy.id === "boss" ? 120 : B.enemy && (B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id === "slime" && B.enemy.isEvolved)) ? 100 : 80, height: 12, background: "radial-gradient(ellipse,rgba(0,0,0,0.6),transparent)", borderRadius: "50%", zIndex: 4, animation: B.enemy && B.enemy.id === "boss" ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite" }} />}
 
         {/* Player platform & info */}
         <div style={{ position: "absolute", left: "2%", bottom: "12%", width: "50%", height: 10, background: scene.platform1, borderRadius: "50%", filter: "blur(2px)", zIndex: 3 }} />
@@ -234,7 +240,7 @@ function App() {
         </div>
 
         {/* Special defense ready badge */}
-        {B.specDef && <div style={{ position: "absolute", bottom: 70, left: 10, zIndex: 20, background: B.starter.type === "fire" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))" : B.starter.type === "water" ? "linear-gradient(135deg,rgba(56,189,248,0.9),rgba(14,165,233,0.9))" : "linear-gradient(135deg,rgba(34,197,94,0.9),rgba(22,163,74,0.9))", color: "white", padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease, specDefReady 2s ease infinite", boxShadow: B.starter.type === "fire" ? "0 2px 12px rgba(251,191,36,0.4)" : B.starter.type === "water" ? "0 2px 12px rgba(56,189,248,0.4)" : "0 2px 12px rgba(34,197,94,0.4)" }}>{B.starter.type === "fire" ? "🛡️防護罩" : B.starter.type === "water" ? "💨完美閃避" : "🌿反彈"} 準備！</div>}
+        {B.specDef && <div style={{ position: "absolute", bottom: 70, left: 10, zIndex: 20, background: B.starter.type === "fire" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))" : B.starter.type === "water" ? "linear-gradient(135deg,rgba(56,189,248,0.9),rgba(14,165,233,0.9))" : B.starter.type === "electric" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(234,179,8,0.9))" : "linear-gradient(135deg,rgba(34,197,94,0.9),rgba(22,163,74,0.9))", color: "white", padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease, specDefReady 2s ease infinite", boxShadow: B.starter.type === "fire" ? "0 2px 12px rgba(251,191,36,0.4)" : B.starter.type === "water" ? "0 2px 12px rgba(56,189,248,0.4)" : B.starter.type === "electric" ? "0 2px 12px rgba(234,179,8,0.4)" : "0 2px 12px rgba(34,197,94,0.4)" }}>{B.starter.type === "fire" ? "🛡️防護罩" : B.starter.type === "water" ? "💨完美閃避" : B.starter.type === "electric" ? "⚡反擊電流" : "🌿反彈"} 準備！</div>}
       </div>
 
       {/* ═══ Bottom panel ═══ */}
@@ -263,7 +269,7 @@ function App() {
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{B.starter.moves[B.selIdx].icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{B.starter.moves[B.selIdx].name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{B.timedMode ? "⏱️ 限時回答！" : "回答正確才能命中"}</span></div>
           <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 16px", textAlign: "center", marginBottom: 8, border: "1px solid rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
             {B.timedMode && !B.answered && <div style={{ position: "absolute", bottom: 0, left: 0, height: 4, background: B.timerLeft <= 1.5 ? "#ef4444" : B.timerLeft <= 3 ? "#f59e0b" : "#22c55e", width: `${(B.timerLeft / TIMER_SEC) * 100}%`, borderRadius: 2, transition: "width 0.05s linear,background 0.3s", animation: B.timerLeft <= 1.5 ? "timerPulse 0.4s ease infinite" : "none" }} />}
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>{B.q.op === "×" ? "乘法題" : B.q.op === "÷" ? "除法題" : B.q.op === "+" ? "加法題" : "減法題"}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>{B.q.op === "×" ? "乘法題" : B.q.op === "÷" ? "除法題" : B.q.op === "+" ? "加法題" : B.q.op === "-" ? "減法題" : B.q.op === "mixed2" ? "加減混合題" : B.q.op === "mixed3" ? "乘加混合題" : B.q.op === "mixed4" ? "四則運算題" : "混合題"}</div>
             <div style={{ fontSize: 36, fontWeight: 900, color: "white", letterSpacing: 2 }}>{B.q.display} = ?</div>
             {B.timedMode && !B.answered && <div style={{ fontSize: 11, fontWeight: 700, color: B.timerLeft <= 1.5 ? "#ef4444" : B.timerLeft <= 3 ? "#f59e0b" : "rgba(255,255,255,0.4)", marginTop: 2, fontFamily: "'Press Start 2P',monospace", transition: "color 0.3s" }}>{B.timerLeft.toFixed(1)}s</div>}
           </div>

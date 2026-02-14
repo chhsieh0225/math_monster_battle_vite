@@ -16,7 +16,14 @@ function rr(lo, hi) {
  * mixed2: a ± b ± c  (加減混合，三個數)
  * e.g. 8 + 5 - 3 = 10
  */
-function genMixed2(range) {
+function genMixed2(range, _depth = 0) {
+  // Fallback: if too many retries (ans < 0), force all-addition
+  if (_depth > 15) {
+    const a = rr(range[0], range[1]), b = rr(range[0], range[1]), c = rr(range[0], range[1]);
+    const ans = a + b + c;
+    return { display: `${a} + ${b} + ${c}`, answer: ans, op: "mixed2",
+             steps: [`${a} + ${b} = ${a + b}`, `${a + b} + ${c} = ${ans}`] };
+  }
   const a = rr(range[0], range[1]);
   const b = rr(range[0], range[1]);
   const c = rr(range[0], range[1]);
@@ -24,7 +31,7 @@ function genMixed2(range) {
   const op2 = Math.random() < 0.5 ? "+" : "-";
   const step1 = op1 === "+" ? a + b : a - b;
   const ans = op2 === "+" ? step1 + c : step1 - c;
-  if (ans < 0) return genMixed2(range);
+  if (ans < 0) return genMixed2(range, _depth + 1);
   const steps = [
     `${a} ${op1} ${b} = ${step1}`,
     `${step1} ${op2} ${c} = ${ans}`,
@@ -35,14 +42,21 @@ function genMixed2(range) {
 /**
  * mixed3: a × b ± c  (乘加/乘減混合，考驗運算優先順序)
  */
-function genMixed3(range) {
+function genMixed3(range, _depth = 0) {
+  // Fallback: force addition so ans is always positive
+  if (_depth > 15) {
+    const a = rr(range[0], range[1]), b = rr(range[0], range[1]), c = rr(range[0], range[1]);
+    const product = a * b, ans = product + c;
+    return { display: `${a} × ${b} + ${c}`, answer: ans, op: "mixed3",
+             steps: [`先算乘法：${a} × ${b} = ${product}`, `再算加法：${product} + ${c} = ${ans}`] };
+  }
   const a = rr(range[0], range[1]);
   const b = rr(range[0], range[1]);
   const c = rr(range[0], range[1]);
   const op2 = Math.random() < 0.5 ? "+" : "-";
   const product = a * b;
   const ans = op2 === "+" ? product + c : product - c;
-  if (ans < 0) return genMixed3(range);
+  if (ans < 0) return genMixed3(range, _depth + 1);
   const steps = [
     `先算乘法：${a} × ${b} = ${product}`,
     `再算${op2 === "+" ? "加" : "減"}法：${product} ${op2} ${c} = ${ans}`,
@@ -53,7 +67,15 @@ function genMixed3(range) {
 /**
  * mixed4: full 四則運算 with order-of-operations
  */
-function genMixed4(range) {
+function genMixed4(range, _depth = 0) {
+  // Fallback: force all-addition pattern so ans is always positive
+  if (_depth > 15) {
+    const a = rr(range[0], range[1]), b = rr(range[0], range[1]);
+    const c = rr(range[0], range[1]), dd = rr(range[0], range[1]);
+    const p1 = a * b, ans = p1 + c + dd;
+    return { display: `${a} × ${b} + ${c} + ${dd}`, answer: ans, op: "mixed4",
+             steps: [`先算乘法：${a} × ${b} = ${p1}`, `再算加法：${p1} + ${c} + ${dd} = ${ans}`] };
+  }
   const pattern = Math.random();
   let d, ans, steps;
 
@@ -65,7 +87,7 @@ function genMixed4(range) {
     const op = Math.random() < 0.5 ? "+" : "-";
     const prod = b * c;
     ans = op === "+" ? a + prod : a - prod;
-    if (ans < 0) return genMixed4(range);
+    if (ans < 0) return genMixed4(range, _depth + 1);
     d = `${a} ${op} ${b} × ${c}`;
     steps = [
       `先算乘法：${b} × ${c} = ${prod}`,
@@ -80,7 +102,7 @@ function genMixed4(range) {
     const op = Math.random() < 0.6 ? "+" : "-";
     const p1 = a * b, p2 = c * dd;
     ans = op === "+" ? p1 + p2 : p1 - p2;
-    if (ans < 0) return genMixed4(range);
+    if (ans < 0) return genMixed4(range, _depth + 1);
     d = `${a} × ${b} ${op} ${c} × ${dd}`;
     steps = [
       `先算乘法：${a} × ${b} = ${p1}`,
@@ -98,7 +120,7 @@ function genMixed4(range) {
     const prod = b * c;
     const mid = op1 === "+" ? a + prod : a - prod;
     ans = op2 === "+" ? mid + dd : mid - dd;
-    if (ans < 0) return genMixed4(range);
+    if (ans < 0) return genMixed4(range, _depth + 1);
     d = `${a} ${op1} ${b} × ${c} ${op2} ${dd}`;
     steps = [
       `先算乘法：${b} × ${c} = ${prod}`,

@@ -13,11 +13,13 @@
  * • Evolution no longer races with advance() — a `pendingEvolve` ref
  *   gates the screen transition so it only fires when the user taps.
  * • Damage math is delegated to utils/damageCalc.js (pure, testable).
+ * • Achievements, Encyclopedia, and SessionLog are extracted into sub-hooks
+ *   (useAchievements, useEncyclopedia, useSessionLog) to keep this file focused.
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 import { MONSTERS, SLIME_VARIANTS, getEff } from '../data/monsters';
-import { SCENES, SCENE_NAMES } from '../data/scenes';
+import { SCENE_NAMES } from '../data/scenes';
 import {
   MAX_MOVE_LVL, POWER_CAPS, HITS_PER_LVL,
   TIMER_SEC, PLAYER_MAX_HP, EFX,
@@ -29,16 +31,28 @@ import {
   calcAttackDamage, calcEnemyDamage, freezeChance,
 } from '../utils/damageCalc';
 import { useTimer } from './useTimer';
-import { loadAch, saveAch, loadEnc, saveEnc } from '../utils/achievementStore';
+import { useAchievements } from './useAchievements';
+import { useEncyclopedia } from './useEncyclopedia';
+import { useSessionLog } from './useSessionLog';
 import { ENC_TOTAL } from '../data/encyclopedia';
-import {
-  initSessionLog, logAnswer as _logAnswer,
-  finalizeSession, saveSession,
-} from '../utils/sessionLogger';
 import sfx from '../utils/sfx';
+
+// ── Constants (module-level to avoid re-allocation per render) ──
+const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
+const HIT_ANIMS = {
+  fire: "enemyFireHit 0.6s ease", electric: "enemyElecHit 0.6s ease",
+  water: "enemyWaterHit 0.7s ease", grass: "enemyGrassHit 0.6s ease",
+  dark: "enemyDarkHit 0.8s ease",
+};
+const EFX_DELAY = { fire: 300, electric: 200, water: 350, grass: 280, dark: 400 };
 
 // ═══════════════════════════════════════════════════════════════════
 export function useBattle() {
+  // ──── Sub-hooks ────
+  const { achUnlocked, achPopup, tryUnlock, dismissAch } = useAchievements();
+  const { encData, setEncData, updateEnc, updateEncDefeated } = useEncyclopedia();
+  const { initSession, markQStart, logAns, endSession } = useSessionLog();
+
   // ──── Enemy roster (regenerated each game for slime variant randomisation) ────
   const buildRoster = () => {
     const order = [0, 1, 0, 2, 0, 1, 3, 2, 3, 4];
@@ -115,7 +129,6 @@ export function useBattle() {
   const [defAnim, setDefAnim] = useState(null);
 
   // ──── Adaptive difficulty ────
-  const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
   const [diffLevel, setDiffLevel] = useState(2);     // start at normal (1.0)
   const recentAnsRef = useRef([]);                    // sliding window of last 6 answers (true/false)
 
@@ -139,57 +152,6 @@ export function useBattle() {
   const [bossCharging, setBossCharging] = useState(false);// boss is charging next big attack
   const [sealedMove, setSealedMove] = useState(-1);       // index of sealed move (-1=none)
   const [sealedTurns, setSealedTurns] = useState(0);      // remaining sealed turns
-
-  // ──── Achievements & Encyclopedia ────
-  const [achUnlocked, setAchUnlocked] = useState(() => loadAch());
-  const [achPopup, setAchPopup] = useState(null);
-  const [encData, setEncData] = useState(() => loadEnc());
-  const achRef = useRef(new Set(loadAch()));
-
-  const tryUnlock = (id) => {
-    if (achRef.current.has(id)) return;
-    achRef.current.add(id);
-    const arr = [...achRef.current];
-    setAchUnlocked(arr);
-    saveAch(arr);
-    setAchPopup(id);
-  };
-  const dismissAch = useCallback(() => setAchPopup(null), []);
-
-  const updateEnc = (enemyObj) => {
-    setEncData(prev => {
-      const key = enemyObj.isEvolved ? enemyObj.id + "Evolved" : enemyObj.id;
-      const next = {
-        encountered: { ...prev.encountered, [key]: (prev.encountered[key] || 0) + 1 },
-        defeated: { ...prev.defeated },
-      };
-      // Also mark base form as encountered if evolved
-      if (enemyObj.isEvolved) {
-        next.encountered[enemyObj.id] = (prev.encountered[enemyObj.id] || 0);
-        if (!next.encountered[enemyObj.id]) next.encountered[enemyObj.id] = 1;
-      }
-      saveEnc(next);
-      return next;
-    });
-  };
-  const updateEncDefeated = (enemyObj) => {
-    setEncData(prev => {
-      const key = enemyObj.isEvolved ? enemyObj.id + "Evolved" : enemyObj.id;
-      const next = {
-        encountered: { ...prev.encountered },
-        defeated: { ...prev.defeated, [key]: (prev.defeated[key] || 0) + 1 },
-      };
-      if (enemyObj.isEvolved) {
-        if (!next.defeated[enemyObj.id]) next.defeated[enemyObj.id] = 0;
-      }
-      saveEnc(next);
-      return next;
-    });
-  };
-
-  // ──── Session logging (parent dashboard) ────
-  const sessionRef = useRef(null);        // mutable session log object
-  const qStartRef  = useRef(0);           // timestamp when question was shown
 
   // ──── Internal refs ────
   const did = useRef(0);
@@ -260,8 +222,7 @@ export function useBattle() {
     setStreak(0);
     setCharge(0);
     // ── Session logging: timeout counts as wrong ──
-    const ansTimeMs = Date.now() - qStartRef.current;
-    _logAnswer(sessionRef.current, sr.current.q, false, ansTimeMs);
+    logAns(sr.current.q, false);
     setBText("⏰ 時間到！來不及出招！");
     setPhase("text");
     // Read enemy from stateRef so we never hit a stale closure
@@ -337,7 +298,7 @@ export function useBattle() {
     pendingEvolve.current = false;
     // Init session log — use override on first game since setStarter is async
     const s = starterOverride || sr.current.starter;
-    sessionRef.current = initSessionLog(s, sr.current.timedMode);
+    initSession(s, sr.current.timedMode);
     setScreen("battle");
     startBattle(0, newRoster);
   };
@@ -345,15 +306,13 @@ export function useBattle() {
   // ── Finalize and persist session log ──
   const _endSession = (isCompleted) => {
     const s = sr.current;
-    const done = finalizeSession(sessionRef.current, {
+    endSession({
       defeated: s.defeated || 0,
       finalLevel: s.pLvl || 1,
       maxStreak: s.maxStreak || 0,
       pHp: s.pHp || 0,
       completed: !!isCompleted,
     });
-    if (done) saveSession(done);
-    sessionRef.current = null;
   };
 
   const quitGame = () => { clearTimer(); _endSession(false); setScreen("gameover"); };
@@ -372,11 +331,9 @@ export function useBattle() {
         setPLvl(l => {
           const nl = l + 1;
           if (s.pStg < 2 && nl % 3 === 0) {
-            // Mark evolution pending — screen transition happens in advance()
+            // Mark evolution pending — defer ALL visual state updates to advance()
+            // so the battle screen keeps showing the pre-evolution sprite during victory.
             pendingEvolve.current = true; sfx.play("evolve");
-            setPStg(st => { if (st + 1 >= 2) tryUnlock("evolve_max"); return Math.min(st + 1, 2); });
-            setPHp(PLAYER_MAX_HP);
-            setMLvls(prev => prev.map(v => Math.min(v + 1, MAX_MOVE_LVL)));
           } else {
             setPHp(h => Math.min(h + 20, PLAYER_MAX_HP));
           }
@@ -417,7 +374,7 @@ export function useBattle() {
     setFb(null);
     setAnswered(false);
     setPhase("question");
-    qStartRef.current = Date.now(); // ← log question start time
+    markQStart(); // ← log question start time
     // Boss: halve timer in boss fight (Phase 1+ roar effect)
     if (timedMode) startTimer();
   };
@@ -520,9 +477,6 @@ export function useBattle() {
       return;
     }
 
-    // ── Boss Phase 1: 暗黑咆哮 (halve timer) — handled via bossRoar state ──
-    // (Timer halving is passive; just do a normal attack with phase-scaled damage)
-
     doEnemyAttack(bp);
   };
 
@@ -601,8 +555,7 @@ export function useBattle() {
     const correct = choice === s.q.answer;
 
     // ── Session logging ──
-    const ansTimeMs = Date.now() - qStartRef.current;
-    _logAnswer(sessionRef.current, s.q, correct, ansTimeMs);
+    logAns(s.q, correct);
     _updateDiff(correct);
 
     if (correct) {
@@ -634,13 +587,6 @@ export function useBattle() {
       setMHits(nh);
 
       // Animation chain
-      const hitAnims = {
-        fire: "enemyFireHit 0.6s ease", electric: "enemyElecHit 0.6s ease",
-        water: "enemyWaterHit 0.7s ease", grass: "enemyGrassHit 0.6s ease",
-        dark: "enemyDarkHit 0.8s ease",
-      };
-      const efxDelay = { fire: 300, electric: 200, water: 350, grass: 280, dark: 400 };
-
       safeTo(() => {
         setPhase("playerAtk"); setPAnim("attackLunge 0.6s ease");
         safeTo(() => {
@@ -711,7 +657,7 @@ export function useBattle() {
             }
 
             setEHp(afterHp);
-            setEAnim(hitAnims[bt] || "enemyHit 0.5s ease");
+            setEAnim(HIT_ANIMS[bt] || "enemyHit 0.5s ease");
             const dmgColor = { fire: "#ef4444", electric: "#fbbf24", water: "#3b82f6", grass: "#22c55e", dark: "#a855f7" }[bt] || "#ef4444";
             addD(`-${dmg}`, 140, 55, dmgColor);
             safeTo(() => { setEAnim(""); setAtkEffect(null); }, 800);
@@ -721,7 +667,7 @@ export function useBattle() {
             if (afterHp <= 0) safeTo(() => handleVictory(), 900);
             else if (willFreeze) safeTo(() => handleFreeze(), 900);
             else safeTo(() => doEnemyTurn(), 900);
-          }, efxDelay[bt] || 300);
+          }, EFX_DELAY[bt] || 300);
         }, 400);
       }, 600);
     } else {
@@ -772,6 +718,11 @@ export function useBattle() {
       // instead of starting next battle (eliminates timer-based race).
       if (pendingEvolve.current) {
         pendingEvolve.current = false;
+        // Apply evolution state NOW (deferred from win handler so battle
+        // screen kept showing the pre-evolution sprite during victory).
+        setPStg(st => { if (st + 1 >= 2) tryUnlock("evolve_max"); return Math.min(st + 1, 2); });
+        setPHp(PLAYER_MAX_HP);
+        setMLvls(prev => prev.map(v => Math.min(v + 1, MAX_MOVE_LVL)));
         setScreen("evolve");
         return;
       }

@@ -1,8 +1,11 @@
 import { useEffect } from 'react';
 
-export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
+const DEF_TARGET = { top: "34%", right: "16%" };
+
+export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
   const dur = 800 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
+  const T = target;
   useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [onDone]);
 
   // --- idx 0: 水泡攻擊 (Bubble Attack) ---
@@ -114,7 +117,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
             <svg key={`s${i}`} width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}
               style={{
                 position:"absolute",
-                right:`${5+Math.random()*30}%`, top:`${6+Math.random()*22}%`,
+                right:`calc(${T.right} + ${-10+Math.random()*20}%)`, top:`calc(${T.top} + ${-6+Math.random()*16}%)`,
                 opacity:0, filter:`drop-shadow(0 0 3px #60a5fa)`,
                 "--px":`${-18+Math.random()*36}px`, "--py":`${-8+Math.random()*28}px`,
                 animation:`splashBurst 0.6s ease ${0.12+i*0.04}s forwards`,
@@ -129,7 +132,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
             </svg>
           );
         })}
-        <div style={{ position:"absolute", inset:0, background:`radial-gradient(ellipse at 65% 25%, rgba(59,130,246,${0.12+lvl*0.03}), transparent 60%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
+        <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(59,130,246,${0.12+lvl*0.03}), transparent 60%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
       </div>
     );
   }
@@ -158,7 +161,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
       {Array.from({ length: ringN }, (_, i) => (
         <svg key={`r${i}`} width="140" height="140" viewBox="0 0 140 140"
           style={{
-            position:"absolute", right:"10%", top:"12%",
+            position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
             animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.12}s forwards`, opacity:0,
           }}>
           <circle cx="70" cy="70" r={20+i*10} fill="none"
@@ -175,7 +178,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
         return (
           <svg key={`b${i}`} width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}
             style={{
-              position:"absolute", right:"17%", top:"20%",
+              position:"absolute", right:T.right, top:T.top,
               opacity:0, filter:`drop-shadow(0 0 4px #60a5fa)`,
               "--px":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--py":`${Math.sin(angle*Math.PI/180)*dist}px`,
@@ -187,7 +190,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, onDone }) {
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 28%, rgba(37,99,235,${0.06+lvl*0.015}), rgba(14,165,233,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(37,99,235,${0.06+lvl*0.015}), rgba(14,165,233,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

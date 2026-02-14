@@ -3,9 +3,12 @@ import { useEffect } from 'react';
 // SVG flame shape (teardrop)
 const FLAME = "M10,28 C10,28 2,18 2,12 C2,5 5.5,0 10,0 C14.5,0 18,5 18,12 C18,18 10,28 10,28Z";
 
-export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
+const DEF_TARGET = { top: "34%", right: "16%" };
+
+export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
   const dur = 700 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
+  const T = target;
   useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [onDone]);
 
   // --- idx 0: 火花彈 (Fireball) ---
@@ -84,7 +87,7 @@ export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
     );
   }
 
-  // --- idx 2: 爆炎轟 (Explosive Blaze) ---
+  // --- idx 2: 爆炎轟 (Explosive Blaze) — centered on enemy ---
   if (idx === 2) {
     const rayN = 8 + Math.floor(lvl * 1.5);
     const coreR = 22 + lvl * 5;
@@ -93,7 +96,7 @@ export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
         {/* Explosion core */}
         <svg width="180" height="180" viewBox="0 0 180 180"
           style={{
-            position:"absolute", right:"8%", top:"8%",
+            position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
             filter:`drop-shadow(0 0 ${glow+6}px #ea580c) drop-shadow(0 0 ${glow+10}px #fbbf24)`,
           }}>
           <defs>
@@ -115,8 +118,8 @@ export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
           return (
             <svg key={i} width={w+4} height={len} viewBox={`0 0 ${w+4} ${len}`}
               style={{
-                position:"absolute", right:`calc(17% + ${Math.cos(angle*Math.PI/180)*5}px)`,
-                top:`calc(22% + ${Math.sin(angle*Math.PI/180)*5}px)`,
+                position:"absolute", right:`calc(${T.right} + ${Math.cos(angle*Math.PI/180)*5}px)`,
+                top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*5}px)`,
                 transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
                 opacity:0, filter:`drop-shadow(0 0 ${glow}px #fbbf24)`,
                 animation:`sparkle ${0.35+Math.random()*0.25}s ease ${i*0.025}s both`,
@@ -131,12 +134,12 @@ export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
             </svg>
           );
         })}
-        <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 70% 30%, rgba(251,191,36,${0.12+lvl*0.03}), transparent 55%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
+        <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(251,191,36,${0.12+lvl*0.03}), transparent 55%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
       </div>
     );
   }
 
-  // --- idx 3: 終極爆破 (dark+fire) ---
+  // --- idx 3: 終極爆破 (dark+fire) — centered on enemy ---
   const D = 0.5;
   const ringN = 2 + lvl;
   const rayN = 6 + lvl * 2;
@@ -156,11 +159,11 @@ export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
         </radialGradient></defs>
         <circle cx="18" cy="18" r="14" fill="url(#fOrb)"/>
       </svg>
-      {/* Phase 2: Dark-fire pulse rings */}
+      {/* Phase 2: Dark-fire pulse rings on enemy */}
       {Array.from({ length: ringN }, (_, i) => (
         <svg key={`r${i}`} width="150" height="150" viewBox="0 0 150 150"
           style={{
-            position:"absolute", right:"10%", top:"10%",
+            position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
             animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.12}s forwards`, opacity:0,
           }}>
           <circle cx="75" cy="75" r={18+i*10} fill="none"
@@ -168,7 +171,7 @@ export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
             style={{ filter:`drop-shadow(0 0 ${glow}px ${i%2===0?"#7c3aed":"#ea580c"})` }}/>
         </svg>
       ))}
-      {/* Radial fire rays from dark center */}
+      {/* Radial fire rays from enemy center */}
       {Array.from({ length: rayN }, (_, i) => {
         const angle = (i / rayN) * 360;
         const len = 22 + lvl * 6;
@@ -176,8 +179,8 @@ export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
         return (
           <svg key={`f${i}`} width={w+4} height={len} viewBox={`0 0 ${w+4} ${len}`}
             style={{
-              position:"absolute", right:`calc(18% + ${Math.cos(angle*Math.PI/180)*4}px)`,
-              top:`calc(22% + ${Math.sin(angle*Math.PI/180)*4}px)`,
+              position:"absolute", right:`calc(${T.right} + ${Math.cos(angle*Math.PI/180)*4}px)`,
+              top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
               transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #fbbf24)`,
               animation:`sparkle ${0.4+Math.random()*0.3}s ease ${D+0.06+i*0.035}s both`,
@@ -192,7 +195,7 @@ export default function FireEffect({ idx = 0, lvl = 1, onDone }) {
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 30%, rgba(234,88,12,${0.06+lvl*0.015}), rgba(124,58,237,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(234,88,12,${0.06+lvl*0.015}), rgba(124,58,237,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

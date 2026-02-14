@@ -3,10 +3,12 @@ import { useEffect } from 'react';
 // SVG paths
 const LEAF = "M0,-10 C5,-10 10,-4 10,0 C10,4 5,10 0,10 C-2,6 -3,2 -3,0 C-3,-2 -2,-6 0,-10Z";
 const VEIN = "M0,-8 Q1,-3 0,0 Q-1,3 0,8";
+const DEF_TARGET = { top: "34%", right: "16%" };
 
-export default function GrassEffect({ idx = 0, lvl = 1, onDone }) {
+export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
   const dur = 700 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
+  const T = target;
   useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [onDone]);
 
   // --- idx 0: 葉刃切 (Leaf Blade) ---
@@ -124,7 +126,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, onDone }) {
             <svg key={i} width={sz} height={sz} viewBox="-12 -12 24 24"
               style={{
                 position:"absolute",
-                left:`${5+Math.random()*30}%`, bottom:`${22+Math.random()*30}%`,
+                right:`calc(${T.right} + ${-12+Math.random()*24}%)`, top:`calc(${T.top} + ${-10+Math.random()*25}%)`,
                 opacity:0, filter:`drop-shadow(0 0 ${glow}px #22c55e)`,
                 "--lx":`${40+Math.random()*80}px`, "--ly":`${-20-Math.random()*45}px`,
                 animation:`leafSpin ${0.45+Math.random()*0.25}s ease ${i*0.04}s forwards`,
@@ -139,7 +141,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, onDone }) {
           );
         })}
         {/* Green screen glow */}
-        <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 65% 30%, rgba(34,197,94,${0.1+lvl*0.03}), transparent 60%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
+        <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at ${T.right} ${T.top}, rgba(34,197,94,${0.1+lvl*0.03}), transparent 60%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
       </div>
     );
   }
@@ -167,7 +169,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, onDone }) {
       {Array.from({ length: 2 + lvl }, (_, i) => (
         <svg key={`r${i}`} width="130" height="130" viewBox="0 0 130 130"
           style={{
-            position:"absolute", right:"12%", top:"13%",
+            position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
             animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.12}s forwards`, opacity:0,
           }}>
           <circle cx="65" cy="65" r={18+i*9} fill="none"
@@ -190,7 +192,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, onDone }) {
         return (
           <svg key={`l${i}`} width="22" height="22" viewBox="-12 -12 24 24"
             style={{
-              position:"absolute", right:"17%", top:"20%",
+              position:"absolute", right:T.right, top:T.top,
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #4ade80)`,
               "--lx":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--ly":`${Math.sin(angle*Math.PI/180)*dist}px`,
@@ -200,7 +202,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, onDone }) {
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 60% 30%, rgba(34,197,94,${0.06+lvl*0.015}), rgba(21,128,61,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at ${T.right} ${T.top}, rgba(34,197,94,${0.06+lvl*0.015}), rgba(21,128,61,${0.03+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

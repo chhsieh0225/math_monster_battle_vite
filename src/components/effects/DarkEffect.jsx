@@ -4,10 +4,12 @@ import { useEffect } from 'react';
 const STAR = "M0,-8 L2,-2 L8,0 L2,2 L0,8 L-2,2 L-8,0 L-2,-2Z";
 // SVG 4-pointed spark (smaller)
 const SPARK4 = "M0,-5 L1,-1 L5,0 L1,1 L0,5 L-1,1 L-5,0 L-1,-1Z";
+const DEF_TARGET = { top: "34%", right: "16%" };
 
-export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
+export default function DarkEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
   const dur = 800 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
+  const T = target;
   useEffect(() => { const t = setTimeout(onDone, dur + 400); return () => clearTimeout(t); }, [onDone]);
 
   // --- idx 0: 暗影彈 (Shadow Bolt) ---
@@ -84,7 +86,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
         {Array.from({ length: 2 + lvl }, (_, i) => (
           <svg key={`st${i}`} width="20" height="20" viewBox="-10 -10 20 20"
             style={{
-              position:"absolute", right:`${8+i*5}%`, top:`${12+i*6}%`,
+              position:"absolute", right:`calc(${T.right} + ${i*3}%)`, top:`calc(${T.top} + ${i*4}%)`,
               opacity:0, filter:`drop-shadow(0 0 ${glow-1}px #a855f7)`,
               "--sx":`${-15+Math.random()*30}px`, "--sy":`${-10+Math.random()*20}px`,
               animation:`darkStarSpin ${0.5+lvl*0.04}s ease ${dur/1000*0.6+i*0.06}s forwards`,
@@ -106,7 +108,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
         {/* Expanding dark core */}
         <svg width="160" height="160" viewBox="0 0 160 160"
           style={{
-            position:"absolute", right:"10%", top:"8%",
+            position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
             filter:`drop-shadow(0 0 ${glow+5}px #581c87) drop-shadow(0 0 ${glow+8}px #7c3aed)`,
           }}>
           <defs>
@@ -124,7 +126,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
         {Array.from({ length: ringN }, (_, i) => (
           <svg key={`r${i}`} width="150" height="150" viewBox="0 0 150 150"
             style={{
-              position:"absolute", right:"10%", top:"8%",
+              position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
               animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${i*0.15}s forwards`, opacity:0,
             }}>
             <circle cx="75" cy="75" r={20+i*12} fill="none"
@@ -141,7 +143,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
           return (
             <svg key={`s${i}`} width="20" height="20" viewBox="-10 -10 20 20"
               style={{
-                position:"absolute", right:"17%", top:"18%",
+                position:"absolute", right:T.right, top:T.top,
                 opacity:0, filter:`drop-shadow(0 0 ${glow-1}px #a855f7)`,
                 "--sx":`${Math.cos(angle*Math.PI/180)*dist}px`,
                 "--sy":`${Math.sin(angle*Math.PI/180)*dist}px`,
@@ -154,7 +156,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
           );
         })}
         {/* Dark mist overlay */}
-        <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 65% 28%, rgba(88,28,135,${0.15+lvl*0.04}), transparent 55%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
+        <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at ${parseInt(T.right)}% ${parseInt(T.top)}%, rgba(88,28,135,${0.15+lvl*0.04}), transparent 55%)`, animation:`darkScreenFlash ${dur/1000}s ease` }}/>
       </div>
     );
   }
@@ -183,7 +185,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
       {/* Phase 2: Central void */}
       <svg width="180" height="180" viewBox="0 0 180 180"
         style={{
-          position:"absolute", right:"8%", top:"6%",
+          position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
           filter:`drop-shadow(0 0 ${glow+8}px #581c87) drop-shadow(0 0 ${glow+12}px #7c3aed)`,
         }}>
         <defs>
@@ -202,7 +204,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
       {Array.from({ length: ringN }, (_, i) => (
         <svg key={`r${i}`} width="160" height="160" viewBox="0 0 160 160"
           style={{
-            position:"absolute", right:"8%", top:"6%",
+            position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
             animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.1}s forwards`, opacity:0,
           }}>
           <circle cx="80" cy="80" r={16+i*8} fill="none"
@@ -230,7 +232,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
         return (
           <svg key={`s${i}`} width="22" height="22" viewBox="-10 -10 20 20"
             style={{
-              position:"absolute", right:"16%", top:"16%",
+              position:"absolute", right:T.right, top:T.top,
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
               "--sx":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--sy":`${Math.sin(angle*Math.PI/180)*dist}px`,
@@ -243,7 +245,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, onDone }) {
           </svg>
         );
       })}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 58% 28%, rgba(30,27,75,${0.07+lvl*0.015}), rgba(88,28,135,${0.04+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at ${parseInt(T.right)}% ${parseInt(T.top)}%, rgba(30,27,75,${0.07+lvl*0.015}), rgba(88,28,135,${0.04+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

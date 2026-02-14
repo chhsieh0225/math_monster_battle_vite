@@ -111,6 +111,15 @@ function App() {
   const scene = SCENES[B.enemy.mType] || SCENES.grass;
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
 
+  // Enemy visual center for targeting attack effects
+  const eTarget = B.enemy.id === "boss"
+    ? { top: "28%", right: "18%" }
+    : (B.enemy.mType === "ghost")
+    ? { top: "22%", right: "16%" }
+    : B.enemy.mType === "steel"
+    ? { top: "26%", right: "16%" }
+    : { top: "34%", right: "16%" };
+
   return (
     <div onClick={canTapAdvance ? B.advance : undefined} style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}>
       {/* Pause overlay */}
@@ -128,11 +137,11 @@ function App() {
       {B.mLvlUp !== null && B.starter && <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: "0 4px 16px rgba(245,158,11,0.4)", whiteSpace: "nowrap" }}>{B.starter.moves[B.mLvlUp].icon} {B.starter.moves[B.mLvlUp].name} 升級到 Lv.{B.mLvls[B.mLvlUp]}！威力 → {B.getPow(B.mLvlUp)}</div>}
 
       {/* Attack effects */}
-      {B.atkEffect && B.atkEffect.type === "fire" && <FireEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} onDone={() => {}} />}
-      {B.atkEffect && B.atkEffect.type === "electric" && <ElecEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} onDone={() => {}} />}
-      {B.atkEffect && B.atkEffect.type === "water" && <WaterEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} onDone={() => {}} />}
-      {B.atkEffect && B.atkEffect.type === "grass" && <GrassEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} onDone={() => {}} />}
-      {B.atkEffect && B.atkEffect.type === "dark" && <DarkEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} onDone={() => {}} />}
+      {B.atkEffect && B.atkEffect.type === "fire" && <FireEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
+      {B.atkEffect && B.atkEffect.type === "electric" && <ElecEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
+      {B.atkEffect && B.atkEffect.type === "water" && <WaterEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
+      {B.atkEffect && B.atkEffect.type === "grass" && <GrassEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
+      {B.atkEffect && B.atkEffect.type === "dark" && <DarkEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
 
       {/* Special Defense animations */}
       {B.defAnim === "fire" && <div style={{ position: "absolute", left: "6%", bottom: "14%", width: 160, height: 160, zIndex: 50, pointerEvents: "none" }}>

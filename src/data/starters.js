@@ -40,9 +40,9 @@ export const STARTERS = [
      {name:"森林王",emoji:"🌿",svgFn:playergrass2SVG},
    ],
    moves:[
-     {name:"葉刃切",icon:"🌿",type:"grass",desc:"加法練習",basePower:12,growth:6,range:[5,50],ops:["+"],color:"#22c55e",bg:"#f0fdf4"},
-     {name:"藤鞭打",icon:"🌿",type:"grass",desc:"減法練習",basePower:20,growth:5,range:[10,80],ops:["-"],color:"#16a34a",bg:"#f0fdf4"},
-     {name:"森林風暴",icon:"🌿",type:"grass",desc:"加減混合",basePower:30,growth:3,range:[10,99],ops:["+","-"],color:"#15803d",bg:"#dcfce7"},
+     {name:"葉刃切",icon:"🌿",type:"grass",desc:"簡單加法",basePower:12,growth:6,range:[2,10],ops:["+"],color:"#22c55e",bg:"#f0fdf4"},
+     {name:"藤鞭打",icon:"🌿",type:"grass",desc:"基本減法",basePower:20,growth:5,range:[5,30],ops:["-"],color:"#16a34a",bg:"#f0fdf4"},
+     {name:"森林風暴",icon:"🌿",type:"grass",desc:"大數加減",basePower:30,growth:3,range:[20,99],ops:["+","-"],color:"#15803d",bg:"#dcfce7"},
      {name:"終極爆破",icon:"💥",type:"dark",type2:"grass",desc:"暗草·乘除混合",basePower:40,growth:3,range:[3,12],ops:["×","÷"],color:"#a855f7",bg:"#faf5ff",risky:true},
    ]},
 ];

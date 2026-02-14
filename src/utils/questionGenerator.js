@@ -25,8 +25,12 @@ export function genQ(move) {
     ans = a + b;
     d = `${a} + ${b}`;
   } else if (op === "-") {
-    a = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
-    b = Math.floor(Math.random() * a) + 1;
+    // Both operands from range, ensure a >= b and a !== b
+    let x = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
+    let y = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
+    if (x === y) y = Math.min(range[1], y + 1); // avoid ans=0
+    a = Math.max(x, y);
+    b = Math.min(x, y);
     ans = a - b;
     d = `${a} - ${b}`;
   }

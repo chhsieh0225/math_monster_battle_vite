@@ -58,6 +58,7 @@ export function useBattle() {
         ...(variant && { id: variant.id, name: variant.name, svgFn: variant.svgFn, c1: variant.c1, c2: variant.c2, mType: variant.mType, typeIcon: variant.typeIcon, typeName: variant.typeName, drops: variant.drops }),
         name: isEvolved && b.evolvedName ? b.evolvedName : (variant ? variant.name : b.name),
         svgFn: isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn),
+        sceneMType: b.mType,   // scene always follows base monster species
         hp: Math.round(b.hp * sc), maxHp: Math.round(b.hp * sc),
         atk: Math.round(b.atk * sc), lvl: i + 1, isEvolved,
       };
@@ -269,7 +270,7 @@ export function useBattle() {
     setDefAnim(null);
     setRound(idx);
     updateEnc(e); // ← encyclopedia: mark encountered
-    const sn = SCENE_NAMES[e.mType] || "";
+    const sn = SCENE_NAMES[e.sceneMType || e.mType] || "";
     setPhase("text");
     setBText(`【${sn}】野生的 ${e.name}(${e.typeIcon}${e.typeName}) Lv.${e.lvl} 出現了！`);
     setScreen("battle");

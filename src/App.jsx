@@ -125,7 +125,7 @@ function App() {
   const st = B.starter.stages[B.pStg];
   const eSvg = B.enemy.svgFn();
   const pSvg = st.svgFn();
-  const scene = SCENES[B.enemy.mType] || SCENES.grass;
+  const scene = SCENES[B.enemy.sceneMType || B.enemy.mType] || SCENES.grass;
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
 
   // Enemy visual center for targeting attack effects

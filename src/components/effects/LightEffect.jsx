@@ -146,98 +146,142 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
     );
   }
 
-  // --- idx 3: 終極爆破 (Ultimate Burst) — dark-gold fusion ---
-  const D = 0.5;
-  const ringN = 3 + lvl;
-  const rayN = 8 + lvl * 2;
-  const orbN = 5 + lvl * 2;
+  // --- idx 3: 終極爆破 (Ultimate Burst) — eclipse lion roar ---
+  const D = 0.34;
+  const ringN = 2 + Math.floor(lvl / 2);
+  const roarN = 2 + lvl;
+  const shardN = 4 + lvl;
+  const moteN = 6 + lvl * 2;
   return (
     <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
-      {/* Phase 1: Dark-gold orb approach */}
-      <svg width="36" height="36" viewBox="0 0 36 36"
+      {/* Phase 1: Eclipse crest rush */}
+      <svg width="40" height="40" viewBox="0 0 24 24"
         style={{
-          position:"absolute", left:"10%", bottom:"35%",
+          position:"absolute",
+          left:"10%",
+          bottom:"35%",
           "--fly-x":`${100-T.flyRight-10}vw`,
           "--fly-y":`${T.flyTop-65}vh`,
-          filter:`drop-shadow(0 0 ${glow}px #f59e0b) drop-shadow(0 0 ${glow+4}px #9d8ec3)`,
-          animation:`ultApproach 0.55s ease forwards`,
+          filter:`drop-shadow(0 0 ${glow}px #fbbf24) drop-shadow(0 0 ${glow+4}px #6b5f86)`,
+          animation:"ultApproach 0.58s ease forwards",
         }}>
-        <defs><radialGradient id="lOrb" cx="40%" cy="40%">
-          <stop offset="0%" stopColor="#fef08a" stopOpacity="0.7"/>
-          <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.5"/>
-          <stop offset="100%" stopColor="#9d8ec3" stopOpacity="0"/>
+        <defs><radialGradient id="lOrb" cx="42%" cy="40%">
+          <stop offset="0%" stopColor="#fff7c2" stopOpacity="0.84"/>
+          <stop offset="36%" stopColor="#fbbf24" stopOpacity="0.72"/>
+          <stop offset="72%" stopColor="#d97706" stopOpacity="0.52"/>
+          <stop offset="100%" stopColor="#5b4f72" stopOpacity="0"/>
         </radialGradient></defs>
-        <circle cx="18" cy="18" r="14" fill="url(#lOrb)"/>
+        <path d={ORB} fill="url(#lOrb)"/>
       </svg>
-      {/* Phase 2: Dark-gold void core */}
-      <svg width="160" height="160" viewBox="0 0 160 160"
+
+      {/* Phase 2: Eclipse core */}
+      <svg width="190" height="190" viewBox="0 0 190 190"
         style={{
-          position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
-          filter:`drop-shadow(0 0 ${glow+6}px #9d8ec3) drop-shadow(0 0 ${glow+10}px #f59e0b)`,
+          position:"absolute",
+          right:T.right,
+          top:T.top,
+          transform:"translate(50%,-30%)",
+          filter:`drop-shadow(0 0 ${glow+7}px #f59e0b) drop-shadow(0 0 ${glow+11}px #6b5f86)`,
         }}>
-        <defs><radialGradient id="lVoid" cx="50%" cy="50%">
-          <stop offset="0%" stopColor="#fef08a" stopOpacity="0.8"/>
-          <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.6"/>
-          <stop offset="60%" stopColor="#9d8ec3" stopOpacity="0.28"/>
-          <stop offset="100%" stopColor="#6b5f86" stopOpacity="0"/>
+        <defs><radialGradient id="lCore" cx="50%" cy="50%">
+          <stop offset="0%" stopColor="#fff9db" stopOpacity="0.94"/>
+          <stop offset="20%" stopColor="#fbbf24" stopOpacity="0.82"/>
+          <stop offset="48%" stopColor="#f59e0b" stopOpacity="0.66"/>
+          <stop offset="76%" stopColor="#6b5f86" stopOpacity="0.32"/>
+          <stop offset="100%" stopColor="#0f172a" stopOpacity="0"/>
         </radialGradient></defs>
-        <circle cx="80" cy="80" r={20+lvl*4} fill="url(#lVoid)"
+        <circle cx="95" cy="95" r={24 + lvl * 4} fill="url(#lCore)"
           style={{ animation:`fireExpand ${dur/1000}s ease ${D}s forwards` }}/>
       </svg>
-      {/* Phase 3: Alternating gold-purple rings */}
+
+      {/* Phase 3: Crown pressure rings */}
       {Array.from({ length: ringN }, (_, i) => (
-        <svg key={`r${i}`} width="160" height="160" viewBox="0 0 160 160"
+        <svg key={`r${i}`} width="228" height="120" viewBox="0 0 228 120"
           style={{
-            position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
-            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.1}s forwards`, opacity:0,
+            position:"absolute",
+            right:`calc(${T.right} - 32px)`,
+            top:`calc(${T.top} - 20px)`,
+            opacity:0,
+            animation:`darkRingExpand ${0.78 + i * 0.12}s ease ${D + 0.08 + i * 0.1}s forwards`,
           }}>
-          <circle cx="80" cy="80" r={16+i*9} fill="none"
-            stroke={i%2===0?"#f59e0b":"#b19ecf"} strokeWidth={2.5-i*0.2}
-            style={{ filter:`drop-shadow(0 0 ${glow}px ${i%2===0?"#f59e0b":"#9d8ec3"})` }} opacity={0.85-i*0.06}/>
+          <ellipse cx="114" cy="60" rx={58 + i * 24} ry={18 + i * 5}
+            fill="none"
+            stroke={i % 2 === 0 ? "rgba(251,191,36,0.76)" : "rgba(176,158,207,0.46)"}
+            strokeWidth={3.8 - i * 0.6}
+            style={{ filter:`drop-shadow(0 0 ${glow}px rgba(251,191,36,0.64))` }}/>
         </svg>
       ))}
-      {/* Phase 4: Radial light rays */}
-      {Array.from({ length: rayN }, (_, i) => {
-        const angle = (i / rayN) * 360;
-        const len = 24 + lvl * 6;
-        const w = 3.5 + lvl * 0.4;
+
+      {/* Phase 4: Roar shockwaves */}
+      {Array.from({ length: roarN }, (_, i) => (
+        <svg key={`rw${i}`} width="100%" height="52" viewBox="0 0 220 44" preserveAspectRatio="none"
+          style={{
+            position:"absolute",
+            right:`calc(${T.right} - ${14 + i * 8}px)`,
+            top:`calc(${T.top} + ${rr("ult-roar-top", i, -10, 14)}px)`,
+            opacity:0,
+            filter:`drop-shadow(0 0 ${glow}px rgba(251,191,36,0.52))`,
+            animation:`waveSweep ${0.6 + rr("ult-roar-anim", i, 0, 0.24)}s ease ${D + 0.1 + i * 0.05}s forwards`,
+          }}>
+          <defs><linearGradient id={`lRoar${i}`} x1="0%" y1="50%" x2="100%" y2="50%">
+            <stop offset="0%" stopColor="rgba(15,23,42,0)"/>
+            <stop offset="36%" stopColor="rgba(245,158,11,0.62)"/>
+            <stop offset="70%" stopColor="rgba(251,191,36,0.82)"/>
+            <stop offset="100%" stopColor="rgba(15,23,42,0)"/>
+          </linearGradient></defs>
+          <path
+            d={`M0,22 L24,${9+i} L52,25 L82,${11+i*2} L114,24 L146,${10+i} L182,26 L220,20`}
+            fill="none"
+            stroke={`url(#lRoar${i})`}
+            strokeWidth={2.6 + lvl * 0.24}
+            strokeLinecap="round"
+          />
+        </svg>
+      ))}
+
+      {/* Phase 5: Fang shards */}
+      {Array.from({ length: shardN }, (_, i) => (
+        <div key={`sh${i}`}
+          style={{
+            position:"absolute",
+            right:`calc(${T.right} + ${rr("ult-shard-right", i, -10, 10)}%)`,
+            top:`calc(${T.top} + ${rr("ult-shard-top", i, -10, 8)}%)`,
+            width:`${6 + rr("ult-shard-width", i, 0, 2.5)}px`,
+            height:`${20 + lvl * 4 + rr("ult-shard-height", i, 0, 12)}px`,
+            borderRadius:999,
+            background:"linear-gradient(180deg, rgba(255,248,220,0.82), rgba(251,191,36,0.78) 45%, rgba(107,95,134,0))",
+            opacity:0,
+            transform:`rotate(${rr("ult-shard-rot", i, -22, 22)}deg)`,
+            filter:`drop-shadow(0 0 ${glow}px rgba(251,191,36,0.6))`,
+            animation:`sparkle ${0.42 + rr("ult-shard-anim", i, 0, 0.2)}s ease ${D + 0.14 + i * 0.05}s both`,
+          }}
+        />
+      ))}
+
+      {/* Phase 6: Solar motes */}
+      {Array.from({ length: moteN }, (_, i) => {
+        const angle = (i / moteN) * 360;
+        const dist = 30 + rr("ult-mote-dist", i, 0, 50);
         return (
-          <svg key={`ray${i}`} width={w+4} height={len} viewBox={`0 0 ${w+4} ${len}`}
+          <svg key={`m${i}`} width="20" height="20" viewBox="0 0 20 20"
             style={{
-              position:"absolute", right:`calc(${T.right} + ${Math.cos(angle*Math.PI/180)*4}px)`,
-              top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
-              transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
-              opacity:0, filter:`drop-shadow(0 0 ${glow}px #f59e0b)`,
-              animation:`sparkle ${0.4 + rr("ult-ray-anim", i, 0, 0.3)}s ease ${D+0.06+i*0.03}s both`,
-            }}>
-            <defs><linearGradient id={`lrr${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
-              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8"/>
-              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0"/>
-            </linearGradient></defs>
-            <rect x="1" y="0" width={w} height={len} rx={w/2} fill={`url(#lrr${i})`}/>
-          </svg>
-        );
-      })}
-      {/* Phase 5: Golden orb particles */}
-      {Array.from({ length: orbN }, (_, i) => {
-        const angle = (i / orbN) * 360;
-        const dist = 28 + rr("ult-orb-dist", i, 0, 45);
-        return (
-          <svg key={`ob${i}`} width="24" height="24" viewBox="0 0 24 24"
-            style={{
-              position:"absolute", right:T.right, top:T.top,
-              opacity:0, filter:`drop-shadow(0 0 ${glow}px #fbbf24)`,
+              position:"absolute",
+              right:T.right,
+              top:T.top,
+              opacity:0,
+              filter:`drop-shadow(0 0 ${glow}px #fbbf24)`,
               "--lx":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--ly":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`leafSpin ${0.5 + rr("ult-orb-anim", i, 0, 0.3)}s ease ${D+0.1+i*0.04}s forwards`,
+              animation:`leafSpin ${0.52 + rr("ult-mote-anim", i, 0, 0.28)}s ease ${D + 0.12 + i * 0.03}s forwards`,
             }}>
-            <circle cx="12" cy="12" r={5+lvl*0.4}
-              fill={i%3===0?"#fbbf24":i%3===1?"#f59e0b":"#fef08a"} opacity="0.7"/>
+            <circle cx="10" cy="10" r={3.8 + rr("ult-mote-r", i, 0, 1.6)}
+              fill={i % 3 === 0 ? "#fde68a" : i % 3 === 1 ? "#fbbf24" : "#f59e0b"} opacity="0.74"/>
           </svg>
         );
       })}
-      {/* Phase 6: Golden-purple glow */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(245,158,11,${0.08+lvl*0.02}), rgba(141,125,180,${0.025+lvl*0.006}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+
+      {/* Phase 7: Eclipse glow */}
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(251,191,36,${0.1+lvl*0.024}), rgba(107,95,134,${0.034+lvl*0.009}) 36%, rgba(15,23,42,${0.06+lvl*0.014}) 58%, transparent 74%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

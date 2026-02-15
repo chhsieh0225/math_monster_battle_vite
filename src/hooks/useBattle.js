@@ -46,6 +46,7 @@ import {
   updateAbilityModel,
 } from '../utils/battleEngine';
 import { appendEvent, createEventSessionId } from '../utils/eventLogger';
+import { nowMs } from '../utils/time';
 import {
   battleReducer,
   createInitialBattleState,
@@ -72,13 +73,14 @@ export function useBattle() {
   // ──── Screen & mode ────
   const [screen, setScreenState] = useState("title");
   const [timedMode, setTimedMode] = useState(false);
+  const [battleMode, setBattleMode] = useState("single");
 
   // ──── Player ────
   const [starter, setStarter] = useState(null);
   const [battle, dispatchBattle] = useReducer(battleReducer, undefined, createInitialBattleState);
   const {
     pHp, pExp, pLvl, pStg,
-    round, enemy, eHp,
+    round, enemy, eHp, enemySub, eHpSub,
     streak, passiveCount, charge, tC, tW, defeated, maxStreak,
     mHits, mLvls, mLvlUp,
     burnStack, frozen, staticStack, specDef, defAnim, cursed,
@@ -159,7 +161,6 @@ export function useBattle() {
   const asyncGateRef = useRef(0);
   const doEnemyTurnRef = useRef(() => {});
   const pendingEvolve = useRef(false);   // ← Bug #2 fix
-  const evolveRound = useRef(0);        // round to resume after evolve screen
   const eventSessionIdRef = useRef(null);
   const sessionClosedRef = useRef(false);
   const sessionStartRef = useRef(0);
@@ -170,10 +171,10 @@ export function useBattle() {
   // from polluting sr.current with intermediate render values.
   const sr = useRef({});
   const _srSnapshot = {
-    enemy, starter, eHp, pHp, pExp, pLvl, pStg,
+    enemy, enemySub, starter, eHp, eHpSub, pHp, pExp, pLvl, pStg,
     streak, passiveCount, charge, burnStack, frozen, staticStack, specDef, cursed,
     mHits, mLvls, selIdx, phase, round, q,
-    screen, timedMode, diffLevel,
+    screen, timedMode, battleMode, diffLevel,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
     tC, tW, maxStreak, defeated,
   };
@@ -282,12 +283,23 @@ export function useBattle() {
     clearTimer();
     const list = roster || enemies;
     const e = list[idx];
-    dispatchBattle({ type: "start_battle", enemy: e, round: idx });
+    if (!e) {
+      _finishGame();
+      return;
+    }
+    const mode = sr.current.battleMode || battleMode;
+    const sub = mode === "double" ? (list[idx + 1] || null) : null;
+    dispatchBattle({ type: "start_battle", enemy: e, enemySub: sub, round: idx });
     frozenR.current = false;
     updateEnc(e); // ← encyclopedia: mark encountered
+    if (sub) updateEnc(sub);
     const sn = SCENE_NAMES[e.sceneMType || e.mType] || "";
     setPhase("text");
-    setBText(`【${sn}】野生的 ${e.name}(${e.typeIcon}${e.typeName}) Lv.${e.lvl} 出現了！`);
+    if (sub) {
+      setBText(`【${sn}】雙打戰！${e.name}(${e.typeIcon}${e.typeName}) 與 ${sub.name}(${sub.typeIcon}${sub.typeName}) 出現了！`);
+    } else {
+      setBText(`【${sn}】野生的 ${e.name}(${e.typeIcon}${e.typeName}) Lv.${e.lvl} 出現了！`);
+    }
     setScreen("battle");
     effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim });
   };
@@ -299,7 +311,7 @@ export function useBattle() {
     reseed(runSeedRef.current * 2654435761);
     clearTimer();
     sessionClosedRef.current = false;
-    sessionStartRef.current = Date.now();
+    sessionStartRef.current = nowMs();
     eventSessionIdRef.current = createEventSessionId();
     // Regenerate roster so slime variants are re-randomised each game
     const newRoster = buildNewRoster();
@@ -339,7 +351,7 @@ export function useBattle() {
       tC: s.tC || 0,
       tW: s.tW || 0,
       timedMode: !!s.timedMode,
-      durationMs: sessionStartRef.current > 0 ? Date.now() - sessionStartRef.current : null,
+      durationMs: sessionStartRef.current > 0 ? nowMs() - sessionStartRef.current : null,
     }, { sessionId: eventSessionIdRef.current });
     endSession({
       defeated: s.defeated || 0,
@@ -534,6 +546,24 @@ export function useBattle() {
   };
 
   // --- Advance from text / victory phase ---
+  const continueFromVictory = () => {
+    const s = sr.current;
+    if (s.battleMode === "double" && s.enemySub) {
+      setScreen("battle");
+      dispatchBattle({ type: "promote_enemy_sub" });
+      setBText(`💥 ${s.enemySub.name} 補位上場！`);
+      setPhase("text");
+      return;
+    }
+    const nx = s.round + 1;
+    if (nx >= enemies.length) {
+      _finishGame();
+    } else {
+      setPHp(h => Math.min(h + 10, PLAYER_MAX_HP));
+      startBattle(nx);
+    }
+  };
+
   const advance = () => {
     if (phase === "text") { setPhase("menu"); setBText(""); }
     else if (phase === "victory") {
@@ -546,15 +576,10 @@ export function useBattle() {
         setPStg(st => { if (st + 1 >= 2) tryUnlock("evolve_max"); return Math.min(st + 1, 2); });
         setPHp(PLAYER_MAX_HP);
         setMLvls(prev => prev.map(v => Math.min(v + 1, MAX_MOVE_LVL)));
-        evolveRound.current = round;   // remember which round to resume from
         setScreen("evolve");
         return;
       }
-      const nx = round + 1;
-      if (nx >= enemies.length) {
-        _finishGame();
-      }
-      else { setPHp(h => Math.min(h + 10, PLAYER_MAX_HP)); startBattle(nx); }
+      continueFromVictory();
     }
   };
 
@@ -583,12 +608,7 @@ export function useBattle() {
 
   // --- Continue from evolve screen → start next battle ---
   const continueAfterEvolve = () => {
-    const nx = evolveRound.current + 1;
-    if (nx >= enemies.length) {
-      _finishGame();
-    } else {
-      startBattle(nx);
-    }
+    continueFromVictory();
   };
 
   // ═══════════════════════════════════════════════════════════════
@@ -596,9 +616,9 @@ export function useBattle() {
   // ═══════════════════════════════════════════════════════════════
   return {
     // ── State (read by render shell) ──
-    screen, timedMode, enemies,
+    screen, timedMode, battleMode, enemies,
     starter, pHp, pExp, pLvl, pStg,
-    round, enemy, eHp,
+    round, enemy, eHp, enemySub, eHpSub,
     streak, passiveCount, charge, tC, tW, defeated, maxStreak,
     mHits, mLvls, mLvlUp,
     phase, selIdx, q, fb, bText, answered,
@@ -612,7 +632,7 @@ export function useBattle() {
     achUnlocked, achPopup, encData, dismissAch,
 
     // ── Actions ──
-    setTimedMode, setScreen, setStarter,
+    setTimedMode, setBattleMode, setScreen, setStarter,
     startGame, selectMove, onAns, advance, continueAfterEvolve,
     quitGame, togglePause,
 

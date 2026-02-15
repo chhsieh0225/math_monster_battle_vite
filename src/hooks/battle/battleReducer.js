@@ -11,6 +11,8 @@ const BASE_STATE = {
   round: 0,
   enemy: null,
   eHp: 0,
+  enemySub: null,
+  eHpSub: 0,
   streak: 0,
   passiveCount: 0,
   charge: 0,
@@ -87,10 +89,13 @@ export function battleReducer(state, action) {
 
     case "start_battle": {
       const enemy = action.enemy || null;
+      const enemySub = action.enemySub || null;
       return {
         ...state,
         enemy,
         eHp: enemy ? enemy.maxHp : 0,
+        enemySub,
+        eHpSub: enemySub ? enemySub.maxHp : 0,
         round: action.round ?? state.round,
         burnStack: 0,
         staticStack: 0,
@@ -98,6 +103,29 @@ export function battleReducer(state, action) {
         specDef: false,
         defAnim: null,
         bossPhase: enemy?.id === "boss" ? 1 : 0,
+        bossTurn: 0,
+        bossCharging: false,
+        sealedMove: -1,
+        sealedTurns: 0,
+      };
+    }
+
+    case "promote_enemy_sub": {
+      if (!state.enemySub) return state;
+      const promoted = state.enemySub;
+      return {
+        ...state,
+        enemy: promoted,
+        eHp: state.eHpSub,
+        enemySub: null,
+        eHpSub: 0,
+        round: state.round + 1,
+        burnStack: 0,
+        staticStack: 0,
+        frozen: false,
+        specDef: false,
+        defAnim: null,
+        bossPhase: promoted?.id === "boss" ? 1 : 0,
         bossTurn: 0,
         bossCharging: false,
         sealedMove: -1,

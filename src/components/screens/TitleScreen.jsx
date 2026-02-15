@@ -5,6 +5,7 @@ import { VERSION } from '../../data/constants';
 export default function TitleScreen({
   onStartNormal,
   onStartTimed,
+  onStartDouble,
   onLeaderboard,
   onAchievements,
   onEncyclopedia,
@@ -67,6 +68,12 @@ export default function TitleScreen({
             boxShadow: "0 4px 20px rgba(239,68,68,0.3)",
           }}>⏱️ 計時模式</button>
         </div>
+        <button className="title-action-btn touch-btn" onClick={onStartDouble} style={{
+          width: "100%", background: "linear-gradient(135deg,#0ea5e9,#22d3ee)",
+          border: "none", color: "white", fontSize: 15, fontWeight: 800,
+          padding: "12px 0", borderRadius: 14,
+          boxShadow: "0 4px 20px rgba(14,165,233,0.28)",
+        }}>⚔️ 雙打測試</button>
         <div style={{ fontSize: 11, opacity: 0.3, marginTop: -4 }}>計時模式：5 秒內回答</div>
 
         {/* Feature grid */}

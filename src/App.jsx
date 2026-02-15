@@ -223,8 +223,9 @@ function App() {
   // ─── Screen routing ───
   if (B.screen === "title") return (
     <TitleScreen
-      onStartNormal={() => { B.setTimedMode(false); B.setScreen("selection"); }}
-      onStartTimed={() => { B.setTimedMode(true); B.setScreen("selection"); }}
+      onStartNormal={() => { B.setTimedMode(false); B.setBattleMode("single"); B.setScreen("selection"); }}
+      onStartTimed={() => { B.setTimedMode(true); B.setBattleMode("single"); B.setScreen("selection"); }}
+      onStartDouble={() => { B.setTimedMode(false); B.setBattleMode("double"); B.setScreen("selection"); }}
       onLeaderboard={() => B.setScreen("leaderboard")}
       onAchievements={() => B.setScreen("achievements")}
       onEncyclopedia={() => B.setScreen("encyclopedia")}
@@ -283,6 +284,7 @@ function App() {
   // ─── Battle screen locals ───
   const st = B.starter.stages[B.pStg];
   const eSvg = B.enemy.svgFn();
+  const eSubSvg = B.enemySub ? B.enemySub.svgFn() : null;
   const pSvg = st.svgFn();
   const scene = SCENES[B.enemy.sceneMType || B.enemy.mType] || SCENES.grass;
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
@@ -372,6 +374,11 @@ function App() {
         {/* Enemy info */}
         <div style={{ position: "absolute", top: 10, left: 10, right: "42%", zIndex: 10 }}>
           <HPBar cur={B.eHp} max={B.enemy.maxHp} color={B.enemy.c1} label={`${B.enemy.typeIcon}${B.enemy.name} Lv.${B.enemy.lvl}`} />
+          {B.enemySub && (
+            <div style={{ marginTop: 4, opacity: 0.88 }}>
+              <HPBar cur={B.eHpSub} max={B.enemySub.maxHp} color={B.enemySub.c1} label={`副將 ${B.enemySub.typeIcon}${B.enemySub.name} Lv.${B.enemySub.lvl}`} />
+            </div>
+          )}
           <div style={{ display: "flex", gap: 4, marginTop: 3, flexWrap: "wrap" }}>
             {B.enemy.traitName && B.enemy.traitName !== "普通" && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>✦{B.enemy.traitName}</div>}
             {B.burnStack > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥灼燒 x{B.burnStack}</div>}
@@ -386,6 +393,11 @@ function App() {
         <div ref={enemySpriteRef} style={{ position: "absolute", right: "10%", top: B.enemy && (eSceneType === "ghost" || B.enemy.id === "boss") ? "12%" : B.enemy && eSceneType === "steel" ? "16%" : "26%", zIndex: 5, animation: B.eAnim || (UX.lowPerfMode ? "none" : (B.enemy && B.enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite")) }}>
           <MonsterSprite svgStr={eSvg} size={B.enemy && B.enemy.id === "boss" ? 230 : B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id.startsWith("slime") && B.enemy.isEvolved) ? 190 : B.enemy.isEvolved ? 155 : 120} />
         </div>
+        {B.enemySub && eSubSvg && (
+          <div style={{ position: "absolute", right: "24%", top: "14%", zIndex: 4, opacity: 0.8, transform: "scale(0.82)", filter: "saturate(0.9)", animation: UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite" }}>
+            <MonsterSprite svgStr={eSubSvg} size={B.enemySub.id === "boss" ? 160 : B.enemySub.isEvolved ? 120 : 96} />
+          </div>
+        )}
         {!B.eAnim && !UX.lowPerfMode && <div style={{ position: "absolute", right: B.enemy && B.enemy.id === "boss" ? "12%" : "14%", top: B.enemy && B.enemy.id === "boss" ? "52%" : B.enemy && eSceneType === "ghost" ? "40%" : B.enemy && eSceneType === "steel" ? "46%" : "54%", width: B.enemy && B.enemy.id === "boss" ? 120 : B.enemy && (B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id.startsWith("slime") && B.enemy.isEvolved)) ? 105 : 80, height: 12, background: "radial-gradient(ellipse,rgba(0,0,0,0.6),transparent)", borderRadius: "50%", zIndex: 4, animation: B.enemy && B.enemy.id === "boss" ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite" }} />}
 
         {/* Player platform & info */}

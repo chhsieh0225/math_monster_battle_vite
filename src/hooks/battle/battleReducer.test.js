@@ -27,11 +27,14 @@ test('battleReducer reset_run restores run defaults', () => {
 test('battleReducer start_battle initializes per-battle status and boss phase', () => {
   const boss = { id: "boss", maxHp: 180 };
   const normal = { id: "slime", maxHp: 40 };
+  const partner = { id: "ghost", maxHp: 66 };
   let state = createInitialBattleState();
 
-  state = battleReducer(state, { type: "start_battle", enemy: normal, round: 2 });
+  state = battleReducer(state, { type: "start_battle", enemy: normal, enemySub: partner, round: 2 });
   assert.equal(state.enemy, normal);
   assert.equal(state.eHp, 40);
+  assert.equal(state.enemySub, partner);
+  assert.equal(state.eHpSub, 66);
   assert.equal(state.round, 2);
   assert.equal(state.bossPhase, 0);
 
@@ -39,5 +42,26 @@ test('battleReducer start_battle initializes per-battle status and boss phase', 
   assert.equal(state.enemy, boss);
   assert.equal(state.eHp, 180);
   assert.equal(state.round, 9);
+  assert.equal(state.bossPhase, 1);
+});
+
+test('battleReducer promote_enemy_sub moves sub enemy to active slot', () => {
+  const main = { id: "slime", maxHp: 50 };
+  const sub = { id: "boss", maxHp: 200 };
+  let state = createInitialBattleState();
+
+  state = battleReducer(state, {
+    type: "start_battle",
+    enemy: main,
+    enemySub: sub,
+    round: 4,
+  });
+  state = battleReducer(state, { type: "promote_enemy_sub" });
+
+  assert.equal(state.enemy, sub);
+  assert.equal(state.eHp, 200);
+  assert.equal(state.enemySub, null);
+  assert.equal(state.eHpSub, 0);
+  assert.equal(state.round, 5);
   assert.equal(state.bossPhase, 1);
 });

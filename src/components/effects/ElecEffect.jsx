@@ -203,13 +203,13 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
           right:T.right,
           top:T.top,
           transform:"translate(50%,-30%)",
-          filter:`drop-shadow(0 0 ${glow + 4}px rgba(124,58,237,0.7))`,
+          filter:`drop-shadow(0 0 ${glow + 4}px rgba(141,125,180,0.45))`,
         }}>
         <defs>
           <radialGradient id="eCore" cx="50%" cy="50%">
             <stop offset="0%" stopColor="#fef9c3" stopOpacity="0.9"/>
             <stop offset="20%" stopColor="#fbbf24" stopOpacity="0.78"/>
-            <stop offset="45%" stopColor="#7c3aed" stopOpacity="0.62"/>
+            <stop offset="45%" stopColor="#9d8ec3" stopOpacity="0.42"/>
             <stop offset="100%" stopColor="#1e1b4b" stopOpacity="0"/>
           </radialGradient>
         </defs>
@@ -228,10 +228,10 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
               transformOrigin:"center bottom",
               transform:`rotate(${angle}deg)`,
               opacity:0,
-              filter:`drop-shadow(0 0 ${glow}px rgba(168,85,247,0.8))`,
+              filter:`drop-shadow(0 0 ${glow}px rgba(167,149,199,0.45))`,
               animation:`sparkle ${0.35 + rr("cage-anim", i, 0, 0.25)}s ease ${D + i * 0.03}s both`,
             }}>
-            <rect x="2" y="0" width="4" height={len} rx="2" fill={i % 2 === 0 ? "rgba(168,85,247,0.7)" : "rgba(251,191,36,0.75)"} />
+            <rect x="2" y="0" width="4" height={len} rx="2" fill={i % 2 === 0 ? "rgba(167,149,199,0.42)" : "rgba(251,191,36,0.72)"} />
           </svg>
         );
       })}
@@ -248,7 +248,7 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
               top:`calc(${T.top} + ${yOff}%)`,
               transform:`scale(${0.65 + lvl * 0.05 + rr("bolt-sc", i, 0, 0.22)}) rotate(${rr("bolt-rot", i, -16, 16)}deg)`,
               transformOrigin:"center top",
-              filter:`drop-shadow(0 0 ${glow+3}px #fbbf24) drop-shadow(0 0 ${glow+8}px #7c3aed)`,
+              filter:`drop-shadow(0 0 ${glow+3}px #fbbf24) drop-shadow(0 0 ${glow+8}px rgba(141,125,180,0.52))`,
               animation:`lightningStrike ${0.42 + rr("bolt-anim", i, 0, 0.2)}s ease ${D+0.08+i*0.035}s both`,
               opacity:0,
             }}>
@@ -270,7 +270,7 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
           }}>
           <defs>
             <linearGradient id={`eArc${i}`} x1="0%" y1="50%" x2="100%" y2="50%">
-              <stop offset="0%" stopColor="rgba(124,58,237,0.5)"/>
+              <stop offset="0%" stopColor="rgba(141,125,180,0.32)"/>
               <stop offset="45%" stopColor="rgba(251,191,36,0.9)"/>
               <stop offset="100%" stopColor="rgba(236,72,153,0.45)"/>
             </linearGradient>
@@ -296,7 +296,7 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
             right:`calc(${T.right} + ${rr("ult-spark-right", i, -10, 11)}%)`,
             top:`calc(${T.top} + ${rr("ult-spark-top", i, -8, 13)}%)`,
             opacity:0,
-            filter:`drop-shadow(0 0 4px #fbbf24) drop-shadow(0 0 6px #7c3aed)`,
+            filter:`drop-shadow(0 0 4px #fbbf24) drop-shadow(0 0 6px rgba(141,125,180,0.5))`,
             animation:`sparkle ${0.35 + rr("sk-anim", i, 0, 0.3)}s ease ${D+0.14+i*0.03}s both`,
           }}>
           <path d={SPARK} fill={i % 2 === 0 ? "#fde68a" : "#c4b5fd"} opacity="0.72"/>
@@ -304,7 +304,7 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
       ))}
 
       {/* Phase 5: Dark thunder global glow */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(124,58,237,${0.13+lvl*0.03}), rgba(251,191,36,${0.08+lvl*0.02}) 30%, rgba(30,27,75,${0.06+lvl*0.015}) 54%, transparent 72%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(141,125,180,${0.07+lvl*0.018}), rgba(251,191,36,${0.08+lvl*0.02}) 30%, rgba(30,27,75,${0.06+lvl*0.015}) 54%, transparent 72%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

@@ -159,13 +159,13 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
           position:"absolute", left:"10%", bottom:"35%",
           "--fly-x":`${100-T.flyRight-10}vw`,
           "--fly-y":`${T.flyTop-65}vh`,
-          filter:`drop-shadow(0 0 ${glow}px #f59e0b) drop-shadow(0 0 ${glow+4}px #7c3aed)`,
+          filter:`drop-shadow(0 0 ${glow}px #f59e0b) drop-shadow(0 0 ${glow+4}px #9d8ec3)`,
           animation:`ultApproach 0.55s ease forwards`,
         }}>
         <defs><radialGradient id="lOrb" cx="40%" cy="40%">
           <stop offset="0%" stopColor="#fef08a" stopOpacity="0.7"/>
           <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.5"/>
-          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0"/>
+          <stop offset="100%" stopColor="#9d8ec3" stopOpacity="0"/>
         </radialGradient></defs>
         <circle cx="18" cy="18" r="14" fill="url(#lOrb)"/>
       </svg>
@@ -173,13 +173,13 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
       <svg width="160" height="160" viewBox="0 0 160 160"
         style={{
           position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
-          filter:`drop-shadow(0 0 ${glow+6}px #7c3aed) drop-shadow(0 0 ${glow+10}px #f59e0b)`,
+          filter:`drop-shadow(0 0 ${glow+6}px #9d8ec3) drop-shadow(0 0 ${glow+10}px #f59e0b)`,
         }}>
         <defs><radialGradient id="lVoid" cx="50%" cy="50%">
           <stop offset="0%" stopColor="#fef08a" stopOpacity="0.8"/>
           <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.6"/>
-          <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.4"/>
-          <stop offset="100%" stopColor="#581c87" stopOpacity="0"/>
+          <stop offset="60%" stopColor="#9d8ec3" stopOpacity="0.28"/>
+          <stop offset="100%" stopColor="#6b5f86" stopOpacity="0"/>
         </radialGradient></defs>
         <circle cx="80" cy="80" r={20+lvl*4} fill="url(#lVoid)"
           style={{ animation:`fireExpand ${dur/1000}s ease ${D}s forwards` }}/>
@@ -192,8 +192,8 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
             animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.1}s forwards`, opacity:0,
           }}>
           <circle cx="80" cy="80" r={16+i*9} fill="none"
-            stroke={i%2===0?"#f59e0b":"#a855f7"} strokeWidth={2.5-i*0.2}
-            style={{ filter:`drop-shadow(0 0 ${glow}px ${i%2===0?"#f59e0b":"#7c3aed"})` }} opacity={0.85-i*0.06}/>
+            stroke={i%2===0?"#f59e0b":"#b19ecf"} strokeWidth={2.5-i*0.2}
+            style={{ filter:`drop-shadow(0 0 ${glow}px ${i%2===0?"#f59e0b":"#9d8ec3"})` }} opacity={0.85-i*0.06}/>
         </svg>
       ))}
       {/* Phase 4: Radial light rays */}
@@ -237,7 +237,7 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
         );
       })}
       {/* Phase 6: Golden-purple glow */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(245,158,11,${0.08+lvl*0.02}), rgba(124,58,237,${0.04+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(245,158,11,${0.08+lvl*0.02}), rgba(141,125,180,${0.025+lvl*0.006}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

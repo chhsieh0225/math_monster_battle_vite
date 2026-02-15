@@ -172,7 +172,7 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
             <defs>
               <radialGradient id={`fmtr${i}`} cx="45%" cy="30%">
                 <stop offset="0%" stopColor="#f5d0fe"/>
-                <stop offset="25%" stopColor="#7c3aed"/>
+                <stop offset="25%" stopColor="#9d8ec3"/>
                 <stop offset="58%" stopColor="#f97316"/>
                 <stop offset="100%" stopColor="#991b1b"/>
               </radialGradient>
@@ -189,12 +189,12 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
           right:T.right,
           top:T.top,
           transform:"translate(50%,-30%)",
-          filter:`drop-shadow(0 0 ${glow + 7}px #7c3aed) drop-shadow(0 0 ${glow + 14}px #ea580c)`,
+          filter:`drop-shadow(0 0 ${glow + 7}px rgba(141,125,180,0.55)) drop-shadow(0 0 ${glow + 14}px #ea580c)`,
         }}>
         <defs>
           <radialGradient id="fImpact" cx="50%" cy="50%">
             <stop offset="0%" stopColor="#f5d0fe" stopOpacity="0.95"/>
-            <stop offset="22%" stopColor="#7c3aed" stopOpacity="0.85"/>
+            <stop offset="22%" stopColor="#9d8ec3" stopOpacity="0.62"/>
             <stop offset="48%" stopColor="#f97316" stopOpacity="0.74"/>
             <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0"/>
           </radialGradient>
@@ -211,11 +211,11 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
             right:`calc(${T.right} - 28px)`,
             top:`calc(${T.top} - 22px)`,
             opacity:0,
-            filter:`drop-shadow(0 0 ${glow + 2}px rgba(124,58,237,0.5))`,
+            filter:`drop-shadow(0 0 ${glow + 2}px rgba(141,125,180,0.3))`,
             animation:`fireExpand ${0.62 + i * 0.12}s ease ${D + 0.08 + i * 0.1}s forwards`,
           }}>
           <ellipse cx="110" cy="60" rx={62 + i * 26} ry={18 + i * 6}
-            fill="none" stroke={i % 2 === 0 ? "rgba(124,58,237,0.72)" : "rgba(251,113,133,0.62)"} strokeWidth={4 - i * 0.7}/>
+            fill="none" stroke={i % 2 === 0 ? "rgba(141,125,180,0.5)" : "rgba(251,113,133,0.56)"} strokeWidth={4 - i * 0.7}/>
         </svg>
       ))}
 
@@ -229,7 +229,7 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
             width:`${120 + lvl * 18}px`,
             height:`${7 + rr("wind-h", i, 0, 4)}px`,
             borderRadius:999,
-            background:"linear-gradient(90deg,rgba(255,255,255,0),rgba(124,58,237,0.78),rgba(251,146,60,0.84),rgba(127,29,29,0.55),rgba(255,255,255,0))",
+            background:"linear-gradient(90deg,rgba(255,255,255,0),rgba(141,125,180,0.42),rgba(251,146,60,0.8),rgba(127,29,29,0.5),rgba(255,255,255,0))",
             opacity:0,
             filter:`blur(${0.4 + rr("wind-blur", i, 0, 0.7)}px)`,
             animation:`windSweep ${0.5 + rr("wind-anim", i, 0, 0.25)}s ease ${D + 0.1 + i * 0.04}s forwards`,
@@ -253,7 +253,7 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
               "--ly":`${Math.sin(angle * Math.PI / 180) * dist}px`,
               animation:`leafSpin ${0.48 + rr("ember-anim", i, 0, 0.35)}s ease ${D + 0.12 + i * 0.035}s forwards`,
             }}>
-            <path d={FLAME} fill={i % 4 === 0 ? "#a855f7" : i % 4 === 1 ? "#fbbf24" : i % 4 === 2 ? "#fb923c" : "#ef4444"} opacity="0.8"/>
+            <path d={FLAME} fill={i % 4 === 0 ? "#b7a3d2" : i % 4 === 1 ? "#fbbf24" : i % 4 === 2 ? "#fb923c" : "#ef4444"} opacity="0.74"/>
           </svg>
         );
       })}
@@ -268,7 +268,7 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
             width:`${22 + rr("ash-sz", i, 0, 18)}px`,
             height:`${12 + rr("ash-sz2", i, 0, 10)}px`,
             borderRadius:"50%",
-            background:"radial-gradient(ellipse,rgba(76,29,149,0.45),rgba(30,27,75,0.14),transparent 72%)",
+            background:"radial-gradient(ellipse,rgba(96,84,128,0.34),rgba(30,27,75,0.14),transparent 72%)",
             opacity:0,
             "--lx":`${rr("ash-lx", i, -45, 45)}px`,
             "--ly":`${rr("ash-ly", i, -60, 20)}px`,
@@ -278,7 +278,7 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
       ))}
 
       {/* Phase 7: Screen darkfire glow */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(124,58,237,${0.12 + lvl * 0.03}), rgba(249,115,22,${0.08 + lvl * 0.02}) 32%, rgba(127,29,29,${0.05 + lvl * 0.015}) 52%, transparent 74%)`, animation:`ultGlow ${dur/1000*1.15}s ease ${D}s` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(141,125,180,${0.07 + lvl * 0.018}), rgba(249,115,22,${0.08 + lvl * 0.02}) 32%, rgba(127,29,29,${0.05 + lvl * 0.015}) 52%, transparent 74%)`, animation:`ultGlow ${dur/1000*1.15}s ease ${D}s` }}/>
     </div>
   );
 }

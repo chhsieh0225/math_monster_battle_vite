@@ -51,10 +51,10 @@
 **UI 元素**:
 - **src/components/ui/HPBar.tsx** - 生命值條顯示
 - **src/components/ui/XPBar.tsx** - 經驗值條顯示
-- **src/components/ui/MonsterSprite.jsx** - 怪獸 SVG 渲染
-- **src/components/ui/DamagePopup.jsx** - 傷害數字浮出動畫
-- **src/components/ui/Particle.jsx** - 粒子特效
-- **src/components/ui/TextBox.jsx** - 文本對話框
+- **src/components/ui/MonsterSprite.tsx** - 怪獸 SVG 渲染
+- **src/components/ui/DamagePopup.tsx** - 傷害數字浮出動畫
+- **src/components/ui/Particle.tsx** - 粒子特效
+- **src/components/ui/TextBox.tsx** - 文本對話框
 
 **特效組件**:
 - **src/components/effects/FireEffect.jsx** - 火系招式特效

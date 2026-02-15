@@ -1,6 +1,14 @@
 import { useEffect } from 'react';
 
-export default function DamagePopup({ value, x, y, color, onDone }) {
+type DamagePopupProps = {
+  value: string | number;
+  x: number | string;
+  y: number | string;
+  color: string;
+  onDone: () => void;
+};
+
+export default function DamagePopup({ value, x, y, color, onDone }: DamagePopupProps) {
   useEffect(() => {
     const t = setTimeout(onDone, 1000);
     return () => clearTimeout(t);

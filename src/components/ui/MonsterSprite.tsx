@@ -1,6 +1,19 @@
-import React, { useId } from 'react';
+import { memo, useId } from 'react';
+import type { CSSProperties } from 'react';
 
-const MonsterSprite = React.memo(function MonsterSprite({ svgStr, size = 120, anim = "", style = {} }) {
+type MonsterSpriteProps = {
+  svgStr: string;
+  size?: number;
+  anim?: string;
+  style?: CSSProperties;
+};
+
+const MonsterSprite = memo(function MonsterSprite({
+  svgStr,
+  size = 120,
+  anim = "",
+  style = {},
+}: MonsterSpriteProps) {
   // useId() generates a unique, stable ID per component instance,
   // avoiding SVG gradient/filter ID collisions when multiple sprites are on screen.
   const uid = useId();
@@ -31,6 +44,6 @@ const MonsterSprite = React.memo(function MonsterSprite({ svgStr, size = 120, an
       <g dangerouslySetInnerHTML={{ __html: svgStr }} />
     </svg>
   );
-}, (a, b) => a.svgStr === b.svgStr && a.size === b.size && a.anim === b.anim);
+}, (a: MonsterSpriteProps, b: MonsterSpriteProps) => a.svgStr === b.svgStr && a.size === b.size && a.anim === b.anim);
 
 export default MonsterSprite;

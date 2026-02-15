@@ -21,6 +21,11 @@ Current migrated files:
 - `src/main.tsx`
 - `src/components/ui/HPBar.tsx`
 - `src/components/ui/XPBar.tsx`
+- `src/components/ui/DamagePopup.tsx`
+- `src/components/ui/Particle.tsx`
+- `src/components/ui/TextBox.tsx`
+- `src/components/ui/MonsterSprite.tsx`
+- `src/components/ui/AchievementPopup.tsx`
 
 ## Next Recommended TS Steps
 

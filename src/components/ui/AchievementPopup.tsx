@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
 
-export default function AchievementPopup({ achievement, onDone }) {
+type AchievementPopupItem = {
+  icon: string;
+  name: string;
+  desc: string;
+};
+
+type AchievementPopupProps = {
+  achievement: AchievementPopupItem | null;
+  onDone: () => void;
+};
+
+export default function AchievementPopup({ achievement, onDone }: AchievementPopupProps) {
   const [out, setOut] = useState(false);
   useEffect(() => {
     const t1 = setTimeout(() => setOut(true), 3400);

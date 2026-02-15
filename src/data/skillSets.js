@@ -7,7 +7,7 @@ export const SKILL_SETS = {
     { name: "火花彈", icon: "🔥", type: "fire", desc: "簡單乘法", basePower: 12, growth: 6, range: [2, 5], ops: ["×"], color: "#ef4444", bg: "#fef2f2" },
     { name: "烈焰衝", icon: "🔥", type: "fire", desc: "九九乘法", basePower: 20, growth: 5, range: [2, 9], ops: ["×"], color: "#f97316", bg: "#fff7ed" },
     { name: "爆炎轟", icon: "🔥", type: "fire", desc: "大數乘法", basePower: 30, growth: 3, range: [4, 12], ops: ["×"], color: "#dc2626", bg: "#fef2f2" },
-    { name: "終極爆破", icon: "💥", type: "dark", type2: "fire", desc: "暗火·乘除混合", basePower: 40, growth: 3, range: [3, 12], ops: ["×", "÷"], color: "#a855f7", bg: "#faf5ff", risky: true },
+    { name: "暗火隕爆", icon: "💥", type: "dark", type2: "fire", desc: "暗火·乘除混合", basePower: 40, growth: 3, range: [3, 12], ops: ["×", "÷"], color: "#a855f7", bg: "#faf5ff", risky: true },
   ],
   water: [
     { name: "水泡攻擊", icon: "💧", type: "water", desc: "簡單除法", basePower: 12, growth: 6, range: [2, 5], ops: ["÷"], color: "#3b82f6", bg: "#eff6ff" },
@@ -34,4 +34,3 @@ export const SKILL_SETS = {
     { name: "終極爆破", icon: "💥", type: "dark", type2: "light", desc: "暗光·混合求未知", basePower: 40, growth: 3, range: [2, 12], ops: ["unknown4"], color: "#a855f7", bg: "#faf5ff", risky: true },
   ],
 };
-

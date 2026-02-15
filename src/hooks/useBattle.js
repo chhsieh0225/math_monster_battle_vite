@@ -40,7 +40,12 @@ import { ENC_TOTAL } from '../data/encyclopedia';
 import sfx from '../utils/sfx';
 import { buildRoster } from '../utils/rosterBuilder';
 import { computeBossPhase, decideBossTurnEvent } from '../utils/turnFlow';
-import { resolveLevelProgress, updateAdaptiveDifficulty } from '../utils/battleEngine';
+import {
+  createAbilityModel,
+  getDifficultyLevelForOps,
+  resolveLevelProgress,
+  updateAbilityModel,
+} from '../utils/battleEngine';
 import { appendEvent, createEventSessionId } from '../utils/eventLogger';
 
 // ── Constants (module-level to avoid re-allocation per render) ──
@@ -117,19 +122,24 @@ export function useBattle() {
   const [defAnim, setDefAnim] = useState(null);
   const [cursed, setCursed] = useState(false);     // dark slime curse: 0.6x player damage next turn
 
-  // ──── Adaptive difficulty ────
-  const [diffLevel, setDiffLevel] = useState(2);     // start at normal (1.0)
-  const recentAnsRef = useRef([]);                    // sliding window of last 6 answers (true/false)
+  // ──── Learning model 2.0: per-question-type adaptive difficulty ────
+  const [diffLevel, setDiffLevel] = useState(2); // current/last question difficulty (0..4)
+  const abilityModelRef = useRef(createAbilityModel(2));
 
-  const _updateDiff = (correct) => {
-    const { nextLevel, nextRecent } = updateAdaptiveDifficulty({
-      currentLevel: diffLevel,
-      recentAnswers: recentAnsRef.current,
+  const _updateAbility = (op, correct) => {
+    if (!op) return;
+    const { nextModel, nextLevel } = updateAbilityModel({
+      model: abilityModelRef.current,
+      op,
       correct,
     });
-    recentAnsRef.current = nextRecent;
+    abilityModelRef.current = nextModel;
     setDiffLevel(nextLevel);
   };
+
+  const _getMoveDiffLevel = (move) => (
+    getDifficultyLevelForOps(abilityModelRef.current, move?.ops, 2)
+  );
 
   // ──── Boss mechanics ────
   const [bossPhase, setBossPhase] = useState(0);         // 0=not boss, 1/2/3
@@ -202,6 +212,7 @@ export function useBattle() {
     setCharge(0);
     // ── Session logging: timeout counts as wrong ──
     const answerTimeMs = logAns(s.q, false);
+    _updateAbility(s.q?.op, false);
     appendEvent("question_answered", {
       outcome: "timeout",
       correct: false,
@@ -292,7 +303,8 @@ export function useBattle() {
     setSpecDef(false); setDefAnim(null); setCursed(false);
     setBossPhase(0); setBossTurn(0); setBossCharging(false);
     setSealedMove(-1); setSealedTurns(0);
-    setDiffLevel(2); recentAnsRef.current = [];
+    abilityModelRef.current = createAbilityModel(2);
+    setDiffLevel(2);
     pendingEvolve.current = false;
     // Init session log — use override on first game since setStarter is async
     const s = starterOverride || sr.current.starter;
@@ -402,7 +414,11 @@ export function useBattle() {
     if (sr.current.sealedMove === i) return; // silently blocked, UI shows lock
     sfx.play("select");
     setSelIdx(i);
-    setQ(genQ(starter.moves[i], DIFF_MODS[sr.current.diffLevel]));
+    const move = starter.moves[i];
+    const lv = _getMoveDiffLevel(move);
+    const diffMod = DIFF_MODS[lv] ?? DIFF_MODS[2];
+    setDiffLevel(lv);
+    setQ(genQ(move, diffMod));
     setFb(null);
     setAnswered(false);
     setPhase("question");
@@ -677,7 +693,7 @@ export function useBattle() {
       diffLevel: s.diffLevel ?? null,
       round: s.round ?? 0,
     }, { sessionId: eventSessionIdRef.current });
-    _updateDiff(correct);
+    _updateAbility(s.q?.op, correct);
 
     if (correct) {
       setFb({ correct: true }); setTC(c => c + 1);

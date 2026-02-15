@@ -103,6 +103,7 @@ export function resolvePlayerStrike({
   cursed,
   starterType,
   playerHp,
+  attackerMaxHp = PLAYER_MAX_HP,
   bossPhase,
 }) {
   const pow = didLevel
@@ -125,9 +126,10 @@ export function resolvePlayerStrike({
   const wasCursed = !!cursed;
   if (wasCursed) dmg = Math.round(dmg * 0.6);
 
-  const braveActive = starterType === "light" && playerHp < PLAYER_MAX_HP;
+  const maxHpForBrave = Math.max(1, attackerMaxHp);
+  const braveActive = starterType === "light" && playerHp < maxHpForBrave;
   if (braveActive) {
-    const braveMult = 1 + ((PLAYER_MAX_HP - playerHp) / PLAYER_MAX_HP) * 0.5;
+    const braveMult = 1 + ((maxHpForBrave - playerHp) / maxHpForBrave) * 0.5;
     dmg = Math.round(dmg * braveMult);
   }
 

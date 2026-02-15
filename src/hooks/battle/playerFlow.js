@@ -1,10 +1,10 @@
 import {
   HITS_PER_LVL,
   MAX_MOVE_LVL,
-  PLAYER_MAX_HP,
   POWER_CAPS,
 } from '../../data/constants.js';
 import { bestAttackType, freezeChance } from '../../utils/damageCalc.js';
+import { getStageMaxHp, getStarterMaxHp } from '../../utils/playerHp.js';
 import {
   getAttackEffectClearDelay,
   getAttackEffectHitDelay,
@@ -90,12 +90,18 @@ export function runPlayerAnswer({
   const getAttackerHp = (state) => (
     isSubAttacker ? (state.pHpSub || 0) : (state.pHp || 0)
   );
+  const getAttackerMaxHp = (state) => (
+    isSubAttacker
+      ? getStarterMaxHp(state.allySub)
+      : getStageMaxHp(state.pStg)
+  );
   const healAttacker = (heal) => {
+    const maxHp = getAttackerMaxHp(sr.current);
     if (isSubAttacker && typeof setPHpSub === "function") {
-      setPHpSub((h) => Math.min(h + heal, PLAYER_MAX_HP));
+      setPHpSub((h) => Math.min(h + heal, maxHp));
       return;
     }
-    setPHp((h) => Math.min(h + heal, PLAYER_MAX_HP));
+    setPHp((h) => Math.min(h + heal, maxHp));
   };
   const applyDamageToAttacker = ({ state, damage, popupText = null, color = "#ef4444" }) => {
     const baseHp = getAttackerHp(state);
@@ -204,6 +210,7 @@ export function runPlayerAnswer({
             cursed: s3.cursed,
             starterType: starter.type,
             playerHp: getAttackerHp(s3),
+            attackerMaxHp: getAttackerMaxHp(s3),
             bossPhase: s3.bossPhase,
           });
           const { eff, isFortress, wasCursed } = strike;
@@ -224,7 +231,7 @@ export function runPlayerAnswer({
 
           if (wasCursed) { setEffMsg({ text: "💀 詛咒弱化了攻擊...", color: "#a855f7" }); safeTo(() => setEffMsg(null), 1500); }
           else if (isFortress) { setEffMsg({ text: "🛡️ 鐵壁減傷！", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
-          else if (starter.type === "light" && getAttackerHp(s3) < PLAYER_MAX_HP * 0.5) { setEffMsg({ text: "🦁 勇氣之心！ATK↑", color: "#f59e0b" }); safeTo(() => setEffMsg(null), 1500); }
+          else if (starter.type === "light" && getAttackerHp(s3) < getAttackerMaxHp(s3) * 0.5) { setEffMsg({ text: "🦁 勇氣之心！ATK↑", color: "#f59e0b" }); safeTo(() => setEffMsg(null), 1500); }
           else if (eff > 1) { setEffMsg({ text: "效果絕佳！", color: "#22c55e" }); safeTo(() => setEffMsg(null), 1500); }
           else if (eff < 1) { setEffMsg({ text: "效果不好...", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
 

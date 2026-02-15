@@ -23,7 +23,7 @@ import { useState, useEffect, useLayoutEffect, useRef, useCallback, useReducer }
 import { SCENE_NAMES } from '../data/scenes';
 import {
   MAX_MOVE_LVL,
-  TIMER_SEC, PLAYER_MAX_HP,
+  TIMER_SEC,
 } from '../data/constants';
 import { PVP_BALANCE } from '../data/pvpBalance';
 import { STARTERS } from '../data/starters';
@@ -33,6 +33,11 @@ import {
   movePower,
   bestEffectiveness,
 } from '../utils/damageCalc';
+import {
+  getStageMaxHp,
+  getStarterMaxHp,
+  getStarterStageIdx,
+} from '../utils/playerHp';
 import { useTimer } from './useTimer';
 import { useAchievements } from './useAchievements';
 import { useEncyclopedia } from './useEncyclopedia';
@@ -99,22 +104,16 @@ const PVP_HIT_ANIMS = {
   light: "enemyFireHit 0.55s ease",
 };
 
-function getStarterStageIdx(starter) {
-  const total = starter?.stages?.length || 1;
-  const maxIdx = Math.max(0, total - 1);
-  const raw = Number.isFinite(starter?.selectedStageIdx) ? starter.selectedStageIdx : 0;
-  return Math.max(0, Math.min(maxIdx, raw));
-}
-
 function createPvpEnemyFromStarter(starter) {
   if (!starter) return null;
   const stageIdx = getStarterStageIdx(starter);
   const stage = starter.stages?.[stageIdx] || starter.stages?.[0];
+  const maxHp = getStarterMaxHp(starter);
   return {
     id: `pvp_${starter.id}`,
     name: stage?.name || starter.name,
-    maxHp: PLAYER_MAX_HP,
-    hp: PLAYER_MAX_HP,
+    maxHp,
+    hp: maxHp,
     atk: 12,
     lvl: 1,
     mType: starter.type,
@@ -150,7 +149,7 @@ export function useBattle() {
   const [battleMode, setBattleMode] = useState("single");
   const [coopActiveSlot, setCoopActiveSlot] = useState("main");
   const [pvpStarter2, setPvpStarter2] = useState(null);
-  const [pvpHp2, setPvpHp2] = useState(PLAYER_MAX_HP);
+  const [pvpHp2, setPvpHp2] = useState(getStageMaxHp(0));
   const [pvpTurn, setPvpTurn] = useState("p1");
   const [pvpWinner, setPvpWinner] = useState(null);
   const [pvpChargeP1, setPvpChargeP1] = useState(0);
@@ -466,6 +465,7 @@ export function useBattle() {
     const leader = starterOverride || sr.current.starter;
     const rival = allyOverride || sr.current.pvpStarter2 || pvpStarter2 || pickPartnerStarter(leader, pickIndex);
     const leaderStageIdx = getStarterStageIdx(leader);
+    const leaderMaxHp = getStageMaxHp(leaderStageIdx);
 
     if (mode === "pvp") {
       setEnemies([]);
@@ -478,12 +478,12 @@ export function useBattle() {
           diffLevel: 2,
           allySub: null,
           pHpSub: 0,
-          pHp: PLAYER_MAX_HP,
+          pHp: leaderMaxHp,
           pStg: leaderStageIdx,
         },
       });
       setPvpStarter2(rival);
-      setPvpHp2(PLAYER_MAX_HP);
+      setPvpHp2(getStarterMaxHp(rival));
       setPvpTurn(firstTurn);
       setPvpWinner(null);
       setPvpChargeP1(0); setPvpChargeP2(0);
@@ -534,8 +534,8 @@ export function useBattle() {
       patch: {
         diffLevel: 2,
         allySub: partner,
-        pHpSub: partner ? PLAYER_MAX_HP : 0,
-        pHp: PLAYER_MAX_HP,
+        pHpSub: partner ? getStarterMaxHp(partner) : 0,
+        pHp: leaderMaxHp,
         pStg: leaderStageIdx,
       },
     });
@@ -702,7 +702,7 @@ export function useBattle() {
     setPExp(progress.nextExp);
     if (progress.nextLevel !== s.pLvl) {
       setPLvl(progress.nextLevel);
-      if (progress.hpBonus > 0) setPHp(h => Math.min(h + progress.hpBonus, PLAYER_MAX_HP));
+      if (progress.hpBonus > 0) setPHp(h => Math.min(h + progress.hpBonus, getStageMaxHp(s.pStg)));
     }
     setDefeated(d => d + 1);
     updateEncDefeated(s.enemy); // ← encyclopedia: mark defeated
@@ -847,13 +847,16 @@ export function useBattle() {
       }
 
       const attackerHp = currentTurn === "p1" ? s.pHp : s.pvpHp2;
+      const attackerMaxHp = currentTurn === "p1"
+        ? getStageMaxHp(s.pStg)
+        : getStarterMaxHp(s.pvpStarter2);
       const strike = resolvePvpStrike({
         move,
         moveIdx: s.selIdx,
         attackerType: attacker.type,
         defenderType: defender.type,
         attackerHp,
-        attackerMaxHp: PLAYER_MAX_HP,
+        attackerMaxHp,
         firstStrike: s.pvpActionCount === 0,
         random: rand,
       });
@@ -1043,7 +1046,7 @@ export function useBattle() {
           addD(`-${totalDmg}`, 140, 55, "#ef4444");
 
           if (strike.heal > 0) {
-            setPHp((h) => Math.min(PLAYER_MAX_HP, h + strike.heal));
+            setPHp((h) => Math.min(getStageMaxHp(s2.pStg), h + strike.heal));
             addD(`+${strike.heal}`, 52, 164, "#22c55e");
             passiveNotes.push("🌿回復");
           }
@@ -1061,7 +1064,7 @@ export function useBattle() {
           addD(`-${totalDmg}`, 60, 170, "#ef4444");
 
           if (strike.heal > 0) {
-            const healed = Math.min(PLAYER_MAX_HP, s2.pvpHp2 + strike.heal);
+            const healed = Math.min(getStarterMaxHp(s2.pvpStarter2), s2.pvpHp2 + strike.heal);
             setPvpHp2(healed);
             setEHp(healed);
             addD(`+${strike.heal}`, 146, 54, "#22c55e");
@@ -1193,9 +1196,9 @@ export function useBattle() {
     if (nx >= enemies.length) {
       _finishGame();
     } else {
-      setPHp(h => Math.min(h + 10, PLAYER_MAX_HP));
+      setPHp(h => Math.min(h + 10, getStageMaxHp(s.pStg)));
       if ((s.battleMode === "double" || s.battleMode === "coop") && s.allySub && (s.pHpSub || 0) > 0) {
-        setPHpSub(h => Math.min(h + 8, PLAYER_MAX_HP));
+        setPHpSub(h => Math.min(h + 8, getStarterMaxHp(s.allySub)));
       }
       startBattle(nx);
     }
@@ -1278,10 +1281,11 @@ export function useBattle() {
       // instead of starting next battle (eliminates timer-based race).
       if (pendingEvolve.current) {
         pendingEvolve.current = false;
+        const nextStage = Math.min((sr.current.pStg || 0) + 1, 2);
         // Apply evolution state NOW (deferred from win handler so battle
         // screen kept showing the pre-evolution sprite during victory).
         setPStg(st => { if (st + 1 >= 2) tryUnlock("evolve_max"); return Math.min(st + 1, 2); });
-        setPHp(PLAYER_MAX_HP);
+        setPHp(getStageMaxHp(nextStage));
         setMLvls(prev => prev.map(v => Math.min(v + 1, MAX_MOVE_LVL)));
         setScreen("evolve");
         return;
@@ -1295,7 +1299,7 @@ export function useBattle() {
     const s = sr.current;
     if (s.tW === 0) tryUnlock("perfect");
     if (s.timedMode) tryUnlock("timed_clear");
-    if (s.pHp >= PLAYER_MAX_HP) tryUnlock("no_damage");
+    if (s.pHp >= getStageMaxHp(s.pStg)) tryUnlock("no_damage");
     if (s.starter) {
       const sid = s.starter.id;
       if (sid === "fire") tryUnlock("fire_clear");

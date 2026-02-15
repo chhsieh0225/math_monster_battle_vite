@@ -16,8 +16,9 @@ import { useMobileExperience } from './hooks/useMobileExperience';
 
 // Data
 import { SCENES } from './data/scenes';
-import { PLAYER_MAX_HP, TIMER_SEC, HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from './data/constants';
+import { TIMER_SEC, HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from './data/constants';
 import { PVP_BALANCE } from './data/pvpBalance';
+import { getStageMaxHp, getStarterMaxHp } from './utils/playerHp';
 
 // UI Components
 import MonsterSprite from './components/ui/MonsterSprite';
@@ -362,6 +363,8 @@ function App() {
   const allyStage = B.allySub ? (B.allySub.stages[B.allySub.selectedStageIdx || 0] || B.allySub.stages[0]) : null;
   const pSubSvg = allyStage ? allyStage.svgFn() : null;
   const pSvg = st.svgFn();
+  const mainMaxHp = getStageMaxHp(B.pStg);
+  const subMaxHp = B.allySub ? getStarterMaxHp(B.allySub) : getStageMaxHp(0);
   const scene = SCENES[B.enemy.sceneMType || B.enemy.mType] || SCENES.grass;
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
   const hasDualUnits = !!(B.enemySub || B.allySub);
@@ -547,11 +550,11 @@ function App() {
         <div style={{ position: "absolute", left: "2%", bottom: "12%", width: "50%", height: 10, background: scene.platform1, borderRadius: "50%", filter: "blur(2px)", zIndex: 3 }} />
         <div style={{ position: "absolute", bottom: 10, right: 10, left: playerInfoLeft, zIndex: 10 }}>
           <div style={hpBarFocusStyle(mainBarActive)}>
-            <HPBar cur={B.pHp} max={PLAYER_MAX_HP} color="#6366f1" label={`${isCoopBattle && !coopUsingSub ? "▶ " : ""}${st.name} Lv.${B.pLvl}`} />
+            <HPBar cur={B.pHp} max={mainMaxHp} color="#6366f1" label={`${isCoopBattle && !coopUsingSub ? "▶ " : ""}${st.name} Lv.${B.pLvl}`} />
           </div>
           {B.allySub && (
             <div style={{ marginTop: 4, ...hpBarFocusStyle(subBarActive) }}>
-              <HPBar cur={B.pHpSub} max={PLAYER_MAX_HP} color={B.allySub.c1} label={`${isCoopBattle && coopUsingSub ? "▶ " : ""}夥伴 ${B.allySub.typeIcon}${B.allySub.name}`} />
+              <HPBar cur={B.pHpSub} max={subMaxHp} color={B.allySub.c1} label={`${isCoopBattle && coopUsingSub ? "▶ " : ""}夥伴 ${B.allySub.typeIcon}${B.allySub.name}`} />
             </div>
           )}
           <XPBar exp={B.pExp} max={B.expNext} />

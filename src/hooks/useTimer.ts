@@ -1,22 +1,35 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
-export function useTimer(timerSec, onTimeoutCallback) {
-  const [paused, setPaused] = useState(false);
-  const timerRef = useRef(null);
-  const timerStartRef = useRef(null);
-  const remainingRef = useRef(timerSec);   // 暫停時記住剩餘秒數
-  const timerLeftRef = useRef(timerSec);
-  const onTimeoutRef = useRef(onTimeoutCallback);
-  const listenersRef = useRef(new Set());
+type TimerListener = () => void;
 
-  // Keep callback ref updated
+type TimerHookApi = {
+  paused: boolean;
+  startTimer: () => void;
+  clearTimer: () => void;
+  pauseTimer: () => void;
+  resumeTimer: () => void;
+  subscribeTimerLeft: (listener: TimerListener) => () => void;
+  getTimerLeft: () => number;
+};
+
+export function useTimer(timerSec: number, onTimeoutCallback?: () => void): TimerHookApi {
+  const [paused, setPaused] = useState<boolean>(false);
+  const timerRef = useRef<number | null>(null);
+  const timerStartRef = useRef<number | null>(null);
+  const remainingRef = useRef<number>(timerSec);
+  const timerLeftRef = useRef<number>(timerSec);
+  const onTimeoutRef = useRef<(() => void) | undefined>(onTimeoutCallback);
+  const listenersRef = useRef<Set<TimerListener>>(new Set());
+
   useEffect(() => {
     onTimeoutRef.current = onTimeoutCallback;
   }, [onTimeoutCallback]);
 
-  const subscribeTimerLeft = useCallback((listener) => {
+  const subscribeTimerLeft = useCallback((listener: TimerListener) => {
     listenersRef.current.add(listener);
-    return () => listenersRef.current.delete(listener);
+    return () => {
+      listenersRef.current.delete(listener);
+    };
   }, []);
 
   const notifyTimerLeft = useCallback(() => {
@@ -29,7 +42,7 @@ export function useTimer(timerSec, onTimeoutCallback) {
     });
   }, []);
 
-  const setTimerLeft = useCallback((next) => {
+  const setTimerLeft = useCallback((next: number) => {
     const safe = Number.isFinite(next) ? Math.max(0, next) : 0;
     if (Math.abs(safe - timerLeftRef.current) < 0.001) return;
     timerLeftRef.current = safe;
@@ -39,7 +52,7 @@ export function useTimer(timerSec, onTimeoutCallback) {
   const getTimerLeft = useCallback(() => timerLeftRef.current, []);
 
   const clearTimer = useCallback(() => {
-    if (timerRef.current) {
+    if (timerRef.current !== null) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
@@ -47,10 +60,11 @@ export function useTimer(timerSec, onTimeoutCallback) {
     setPaused(false);
   }, []);
 
-  const runInterval = useCallback((startSeconds) => {
+  const runInterval = useCallback((startSeconds: number) => {
     timerStartRef.current = Date.now();
     remainingRef.current = startSeconds;
-    timerRef.current = setInterval(() => {
+    timerRef.current = window.setInterval(() => {
+      if (timerStartRef.current === null) return;
       const elapsed = (Date.now() - timerStartRef.current) / 1000;
       const left = Math.max(0, remainingRef.current - elapsed);
       setTimerLeft(left);
@@ -70,8 +84,8 @@ export function useTimer(timerSec, onTimeoutCallback) {
   }, [timerSec, clearTimer, runInterval, setTimerLeft]);
 
   const pauseTimer = useCallback(() => {
-    if (!timerRef.current || paused) return;
-    // 算出目前剩餘時間並記下來
+    if (timerRef.current === null || paused) return;
+    if (timerStartRef.current === null) return;
     const elapsed = (Date.now() - timerStartRef.current) / 1000;
     remainingRef.current = Math.max(0, remainingRef.current - elapsed);
     clearInterval(timerRef.current);
@@ -86,9 +100,8 @@ export function useTimer(timerSec, onTimeoutCallback) {
     runInterval(remainingRef.current);
   }, [paused, runInterval]);
 
-  // Cleanup on unmount to prevent leaked intervals
   useEffect(() => () => {
-    if (timerRef.current) clearInterval(timerRef.current);
+    if (timerRef.current !== null) clearInterval(timerRef.current);
     listenersRef.current.clear();
   }, []);
 

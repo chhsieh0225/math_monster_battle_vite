@@ -7,8 +7,12 @@
  */
 import { useState, useMemo } from 'react';
 import { loadSessions, clearSessions, loadPin, savePin } from '../../utils/sessionLogger';
-
-const OPS = ["+", "-", "×", "÷", "mixed2", "mixed3", "mixed4", "unknown1", "unknown2", "unknown3", "unknown4"];
+import {
+  OPS,
+  buildDashboardInsights,
+  opIcon,
+  opName,
+} from '../../utils/dashboardInsights';
 
 // ─── PIN Gate ───
 function PINGate({ onUnlock, onBack }) {
@@ -79,9 +83,9 @@ export default function DashboardScreen({ onBack }) {
 // Overview Tab
 // ═══════════════════════════════════════════════
 function OverviewTab({ sessions }) {
-  const stats = useMemo(() => computeStats(sessions), [sessions]);
-
-  if (sessions.length === 0) return <Empty text="尚無遊戲記錄，開始遊戲後數據會自動記錄。" />;
+  const insights = useMemo(() => buildDashboardInsights(sessions), [sessions]);
+  const { overview: stats, weakSuggestions, weeklyReport, practiceTasks } = insights;
+  const visibleOps = OPS.filter(op => stats.opData[op]?.attempted > 0 || ["+", "-", "×", "÷"].includes(op));
 
   return (
     <div style={{ width: "100%" }}>
@@ -90,13 +94,24 @@ function OverviewTab({ sessions }) {
         <Card label="總遊戲次數" value={stats.totalSessions} color="#6366f1" />
         <Card label="總答題數" value={stats.totalQ} color="#8b5cf6" />
         <Card label="整體正確率" value={`${stats.overallAcc}%`} color={stats.overallAcc >= 70 ? "#22c55e" : stats.overallAcc >= 50 ? "#f59e0b" : "#ef4444"} />
-        <Card label="平均回答時間" value={`${stats.avgTimeS}s`} color="#3b82f6" />
+        <Card label="平均回答時間" value={stats.avgTimeS === "—" ? "—" : `${stats.avgTimeS}s`} color="#3b82f6" />
       </div>
+
+      <SectionTitle text="弱點題型建議" />
+      <WeakSuggestions items={weakSuggestions} />
+
+      <SectionTitle text="每週學習報告" />
+      <WeeklyReport report={weeklyReport} />
+
+      <SectionTitle text="練習任務推薦" />
+      <PracticeTaskList tasks={practiceTasks} />
+
+      {sessions.length === 0 && <Empty text="尚無遊戲記錄，開始遊戲後儀表板會自動更新分析。" />}
 
       {/* Per-operation accuracy */}
       <SectionTitle text="各運算正確率" />
       <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-        {OPS.filter(op => stats.opData[op]?.attempted > 0 || ["+","-","×","÷"].includes(op)).map(op => {
+        {visibleOps.map(op => {
           const d = stats.opData[op] || { attempted: 0, correct: 0, acc: 0, avgTime: 0, weak: false };
           return (
             <div key={op} style={{ flex: 1, background: "rgba(255,255,255,0.06)", borderRadius: 12, padding: "10px 6px", textAlign: "center", border: d.weak ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.08)" }}>
@@ -119,7 +134,7 @@ function OverviewTab({ sessions }) {
       {/* Per-operation avg time */}
       <SectionTitle text="各運算平均回答時間" />
       <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-        {OPS.filter(op => stats.opData[op]?.attempted > 0 || ["+","-","×","÷"].includes(op)).map(op => {
+        {visibleOps.map(op => {
           const d = stats.opData[op] || { attempted: 0, avgTime: 0 };
           return (
             <div key={op} style={{ flex: 1, background: "rgba(255,255,255,0.06)", borderRadius: 12, padding: "10px 6px", textAlign: "center" }}>
@@ -129,6 +144,75 @@ function OverviewTab({ sessions }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function WeakSuggestions({ items }) {
+  if (!items.length) return <Empty text="目前尚無弱點建議。" />;
+  return (
+    <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
+      {items.map((item) => (
+        <div key={item.id} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "10px 12px", textAlign: "left" }}>
+          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 4 }}>{item.title}</div>
+          <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 6 }}>{item.summary}</div>
+          <div style={{ fontSize: 11, color: "#c4b5fd" }}>{item.action}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function WeeklyReport({ report }) {
+  const avgTimeText = report.current.avgTimeSec == null ? "—" : `${report.current.avgTimeSec.toFixed(1)}s`;
+  const accDelta = formatDelta(report.delta.acc, "%");
+  const qDelta = formatDelta(report.delta.questions, "題");
+  const sDelta = formatDelta(report.delta.sessions, "場");
+  const strongest = report.current.strongest;
+  const weakest = report.current.weakest;
+
+  return (
+    <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "12px", marginBottom: 14, textAlign: "left" }}>
+      <div style={{ fontSize: 11, opacity: 0.45, marginBottom: 6 }}>{report.range.startLabel} - {report.range.endLabel}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 10 }}>{report.headline}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+        <MiniCard label="本週場次" value={`${report.current.sessions}`} />
+        <MiniCard label="本週題數" value={`${report.current.totalQ}`} />
+        <MiniCard label="本週正確率" value={`${report.current.acc}%`} />
+        <MiniCard label="平均作答" value={avgTimeText} />
+      </div>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+        <DeltaPill label="正確率" value={accDelta} />
+        <DeltaPill label="題量" value={qDelta} />
+        <DeltaPill label="場次" value={sDelta} />
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <Tag text={strongest ? `強項 ${strongest.icon}${strongest.label} ${strongest.acc}%` : "強項資料不足"} color="rgba(34,197,94,0.2)" />
+        <Tag text={weakest ? `弱項 ${weakest.icon}${weakest.label} ${weakest.acc}%` : "弱項資料不足"} color="rgba(239,68,68,0.2)" />
+      </div>
+    </div>
+  );
+}
+
+function PracticeTaskList({ tasks }) {
+  if (!tasks.length) return <Empty text="目前尚無任務建議。" />;
+  return (
+    <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
+      {tasks.map((task, i) => (
+        <div key={task.id} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, padding: "10px 12px", textAlign: "left" }}>
+          <div style={{ fontSize: 11, opacity: 0.45, marginBottom: 2 }}>任務 {i + 1}</div>
+          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 4 }}>{task.title}</div>
+          <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 6 }}>{task.summary}</div>
+          <div style={{ fontSize: 11, color: "#93c5fd", marginBottom: 8 }}>目標：{task.goal}</div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {(task.focusOps || []).slice(0, 4).map(op => (
+              <span key={`${task.id}-${op}`} style={{ fontSize: 10, padding: "2px 6px", borderRadius: 999, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                {opIcon(op)} {opName(op)}
+              </span>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -271,83 +355,37 @@ function BarChart({ data }) {
   );
 }
 
-// ═══════════════════════════════════════════════
-// Stats computation
-// ═══════════════════════════════════════════════
-
-function computeStats(sessions) {
-  let totalC = 0, totalW = 0, totalMs = 0, totalQ = 0;
-  const opAgg = {};
-  for (const op of OPS) opAgg[op] = { a: 0, c: 0, ms: 0 };
-
-  for (const s of sessions) {
-    totalC += s.tC || 0;
-    totalW += s.tW || 0;
-    if (s.opStats) {
-      for (const op of OPS) {
-        const d = s.opStats[op];
-        if (d) {
-          opAgg[op].a += d.attempted;
-          opAgg[op].c += d.correct;
-          opAgg[op].ms += d.totalMs;
-        }
-      }
-    }
-  }
-
-  totalQ = totalC + totalW;
-  for (const op of OPS) {
-    totalMs += opAgg[op].ms;
-  }
-
-  const overallAcc = totalQ > 0 ? Math.round(totalC / totalQ * 100) : 0;
-  const avgTimeS = totalQ > 0 ? (totalMs / totalQ / 1000).toFixed(1) : "—";
-
-  const opData = {};
-  for (const op of OPS) {
-    const d = opAgg[op];
-    const acc = d.a > 0 ? Math.round(d.c / d.a * 100) : 0;
-    const avgTime = d.a > 0 ? (d.ms / d.a / 1000).toFixed(1) : "—";
-    opData[op] = { attempted: d.a, correct: d.c, acc, avgTime, weak: d.a >= 5 && acc < 60 };
-  }
-
-  // Recent 10 sessions accuracy for bar chart
-  const recent = sessions.slice(-10);
-  const recentAcc = recent.map((s, i) => ({
-    label: `#${sessions.length - recent.length + i + 1}`,
-    value: s.tC + s.tW > 0 ? Math.round(s.tC / (s.tC + s.tW) * 100) : 0,
-  }));
-
-  return { totalSessions: sessions.length, totalQ, overallAcc, avgTimeS, opData, recentAcc };
+function MiniCard({ label, value }) {
+  return (
+    <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "8px 6px", textAlign: "center" }}>
+      <div style={{ fontSize: 16, fontWeight: 800 }}>{value}</div>
+      <div style={{ fontSize: 10, opacity: 0.45 }}>{label}</div>
+    </div>
+  );
 }
 
-function opIcon(op) {
-  return {
-    "+": "➕",
-    "-": "➖",
-    "×": "✖️",
-    "÷": "➗",
-    mixed2: "⚡",
-    mixed3: "⚡",
-    mixed4: "⚡",
-    unknown1: "🦁",
-    unknown2: "🦁",
-    unknown3: "🦁",
-    unknown4: "🦁",
-  }[op] || op;
+function DeltaPill({ label, value }) {
+  const isUp = value.startsWith("+");
+  const isFlat = value === "—";
+  const color = isFlat ? "rgba(148,163,184,0.25)" : isUp ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)";
+  return (
+    <span style={{ fontSize: 10, padding: "4px 8px", borderRadius: 999, background: color, border: "1px solid rgba(255,255,255,0.14)" }}>
+      {label} {value}
+    </span>
+  );
 }
-function opName(op) {
-  return {
-    "+": "加法",
-    "-": "減法",
-    "×": "乘法",
-    "÷": "除法",
-    mixed2: "加減混合",
-    mixed3: "乘加混合",
-    mixed4: "四則混合",
-    unknown1: "加減求未知",
-    unknown2: "乘除求未知",
-    unknown3: "大數求未知",
-    unknown4: "混合求未知",
-  }[op] || op;
+
+function Tag({ text, color }) {
+  return (
+    <span style={{ fontSize: 10, padding: "4px 8px", borderRadius: 999, background: color, border: "1px solid rgba(255,255,255,0.14)" }}>
+      {text}
+    </span>
+  );
+}
+
+function formatDelta(value, unit) {
+  if (value == null || Number.isNaN(value)) return "—";
+  if (value === 0) return `0${unit}`;
+  const prefix = value > 0 ? "+" : "";
+  return `${prefix}${value}${unit}`;
 }

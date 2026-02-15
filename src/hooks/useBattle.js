@@ -741,18 +741,19 @@ export function useBattle() {
         safeTo(() => {
           setPAnim("");
           const s2 = sr.current;
-          const bt = bestAttackType(move, s2.enemy);
+          const dmgType = bestAttackType(move, s2.enemy);
+          const vfxType = move.risky && move.type2 ? move.type2 : dmgType;
           const effectMeta = {
             idx: s2.selIdx,
             lvl: s2.mLvls[s2.selIdx],
           };
           const effectTimeline = {
-            hitDelay: getAttackEffectHitDelay(bt),
+            hitDelay: getAttackEffectHitDelay(vfxType),
             clearDelay: getAttackEffectClearDelay(effectMeta),
             nextDelay: getAttackEffectNextStepDelay(effectMeta),
           };
-          setAtkEffect({ type: bt, idx: effectMeta.idx, lvl: effectMeta.lvl });
-          sfx.play(bt); // type-specific attack sound
+          setAtkEffect({ type: vfxType, idx: effectMeta.idx, lvl: effectMeta.lvl });
+          sfx.play(vfxType); // type-specific attack sound
 
           safeTo(() => {
             const s3 = sr.current;
@@ -839,8 +840,8 @@ export function useBattle() {
             }
 
             setEHp(afterHp);
-            setEAnim(HIT_ANIMS[bt] || "enemyHit 0.5s ease");
-            const dmgColor = { fire: "#ef4444", electric: "#fbbf24", water: "#3b82f6", grass: "#22c55e", dark: "#a855f7", light: "#f59e0b" }[bt] || "#ef4444";
+            setEAnim(HIT_ANIMS[vfxType] || "enemyHit 0.5s ease");
+            const dmgColor = { fire: "#ef4444", electric: "#fbbf24", water: "#3b82f6", grass: "#22c55e", dark: "#a855f7", light: "#f59e0b" }[vfxType] || "#ef4444";
             addD(`-${dmg}`, 140, 55, dmgColor);
             safeTo(() => { setEAnim(""); setAtkEffect(null); }, effectTimeline.clearDelay);
 

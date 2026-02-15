@@ -60,7 +60,7 @@ export default function GameOverScreen({
     const nm = playerName.trim() || "???";
     writeText("mathMonsterBattle_name", nm);
     const entry: LeaderboardEntry = { score: finalScore, name: nm, defeated, correct: tC, wrong: tW, accuracy: acc, level: pLvl, timed: timedMode, maxStreak, completed: won, date: new Date().toISOString() };
-    setLastRank(saveScore(entry));
+    setLastRank(Number(saveScore(entry)));
     setNameSaved(true);
   };
 

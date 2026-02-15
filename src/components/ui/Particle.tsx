@@ -17,9 +17,9 @@ type ParticleState = {
 };
 
 export default function Particle({ emoji, x, y, seed, onDone }: ParticleProps) {
-  const offset = useMemo(() => ({
-    dx: seedRange(`p-${seed}-dx`, -40, 40),
-    dy: -seedRange(`p-${seed}-dy`, 20, 80),
+  const offset = useMemo<{ dx: number; dy: number }>(() => ({
+    dx: Number(seedRange(`p-${seed}-dx`, -40, 40)),
+    dy: -Number(seedRange(`p-${seed}-dy`, 20, 80)),
   }), [seed]);
 
   const [s, setS] = useState<ParticleState>({ left: x, top: y, opacity: 1, transform: "scale(0)" });

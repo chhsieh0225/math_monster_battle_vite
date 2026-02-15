@@ -1,6 +1,6 @@
 import {
   slimeSVG, fireLizardSVG, ghostSVG, dragonSVG, darkLordSVG,
-  slimeEvolvedSVG, slimeElectricEvolvedSVG, slimeFireEvolvedSVG, slimeWaterEvolvedSVG,
+  slimeEvolvedSVG, slimeElectricEvolvedSVG, slimeFireEvolvedSVG, slimeWaterEvolvedSVG, slimeSteelEvolvedSVG,
   fireEvolvedSVG, ghostEvolvedSVG, dragonEvolvedSVG,
   slimeRedSVG, slimeBlueSVG, slimeYellowSVG, slimeDarkSVG, slimeSteelSVG,
 } from './sprites';
@@ -44,6 +44,7 @@ export const EVOLVED_SLIME_VARIANTS = [
   { id:"slimeElectricEvolved",  name:"雷霆巨魔",   svgFn:slimeElectricEvolvedSVG,  c1:"#facc15",c2:"#ca8a04", mType:"electric", typeIcon:"⚡", typeName:"電", drops:["⚡","🧪"] },
   { id:"slimeFireEvolved",     name:"烈焰巨魔",   svgFn:slimeFireEvolvedSVG,     c1:"#f87171",c2:"#b91c1c", mType:"fire",     typeIcon:"🔥", typeName:"火", drops:["🔥","🧪"] },
   { id:"slimeWaterEvolved",    name:"深海巨魔",   svgFn:slimeWaterEvolvedSVG,    c1:"#60a5fa",c2:"#1d4ed8", mType:"water",    typeIcon:"💧", typeName:"水", drops:["💧","🧪"] },
+  { id:"slimeSteelEvolved",    name:"鋼鐵巨魔",   svgFn:slimeSteelEvolvedSVG,    c1:"#94a3b8",c2:"#475569", mType:"steel",    typeIcon:"🛡️", typeName:"鋼", drops:["🛡️","🧪"] },
 ];
 
 export const MONSTERS = [

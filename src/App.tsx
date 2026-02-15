@@ -11,6 +11,8 @@ import { useState, useEffect, useRef, useSyncExternalStore, Component } from 're
 import type { ComponentProps, ReactNode } from 'react';
 import './App.css';
 import { useI18n } from './i18n';
+import zhTW from './i18n/locales/zh-TW';
+import enUS from './i18n/locales/en-US';
 
 // Hooks
 import { useBattle } from './hooks/useBattle';
@@ -48,6 +50,30 @@ import AchievementPopup from './components/ui/AchievementPopup';
 import { ACH_MAP } from './data/achievements';
 import type { ScreenName, TimerSubscribe } from './types/battle';
 
+type StaticLocaleCode = "zh-TW" | "en-US";
+
+function resolveStaticLocale(): StaticLocaleCode {
+  if (typeof window !== "undefined") {
+    try {
+      const stored = window.localStorage.getItem("mathMonsterBattle_locale");
+      if (stored === "zh-TW" || stored === "en-US") return stored;
+    } catch {
+      // ignore
+    }
+  }
+  return "zh-TW";
+}
+
+const STATIC_DICTS: Record<StaticLocaleCode, Record<string, string>> = {
+  "zh-TW": zhTW as Record<string, string>,
+  "en-US": enUS as Record<string, string>,
+};
+
+function staticT(key: string, fallback: string): string {
+  const locale = resolveStaticLocale();
+  return STATIC_DICTS[locale][key] || STATIC_DICTS["zh-TW"][key] || fallback;
+}
+
 // ─── ErrorBoundary: catches render crashes to show error instead of black screen ───
 type ErrorBoundaryProps = {
   children?: ReactNode;
@@ -76,9 +102,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       return (
       <div style={{ height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"#1e1b4b", color:"white", padding:24, textAlign:"center", gap:12 }}>
         <div style={{ fontSize:40 }}>⚠️</div>
-        <div style={{ fontSize:16, fontWeight:800 }}>遊戲發生錯誤</div>
+        <div style={{ fontSize:16, fontWeight:800 }}>{staticT("app.error.title", "A game error occurred")}</div>
         <div style={{ fontSize:11, opacity:0.6, maxWidth:320, wordBreak:"break-all" }}>{errorText}</div>
-        <button onClick={() => { this.setState({ error: null }); }} style={{ marginTop:12, background:"rgba(255,255,255,0.15)", border:"1px solid rgba(255,255,255,0.3)", color:"white", padding:"8px 20px", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>重新載入</button>
+        <button onClick={() => { this.setState({ error: null }); }} style={{ marginTop:12, background:"rgba(255,255,255,0.15)", border:"1px solid rgba(255,255,255,0.3)", color:"white", padding:"8px 20px", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>{staticT("app.error.reload", "Reload")}</button>
       </div>
       );
     }
@@ -516,6 +542,29 @@ function App() {
   const selectedMove = activeStarter && B.selIdx !== null
     ? activeStarter.moves[B.selIdx]
     : null;
+  const questionTypeLabel = !question
+    ? ""
+    : question.op === "×" ? t("battle.qtype.mul", "Multiplication")
+    : question.op === "÷" ? t("battle.qtype.div", "Division")
+    : question.op === "+" ? t("battle.qtype.add", "Addition")
+    : question.op === "-" ? t("battle.qtype.sub", "Subtraction")
+    : question.op === "mixed2" ? t("battle.qtype.mixed2", "Add/Sub Mix")
+    : question.op === "mixed3" ? t("battle.qtype.mixed3", "Mul/Add Mix")
+    : question.op === "mixed4" ? t("battle.qtype.mixed4", "Four Ops")
+    : question.op === "unknown1" ? t("battle.qtype.unknown1", "Unknown Add/Sub")
+    : question.op === "unknown2" ? t("battle.qtype.unknown2", "Unknown Mul/Div")
+    : question.op === "unknown3" ? t("battle.qtype.unknown3", "Unknown Large Number")
+    : question.op === "unknown4" ? t("battle.qtype.unknown4", "Unknown Mixed")
+    : t("battle.qtype.mixed", "Mixed");
+  const specDefReadyLabel = B.starter.type === "fire"
+    ? t("battle.specDef.fire", "🛡️ Shield")
+    : B.starter.type === "water"
+      ? t("battle.specDef.water", "💨 Perfect Dodge")
+      : B.starter.type === "electric"
+        ? t("battle.specDef.electric", "⚡ Paralysis")
+        : B.starter.type === "light"
+          ? t("battle.specDef.light", "✨ Lion Roar")
+          : t("battle.specDef.grass", "🌿 Reflect");
 
   return (
     <div
@@ -559,7 +608,15 @@ function App() {
       {showHeavyFx && B.parts.map((p) => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} seed={p.id} onDone={() => B.rmP(p.id)} />)}
 
       {/* Move level-up toast */}
-      {B.battleMode !== "pvp" && B.mLvlUp !== null && B.starter && <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: "0 4px 16px rgba(245,158,11,0.4)", whiteSpace: "nowrap" }}>{B.starter.moves[B.mLvlUp].icon} {B.starter.moves[B.mLvlUp].name} 升級到 Lv.{B.mLvls[B.mLvlUp]}！威力 → {B.getPow(B.mLvlUp)}</div>}
+      {B.battleMode !== "pvp" && B.mLvlUp !== null && B.starter && (
+        <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: "0 4px 16px rgba(245,158,11,0.4)", whiteSpace: "nowrap" }}>
+          {B.starter.moves[B.mLvlUp].icon} {B.starter.moves[B.mLvlUp].name}{" "}
+          {t("battle.moveLevelUp", "leveled up to Lv.{level}! Power -> {power}", {
+            level: B.mLvls[B.mLvlUp],
+            power: B.getPow(B.mLvlUp),
+          })}
+        </div>
+      )}
       {/* Achievement popup */}
       {B.achPopup && ACH_MAP[B.achPopup] && <AchievementPopup achievement={ACH_MAP[B.achPopup]} onDone={B.dismissAch} />}
 
@@ -613,31 +670,41 @@ function App() {
         {/* Enemy info */}
         <div style={{ position: "absolute", top: 10, left: 10, right: enemyInfoRight, zIndex: 10 }}>
           <div style={hpBarFocusStyle(pvpEnemyBarActive)}>
-            <HPBar cur={B.eHp} max={B.enemy.maxHp} color={B.enemy.c1} label={`${B.enemy.typeIcon}${B.enemy.name} Lv.${B.enemy.lvl}`} />
+            <HPBar
+              cur={B.eHp}
+              max={B.enemy.maxHp}
+              color={B.enemy.c1}
+              label={`${B.enemy.typeIcon}${B.enemy.name} ${t("battle.level", "Lv.{level}", { level: B.enemy.lvl })}`}
+            />
           </div>
           {B.enemySub && (
             <div style={{ marginTop: 4, ...hpBarFocusStyle(false) }}>
-              <HPBar cur={B.eHpSub} max={B.enemySub.maxHp} color={B.enemySub.c1} label={`副將 ${B.enemySub.typeIcon}${B.enemySub.name} Lv.${B.enemySub.lvl}`} />
+              <HPBar
+                cur={B.eHpSub}
+                max={B.enemySub.maxHp}
+                color={B.enemySub.c1}
+                label={`${t("battle.subUnit", "Sub")} ${B.enemySub.typeIcon}${B.enemySub.name} ${t("battle.level", "Lv.{level}", { level: B.enemySub.lvl })}`}
+              />
             </div>
           )}
           <div style={{ display: "flex", gap: 4, marginTop: 3, flexWrap: "wrap" }}>
             {B.battleMode === "pvp" ? (
               <>
-                {pvpEnemyBurn > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥灼燒 x{pvpEnemyBurn}</div>}
-                {pvpEnemyFreeze && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️凍結</div>}
-                {pvpEnemyParalyze && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡麻痺</div>}
-                {pvpEnemyStatic > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡蓄電 x{pvpEnemyStatic}</div>}
-                {pvpEnemySpecDef && <div style={{ background: "rgba(99,102,241,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️反制就緒</div>}
-                {!pvpEnemySpecDef && pvpEnemyCombo > 0 && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️連擊 {pvpEnemyCombo}/{pvpComboTrigger}</div>}
+                {pvpEnemyBurn > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥 {t("battle.status.burnStack", "Burn x{count}", { count: pvpEnemyBurn })}</div>}
+                {pvpEnemyFreeze && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️ {t("battle.status.freeze", "Freeze")}</div>}
+                {pvpEnemyParalyze && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡ {t("battle.status.paralyze", "Paralyze")}</div>}
+                {pvpEnemyStatic > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡ {t("battle.status.chargeStack", "Charge x{count}", { count: pvpEnemyStatic })}</div>}
+                {pvpEnemySpecDef && <div style={{ background: "rgba(99,102,241,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️ {t("battle.status.counterReady", "Counter Ready")}</div>}
+                {!pvpEnemySpecDef && pvpEnemyCombo > 0 && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️ {t("battle.status.comboProgress", "Combo {count}/{target}", { count: pvpEnemyCombo, target: pvpComboTrigger })}</div>}
               </>
             ) : (
               <>
                 {B.enemy.traitName && B.enemy.traitName !== "普通" && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>✦{B.enemy.traitName}</div>}
-                {B.burnStack > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥灼燒 x{B.burnStack}</div>}
-                {B.frozen && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️凍結</div>}
-                {B.staticStack > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡靜電 x{B.staticStack}{B.staticStack >= 2 ? " ⚠️" : ""}</div>}
-                {B.bossPhase >= 2 && <div style={{ background: "rgba(168,85,247,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>{B.bossPhase >= 3 ? "💀覺醒 ATK×2" : "💀狂暴 ATK×1.5"}</div>}
-                {B.bossCharging && <div style={{ background: "rgba(251,191,36,0.9)", color: "#000", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚠️蓄力中！</div>}
+                {B.burnStack > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥 {t("battle.status.burnStack", "Burn x{count}", { count: B.burnStack })}</div>}
+                {B.frozen && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️ {t("battle.status.freeze", "Freeze")}</div>}
+                {B.staticStack > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡ {t("battle.status.staticStack", "Static x{count}", { count: B.staticStack })}{B.staticStack >= 2 ? " ⚠️" : ""}</div>}
+                {B.bossPhase >= 2 && <div style={{ background: "rgba(168,85,247,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>{B.bossPhase >= 3 ? t("battle.status.bossAwaken", "💀 Awaken ATKx2") : t("battle.status.bossRage", "💀 Rage ATKx1.5")}</div>}
+                {B.bossCharging && <div style={{ background: "rgba(251,191,36,0.9)", color: "#000", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚠️ {t("battle.status.charging", "Charging!")}</div>}
               </>
             )}
           </div>
@@ -658,26 +725,36 @@ function App() {
         <div style={{ position: "absolute", left: "2%", bottom: "12%", width: "50%", height: 10, background: scene.platform1, borderRadius: "50%", filter: "blur(2px)", zIndex: 3 }} />
         <div style={{ position: "absolute", bottom: 10, right: 10, left: playerInfoLeft, zIndex: 10 }}>
           <div style={hpBarFocusStyle(mainBarActive)}>
-            <HPBar cur={B.pHp} max={mainMaxHp} color="#6366f1" label={`${isCoopBattle && !coopUsingSub ? "▶ " : ""}${st.name} Lv.${B.pLvl}`} />
+            <HPBar
+              cur={B.pHp}
+              max={mainMaxHp}
+              color="#6366f1"
+              label={`${isCoopBattle && !coopUsingSub ? "▶ " : ""}${st.name} ${t("battle.level", "Lv.{level}", { level: B.pLvl })}`}
+            />
           </div>
           {B.allySub && (
             <div style={{ marginTop: 4, ...hpBarFocusStyle(subBarActive) }}>
-              <HPBar cur={B.pHpSub} max={subMaxHp} color={B.allySub.c1} label={`${isCoopBattle && coopUsingSub ? "▶ " : ""}夥伴 ${B.allySub.typeIcon}${B.allySub.name}`} />
+              <HPBar
+                cur={B.pHpSub}
+                max={subMaxHp}
+                color={B.allySub.c1}
+                label={`${isCoopBattle && coopUsingSub ? "▶ " : ""}${t("battle.partner", "Partner")} ${B.allySub.typeIcon}${B.allySub.name}`}
+              />
             </div>
           )}
           <XPBar exp={B.pExp} max={B.expNext} />
           {B.battleMode === "pvp" ? (
             <div style={{ display: "flex", gap: 4, marginTop: 3, flexWrap: "wrap" }}>
-              {pvpPlayerBurn > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥灼燒 x{pvpPlayerBurn}</div>}
-              {pvpPlayerFreeze && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️凍結</div>}
-              {pvpPlayerParalyze && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡麻痺</div>}
-              {pvpPlayerStatic > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡蓄電 x{pvpPlayerStatic}</div>}
-              {pvpPlayerSpecDef && <div style={{ background: "rgba(99,102,241,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️反制就緒</div>}
-              {!pvpPlayerSpecDef && pvpPlayerCombo > 0 && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️連擊 {pvpPlayerCombo}/{pvpComboTrigger}</div>}
+              {pvpPlayerBurn > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥 {t("battle.status.burnStack", "Burn x{count}", { count: pvpPlayerBurn })}</div>}
+              {pvpPlayerFreeze && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️ {t("battle.status.freeze", "Freeze")}</div>}
+              {pvpPlayerParalyze && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡ {t("battle.status.paralyze", "Paralyze")}</div>}
+              {pvpPlayerStatic > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡ {t("battle.status.chargeStack", "Charge x{count}", { count: pvpPlayerStatic })}</div>}
+              {pvpPlayerSpecDef && <div style={{ background: "rgba(99,102,241,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️ {t("battle.status.counterReady", "Counter Ready")}</div>}
+              {!pvpPlayerSpecDef && pvpPlayerCombo > 0 && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️ {t("battle.status.comboProgress", "Combo {count}/{target}", { count: pvpPlayerCombo, target: pvpComboTrigger })}</div>}
             </div>
           ) : (
             <>
-              {B.cursed && <div style={{ background: "rgba(168,85,247,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, marginTop: 3, display: "inline-block", animation: "popIn 0.3s ease" }}>💀詛咒：下次攻擊弱化</div>}
+              {B.cursed && <div style={{ background: "rgba(168,85,247,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, marginTop: 3, display: "inline-block", animation: "popIn 0.3s ease" }}>💀 {t("battle.status.curse", "Cursed: next attack weakened")}</div>}
             </>
           )}
         </div>
@@ -694,22 +771,22 @@ function App() {
         {!B.pAnim && !UX.lowPerfMode && <div style={{ position: "absolute", left: `calc(${playerMainLeftPct}% + ${Math.round(mainPlayerSize * 0.14)}px)`, bottom: `${Math.max(8, playerMainBottomPct - 1)}%`, width: Math.round(mainPlayerSize * 0.5), height: 10, background: "radial-gradient(ellipse,rgba(0,0,0,0.55),transparent)", borderRadius: "50%", zIndex: 4, animation: "shadowPulse 3s ease-in-out infinite" }} />}
 
         {/* Streak badge */}
-        {B.streak >= 2 && <div style={{ position: "absolute", top: 10, right: 10, background: "linear-gradient(135deg,#f59e0b,#ef4444)", color: "white", padding: "3px 10px", borderRadius: 16, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease", zIndex: 20 }}>🔥 {B.streak} 連擊！</div>}
+        {B.streak >= 2 && <div style={{ position: "absolute", top: 10, right: 10, background: "linear-gradient(135deg,#f59e0b,#ef4444)", color: "white", padding: "3px 10px", borderRadius: 16, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease", zIndex: 20 }}>🔥 {t("battle.streak", "{count} combo!", { count: B.streak })}</div>}
         {/* Passive counter progress (shows when passiveCount >= 1) */}
         {B.passiveCount >= 1 && !B.specDef && <div style={{ position: "absolute", top: B.streak >= 2 ? 32 : 10, right: B.timedMode && B.streak < 2 ? 80 : 10, background: "rgba(99,102,241,0.8)", color: "white", padding: "2px 8px", borderRadius: 12, fontSize: 10, fontWeight: 700, zIndex: 20, display: "flex", alignItems: "center", gap: 3 }}>🛡️ {B.passiveCount}/8</div>}
-        {B.timedMode && B.streak < 2 && <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(239,68,68,0.7)", color: "white", padding: "3px 8px", borderRadius: 12, fontSize: 10, fontWeight: 700, zIndex: 20, backdropFilter: UX.lowPerfMode ? "none" : "blur(4px)" }}>⏱️ 計時</div>}
-        {B.diffLevel !== 2 && <div style={{ position: "absolute", top: (B.streak >= 2 || B.timedMode) ? 32 : 10, right: 10, background: B.diffLevel > 2 ? "rgba(239,68,68,0.7)" : "rgba(56,189,248,0.7)", color: "white", padding: "2px 8px", borderRadius: 12, fontSize: 10, fontWeight: 700, zIndex: 20, animation: "popIn 0.3s ease" }}>{B.diffLevel > 2 ? `📈難度+${B.diffLevel - 2}` : `📉難度${B.diffLevel - 2}`}</div>}
+        {B.timedMode && B.streak < 2 && <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(239,68,68,0.7)", color: "white", padding: "3px 8px", borderRadius: 12, fontSize: 10, fontWeight: 700, zIndex: 20, backdropFilter: UX.lowPerfMode ? "none" : "blur(4px)" }}>⏱️ {t("battle.timed", "Timed")}</div>}
+        {B.diffLevel !== 2 && <div style={{ position: "absolute", top: (B.streak >= 2 || B.timedMode) ? 32 : 10, right: 10, background: B.diffLevel > 2 ? "rgba(239,68,68,0.7)" : "rgba(56,189,248,0.7)", color: "white", padding: "2px 8px", borderRadius: 12, fontSize: 10, fontWeight: 700, zIndex: 20, animation: "popIn 0.3s ease" }}>{B.diffLevel > 2 ? t("battle.diff.up", "📈 Difficulty +{value}", { value: B.diffLevel - 2 }) : t("battle.diff.down", "📉 Difficulty {value}", { value: B.diffLevel - 2 })}</div>}
 
         {/* Charge meter */}
         <div style={{ position: "absolute", bottom: 50, left: 10, display: "flex", gap: 4, zIndex: 20, background: "rgba(0,0,0,0.3)", padding: "3px 8px", borderRadius: 10, backdropFilter: UX.lowPerfMode ? "none" : "blur(4px)" }}>
           {[0, 1, 2].map(i => <div key={i} style={{ width: 11, height: 11, borderRadius: 6, background: i < chargeDisplay ? "#f59e0b" : "rgba(0,0,0,0.15)", border: "2px solid rgba(255,255,255,0.4)", transition: "all 0.3s", animation: !UX.lowPerfMode && i < chargeDisplay ? "chargeGlow 1.5s ease infinite" : "none" }} />)}
-          {chargeReadyDisplay && <span style={{ fontSize: 9, color: "#b45309", fontWeight: 700, marginLeft: 2, animation: "popIn 0.3s ease" }}>MAX!</span>}
+          {chargeReadyDisplay && <span style={{ fontSize: 9, color: "#b45309", fontWeight: 700, marginLeft: 2, animation: "popIn 0.3s ease" }}>{t("battle.charge.max", "MAX!")}</span>}
         </div>
 
         {/* Special defense ready badge */}
-        {B.bossPhase >= 3 && <div style={{ position: "absolute", bottom: 92, left: 10, zIndex: 20, background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease, specDefReady 2s ease infinite", boxShadow: "0 2px 12px rgba(251,191,36,0.4)" }}>🔥背水一戰 DMG×1.3</div>}
-        {B.bossCharging && <div style={{ position: "absolute", top: "40%", left: "50%", transform: "translateX(-50%)", zIndex: 20, background: "rgba(251,191,36,0.95)", color: "#000", padding: "6px 16px", borderRadius: 12, fontSize: 14, fontWeight: 800, animation: "popIn 0.3s ease", boxShadow: "0 4px 20px rgba(251,191,36,0.6)" }}>⚠️ 答對可以打斷蓄力！</div>}
-        {B.specDef && <div style={{ position: "absolute", bottom: 70, left: 10, zIndex: 20, background: B.starter.type === "fire" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))" : B.starter.type === "water" ? "linear-gradient(135deg,rgba(56,189,248,0.9),rgba(14,165,233,0.9))" : B.starter.type === "electric" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(234,179,8,0.9))" : B.starter.type === "light" ? "linear-gradient(135deg,rgba(245,158,11,0.9),rgba(217,119,6,0.9))" : "linear-gradient(135deg,rgba(34,197,94,0.9),rgba(22,163,74,0.9))", color: "white", padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease, specDefReady 2s ease infinite", boxShadow: B.starter.type === "fire" ? "0 2px 12px rgba(251,191,36,0.4)" : B.starter.type === "water" ? "0 2px 12px rgba(56,189,248,0.4)" : B.starter.type === "electric" ? "0 2px 12px rgba(234,179,8,0.4)" : B.starter.type === "light" ? "0 2px 12px rgba(245,158,11,0.4)" : "0 2px 12px rgba(34,197,94,0.4)" }}>{B.starter.type === "fire" ? "🛡️防護罩" : B.starter.type === "water" ? "💨完美閃避" : B.starter.type === "electric" ? "⚡電流麻痺" : B.starter.type === "light" ? "✨獅王咆哮" : "🌿反彈"} 準備！</div>}
+        {B.bossPhase >= 3 && <div style={{ position: "absolute", bottom: 92, left: 10, zIndex: 20, background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease, specDefReady 2s ease infinite", boxShadow: "0 2px 12px rgba(251,191,36,0.4)" }}>{t("battle.lastStand", "🔥 Last Stand DMGx1.3")}</div>}
+        {B.bossCharging && <div style={{ position: "absolute", top: "40%", left: "50%", transform: "translateX(-50%)", zIndex: 20, background: "rgba(251,191,36,0.95)", color: "#000", padding: "6px 16px", borderRadius: 12, fontSize: 14, fontWeight: 800, animation: "popIn 0.3s ease", boxShadow: "0 4px 20px rgba(251,191,36,0.6)" }}>⚠️ {t("battle.bossBreakHint", "Answer correctly to interrupt charging!")}</div>}
+        {B.specDef && <div style={{ position: "absolute", bottom: 70, left: 10, zIndex: 20, background: B.starter.type === "fire" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))" : B.starter.type === "water" ? "linear-gradient(135deg,rgba(56,189,248,0.9),rgba(14,165,233,0.9))" : B.starter.type === "electric" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(234,179,8,0.9))" : B.starter.type === "light" ? "linear-gradient(135deg,rgba(245,158,11,0.9),rgba(217,119,6,0.9))" : "linear-gradient(135deg,rgba(34,197,94,0.9),rgba(22,163,74,0.9))", color: "white", padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease, specDefReady 2s ease infinite", boxShadow: B.starter.type === "fire" ? "0 2px 12px rgba(251,191,36,0.4)" : B.starter.type === "water" ? "0 2px 12px rgba(56,189,248,0.4)" : B.starter.type === "electric" ? "0 2px 12px rgba(234,179,8,0.4)" : B.starter.type === "light" ? "0 2px 12px rgba(245,158,11,0.4)" : "0 2px 12px rgba(34,197,94,0.4)" }}>{specDefReadyLabel} {t("battle.ready", "Ready!")}</div>}
       </div>
 
       {/* ═══ Bottom panel ═══ */}
@@ -718,12 +795,12 @@ function App() {
         {B.phase === "menu" && activeStarter && <div style={{ padding: 10 }}>
           {isCoopBattle && (
             <div style={{ marginBottom: 8, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.75)" }}>
-              🤝 雙人合作 · 目前出招：{activeStarter.typeIcon} {activeStarter.name}
+              🤝 {t("battle.coopTurn", "Co-op · Active:")} {activeStarter.typeIcon} {activeStarter.name}
             </div>
           )}
           {B.battleMode === "pvp" && (
             <div style={{ marginBottom: 8, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.75)" }}>
-              {B.pvpTurn === "p1" ? "🔵 玩家1 回合" : "🔴 玩家2 回合"} · {activeStarter.typeIcon} {activeStarter.name} · ⚡{pvpActiveCharge}/3 · {pvpActiveSpecDefReady ? "🛡️反制就緒" : `🛡️${pvpActiveCombo}/${pvpComboTrigger}`}
+              {B.pvpTurn === "p1" ? t("battle.pvpTurn.p1", "🔵 Player 1 Turn") : t("battle.pvpTurn.p2", "🔴 Player 2 Turn")} · {activeStarter.typeIcon} {activeStarter.name} · ⚡{pvpActiveCharge}/3 · {pvpActiveSpecDefReady ? `🛡️${t("battle.status.counterReady", "Counter Ready")}` : `🛡️${pvpActiveCombo}/${pvpComboTrigger}`}
             </div>
           )}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
@@ -736,12 +813,12 @@ function App() {
               const atCap = lv >= MAX_MOVE_LVL || m.basePower + lv * m.growth > POWER_CAPS[i];
               const eff = B.battleMode === "pvp" ? 1 : B.dualEff(m);
               return <button className="battle-menu-btn" key={i} onClick={() => !locked && B.selectMove(i)} style={{ background: locked ? "rgba(255,255,255,0.03)" : eff > 1 ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))` : eff < 1 ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))` : m.bg, border: `2px solid ${sealed ? "rgba(168,85,247,0.4)" : locked ? "rgba(255,255,255,0.08)" : eff > 1 ? "#22c55e66" : m.color + "44"}`, borderRadius: 12, padding: "10px 10px", textAlign: "left", opacity: locked ? 0.4 : 1, cursor: locked ? "default" : "pointer", transition: "all 0.2s", animation: `fadeSlide 0.3s ease ${i * 0.05}s both`, position: "relative", overflow: "hidden" }}>
-                {sealed && <div style={{ position: "absolute", inset: 0, background: "rgba(168,85,247,0.1)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2, borderRadius: 12 }}><span style={{ fontSize: 20 }}>🔮封印中 ({B.sealedTurns})</span></div>}
+                {sealed && <div style={{ position: "absolute", inset: 0, background: "rgba(168,85,247,0.1)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2, borderRadius: 12 }}><span style={{ fontSize: 20 }}>{t("battle.sealed", "🔮 Sealed ({turns})", { turns: B.sealedTurns })}</span></div>}
                 {B.battleMode !== "pvp" && lv > 1 && <div style={{ position: "absolute", top: 4, right: eff !== 1 ? 44 : 6, background: atCap ? "linear-gradient(135deg,#f59e0b,#ef4444)" : m.color, color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8, fontFamily: "'Press Start 2P',monospace" }}>Lv{lv}</div>}
-                {eff > 1 && <div style={{ position: "absolute", top: 4, right: 6, background: "#22c55e", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8 }}>效果↑</div>}
-                {eff < 1 && <div style={{ position: "absolute", top: 4, right: 6, background: "#64748b", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8 }}>效果↓</div>}
+                {eff > 1 && <div style={{ position: "absolute", top: 4, right: 6, background: "#22c55e", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8 }}>{t("battle.effect.up", "Effect Up")}</div>}
+                {eff < 1 && <div style={{ position: "absolute", top: 4, right: 6, background: "#64748b", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8 }}>{t("battle.effect.down", "Effect Down")}</div>}
                 <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}><span style={{ fontSize: 20 }}>{m.icon}</span><span className="move-name" style={{ fontSize: 15, fontWeight: 700, color: locked ? "#64748b" : m.color }}>{m.name}</span></div>
-                <div style={{ fontSize: 12, color: locked ? "#475569" : "#64748b" }}>{m.desc} · 威力 <b style={{ color: lv > 1 ? m.color : "inherit" }}>{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && B.battleMode === "pvp" && !chargeReadyDisplay && " 🔒需3次正答"}{m.risky && B.battleMode === "pvp" && chargeReadyDisplay && " ⚡可施放"}{m.risky && !B.chargeReady && B.battleMode !== "pvp" && " 🔒"}{m.risky && B.chargeReady && B.battleMode !== "pvp" && " ⚡蓄力完成！"}{B.battleMode !== "pvp" && !m.risky && !atCap && lv > 1 && " ↑"}{B.battleMode !== "pvp" && atCap && " ✦MAX"}</div>
+                <div style={{ fontSize: 12, color: locked ? "#475569" : "#64748b" }}>{m.desc} · {t("battle.power", "Power")} <b style={{ color: lv > 1 ? m.color : "inherit" }}>{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && B.battleMode === "pvp" && !chargeReadyDisplay && ` ${t("battle.risky.lockedPvp", "🔒Need 3 correct")}`}{m.risky && B.battleMode === "pvp" && chargeReadyDisplay && ` ${t("battle.risky.readyPvp", "⚡Cast Ready")}`}{m.risky && !B.chargeReady && B.battleMode !== "pvp" && ` ${t("battle.risky.locked", "🔒")}`}{m.risky && B.chargeReady && B.battleMode !== "pvp" && ` ${t("battle.risky.ready", "⚡Charge Ready!")}`}{B.battleMode !== "pvp" && !m.risky && !atCap && lv > 1 && " ↑"}{B.battleMode !== "pvp" && atCap && ` ${t("battle.max", "✦MAX")}`}</div>
                 {B.battleMode !== "pvp" && !m.risky && !atCap && <div style={{ height: 3, background: "rgba(0,0,0,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}><div style={{ width: `${(B.mHits[i] % (HITS_PER_LVL * B.mLvls[i])) / (HITS_PER_LVL * B.mLvls[i]) * 100}%`, height: "100%", background: m.color, borderRadius: 2, transition: "width 0.3s" }} /></div>}
               </button>;
             })}
@@ -749,18 +826,18 @@ function App() {
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}>
             {isCoopBattle && (
               <button className="battle-util-btn" onClick={B.toggleCoopActive} disabled={!coopCanSwitch} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: coopCanSwitch ? "rgba(255,255,255,0.45)" : "rgba(148,163,184,0.45)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: coopCanSwitch ? "pointer" : "not-allowed", opacity: coopCanSwitch ? 1 : 0.55 }}>
-                🔁 {coopUsingSub ? "主將出招" : "副將出招"}
+                🔁 {coopUsingSub ? t("battle.coop.mainTurn", "Main Turn") : t("battle.coop.subTurn", "Sub Turn")}
               </button>
             )}
-            <button className="battle-util-btn" aria-label={t("a11y.battle.pause", "Pause game")} onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button>
-            <button className="battle-util-btn" aria-label={t("a11y.battle.settings", "Open battle settings")} onClick={() => openSettings("battle")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⚙️ 設定</button>
-            <button className="battle-util-btn" aria-label={t("a11y.battle.run", "Run from battle")} onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button>
+            <button className="battle-util-btn" aria-label={t("a11y.battle.pause", "Pause game")} onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ {t("battle.pause", "Pause")}</button>
+            <button className="battle-util-btn" aria-label={t("a11y.battle.settings", "Open battle settings")} onClick={() => openSettings("battle")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⚙️ {t("battle.settings", "Settings")}</button>
+            <button className="battle-util-btn" aria-label={t("a11y.battle.run", "Run from battle")} onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ {t("battle.run", "Run")}</button>
           </div>
         </div>}
 
         {/* Question panel */}
         {B.phase === "question" && question && activeStarter && selectedMove && <div style={{ padding: "10px 14px", animation: "fadeSlide 0.25s ease" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{selectedMove.icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{selectedMove.name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{activeStarter.typeIcon} {activeStarter.name}</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{B.timedMode ? "⏱️ 限時回答！" : "回答正確才能命中"}</span></div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{selectedMove.icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{selectedMove.name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{activeStarter.typeIcon} {activeStarter.name}</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{B.timedMode ? t("battle.answer.timed", "⏱️ Timed Answer!") : t("battle.answer.hit", "Answer correctly to hit")}</span></div>
           <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 16px", textAlign: "center", marginBottom: 8, border: "1px solid rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
             {B.timedMode && !B.answered && (
               <QuestionTimerHud
@@ -769,16 +846,16 @@ function App() {
                 getSnapshot={B.getTimerLeft}
               />
             )}
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>{question.op === "×" ? "乘法題" : question.op === "÷" ? "除法題" : question.op === "+" ? "加法題" : question.op === "-" ? "減法題" : question.op === "mixed2" ? "加減混合題" : question.op === "mixed3" ? "乘加混合題" : question.op === "mixed4" ? "四則運算題" : question.op === "unknown1" ? "加減求未知題" : question.op === "unknown2" ? "乘除求未知題" : question.op === "unknown3" ? "大數求未知題" : question.op === "unknown4" ? "混合求未知題" : "混合題"}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>{questionTypeLabel}</div>
             <div className="question-expression" style={{ fontSize: 36, fontWeight: 900, color: "white", letterSpacing: 2 }}>{question.display}{question.op && question.op.startsWith("unknown") ? "" : " = ?"}</div>
           </div>
-          {feedback && <div style={{ textAlign: "center", marginBottom: 4, fontSize: 16, fontWeight: 700, color: feedback.correct ? "#22c55e" : "#ef4444", animation: "popIn 0.2s ease" }}>{feedback.correct ? "✅ 命中！" : `❌ 答案是 ${feedback.answer}`}</div>}
+          {feedback && <div style={{ textAlign: "center", marginBottom: 4, fontSize: 16, fontWeight: 700, color: feedback.correct ? "#22c55e" : "#ef4444", animation: "popIn 0.2s ease" }}>{feedback.correct ? t("battle.feedback.hit", "✅ Hit!") : t("battle.feedback.answer", "❌ Answer is {answer}", { answer: feedback.answer })}</div>}
           {feedback && !feedback.correct && (feedback.steps?.length || 0) > 0 && (
             <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "8px 12px", marginBottom: 6, animation: "fadeIn 0.4s ease" }}>
-              <div style={{ fontSize: 11, color: "#fca5a5", fontWeight: 700, marginBottom: 4 }}>📝 解題過程：</div>
+              <div style={{ fontSize: 11, color: "#fca5a5", fontWeight: 700, marginBottom: 4 }}>📝 {t("battle.feedback.steps", "Solution Steps:")}</div>
               {(feedback.steps ?? []).map((step: string, i: number) => (
                 <div key={i} style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: 600, lineHeight: 1.8, fontFamily: "monospace" }}>
-                  {(feedback.steps?.length || 0) > 1 && <span style={{ color: "#fca5a5", fontSize: 11, marginRight: 4 }}>Step {i + 1}.</span>}{step}
+                  {(feedback.steps?.length || 0) > 1 && <span style={{ color: "#fca5a5", fontSize: 11, marginRight: 4 }}>{t("battle.feedback.step", "Step {index}.", { index: i + 1 })}</span>}{step}
                 </div>
               ))}
             </div>

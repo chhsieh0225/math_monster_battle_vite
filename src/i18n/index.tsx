@@ -40,8 +40,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY);
       if (stored) return normalizeLocale(stored);
-      const nav = navigator.language || "";
-      return nav.toLowerCase().startsWith("en") ? "en-US" : FALLBACK_LOCALE;
+      return FALLBACK_LOCALE;
     } catch {
       return FALLBACK_LOCALE;
     }

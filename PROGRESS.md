@@ -50,6 +50,8 @@
 - **src/components/screens/EvolveScreen.tsx** - 進化動畫與演出
 - **src/components/screens/PvpResultScreen.tsx** - 雙人對戰結算畫面
 - **src/components/screens/SettingsScreen.tsx** - 設定畫面（聲音/效能）
+- **src/components/screens/DashboardScreen.tsx** - 家長儀表板
+- **src/components/screens/EncyclopediaScreen.tsx** - 怪獸圖鑑
 
 **UI 元素**:
 - **src/components/ui/HPBar.tsx** - 生命值條顯示

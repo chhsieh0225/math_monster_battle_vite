@@ -73,3 +73,50 @@ export type StarterSelectable = StarterLite & {
 };
 
 export type SelectionMode = "single" | "coop" | "pvp" | "double";
+
+export type EncyclopediaCounts = Record<string, number>;
+
+export type EncyclopediaData = {
+  encountered?: EncyclopediaCounts;
+  defeated?: EncyclopediaCounts;
+};
+
+export type EncyclopediaEnemyEntry = {
+  key: string;
+  name: string;
+  mType: string;
+  typeIcon: string;
+  typeName: string;
+  hp: number;
+  atk: number;
+  svgFn: (c1: string, c2: string) => string;
+  c1: string;
+  c2: string;
+  weakAgainst: string[];
+  resistAgainst: string[];
+  isEvolved: boolean;
+  desc?: string;
+  habitat?: string;
+  rarity?: string;
+  drops?: string[];
+  traitName?: string | null;
+  traitDesc?: string | null;
+};
+
+export type EncyclopediaStarterEntry = {
+  key: string;
+  starterId?: StarterId;
+  stageIdx: number;
+  name: string;
+  emoji?: string;
+  mType: string;
+  typeIcon: string;
+  typeName: string;
+  svgFn: (c1: string, c2: string) => string;
+  c1: string;
+  c2: string;
+  desc?: string;
+  skill?: string;
+  stageLabel: string;
+  moves: StarterMoveLite[];
+};

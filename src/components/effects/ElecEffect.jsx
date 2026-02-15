@@ -187,108 +187,124 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
     );
   }
 
-  // --- idx 3: 終極爆破 — purple core + lightning sparks ---
-  const D = 0.5;
-  const ringN = 3 + lvl;
-  const rayN = 8 + lvl * 2;
-  const boltN = 4 + lvl;
-  const sc = 0.7 + lvl * 0.06;
+  // --- idx 3: 終極爆破 — dark thunder prison + chain lightning ---
+  const D = 0.34;
+  const boltN = 5 + lvl;
+  const arcN = 2 + Math.floor(lvl / 2);
+  const sparkN = 6 + lvl * 2;
+  const cageN = 6 + lvl;
   const boltPaths = [BOLT_A, BOLT_B, BOLT_C];
   return (
     <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
-      {/* Phase 1: Purple orb approach */}
-      <svg width="34" height="34" viewBox="0 0 34 34"
+      {/* Phase 1: Dark thunder cage forms around target */}
+      <svg width="190" height="190" viewBox="0 0 190 190"
         style={{
-          position:"absolute", left:"10%", bottom:"35%",
-          "--fly-x":`${100-T.flyRight-10}vw`,
-          "--fly-y":`${T.flyTop-65}vh`,
-          filter:`drop-shadow(0 0 ${glow}px #7c3aed) drop-shadow(0 0 ${glow+4}px #581c87)`,
-          animation:`ultApproach 0.55s ease forwards`,
+          position:"absolute",
+          right:T.right,
+          top:T.top,
+          transform:"translate(50%,-30%)",
+          filter:`drop-shadow(0 0 ${glow + 4}px rgba(124,58,237,0.7))`,
         }}>
-        <defs><radialGradient id="eOrb" cx="40%" cy="40%">
-          <stop offset="0%" stopColor="#e9d5ff" stopOpacity="0.6"/>
-          <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.4"/>
-          <stop offset="100%" stopColor="#581c87" stopOpacity="0"/>
-        </radialGradient></defs>
-        <circle cx="17" cy="17" r="13" fill="url(#eOrb)"/>
-      </svg>
-      {/* Phase 2: Purple void core */}
-      <svg width="160" height="160" viewBox="0 0 160 160"
-        style={{
-          position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
-          filter:`drop-shadow(0 0 ${glow+6}px #581c87) drop-shadow(0 0 ${glow+10}px #7c3aed)`,
-        }}>
-        <defs><radialGradient id="eVoid" cx="50%" cy="50%">
-          <stop offset="0%" stopColor="#1e1b4b" stopOpacity="0.9"/>
-          <stop offset="35%" stopColor="#581c87" stopOpacity="0.7"/>
-          <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.4"/>
-          <stop offset="100%" stopColor="#a855f7" stopOpacity="0"/>
-        </radialGradient></defs>
-        <circle cx="80" cy="80" r={20+lvl*4} fill="url(#eVoid)"
+        <defs>
+          <radialGradient id="eCore" cx="50%" cy="50%">
+            <stop offset="0%" stopColor="#fef9c3" stopOpacity="0.9"/>
+            <stop offset="20%" stopColor="#fbbf24" stopOpacity="0.78"/>
+            <stop offset="45%" stopColor="#7c3aed" stopOpacity="0.62"/>
+            <stop offset="100%" stopColor="#1e1b4b" stopOpacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="95" cy="95" r={20 + lvl * 4} fill="url(#eCore)"
           style={{ animation:`fireExpand ${dur/1000}s ease ${D}s forwards` }}/>
       </svg>
-      {/* Phase 3: Purple pulse rings */}
-      {Array.from({ length: ringN }, (_, i) => (
-        <svg key={`r${i}`} width="160" height="160" viewBox="0 0 160 160"
-          style={{
-            position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
-            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.1}s forwards`, opacity:0,
-          }}>
-          <circle cx="80" cy="80" r={16+i*9} fill="none"
-            stroke={i%2===0?"#7c3aed":"#a855f7"} strokeWidth={2.5-i*0.2}
-            style={{ filter:`drop-shadow(0 0 ${glow}px #7c3aed)` }} opacity={0.85-i*0.06}/>
-        </svg>
-      ))}
-      {/* Phase 4: Purple radial light rays */}
-      {Array.from({ length: rayN }, (_, i) => {
-        const angle = (i / rayN) * 360;
-        const len = 24 + lvl * 6;
-        const w = 3.5 + lvl * 0.4;
+      {Array.from({ length: cageN }, (_, i) => {
+        const angle = (i / cageN) * 360;
+        const len = 34 + lvl * 5;
         return (
-          <svg key={`ray${i}`} width={w+4} height={len} viewBox={`0 0 ${w+4} ${len}`}
+          <svg key={`c${i}`} width="8" height={len} viewBox={`0 0 8 ${len}`}
             style={{
-              position:"absolute", right:`calc(${T.right} + ${Math.cos(angle*Math.PI/180)*4}px)`,
-              top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
-              transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
-              opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
-              animation:`sparkle ${0.4 + rr("ult-ray-anim", i, 0, 0.3)}s ease ${D+0.06+i*0.03}s both`,
+              position:"absolute",
+              right:`calc(${T.right} + ${Math.cos(angle * Math.PI / 180) * 8}px)`,
+              top:`calc(${T.top} + ${Math.sin(angle * Math.PI / 180) * 8}px)`,
+              transformOrigin:"center bottom",
+              transform:`rotate(${angle}deg)`,
+              opacity:0,
+              filter:`drop-shadow(0 0 ${glow}px rgba(168,85,247,0.8))`,
+              animation:`sparkle ${0.35 + rr("cage-anim", i, 0, 0.25)}s ease ${D + i * 0.03}s both`,
             }}>
-            <defs><linearGradient id={`eray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
-              <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.8"/>
-              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0"/>
-            </linearGradient></defs>
-            <rect x="1" y="0" width={w} height={len} rx={w/2} fill={`url(#eray${i})`}/>
+            <rect x="2" y="0" width="4" height={len} rx="2" fill={i % 2 === 0 ? "rgba(168,85,247,0.7)" : "rgba(251,191,36,0.75)"} />
           </svg>
         );
       })}
-      {/* Phase 5: Electric-specific bolts + sparks */}
+
+      {/* Phase 2: Vertical thunder punish */}
       {Array.from({ length: boltN }, (_, i) => {
-        const angle = (i / boltN) * 360;
+        const xOff = rr("bolt-x", i, -8, 10);
+        const yOff = rr("bolt-y", i, -18, 4);
         return (
           <svg key={`bl${i}`} width="45" height="65" viewBox="0 0 80 70"
             style={{
-              position:"absolute", right:`calc(${T.right} + ${Math.cos(angle*Math.PI/180)*5}px)`,
-              top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*5}px)`,
-              transformOrigin:"center top", transform:`rotate(${angle}deg) scale(${sc})`,
-              filter:`drop-shadow(0 0 ${glow+2}px #fbbf24)`,
-              animation:`lightningStrike 0.45s ease ${D+0.08+i*0.04}s both`, opacity:0,
+              position:"absolute",
+              right:`calc(${T.right} + ${xOff}%)`,
+              top:`calc(${T.top} + ${yOff}%)`,
+              transform:`scale(${0.65 + lvl * 0.05 + rr("bolt-sc", i, 0, 0.22)}) rotate(${rr("bolt-rot", i, -16, 16)}deg)`,
+              transformOrigin:"center top",
+              filter:`drop-shadow(0 0 ${glow+3}px #fbbf24) drop-shadow(0 0 ${glow+8}px #7c3aed)`,
+              animation:`lightningStrike ${0.42 + rr("bolt-anim", i, 0, 0.2)}s ease ${D+0.08+i*0.035}s both`,
+              opacity:0,
             }}>
-            <path d={boltPaths[i % 3]} fill="#fde68a"/>
+            <path d={boltPaths[i % 3]} fill={i % 2 === 0 ? "#fde68a" : "#c4b5fd"} />
           </svg>
         );
       })}
-      {Array.from({ length: 4 + lvl }, (_, i) => (
-        <svg key={`sk${i}`} width="12" height="12" viewBox="-8 -8 16 16"
+
+      {/* Phase 3: Chain arcs */}
+      {Array.from({ length: arcN }, (_, i) => (
+        <svg key={`a${i}`} width="100%" height="58" viewBox="0 0 210 45" preserveAspectRatio="none"
           style={{
-            position:"absolute", right:`calc(${T.right} + ${rr("ult-spark-right", i, -8, 8)}%)`, top:`calc(${T.top} + ${rr("ult-spark-top", i, -6, 10)}%)`,
-            opacity:0, filter:`drop-shadow(0 0 3px #fbbf24)`,
-            animation:`sparkle 0.4s ease ${D+0.12+i*0.04}s both`,
+            position:"absolute",
+            right:`calc(${T.right} - ${14 + i * 4}px)`,
+            top:`calc(${T.top} + ${4 + i * 10}px)`,
+            filter:`drop-shadow(0 0 ${glow+2}px rgba(251,191,36,0.7))`,
+            opacity:0,
+            animation:`lightningStrike 0.65s ease ${D+0.12+i*0.08}s both`,
           }}>
-          <path d={SPARK} fill="#fde68a" opacity="0.65"/>
+          <defs>
+            <linearGradient id={`eArc${i}`} x1="0%" y1="50%" x2="100%" y2="50%">
+              <stop offset="0%" stopColor="rgba(124,58,237,0.5)"/>
+              <stop offset="45%" stopColor="rgba(251,191,36,0.9)"/>
+              <stop offset="100%" stopColor="rgba(236,72,153,0.45)"/>
+            </linearGradient>
+          </defs>
+          <path
+            d={`M0,22 L22,${7+i*2} L45,26 L72,${10+i} L98,24 L123,${8+i*2} L148,25 L176,${12+i} L210,21`}
+            fill="none"
+            stroke={`url(#eArc${i})`}
+            strokeWidth={2.2 + lvl * 0.25}
+            strokeLinecap="round"
+            strokeDasharray="220"
+            strokeDashoffset="220"
+            style={{ animation:`arcFlow ${0.55 + rr("arc-flow", i, 0, 0.25)}s ease ${D+0.15+i*0.09}s forwards` }}
+          />
         </svg>
       ))}
-      {/* Phase 6: Purple glow */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(124,58,237,${0.08+lvl*0.02}), rgba(88,28,135,${0.04+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+
+      {/* Phase 4: Static sparks */}
+      {Array.from({ length: sparkN }, (_, i) => (
+        <svg key={`sk${i}`} width="13" height="13" viewBox="-8 -8 16 16"
+          style={{
+            position:"absolute",
+            right:`calc(${T.right} + ${rr("ult-spark-right", i, -10, 11)}%)`,
+            top:`calc(${T.top} + ${rr("ult-spark-top", i, -8, 13)}%)`,
+            opacity:0,
+            filter:`drop-shadow(0 0 4px #fbbf24) drop-shadow(0 0 6px #7c3aed)`,
+            animation:`sparkle ${0.35 + rr("sk-anim", i, 0, 0.3)}s ease ${D+0.14+i*0.03}s both`,
+          }}>
+          <path d={SPARK} fill={i % 2 === 0 ? "#fde68a" : "#c4b5fd"} opacity="0.72"/>
+        </svg>
+      ))}
+
+      {/* Phase 5: Dark thunder global glow */}
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(124,58,237,${0.13+lvl*0.03}), rgba(251,191,36,${0.08+lvl*0.02}) 30%, rgba(30,27,75,${0.06+lvl*0.015}) 54%, transparent 72%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

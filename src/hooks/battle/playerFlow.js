@@ -22,6 +22,16 @@ const HIT_ANIMS = {
   light: "enemyFireHit 0.6s ease",
 };
 
+function formatFallback(template, params) {
+  if (!params) return template;
+  return template.replace(/\{(\w+)\}/g, (_m, key) => String(params[key] ?? ""));
+}
+
+function tr(t, key, fallback, params) {
+  if (typeof t === "function") return t(key, fallback, params);
+  return formatFallback(fallback, params);
+}
+
 export function runPlayerAnswer({
   correct,
   move,
@@ -66,18 +76,19 @@ export function runPlayerAnswer({
   setBText,
   handlePlayerPartyKo,
   runAllySupportTurn,
+  t,
 }) {
   const s = sr.current;
   if (!s || !move || !starter) return;
 
-  const loseToGameOver = (message = "你的夥伴倒下了...") => {
+  const loseToGameOver = (message = tr(t, "battle.ally.ko", "Your partner has fallen...")) => {
     _endSession(false);
     setPhase("ko");
     setBText(message);
     setScreen("gameover");
   };
 
-  const resolveMainKo = (message = "你的夥伴倒下了...") => {
+  const resolveMainKo = (message = tr(t, "battle.ally.ko", "Your partner has fallen...")) => {
     if (handlePlayerPartyKo) {
       return handlePlayerPartyKo({ target: "main", reason: message });
     }
@@ -86,7 +97,9 @@ export function runPlayerAnswer({
   };
 
   const isSubAttacker = attackerSlot === "sub";
-  const attackerName = isSubAttacker ? (s.allySub?.name || "副將") : (s.starter?.name || "主將");
+  const attackerName = isSubAttacker
+    ? (s.allySub?.name || tr(t, "battle.role.sub", "Sub"))
+    : (s.starter?.name || tr(t, "battle.role.main", "Main"));
   const getAttackerHp = (state) => (
     isSubAttacker ? (state.pHpSub || 0) : (state.pHp || 0)
   );
@@ -121,7 +134,7 @@ export function runPlayerAnswer({
     );
     return nextHp;
   };
-  const resolveActiveKo = (message = "你的夥伴倒下了...") => {
+  const resolveActiveKo = (message = tr(t, "battle.ally.ko", "Your partner has fallen...")) => {
     if (!isSubAttacker) return resolveMainKo(message);
     if (handlePlayerPartyKo) {
       return handlePlayerPartyKo({ target: "sub", reason: message });
@@ -219,7 +232,7 @@ export function runPlayerAnswer({
           const isPhantom = s3.enemy.trait === "phantom" && chance(0.25);
           if (isPhantom) {
             setEAnim("dodgeSlide 0.9s ease");
-            setEffMsg({ text: "👻 幻影閃避！", color: "#c084fc" });
+            setEffMsg({ text: tr(t, "battle.effect.phantomDodge", "👻 Phantom Dodge!"), color: "#c084fc" });
             safeTo(() => setEffMsg(null), 1500);
             addD("MISS!", 155, 50, "#c084fc");
             safeTo(() => { setEAnim(""); setAtkEffect(null); }, effectTimeline.clearDelay);
@@ -229,15 +242,15 @@ export function runPlayerAnswer({
 
           if (wasCursed) setCursed(false);
 
-          if (wasCursed) { setEffMsg({ text: "💀 詛咒弱化了攻擊...", color: "#a855f7" }); safeTo(() => setEffMsg(null), 1500); }
-          else if (isFortress) { setEffMsg({ text: "🛡️ 鐵壁減傷！", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
-          else if (starter.type === "light" && getAttackerHp(s3) < getAttackerMaxHp(s3) * 0.5) { setEffMsg({ text: "🦁 勇氣之心！ATK↑", color: "#f59e0b" }); safeTo(() => setEffMsg(null), 1500); }
-          else if (eff > 1) { setEffMsg({ text: "效果絕佳！", color: "#22c55e" }); safeTo(() => setEffMsg(null), 1500); }
-          else if (eff < 1) { setEffMsg({ text: "效果不好...", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
+          if (wasCursed) { setEffMsg({ text: tr(t, "battle.effect.curseWeak", "💀 Curse weakened the attack..."), color: "#a855f7" }); safeTo(() => setEffMsg(null), 1500); }
+          else if (isFortress) { setEffMsg({ text: tr(t, "battle.effect.fortressGuard", "🛡️ Fortress reduced damage!"), color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
+          else if (starter.type === "light" && getAttackerHp(s3) < getAttackerMaxHp(s3) * 0.5) { setEffMsg({ text: tr(t, "battle.effect.lightCourage", "🦁 Courage Heart! ATK↑"), color: "#f59e0b" }); safeTo(() => setEffMsg(null), 1500); }
+          else if (eff > 1) { setEffMsg({ text: tr(t, "battle.effect.super", "Super effective!"), color: "#22c55e" }); safeTo(() => setEffMsg(null), 1500); }
+          else if (eff < 1) { setEffMsg({ text: tr(t, "battle.effect.notVery", "Not very effective..."), color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
 
           if (s3.bossCharging) {
             setBossCharging(false);
-            safeTo(() => addD("💥打斷蓄力！", 155, 30, "#fbbf24"), 400);
+            safeTo(() => addD(tr(t, "battle.tag.chargeInterrupted", "💥Charge Interrupted!"), 155, 30, "#fbbf24"), 400);
           }
 
           let afterHp = Math.max(0, s3.eHp - dmg);
@@ -265,7 +278,7 @@ export function runPlayerAnswer({
               setFrozen(true);
               frozenR.current = true;
               sfx.play("freeze");
-              safeTo(() => addD("❄️凍結", 155, 50, "#38bdf8"), 600);
+              safeTo(() => addD(tr(t, "battle.tag.freeze", "❄️Frozen"), 155, 50, "#38bdf8"), 600);
             }
           }
 
@@ -305,11 +318,11 @@ export function runPlayerAnswer({
                   popupText: `🛡️-${refDmg}`,
                   color: "#60a5fa",
                 });
-                setEffMsg({ text: "🛡️ 反擊裝甲！", color: "#60a5fa" });
+                setEffMsg({ text: tr(t, "battle.effect.counterArmor", "🛡️ Counter Armor!"), color: "#60a5fa" });
                 safeTo(() => setEffMsg(null), 1500);
                 if (nh4 <= 0) safeTo(() => {
                   sfx.play("ko");
-                  resolveActiveKo(`${attackerName} 被反擊傷害打倒了...`);
+                  resolveActiveKo(tr(t, "battle.ko.counter", "{name} was knocked out by counter damage...", { name: attackerName }));
                 }, 800);
               }, 600);
             }
@@ -355,25 +368,29 @@ export function runPlayerAnswer({
         state: s2,
         damage: sd,
       });
-      setBText(`${move.name} 失控了！${attackerName} 受到 ${sd} 傷害！`);
+      setBText(tr(t, "battle.risky.backfire", "{move} went out of control! {name} took {damage} damage!", {
+        move: move.name,
+        name: attackerName,
+        damage: sd,
+      }));
       setPhase("text");
       safeTo(() => {
-        if (nh2 <= 0) resolveActiveKo(`${attackerName} 倒下了...`);
+        if (nh2 <= 0) resolveActiveKo(tr(t, "battle.ko.fallen", "{name} has fallen...", { name: attackerName }));
         else if (frozenR.current) handleFreeze();
         else doEnemyTurn();
       }, 1500);
     } else {
-      let mt = "攻擊落空了！";
+      let mt = tr(t, "battle.attack.miss", "Attack missed!");
       if (s2.burnStack > 0) {
         const bd = s2.burnStack * 2;
         const nh3 = Math.max(0, s2.eHp - bd);
         setEHp(nh3);
         addD(`🔥-${bd}`, 155, 50, "#f97316");
-        mt += ` 灼燒-${bd}！`;
+        mt += tr(t, "battle.burn.tickShort", " Burn -{damage}!", { damage: bd });
         if (nh3 <= 0) {
           setBText(mt);
           setPhase("text");
-          safeTo(() => handleVictory("被灼燒打倒了"), 1200);
+          safeTo(() => handleVictory(tr(t, "battle.victory.verb.burned", "was burned down")), 1200);
           return;
         }
       }

@@ -8,6 +8,16 @@ import {
   resolveEnemyPrimaryStrike,
 } from './turnResolver.js';
 
+function formatFallback(template, params) {
+  if (!params) return template;
+  return template.replace(/\{(\w+)\}/g, (_m, key) => String(params[key] ?? ""));
+}
+
+function tr(t, key, fallback, params) {
+  if (typeof t === "function") return t(key, fallback, params);
+  return formatFallback(fallback, params);
+}
+
 export function runEnemyTurn({
   sr,
   safeTo,
@@ -37,8 +47,9 @@ export function runEnemyTurn({
   setScreen,
   handleVictory,
   handlePlayerPartyKo,
+  t,
 }) {
-  const loseToGameOver = (message = "你的夥伴倒下了...") => {
+  const loseToGameOver = (message = tr(t, "battle.ally.ko", "Your partner has fallen...")) => {
     _endSession(false);
     setPhase("ko");
     setBText(message);
@@ -80,7 +91,7 @@ export function runEnemyTurn({
         setBText("");
         return;
       }
-      setBText(`⚔️ ${s2.enemySub.name} 發動支援攻擊！`);
+      setBText(tr(t, "battle.enemy.assistAttack", "⚔️ {enemy} launched an assist attack!", { enemy: s2.enemySub.name }));
       setPhase("enemyAtk");
       effectOrchestrator.runEnemyLunge({
         safeTo,
@@ -94,7 +105,7 @@ export function runEnemyTurn({
             return;
           }
           const target = resolvePlayerTarget(s3);
-          const targetName = target === "sub" ? (s3.allySub?.name || "副將") : s3.starter.name;
+          const targetName = target === "sub" ? (s3.allySub?.name || tr(t, "battle.role.sub", "Sub")) : s3.starter.name;
           const defenderType = target === "sub" ? (s3.allySub?.type || s3.starter.type) : s3.starter.type;
           const { dmg } = resolveEnemyAssistStrike({
             enemySub: s3.enemySub,
@@ -115,10 +126,10 @@ export function runEnemyTurn({
               if (handlePlayerPartyKo) {
                 handlePlayerPartyKo({
                   target,
-                  reason: `${targetName} 被雙打夾擊擊倒了...`,
+                  reason: tr(t, "battle.ko.doubleFocus", "{name} was knocked out by a double focus attack...", { name: targetName }),
                 });
               } else {
-                loseToGameOver("你的夥伴被雙打夾擊擊倒了...");
+                loseToGameOver(tr(t, "battle.ko.doubleFocus.generic", "Your partner was knocked out by a double focus attack..."));
               }
             }, 650);
             return;
@@ -137,7 +148,7 @@ export function runEnemyTurn({
   function doEnemyAttack(bp) {
     const s = sr.current;
     if (!s.enemy || !s.starter) return;
-    setBText(`${s.enemy.name} 發動攻擊！`);
+    setBText(tr(t, "battle.enemy.attackStart", "{enemy} attacks!", { enemy: s.enemy.name }));
     setPhase("enemyAtk");
     effectOrchestrator.runEnemyLunge({
       safeTo,
@@ -145,31 +156,31 @@ export function runEnemyTurn({
       onStrike: () => {
         const s2 = sr.current; // re-read after delay
         const target = resolvePlayerTarget(s2);
-        const targetName = target === "sub" ? (s2.allySub?.name || "副將") : s2.starter.name;
+        const targetName = target === "sub" ? (s2.allySub?.name || tr(t, "battle.role.sub", "Sub")) : s2.starter.name;
         const defenderType = target === "sub" ? (s2.allySub?.type || s2.starter.type) : s2.starter.type;
         if (target === "main" && s2.specDef) {
           const st = s2.starter.type;
           setSpecDef(false);
           setDefAnim(st);
           if (st === "fire") {
-            setBText("🛡️ 防護罩擋下了攻擊！");
+            setBText(tr(t, "battle.specdef.fire.block", "🛡️ Barrier blocked the attack!"));
             addD("🛡️BLOCK", 60, 170, "#fbbf24");
             addP("starter", 50, 170, 6);
             safeTo(() => { setDefAnim(null); setPhase("menu"); setBText(""); }, 1800);
           } else if (st === "water") {
             setPAnim("dodgeSlide 0.9s ease");
-            setBText("💨 完美閃避！");
+            setBText(tr(t, "battle.specdef.water.dodge", "💨 Perfect dodge!"));
             addD("MISS!", 60, 170, "#38bdf8");
             safeTo(() => { setPAnim(""); setDefAnim(null); setPhase("menu"); setBText(""); }, 1800);
           } else if (st === "electric") {
-            setBText("⚡ 電流麻痺！敵人無法行動！");
-            addD("⚡麻痺", 60, 170, "#fbbf24");
+            setBText(tr(t, "battle.specdef.electric.stun", "⚡ Electric stun! Enemy cannot move!"));
+            addD(tr(t, "battle.pvp.tag.paralyze", "⚡Paralyzed"), 60, 170, "#fbbf24");
             setEAnim("enemyElecHit 0.6s ease");
             addP("electric", 155, 80, 5);
             safeTo(() => {
               setEAnim("");
               setDefAnim(null);
-              setBText(`⚡ ${sr.current.enemy.name} 被麻痺了，無法攻擊！`);
+              setBText(tr(t, "battle.enemy.paralyzedSkip", "⚡ {enemy} is paralyzed and cannot attack!", { enemy: sr.current.enemy.name }));
               setPhase("text");
               safeTo(() => { setPhase("menu"); setBText(""); }, 1500);
             }, 1800);
@@ -177,7 +188,7 @@ export function runEnemyTurn({
             const roarDmg = 15;
             const nh = Math.max(0, sr.current.eHp - roarDmg);
             setEHp(nh);
-            setBText("✨ 獅王咆哮！擋下攻擊並反擊！");
+            setBText(tr(t, "battle.specdef.light.roarCounter", "✨ Lion's roar! Blocked and countered!"));
             addD("🛡️BLOCK", 60, 170, "#f59e0b");
             addP("starter", 50, 170, 6);
             sfx.play("light");
@@ -189,7 +200,7 @@ export function runEnemyTurn({
             safeTo(() => {
               setEAnim("");
               setDefAnim(null);
-              if (nh <= 0) safeTo(() => handleVictory("被獅王咆哮打倒了"), 500);
+              if (nh <= 0) safeTo(() => handleVictory(tr(t, "battle.victory.verb.lionRoar", "was defeated by lion's roar")), 500);
               else { setPhase("menu"); setBText(""); }
             }, 1800);
           } else {
@@ -197,7 +208,7 @@ export function runEnemyTurn({
             const refDmg = Math.round(rawDmg * 1.2);
             const nh = Math.max(0, sr.current.eHp - refDmg);
             setEHp(nh);
-            setBText("🌿 反彈攻擊！");
+            setBText(tr(t, "battle.specdef.grass.reflect", "🌿 Reflected attack!"));
             addD("🛡️BLOCK", 60, 170, "#22c55e");
             safeTo(() => {
               addD(`-${refDmg}`, 155, 50, "#22c55e");
@@ -207,7 +218,7 @@ export function runEnemyTurn({
             safeTo(() => {
               setEAnim("");
               setDefAnim(null);
-              if (nh <= 0) safeTo(() => handleVictory("被反彈攻擊打倒了"), 500);
+              if (nh <= 0) safeTo(() => handleVictory(tr(t, "battle.victory.verb.reflected", "was defeated by reflected damage")), 500);
               else { setPhase("menu"); setBText(""); }
             }, 1800);
           }
@@ -237,16 +248,16 @@ export function runEnemyTurn({
         });
         sfx.play("playerHit");
         addP("enemy", 80, 190, 4);
-        if (isCrit) { setEffMsg({ text: "🔥 暴擊！", color: "#ff6b00" }); safeTo(() => setEffMsg(null), 1500); }
-        else if (isBlaze) { setEffMsg({ text: "🔥 烈焰覺醒！ATK↑", color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
-        else if (defEff > 1) { setEffMsg({ text: "敵人招式很有效！", color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
-        else if (defEff < 1) { setEffMsg({ text: "敵人招式效果不佳", color: "#64748b" }); safeTo(() => setEffMsg(null), 1500); }
+        if (isCrit) { setEffMsg({ text: tr(t, "battle.enemy.effect.crit", "🔥 Critical!"), color: "#ff6b00" }); safeTo(() => setEffMsg(null), 1500); }
+        else if (isBlaze) { setEffMsg({ text: tr(t, "battle.enemy.effect.blazeAwaken", "🔥 Blaze awakened! ATK↑"), color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
+        else if (defEff > 1) { setEffMsg({ text: tr(t, "battle.enemy.effect.super", "Enemy move is super effective!"), color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
+        else if (defEff < 1) { setEffMsg({ text: tr(t, "battle.enemy.effect.notVery", "Enemy move is not very effective"), color: "#64748b" }); safeTo(() => setEffMsg(null), 1500); }
 
         if (nh <= 0) {
           safeTo(() => {
             sfx.play("ko");
             if (handlePlayerPartyKo) {
-              handlePlayerPartyKo({ target, reason: `${targetName} 倒下了...` });
+              handlePlayerPartyKo({ target, reason: tr(t, "battle.ko.fallen", "{name} has fallen...", { name: targetName }) });
             } else {
               loseToGameOver();
             }
@@ -260,28 +271,28 @@ export function runEnemyTurn({
           safeTo(() => {
             setEHp(newEHp);
             addD(`+${heal}`, 155, 50, "#3b82f6");
-            setBText(`💧 ${s2.enemy.name} 回復了體力！`);
+            setBText(tr(t, "battle.enemy.tenacityHeal", "💧 {enemy} recovered HP!", { enemy: s2.enemy.name }));
           }, 600);
         }
 
         if (trait === "curse" && chance(0.35)) {
           setCursed(true);
           safeTo(() => {
-            addD("💀詛咒", 60, 140, "#a855f7");
-            setBText(`💀 ${s2.enemy.name} 的詛咒弱化了你的下次攻擊！`);
+            addD(tr(t, "battle.tag.curse", "💀Curse"), 60, 140, "#a855f7");
+            setBText(tr(t, "battle.enemy.curseApplied", "💀 {enemy}'s curse weakens your next attack!", { enemy: s2.enemy.name }));
           }, 600);
         }
 
         if (trait === "swift" && chance(0.25)) {
           safeTo(() => {
-            setBText(`⚡ ${s2.enemy.name} 再次攻擊！`);
+            setBText(tr(t, "battle.enemy.swiftExtra", "⚡ {enemy} attacks again!", { enemy: s2.enemy.name }));
             effectOrchestrator.runEnemyLunge({
               safeTo,
               setEAnim,
               onStrike: () => {
                 const s3 = sr.current;
                 const target2 = resolvePlayerTarget(s3);
-                const target2Name = target2 === "sub" ? (s3.allySub?.name || "副將") : s3.starter.name;
+                const target2Name = target2 === "sub" ? (s3.allySub?.name || tr(t, "battle.role.sub", "Sub")) : s3.starter.name;
                 const defenderType2 = target2 === "sub" ? (s3.allySub?.type || s3.starter.type) : s3.starter.type;
                 const dmg2 = calcEnemyDamage(scaledAtk, getEff(s3.enemy.mType, defenderType2));
                 const nh2 = applyDamageToTarget({
@@ -296,7 +307,7 @@ export function runEnemyTurn({
                 if (nh2 <= 0) safeTo(() => {
                   sfx.play("ko");
                   if (handlePlayerPartyKo) {
-                    handlePlayerPartyKo({ target: target2, reason: `${target2Name} 被連擊擊倒了...` });
+                    handlePlayerPartyKo({ target: target2, reason: tr(t, "battle.ko.comboDown", "{name} was knocked out by combo hits...", { name: target2Name }) });
                   } else {
                     loseToGameOver();
                   }
@@ -332,7 +343,7 @@ export function runEnemyTurn({
 
     if (bossEvent === "release") {
       setBossCharging(false);
-      setBText("💀 暗黑龍王釋放暗黑吐息！");
+      setBText(tr(t, "battle.boss.release", "💀 Dark Dragon King unleashes dark breath!"));
       sfx.play("bossBoom");
       setPhase("enemyAtk");
       effectOrchestrator.runEnemyLunge({
@@ -341,7 +352,7 @@ export function runEnemyTurn({
         onStrike: () => {
           const s2 = sr.current;
           const target = resolvePlayerTarget(s2);
-          const targetName = target === "sub" ? (s2.allySub?.name || "副將") : s2.starter.name;
+          const targetName = target === "sub" ? (s2.allySub?.name || tr(t, "battle.role.sub", "Sub")) : s2.starter.name;
           const bigDmg = Math.round(s2.enemy.atk * 2.2);
           const nh = applyDamageToTarget({
             s: s2,
@@ -353,7 +364,7 @@ export function runEnemyTurn({
           addP("enemy", 80, 190, 6);
           if (nh <= 0) safeTo(() => {
             if (handlePlayerPartyKo) {
-              handlePlayerPartyKo({ target, reason: `${targetName} 被暗黑吐息擊倒了...` });
+              handlePlayerPartyKo({ target, reason: tr(t, "battle.ko.bossBreath", "{name} was knocked out by dark breath...", { name: targetName }) });
             } else {
               loseToGameOver();
             }
@@ -367,7 +378,7 @@ export function runEnemyTurn({
     if (bossEvent === "start_charge") {
       setBossCharging(true);
       sfx.play("bossCharge");
-      setBText("⚠️ 暗黑龍王正在蓄力！下回合將釋放大招！");
+      setBText(tr(t, "battle.boss.charge", "⚠️ Dark Dragon King is charging! It will unleash a big move next turn!"));
       setPhase("text");
       setEAnim("bossShake 0.5s ease infinite");
       safeTo(() => { setPhase("menu"); setBText(""); setEAnim(""); }, 2000);
@@ -380,7 +391,7 @@ export function runEnemyTurn({
       sfx.play("seal");
       setSealedTurns(2);
       const moveName = s.starter.moves[sealIdx]?.name || "???";
-      setBText(`💀 暗黑龍王封印了你的「${moveName}」！（2回合）`);
+      setBText(tr(t, "battle.boss.sealMove", "💀 Dark Dragon King sealed your \"{move}\"! (2 turns)", { move: moveName }));
       setPhase("text");
       safeTo(() => doEnemyAttack(bp), 1500);
       return;
@@ -403,8 +414,8 @@ export function runEnemyTurn({
     const newPhase = computeBossPhase(s.eHp, s.enemy.maxHp);
     if (newPhase !== s.bossPhase) {
       setBossPhase(newPhase);
-      const phaseMsg = newPhase === 2 ? "💀 暗黑龍王進入狂暴狀態！攻擊力上升！"
-        : newPhase === 3 ? "💀 暗黑龍王覺醒了！背水一戰！"
+      const phaseMsg = newPhase === 2 ? tr(t, "battle.boss.phase2", "💀 Dark Dragon King entered rage state! ATK increased!")
+        : newPhase === 3 ? tr(t, "battle.boss.phase3", "💀 Dark Dragon King awakened! Final stand!")
           : "";
       if (phaseMsg) {
         setBText(phaseMsg);

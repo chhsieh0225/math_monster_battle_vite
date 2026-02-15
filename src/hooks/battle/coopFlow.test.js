@@ -91,5 +91,5 @@ test('runCoopAllySupportTurn can finish the enemy and trigger victory callback',
 
   assert.equal(out, true);
   assert.equal(sr.current.eHp, 0);
-  assert.equal(victoryReason, "被雙人連攜打倒了");
+  assert.equal(victoryReason, "was defeated by co-op combo");
 });

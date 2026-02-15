@@ -190,7 +190,7 @@ test('resolvePvpStrike applies grass sustain and light comeback passive tuning',
   });
   assert.ok(grass.heal > 0);
   assert.ok(grass.heal <= 6);
-  assert.equal(grass.passiveLabel, "🌿 生機回復");
+  assert.equal(grass.passiveLabelKey, "battle.pvp.note.grassSustain");
 
   const lightFullHp = resolvePvpStrike({
     move: { basePower: 40, growth: 3, type: "light", risky: false },
@@ -213,7 +213,7 @@ test('resolvePvpStrike applies grass sustain and light comeback passive tuning',
     critRandom: () => 1,
   });
   assert.ok(lightLowHp.dmg > lightFullHp.dmg);
-  assert.equal(lightLowHp.passiveLabel, "🦁 勇氣之心");
+  assert.equal(lightLowHp.passiveLabelKey, "battle.pvp.note.lightCourage");
 });
 
 test('starter average PvP damage profiles stay within tuning band', () => {

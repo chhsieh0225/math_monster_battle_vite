@@ -173,6 +173,8 @@ export function resolvePvpStrike({
       antiCritRate: 0,
       antiCritDamage: 0,
       passiveLabel: "",
+      passiveLabelKey: "",
+      passiveLabelFallback: "",
     };
   }
 
@@ -245,6 +247,16 @@ export function resolvePvpStrike({
       Math.max(0, Math.round(dmg * PVP_BALANCE.grassSustain.healRatio)),
     )
     : 0;
+  const passiveLabelKey = attackerType === "light" && lightComebackBonus >= 0.06
+    ? "battle.pvp.note.lightCourage"
+    : attackerType === "grass" && heal > 0
+      ? "battle.pvp.note.grassSustain"
+      : "";
+  const passiveLabelFallback = passiveLabelKey === "battle.pvp.note.lightCourage"
+    ? "🦁 Courage Heart"
+    : passiveLabelKey === "battle.pvp.note.grassSustain"
+      ? "🌿 Life Sustain"
+      : "";
 
   return {
     basePow,
@@ -257,10 +269,8 @@ export function resolvePvpStrike({
     critMultiplier,
     antiCritRate,
     antiCritDamage,
-    passiveLabel: attackerType === "light" && lightComebackBonus >= 0.06
-      ? "🦁 勇氣之心"
-      : attackerType === "grass" && heal > 0
-        ? "🌿 生機回復"
-        : "",
+    passiveLabel: passiveLabelFallback,
+    passiveLabelKey,
+    passiveLabelFallback,
   };
 }

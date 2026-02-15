@@ -19,6 +19,7 @@
  *   (useAchievements, useEncyclopedia, useSessionLog) to keep this file focused.
  */
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useReducer } from 'react';
+import { useI18n } from '../i18n';
 
 import { SCENE_NAMES } from '../data/scenes';
 import {
@@ -100,6 +101,7 @@ function pickPartnerStarter(mainStarter, pickIndex) {
 
 // ═══════════════════════════════════════════════════════════════════
 export function useBattle() {
+  const { t } = useI18n();
   // ──── Sub-hooks ────
   const { achUnlocked, achPopup, tryUnlock, dismissAch } = useAchievements();
   const { encData, setEncData, updateEnc, updateEncDefeated } = useEncyclopedia();
@@ -234,8 +236,8 @@ export function useBattle() {
 
   const getPvpTurnName = (state, turn) => (
     turn === "p1"
-      ? (state?.starter?.name || "玩家1")
-      : (state?.pvpStarter2?.name || "玩家2")
+      ? (state?.starter?.name || t("battle.pvp.player1", "Player 1"))
+      : (state?.pvpStarter2?.name || t("battle.pvp.player2", "Player 2"))
   );
 
   const getOtherPvpTurn = (turn) => (turn === "p1" ? "p2" : "p1");
@@ -328,7 +330,7 @@ export function useBattle() {
         setPvpChargeP2(0);
         setPvpComboP2(0);
       }
-      setBText(`⏰ ${getPvpTurnName(s, s.pvpTurn)} 超時，回合交換！`);
+      setBText(t("battle.pvp.timeoutSwap", "⏰ {name} timed out. Turn swapped!", { name: getPvpTurnName(s, s.pvpTurn) }));
       setPvpTurn(nextTurn);
       setPvpActionCount((c) => c + 1);
       setPhase("text");
@@ -362,7 +364,7 @@ export function useBattle() {
     if (isCoopBattleMode(s.battleMode)) {
       markCoopRotatePending();
     }
-    setBText("⏰ 時間到！來不及出招！");
+    setBText(t("battle.timeoutMiss", "⏰ Time's up! Too late to attack!"));
     setPhase("text");
     // Read enemy from stateRef so we never hit a stale closure
     safeTo(() => doEnemyTurnRef.current(), 1500);
@@ -419,12 +421,29 @@ export function useBattle() {
     const ally = sr.current.allySub;
     if (sub) {
       if (ally) {
-        setBText(`【${sn}】2v2 開戰！我方 ${starter?.name || "主將"} 與 ${ally.name} 對上 ${e.name} 與 ${sub.name}！`);
+        setBText(t("battle.start.doubleWithAlly", "【{scene}】2v2 battle! Our {leader} and {ally} face {enemy} and {enemySub}!", {
+          scene: sn,
+          leader: starter?.name || t("battle.role.main", "Main"),
+          ally: ally.name,
+          enemy: e.name,
+          enemySub: sub.name,
+        }));
       } else {
-        setBText(`【${sn}】雙打戰！${e.name}(${e.typeIcon}${e.typeName}) 與 ${sub.name}(${sub.typeIcon}${sub.typeName}) 出現了！`);
+        setBText(t("battle.start.double", "【{scene}】Double battle! {enemy}({enemyType}) and {enemySub}({enemySubType}) appeared!", {
+          scene: sn,
+          enemy: e.name,
+          enemyType: `${e.typeIcon}${e.typeName}`,
+          enemySub: sub.name,
+          enemySubType: `${sub.typeIcon}${sub.typeName}`,
+        }));
       }
     } else {
-      setBText(`【${sn}】野生的 ${e.name}(${e.typeIcon}${e.typeName}) Lv.${e.lvl} 出現了！`);
+      setBText(t("battle.start.single", "【{scene}】A wild {enemy}({enemyType}) Lv.{level} appeared!", {
+        scene: sn,
+        enemy: e.name,
+        enemyType: `${e.typeIcon}${e.typeName}`,
+        level: e.lvl,
+      }));
     }
     setScreen("battle");
     effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim });
@@ -485,11 +504,15 @@ export function useBattle() {
         timedMode: true,
       }, { sessionId: eventSessionIdRef.current });
       initSession(leader, true);
-      const enemyPvp = createPvpEnemyFromStarter(rival);
+      const enemyPvp = createPvpEnemyFromStarter(rival, t);
       dispatchBattle({ type: "start_battle", enemy: enemyPvp, enemySub: null, round: 0 });
       setPhase("text");
-      const firstName = firstTurn === "p1" ? (leader?.name || "玩家1") : (rival?.name || "玩家2");
-      setBText(`⚔️ 雙人對戰開始！${leader?.name || "玩家1"} vs ${rival?.name || "玩家2"}，先手：${firstName}`);
+      const firstName = firstTurn === "p1" ? (leader?.name || t("battle.pvp.player1", "Player 1")) : (rival?.name || t("battle.pvp.player2", "Player 2"));
+      setBText(t("battle.pvp.start", "⚔️ PvP start! {p1} vs {p2}, first turn: {first}", {
+        p1: leader?.name || t("battle.pvp.player1", "Player 1"),
+        p2: rival?.name || t("battle.pvp.player2", "Player 2"),
+        first: firstName,
+      }));
       setScreen("battle");
       effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim });
       return;
@@ -581,7 +604,7 @@ export function useBattle() {
     setScreen("gameover");
   };
 
-  const handlePlayerPartyKo = ({ target = "main", reason = "你的夥伴倒下了..." }) => {
+  const handlePlayerPartyKo = ({ target = "main", reason = t("battle.ally.ko", "Your partner has fallen...") }) => {
     return handleCoopPartyKo({
       state: sr.current,
       target,
@@ -597,6 +620,7 @@ export function useBattle() {
       safeTo,
       endSession: _endSession,
       setScreen,
+      t,
     });
   };
 
@@ -616,11 +640,12 @@ export function useBattle() {
       handleVictory,
       delayMs,
       onDone,
+      t,
     });
   };
 
   // --- Handle a defeated enemy ---
-  const handleVictory = (verb = "被打倒了") => {
+  const handleVictory = (verb = t("battle.victory.verb.defeated", "was defeated")) => {
     const s = sr.current;
     setBurnStack(0); setStaticStack(0); setFrozen(false); frozenR.current = false;
     setCursed(false);
@@ -646,7 +671,12 @@ export function useBattle() {
     updateEncDefeated(s.enemy); // ← encyclopedia: mark defeated
     applyVictoryAchievements({ state: s, tryUnlock });
     const drop = s.enemy.drops[randInt(0, s.enemy.drops.length - 1)];
-    setBText(`${s.enemy.name} ${verb}！獲得 ${xp} 經驗值 ${drop}`);
+    setBText(t("battle.victory.gain", "{enemy} {verb}! Gained {xp} EXP {drop}", {
+      enemy: s.enemy.name,
+      verb,
+      xp,
+      drop,
+    }));
     setPhase("victory"); sfx.play("victory");
   };
 
@@ -654,7 +684,7 @@ export function useBattle() {
   const handleFreeze = () => {
     const s = sr.current;
     frozenR.current = false; setFrozen(false);
-    setBText(`❄️ ${s.enemy.name} 被凍住了，無法攻擊！`);
+    setBText(t("battle.freeze.enemySkip", "❄️ {enemy} is frozen and cannot attack!", { enemy: s.enemy.name }));
     setPhase("text");
     safeTo(() => { setPhase("menu"); setBText(""); }, 1500);
   };
@@ -717,6 +747,7 @@ export function useBattle() {
       setScreen,
       handleVictory,
       handlePlayerPartyKo,
+      t,
     });
   }
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
@@ -768,6 +799,7 @@ export function useBattle() {
       setPvpFreezeP2,
       setPvpStaticP1,
       setPvpStaticP2,
+      t,
     })) return;
 
     const actingStarter = getActingStarter(s);
@@ -846,6 +878,7 @@ export function useBattle() {
       setBText,
       handlePlayerPartyKo,
       runAllySupportTurn,
+      t,
     });
   };
 
@@ -855,7 +888,7 @@ export function useBattle() {
     if (isCoopBattleMode(s.battleMode) && s.enemySub) {
       setScreen("battle");
       dispatchBattle({ type: "promote_enemy_sub" });
-      setBText(`💥 ${s.enemySub.name} 補位上場！`);
+      setBText(t("battle.enemySub.promote", "💥 {enemy} steps in!", { enemy: s.enemySub.name }));
       setPhase("text");
       return;
     }
@@ -895,6 +928,7 @@ export function useBattle() {
         setPvpTurn,
         setPvpFreezeP1,
         setPvpFreezeP2,
+        t,
       })) return;
       setPhase("menu"); setBText("");
     }

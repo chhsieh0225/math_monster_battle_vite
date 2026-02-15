@@ -1,5 +1,15 @@
 import { getStarterStageIdx } from '../../utils/playerHp.js';
 
+function formatFallback(template, params) {
+  if (!params) return template;
+  return template.replace(/\{(\w+)\}/g, (_m, key) => String(params[key] ?? ""));
+}
+
+function tr(t, key, fallback, params) {
+  if (typeof t === "function") return t(key, fallback, params);
+  return formatFallback(fallback, params);
+}
+
 export function isCoopBattleMode(mode) {
   return mode === "coop" || mode === "double";
 }
@@ -19,7 +29,7 @@ export function buildNextEvolvedAlly(allySub) {
 export function handleCoopPartyKo({
   state,
   target = "main",
-  reason = "你的夥伴倒下了...",
+  reason = "Your partner has fallen...",
   setStarter,
   setPStg,
   setPHp,
@@ -31,6 +41,7 @@ export function handleCoopPartyKo({
   safeTo,
   endSession,
   setScreen,
+  t,
 }) {
   if (target === "sub") {
     setAllySub(null);
@@ -43,7 +54,9 @@ export function handleCoopPartyKo({
       setScreen("gameover");
       return "gameover";
     }
-    setBText(`💫 ${state.allySub?.name || "副將"} 倒下了！`);
+    setBText(tr(t, "battle.coop.subDown", "💫 {name} has fallen!", {
+      name: state.allySub?.name || tr(t, "battle.role.sub", "Sub"),
+    }));
     setPhase("text");
     safeTo(() => {
       setPhase("menu");
@@ -60,7 +73,7 @@ export function handleCoopPartyKo({
     setAllySub(null);
     setPHpSub(0);
     setCoopActiveSlot("main");
-    setBText(`💫 ${promoted.name} 接替上場！`);
+    setBText(tr(t, "battle.coop.promoted", "💫 {name} takes the field!", { name: promoted.name }));
     setPhase("text");
     safeTo(() => {
       setPhase("menu");
@@ -91,6 +104,7 @@ export function runCoopAllySupportTurn({
   handleVictory,
   delayMs = 850,
   onDone,
+  t,
 }) {
   const state = sr.current;
   if (
@@ -111,7 +125,7 @@ export function runCoopAllySupportTurn({
     const base = 16 + Math.max(0, s2.pLvl - 1) * 2;
     const dmg = Math.min(28, Math.max(6, Math.round(base * (0.85 + rand() * 0.3))));
     const nh = Math.max(0, s2.eHp - dmg);
-    setBText(`🤝 ${s2.allySub.name} 協同攻擊！`);
+    setBText(tr(t, "battle.coop.supportAttack", "🤝 {name} launches a support attack!", { name: s2.allySub.name }));
     setPhase("playerAtk");
     setEAnim("enemyWaterHit 0.45s ease");
     setEHp(nh);
@@ -121,7 +135,7 @@ export function runCoopAllySupportTurn({
 
     safeTo(() => setEAnim(""), 450);
     if (nh <= 0) {
-      safeTo(() => handleVictory("被雙人連攜打倒了"), 700);
+      safeTo(() => handleVictory(tr(t, "battle.victory.verb.coopCombo", "was defeated by co-op combo")), 700);
       return;
     }
     if (onDone) safeTo(onDone, 700);

@@ -23,7 +23,17 @@ const PVP_HIT_ANIMS = {
   light: "enemyFireHit 0.55s ease",
 };
 
-export function createPvpEnemyFromStarter(starter) {
+function formatFallback(template, params) {
+  if (!params) return template;
+  return template.replace(/\{(\w+)\}/g, (_m, key) => String(params[key] ?? ""));
+}
+
+function tr(t, key, fallback, params) {
+  if (typeof t === "function") return t(key, fallback, params);
+  return formatFallback(fallback, params);
+}
+
+export function createPvpEnemyFromStarter(starter, t) {
   if (!starter) return null;
   const stageIdx = getStarterStageIdx(starter);
   const stage = starter.stages?.[stageIdx] || starter.stages?.[0];
@@ -42,7 +52,7 @@ export function createPvpEnemyFromStarter(starter) {
     c1: starter.c1,
     c2: starter.c2,
     trait: "normal",
-    traitName: "玩家",
+    traitName: tr(t, "battle.pvp.playerTrait", "Player"),
     drops: ["🏁"],
     svgFn: stage?.svgFn || starter.stages[0].svgFn,
     isEvolved: stageIdx > 0,
@@ -92,6 +102,7 @@ export function handlePvpAnswer({
   setPvpFreezeP2,
   setPvpStaticP1,
   setPvpStaticP2,
+  t,
 }) {
   if (state.battleMode !== "pvp") return false;
   const attacker = state.pvpTurn === "p1" ? state.starter : state.pvpStarter2;
@@ -116,7 +127,7 @@ export function handlePvpAnswer({
     }
     setPvpTurn(nextTurn);
     setPvpActionCount((c) => c + 1);
-    setBText(`❌ ${attacker.name} 答錯，攻擊落空！`);
+    setBText(tr(t, "battle.pvp.miss", "❌ {name} answered wrong. Attack missed!", { name: attacker.name }));
     setPhase("text");
     return true;
   }
@@ -164,13 +175,13 @@ export function handlePvpAnswer({
   });
 
   if (strike.isCrit) {
-    setEffMsg({ text: "💥 暴擊！", color: "#ff6b00" });
+    setEffMsg({ text: tr(t, "battle.pvp.effect.crit", "💥 Critical!"), color: "#ff6b00" });
     safeTo(() => setEffMsg(null), 1200);
   } else if (strike.eff > 1) {
-    setEffMsg({ text: "效果絕佳！", color: "#22c55e" });
+    setEffMsg({ text: tr(t, "battle.pvp.effect.super", "Super effective!"), color: "#22c55e" });
     safeTo(() => setEffMsg(null), 1200);
   } else if (strike.eff < 1) {
-    setEffMsg({ text: "效果不佳", color: "#94a3b8" });
+    setEffMsg({ text: tr(t, "battle.pvp.effect.notVery", "Not very effective"), color: "#94a3b8" });
     safeTo(() => setEffMsg(null), 1200);
   }
 
@@ -206,7 +217,7 @@ export function handlePvpAnswer({
       if (defender.type === "fire") {
         addD("🛡️BLOCK", defenderMainX, defenderMainY, "#fbbf24");
         sfx.play("specDef");
-        setBText(`🛡️ ${defender.name} 展開防護罩，擋下了攻擊！`);
+        setBText(tr(t, "battle.pvp.specdef.fire", "🛡️ {name} raised a barrier and blocked the hit!", { name: defender.name }));
         safeTo(() => setAtkEffect(null), 380);
         finishWithTurnSwap();
         return;
@@ -217,7 +228,7 @@ export function handlePvpAnswer({
         else setPAnim("dodgeSlide 0.9s ease");
         addD("MISS!", defenderMainX, defenderMainY, "#38bdf8");
         sfx.play("specDef");
-        setBText(`💨 ${defender.name} 完美閃避！`);
+        setBText(tr(t, "battle.pvp.specdef.water", "💨 {name} dodged perfectly!", { name: defender.name }));
         safeTo(() => {
           setEAnim("");
           setPAnim("");
@@ -232,9 +243,12 @@ export function handlePvpAnswer({
         else setPvpParalyzeP2(true);
         if (currentTurn === "p1") setPAnim("playerHit 0.45s ease");
         else setEAnim("enemyElecHit 0.55s ease");
-        addD("⚡麻痺", attackerMainX, attackerMainY, "#fbbf24");
+        addD(tr(t, "battle.pvp.tag.paralyze", "⚡Paralyzed"), attackerMainX, attackerMainY, "#fbbf24");
         sfx.play("specDef");
-        setBText(`⚡ ${defender.name} 觸發反制電流！${attacker.name} 下回合麻痺！`);
+        setBText(tr(t, "battle.pvp.specdef.electric", "⚡ {defender} triggered counter current! {attacker} will be paralyzed next turn!", {
+          defender: defender.name,
+          attacker: attacker.name,
+        }));
         safeTo(() => {
           setPAnim("");
           setEAnim("");
@@ -267,7 +281,7 @@ export function handlePvpAnswer({
         addD("🛡️BLOCK", defenderMainX, defenderMainY, "#f59e0b");
         const killed = applyCounterToAttacker(counterDmg, "#f59e0b", "enemyFireHit 0.55s ease");
         sfx.play("light");
-        setBText(`✨ ${defender.name} 咆哮反擊！`);
+        setBText(tr(t, "battle.pvp.specdef.light", "✨ {name} roared and countered!", { name: defender.name }));
         safeTo(() => setAtkEffect(null), 420);
         if (killed) {
           setPvpWinner(currentTurn === "p1" ? "p2" : "p1");
@@ -286,7 +300,7 @@ export function handlePvpAnswer({
       addD("🛡️BLOCK", defenderMainX, defenderMainY, "#22c55e");
       const killed = applyCounterToAttacker(reflectDmg, "#22c55e", "enemyGrassHit 0.55s ease");
       sfx.play("specDef");
-      setBText(`🌿 ${defender.name} 反彈攻擊！`);
+      setBText(tr(t, "battle.pvp.specdef.grass", "🌿 {name} reflected the attack!", { name: defender.name }));
       safeTo(() => setAtkEffect(null), 420);
       if (killed) {
         setPvpWinner(currentTurn === "p1" ? "p2" : "p1");
@@ -304,13 +318,13 @@ export function handlePvpAnswer({
     if (attacker.type === "fire") {
       if (currentTurn === "p1") setPvpBurnP2((b) => Math.min(PVP_BALANCE.passive.fireBurnCap, b + 1));
       else setPvpBurnP1((b) => Math.min(PVP_BALANCE.passive.fireBurnCap, b + 1));
-      passiveNotes.push("🔥灼燒");
+      passiveNotes.push(tr(t, "battle.pvp.note.burn", "🔥Burn"));
     }
 
     if (attacker.type === "water" && chance(PVP_BALANCE.passive.waterFreezeChance)) {
       if (currentTurn === "p1") setPvpFreezeP2(true);
       else setPvpFreezeP1(true);
-      passiveNotes.push("❄️凍結");
+      passiveNotes.push(tr(t, "battle.pvp.note.freeze", "❄️Freeze"));
     }
 
     if (attacker.type === "electric") {
@@ -319,7 +333,7 @@ export function handlePvpAnswer({
         if (stack >= PVP_BALANCE.passive.electricDischargeAt) {
           bonusDmg += PVP_BALANCE.passive.electricDischargeDamage;
           setPvpStaticP1(0);
-          passiveNotes.push("⚡放電");
+          passiveNotes.push(tr(t, "battle.pvp.note.discharge", "⚡Discharge"));
           addD(`⚡-${PVP_BALANCE.passive.electricDischargeDamage}`, 140, 55, "#fbbf24");
           sfx.play("staticDischarge");
         } else {
@@ -330,7 +344,7 @@ export function handlePvpAnswer({
         if (stack >= PVP_BALANCE.passive.electricDischargeAt) {
           bonusDmg += PVP_BALANCE.passive.electricDischargeDamage;
           setPvpStaticP2(0);
-          passiveNotes.push("⚡放電");
+          passiveNotes.push(tr(t, "battle.pvp.note.discharge", "⚡Discharge"));
           addD(`⚡-${PVP_BALANCE.passive.electricDischargeDamage}`, 60, 170, "#fbbf24");
           sfx.play("staticDischarge");
         } else {
@@ -351,7 +365,7 @@ export function handlePvpAnswer({
       if (strike.heal > 0) {
         setPHp((h) => Math.min(getStageMaxHp(s2.pStg), h + strike.heal));
         addD(`+${strike.heal}`, 52, 164, "#22c55e");
-        passiveNotes.push("🌿回復");
+        passiveNotes.push(tr(t, "battle.pvp.note.heal", "🌿Heal"));
       }
 
       safeTo(() => { setEAnim(""); setAtkEffect(null); }, 520);
@@ -371,7 +385,7 @@ export function handlePvpAnswer({
         setPvpHp2(healed);
         setEHp(healed);
         addD(`+${strike.heal}`, 146, 54, "#22c55e");
-        passiveNotes.push("🌿回復");
+        passiveNotes.push(tr(t, "battle.pvp.note.heal", "🌿Heal"));
       }
 
       safeTo(() => { setPAnim(""); setAtkEffect(null); }, 520);
@@ -382,8 +396,20 @@ export function handlePvpAnswer({
       }
     }
 
-    const allNotes = [strike.isCrit ? "💥暴擊" : "", strike.passiveLabel, ...passiveNotes, unlockedSpecDef ? "🛡️反制就緒" : ""].filter(Boolean).join(" ");
-    setBText(`✅ ${attacker.name} 的 ${move.name} 命中！${allNotes ? ` ${allNotes}` : ""}`);
+    const passiveNote = strike.passiveLabelKey
+      ? tr(t, strike.passiveLabelKey, strike.passiveLabelFallback || strike.passiveLabel || "")
+      : (strike.passiveLabel || "");
+    const allNotes = [
+      strike.isCrit ? tr(t, "battle.pvp.note.crit", "💥Critical") : "",
+      passiveNote,
+      ...passiveNotes,
+      unlockedSpecDef ? tr(t, "battle.pvp.note.specdefReady", "🛡️Counter Ready") : "",
+    ].filter(Boolean).join(" ");
+    setBText(tr(t, "battle.pvp.hit", "✅ {attacker}'s {move} hit!{notes}", {
+      attacker: attacker.name,
+      move: move.name,
+      notes: allNotes ? ` ${allNotes}` : "",
+    }));
     setPvpTurn(nextTurn);
     setPvpActionCount((c) => c + 1);
     setPhase("text");
@@ -431,6 +457,7 @@ export function processPvpTurnStart({
   setPvpTurn,
   setPvpFreezeP1,
   setPvpFreezeP2,
+  t,
 }) {
   if (state.battleMode !== "pvp" || state.pvpWinner) return false;
   const currentTurn = state.pvpTurn;
@@ -467,7 +494,7 @@ export function processPvpTurnStart({
         return true;
       }
     }
-    setBText(`🔥 ${currentName} 受到灼燒傷害！`);
+    setBText(tr(t, "battle.pvp.turnstart.burn", "🔥 {name} took burn damage!", { name: currentName }));
     setPhase("text");
     return true;
   }
@@ -478,7 +505,7 @@ export function processPvpTurnStart({
     else setPvpParalyzeP2(false);
     const nextTurn = getOtherPvpTurn(currentTurn);
     setPvpTurn(nextTurn);
-    setBText(`⚡ ${currentName} 麻痺，回合跳過！`);
+    setBText(tr(t, "battle.pvp.turnstart.paralyze", "⚡ {name} is paralyzed and skips the turn!", { name: currentName }));
     setPhase("text");
     return true;
   }
@@ -489,7 +516,7 @@ export function processPvpTurnStart({
     else setPvpFreezeP2(false);
     const nextTurn = getOtherPvpTurn(currentTurn);
     setPvpTurn(nextTurn);
-    setBText(`❄️ ${currentName} 被凍結，回合跳過！`);
+    setBText(tr(t, "battle.pvp.turnstart.freeze", "❄️ {name} is frozen and skips the turn!", { name: currentName }));
     setPhase("text");
     return true;
   }

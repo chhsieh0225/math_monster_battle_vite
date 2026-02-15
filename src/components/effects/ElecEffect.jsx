@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { seedRange } from '../../utils/prng';
 
 // Primary bolt paths (jagged lightning shapes)
@@ -11,12 +10,11 @@ const SPARK = "M0,-6 L1.5,-1.5 L6,0 L1.5,1.5 L0,6 L-1.5,1.5 L-6,0 L-1.5,-1.5Z";
 
 const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
 
-export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
+export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
   const dur = 600 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
   const rr = (slot, i, min, max) => seedRange(`elec-${idx}-${lvl}-${slot}-${i}`, min, max);
-  useEffect(() => { const t = setTimeout(onDone, dur + 400); return () => clearTimeout(t); }, [dur, onDone]);
 
   // --- idx 0: 基礎電擊 (Basic Bolt) — bolts strike near enemy ---
   if (idx === 0) {

@@ -281,12 +281,12 @@ function App() {
       {B.achPopup && ACH_MAP[B.achPopup] && <AchievementPopup achievement={ACH_MAP[B.achPopup]} onDone={B.dismissAch} />}
 
       {/* Attack effects */}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "fire" && <FireEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "electric" && <ElecEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "water" && <WaterEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "grass" && <GrassEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "dark" && <DarkEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "light" && <LightEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
+      {showHeavyFx && B.atkEffect && B.atkEffect.type === "fire" && <FireEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
+      {showHeavyFx && B.atkEffect && B.atkEffect.type === "electric" && <ElecEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
+      {showHeavyFx && B.atkEffect && B.atkEffect.type === "water" && <WaterEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
+      {showHeavyFx && B.atkEffect && B.atkEffect.type === "grass" && <GrassEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
+      {showHeavyFx && B.atkEffect && B.atkEffect.type === "dark" && <DarkEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
+      {showHeavyFx && B.atkEffect && B.atkEffect.type === "light" && <LightEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
 
       {/* Special Defense animations */}
       {showHeavyFx && B.defAnim === "fire" && <div style={{ position: "absolute", left: "6%", bottom: "14%", width: 160, height: 160, zIndex: 50, pointerEvents: "none" }}>

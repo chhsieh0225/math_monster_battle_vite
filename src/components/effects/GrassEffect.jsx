@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { seedRange } from '../../utils/prng';
 
 // SVG paths
@@ -6,12 +5,11 @@ const LEAF = "M0,-10 C5,-10 10,-4 10,0 C10,4 5,10 0,10 C-2,6 -3,2 -3,0 C-3,-2 -2
 const VEIN = "M0,-8 Q1,-3 0,0 Q-1,3 0,8";
 const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
 
-export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
+export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
   const dur = 700 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
   const rr = (slot, i, min, max) => seedRange(`grass-${idx}-${lvl}-${slot}-${i}`, min, max);
-  useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [dur, onDone]);
 
   // --- idx 0: 葉刃切 (Leaf Blade) ---
   if (idx === 0) {

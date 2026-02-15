@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { seedRange } from '../../utils/prng';
 
 // SVG flame shape (teardrop)
@@ -6,12 +5,11 @@ const FLAME = "M10,28 C10,28 2,18 2,12 C2,5 5.5,0 10,0 C14.5,0 18,5 18,12 C18,18
 
 const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
 
-export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
+export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
   const dur = 700 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
   const rr = (slot, i, min, max) => seedRange(`fire-${idx}-${lvl}-${slot}-${i}`, min, max);
-  useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [dur, onDone]);
 
   // --- idx 0: 火花彈 (Fireball) ---
   if (idx === 0) {

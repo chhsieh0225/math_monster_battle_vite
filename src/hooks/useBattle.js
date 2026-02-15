@@ -47,6 +47,11 @@ import {
   updateAbilityModel,
 } from '../utils/battleEngine';
 import { appendEvent, createEventSessionId } from '../utils/eventLogger';
+import {
+  getAttackEffectClearDelay,
+  getAttackEffectHitDelay,
+  getAttackEffectNextStepDelay,
+} from '../utils/effectTiming';
 
 // ── Constants (module-level to avoid re-allocation per render) ──
 const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
@@ -55,7 +60,6 @@ const HIT_ANIMS = {
   water: "enemyWaterHit 0.7s ease", grass: "enemyGrassHit 0.6s ease",
   dark: "enemyDarkHit 0.8s ease", light: "enemyFireHit 0.6s ease",
 };
-const EFX_DELAY = { fire: 300, electric: 200, water: 350, grass: 280, dark: 400, light: 300 };
 
 // ═══════════════════════════════════════════════════════════════════
 export function useBattle() {
@@ -738,7 +742,16 @@ export function useBattle() {
           setPAnim("");
           const s2 = sr.current;
           const bt = bestAttackType(move, s2.enemy);
-          setAtkEffect({ type: bt, idx: s2.selIdx, lvl: s2.mLvls[s2.selIdx] });
+          const effectMeta = {
+            idx: s2.selIdx,
+            lvl: s2.mLvls[s2.selIdx],
+          };
+          const effectTimeline = {
+            hitDelay: getAttackEffectHitDelay(bt),
+            clearDelay: getAttackEffectClearDelay(effectMeta),
+            nextDelay: getAttackEffectNextStepDelay(effectMeta),
+          };
+          setAtkEffect({ type: bt, idx: effectMeta.idx, lvl: effectMeta.lvl });
           sfx.play(bt); // type-specific attack sound
 
           safeTo(() => {
@@ -759,8 +772,8 @@ export function useBattle() {
               setEAnim("dodgeSlide 0.9s ease");
               setEffMsg({ text: "👻 幻影閃避！", color: "#c084fc" }); safeTo(() => setEffMsg(null), 1500);
               addD("MISS!", 155, 50, "#c084fc");
-              safeTo(() => { setEAnim(""); setAtkEffect(null); }, 800);
-              safeTo(() => doEnemyTurn(), 1200);
+              safeTo(() => { setEAnim(""); setAtkEffect(null); }, effectTimeline.clearDelay);
+              safeTo(() => doEnemyTurn(), effectTimeline.nextDelay);
               return; // skip all damage
             }
             // ── Fortress trait: enemy takes 30% less damage ──
@@ -829,7 +842,7 @@ export function useBattle() {
             setEAnim(HIT_ANIMS[bt] || "enemyHit 0.5s ease");
             const dmgColor = { fire: "#ef4444", electric: "#fbbf24", water: "#3b82f6", grass: "#22c55e", dark: "#a855f7", light: "#f59e0b" }[bt] || "#ef4444";
             addD(`-${dmg}`, 140, 55, dmgColor);
-            safeTo(() => { setEAnim(""); setAtkEffect(null); }, 800);
+            safeTo(() => { setEAnim(""); setAtkEffect(null); }, effectTimeline.clearDelay);
 
             // ── Counter trait: reflect 20% damage back to player ──
             if (s3.enemy.trait === "counter" && afterHp > 0) {
@@ -849,10 +862,10 @@ export function useBattle() {
 
             // Achievement: one-hit KO (dealt damage >= enemy maxHp)
             if (afterHp <= 0 && dmg >= s3.enemy.maxHp) tryUnlock("one_hit");
-            if (afterHp <= 0) safeTo(() => handleVictory(), 900);
-            else if (willFreeze) safeTo(() => handleFreeze(), 900);
-            else safeTo(() => doEnemyTurn(), 900);
-          }, EFX_DELAY[bt] || 300);
+            if (afterHp <= 0) safeTo(() => handleVictory(), effectTimeline.nextDelay);
+            else if (willFreeze) safeTo(() => handleFreeze(), effectTimeline.nextDelay);
+            else safeTo(() => doEnemyTurn(), effectTimeline.nextDelay);
+          }, effectTimeline.hitDelay);
         }, 400);
       }, 600);
     } else {

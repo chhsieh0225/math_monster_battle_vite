@@ -1,14 +1,12 @@
-import { useEffect } from 'react';
 import { seedRange } from '../../utils/prng';
 
 const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
 
-export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
+export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
   const dur = 800 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
   const rr = (slot, i, min, max) => seedRange(`water-${idx}-${lvl}-${slot}-${i}`, min, max);
-  useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [dur, onDone]);
 
   // --- idx 0: 水泡攻擊 (Bubble Attack) ---
   if (idx === 0) {

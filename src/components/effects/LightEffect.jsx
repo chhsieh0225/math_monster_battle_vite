@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { seedRange } from '../../utils/prng';
 
 // Golden light orb shape
@@ -6,12 +5,11 @@ const ORB = "M12,2 C6,2 2,6 2,12 C2,18 6,22 12,22 C18,22 22,18 22,12 C22,6 18,2 
 
 const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
 
-export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDone }) {
+export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
   const dur = 700 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
   const rr = (slot, i, min, max) => seedRange(`light-${idx}-${lvl}-${slot}-${i}`, min, max);
-  useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [dur, onDone]);
 
   // --- idx 0: 獵爪撲 (Light Claw) — golden orbs fly toward enemy ---
   if (idx === 0) {

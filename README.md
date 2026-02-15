@@ -24,6 +24,7 @@ Current migrated files:
 - `src/App.tsx`
 - `src/hooks/useBattle.ts` (typed wrapper)
 - `src/hooks/useMobileExperience.ts`
+- `src/hooks/useBattleRng.ts`
 - `src/components/ui/HPBar.tsx`
 - `src/components/ui/XPBar.tsx`
 - `src/components/ui/DamagePopup.tsx`

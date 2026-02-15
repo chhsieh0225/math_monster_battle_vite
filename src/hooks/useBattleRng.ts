@@ -2,7 +2,12 @@ import { useCallback, useRef } from 'react';
 
 const DEFAULT_SEED = 0x6d2b79f5;
 
-function step(state) {
+type StepOut = {
+  state: number;
+  value: number;
+};
+
+function step(state: number): StepOut {
   let t = (state + 0x6d2b79f5) >>> 0;
   t = Math.imul(t ^ (t >>> 15), t | 1);
   t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
@@ -12,10 +17,18 @@ function step(state) {
   };
 }
 
-export function useBattleRng(seed = DEFAULT_SEED) {
-  const stateRef = useRef(seed >>> 0);
+export type BattleRngApi = {
+  rand: () => number;
+  randInt: (min: number, max: number) => number;
+  chance: (p: number) => boolean;
+  pickIndex: (length: number) => number;
+  reseed: (nextSeed: number) => void;
+};
 
-  const reseed = useCallback((nextSeed) => {
+export function useBattleRng(seed: number = DEFAULT_SEED): BattleRngApi {
+  const stateRef = useRef<number>(seed >>> 0);
+
+  const reseed = useCallback((nextSeed: number) => {
     stateRef.current = (nextSeed >>> 0) || DEFAULT_SEED;
   }, []);
 
@@ -25,13 +38,13 @@ export function useBattleRng(seed = DEFAULT_SEED) {
     return next.value;
   }, []);
 
-  const randInt = useCallback((min, max) => (
+  const randInt = useCallback((min: number, max: number) => (
     Math.floor(rand() * (max - min + 1)) + min
   ), [rand]);
 
-  const chance = useCallback((p) => rand() < p, [rand]);
+  const chance = useCallback((p: number) => rand() < p, [rand]);
 
-  const pickIndex = useCallback((length) => {
+  const pickIndex = useCallback((length: number) => {
     if (length <= 1) return 0;
     return randInt(0, length - 1);
   }, [randInt]);

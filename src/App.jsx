@@ -7,7 +7,7 @@
  *   2. Battle-screen layout & visual rendering
  *   3. Orientation-lock wrapper (GameShell)
  */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, Component } from 'react';
 import './App.css';
 
 // Hooks
@@ -40,13 +40,30 @@ import DashboardScreen from './components/screens/DashboardScreen';
 import AchievementPopup from './components/ui/AchievementPopup';
 import { ACH_MAP } from './data/achievements';
 
+// ─── ErrorBoundary: catches render crashes to show error instead of black screen ───
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(e) { return { error: e }; }
+  render() {
+    if (this.state.error) return (
+      <div style={{ height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"#1e1b4b", color:"white", padding:24, textAlign:"center", gap:12 }}>
+        <div style={{ fontSize:40 }}>⚠️</div>
+        <div style={{ fontSize:16, fontWeight:800 }}>遊戲發生錯誤</div>
+        <div style={{ fontSize:11, opacity:0.6, maxWidth:320, wordBreak:"break-all" }}>{String(this.state.error)}</div>
+        <button onClick={() => { this.setState({ error: null }); }} style={{ marginTop:12, background:"rgba(255,255,255,0.15)", border:"1px solid rgba(255,255,255,0.3)", color:"white", padding:"8px 20px", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>重新載入</button>
+      </div>
+    );
+    return this.props.children;
+  }
+}
+
 // ─── GameShell: orientation lock wrapper ───
 const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 function GameShell() {
   const [showRotateHint, setShowRotateHint] = useState(false);
   useEffect(() => {
-    try { screen.orientation.lock("portrait-primary").catch(() => {}); } catch (e) {}
+    try { screen.orientation.lock("portrait-primary").catch(() => {}); } catch { /* unsupported */ }
     let tid = null;
     const chk = () => {
       const isLandscape = window.innerWidth > window.innerHeight * 1.05;
@@ -62,7 +79,7 @@ function GameShell() {
   return (
     <div style={{ position: "fixed", inset: 0, overflow: "hidden", background: "#0f172a", display: "flex", justifyContent: "center" }}>
       <div style={{ width: "100%", maxWidth: 480, height: "100%", position: "relative", background: "#000", boxShadow: "0 0 40px rgba(0,0,0,0.5)" }}>
-        <App />
+        <ErrorBoundary><App /></ErrorBoundary>
         {showRotateHint && (
           <div onClick={() => setShowRotateHint(false)} style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9999, cursor: "pointer" }}>
             <div style={{ fontSize: 56, marginBottom: 20, animation: "float 3s ease-in-out infinite" }}>📱</div>
@@ -144,12 +161,12 @@ function App() {
   const eSceneType = B.enemy.sceneMType || B.enemy.mType;
   const eTopPct = (eSceneType === "ghost" || B.enemy.id === "boss") ? 12
     : eSceneType === "steel" ? 16 : 26;
-  const eTarget = useMemo(() => ({
+  const eTarget = {
     top: `calc(${eTopPct}% + ${eSize / 2}px)`,
     right: `calc(10% + ${eSize / 2}px)`,
     flyRight: 10 + eSize / 2 * 100 / 390,
     flyTop: eTopPct + eSize / 2 * 100 / 550,
-  }), [eSize, eTopPct]);
+  };
 
   return (
     <div onClick={canTapAdvance ? B.advance : undefined} style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}>

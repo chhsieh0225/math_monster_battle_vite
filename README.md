@@ -30,10 +30,11 @@ Current migrated files:
 - `src/components/screens/EvolveScreen.tsx`
 - `src/components/screens/LeaderboardScreen.tsx`
 - `src/components/screens/AchievementScreen.tsx`
+- `src/components/screens/GameOverScreen.tsx`
 
 ## Next Recommended TS Steps
 
 1. Enable TS linting (`@typescript-eslint`) in `eslint.config.js`.
-2. Migrate remaining screens (`GameOver`, `Title`, `PvpResult`) to `.tsx`.
+2. Migrate remaining screens (`Title`, `PvpResult`, `Settings`) to `.tsx`.
 3. Migrate battle domain files in this order:
    - `turnResolver` → `battleReducer` → `playerFlow/enemyFlow` → `useBattle`.

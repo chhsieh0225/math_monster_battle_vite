@@ -1,8 +1,49 @@
 import { useState, useRef } from 'react';
+import type { ChangeEvent, KeyboardEvent } from 'react';
 import { calcScore, saveScore } from '../../utils/leaderboard';
 import { readText, writeText } from '../../utils/storage';
+import type { LeaderboardEntry } from '../../types/game';
 
-export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, timedMode, maxStreak = 0, starter, mLvls, getPow, onRestart, onLeaderboard, onHome }) {
+type StarterMoveLite = {
+  icon: string;
+  color: string;
+};
+
+type GameOverStarterLite = {
+  moves: StarterMoveLite[];
+};
+
+type GameOverScreenProps = {
+  defeated: number;
+  totalEnemies: number;
+  tC: number;
+  tW: number;
+  pLvl: number;
+  timedMode: boolean;
+  maxStreak?: number;
+  starter: GameOverStarterLite | null;
+  mLvls: number[];
+  getPow: (moveIdx: number) => number;
+  onRestart: () => void;
+  onLeaderboard: () => void;
+  onHome: () => void;
+};
+
+export default function GameOverScreen({
+  defeated,
+  totalEnemies,
+  tC,
+  tW,
+  pLvl,
+  timedMode,
+  maxStreak = 0,
+  starter,
+  mLvls,
+  getPow,
+  onRestart,
+  onLeaderboard,
+  onHome,
+}: GameOverScreenProps) {
   const won = defeated >= totalEnemies;
   const finalScore = calcScore(defeated, tC, tW, pLvl, timedMode, maxStreak);
   const [lastRank, setLastRank] = useState(-1);
@@ -18,7 +59,7 @@ export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, t
     const acc = (tC + tW > 0) ? Math.round(tC / (tC + tW) * 100) : 0;
     const nm = playerName.trim() || "???";
     writeText("mathMonsterBattle_name", nm);
-    const entry = { score: finalScore, name: nm, defeated, correct: tC, wrong: tW, accuracy: acc, level: pLvl, timed: timedMode, maxStreak, completed: won, date: new Date().toISOString() };
+    const entry: LeaderboardEntry = { score: finalScore, name: nm, defeated, correct: tC, wrong: tW, accuracy: acc, level: pLvl, timed: timedMode, maxStreak, completed: won, date: new Date().toISOString() };
     setLastRank(saveScore(entry));
     setNameSaved(true);
   };
@@ -48,8 +89,8 @@ export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, t
       {!nameSaved ? (
         <div style={{ marginBottom: 10, animation: "popIn 0.3s ease 0.4s both" }}>
           <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center" }}>
-            <input value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="你的名字" maxLength={8}
-              onKeyDown={e => { if (e.key === "Enter") handleSaveScore(); }}
+            <input value={playerName} onChange={(e: ChangeEvent<HTMLInputElement>) => setPlayerName(e.target.value)} placeholder="你的名字" maxLength={8}
+              onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") handleSaveScore(); }}
               style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, color: "white", fontSize: 15, fontWeight: 700, padding: "8px 12px", textAlign: "center", width: 130, outline: "none" }} />
             <button className="touch-btn" onClick={handleSaveScore} style={{ background: "linear-gradient(135deg,#22c55e,#16a34a)", border: "none", color: "white", fontSize: 13, fontWeight: 700, padding: "10px 18px", borderRadius: 12 }}>儲存</button>
           </div>
@@ -93,7 +134,13 @@ export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, t
   );
 }
 
-function Stat({ value, label, color }) {
+type StatProps = {
+  value: string | number;
+  label: string;
+  color: string;
+};
+
+function Stat({ value, label, color }: StatProps) {
   return (
     <div style={{ textAlign: "center" }}>
       <div style={{ fontSize: 22, fontWeight: 900, color }}>{value}</div>

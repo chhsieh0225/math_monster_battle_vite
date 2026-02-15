@@ -20,6 +20,7 @@ Current migrated files:
 
 - `src/types/game.ts`
 - `src/main.tsx`
+- `src/App.tsx`
 - `src/components/ui/HPBar.tsx`
 - `src/components/ui/XPBar.tsx`
 - `src/components/ui/DamagePopup.tsx`

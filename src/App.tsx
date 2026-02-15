@@ -1,5 +1,5 @@
 /**
- * App.jsx — Thin render shell.
+ * App.tsx — Thin render shell.
  *
  * All game state and logic live in useBattle().
  * This file is purely responsible for:
@@ -7,7 +7,14 @@
  *   2. Battle-screen layout & visual rendering
  *   3. Orientation-lock wrapper (GameShell)
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { useState, useEffect, useRef, useSyncExternalStore, Component } from 'react';
+import type { ReactNode } from 'react';
 import './App.css';
 
 // Hooks
@@ -46,26 +53,55 @@ import AchievementPopup from './components/ui/AchievementPopup';
 import { ACH_MAP } from './data/achievements';
 
 // ─── ErrorBoundary: catches render crashes to show error instead of black screen ───
-class ErrorBoundary extends Component {
-  constructor(props) { super(props); this.state = { error: null }; }
-  static getDerivedStateFromError(e) { return { error: e }; }
+type ErrorBoundaryProps = {
+  children?: ReactNode;
+};
+
+type ErrorBoundaryState = {
+  error: Error | string | null;
+};
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
+    if (error instanceof Error) return { error };
+    return { error: String(error) };
+  }
+
   render() {
-    if (this.state.error) return (
+    if (this.state.error) {
+      const errorText = typeof this.state.error === "string"
+        ? this.state.error
+        : this.state.error.message;
+      return (
       <div style={{ height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"#1e1b4b", color:"white", padding:24, textAlign:"center", gap:12 }}>
         <div style={{ fontSize:40 }}>⚠️</div>
         <div style={{ fontSize:16, fontWeight:800 }}>遊戲發生錯誤</div>
-        <div style={{ fontSize:11, opacity:0.6, maxWidth:320, wordBreak:"break-all" }}>{String(this.state.error)}</div>
+        <div style={{ fontSize:11, opacity:0.6, maxWidth:320, wordBreak:"break-all" }}>{errorText}</div>
         <button onClick={() => { this.setState({ error: null }); }} style={{ marginTop:12, background:"rgba(255,255,255,0.15)", border:"1px solid rgba(255,255,255,0.3)", color:"white", padding:"8px 20px", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>重新載入</button>
       </div>
-    );
+      );
+    }
     return this.props.children;
   }
 }
 
-const NOOP_SUBSCRIBE = () => () => {};
-const ZERO_SNAPSHOT = () => 0;
+type TimerSubscribe = (listener: () => void) => () => void;
 
-function QuestionTimerHud({ timerSec, subscribe, getSnapshot }) {
+const NOOP_SUBSCRIBE: TimerSubscribe = () => () => {};
+const ZERO_SNAPSHOT = (): number => 0;
+
+type QuestionTimerHudProps = {
+  timerSec: number;
+  subscribe?: TimerSubscribe;
+  getSnapshot?: () => number;
+};
+
+function QuestionTimerHud({ timerSec, subscribe, getSnapshot }: QuestionTimerHudProps) {
   const timerLeft = useSyncExternalStore(
     subscribe || NOOP_SUBSCRIBE,
     getSnapshot || ZERO_SNAPSHOT,
@@ -106,13 +142,20 @@ function QuestionTimerHud({ timerSec, subscribe, getSnapshot }) {
 }
 
 // ─── GameShell: orientation lock wrapper ───
-const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+const isTouchDevice = (): boolean => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 function GameShell() {
   const [showRotateHint, setShowRotateHint] = useState(false);
   useEffect(() => {
-    try { screen.orientation.lock("portrait-primary").catch(() => {}); } catch { /* unsupported */ }
-    let tid = null;
+    try {
+      const orientation = screen.orientation as ScreenOrientation & {
+        lock?: (orientation: string) => Promise<void>;
+      };
+      orientation.lock?.("portrait-primary").catch(() => {});
+    } catch {
+      // unsupported
+    }
+    let tid: ReturnType<typeof setTimeout> | null = null;
     const chk = () => {
       const isLandscape = window.innerWidth > window.innerHeight * 1.05;
       setShowRotateHint(isLandscape && isTouchDevice());
@@ -142,23 +185,30 @@ function GameShell() {
 }
 
 // ─── App: main game component (render only) ───
+type SpriteTarget = {
+  right: string;
+  top: string;
+  flyRight: number;
+  flyTop: number;
+};
+
 function App() {
-  const B = useBattle();
-  const UX = useMobileExperience();
+  const B = useBattle() as any;
+  const UX = useMobileExperience() as any;
   const showHeavyFx = !UX.lowPerfMode;
-  const [audioMuted, setAudioMuted] = useState(() => B.sfx.muted);
-  const battleRootRef = useRef(null);
-  const enemySpriteRef = useRef(null);
-  const playerSpriteRef = useRef(null);
-  const [measuredEnemyTarget, setMeasuredEnemyTarget] = useState(null);
-  const [measuredPlayerTarget, setMeasuredPlayerTarget] = useState(null);
-  const settingsReturnRef = useRef("title");
+  const [audioMuted, setAudioMuted] = useState<boolean>(() => Boolean(B.sfx.muted));
+  const battleRootRef = useRef<HTMLDivElement | null>(null);
+  const enemySpriteRef = useRef<HTMLDivElement | null>(null);
+  const playerSpriteRef = useRef<HTMLDivElement | null>(null);
+  const [measuredEnemyTarget, setMeasuredEnemyTarget] = useState<SpriteTarget | null>(null);
+  const [measuredPlayerTarget, setMeasuredPlayerTarget] = useState<SpriteTarget | null>(null);
+  const settingsReturnRef = useRef<string>("title");
   const resumeBattleAfterSettingsRef = useRef(false);
-  const setAudioMute = (next) => {
+  const setAudioMute = (next: boolean) => {
     const muted = B.sfx.setMuted(next);
     setAudioMuted(muted);
   };
-  const openSettings = (fromScreen) => {
+  const openSettings = (fromScreen: string) => {
     settingsReturnRef.current = fromScreen;
     if (fromScreen === "battle" && !B.gamePaused) {
       resumeBattleAfterSettingsRef.current = true;
@@ -231,7 +281,7 @@ function App() {
     scheduleSync();
     window.addEventListener("resize", scheduleSync);
 
-    let observer = null;
+    let observer: ResizeObserver | null = null;
     if (typeof ResizeObserver !== "undefined") {
       observer = new ResizeObserver(scheduleSync);
       if (battleRootRef.current) observer.observe(battleRootRef.current);
@@ -287,7 +337,7 @@ function App() {
   if (B.screen === "selection") return (
     <SelectionScreen
       mode={B.battleMode}
-      onSelect={(payload) => {
+      onSelect={(payload: any) => {
         B.sfx.init();
         if (B.battleMode === "coop") {
           B.setStarter(payload.p1);
@@ -365,7 +415,8 @@ function App() {
   const pSvg = st.svgFn();
   const mainMaxHp = getStageMaxHp(B.pStg);
   const subMaxHp = B.allySub ? getStarterMaxHp(B.allySub) : getStageMaxHp(0);
-  const scene = SCENES[B.enemy.sceneMType || B.enemy.mType] || SCENES.grass;
+  const sceneKey = (B.enemy.sceneMType || B.enemy.mType) as string;
+  const scene = (SCENES as Record<string, any>)[sceneKey] || (SCENES as Record<string, any>).grass;
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
   const hasDualUnits = !!(B.enemySub || B.allySub);
   const compactDual = hasDualUnits && UX.compactUI;
@@ -387,7 +438,7 @@ function App() {
     ? B.pvpTurn === "p1"
     : (isCoopBattle ? !coopUsingSub : true);
   const subBarActive = isCoopBattle && !!B.allySub && coopUsingSub;
-  const hpBarFocusStyle = (active) => ({
+  const hpBarFocusStyle = (active: boolean) => ({
     opacity: active ? 1 : 0.62,
     transform: active ? "scale(1)" : "scale(0.98)",
     filter: active ? "none" : "saturate(0.72)",
@@ -447,8 +498,8 @@ function App() {
       </div>}
 
       {/* Popups & particles */}
-      {B.dmgs.map(d => <DamagePopup key={d.id} value={d.value} x={d.x} y={d.y} color={d.color} onDone={() => B.rmD(d.id)} />)}
-      {showHeavyFx && B.parts.map(p => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} seed={p.id} onDone={() => B.rmP(p.id)} />)}
+      {B.dmgs.map((d: any) => <DamagePopup key={d.id} value={d.value} x={d.x} y={d.y} color={d.color} onDone={() => B.rmD(d.id)} />)}
+      {showHeavyFx && B.parts.map((p: any) => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} seed={p.id} onDone={() => B.rmP(p.id)} />)}
 
       {/* Move level-up toast */}
       {B.battleMode !== "pvp" && B.mLvlUp !== null && B.starter && <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: "0 4px 16px rgba(245,158,11,0.4)", whiteSpace: "nowrap" }}>{B.starter.moves[B.mLvlUp].icon} {B.starter.moves[B.mLvlUp].name} 升級到 Lv.{B.mLvls[B.mLvlUp]}！威力 → {B.getPow(B.mLvlUp)}</div>}
@@ -619,7 +670,7 @@ function App() {
             </div>
           )}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
-            {activeStarter.moves.map((m, i) => {
+            {activeStarter.moves.map((m: any, i: number) => {
               const sealed = B.battleMode === "pvp" ? false : B.sealedMove === i;
               const pvpLocked = B.battleMode === "pvp" ? (m.risky && !chargeReadyDisplay) : false;
               const locked = B.battleMode === "pvp" ? pvpLocked : ((m.risky && !B.chargeReady) || sealed);
@@ -668,7 +719,7 @@ function App() {
           {B.fb && !B.fb.correct && B.fb.steps && B.fb.steps.length > 0 && (
             <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "8px 12px", marginBottom: 6, animation: "fadeIn 0.4s ease" }}>
               <div style={{ fontSize: 11, color: "#fca5a5", fontWeight: 700, marginBottom: 4 }}>📝 解題過程：</div>
-              {B.fb.steps.map((step, i) => (
+              {B.fb.steps.map((step: string, i: number) => (
                 <div key={i} style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: 600, lineHeight: 1.8, fontFamily: "monospace" }}>
                   {B.fb.steps.length > 1 && <span style={{ color: "#fca5a5", fontSize: 11, marginRight: 4 }}>Step {i + 1}.</span>}{step}
                 </div>
@@ -676,7 +727,7 @@ function App() {
             </div>
           )}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
-            {B.q.choices.map((c, i) => {
+            {B.q.choices.map((c: number, i: number) => {
               let bg = "rgba(255,255,255,0.08)", bd = "rgba(255,255,255,0.15)", co = "white";
               if (B.fb) { if (c === B.q.answer) { bg = "rgba(34,197,94,0.2)"; bd = "#22c55e"; co = "#22c55e"; } else { bg = "rgba(255,255,255,0.03)"; co = "rgba(255,255,255,0.3)"; } }
               return <button className="answer-btn" key={i} onClick={() => B.onAns(c)} disabled={B.answered} style={{ background: bg, border: `2px solid ${bd}`, borderRadius: 10, padding: "12px 8px", fontSize: 26, fontWeight: 700, color: co, transition: "all 0.2s" }}>{c}</button>;

@@ -1,12 +1,14 @@
 /**
  * SettingsScreen — Unified runtime settings.
- * Includes performance and audio controls.
+ * Includes performance, audio, and language controls.
  */
 import type { CSSProperties } from 'react';
+import { useI18n } from '../../i18n';
+import type { LocaleCode } from '../../i18n';
 
-const PAGE_BG = "radial-gradient(120% 80% at 50% 0%, #1f2a44 0%, #131a2f 45%, #0a1020 100%)";
+const PAGE_BG = 'radial-gradient(120% 80% at 50% 0%, #1f2a44 0%, #131a2f 45%, #0a1020 100%)';
 
-type PerfMode = "auto" | "on" | "off";
+type PerfMode = 'auto' | 'on' | 'off';
 
 type SettingsScreenProps = {
   onBack: () => void;
@@ -19,12 +21,12 @@ type SettingsScreenProps = {
 };
 
 const cardStyle: CSSProperties = {
-  background: "linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.05))",
-  border: "1px solid rgba(255,255,255,0.16)",
+  background: 'linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.05))',
+  border: '1px solid rgba(255,255,255,0.16)',
   borderRadius: 16,
-  padding: "14px 14px 12px",
-  textAlign: "left",
-  boxShadow: "0 10px 26px rgba(0,0,0,0.25)",
+  padding: '14px 14px 12px',
+  textAlign: 'left',
+  boxShadow: '0 10px 26px rgba(0,0,0,0.25)',
 };
 
 export default function SettingsScreen({
@@ -36,108 +38,148 @@ export default function SettingsScreen({
   audioMuted,
   onSetAudioMuted,
 }: SettingsScreenProps) {
+  const { locale, setLocale, t } = useI18n();
   const soundOn = !audioMuted;
-  const perfResolved = lowPerfMode ? "省電執行" : "標準執行";
+  const perfResolved = lowPerfMode
+    ? t('settings.perf.resolved.low', 'Battery mode')
+    : t('settings.perf.resolved.std', 'Standard mode');
+  const localeLabel = locale === 'zh-TW'
+    ? t('settings.locale.zhTW', 'Traditional Chinese')
+    : t('settings.locale.enUS', 'English');
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", padding: "16px 12px", overflowY: "auto" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-        <button className="back-touch-btn" onClick={onBack} style={{ width: 36, height: 36, borderRadius: 10, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.08)", color: "white", fontSize: 17, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>←</button>
-        <div style={{ textAlign: "left" }}>
-          <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: 0.6 }}>⚙️ 遊戲設定</div>
-          <div style={{ fontSize: 11, opacity: 0.55 }}>簡潔控制效能與聲音</div>
+    <main style={{ height: '100%', display: 'flex', flexDirection: 'column', background: PAGE_BG, color: 'white', padding: '16px 12px', overflowY: 'auto' }}>
+      <header style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <button className="back-touch-btn" onClick={onBack} aria-label={t('a11y.settings.back', 'Back to title')} style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)', color: 'white', fontSize: 17, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>←</button>
+        <div style={{ textAlign: 'left' }}>
+          <h1 style={{ fontSize: 18, fontWeight: 900, letterSpacing: 0.6, margin: 0 }}>⚙️ {t('settings.title', 'Settings')}</h1>
+          <div style={{ fontSize: 11, opacity: 0.55 }}>{t('settings.subtitle', 'Simple controls for performance and audio')}</div>
         </div>
-      </div>
+      </header>
 
-      <div style={{ ...cardStyle, marginBottom: 10 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>🔊 聲音</div>
-        <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 10 }}>控制戰鬥音效開關（本機保存）</div>
+      <section style={{ ...cardStyle, marginBottom: 10 }} aria-label={t('settings.audio.title', 'Audio')}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>🔊 {t('settings.audio.title', 'Audio')}</div>
+        <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 10 }}>{t('settings.audio.subtitle', 'Toggle battle sound effects (saved locally)')}</div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <OptionButton
-            label="開啟"
+            label={t('common.on', 'On')}
             active={soundOn}
             tone="green"
+            ariaLabel={t('a11y.settings.audioOn', 'Enable audio')}
             onClick={() => onSetAudioMuted(false)}
           />
           <OptionButton
-            label="靜音"
+            label={t('common.off', 'Off')}
             active={!soundOn}
             tone="gray"
+            ariaLabel={t('a11y.settings.audioOff', 'Mute audio')}
             onClick={() => onSetAudioMuted(true)}
           />
         </div>
 
-        <div style={{ marginTop: 10, fontSize: 11, color: soundOn ? "#86efac" : "#cbd5e1", fontWeight: 700 }}>
-          狀態：{soundOn ? "音效已開啟" : "已靜音"}
+        <div style={{ marginTop: 10, fontSize: 11, color: soundOn ? '#86efac' : '#cbd5e1', fontWeight: 700 }}>
+          {soundOn ? t('settings.audio.statusOn', 'Status: audio enabled') : t('settings.audio.statusOff', 'Status: muted')}
         </div>
-      </div>
+      </section>
 
-      <div style={{ ...cardStyle, marginBottom: 10 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>🚀 效能</div>
-        <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 10 }}>降低動畫與特效以提升穩定度</div>
+      <section style={{ ...cardStyle, marginBottom: 10 }} aria-label={t('settings.perf.title', 'Performance')}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>🚀 {t('settings.perf.title', 'Performance')}</div>
+        <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 10 }}>{t('settings.perf.subtitle', 'Reduce animation/effects for better stability')}</div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
           <ModeButton
-            title="自動"
-            subtitle={autoLowEnd ? "偵測到低階裝置，將偏向省電" : "依裝置能力自動選擇"}
-            active={perfMode === "auto"}
-            onClick={() => onSetPerfMode("auto")}
+            title={t('settings.perf.auto.title', 'Auto')}
+            subtitle={autoLowEnd ? t('settings.perf.auto.subtitle.low', 'Low-end device detected, battery mode preferred') : t('settings.perf.auto.subtitle.normal', 'Auto choose by device capability')}
+            active={perfMode === 'auto'}
+            ariaLabel={t('a11y.settings.perfAuto', 'Performance auto mode')}
+            onClick={() => onSetPerfMode('auto')}
           />
           <ModeButton
-            title="省電"
-            subtitle="減少背景動畫與重特效"
-            active={perfMode === "on"}
-            onClick={() => onSetPerfMode("on")}
+            title={t('settings.perf.low.title', 'Battery')}
+            subtitle={t('settings.perf.low.subtitle', 'Reduce heavy animation and effects')}
+            active={perfMode === 'on'}
+            ariaLabel={t('a11y.settings.perfLow', 'Performance battery mode')}
+            onClick={() => onSetPerfMode('on')}
           />
           <ModeButton
-            title="標準"
-            subtitle="保留完整視覺特效"
-            active={perfMode === "off"}
-            onClick={() => onSetPerfMode("off")}
+            title={t('settings.perf.std.title', 'Standard')}
+            subtitle={t('settings.perf.std.subtitle', 'Keep full visual effects')}
+            active={perfMode === 'off'}
+            ariaLabel={t('a11y.settings.perfStd', 'Performance standard mode')}
+            onClick={() => onSetPerfMode('off')}
           />
         </div>
 
-        <div style={{ marginTop: 10, fontSize: 11, color: lowPerfMode ? "#fbbf24" : "#93c5fd", fontWeight: 700 }}>
-          目前生效：{perfResolved}
+        <div style={{ marginTop: 10, fontSize: 11, color: lowPerfMode ? '#fbbf24' : '#93c5fd', fontWeight: 700 }}>
+          {t('settings.perf.resolved', 'Applied: {mode}', { mode: perfResolved })}
         </div>
-      </div>
+      </section>
 
-      <div style={{ ...cardStyle, padding: "10px 12px", opacity: 0.82 }}>
+      <section style={{ ...cardStyle, marginBottom: 10 }} aria-label={t('settings.locale.title', 'Language')}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>🌐 {t('settings.locale.title', 'Language')}</div>
+        <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 10 }}>{t('settings.locale.subtitle', 'You can switch UI language anytime')}</div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <LocaleButton
+            locale="zh-TW"
+            current={locale}
+            label={t('settings.locale.zhTW', 'Traditional Chinese')}
+            ariaLabel={t('a11y.settings.localeZhTW', 'Switch language to Traditional Chinese')}
+            onPick={setLocale}
+          />
+          <LocaleButton
+            locale="en-US"
+            current={locale}
+            label={t('settings.locale.enUS', 'English')}
+            ariaLabel={t('a11y.settings.localeEnUS', 'Switch language to English')}
+            onPick={setLocale}
+          />
+        </div>
+
+        <div style={{ marginTop: 10, fontSize: 11, color: '#cbd5e1', fontWeight: 700 }}>
+          {t('settings.locale.current', 'Current language: {lang}', { lang: localeLabel })}
+        </div>
+      </section>
+
+      <section style={{ ...cardStyle, padding: '10px 12px', opacity: 0.82 }}>
         <div style={{ fontSize: 10, lineHeight: 1.8, opacity: 0.72 }}>
-          <div>• 設定儲存在本機 localStorage</div>
-          <div>• 重新整理或重開遊戲後仍會保留</div>
+          <div>{t('settings.storage.line1', '• Settings are saved in localStorage')}</div>
+          <div>{t('settings.storage.line2', '• They persist after reload/reopen')}</div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
 
 type OptionButtonProps = {
   label: string;
   active: boolean;
-  tone: "green" | "gray";
+  tone: 'green' | 'gray';
+  ariaLabel: string;
   onClick: () => void;
 };
 
-function OptionButton({ label, active, tone, onClick }: OptionButtonProps) {
-  const activeStyle = tone === "green"
-    ? "linear-gradient(135deg, rgba(34,197,94,0.95), rgba(22,163,74,0.95))"
-    : "linear-gradient(135deg, rgba(100,116,139,0.9), rgba(71,85,105,0.9))";
+function OptionButton({ label, active, tone, ariaLabel, onClick }: OptionButtonProps) {
+  const activeStyle = tone === 'green'
+    ? 'linear-gradient(135deg, rgba(34,197,94,0.95), rgba(22,163,74,0.95))'
+    : 'linear-gradient(135deg, rgba(100,116,139,0.9), rgba(71,85,105,0.9))';
 
   return (
     <button
       className="touch-btn"
       onClick={onClick}
+      aria-label={ariaLabel}
+      aria-pressed={active}
       style={{
-        background: active ? activeStyle : "rgba(255,255,255,0.06)",
-        color: "white",
-        border: active ? "1px solid rgba(255,255,255,0.35)" : "1px solid rgba(255,255,255,0.12)",
+        background: active ? activeStyle : 'rgba(255,255,255,0.06)',
+        color: 'white',
+        border: active ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.12)',
         borderRadius: 12,
-        padding: "10px 0",
+        padding: '10px 0',
         fontSize: 13,
         fontWeight: 800,
-        cursor: "pointer",
+        cursor: 'pointer',
       }}
     >
       {label}
@@ -149,28 +191,63 @@ type ModeButtonProps = {
   title: string;
   subtitle: string;
   active: boolean;
+  ariaLabel: string;
   onClick: () => void;
 };
 
-function ModeButton({ title, subtitle, active, onClick }: ModeButtonProps) {
+function ModeButton({ title, subtitle, active, ariaLabel, onClick }: ModeButtonProps) {
   return (
     <button
       className="touch-btn"
       onClick={onClick}
+      aria-label={ariaLabel}
+      aria-pressed={active}
       style={{
-        textAlign: "left",
+        textAlign: 'left',
         background: active
-          ? "linear-gradient(135deg, rgba(59,130,246,0.32), rgba(14,165,233,0.22))"
-          : "rgba(255,255,255,0.05)",
-        border: active ? "1px solid rgba(56,189,248,0.7)" : "1px solid rgba(255,255,255,0.12)",
-        color: "white",
+          ? 'linear-gradient(135deg, rgba(59,130,246,0.32), rgba(14,165,233,0.22))'
+          : 'rgba(255,255,255,0.05)',
+        border: active ? '1px solid rgba(56,189,248,0.7)' : '1px solid rgba(255,255,255,0.12)',
+        color: 'white',
         borderRadius: 12,
-        padding: "10px 12px",
-        cursor: "pointer",
+        padding: '10px 12px',
+        cursor: 'pointer',
       }}
     >
       <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>{title}</div>
       <div style={{ fontSize: 11, opacity: 0.65, lineHeight: 1.4 }}>{subtitle}</div>
+    </button>
+  );
+}
+
+type LocaleButtonProps = {
+  locale: LocaleCode;
+  current: LocaleCode;
+  label: string;
+  ariaLabel: string;
+  onPick: (next: LocaleCode) => void;
+};
+
+function LocaleButton({ locale, current, label, ariaLabel, onPick }: LocaleButtonProps) {
+  const active = locale === current;
+  return (
+    <button
+      className="touch-btn"
+      onClick={() => onPick(locale)}
+      aria-label={ariaLabel}
+      aria-pressed={active}
+      style={{
+        background: active ? 'linear-gradient(135deg, rgba(99,102,241,0.35), rgba(168,85,247,0.25))' : 'rgba(255,255,255,0.06)',
+        color: 'white',
+        border: active ? '1px solid rgba(139,92,246,0.7)' : '1px solid rgba(255,255,255,0.12)',
+        borderRadius: 12,
+        padding: '10px 0',
+        fontSize: 13,
+        fontWeight: 800,
+        cursor: 'pointer',
+      }}
+    >
+      {label}
     </button>
   );
 }

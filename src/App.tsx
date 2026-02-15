@@ -10,6 +10,7 @@
 import { useState, useEffect, useRef, useSyncExternalStore, Component } from 'react';
 import type { ComponentProps, ReactNode } from 'react';
 import './App.css';
+import { useI18n } from './i18n';
 
 // Hooks
 import { useBattle } from './hooks/useBattle';
@@ -138,6 +139,7 @@ function QuestionTimerHud({ timerSec, subscribe, getSnapshot }: QuestionTimerHud
 const isTouchDevice = (): boolean => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 function GameShell() {
+  const { t } = useI18n();
   const [showRotateHint, setShowRotateHint] = useState(false);
   useEffect(() => {
     try {
@@ -165,7 +167,19 @@ function GameShell() {
       <div style={{ width: "100%", maxWidth: 480, height: "100%", position: "relative", background: "#000", boxShadow: "0 0 40px rgba(0,0,0,0.5)" }}>
         <ErrorBoundary><App /></ErrorBoundary>
         {showRotateHint && (
-          <div onClick={() => setShowRotateHint(false)} style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9999, cursor: "pointer" }}>
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label={t("a11y.overlay.rotateDismiss", "Dismiss rotate hint and continue")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setShowRotateHint(false);
+              }
+            }}
+            onClick={() => setShowRotateHint(false)}
+            style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9999, cursor: "pointer" }}
+          >
             <div style={{ fontSize: 56, marginBottom: 20, animation: "float 3s ease-in-out infinite" }}>📱</div>
             <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>請將手機轉為直立方向</div>
             <div style={{ fontSize: 13, opacity: 0.5 }}>本遊戲僅支援直向模式</div>
@@ -193,6 +207,7 @@ function isDualSelectionPayload(payload: SelectionPayload): payload is DualSelec
 }
 
 function App() {
+  const { t } = useI18n();
   const B = useBattle();
   const UX = useMobileExperience();
   const showHeavyFx = !UX.lowPerfMode;
@@ -494,9 +509,36 @@ function App() {
     : null;
 
   return (
-    <div ref={battleRootRef} className={`battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""}`} onClick={canTapAdvance ? B.advance : undefined} style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}>
+    <div
+      ref={battleRootRef}
+      className={`battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""}`}
+      role={canTapAdvance ? "button" : undefined}
+      tabIndex={canTapAdvance ? 0 : -1}
+      aria-label={canTapAdvance ? t("a11y.battle.advance", "Advance to next step") : undefined}
+      onKeyDown={(e) => {
+        if (!canTapAdvance) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          B.advance();
+        }
+      }}
+      onClick={canTapAdvance ? B.advance : undefined}
+      style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}
+    >
       {/* Pause overlay */}
-      {B.gamePaused && <div onClick={B.togglePause} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9000, cursor: "pointer", backdropFilter: UX.lowPerfMode ? "none" : "blur(4px)" }}>
+      {B.gamePaused && <div
+        role="button"
+        tabIndex={0}
+        aria-label={t("a11y.overlay.pauseResume", "Resume game")}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            B.togglePause();
+          }
+        }}
+        onClick={B.togglePause}
+        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9000, cursor: "pointer", backdropFilter: UX.lowPerfMode ? "none" : "blur(4px)" }}
+      >
         <div style={{ fontSize: 48, marginBottom: 16 }}>⏸️</div>
         <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>遊戲暫停</div>
         <div style={{ fontSize: 13, opacity: 0.5 }}>點擊任意處繼續</div>
@@ -700,9 +742,9 @@ function App() {
                 🔁 {coopUsingSub ? "主將出招" : "副將出招"}
               </button>
             )}
-            <button className="battle-util-btn" onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button>
-            <button className="battle-util-btn" onClick={() => openSettings("battle")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⚙️ 設定</button>
-            <button className="battle-util-btn" onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button>
+            <button className="battle-util-btn" aria-label={t("a11y.battle.pause", "Pause game")} onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button>
+            <button className="battle-util-btn" aria-label={t("a11y.battle.settings", "Open battle settings")} onClick={() => openSettings("battle")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⚙️ 設定</button>
+            <button className="battle-util-btn" aria-label={t("a11y.battle.run", "Run from battle")} onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button>
           </div>
         </div>}
 

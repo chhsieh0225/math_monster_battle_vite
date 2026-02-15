@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { CSSProperties, MouseEvent } from 'react';
+import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia';
 import type {
@@ -30,6 +30,13 @@ type EncyclopediaScreenProps = {
   onBack: () => void;
 };
 
+function handleKeyboardActivate(ev: KeyboardEvent<HTMLElement>, action: () => void) {
+  if (ev.key === "Enter" || ev.key === " ") {
+    ev.preventDefault();
+    action();
+  }
+}
+
 export default function EncyclopediaScreen({ encData = {}, onBack }: EncyclopediaScreenProps) {
   const enemyEntries = ENC_ENTRIES as EncyclopediaEnemyEntry[];
   const starterEntries = STARTER_ENTRIES as EncyclopediaStarterEntry[];
@@ -44,7 +51,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: PAGE_BG, color: 'white', overflow: 'hidden' }}>
       <div style={{ padding: '16px 16px 10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <button className="back-touch-btn" onClick={onBack} style={backBtn}>←</button>
+          <button className="back-touch-btn" onClick={onBack} aria-label="返回主畫面" style={backBtn}>←</button>
           <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>📚 怪獸圖鑑</div>
           <div style={{ flex: 1 }} />
           <div style={{ fontSize: 12, opacity: 0.5 }}>{encCount}/{ENC_TOTAL}</div>
@@ -63,6 +70,13 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
             return (
               <div
                 key={e.key}
+                role={seen ? "button" : undefined}
+                tabIndex={seen ? 0 : -1}
+                aria-label={seen ? `查看圖鑑：${e.name}` : "尚未解鎖怪獸"}
+                onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => {
+                  if (!seen) return;
+                  handleKeyboardActivate(ev, () => setSelected({ entry: e, kind: 'enemy' }));
+                }}
                 onClick={() => seen && setSelected({ entry: e, kind: 'enemy' })}
                 style={{
                   background: seen ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
@@ -85,7 +99,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                     filter: seen ? 'none' : 'brightness(0) opacity(0.15)',
                   }}
                 >
-                  <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} />
+                  <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={`${seen ? e.name : "未知怪獸"} 圖像`} />
                 </div>
                 <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{seen ? e.name : '???'}</div>
                 <div style={{ fontSize: 10, opacity: 0.5 }}>
@@ -103,6 +117,10 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
           {starterEntries.map((e) => (
             <div
               key={e.key}
+              role="button"
+              tabIndex={0}
+              aria-label={`查看夥伴圖鑑：${e.name}`}
+              onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, () => setSelected({ entry: e, kind: 'starter' }))}
               onClick={() => setSelected({ entry: e, kind: 'starter' })}
               style={{
                 background: 'rgba(255,255,255,0.06)',
@@ -124,7 +142,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                   justifyContent: 'center',
                 }}
               >
-                <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} />
+                <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={`${e.name} 圖像`} />
               </div>
               <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{e.name}</div>
               <div style={{ fontSize: 10, opacity: 0.5 }}>{e.typeIcon} {e.typeName}</div>
@@ -155,6 +173,10 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label="關閉怪獸詳情"
+      onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, onClose)}
       onClick={onClose}
       style={{
         position: 'absolute',
@@ -195,6 +217,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
           <button
             className="touch-btn"
             onClick={onClose}
+            aria-label="關閉"
             style={{
               position: 'absolute',
               top: 12,
@@ -226,7 +249,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
               animation: 'float 3s ease-in-out infinite',
             }}
           >
-            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} />
+            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} ariaLabel={`${entry.name} 圖像`} />
           </div>
 
           <div style={{ marginTop: 12 }}>
@@ -453,6 +476,10 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label="關閉夥伴詳情"
+      onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, onClose)}
       onClick={onClose}
       style={{
         position: 'absolute',
@@ -493,6 +520,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
           <button
             className="touch-btn"
             onClick={onClose}
+            aria-label="關閉"
             style={{
               position: 'absolute',
               top: 12,
@@ -526,7 +554,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
               animation: 'float 3s ease-in-out infinite',
             }}
           >
-            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} />
+            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} ariaLabel={`${entry.name} 圖像`} />
           </div>
 
           <div style={{ marginTop: 12 }}>

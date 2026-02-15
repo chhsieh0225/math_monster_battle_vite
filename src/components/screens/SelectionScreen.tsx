@@ -113,7 +113,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
     <div className="selection-screen" style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", overflow: "hidden" }}>
       {/* Header */}
       <div style={{ padding: "12px 16px 6px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-        <button className="back-touch-btn" onClick={onBack} style={backBtn}>←</button>
+        <button className="back-touch-btn" onClick={onBack} aria-label="返回主畫面" style={backBtn}>←</button>
         <div>
           <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: 1 }}>
             {isDual ? (mode === "pvp" ? "選擇雙方角色！" : "選擇雙人夥伴！") : "選擇你的夥伴！"}
@@ -126,7 +126,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
 
       {isDual && (
         <div style={{ padding: "0 16px 6px", display: "flex", gap: 8, flexShrink: 0 }}>
-          <button className="touch-btn" onClick={() => setFocusSlot("p1")} style={{
+          <button className="touch-btn" onClick={() => setFocusSlot("p1")} aria-label="選擇玩家1角色欄位" style={{
             flex: 1,
             borderRadius: 10,
             border: focusSlot === "p1" ? "1px solid #60a5fa" : "1px solid rgba(255,255,255,0.12)",
@@ -138,7 +138,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
           }}>
             玩家1：{picked1 ? `${picked1.typeIcon}${picked1.name}` : "未選"}
           </button>
-          <button className="touch-btn" onClick={() => setFocusSlot("p2")} style={{
+          <button className="touch-btn" onClick={() => setFocusSlot("p2")} aria-label="選擇玩家2角色欄位" style={{
             flex: 1,
             borderRadius: 10,
             border: focusSlot === "p2" ? "1px solid #f472b6" : "1px solid rgba(255,255,255,0.12)",
@@ -166,6 +166,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
                   className="touch-btn"
                   key={`${focusedPicked.id}_stage_${idx}`}
                   onClick={() => updateFocusedStage(idx)}
+                  aria-label={`選擇${stage.name}型態`}
                   style={{
                     flex: 1,
                     borderRadius: 10,
@@ -200,7 +201,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
           const selectedStage = s.stages[selectedStageIdx] || s.stages[0];
           const info = DESCS[s.id];
           return (
-            <button className="selection-card-btn" key={s.id} onClick={() => handlePick(s)} style={{
+            <button className="selection-card-btn" key={s.id} onClick={() => handlePick(s)} aria-label={`選擇角色 ${s.name}`} style={{
               background: sel
                 ? `linear-gradient(135deg, ${s.c1}44, ${s.c2}33)`
                 : `linear-gradient(135deg, ${s.c1}18, ${s.c2}10)`,
@@ -219,7 +220,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
                   animation: sel ? "spinSelect 0.7s ease-in-out" : "none",
                   transition: "transform 0.3s",
                 }}>
-                  <MonsterSprite svgStr={selectedStage.svgFn(s.c1, s.c2)} size={sel ? 72 : 56} />
+                  <MonsterSprite svgStr={selectedStage.svgFn(s.c1, s.c2)} size={sel ? 72 : 56} ariaLabel={`${s.name} 角色圖像`} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>
@@ -274,7 +275,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
       {/* Confirm button */}
       {!isDual && picked && (
         <div style={{ padding: "6px 14px 14px", animation: "fadeIn 0.3s ease", flexShrink: 0 }}>
-          <button className="selection-confirm-btn touch-btn" onClick={confirmSingle} style={{
+          <button className="selection-confirm-btn touch-btn" onClick={confirmSingle} aria-label={`確認選擇 ${picked.name}`} style={{
             width: "100%", padding: "13px 0",
             background: `linear-gradient(135deg, ${picked.c1}, ${picked.c2})`,
             border: "none", borderRadius: 14,
@@ -288,7 +289,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
       )}
       {isDual && picked1 && picked2 && (
         <div style={{ padding: "6px 14px 14px", animation: "fadeIn 0.3s ease", flexShrink: 0 }}>
-          <button className="selection-confirm-btn touch-btn" onClick={confirmDual} style={{
+          <button className="selection-confirm-btn touch-btn" onClick={confirmDual} aria-label="確認雙人角色並出發" style={{
             width: "100%", padding: "13px 0",
             background: mode === "pvp"
               ? "linear-gradient(135deg,#ec4899,#f43f5e)"

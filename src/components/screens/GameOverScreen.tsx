@@ -90,9 +90,10 @@ export default function GameOverScreen({
         <div style={{ marginBottom: 10, animation: "popIn 0.3s ease 0.4s both" }}>
           <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center" }}>
             <input value={playerName} onChange={(e: ChangeEvent<HTMLInputElement>) => setPlayerName(e.target.value)} placeholder="你的名字" maxLength={8}
+              aria-label="輸入玩家名稱"
               onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") handleSaveScore(); }}
               style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, color: "white", fontSize: 15, fontWeight: 700, padding: "8px 12px", textAlign: "center", width: 130, outline: "none" }} />
-            <button className="touch-btn" onClick={handleSaveScore} style={{ background: "linear-gradient(135deg,#22c55e,#16a34a)", border: "none", color: "white", fontSize: 13, fontWeight: 700, padding: "10px 18px", borderRadius: 12 }}>儲存</button>
+            <button className="touch-btn" onClick={handleSaveScore} aria-label="儲存分數" style={{ background: "linear-gradient(135deg,#22c55e,#16a34a)", border: "none", color: "white", fontSize: 13, fontWeight: 700, padding: "10px 18px", borderRadius: 12 }}>儲存</button>
           </div>
         </div>
       ) : (
@@ -126,9 +127,9 @@ export default function GameOverScreen({
 
       {/* Action buttons */}
       <div style={{ display: "flex", gap: 8 }}>
-        <button className="end-action-btn touch-btn" onClick={onRestart} style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)", border: "none", color: "white", fontSize: 15, fontWeight: 700, padding: "12px 28px", borderRadius: 14 }}>🔄 再挑戰</button>
-        <button className="end-action-btn touch-btn" onClick={onLeaderboard} style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)", border: "none", color: "white", fontSize: 13, fontWeight: 700, padding: "12px 20px", borderRadius: 14 }}>🏆</button>
-        <button className="end-action-btn touch-btn" onClick={onHome} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 13, fontWeight: 600, padding: "12px 18px", borderRadius: 14 }}>🏠</button>
+        <button className="end-action-btn touch-btn" onClick={onRestart} aria-label="重新挑戰" style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)", border: "none", color: "white", fontSize: 15, fontWeight: 700, padding: "12px 28px", borderRadius: 14 }}>🔄 再挑戰</button>
+        <button className="end-action-btn touch-btn" onClick={onLeaderboard} aria-label="開啟排行榜" style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)", border: "none", color: "white", fontSize: 13, fontWeight: 700, padding: "12px 20px", borderRadius: 14 }}>🏆</button>
+        <button className="end-action-btn touch-btn" onClick={onHome} aria-label="返回主畫面" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 13, fontWeight: 600, padding: "12px 18px", borderRadius: 14 }}>🏠</button>
       </div>
     </div>
   );

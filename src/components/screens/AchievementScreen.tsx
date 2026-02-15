@@ -21,7 +21,7 @@ export default function AchievementScreen({ unlockedIds = [], onBack }: Achievem
       {/* Header */}
       <div style={{ padding: "16px 16px 10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-          <button className="back-touch-btn" onClick={onBack} style={backBtn}>←</button>
+          <button className="back-touch-btn" onClick={onBack} aria-label="返回主畫面" style={backBtn}>←</button>
           <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>⭐ 成就</div>
           <div style={{ flex: 1 }} />
           <div style={{ fontSize: 12, opacity: 0.5 }}>{done}/{total}</div>

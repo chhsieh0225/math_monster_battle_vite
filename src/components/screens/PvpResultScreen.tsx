@@ -111,7 +111,7 @@ export default function PvpResultScreen({
         </div>
         <div style={{ animation: "growIn 1.2s ease 0.15s both", marginBottom: 8 }}>
           <div style={{ animation: "evolveGlow 2s ease 1s infinite" }}>
-            <MonsterSprite svgStr={winnerStage?.svgFn?.(winnerStarter?.c1 || "#6366f1", winnerStarter?.c2 || "#a855f7") || ""} size={180} />
+            <MonsterSprite svgStr={winnerStage?.svgFn?.(winnerStarter?.c1 || "#6366f1", winnerStarter?.c2 || "#a855f7") || ""} size={180} ariaLabel={`勝利者 ${winnerName}`} />
           </div>
         </div>
       </div>
@@ -120,7 +120,7 @@ export default function PvpResultScreen({
         <div style={{ position: "relative", zIndex: 6, opacity: 0.62, marginBottom: 4 }}>
           <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 2 }}>對手</div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-            <MonsterSprite svgStr={loserStage.svgFn(loserStarter?.c1 || "#64748b", loserStarter?.c2 || "#475569")} size={58} />
+            <MonsterSprite svgStr={loserStage.svgFn(loserStarter?.c1 || "#64748b", loserStarter?.c2 || "#475569")} size={58} ariaLabel={`對手 ${loserName}`} />
             <div style={{ fontSize: 13 }}>{loserStarter?.typeIcon} {loserName}</div>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function PvpResultScreen({
       </div>
       <div style={{ fontSize: 11, opacity: 0.45, zIndex: 6 }}>同機雙人模式</div>
       <div style={{ display: "flex", gap: 10, marginTop: 8, zIndex: 6 }}>
-        <button className="touch-btn" onClick={onRematch} style={{
+        <button className="touch-btn" onClick={onRematch} aria-label="再戰一場" style={{
           background: `linear-gradient(135deg,${winnerC1},${winnerC2})`,
           border: "none",
           color: "white",
@@ -141,7 +141,7 @@ export default function PvpResultScreen({
           borderRadius: 14,
           cursor: "pointer",
         }}>🔄 再戰</button>
-        <button className="touch-btn" onClick={onHome} style={{
+        <button className="touch-btn" onClick={onHome} aria-label="返回主畫面" style={{
           background: "rgba(255,255,255,0.1)",
           border: "1px solid rgba(255,255,255,0.15)",
           color: "white",

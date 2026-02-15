@@ -17,7 +17,7 @@ export default function EvolveScreen({ starter, stageIdx, onContinue }: EvolveSc
       <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", color: "white", padding: 24, textAlign: "center", gap: 16 }}>
         <div style={{ fontSize: 20, fontWeight: 800 }}>進化資料暫時不可用</div>
         <div style={{ fontSize: 13, opacity: 0.65 }}>已套用安全保護，你可以繼續遊戲。</div>
-        <button className="touch-btn" onClick={onContinue} style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)", border: "none", color: "white", fontSize: 16, fontWeight: 700, padding: "14px 40px", borderRadius: 50, boxShadow: "0 4px 24px rgba(99,102,241,0.5)" }}>繼續戰鬥！</button>
+        <button className="touch-btn" onClick={onContinue} aria-label="繼續戰鬥" style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)", border: "none", color: "white", fontSize: 16, fontWeight: 700, padding: "14px 40px", borderRadius: 50, boxShadow: "0 4px 24px rgba(99,102,241,0.5)" }}>繼續戰鬥！</button>
       </div>
     );
   }
@@ -51,7 +51,7 @@ export default function EvolveScreen({ starter, stageIdx, onContinue }: EvolveSc
         <div style={{animation:"growIn 1.2s ease 0.4s both",marginBottom:16}}><div style={{animation:"evolveGlow 2s ease 1.5s infinite"}}><MonsterSprite svgStr={st.svgFn(starter.c1,starter.c2)} size={180}/></div></div>
         <div style={{fontSize:32,fontWeight:900,animation:"fadeSlide 0.5s ease 1.3s both",marginBottom:6,textShadow:"0 0 20px rgba(168,85,247,0.5)",letterSpacing:2}}>{st.name}</div>
         <div style={{fontSize:14,opacity:0.6,marginBottom:32,animation:"fadeSlide 0.3s ease 1.6s both"}}>攻擊力提升！生命恢復！</div>
-        <button className="touch-btn" onClick={onContinue} style={{background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none",color:"white",fontSize:16,fontWeight:700,padding:"14px 40px",borderRadius:50,boxShadow:"0 4px 24px rgba(99,102,241,0.5)",animation:"fadeSlide 0.3s ease 1.9s both",position:"relative",zIndex:70}}>繼續戰鬥！</button>
+        <button className="touch-btn" onClick={onContinue} aria-label="繼續戰鬥" style={{background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none",color:"white",fontSize:16,fontWeight:700,padding:"14px 40px",borderRadius:50,boxShadow:"0 4px 24px rgba(99,102,241,0.5)",animation:"fadeSlide 0.3s ease 1.9s both",position:"relative",zIndex:70}}>繼續戰鬥！</button>
       </div>
     </div>
   );

@@ -6,6 +6,8 @@ type MonsterSpriteProps = {
   size?: number;
   anim?: string;
   style?: CSSProperties;
+  ariaLabel?: string;
+  decorative?: boolean;
 };
 
 const MonsterSprite = memo(function MonsterSprite({
@@ -13,6 +15,8 @@ const MonsterSprite = memo(function MonsterSprite({
   size = 120,
   anim = "",
   style = {},
+  ariaLabel = "Monster sprite",
+  decorative = false,
 }: MonsterSpriteProps) {
   // useId() generates a unique, stable ID per component instance,
   // avoiding SVG gradient/filter ID collisions when multiple sprites are on screen.
@@ -26,8 +30,13 @@ const MonsterSprite = memo(function MonsterSprite({
       height={size * 100 / 120}
       viewBox="0 0 120 100"
       overflow="hidden"
+      role={decorative ? "presentation" : "img"}
+      aria-label={decorative ? undefined : ariaLabel}
+      aria-hidden={decorative || undefined}
+      focusable={decorative ? false : undefined}
       style={{ ...style, animation: anim || "none", imageRendering: "pixelated" }}
     >
+      {!decorative && <title>{ariaLabel}</title>}
       <defs>
         <radialGradient id={gsId} cx="35%" cy="25%">
           <stop offset="0%" stopColor="white" stopOpacity="0.5" />

@@ -27,6 +27,12 @@ import {
   TIMER_SEC,
 } from '../data/constants';
 import { STARTERS } from '../data/starters';
+import {
+  localizeEnemy,
+  localizeEnemyRoster,
+  localizeSceneName,
+  localizeStarter,
+} from '../utils/contentLocalization';
 
 import { genQ } from '../utils/questionGenerator';
 import {
@@ -89,19 +95,19 @@ const PARTNER_BY_STARTER = {
   lion: "water",
 };
 
-function pickPartnerStarter(mainStarter, pickIndex) {
+function pickPartnerStarter(mainStarter, pickIndex, locale) {
   if (!mainStarter) return null;
   const preferId = PARTNER_BY_STARTER[mainStarter.id];
   const preferred = STARTERS.find((s) => s.id === preferId);
-  if (preferred) return preferred;
+  if (preferred) return localizeStarter(preferred, locale);
   const pool = STARTERS.filter((s) => s.id !== mainStarter.id);
   if (pool.length <= 0) return null;
-  return pool[pickIndex(pool.length)];
+  return localizeStarter(pool[pickIndex(pool.length)], locale);
 }
 
 // ═══════════════════════════════════════════════════════════════════
 export function useBattle() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   // ──── Sub-hooks ────
   const { achUnlocked, achPopup, tryUnlock, dismissAch } = useAchievements();
   const { encData, setEncData, updateEnc, updateEncDefeated } = useEncyclopedia();
@@ -109,7 +115,10 @@ export function useBattle() {
   const { rand, randInt, chance, pickIndex, reseed } = useBattleRng();
   const UI = useBattleUIState({ rand, randInt });
 
-  const buildNewRoster = useCallback((mode = "single") => buildRoster(pickIndex, mode), [pickIndex]);
+  const buildNewRoster = useCallback(
+    (mode = "single") => localizeEnemyRoster(buildRoster(pickIndex, mode), locale),
+    [pickIndex, locale],
+  );
   const [enemies, setEnemies] = useState(() => buildNewRoster("single"));
 
   // ──── Screen & mode ────
@@ -404,19 +413,24 @@ export function useBattle() {
     invalidateAsyncWork();
     clearTimer();
     const list = roster || enemies;
-    const e = list[idx];
-    if (!e) {
+    const nextEnemy = list[idx];
+    if (!nextEnemy) {
       _finishGame();
       return;
     }
+    const e = localizeEnemy(nextEnemy, locale);
     const mode = sr.current.battleMode || battleMode;
     const isTeamMode = mode === "double" || mode === "coop";
-    const sub = isTeamMode ? (list[idx + 1] || null) : null;
+    const sub = isTeamMode ? localizeEnemy(list[idx + 1] || null, locale) : null;
     dispatchBattle({ type: "start_battle", enemy: e, enemySub: sub, round: idx });
     frozenR.current = false;
     updateEnc(e); // ← encyclopedia: mark encountered
     if (sub) updateEnc(sub);
-    const sn = SCENE_NAMES[e.sceneMType || e.mType] || "";
+    const sn = localizeSceneName(
+      e.sceneMType || e.mType,
+      SCENE_NAMES[e.sceneMType || e.mType] || "",
+      locale,
+    );
     setPhase("text");
     const ally = sr.current.allySub;
     if (sub) {
@@ -461,8 +475,14 @@ export function useBattle() {
     resetCoopRotatePending();
     // Regenerate roster so slime variants are re-randomised each game
     const mode = modeOverride || sr.current.battleMode || battleMode;
-    const leader = starterOverride || sr.current.starter;
-    const rival = allyOverride || sr.current.pvpStarter2 || pvpStarter2 || pickPartnerStarter(leader, pickIndex);
+    const leader = localizeStarter(starterOverride || sr.current.starter, locale);
+    const rival = localizeStarter(
+      allyOverride
+      || sr.current.pvpStarter2
+      || pvpStarter2
+      || pickPartnerStarter(leader, pickIndex, locale),
+      locale,
+    );
     const leaderStageIdx = getStarterStageIdx(leader);
     const leaderMaxHp = getStageMaxHp(leaderStageIdx);
 
@@ -531,7 +551,9 @@ export function useBattle() {
     setPvpComboP1(0); setPvpComboP2(0);
     setPvpSpecDefP1(false); setPvpSpecDefP2(false);
     const isCoop = mode === "coop" || mode === "double";
-    const partner = isCoop ? (allyOverride || pickPartnerStarter(leader, pickIndex)) : null;
+    const partner = isCoop
+      ? localizeStarter(allyOverride || pickPartnerStarter(leader, pickIndex, locale), locale)
+      : null;
     dispatchBattle({
       type: "reset_run",
       patch: {
@@ -888,7 +910,8 @@ export function useBattle() {
     if (isCoopBattleMode(s.battleMode) && s.enemySub) {
       setScreen("battle");
       dispatchBattle({ type: "promote_enemy_sub" });
-      setBText(t("battle.enemySub.promote", "💥 {enemy} steps in!", { enemy: s.enemySub.name }));
+      const promotedEnemy = localizeEnemy(s.enemySub, locale);
+      setBText(t("battle.enemySub.promote", "💥 {enemy} steps in!", { enemy: promotedEnemy?.name || s.enemySub.name }));
       setPhase("text");
       return;
     }
@@ -986,6 +1009,14 @@ export function useBattle() {
     setCoopActiveSlot((prev) => (prev === "main" ? "sub" : "main"));
   }, []);
 
+  const setStarterLocalized = useCallback((nextStarter) => {
+    setStarter(localizeStarter(nextStarter, locale));
+  }, [locale]);
+
+  const setPvpStarter2Localized = useCallback((nextStarter) => {
+    setPvpStarter2(localizeStarter(nextStarter, locale));
+  }, [locale]);
+
   // ═══════════════════════════════════════════════════════════════
   //  PUBLIC API
   // ═══════════════════════════════════════════════════════════════
@@ -1011,7 +1042,7 @@ export function useBattle() {
     achUnlocked, achPopup, encData, dismissAch,
 
     // ── Actions ──
-    setTimedMode, setBattleMode, setScreen, setStarter, setPvpStarter2,
+    setTimedMode, setBattleMode, setScreen, setStarter: setStarterLocalized, setPvpStarter2: setPvpStarter2Localized,
     startGame, selectMove, onAns, advance, continueAfterEvolve,
     quitGame, togglePause, toggleCoopActive,
 

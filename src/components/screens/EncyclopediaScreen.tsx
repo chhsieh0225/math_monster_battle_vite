@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia';
 import { useI18n } from '../../i18n';
 import { hasSpecialTrait } from '../../utils/traits';
+import {
+  localizeEncyclopediaEnemyEntries,
+  localizeEncyclopediaStarterEntries,
+} from '../../utils/contentLocalization';
 import type {
   EncyclopediaCounts,
   EncyclopediaData,
@@ -40,9 +44,15 @@ function handleKeyboardActivate(ev: KeyboardEvent<HTMLElement>, action: () => vo
 }
 
 export default function EncyclopediaScreen({ encData = {}, onBack }: EncyclopediaScreenProps) {
-  const { t } = useI18n();
-  const enemyEntries = ENC_ENTRIES as EncyclopediaEnemyEntry[];
-  const starterEntries = STARTER_ENTRIES as EncyclopediaStarterEntry[];
+  const { t, locale } = useI18n();
+  const enemyEntries = useMemo(
+    () => localizeEncyclopediaEnemyEntries(ENC_ENTRIES, locale) as EncyclopediaEnemyEntry[],
+    [locale],
+  );
+  const starterEntries = useMemo(
+    () => localizeEncyclopediaStarterEntries(STARTER_ENTRIES, locale) as EncyclopediaStarterEntry[],
+    [locale],
+  );
   const enc: EncyclopediaCounts = encData.encountered || {};
   const def: EncyclopediaCounts = encData.defeated || {};
   const encCount = Object.keys(enc).length;

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters';
 import type { SelectionMode, StarterId, StarterSelectable } from '../../types/game';
 import { useI18n } from '../../i18n';
+import { localizeStarterList } from '../../utils/contentLocalization';
 
 const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
 
@@ -76,9 +77,12 @@ type SelectionScreenProps = {
 };
 
 export default function SelectionScreen({ mode = "single", onSelect, onBack }: SelectionScreenProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const DESCS = buildStarterDescs(t);
-  const starters = STARTERS as StarterSelectable[];
+  const starters = useMemo(
+    () => localizeStarterList(STARTERS, locale) as StarterSelectable[],
+    [locale],
+  );
   const isDual = mode === "coop" || mode === "pvp" || mode === "double";
   const [picked, setPicked] = useState<StarterSelectable | null>(null);
   const [picked1, setPicked1] = useState<StarterSelectable | null>(null);

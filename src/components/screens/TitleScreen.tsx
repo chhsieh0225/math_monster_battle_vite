@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters';
 import { VERSION } from '../../data/constants';
 import type { StarterLite, StarterStage } from '../../types/game';
 import { useI18n } from '../../i18n';
+import { localizeStarterList } from '../../utils/contentLocalization';
 
 type TitleStarter = StarterLite & {
   id: string;
@@ -37,8 +39,11 @@ export default function TitleScreen({
   onSettings,
   lowPerfMode = false,
 }: TitleScreenProps) {
-  const { t } = useI18n();
-  const starters = STARTERS as TitleStarter[];
+  const { t, locale } = useI18n();
+  const starters = useMemo(
+    () => localizeStarterList(STARTERS, locale) as TitleStarter[],
+    [locale],
+  );
   const row1 = starters.slice(0, 3);
   const row2 = starters.slice(3);
   const versionText = String(VERSION);

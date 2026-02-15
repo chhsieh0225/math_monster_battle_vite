@@ -169,6 +169,9 @@ export function resolvePvpStrike({
       heal: 0,
       isCrit: false,
       critChance: 0,
+      critMultiplier: 1,
+      antiCritRate: 0,
+      antiCritDamage: 0,
       passiveLabel: "",
     };
   }
@@ -197,17 +200,27 @@ export function resolvePvpStrike({
     : 0;
   const comebackScale = 1 + lightComebackBonus;
   const firstStrikeScale = firstStrike ? (PVP_BALANCE.firstStrikeScale ?? 1) : 1;
+  const attackerCritProfile = PVP_BALANCE.crit?.byType?.[attackerType] || {};
+  const defenderCritProfile = PVP_BALANCE.crit?.byType?.[defenderType] || {};
   const critRoller = typeof critRandom === "function" ? critRandom : random;
   const baseCritChance = PVP_BALANCE.crit?.chance ?? 0;
   const riskyCritBonus = move.risky ? (PVP_BALANCE.crit?.riskyBonus ?? 0) : 0;
+  const typeCritChanceBonus = attackerCritProfile.critChanceBonus ?? 0;
+  const antiCritRate = defenderCritProfile.antiCritRate ?? 0;
+  const minCritChance = PVP_BALANCE.crit?.minChance ?? 0;
+  const maxCritChance = PVP_BALANCE.crit?.maxChance ?? 1;
   const cappedCritChance = Math.min(
-    PVP_BALANCE.crit?.maxChance ?? 1,
-    Math.max(0, baseCritChance + riskyCritBonus),
+    maxCritChance,
+    Math.max(minCritChance, baseCritChance + riskyCritBonus + typeCritChanceBonus - antiCritRate),
   );
   const critChance = Math.max(0, Math.min(1, cappedCritChance));
   const critRoll = Math.max(0, Math.min(1, critRoller()));
   const isCrit = critRoll < critChance;
-  const critScale = isCrit ? (PVP_BALANCE.crit?.multiplier ?? 1) : 1;
+  const typeCritDamageBonus = attackerCritProfile.critDamageBonus ?? 0;
+  const antiCritDamage = Math.max(0, Math.min(0.95, defenderCritProfile.antiCritDamage ?? 0));
+  const rawCritMultiplier = (PVP_BALANCE.crit?.multiplier ?? 1) + typeCritDamageBonus;
+  const critMultiplier = Math.max(1, rawCritMultiplier * (1 - antiCritDamage));
+  const critScale = isCrit ? critMultiplier : 1;
 
   const rawDamage = basePow
     * PVP_BALANCE.baseScale
@@ -241,6 +254,9 @@ export function resolvePvpStrike({
     heal,
     isCrit,
     critChance,
+    critMultiplier,
+    antiCritRate,
+    antiCritDamage,
     passiveLabel: attackerType === "light" && lightComebackBonus >= 0.06
       ? "🦁 勇氣之心"
       : attackerType === "grass" && heal > 0

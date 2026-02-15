@@ -268,3 +268,41 @@ test('resolvePvpStrike applies configurable crit chance and multiplier', () => {
   assert.equal(crit.isCrit, true);
   assert.ok(crit.dmg > base.dmg);
 });
+
+test('resolvePvpStrike applies type-based crit and anti-crit profiles', () => {
+  const electricVsFire = resolvePvpStrike({
+    move: { basePower: 40, growth: 3, type: "electric", risky: false },
+    moveIdx: 1,
+    attackerType: "electric",
+    defenderType: "fire",
+    random: () => 0.5,
+    critRandom: () => 1,
+  });
+  const electricVsWater = resolvePvpStrike({
+    move: { basePower: 40, growth: 3, type: "electric", risky: false },
+    moveIdx: 1,
+    attackerType: "electric",
+    defenderType: "water",
+    random: () => 0.5,
+    critRandom: () => 1,
+  });
+  assert.ok(electricVsFire.critChance > electricVsWater.critChance);
+
+  const fireVsFire = resolvePvpStrike({
+    move: { basePower: 40, growth: 3, type: "fire", risky: false },
+    moveIdx: 1,
+    attackerType: "fire",
+    defenderType: "fire",
+    random: () => 0.5,
+    critRandom: () => 0,
+  });
+  const fireVsGrass = resolvePvpStrike({
+    move: { basePower: 40, growth: 3, type: "fire", risky: false },
+    moveIdx: 1,
+    attackerType: "fire",
+    defenderType: "grass",
+    random: () => 0.5,
+    critRandom: () => 0,
+  });
+  assert.ok(fireVsFire.critMultiplier > fireVsGrass.critMultiplier);
+});

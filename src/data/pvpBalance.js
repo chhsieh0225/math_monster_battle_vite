@@ -49,8 +49,22 @@ export const PVP_BALANCE = {
   crit: {
     chance: 0.12,
     riskyBonus: 0.04,
+    minChance: 0.02,
     maxChance: 0.28,
     multiplier: 1.45,
+    // Type-specific crit tuning.
+    // critChanceBonus: added to attacker's crit chance.
+    // critDamageBonus: added to crit multiplier.
+    // antiCritRate: reduced from incoming crit chance.
+    // antiCritDamage: scales down incoming crit multiplier.
+    byType: {
+      fire: { critChanceBonus: 0.01, critDamageBonus: 0.06, antiCritRate: 0.01, antiCritDamage: 0.03 },
+      water: { critChanceBonus: 0.00, critDamageBonus: 0.02, antiCritRate: 0.03, antiCritDamage: 0.10 },
+      grass: { critChanceBonus: 0.00, critDamageBonus: 0.03, antiCritRate: 0.02, antiCritDamage: 0.14 },
+      electric: { critChanceBonus: 0.03, critDamageBonus: 0.04, antiCritRate: 0.00, antiCritDamage: 0.04 },
+      light: { critChanceBonus: 0.02, critDamageBonus: 0.05, antiCritRate: 0.01, antiCritDamage: 0.06 },
+      dark: { critChanceBonus: 0.03, critDamageBonus: 0.08, antiCritRate: 0.00, antiCritDamage: 0.00 },
+    },
   },
   passive: {
     fireBurnCap: 2,

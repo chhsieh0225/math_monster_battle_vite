@@ -41,6 +41,7 @@ import sfx from '../utils/sfx';
 import { buildRoster } from '../utils/rosterBuilder';
 import { computeBossPhase, decideBossTurnEvent } from '../utils/turnFlow';
 import { resolveLevelProgress, updateAdaptiveDifficulty } from '../utils/battleEngine';
+import { appendEvent, createEventSessionId } from '../utils/eventLogger';
 
 // ── Constants (module-level to avoid re-allocation per render) ──
 const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
@@ -142,6 +143,9 @@ export function useBattle() {
   const doEnemyTurnRef = useRef(() => {});
   const pendingEvolve = useRef(false);   // ← Bug #2 fix
   const evolveRound = useRef(0);        // round to resume after evolve screen
+  const eventSessionIdRef = useRef(null);
+  const sessionClosedRef = useRef(false);
+  const sessionStartRef = useRef(0);
 
   // ──── State ref — always points at latest committed values ────
   // Use useLayoutEffect so the ref is updated synchronously after DOM commit,
@@ -189,14 +193,30 @@ export function useBattle() {
   //  TIMER
   // ═══════════════════════════════════════════════════════════════
   const onTimeout = () => {
+    const s = sr.current;
     setAnswered(true);
-    setFb({ correct: false, answer: sr.current.q?.answer, steps: sr.current.q?.steps || [] });
+    setFb({ correct: false, answer: s.q?.answer, steps: s.q?.steps || [] });
     sfx.play("timeout");
     setTW(w => w + 1);
     setStreak(0); setPassiveCount(0);
     setCharge(0);
     // ── Session logging: timeout counts as wrong ──
-    logAns(sr.current.q, false);
+    const answerTimeMs = logAns(s.q, false);
+    appendEvent("question_answered", {
+      outcome: "timeout",
+      correct: false,
+      selectedAnswer: null,
+      expectedAnswer: s.q?.answer ?? null,
+      answerTimeMs,
+      op: s.q?.op ?? null,
+      display: s.q?.display ?? null,
+      moveIndex: s.selIdx ?? -1,
+      moveName: s.starter?.moves?.[s.selIdx]?.name || null,
+      moveType: s.starter?.moves?.[s.selIdx]?.type || null,
+      timedMode: !!s.timedMode,
+      diffLevel: s.diffLevel ?? null,
+      round: s.round ?? 0,
+    }, { sessionId: eventSessionIdRef.current });
     setBText("⏰ 時間到！來不及出招！");
     setPhase("text");
     // Read enemy from stateRef so we never hit a stale closure
@@ -257,6 +277,9 @@ export function useBattle() {
     turnRef.current++;
     reseed(turnRef.current * 2654435761);
     clearTimer();
+    sessionClosedRef.current = false;
+    sessionStartRef.current = Date.now();
+    eventSessionIdRef.current = createEventSessionId();
     // Regenerate roster so slime variants are re-randomised each game
     const newRoster = buildNewRoster();
     setEnemies(newRoster);
@@ -273,14 +296,36 @@ export function useBattle() {
     pendingEvolve.current = false;
     // Init session log — use override on first game since setStarter is async
     const s = starterOverride || sr.current.starter;
+    appendEvent("starter_selected", {
+      starterId: s?.id || null,
+      starterName: s?.name || null,
+      starterType: s?.type || null,
+      timedMode: !!sr.current.timedMode,
+    }, { sessionId: eventSessionIdRef.current });
     initSession(s, sr.current.timedMode);
     setScreen("battle");
     startBattle(0, newRoster);
   };
 
   // ── Finalize and persist session log ──
-  const _endSession = (isCompleted) => {
+  const _endSession = (isCompleted, reasonOverride = null) => {
+    if (sessionClosedRef.current) return;
+    sessionClosedRef.current = true;
     const s = sr.current;
+    const reason = reasonOverride || (isCompleted ? "clear" : "player_ko");
+    const result = isCompleted ? "win" : reason === "quit" ? "quit" : "lose";
+    appendEvent("battle_result", {
+      result,
+      reason,
+      defeated: s.defeated || 0,
+      finalLevel: s.pLvl || 1,
+      maxStreak: s.maxStreak || 0,
+      pHp: s.pHp || 0,
+      tC: s.tC || 0,
+      tW: s.tW || 0,
+      timedMode: !!s.timedMode,
+      durationMs: sessionStartRef.current > 0 ? Date.now() - sessionStartRef.current : null,
+    }, { sessionId: eventSessionIdRef.current });
     endSession({
       defeated: s.defeated || 0,
       finalLevel: s.pLvl || 1,
@@ -290,7 +335,22 @@ export function useBattle() {
     });
   };
 
-  const quitGame = () => { clearTimer(); _endSession(false); setScreen("gameover"); };
+  const quitGame = () => {
+    clearTimer();
+    if (!sessionClosedRef.current) {
+      const s = sr.current;
+      appendEvent("game_exit", {
+        reason: "quit_button",
+        screen: s.screen || null,
+        phase: s.phase || null,
+        round: s.round || 0,
+        defeated: s.defeated || 0,
+        pHp: s.pHp || 0,
+      }, { sessionId: eventSessionIdRef.current });
+    }
+    _endSession(false, "quit");
+    setScreen("gameover");
+  };
 
   // --- Handle a defeated enemy ---
   const handleVictory = (verb = "被打倒了") => {
@@ -601,7 +661,22 @@ export function useBattle() {
     const correct = choice === s.q.answer;
 
     // ── Session logging ──
-    logAns(s.q, correct);
+    const answerTimeMs = logAns(s.q, correct);
+    appendEvent("question_answered", {
+      outcome: "submitted",
+      correct,
+      selectedAnswer: choice,
+      expectedAnswer: s.q?.answer ?? null,
+      answerTimeMs,
+      op: s.q?.op ?? null,
+      display: s.q?.display ?? null,
+      moveIndex: s.selIdx ?? -1,
+      moveName: move?.name || null,
+      moveType: move?.type || null,
+      timedMode: !!s.timedMode,
+      diffLevel: s.diffLevel ?? null,
+      round: s.round ?? 0,
+    }, { sessionId: eventSessionIdRef.current });
     _updateDiff(correct);
 
     if (correct) {

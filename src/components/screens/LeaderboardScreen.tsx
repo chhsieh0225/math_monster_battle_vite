@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { loadScores } from '../../utils/leaderboard';
 import type { LeaderboardEntry } from '../../types/game';
+import { useI18n } from '../../i18n';
 
 const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
 
@@ -10,19 +11,20 @@ type LeaderboardScreenProps = {
 };
 
 export default function LeaderboardScreen({ totalEnemies, onBack }: LeaderboardScreenProps) {
+  const { t } = useI18n();
   const scores = loadScores() as LeaderboardEntry[];
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", overflow: "hidden" }}>
       {/* Header */}
       <div style={{ padding: "16px 16px 12px", display: "flex", alignItems: "center", gap: 12 }}>
-        <button className="back-touch-btn" onClick={onBack} aria-label="返回主畫面" style={backBtn}>←</button>
-        <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>🏆 排行榜</div>
+        <button className="back-touch-btn" onClick={onBack} aria-label={t("a11y.common.backToTitle", "Back to title")} style={backBtn}>←</button>
+        <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>🏆 {t("leaderboard.title", "Leaderboard")}</div>
       </div>
 
       {/* Content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "0 14px 20px", WebkitOverflowScrolling: "touch" }}>
         {scores.length === 0
-          ? <div style={{ opacity: 0.4, fontSize: 13, marginTop: 60, textAlign: "center" }}>尚無紀錄，快去挑戰吧！</div>
+          ? <div style={{ opacity: 0.4, fontSize: 13, marginTop: 60, textAlign: "center" }}>{t("leaderboard.empty", "No records yet. Start a run!")}</div>
           : scores.map((s, i) => {
               const d = new Date(s.date);
               const ds = `${d.getMonth() + 1}/${d.getDate()}`;
@@ -38,13 +40,15 @@ export default function LeaderboardScreen({ totalEnemies, onBack }: LeaderboardS
                     {i < 3 ? ["🥇", "🥈", "🥉"][i] : `${i + 1}`}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{s.name || "???"}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{s.name || t("leaderboard.playerUnknown", "???")}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <span style={{ fontSize: 17, fontWeight: 900, color: "#fbbf24", fontFamily: "'Press Start 2P',monospace" }}>{s.score}</span>
                       {s.timed && <span style={{ fontSize: 9, background: "rgba(239,68,68,0.25)", padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>⏱️</span>}
                       {s.completed && <span style={{ fontSize: 9, background: "rgba(34,197,94,0.25)", padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>👑</span>}
                     </div>
-                    <div style={{ fontSize: 10, opacity: 0.45, marginTop: 2 }}>怪獸 {s.defeated}/{totalEnemies} · 正確率 {s.accuracy}% · Lv.{s.level}</div>
+                    <div style={{ fontSize: 10, opacity: 0.45, marginTop: 2 }}>
+                      {t("leaderboard.statLine", "Monsters {defeated}/{total} · Accuracy {accuracy}% · Lv.{level}", { defeated: s.defeated, total: totalEnemies, accuracy: s.accuracy, level: s.level })}
+                    </div>
                   </div>
                   <div style={{ fontSize: 10, opacity: 0.3, flexShrink: 0 }}>{ds}</div>
                 </div>

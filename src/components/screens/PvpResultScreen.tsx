@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import type { StarterLite, StarterStage } from '../../types/game';
+import { useI18n } from '../../i18n';
 
 type PvpStarter = StarterLite & {
   typeIcon?: string;
@@ -26,6 +27,7 @@ export default function PvpResultScreen({
   onRematch,
   onHome,
 }: PvpResultScreenProps) {
+  const { t } = useI18n();
   const clampIdx = (starter: PvpStarter | null, idx: number) => {
     const total = starter?.stages?.length || 1;
     const maxIdx = Math.max(0, total - 1);
@@ -39,8 +41,8 @@ export default function PvpResultScreen({
   const loserIdx = clampIdx(loserStarter, winner === "p1" ? p2StageIdx : p1StageIdx);
   const winnerStage = winnerStarter?.stages?.[winnerIdx] || winnerStarter?.stages?.[0];
   const loserStage = loserStarter?.stages?.[loserIdx] || loserStarter?.stages?.[0];
-  const winnerName = winnerStage?.name || winnerStarter?.name || "玩家";
-  const loserName = loserStage?.name || loserStarter?.name || "對手";
+  const winnerName = winnerStage?.name || winnerStarter?.name || t("pvpResult.defaultWinner", "Player");
+  const loserName = loserStage?.name || loserStarter?.name || t("pvpResult.defaultLoser", "Opponent");
   const winnerIcon = winnerStarter?.typeIcon || "🏆";
   const winnerC1 = winnerStarter?.c1 || "#6366f1";
   const winnerC2 = winnerStarter?.c2 || "#a855f7";
@@ -104,34 +106,34 @@ export default function PvpResultScreen({
       })}
       <div style={{ position: "relative", zIndex: 6 }}>
         <div style={{ fontSize: 16, fontWeight: 800, opacity: 0.9, marginBottom: 6, animation: "fadeSlide 0.4s ease both" }}>
-          🏆 勝利者
+          {t("pvpResult.title", "🏆 Winner")}
         </div>
         <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: 2, marginBottom: 8, color: winnerC1, textShadow: `0 0 20px ${winnerC1}66` }}>
           {winnerIcon} {winnerName}
         </div>
         <div style={{ animation: "growIn 1.2s ease 0.15s both", marginBottom: 8 }}>
           <div style={{ animation: "evolveGlow 2s ease 1s infinite" }}>
-            <MonsterSprite svgStr={winnerStage?.svgFn?.(winnerStarter?.c1 || "#6366f1", winnerStarter?.c2 || "#a855f7") || ""} size={180} ariaLabel={`勝利者 ${winnerName}`} />
+            <MonsterSprite svgStr={winnerStage?.svgFn?.(winnerStarter?.c1 || "#6366f1", winnerStarter?.c2 || "#a855f7") || ""} size={180} ariaLabel={`${t("pvpResult.title", "🏆 Winner")} ${winnerName}`} />
           </div>
         </div>
       </div>
 
       {loserStage && (
         <div style={{ position: "relative", zIndex: 6, opacity: 0.62, marginBottom: 4 }}>
-          <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 2 }}>對手</div>
+          <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 2 }}>{t("pvpResult.opponent", "Opponent")}</div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-            <MonsterSprite svgStr={loserStage.svgFn(loserStarter?.c1 || "#64748b", loserStarter?.c2 || "#475569")} size={58} ariaLabel={`對手 ${loserName}`} />
+            <MonsterSprite svgStr={loserStage.svgFn(loserStarter?.c1 || "#64748b", loserStarter?.c2 || "#475569")} size={58} ariaLabel={`${t("pvpResult.opponent", "Opponent")} ${loserName}`} />
             <div style={{ fontSize: 13 }}>{loserStarter?.typeIcon} {loserName}</div>
           </div>
         </div>
       )}
 
       <div style={{ fontSize: 15, opacity: 0.95, zIndex: 6 }}>
-        {winnerName} 擊敗了 {loserName}
+        {t("pvpResult.resultLine", "{winner} defeated {loser}", { winner: winnerName, loser: loserName })}
       </div>
-      <div style={{ fontSize: 11, opacity: 0.45, zIndex: 6 }}>同機雙人模式</div>
+      <div style={{ fontSize: 11, opacity: 0.45, zIndex: 6 }}>{t("pvpResult.localMode", "Local 2-player mode")}</div>
       <div style={{ display: "flex", gap: 10, marginTop: 8, zIndex: 6 }}>
-        <button className="touch-btn" onClick={onRematch} aria-label="再戰一場" style={{
+        <button className="touch-btn" onClick={onRematch} aria-label={t("a11y.common.rematch", "Play rematch")} style={{
           background: `linear-gradient(135deg,${winnerC1},${winnerC2})`,
           border: "none",
           color: "white",
@@ -140,8 +142,8 @@ export default function PvpResultScreen({
           padding: "12px 24px",
           borderRadius: 14,
           cursor: "pointer",
-        }}>🔄 再戰</button>
-        <button className="touch-btn" onClick={onHome} aria-label="返回主畫面" style={{
+        }}>{t("pvpResult.rematch", "🔄 Rematch")}</button>
+        <button className="touch-btn" onClick={onHome} aria-label={t("a11y.common.goHome", "Back to title")} style={{
           background: "rgba(255,255,255,0.1)",
           border: "1px solid rgba(255,255,255,0.15)",
           color: "white",
@@ -150,7 +152,7 @@ export default function PvpResultScreen({
           padding: "12px 20px",
           borderRadius: 14,
           cursor: "pointer",
-        }}>🏠 首頁</button>
+        }}>{t("pvpResult.home", "🏠 Home")}</button>
       </div>
     </div>
   );

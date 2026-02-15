@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { ACHIEVEMENTS } from '../../data/achievements';
 import type { AchievementDef, AchievementId } from '../../types/game';
+import { useI18n } from '../../i18n';
 
 const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
 
@@ -10,6 +11,7 @@ type AchievementScreenProps = {
 };
 
 export default function AchievementScreen({ unlockedIds = [], onBack }: AchievementScreenProps) {
+  const { t } = useI18n();
   const achievements = ACHIEVEMENTS as AchievementDef[];
   const unlocked = new Set<AchievementId>(unlockedIds);
   const total = achievements.length;
@@ -21,8 +23,8 @@ export default function AchievementScreen({ unlockedIds = [], onBack }: Achievem
       {/* Header */}
       <div style={{ padding: "16px 16px 10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-          <button className="back-touch-btn" onClick={onBack} aria-label="返回主畫面" style={backBtn}>←</button>
-          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>⭐ 成就</div>
+          <button className="back-touch-btn" onClick={onBack} aria-label={t("a11y.common.backToTitle", "Back to title")} style={backBtn}>←</button>
+          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>⭐ {t("achievement.title", "Achievements")}</div>
           <div style={{ flex: 1 }} />
           <div style={{ fontSize: 12, opacity: 0.5 }}>{done}/{total}</div>
         </div>

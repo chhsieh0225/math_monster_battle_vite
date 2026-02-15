@@ -164,6 +164,9 @@ function GameShell() {
 
   return (
     <div style={{ position: "fixed", inset: 0, overflow: "hidden", background: "#0f172a", display: "flex", justifyContent: "center" }}>
+      <a className="skip-link" href="#main-content" aria-label={t("a11y.skip.main", "Skip to main content")}>
+        {t("app.skip.main", "Skip to main content")}
+      </a>
       <div style={{ width: "100%", maxWidth: 480, height: "100%", position: "relative", background: "#000", boxShadow: "0 0 40px rgba(0,0,0,0.5)" }}>
         <ErrorBoundary><App /></ErrorBoundary>
         {showRotateHint && (
@@ -181,9 +184,9 @@ function GameShell() {
             style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9999, cursor: "pointer" }}
           >
             <div style={{ fontSize: 56, marginBottom: 20, animation: "float 3s ease-in-out infinite" }}>📱</div>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>請將手機轉為直立方向</div>
-            <div style={{ fontSize: 13, opacity: 0.5 }}>本遊戲僅支援直向模式</div>
-            <div style={{ fontSize: 12, opacity: 0.35, marginTop: 24 }}>點擊任意處繼續遊戲</div>
+            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>{t("app.rotate.title", "Please rotate your phone to portrait")}</div>
+            <div style={{ fontSize: 13, opacity: 0.5 }}>{t("app.rotate.hint", "This game supports portrait mode only")}</div>
+            <div style={{ fontSize: 12, opacity: 0.35, marginTop: 24 }}>{t("app.rotate.continue", "Tap anywhere to continue")}</div>
           </div>
         )}
       </div>
@@ -311,8 +314,14 @@ function App() {
     };
   }, [B.screen, B.phase, B.enemy?.id, B.enemy?.isEvolved, B.enemy?.sceneMType, B.enemy?.mType, B.pStg, B.battleMode, B.pvpTurn]);
 
+  const wrapMain = (node: ReactNode) => (
+    <div id="main-content" style={{ height: "100%" }}>
+      {node}
+    </div>
+  );
+
   // ─── Screen routing ───
-  if (B.screen === "title") return (
+  if (B.screen === "title") return wrapMain(
     <TitleScreen
       onStartNormal={() => { B.setTimedMode(false); B.setBattleMode("single"); B.setScreen("selection"); }}
       onStartTimed={() => { B.setTimedMode(true); B.setBattleMode("single"); B.setScreen("selection"); }}
@@ -326,16 +335,16 @@ function App() {
       lowPerfMode={UX.lowPerfMode}
     />
   );
-  if (B.screen === "achievements") return (
+  if (B.screen === "achievements") return wrapMain(
     <AchievementScreen unlockedIds={B.achUnlocked} onBack={() => B.setScreen("title")} />
   );
-  if (B.screen === "encyclopedia") return (
+  if (B.screen === "encyclopedia") return wrapMain(
     <EncyclopediaScreen encData={B.encData} onBack={() => B.setScreen("title")} />
   );
-  if (B.screen === "dashboard") return (
+  if (B.screen === "dashboard") return wrapMain(
     <DashboardScreen onBack={() => B.setScreen("title")} />
   );
-  if (B.screen === "settings") return (
+  if (B.screen === "settings") return wrapMain(
     <SettingsScreen
       onBack={closeSettings}
       perfMode={UX.perfMode}
@@ -346,10 +355,10 @@ function App() {
       onSetAudioMuted={setAudioMute}
     />
   );
-  if (B.screen === "leaderboard") return (
+  if (B.screen === "leaderboard") return wrapMain(
     <LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen("title")} />
   );
-  if (B.screen === "selection") return (
+  if (B.screen === "selection") return wrapMain(
     <SelectionScreen
       mode={B.battleMode}
       onSelect={(payload: SelectionPayload) => {
@@ -371,7 +380,7 @@ function App() {
       onBack={() => B.setScreen("title")}
     />
   );
-  if (B.screen === "pvp_result") return (
+  if (B.screen === "pvp_result") return wrapMain(
     <PvpResultScreen
       p1Starter={B.starter}
       p2Starter={B.pvpStarter2}
@@ -382,10 +391,10 @@ function App() {
       onHome={() => B.setScreen("title")}
     />
   );
-  if (B.screen === "evolve") return (
+  if (B.screen === "evolve") return wrapMain(
     <EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={B.continueAfterEvolve} />
   );
-  if (B.screen === "gameover") return (
+  if (B.screen === "gameover") return wrapMain(
     <GameOverScreen
       defeated={B.defeated} totalEnemies={B.enemies.length}
       tC={B.tC} tW={B.tW} pLvl={B.pLvl} timedMode={B.timedMode}
@@ -396,10 +405,10 @@ function App() {
       onHome={() => B.setScreen("title")}
     />
   );
-  if (!B.enemy || !B.starter) return (
+  if (!B.enemy || !B.starter) return wrapMain(
     <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", color: "white", gap: 16 }}>
       <div style={{ fontSize: 48, animation: "float 2s ease-in-out infinite" }}>⚔️</div>
-      <div style={{ fontSize: 16, fontWeight: 700, opacity: 0.6 }}>準備戰鬥中...</div>
+      <div style={{ fontSize: 16, fontWeight: 700, opacity: 0.6 }}>{t("app.loading.battle", "Preparing battle...")}</div>
     </div>
   );
 
@@ -510,6 +519,7 @@ function App() {
 
   return (
     <div
+      id="main-content"
       ref={battleRootRef}
       className={`battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""}`}
       role={canTapAdvance ? "button" : undefined}
@@ -540,8 +550,8 @@ function App() {
         style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9000, cursor: "pointer", backdropFilter: UX.lowPerfMode ? "none" : "blur(4px)" }}
       >
         <div style={{ fontSize: 48, marginBottom: 16 }}>⏸️</div>
-        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>遊戲暫停</div>
-        <div style={{ fontSize: 13, opacity: 0.5 }}>點擊任意處繼續</div>
+        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>{t("app.pause.title", "Game Paused")}</div>
+        <div style={{ fontSize: 13, opacity: 0.5 }}>{t("app.pause.hint", "Tap anywhere to resume")}</div>
       </div>}
 
       {/* Popups & particles */}

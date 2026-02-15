@@ -2,8 +2,8 @@
  * Pure damage calculation functions.
  * Extracted from App.jsx for testability and clarity.
  */
-import { POWER_CAPS } from '../data/constants';
-import { getEff } from '../data/monsters';
+import { POWER_CAPS } from '../data/constants.js';
+import { getEff } from '../data/typeEffectiveness.js';
 
 /**
  * Compute effective power of a move at its current level.

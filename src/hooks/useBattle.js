@@ -18,11 +18,11 @@
  */
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 
-import { getEff } from '../data/monsters';
+import { getEff } from '../data/typeEffectiveness';
 import { SCENE_NAMES } from '../data/scenes';
 import {
   MAX_MOVE_LVL, POWER_CAPS, HITS_PER_LVL,
-  TIMER_SEC, PLAYER_MAX_HP, EFX,
+  TIMER_SEC, PLAYER_MAX_HP,
 } from '../data/constants';
 
 import { genQ } from '../utils/questionGenerator';
@@ -35,9 +35,12 @@ import { useAchievements } from './useAchievements';
 import { useEncyclopedia } from './useEncyclopedia';
 import { useSessionLog } from './useSessionLog';
 import { useBattleRng } from './useBattleRng';
+import { useBattleUIState } from './useBattleUIState';
 import { ENC_TOTAL } from '../data/encyclopedia';
 import sfx from '../utils/sfx';
 import { buildRoster } from '../utils/rosterBuilder';
+import { computeBossPhase, decideBossTurnEvent } from '../utils/turnFlow';
+import { resolveLevelProgress, updateAdaptiveDifficulty } from '../utils/battleEngine';
 
 // ── Constants (module-level to avoid re-allocation per render) ──
 const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
@@ -55,6 +58,7 @@ export function useBattle() {
   const { encData, setEncData, updateEnc, updateEncDefeated } = useEncyclopedia();
   const { initSession, markQStart, logAns, endSession } = useSessionLog();
   const { rand, randInt, chance, pickIndex, reseed } = useBattleRng();
+  const UI = useBattleUIState({ rand, randInt });
 
   const buildNewRoster = useCallback(() => buildRoster(pickIndex), [pickIndex]);
   const [enemies, setEnemies] = useState(buildNewRoster);
@@ -86,18 +90,22 @@ export function useBattle() {
   const [mLvlUp, setMLvlUp] = useState(null);
 
   // ──── Phase & UI ────
-  const [phase, setPhase] = useState("menu");
-  const [selIdx, setSelIdx] = useState(null);
-  const [q, setQ] = useState(null);
-  const [fb, setFb] = useState(null);
-  const [bText, setBText] = useState("");
-  const [answered, setAnswered] = useState(false);
-  const [dmgs, setDmgs] = useState([]);
-  const [parts, setParts] = useState([]);
-  const [eAnim, setEAnim] = useState("");
-  const [pAnim, setPAnim] = useState("");
-  const [atkEffect, setAtkEffect] = useState(null);
-  const [effMsg, setEffMsg] = useState(null);
+  const {
+    phase, setPhase,
+    selIdx, setSelIdx,
+    q, setQ,
+    fb, setFb,
+    bText, setBText,
+    answered, setAnswered,
+    dmgs, setDmgs,
+    parts, setParts,
+    eAnim, setEAnim,
+    pAnim, setPAnim,
+    atkEffect, setAtkEffect,
+    effMsg, setEffMsg,
+    addD, rmD,
+    addP, rmP,
+  } = UI;
 
   // ──── Status effects ────
   const [burnStack, setBurnStack] = useState(0);
@@ -113,17 +121,13 @@ export function useBattle() {
   const recentAnsRef = useRef([]);                    // sliding window of last 6 answers (true/false)
 
   const _updateDiff = (correct) => {
-    const win = recentAnsRef.current;
-    win.push(correct);
-    if (win.length > 6) win.shift();
-    if (win.length >= 4) {
-      const rate = win.filter(Boolean).length / win.length;
-      setDiffLevel(prev => {
-        if (rate >= 0.8 && prev < 4) return prev + 1;   // doing great → harder
-        if (rate <= 0.35 && prev > 0) return prev - 1;   // struggling → easier
-        return prev;
-      });
-    }
+    const { nextLevel, nextRecent } = updateAdaptiveDifficulty({
+      currentLevel: diffLevel,
+      recentAnswers: recentAnsRef.current,
+      correct,
+    });
+    recentAnsRef.current = nextRecent;
+    setDiffLevel(nextLevel);
   };
 
   // ──── Boss mechanics ────
@@ -134,8 +138,6 @@ export function useBattle() {
   const [sealedTurns, setSealedTurns] = useState(0);      // remaining sealed turns
 
   // ──── Internal refs ────
-  const did = useRef(0);
-  const pid = useRef(0);
   const turnRef = useRef(0);
   const doEnemyTurnRef = useRef(() => {});
   const pendingEvolve = useRef(false);   // ← Bug #2 fix
@@ -169,28 +171,6 @@ export function useBattle() {
     (move) => bestEffectiveness(move, enemy),
     [enemy],
   );
-
-  // ──── Damage / particle helpers ────
-  const addD = (v, x, y, c) => {
-    const id = did.current++;
-    setDmgs(f => [...f, { id, value: v, x, y, color: c }]);
-  };
-  const rmD = (id) => setDmgs(f => f.filter(v => v.id !== id));
-
-  const addP = (type, x, y, n = 5) => {
-    const es = EFX[type] || ["✨"];
-    const np = [];
-    for (let i = 0; i < n; i++) {
-      np.push({
-        id: pid.current++,
-        emoji: es[randInt(0, es.length - 1)],
-        x: x + rand() * 40 - 20,
-        y: y + rand() * 20 - 10,
-      });
-    }
-    setParts(p => [...p, ...np]);
-  };
-  const rmP = (id) => setParts(f => f.filter(v => v.id !== id));
 
   // ──── Safe timeout (cancelled on turn/game change or unmount) ────
   const activeTimers = useRef(new Set());
@@ -320,28 +300,20 @@ export function useBattle() {
     setBossPhase(0); setBossTurn(0); setBossCharging(false);
     setSealedMove(-1); setSealedTurns(0);
     const xp = s.enemy.lvl * 15;
-    // Compute XP / level-up synchronously.
-    // Use while loop to handle overflow that spans multiple level thresholds
-    // (e.g. pLvl=2, pExp=50, xp=135 → should gain 2 levels, not 1).
-    let curExp = s.pExp + xp;
-    let curLvl = s.pLvl;
-    let curStg = s.pStg;
-    let hpBonus = 0;
-    while (curExp >= curLvl * 30) {
-      curExp -= curLvl * 30;
-      curLvl++;
-      if (curStg < 2 && curLvl % 3 === 0) {
-        // Evolution — defer visual updates to advance(), only set flag here.
-        pendingEvolve.current = true; sfx.play("evolve");
-        curStg++;       // track locally so second evolution in same burst also works
-      } else {
-        hpBonus += 20;  // accumulate HP bonus for non-evolve level-ups
-      }
+    const progress = resolveLevelProgress({
+      currentExp: s.pExp,
+      currentLevel: s.pLvl,
+      currentStage: s.pStg,
+      gainExp: xp,
+    });
+    if (progress.evolveCount > 0) {
+      pendingEvolve.current = true;
+      sfx.play("evolve");
     }
-    setPExp(curExp);
-    if (curLvl !== s.pLvl) {
-      setPLvl(curLvl);
-      if (hpBonus > 0) setPHp(h => Math.min(h + hpBonus, PLAYER_MAX_HP));
+    setPExp(progress.nextExp);
+    if (progress.nextLevel !== s.pLvl) {
+      setPLvl(progress.nextLevel);
+      if (progress.hpBonus > 0) setPHp(h => Math.min(h + progress.hpBonus, PLAYER_MAX_HP));
     }
     setDefeated(d => d + 1);
     updateEncDefeated(s.enemy); // ← encyclopedia: mark defeated
@@ -379,14 +351,6 @@ export function useBattle() {
     if (timedMode) startTimer();
   };
 
-  // --- Helper: compute boss phase from HP ratio ---
-  const _updateBossPhase = (hp, maxHp) => {
-    const ratio = hp / maxHp;
-    if (ratio <= 0.3) return 3;
-    if (ratio <= 0.6) return 2;
-    return 1;
-  };
-
   // --- Enemy turn logic (reads from stateRef) ---
   function doEnemyTurn() {
     const s = sr.current;
@@ -402,7 +366,7 @@ export function useBattle() {
 
     // ── Boss: update phase from current HP ──
     if (isBoss) {
-      const newPhase = _updateBossPhase(s.eHp, s.enemy.maxHp);
+      const newPhase = computeBossPhase(s.eHp, s.enemy.maxHp);
       if (newPhase !== s.bossPhase) {
         setBossPhase(newPhase);
         // Phase transition announcement
@@ -426,7 +390,7 @@ export function useBattle() {
     const s = sr.current;
     if (!s.enemy || !s.starter) return;
     const isBoss = s.enemy.id === "boss";
-    const bp = isBoss ? _updateBossPhase(s.eHp, s.enemy.maxHp) : 0;
+    const bp = isBoss ? computeBossPhase(s.eHp, s.enemy.maxHp) : 0;
 
     // ── Boss: increment turn counter ──
     let turnCount = s.bossTurn;
@@ -435,8 +399,16 @@ export function useBattle() {
       setBossTurn(turnCount);
     }
 
+    const bossEvent = decideBossTurnEvent({
+      isBoss,
+      bossCharging: s.bossCharging,
+      turnCount,
+      bossPhase: bp,
+      sealedMove: s.sealedMove,
+    });
+
     // ── Boss charging mechanic: release big attack ──
-    if (isBoss && s.bossCharging) {
+    if (bossEvent === "release") {
       setBossCharging(false);
       setBText(`💀 暗黑龍王釋放暗黑吐息！`); sfx.play("bossBoom");
       setPhase("enemyAtk");
@@ -456,7 +428,7 @@ export function useBattle() {
     }
 
     // ── Boss: start charging every 4 turns ──
-    if (isBoss && turnCount > 0 && turnCount % 4 === 0 && !s.bossCharging) {
+    if (bossEvent === "start_charge") {
       setBossCharging(true); sfx.play("bossCharge");
       setBText("⚠️ 暗黑龍王正在蓄力！下回合將釋放大招！");
       setPhase("text");
@@ -466,7 +438,7 @@ export function useBattle() {
     }
 
     // ── Boss Phase 2+: seal a random move ──
-    if (isBoss && bp >= 2 && s.sealedMove < 0 && turnCount > 0 && turnCount % 3 === 0) {
+    if (bossEvent === "seal_move") {
       const sealIdx = randInt(0, 2); // only seal moves 0-2, not ultimate
       setSealedMove(sealIdx); sfx.play("seal");
       setSealedTurns(2);

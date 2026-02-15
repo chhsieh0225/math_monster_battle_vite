@@ -4,6 +4,7 @@ import {
   fireEvolvedSVG, ghostEvolvedSVG, dragonEvolvedSVG,
   slimeRedSVG, slimeBlueSVG, slimeYellowSVG, slimeDarkSVG, slimeSteelSVG,
 } from './sprites';
+export { TYPE_EFF, getEff } from './typeEffectiveness';
 
 /**
  * Slime colour variants — randomly picked each encounter (non-evolved only).
@@ -55,16 +56,3 @@ export const MONSTERS = [
   {id:"dragon",name:"鋼鐵龍",hp:80,atk:12,c1:"#60a5fa",c2:"#1d4ed8",svgFn:dragonSVG,evolvedSvgFn:dragonEvolvedSVG,evolvedName:"鐵甲天龍",evolveLvl:9,drops:["🐉","👑"],mType:"steel",typeIcon:"🛡️",typeName:"鋼", trait:"counter", traitName:"反擊裝甲", traitDesc:"堅硬的裝甲會反彈20%受到的傷害給攻擊者。"},
   {id:"boss",name:"暗黑龍王",hp:120,atk:15,c1:"#fbbf24",c2:"#b45309",svgFn:darkLordSVG,drops:["👑","🏆"],mType:"dark",typeIcon:"💀",typeName:"暗", trait:"tyrant", traitName:"霸王", traitDesc:"擁有多階段戰鬥形態，能蓄力釋放毀滅大招，還能封印對手技能。"},
 ];
-
-export const TYPE_EFF = {
-  fire:    {grass:1.5, fire:0.6, water:0.6, electric:1.0, ghost:1.5, steel:0.6, dark:1.0, light:1.0},
-  electric:{grass:1.0, fire:1.0, water:1.5, electric:0.6, ghost:0.6, steel:1.5, dark:1.0, light:1.0},
-  water:   {grass:0.6, fire:1.5, water:0.6, electric:0.6, ghost:1.0, steel:1.0, dark:1.5, light:1.0},
-  grass:   {grass:0.6, fire:0.6, water:1.5, electric:1.5, ghost:1.0, steel:0.6, dark:1.0, light:1.0},
-  dark:    {grass:1.0, fire:1.0, water:1.0, electric:1.0, ghost:1.5, steel:0.6, dark:0.6, light:0.6},
-  light:   {grass:1.0, fire:1.0, water:1.0, electric:1.0, ghost:1.5, steel:0.6, dark:1.5, light:0.6},
-};
-
-export function getEff(moveType, monType) {
-  return (TYPE_EFF[moveType] && TYPE_EFF[moveType][monType]) || 1.0;
-}

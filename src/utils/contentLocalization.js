@@ -317,9 +317,15 @@ export function localizeStarterList(starters, locale) {
 
 export function localizeEnemy(enemy, locale) {
   if (!isObject(enemy) || !isEnglishLocale(locale)) return enemy;
+  const enemyId = String(enemy.id || "");
+  const enemyKey = (
+    enemy.isEvolved && enemyId && !enemyId.endsWith("Evolved")
+      ? `${enemyId}Evolved`
+      : enemyId
+  );
   return {
     ...enemy,
-    name: MONSTER_NAME_EN[enemy.id] || enemy.name,
+    name: MONSTER_NAME_EN[enemyKey] || MONSTER_NAME_EN[enemyId] || enemy.name,
     typeName: localizeTypeName(enemy.mType || enemy.typeName, locale),
     traitName: localizeTraitName(enemy.trait, enemy.traitName, locale),
     traitDesc: localizeTraitDesc(enemy.trait, enemy.traitDesc, locale),

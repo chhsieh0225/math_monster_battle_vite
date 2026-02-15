@@ -1,19 +1,21 @@
-import { MONSTERS, SLIME_VARIANTS, EVOLVED_SLIME_VARIANTS } from '../data/monsters';
+import { MONSTERS, SLIME_VARIANTS, EVOLVED_SLIME_VARIANTS } from '../data/monsters.js';
+import { STAGE_SCALE_BASE, STAGE_SCALE_STEP, STAGE_WAVES } from '../data/stageConfigs.js';
 
-const ORDER = [0, 1, 0, 2, 0, 1, 3, 2, 3, 4];
+const MONSTER_BY_ID = new Map(MONSTERS.map(mon => [mon.id, mon]));
 
 export function buildRoster(pickIndex) {
   const pick = (arr) => arr[pickIndex(arr.length)];
 
-  return ORDER.map((idx, i) => {
-    const b = MONSTERS[idx];
-    const sc = 1 + i * 0.12;
+  return STAGE_WAVES.map((wave, i) => {
+    const b = MONSTER_BY_ID.get(wave.monsterId);
+    if (!b) throw new Error(`[rosterBuilder] unknown monsterId: ${wave.monsterId}`);
+    const sc = STAGE_SCALE_BASE + i * STAGE_SCALE_STEP;
     const isEvolved = b.evolveLvl && (i + 1) >= b.evolveLvl;
 
     let variant = null;
     let evolvedVariant = null;
-    if (idx === 0 && !isEvolved) variant = pick(SLIME_VARIANTS);
-    if (idx === 0 && isEvolved) evolvedVariant = pick(EVOLVED_SLIME_VARIANTS);
+    if (b.id === "slime" && !isEvolved) variant = pick(SLIME_VARIANTS);
+    if (b.id === "slime" && isEvolved) evolvedVariant = pick(EVOLVED_SLIME_VARIANTS);
 
     const activeVariant = evolvedVariant || variant;
     const hm = activeVariant ? (activeVariant.hpMult || 1) : 1;

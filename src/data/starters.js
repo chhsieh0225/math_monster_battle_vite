@@ -5,6 +5,7 @@ import {
   playerelectric0SVG, playerelectric1SVG, playerelectric2SVG,
   playerlion0SVG, playerlion1SVG, playerlion2SVG,
 } from './sprites';
+import { SKILL_SETS } from './skillSets';
 
 // growth = 每升一級增加的威力
 // 簡單招 growth 高（勤練就強），困難招 growth 低（起手就強）
@@ -17,58 +18,33 @@ export const STARTERS = [
      {name:"烈焰獸",emoji:"🔥",svgFn:playerfire1SVG},
      {name:"炎龍王",emoji:"🔥",svgFn:playerfire2SVG},
    ],
-   moves:[
-     {name:"火花彈",icon:"🔥",type:"fire",desc:"簡單乘法",basePower:12,growth:6,range:[2,5],ops:["×"],color:"#ef4444",bg:"#fef2f2"},
-     {name:"烈焰衝",icon:"🔥",type:"fire",desc:"九九乘法",basePower:20,growth:5,range:[2,9],ops:["×"],color:"#f97316",bg:"#fff7ed"},
-     {name:"爆炎轟",icon:"🔥",type:"fire",desc:"大數乘法",basePower:30,growth:3,range:[4,12],ops:["×"],color:"#dc2626",bg:"#fef2f2"},
-     {name:"終極爆破",icon:"💥",type:"dark",type2:"fire",desc:"暗火·乘除混合",basePower:40,growth:3,range:[3,12],ops:["×","÷"],color:"#a855f7",bg:"#faf5ff",risky:true},
-   ]},
+   moves: SKILL_SETS.fire},
   {id:"water",name:"小水獸",type:"water",typeIcon:"💧",typeName:"水",c1:"#60a5fa",c2:"#1d4ed8",
    stages:[
      {name:"小水獸",emoji:"💧",svgFn:playerwater0SVG},
      {name:"波濤獸",emoji:"💧",svgFn:playerwater1SVG},
      {name:"海龍王",emoji:"💧",svgFn:playerwater2SVG},
    ],
-   moves:[
-     {name:"水泡攻擊",icon:"💧",type:"water",desc:"簡單除法",basePower:12,growth:6,range:[2,5],ops:["÷"],color:"#3b82f6",bg:"#eff6ff"},
-     {name:"水流波",icon:"🌊",type:"water",desc:"進階除法",basePower:20,growth:5,range:[2,9],ops:["÷"],color:"#2563eb",bg:"#eff6ff"},
-     {name:"海嘯衝擊",icon:"🌊",type:"water",desc:"大數除法",basePower:30,growth:3,range:[4,12],ops:["÷"],color:"#1d4ed8",bg:"#dbeafe"},
-     {name:"終極爆破",icon:"💥",type:"dark",type2:"water",desc:"暗水·乘除混合",basePower:37,growth:3,range:[3,12],ops:["×","÷"],color:"#a855f7",bg:"#faf5ff",risky:true},
-   ]},
+   moves: SKILL_SETS.water},
   {id:"grass",name:"小草獸",type:"grass",typeIcon:"🌿",typeName:"草",c1:"#4ade80",c2:"#16a34a",
    stages:[
      {name:"小草獸",emoji:"🌿",svgFn:playergrass0SVG},
      {name:"花葉獸",emoji:"🌿",svgFn:playergrass1SVG},
      {name:"森林王",emoji:"🌿",svgFn:playergrass2SVG},
    ],
-   moves:[
-     {name:"葉刃切",icon:"🌿",type:"grass",desc:"簡單加法",basePower:12,growth:6,range:[2,10],ops:["+"],color:"#22c55e",bg:"#f0fdf4"},
-     {name:"藤鞭打",icon:"🌿",type:"grass",desc:"基本減法",basePower:20,growth:5,range:[5,30],ops:["-"],color:"#16a34a",bg:"#f0fdf4"},
-     {name:"森林風暴",icon:"🌿",type:"grass",desc:"大數加減",basePower:30,growth:3,range:[20,99],ops:["+","-"],color:"#15803d",bg:"#dcfce7"},
-     {name:"終極爆破",icon:"💥",type:"dark",type2:"grass",desc:"暗草·乘除混合",basePower:40,growth:3,range:[3,12],ops:["×","÷"],color:"#a855f7",bg:"#faf5ff",risky:true},
-   ]},
+   moves: SKILL_SETS.grass},
   {id:"electric",name:"小雷獸",type:"electric",typeIcon:"⚡",typeName:"雷",c1:"#facc15",c2:"#ca8a04",
    stages:[
      {name:"小雷獸",emoji:"⚡",svgFn:playerelectric0SVG},
      {name:"雷電獸",emoji:"⚡",svgFn:playerelectric1SVG},
      {name:"雷龍王",emoji:"⚡",svgFn:playerelectric2SVG},
    ],
-   moves:[
-     {name:"電光彈",icon:"⚡",type:"electric",desc:"加減混合",basePower:12,growth:6,range:[2,15],ops:["mixed2"],color:"#eab308",bg:"#fefce8"},
-     {name:"雷電擊",icon:"⚡",type:"electric",desc:"乘加混合",basePower:20,growth:5,range:[2,9],ops:["mixed3"],color:"#ca8a04",bg:"#fef9c3"},
-     {name:"萬雷轟",icon:"⚡",type:"electric",desc:"四則運算",basePower:30,growth:3,range:[2,9],ops:["mixed4"],color:"#a16207",bg:"#fef08a"},
-     {name:"終極爆破",icon:"💥",type:"dark",type2:"electric",desc:"暗雷·四則混合",basePower:40,growth:3,range:[2,12],ops:["mixed4"],color:"#a855f7",bg:"#faf5ff",risky:true},
-   ]},
+   moves: SKILL_SETS.electric},
   {id:"lion",name:"小獅獸",type:"light",typeIcon:"✨",typeName:"光",c1:"#f59e0b",c2:"#92400e",
    stages:[
      {name:"小獅獸",emoji:"✨",svgFn:playerlion0SVG},
      {name:"獅鬃獸",emoji:"✨",svgFn:playerlion1SVG},
      {name:"獅焰王",emoji:"✨",svgFn:playerlion2SVG},
    ],
-   moves:[
-     {name:"獵爪撲",icon:"✨",type:"light",desc:"加減求未知",basePower:12,growth:6,range:[2,20],ops:["unknown1"],color:"#f59e0b",bg:"#fffbeb"},
-     {name:"獅吼破",icon:"✨",type:"light",desc:"乘除求未知",basePower:20,growth:5,range:[2,9],ops:["unknown2"],color:"#d97706",bg:"#fef3c7"},
-     {name:"烈焰獵擊",icon:"✨",type:"light",desc:"大數求未知",basePower:30,growth:3,range:[4,50],ops:["unknown3"],color:"#b45309",bg:"#fde68a"},
-     {name:"終極爆破",icon:"💥",type:"dark",type2:"light",desc:"暗光·混合求未知",basePower:40,growth:3,range:[2,12],ops:["unknown4"],color:"#a855f7",bg:"#faf5ff",risky:true},
-   ]},
+   moves: SKILL_SETS.lion},
 ];

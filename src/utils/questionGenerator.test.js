@@ -32,3 +32,18 @@ test('genQ unknown-operation question contains unknown symbol and valid choices'
   assert.equal(q.choices.includes(q.answer), true);
   assert.equal(q.steps.length > 0, true);
 });
+
+test('genQ supports localized step text via translator option', () => {
+  const move = { range: [2, 10], ops: ["÷"] };
+  const q = genQ(move, 1, {
+    t: (key, fallback, params) => {
+      if (key === "question.step.think") return `THINK ${params.expr}`;
+      if (key === "question.step.therefore") return `THEREFORE ${params.expr}`;
+      return fallback;
+    },
+  });
+
+  assert.equal(q.op, "÷");
+  assert.equal(q.steps[0].startsWith("THINK "), true);
+  assert.equal(q.steps[2].startsWith("THEREFORE "), true);
+});

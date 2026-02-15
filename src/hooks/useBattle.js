@@ -707,7 +707,7 @@ export function useBattle() {
     const lv = _getMoveDiffLevel(move);
     const diffMod = DIFF_MODS[lv] ?? DIFF_MODS[2];
     setDiffLevel(lv);
-    setQ(genQ(move, diffMod));
+    setQ(genQ(move, diffMod, { t }));
     setFb(null);
     setAnswered(false);
     setPhase("question");

@@ -118,8 +118,8 @@ MONSTERS.forEach(m => {
         mType: ev.mType,
         typeIcon: ev.typeIcon,
         typeName: ev.typeName,
-        hp: m.hp,
-        atk: m.atk,
+        hp: Math.round(m.hp * (ev.hpMult || 1)),
+        atk: Math.round(m.atk * (ev.atkMult || 1)),
         svgFn: ev.svgFn,
         c1: ev.c1, c2: ev.c2,
         weakAgainst: weaknesses(ev.mType).map(t => TYPE_LABEL[t] || t),
@@ -129,6 +129,9 @@ MONSTERS.forEach(m => {
         habitat: HABITATS[ev.id] || "",
         rarity: RARITY[ev.id] || "★",
         drops: ev.drops,
+        trait: ev.trait || null,
+        traitName: ev.traitName || null,
+        traitDesc: ev.traitDesc || null,
       });
     });
   } else {

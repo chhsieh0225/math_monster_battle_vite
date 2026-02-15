@@ -40,12 +40,12 @@ export const SLIME_VARIANTS = [
  * appearance, type, and drops. Appears on the same stage (草原).
  */
 export const EVOLVED_SLIME_VARIANTS = [
-  { id:"slimeEvolved",          name:"叢林巨魔",   svgFn:slimeEvolvedSVG,          c1:"#4ade80",c2:"#16a34a", mType:"grass",    typeIcon:"🌿", typeName:"草", drops:["🍬","🧪"] },
-  { id:"slimeElectricEvolved",  name:"雷霆巨魔",   svgFn:slimeElectricEvolvedSVG,  c1:"#facc15",c2:"#ca8a04", mType:"electric", typeIcon:"⚡", typeName:"電", drops:["⚡","🧪"] },
-  { id:"slimeFireEvolved",     name:"烈焰巨魔",   svgFn:slimeFireEvolvedSVG,     c1:"#f87171",c2:"#b91c1c", mType:"fire",     typeIcon:"🔥", typeName:"火", drops:["🔥","🧪"] },
-  { id:"slimeWaterEvolved",    name:"深海巨魔",   svgFn:slimeWaterEvolvedSVG,    c1:"#60a5fa",c2:"#1d4ed8", mType:"water",    typeIcon:"💧", typeName:"水", drops:["💧","🧪"] },
-  { id:"slimeSteelEvolved",    name:"鋼鐵巨魔",   svgFn:slimeSteelEvolvedSVG,    c1:"#94a3b8",c2:"#475569", mType:"steel",    typeIcon:"🛡️", typeName:"鋼", drops:["🛡️","🧪"] },
-  { id:"slimeDarkEvolved",     name:"深淵巨魔",   svgFn:slimeDarkEvolvedSVG,     c1:"#a1a1aa",c2:"#3f3f46", mType:"dark",     typeIcon:"💀", typeName:"暗", drops:["💀","🧪"] },
+  { id:"slimeEvolved",          name:"叢林巨魔",   svgFn:slimeEvolvedSVG,          c1:"#4ade80",c2:"#16a34a", mType:"grass",    typeIcon:"🌿", typeName:"草", drops:["🍬","🧪"], trait:"normal",   traitName:"普通",  traitDesc:"最基本的史萊姆，沒有特殊能力。",                          hpMult:1.0, atkMult:1.0 },
+  { id:"slimeElectricEvolved",  name:"雷霆巨魔",   svgFn:slimeElectricEvolvedSVG,  c1:"#facc15",c2:"#ca8a04", mType:"electric", typeIcon:"⚡", typeName:"電", drops:["⚡","🧪"], trait:"swift",    traitName:"迅捷",  traitDesc:"行動速度極快，有機率在一回合內連續攻擊兩次！",            hpMult:0.9, atkMult:1.1 },
+  { id:"slimeFireEvolved",     name:"烈焰巨魔",   svgFn:slimeFireEvolvedSVG,     c1:"#f87171",c2:"#b91c1c", mType:"fire",     typeIcon:"🔥", typeName:"火", drops:["🔥","🧪"], trait:"berserk",  traitName:"狂暴",  traitDesc:"血量較低但攻擊兇猛，有機率發動暴擊造成1.5倍傷害！",      hpMult:0.8, atkMult:1.4 },
+  { id:"slimeWaterEvolved",    name:"深海巨魔",   svgFn:slimeWaterEvolvedSVG,    c1:"#60a5fa",c2:"#1d4ed8", mType:"water",    typeIcon:"💧", typeName:"水", drops:["💧","🧪"], trait:"tenacity", traitName:"堅韌",  traitDesc:"攻擊力較低但非常耐打，攻擊時還能回復自身生命值。",        hpMult:1.3, atkMult:0.8 },
+  { id:"slimeSteelEvolved",    name:"鋼鐵巨魔",   svgFn:slimeSteelEvolvedSVG,    c1:"#94a3b8",c2:"#475569", mType:"steel",    typeIcon:"🛡️", typeName:"鋼", drops:["🛡️","🧪"], trait:"fortress", traitName:"鐵壁",  traitDesc:"全身覆蓋金屬外殼，攻擊力低但受到的傷害減少30%。",      hpMult:1.5, atkMult:0.7 },
+  { id:"slimeDarkEvolved",     name:"深淵巨魔",   svgFn:slimeDarkEvolvedSVG,     c1:"#a1a1aa",c2:"#3f3f46", mType:"dark",     typeIcon:"💀", typeName:"暗", drops:["💀","🧪"], trait:"curse",    traitName:"詛咒",  traitDesc:"散發不祥氣息，攻擊時有機率弱化對手的下一次攻擊。",      hpMult:1.0, atkMult:1.0 },
 ];
 
 export const MONSTERS = [

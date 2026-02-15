@@ -72,16 +72,17 @@ export function useBattle() {
         evolvedVariant = EVOLVED_SLIME_VARIANTS[Math.floor(Math.random() * EVOLVED_SLIME_VARIANTS.length)];
       }
 
-      // Trait-based HP/ATK multipliers for slime variants
-      const hm = variant ? (variant.hpMult || 1) : 1;
-      const am = variant ? (variant.atkMult || 1) : 1;
+      // Trait-based HP/ATK multipliers for slime variants (both base and evolved)
+      const activeVariant = evolvedVariant || variant;
+      const hm = activeVariant ? (activeVariant.hpMult || 1) : 1;
+      const am = activeVariant ? (activeVariant.atkMult || 1) : 1;
 
       return {
         ...b,
         // Apply variant overrides for non-evolved slimes
         ...(variant && { id: variant.id, name: variant.name, svgFn: variant.svgFn, c1: variant.c1, c2: variant.c2, mType: variant.mType, typeIcon: variant.typeIcon, typeName: variant.typeName, drops: variant.drops, trait: variant.trait, traitName: variant.traitName }),
-        // Apply evolved variant overrides
-        ...(evolvedVariant && { id: evolvedVariant.id, name: evolvedVariant.name, svgFn: evolvedVariant.svgFn, c1: evolvedVariant.c1, c2: evolvedVariant.c2, mType: evolvedVariant.mType, typeIcon: evolvedVariant.typeIcon, typeName: evolvedVariant.typeName, drops: evolvedVariant.drops }),
+        // Apply evolved variant overrides (including trait)
+        ...(evolvedVariant && { id: evolvedVariant.id, name: evolvedVariant.name, svgFn: evolvedVariant.svgFn, c1: evolvedVariant.c1, c2: evolvedVariant.c2, mType: evolvedVariant.mType, typeIcon: evolvedVariant.typeIcon, typeName: evolvedVariant.typeName, drops: evolvedVariant.drops, trait: evolvedVariant.trait, traitName: evolvedVariant.traitName }),
         name: evolvedVariant ? evolvedVariant.name : (isEvolved && b.evolvedName ? b.evolvedName : (variant ? variant.name : b.name)),
         svgFn: evolvedVariant ? evolvedVariant.svgFn : (isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn)),
         sceneMType: b.mType,   // scene always follows base monster species

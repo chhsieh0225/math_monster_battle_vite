@@ -17,6 +17,7 @@ import { useMobileExperience } from './hooks/useMobileExperience';
 // Data
 import { SCENES } from './data/scenes';
 import { PLAYER_MAX_HP, TIMER_SEC, HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from './data/constants';
+import { PVP_BALANCE } from './data/pvpBalance';
 
 // UI Components
 import MonsterSprite from './components/ui/MonsterSprite';
@@ -342,6 +343,18 @@ function App() {
   const activeStarter = B.battleMode === "pvp"
     ? (B.pvpTurn === "p1" ? B.starter : B.pvpStarter2)
     : (coopUsingSub ? B.allySub : B.starter);
+  const pvpComboTrigger = PVP_BALANCE.passive.specDefComboTrigger || 4;
+  const pvpActiveCharge = B.battleMode === "pvp"
+    ? (B.pvpTurn === "p1" ? (B.pvpChargeP1 || 0) : (B.pvpChargeP2 || 0))
+    : 0;
+  const pvpActiveCombo = B.battleMode === "pvp"
+    ? (B.pvpTurn === "p1" ? (B.pvpComboP1 || 0) : (B.pvpComboP2 || 0))
+    : 0;
+  const pvpActiveSpecDefReady = B.battleMode === "pvp"
+    ? (B.pvpTurn === "p1" ? !!B.pvpSpecDefP1 : !!B.pvpSpecDefP2)
+    : false;
+  const chargeDisplay = B.battleMode === "pvp" ? pvpActiveCharge : B.charge;
+  const chargeReadyDisplay = B.battleMode === "pvp" ? pvpActiveCharge >= 3 : B.chargeReady;
   const eSvg = B.enemy.svgFn();
   const eSubSvg = B.enemySub ? B.enemySub.svgFn() : null;
   const allyStage = B.allySub ? B.allySub.stages[0] : null;
@@ -377,10 +390,16 @@ function App() {
   });
   const pvpEnemyBurn = B.pvpBurnP2 || 0;
   const pvpEnemyFreeze = !!B.pvpFreezeP2;
+  const pvpEnemyParalyze = !!B.pvpParalyzeP2;
   const pvpEnemyStatic = B.pvpStaticP2 || 0;
+  const pvpEnemyCombo = B.pvpComboP2 || 0;
+  const pvpEnemySpecDef = !!B.pvpSpecDefP2;
   const pvpPlayerBurn = B.pvpBurnP1 || 0;
   const pvpPlayerFreeze = !!B.pvpFreezeP1;
+  const pvpPlayerParalyze = !!B.pvpParalyzeP1;
   const pvpPlayerStatic = B.pvpStaticP1 || 0;
+  const pvpPlayerCombo = B.pvpComboP1 || 0;
+  const pvpPlayerSpecDef = !!B.pvpSpecDefP1;
 
   // Enemy visual center fallback (used before first DOM measurement)
   // Note: MonsterSprite height = size * 100 / 120, so center Y uses sprite height / 2.
@@ -493,7 +512,10 @@ function App() {
               <>
                 {pvpEnemyBurn > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥灼燒 x{pvpEnemyBurn}</div>}
                 {pvpEnemyFreeze && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️凍結</div>}
+                {pvpEnemyParalyze && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡麻痺</div>}
                 {pvpEnemyStatic > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡蓄電 x{pvpEnemyStatic}</div>}
+                {pvpEnemySpecDef && <div style={{ background: "rgba(99,102,241,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️反制就緒</div>}
+                {!pvpEnemySpecDef && pvpEnemyCombo > 0 && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️連擊 {pvpEnemyCombo}/{pvpComboTrigger}</div>}
               </>
             ) : (
               <>
@@ -535,7 +557,10 @@ function App() {
             <div style={{ display: "flex", gap: 4, marginTop: 3, flexWrap: "wrap" }}>
               {pvpPlayerBurn > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥灼燒 x{pvpPlayerBurn}</div>}
               {pvpPlayerFreeze && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️凍結</div>}
+              {pvpPlayerParalyze && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡麻痺</div>}
               {pvpPlayerStatic > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡蓄電 x{pvpPlayerStatic}</div>}
+              {pvpPlayerSpecDef && <div style={{ background: "rgba(99,102,241,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️反制就緒</div>}
+              {!pvpPlayerSpecDef && pvpPlayerCombo > 0 && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️連擊 {pvpPlayerCombo}/{pvpComboTrigger}</div>}
             </div>
           ) : (
             <>
@@ -564,8 +589,8 @@ function App() {
 
         {/* Charge meter */}
         <div style={{ position: "absolute", bottom: 50, left: 10, display: "flex", gap: 4, zIndex: 20, background: "rgba(0,0,0,0.3)", padding: "3px 8px", borderRadius: 10, backdropFilter: UX.lowPerfMode ? "none" : "blur(4px)" }}>
-          {[0, 1, 2].map(i => <div key={i} style={{ width: 11, height: 11, borderRadius: 6, background: i < B.charge ? "#f59e0b" : "rgba(0,0,0,0.15)", border: "2px solid rgba(255,255,255,0.4)", transition: "all 0.3s", animation: !UX.lowPerfMode && i < B.charge ? "chargeGlow 1.5s ease infinite" : "none" }} />)}
-          {B.chargeReady && <span style={{ fontSize: 9, color: "#b45309", fontWeight: 700, marginLeft: 2, animation: "popIn 0.3s ease" }}>MAX!</span>}
+          {[0, 1, 2].map(i => <div key={i} style={{ width: 11, height: 11, borderRadius: 6, background: i < chargeDisplay ? "#f59e0b" : "rgba(0,0,0,0.15)", border: "2px solid rgba(255,255,255,0.4)", transition: "all 0.3s", animation: !UX.lowPerfMode && i < chargeDisplay ? "chargeGlow 1.5s ease infinite" : "none" }} />)}
+          {chargeReadyDisplay && <span style={{ fontSize: 9, color: "#b45309", fontWeight: 700, marginLeft: 2, animation: "popIn 0.3s ease" }}>MAX!</span>}
         </div>
 
         {/* Special defense ready badge */}
@@ -585,13 +610,14 @@ function App() {
           )}
           {B.battleMode === "pvp" && (
             <div style={{ marginBottom: 8, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.75)" }}>
-              {B.pvpTurn === "p1" ? "🔵 玩家1 回合" : "🔴 玩家2 回合"} · {activeStarter.typeIcon} {activeStarter.name}
+              {B.pvpTurn === "p1" ? "🔵 玩家1 回合" : "🔴 玩家2 回合"} · {activeStarter.typeIcon} {activeStarter.name} · ⚡{pvpActiveCharge}/3 · {pvpActiveSpecDefReady ? "🛡️反制就緒" : `🛡️${pvpActiveCombo}/${pvpComboTrigger}`}
             </div>
           )}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
             {activeStarter.moves.map((m, i) => {
               const sealed = B.battleMode === "pvp" ? false : B.sealedMove === i;
-              const locked = B.battleMode === "pvp" ? false : ((m.risky && !B.chargeReady) || sealed);
+              const pvpLocked = B.battleMode === "pvp" ? (m.risky && !chargeReadyDisplay) : false;
+              const locked = B.battleMode === "pvp" ? pvpLocked : ((m.risky && !B.chargeReady) || sealed);
               const lv = B.mLvls[i];
               const pw = B.battleMode === "pvp" ? m.basePower : B.getPow(i);
               const atCap = lv >= MAX_MOVE_LVL || m.basePower + lv * m.growth > POWER_CAPS[i];
@@ -602,7 +628,7 @@ function App() {
                 {eff > 1 && <div style={{ position: "absolute", top: 4, right: 6, background: "#22c55e", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8 }}>效果↑</div>}
                 {eff < 1 && <div style={{ position: "absolute", top: 4, right: 6, background: "#64748b", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8 }}>效果↓</div>}
                 <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}><span style={{ fontSize: 20 }}>{m.icon}</span><span className="move-name" style={{ fontSize: 15, fontWeight: 700, color: locked ? "#64748b" : m.color }}>{m.name}</span></div>
-                <div style={{ fontSize: 12, color: locked ? "#475569" : "#64748b" }}>{m.desc} · 威力 <b style={{ color: lv > 1 ? m.color : "inherit" }}>{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && !B.chargeReady && B.battleMode !== "pvp" && " 🔒"}{m.risky && B.chargeReady && B.battleMode !== "pvp" && " ⚡蓄力完成！"}{B.battleMode !== "pvp" && !m.risky && !atCap && lv > 1 && " ↑"}{B.battleMode !== "pvp" && atCap && " ✦MAX"}</div>
+                <div style={{ fontSize: 12, color: locked ? "#475569" : "#64748b" }}>{m.desc} · 威力 <b style={{ color: lv > 1 ? m.color : "inherit" }}>{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && B.battleMode === "pvp" && !chargeReadyDisplay && " 🔒需3次正答"}{m.risky && B.battleMode === "pvp" && chargeReadyDisplay && " ⚡可施放"}{m.risky && !B.chargeReady && B.battleMode !== "pvp" && " 🔒"}{m.risky && B.chargeReady && B.battleMode !== "pvp" && " ⚡蓄力完成！"}{B.battleMode !== "pvp" && !m.risky && !atCap && lv > 1 && " ↑"}{B.battleMode !== "pvp" && atCap && " ✦MAX"}</div>
                 {B.battleMode !== "pvp" && !m.risky && !atCap && <div style={{ height: 3, background: "rgba(0,0,0,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}><div style={{ width: `${(B.mHits[i] % (HITS_PER_LVL * B.mLvls[i])) / (HITS_PER_LVL * B.mLvls[i]) * 100}%`, height: "100%", background: m.color, borderRadius: 2, transition: "width 0.3s" }} /></div>}
               </button>;
             })}

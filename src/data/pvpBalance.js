@@ -48,11 +48,16 @@ export const PVP_BALANCE = {
   },
   passive: {
     fireBurnCap: 2,
-    fireBurnTickBase: 2,
+    fireBurnTickBase: 3,
     fireBurnTickPerStack: 2,
-    waterFreezeChance: 0.28,
+    waterFreezeChance: 0.14,
     electricDischargeAt: 3,
     electricDischargeDamage: 10,
+    specDefComboTrigger: 4,
+    lightCounterDamage: 14,
+    grassReflectRatio: 0.32,
+    grassReflectMin: 8,
+    grassReflectCap: 18,
   },
   firstStrikeScale: 0.9,
   effectScale: {

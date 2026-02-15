@@ -142,6 +142,8 @@ export function useBattle() {
   const [pvpHp2, setPvpHp2] = useState(PLAYER_MAX_HP);
   const [pvpTurn, setPvpTurn] = useState("p1");
   const [pvpWinner, setPvpWinner] = useState(null);
+  const [pvpChargeP1, setPvpChargeP1] = useState(0);
+  const [pvpChargeP2, setPvpChargeP2] = useState(0);
   const [pvpActionCount, setPvpActionCount] = useState(0);
   const [pvpBurnP1, setPvpBurnP1] = useState(0);
   const [pvpBurnP2, setPvpBurnP2] = useState(0);
@@ -149,6 +151,12 @@ export function useBattle() {
   const [pvpFreezeP2, setPvpFreezeP2] = useState(false);
   const [pvpStaticP1, setPvpStaticP1] = useState(0);
   const [pvpStaticP2, setPvpStaticP2] = useState(0);
+  const [pvpParalyzeP1, setPvpParalyzeP1] = useState(false);
+  const [pvpParalyzeP2, setPvpParalyzeP2] = useState(false);
+  const [pvpComboP1, setPvpComboP1] = useState(0);
+  const [pvpComboP2, setPvpComboP2] = useState(0);
+  const [pvpSpecDefP1, setPvpSpecDefP1] = useState(false);
+  const [pvpSpecDefP2, setPvpSpecDefP2] = useState(false);
 
   // ──── Player ────
   const [starter, setStarter] = useState(null);
@@ -254,6 +262,7 @@ export function useBattle() {
   );
 
   const getOtherPvpTurn = (turn) => (turn === "p1" ? "p2" : "p1");
+  const pvpSpecDefTrigger = PVP_BALANCE.passive.specDefComboTrigger || 4;
 
   // ──── Internal refs ────
   const runSeedRef = useRef(0);
@@ -277,8 +286,9 @@ export function useBattle() {
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
     tC, tW, maxStreak, defeated,
     coopActiveSlot,
-    pvpStarter2, pvpHp2, pvpTurn, pvpWinner, pvpActionCount,
+    pvpStarter2, pvpHp2, pvpTurn, pvpWinner, pvpChargeP1, pvpChargeP2, pvpActionCount,
     pvpBurnP1, pvpBurnP2, pvpFreezeP1, pvpFreezeP2, pvpStaticP1, pvpStaticP2,
+    pvpParalyzeP1, pvpParalyzeP2, pvpComboP1, pvpComboP2, pvpSpecDefP1, pvpSpecDefP2,
   };
   useLayoutEffect(() => { sr.current = _srSnapshot; });
 
@@ -325,6 +335,13 @@ export function useBattle() {
       setFb({ correct: false, answer: s.q?.answer, steps: s.q?.steps || [] });
       setTW(w => w + 1);
       const nextTurn = getOtherPvpTurn(s.pvpTurn);
+      if (s.pvpTurn === "p1") {
+        setPvpChargeP1(0);
+        setPvpComboP1(0);
+      } else {
+        setPvpChargeP2(0);
+        setPvpComboP2(0);
+      }
       setBText(`⏰ ${getPvpTurnName(s, s.pvpTurn)} 超時，回合交換！`);
       setPvpTurn(nextTurn);
       setPvpActionCount((c) => c + 1);
@@ -456,10 +473,14 @@ export function useBattle() {
       setPvpHp2(PLAYER_MAX_HP);
       setPvpTurn(firstTurn);
       setPvpWinner(null);
+      setPvpChargeP1(0); setPvpChargeP2(0);
       setPvpActionCount(0);
       setPvpBurnP1(0); setPvpBurnP2(0);
       setPvpFreezeP1(false); setPvpFreezeP2(false);
       setPvpStaticP1(0); setPvpStaticP2(0);
+      setPvpParalyzeP1(false); setPvpParalyzeP2(false);
+      setPvpComboP1(0); setPvpComboP2(0);
+      setPvpSpecDefP1(false); setPvpSpecDefP2(false);
       setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
       frozenR.current = false;
       abilityModelRef.current = createAbilityModel(2);
@@ -485,10 +506,14 @@ export function useBattle() {
     setEnemies(newRoster);
     setCoopActiveSlot("main");
     setPvpWinner(null);
+    setPvpChargeP1(0); setPvpChargeP2(0);
     setPvpActionCount(0);
     setPvpBurnP1(0); setPvpBurnP2(0);
     setPvpFreezeP1(false); setPvpFreezeP2(false);
     setPvpStaticP1(0); setPvpStaticP2(0);
+    setPvpParalyzeP1(false); setPvpParalyzeP2(false);
+    setPvpComboP1(0); setPvpComboP2(0);
+    setPvpSpecDefP1(false); setPvpSpecDefP2(false);
     const isCoop = mode === "coop" || mode === "double";
     const partner = isCoop ? (allyOverride || pickPartnerStarter(leader, pickIndex)) : null;
     dispatchBattle({
@@ -691,11 +716,15 @@ export function useBattle() {
     const s = sr.current;
     const activeStarter = getActingStarter(s);
     if (!activeStarter) return;
+    const move = activeStarter.moves[i];
+    if (s.battleMode === "pvp" && move?.risky) {
+      const chargeNow = s.pvpTurn === "p1" ? (s.pvpChargeP1 || 0) : (s.pvpChargeP2 || 0);
+      if (chargeNow < 3) return;
+    }
     // Boss: sealed move check
     if (s.battleMode !== "pvp" && s.sealedMove === i) return; // silently blocked, UI shows lock
     sfx.play("select");
     setSelIdx(i);
-    const move = activeStarter.moves[i];
     const lv = _getMoveDiffLevel(move);
     const diffMod = DIFF_MODS[lv] ?? DIFF_MODS[2];
     setDiffLevel(lv);
@@ -762,11 +791,45 @@ export function useBattle() {
       const nextTurn = getOtherPvpTurn(currentTurn);
 
       if (!correct) {
+        if (currentTurn === "p1") {
+          setPvpChargeP1(0);
+          setPvpComboP1(0);
+        } else {
+          setPvpChargeP2(0);
+          setPvpComboP2(0);
+        }
         setPvpTurn(nextTurn);
         setPvpActionCount((c) => c + 1);
         setBText(`❌ ${attacker.name} 答錯，攻擊落空！`);
         setPhase("text");
         return;
+      }
+
+      let unlockedSpecDef = false;
+      if (currentTurn === "p1") {
+        setPvpChargeP1((c) => Math.min(c + 1, 3));
+        if (!s.pvpSpecDefP1) {
+          const nextCombo = (s.pvpComboP1 || 0) + 1;
+          if (nextCombo >= pvpSpecDefTrigger) {
+            setPvpComboP1(0);
+            setPvpSpecDefP1(true);
+            unlockedSpecDef = true;
+          } else {
+            setPvpComboP1(nextCombo);
+          }
+        }
+      } else {
+        setPvpChargeP2((c) => Math.min(c + 1, 3));
+        if (!s.pvpSpecDefP2) {
+          const nextCombo = (s.pvpComboP2 || 0) + 1;
+          if (nextCombo >= pvpSpecDefTrigger) {
+            setPvpComboP2(0);
+            setPvpSpecDefP2(true);
+            unlockedSpecDef = true;
+          } else {
+            setPvpComboP2(nextCombo);
+          }
+        }
       }
 
       const attackerHp = currentTurn === "p1" ? s.pHp : s.pvpHp2;
@@ -800,6 +863,115 @@ export function useBattle() {
         } else {
           setAtkEffect({ type: vfxType, idx: s2.selIdx, lvl: 1, targetSide: "player" });
           addP("enemy", 84, 186, 3);
+        }
+
+        const defenderSpecDefReady = currentTurn === "p1" ? !!s2.pvpSpecDefP2 : !!s2.pvpSpecDefP1;
+        if (defenderSpecDefReady) {
+          if (currentTurn === "p1") setPvpSpecDefP2(false);
+          else setPvpSpecDefP1(false);
+
+          const defenderMainX = currentTurn === "p1" ? 140 : 60;
+          const defenderMainY = currentTurn === "p1" ? 55 : 170;
+          const attackerMainX = currentTurn === "p1" ? 60 : 140;
+          const attackerMainY = currentTurn === "p1" ? 170 : 55;
+          const finishWithTurnSwap = () => {
+            setPvpTurn(nextTurn);
+            setPvpActionCount((c) => c + 1);
+            setPhase("text");
+          };
+
+          if (defender.type === "fire") {
+            addD("🛡️BLOCK", defenderMainX, defenderMainY, "#fbbf24");
+            sfx.play("specDef");
+            setBText(`🛡️ ${defender.name} 展開防護罩，擋下了攻擊！`);
+            safeTo(() => setAtkEffect(null), 380);
+            finishWithTurnSwap();
+            return;
+          }
+
+          if (defender.type === "water") {
+            if (currentTurn === "p1") setEAnim("dodgeSlide 0.9s ease");
+            else setPAnim("dodgeSlide 0.9s ease");
+            addD("MISS!", defenderMainX, defenderMainY, "#38bdf8");
+            sfx.play("specDef");
+            setBText(`💨 ${defender.name} 完美閃避！`);
+            safeTo(() => {
+              setEAnim("");
+              setPAnim("");
+              setAtkEffect(null);
+            }, 680);
+            finishWithTurnSwap();
+            return;
+          }
+
+          if (defender.type === "electric") {
+            if (currentTurn === "p1") setPvpParalyzeP1(true);
+            else setPvpParalyzeP2(true);
+            if (currentTurn === "p1") setPAnim("playerHit 0.45s ease");
+            else setEAnim("enemyElecHit 0.55s ease");
+            addD("⚡麻痺", attackerMainX, attackerMainY, "#fbbf24");
+            sfx.play("specDef");
+            setBText(`⚡ ${defender.name} 觸發反制電流！${attacker.name} 下回合麻痺！`);
+            safeTo(() => {
+              setPAnim("");
+              setEAnim("");
+              setAtkEffect(null);
+            }, 520);
+            finishWithTurnSwap();
+            return;
+          }
+
+          const applyCounterToAttacker = (dmg, color, anim) => {
+            if (currentTurn === "p1") {
+              const nh = Math.max(0, s2.pHp - dmg);
+              setPHp(nh);
+              setPAnim("playerHit 0.45s ease");
+              addD(`-${dmg}`, attackerMainX, attackerMainY, color);
+              safeTo(() => setPAnim(""), 520);
+              return nh <= 0;
+            }
+            const nh = Math.max(0, s2.pvpHp2 - dmg);
+            setPvpHp2(nh);
+            setEHp(nh);
+            setEAnim(anim);
+            addD(`-${dmg}`, attackerMainX, attackerMainY, color);
+            safeTo(() => setEAnim(""), 520);
+            return nh <= 0;
+          };
+
+          if (defender.type === "light") {
+            const counterDmg = PVP_BALANCE.passive.lightCounterDamage || 14;
+            addD("🛡️BLOCK", defenderMainX, defenderMainY, "#f59e0b");
+            const killed = applyCounterToAttacker(counterDmg, "#f59e0b", "enemyFireHit 0.55s ease");
+            sfx.play("light");
+            setBText(`✨ ${defender.name} 咆哮反擊！`);
+            safeTo(() => setAtkEffect(null), 420);
+            if (killed) {
+              setPvpWinner(currentTurn === "p1" ? "p2" : "p1");
+              setScreen("pvp_result");
+              return;
+            }
+            finishWithTurnSwap();
+            return;
+          }
+
+          const reflectRaw = Math.round(strike.dmg * (PVP_BALANCE.passive.grassReflectRatio || 0.32));
+          const reflectDmg = Math.min(
+            PVP_BALANCE.passive.grassReflectCap || 18,
+            Math.max(PVP_BALANCE.passive.grassReflectMin || 8, reflectRaw),
+          );
+          addD("🛡️BLOCK", defenderMainX, defenderMainY, "#22c55e");
+          const killed = applyCounterToAttacker(reflectDmg, "#22c55e", "enemyGrassHit 0.55s ease");
+          sfx.play("specDef");
+          setBText(`🌿 ${defender.name} 反彈攻擊！`);
+          safeTo(() => setAtkEffect(null), 420);
+          if (killed) {
+            setPvpWinner(currentTurn === "p1" ? "p2" : "p1");
+            setScreen("pvp_result");
+            return;
+          }
+          finishWithTurnSwap();
+          return;
         }
 
         let totalDmg = strike.dmg;
@@ -890,7 +1062,7 @@ export function useBattle() {
           }
         }
 
-        const allNotes = [strike.passiveLabel, ...passiveNotes].filter(Boolean).join(" ");
+        const allNotes = [strike.passiveLabel, ...passiveNotes, unlockedSpecDef ? "🛡️反制就緒" : ""].filter(Boolean).join(" ");
         setBText(`✅ ${attacker.name} 的 ${move.name} 命中！${allNotes ? ` ${allNotes}` : ""}`);
         setPvpTurn(nextTurn);
         setPvpActionCount((c) => c + 1);
@@ -1057,6 +1229,17 @@ export function useBattle() {
       return true;
     }
 
+    const paralyzed = isP1 ? !!s.pvpParalyzeP1 : !!s.pvpParalyzeP2;
+    if (paralyzed) {
+      if (isP1) setPvpParalyzeP1(false);
+      else setPvpParalyzeP2(false);
+      const nextTurn = getOtherPvpTurn(currentTurn);
+      setPvpTurn(nextTurn);
+      setBText(`⚡ ${currentName} 麻痺，回合跳過！`);
+      setPhase("text");
+      return true;
+    }
+
     const frozen = isP1 ? !!s.pvpFreezeP1 : !!s.pvpFreezeP2;
     if (frozen) {
       if (isP1) setPvpFreezeP1(false);
@@ -1140,8 +1323,9 @@ export function useBattle() {
     screen, timedMode, battleMode, enemies,
     starter, allySub, pHp, pHpSub, pExp, pLvl, pStg,
     coopActiveSlot,
-    pvpStarter2, pvpHp2, pvpTurn, pvpWinner, pvpActionCount,
+    pvpStarter2, pvpHp2, pvpTurn, pvpWinner, pvpChargeP1, pvpChargeP2, pvpActionCount,
     pvpBurnP1, pvpBurnP2, pvpFreezeP1, pvpFreezeP2, pvpStaticP1, pvpStaticP2,
+    pvpParalyzeP1, pvpParalyzeP2, pvpComboP1, pvpComboP2, pvpSpecDefP1, pvpSpecDefP2,
     round, enemy, eHp, enemySub, eHpSub,
     streak, passiveCount, charge, tC, tW, defeated, maxStreak,
     mHits, mLvls, mLvlUp,

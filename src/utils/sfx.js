@@ -155,6 +155,11 @@ const SOUNDS = {
     bass("D2", "4n");
     setTimeout(() => metalPing(0.13), 100);
   },
+  light: () => {
+    melodic("C6", "16n");
+    setTimeout(() => melodic("E6", "16n"), 80);
+    setTimeout(() => melodic("G5", "16n"), 160);
+  },
   bossCharge: () => {
     bass("E2", "4n");
     setTimeout(() => bass("F2", "4n"), 300);

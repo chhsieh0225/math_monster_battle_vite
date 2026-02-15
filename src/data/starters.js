@@ -3,6 +3,7 @@ import {
   playerwater0SVG, playerwater1SVG, playerwater2SVG,
   playergrass0SVG, playergrass1SVG, playergrass2SVG,
   playerelectric0SVG, playerelectric1SVG, playerelectric2SVG,
+  playerlion0SVG, playerlion1SVG, playerlion2SVG,
 } from './sprites';
 
 // growth = 每升一級增加的威力
@@ -57,5 +58,17 @@ export const STARTERS = [
      {name:"雷電擊",icon:"⚡",type:"electric",desc:"乘加混合",basePower:20,growth:5,range:[2,9],ops:["mixed3"],color:"#ca8a04",bg:"#fef9c3"},
      {name:"萬雷轟",icon:"⚡",type:"electric",desc:"四則運算",basePower:30,growth:3,range:[2,9],ops:["mixed4"],color:"#a16207",bg:"#fef08a"},
      {name:"終極爆破",icon:"💥",type:"dark",type2:"electric",desc:"暗雷·四則混合",basePower:40,growth:3,range:[2,12],ops:["mixed4"],color:"#a855f7",bg:"#faf5ff",risky:true},
+   ]},
+  {id:"lion",name:"小獅獸",type:"light",typeIcon:"✨",typeName:"光",c1:"#f59e0b",c2:"#92400e",
+   stages:[
+     {name:"小獅獸",emoji:"✨",svgFn:playerlion0SVG},
+     {name:"獅鬃獸",emoji:"✨",svgFn:playerlion1SVG},
+     {name:"獅焰王",emoji:"✨",svgFn:playerlion2SVG},
+   ],
+   moves:[
+     {name:"獵爪撲",icon:"✨",type:"light",desc:"加減求未知",basePower:12,growth:6,range:[2,20],ops:["unknown1"],color:"#f59e0b",bg:"#fffbeb"},
+     {name:"獅吼破",icon:"✨",type:"light",desc:"乘除求未知",basePower:20,growth:5,range:[2,9],ops:["unknown2"],color:"#d97706",bg:"#fef3c7"},
+     {name:"烈焰獵擊",icon:"✨",type:"light",desc:"大數求未知",basePower:30,growth:3,range:[4,50],ops:["unknown3"],color:"#b45309",bg:"#fde68a"},
+     {name:"終極爆破",icon:"💥",type:"dark",type2:"light",desc:"暗光·混合求未知",basePower:40,growth:3,range:[2,12],ops:["unknown4"],color:"#a855f7",bg:"#faf5ff",risky:true},
    ]},
 ];

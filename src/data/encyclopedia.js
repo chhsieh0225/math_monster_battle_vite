@@ -26,7 +26,7 @@ function resistances(mType) {
   return res;
 }
 
-const TYPE_LABEL = { fire:"火", water:"水", grass:"草", electric:"電", dark:"暗", ghost:"靈", steel:"鋼" };
+const TYPE_LABEL = { fire:"火", water:"水", grass:"草", electric:"電", dark:"暗", ghost:"靈", steel:"鋼", light:"光" };
 
 // ── Monster descriptions ──
 const DESCS = {
@@ -209,6 +209,10 @@ const STARTER_DESCS = {
   electric_0: "在雷雨天誕生的電氣幼獸。毛茸茸的身體會蓄積靜電。學習加減混合運算來精確控制放電頻率。",
   electric_1: "小雷獸掌握了雷電之力後的進化。全身電弧環繞，速度大幅提升。乘加混合運算讓攻擊變化多端。",
   electric_2: "雷電獸引發天雷後的終極覺醒。據說一道閃電就能劈開山脈。四則運算的全方位掌握就是牠的無限電力。",
+  // ── Lion ──
+  lion_0: "在金色草原上誕生的幼獅。雖然年幼但眼神銳利，天生擁有追蹤未知數的直覺。擅長用加減法找出隱藏的答案。",
+  lion_1: "小獅獸歷經磨練後長出了威風的鬃毛。牠的獵爪更加鋒利，能破解乘除法中的未知謎題。草原上的掠食者都敬畏三分。",
+  lion_2: "獅鬃獸覺醒獅焰之力後的終極型態。全身環繞神聖金焰，任何未知數都無所遁形。傳說中只有最勇敢的訓練師才能駕馭這頭萬獸之王。",
 };
 
 const STARTER_SKILLS = {
@@ -216,6 +220,7 @@ const STARTER_SKILLS = {
   water:    "💧 水屬性·除法系",
   grass:    "🌿 草屬性·加減法系",
   electric: "⚡ 雷屬性·四則運算系",
+  lion:     "✨ 光屬性·求未知數系",
 };
 
 export const STARTER_ENTRIES = [];

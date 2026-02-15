@@ -42,9 +42,9 @@ const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
 const HIT_ANIMS = {
   fire: "enemyFireHit 0.6s ease", electric: "enemyElecHit 0.6s ease",
   water: "enemyWaterHit 0.7s ease", grass: "enemyGrassHit 0.6s ease",
-  dark: "enemyDarkHit 0.8s ease",
+  dark: "enemyDarkHit 0.8s ease", light: "enemyFireHit 0.6s ease",
 };
-const EFX_DELAY = { fire: 300, electric: 200, water: 350, grass: 280, dark: 400 };
+const EFX_DELAY = { fire: 300, electric: 200, water: 350, grass: 280, dark: 400, light: 300 };
 
 // ═══════════════════════════════════════════════════════════════════
 export function useBattle() {
@@ -542,6 +542,24 @@ export function useBattle() {
             setPhase("text");
             safeTo(() => { setPhase("menu"); setBText(""); }, 1500);
           }, 1800);
+        } else if (st === "light") {
+          // Lion King's Roar: block attack + 15 fixed counter damage
+          const roarDmg = 15;
+          const nh = Math.max(0, sr.current.eHp - roarDmg);
+          setEHp(nh);
+          setBText("✨ 獅王咆哮！擋下攻擊並反擊！");
+          addD("🛡️BLOCK", 60, 170, "#f59e0b"); addP("starter", 50, 170, 6);
+          sfx.play("light");
+          safeTo(() => {
+            addD(`-${roarDmg}`, 155, 50, "#f59e0b");
+            setEAnim("enemyFireHit 0.6s ease");
+            addP("starter", 155, 80, 5);
+          }, 500);
+          safeTo(() => {
+            setEAnim(""); setDefAnim(null);
+            if (nh <= 0) { safeTo(() => handleVictory("被獅王咆哮打倒了"), 500); }
+            else { setPhase("menu"); setBText(""); }
+          }, 1800);
         } else {
           const rawDmg = Math.round(s2.enemy.atk * (0.8 + Math.random() * 0.4));
           const refDmg = Math.round(rawDmg * 1.2);
@@ -719,11 +737,17 @@ export function useBattle() {
             // ── Curse debuff: player attack weakened by 0.6x ──
             const wasCursed = s3.cursed;
             if (wasCursed) { dmg = Math.round(dmg * 0.6); setCursed(false); }
+            // Lion Brave Heart passive: damage bonus scales with missing HP (max +50%)
+            if (starter.type === "light" && s3.pHp < PLAYER_MAX_HP) {
+              const braveMult = 1 + ((PLAYER_MAX_HP - s3.pHp) / PLAYER_MAX_HP) * 0.5;
+              dmg = Math.round(dmg * braveMult);
+            }
             // Boss Phase 3: 背水一戰 — player gets ×1.3 bonus
             if (s3.bossPhase >= 3) dmg = Math.round(dmg * 1.3);
 
             if (wasCursed) { setEffMsg({ text: "💀 詛咒弱化了攻擊...", color: "#a855f7" }); safeTo(() => setEffMsg(null), 1500); }
             else if (isFortress) { setEffMsg({ text: "🛡️ 鐵壁減傷！", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
+            else if (starter.type === "light" && s3.pHp < PLAYER_MAX_HP * 0.5) { setEffMsg({ text: "🦁 勇氣之心！ATK↑", color: "#f59e0b" }); safeTo(() => setEffMsg(null), 1500); }
             else if (eff > 1) { setEffMsg({ text: "效果絕佳！", color: "#22c55e" }); safeTo(() => setEffMsg(null), 1500); }
             else if (eff < 1) { setEffMsg({ text: "效果不好...", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
 
@@ -771,7 +795,7 @@ export function useBattle() {
 
             setEHp(afterHp);
             setEAnim(HIT_ANIMS[bt] || "enemyHit 0.5s ease");
-            const dmgColor = { fire: "#ef4444", electric: "#fbbf24", water: "#3b82f6", grass: "#22c55e", dark: "#a855f7" }[bt] || "#ef4444";
+            const dmgColor = { fire: "#ef4444", electric: "#fbbf24", water: "#3b82f6", grass: "#22c55e", dark: "#a855f7", light: "#f59e0b" }[bt] || "#ef4444";
             addD(`-${dmg}`, 140, 55, dmgColor);
             safeTo(() => { setEAnim(""); setAtkEffect(null); }, 800);
 
@@ -876,6 +900,7 @@ export function useBattle() {
       else if (sid === "water") tryUnlock("water_clear");
       else if (sid === "grass") tryUnlock("grass_clear");
       else if (sid === "electric") tryUnlock("electric_clear");
+      else if (sid === "lion") tryUnlock("lion_clear");
     }
     setEncData(prev => {
       if (Object.keys(prev.encountered).length >= ENC_TOTAL) tryUnlock("enc_all");

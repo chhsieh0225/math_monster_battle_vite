@@ -132,6 +132,124 @@ function genMixed4(range, _depth = 0) {
   return { display: d, answer: ans, op: "mixed4", steps };
 }
 
+// ── Solve-for-unknown question generators (for lion starter) ──
+
+/**
+ * unknown1: ? ± b = c  (加減求未知)
+ * e.g. ? + 5 = 12 → ans = 7
+ */
+function genUnknown1(range, _depth = 0) {
+  if (_depth > 20) {
+    const a = rr(range[0], range[1]), b = rr(range[0], range[1]);
+    return { display: `? + ${b} = ${a + b}`, answer: a, op: "unknown1",
+             steps: [`? + ${b} = ${a + b}`, `? = ${a + b} - ${b}`, `? = ${a}`] };
+  }
+  const op = Math.random() < 0.5 ? "+" : "-";
+  if (op === "+") {
+    const ans = rr(range[0], range[1]);
+    const b = rr(range[0], range[1]);
+    const c = ans + b;
+    return { display: `? + ${b} = ${c}`, answer: ans, op: "unknown1",
+             steps: [`? + ${b} = ${c}`, `? = ${c} - ${b}`, `? = ${ans}`] };
+  } else {
+    const b = rr(range[0], range[1]);
+    const ans = rr(range[0], range[1]);
+    const c = ans - b;
+    if (c < 0) return genUnknown1(range, _depth + 1);
+    return { display: `? - ${b} = ${c}`, answer: ans, op: "unknown1",
+             steps: [`? - ${b} = ${c}`, `? = ${c} + ${b}`, `? = ${ans}`] };
+  }
+}
+
+/**
+ * unknown2: ? × b = c  or  ? ÷ b = c  (乘除求未知)
+ * e.g. ? × 4 = 28 → ans = 7
+ */
+function genUnknown2(range) {
+  const op = Math.random() < 0.5 ? "×" : "÷";
+  if (op === "×") {
+    const ans = rr(range[0], range[1]);
+    const b = Math.max(2, rr(range[0], range[1]));
+    const c = ans * b;
+    return { display: `? × ${b} = ${c}`, answer: ans, op: "unknown2",
+             steps: [`? × ${b} = ${c}`, `? = ${c} ÷ ${b}`, `? = ${ans}`] };
+  } else {
+    const b = Math.max(2, rr(range[0], range[1]));
+    const c = rr(range[0], range[1]);
+    const ans = b * c;
+    return { display: `? ÷ ${b} = ${c}`, answer: ans, op: "unknown2",
+             steps: [`? ÷ ${b} = ${c}`, `? = ${c} × ${b}`, `? = ${ans}`] };
+  }
+}
+
+/**
+ * unknown3: large-number unknowns — ? + b = c, ? × b = c with bigger numbers
+ * e.g. ? + 37 = 85 → ans = 48
+ */
+function genUnknown3(range, _depth = 0) {
+  if (_depth > 20) {
+    const a = rr(range[0], range[1]), b = rr(range[0], range[1]);
+    return { display: `? + ${b} = ${a + b}`, answer: a, op: "unknown3",
+             steps: [`? + ${b} = ${a + b}`, `? = ${a + b} - ${b}`, `? = ${a}`] };
+  }
+  const pattern = Math.random();
+  if (pattern < 0.35) {
+    // ? + b = c
+    const ans = rr(range[0], range[1]);
+    const b = rr(range[0], range[1]);
+    const c = ans + b;
+    return { display: `? + ${b} = ${c}`, answer: ans, op: "unknown3",
+             steps: [`? + ${b} = ${c}`, `? = ${c} - ${b}`, `? = ${ans}`] };
+  } else if (pattern < 0.65) {
+    // ? - b = c
+    const b = rr(range[0], range[1]);
+    const ans = rr(Math.max(range[0], b + 1), range[1] + b);
+    const c = ans - b;
+    if (c < 0) return genUnknown3(range, _depth + 1);
+    return { display: `? - ${b} = ${c}`, answer: ans, op: "unknown3",
+             steps: [`? - ${b} = ${c}`, `? = ${c} + ${b}`, `? = ${ans}`] };
+  } else {
+    // ? × b = c (with capped b to keep answer reasonable)
+    const b = Math.max(2, rr(2, Math.min(range[1], 9)));
+    const ans = rr(range[0], Math.min(range[1], 15));
+    const c = ans * b;
+    return { display: `? × ${b} = ${c}`, answer: ans, op: "unknown3",
+             steps: [`? × ${b} = ${c}`, `? = ${c} ÷ ${b}`, `? = ${ans}`] };
+  }
+}
+
+/**
+ * unknown4: compound unknowns — (? + a) × b = c, ? × a + b = c
+ * e.g. (? + 3) × 4 = 28 → ? = 4
+ */
+function genUnknown4(range, _depth = 0) {
+  if (_depth > 20) {
+    const a = rr(2, 5), b = rr(2, 5), ans = rr(range[0], range[1]);
+    const c = (ans + a) * b;
+    return { display: `(? + ${a}) × ${b} = ${c}`, answer: ans, op: "unknown4",
+             steps: [`(? + ${a}) × ${b} = ${c}`, `? + ${a} = ${c} ÷ ${b} = ${c / b}`, `? = ${c / b} - ${a} = ${ans}`] };
+  }
+  const pattern = Math.random();
+  if (pattern < 0.5) {
+    // (? + a) × b = c
+    const a = rr(1, Math.min(range[1], 6));
+    const b = Math.max(2, rr(2, Math.min(range[1], 6)));
+    const ans = rr(range[0], range[1]);
+    const inner = ans + a;
+    const c = inner * b;
+    return { display: `(? + ${a}) × ${b} = ${c}`, answer: ans, op: "unknown4",
+             steps: [`(? + ${a}) × ${b} = ${c}`, `? + ${a} = ${c} ÷ ${b} = ${inner}`, `? = ${inner} - ${a} = ${ans}`] };
+  } else {
+    // ? × a + b = c
+    const a = Math.max(2, rr(2, Math.min(range[1], 6)));
+    const b = rr(1, Math.min(range[1], 10));
+    const ans = rr(range[0], range[1]);
+    const c = ans * a + b;
+    return { display: `? × ${a} + ${b} = ${c}`, answer: ans, op: "unknown4",
+             steps: [`? × ${a} + ${b} = ${c}`, `? × ${a} = ${c} - ${b} = ${c - b}`, `? = ${(c - b)} ÷ ${a} = ${ans}`] };
+  }
+}
+
 /**
  * @param {Object} move
  * @param {number} [diffMod=1] - Difficulty multiplier for range (0.7~1.3)
@@ -158,6 +276,24 @@ export function genQ(move, diffMod = 1) {
   }
   if (op === "mixed4") {
     const q = genMixed4(range);
+    return makeChoices(q);
+  }
+
+  // ── Solve-for-unknown operations (lion starter) ──
+  if (op === "unknown1") {
+    const q = genUnknown1(range);
+    return makeChoices(q);
+  }
+  if (op === "unknown2") {
+    const q = genUnknown2(range);
+    return makeChoices(q);
+  }
+  if (op === "unknown3") {
+    const q = genUnknown3(range);
+    return makeChoices(q);
+  }
+  if (op === "unknown4") {
+    const q = genUnknown4(range);
     return makeChoices(q);
   }
 

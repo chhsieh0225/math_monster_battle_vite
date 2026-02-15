@@ -46,6 +46,15 @@ export const PVP_BALANCE = {
   lightComeback: {
     maxBonus: 0.16,
   },
+  passive: {
+    fireBurnCap: 2,
+    fireBurnTickBase: 2,
+    fireBurnTickPerStack: 2,
+    waterFreezeChance: 0.28,
+    electricDischargeAt: 3,
+    electricDischargeDamage: 10,
+  },
+  firstStrikeScale: 0.9,
   effectScale: {
     strong: 1.18,
     weak: 0.86,

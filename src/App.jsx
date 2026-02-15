@@ -352,6 +352,12 @@ function App() {
     filter: active ? "none" : "saturate(0.72)",
     transition: "opacity 0.2s ease,transform 0.2s ease,filter 0.2s ease",
   });
+  const pvpEnemyBurn = B.pvpBurnP2 || 0;
+  const pvpEnemyFreeze = !!B.pvpFreezeP2;
+  const pvpEnemyStatic = B.pvpStaticP2 || 0;
+  const pvpPlayerBurn = B.pvpBurnP1 || 0;
+  const pvpPlayerFreeze = !!B.pvpFreezeP1;
+  const pvpPlayerStatic = B.pvpStaticP1 || 0;
 
   // Enemy visual center fallback (used before first DOM measurement)
   // Note: MonsterSprite height = size * 100 / 120, so center Y uses sprite height / 2.
@@ -449,12 +455,22 @@ function App() {
             </div>
           )}
           <div style={{ display: "flex", gap: 4, marginTop: 3, flexWrap: "wrap" }}>
-            {B.enemy.traitName && B.enemy.traitName !== "普通" && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>✦{B.enemy.traitName}</div>}
-            {B.burnStack > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥灼燒 x{B.burnStack}</div>}
-            {B.frozen && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️凍結</div>}
-            {B.staticStack > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡靜電 x{B.staticStack}{B.staticStack >= 2 ? " ⚠️" : ""}</div>}
-            {B.bossPhase >= 2 && <div style={{ background: "rgba(168,85,247,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>{B.bossPhase >= 3 ? "💀覺醒 ATK×2" : "💀狂暴 ATK×1.5"}</div>}
-            {B.bossCharging && <div style={{ background: "rgba(251,191,36,0.9)", color: "#000", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚠️蓄力中！</div>}
+            {B.battleMode === "pvp" ? (
+              <>
+                {pvpEnemyBurn > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥灼燒 x{pvpEnemyBurn}</div>}
+                {pvpEnemyFreeze && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️凍結</div>}
+                {pvpEnemyStatic > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡蓄電 x{pvpEnemyStatic}</div>}
+              </>
+            ) : (
+              <>
+                {B.enemy.traitName && B.enemy.traitName !== "普通" && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>✦{B.enemy.traitName}</div>}
+                {B.burnStack > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥灼燒 x{B.burnStack}</div>}
+                {B.frozen && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️凍結</div>}
+                {B.staticStack > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡靜電 x{B.staticStack}{B.staticStack >= 2 ? " ⚠️" : ""}</div>}
+                {B.bossPhase >= 2 && <div style={{ background: "rgba(168,85,247,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>{B.bossPhase >= 3 ? "💀覺醒 ATK×2" : "💀狂暴 ATK×1.5"}</div>}
+                {B.bossCharging && <div style={{ background: "rgba(251,191,36,0.9)", color: "#000", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚠️蓄力中！</div>}
+              </>
+            )}
           </div>
         </div>
 
@@ -481,7 +497,17 @@ function App() {
             </div>
           )}
           <XPBar exp={B.pExp} max={B.expNext} />
-          {B.cursed && <div style={{ background: "rgba(168,85,247,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, marginTop: 3, display: "inline-block", animation: "popIn 0.3s ease" }}>💀詛咒：下次攻擊弱化</div>}
+          {B.battleMode === "pvp" ? (
+            <div style={{ display: "flex", gap: 4, marginTop: 3, flexWrap: "wrap" }}>
+              {pvpPlayerBurn > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥灼燒 x{pvpPlayerBurn}</div>}
+              {pvpPlayerFreeze && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️凍結</div>}
+              {pvpPlayerStatic > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡蓄電 x{pvpPlayerStatic}</div>}
+            </div>
+          ) : (
+            <>
+              {B.cursed && <div style={{ background: "rgba(168,85,247,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, marginTop: 3, display: "inline-block", animation: "popIn 0.3s ease" }}>💀詛咒：下次攻擊弱化</div>}
+            </>
+          )}
         </div>
 
         {/* Player sprite */}

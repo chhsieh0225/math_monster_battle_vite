@@ -25,6 +25,7 @@ import {
   MAX_MOVE_LVL,
   TIMER_SEC, PLAYER_MAX_HP,
 } from '../data/constants';
+import { PVP_BALANCE } from '../data/pvpBalance';
 import { STARTERS } from '../data/starters';
 
 import { genQ } from '../utils/questionGenerator';
@@ -89,6 +90,15 @@ const TYPE_TO_SCENE = {
   light: "grass",
 };
 
+const PVP_HIT_ANIMS = {
+  fire: "enemyFireHit 0.55s ease",
+  electric: "enemyElecHit 0.55s ease",
+  water: "enemyWaterHit 0.6s ease",
+  grass: "enemyGrassHit 0.55s ease",
+  dark: "enemyDarkHit 0.7s ease",
+  light: "enemyFireHit 0.55s ease",
+};
+
 function createPvpEnemyFromStarter(starter) {
   if (!starter) return null;
   return {
@@ -132,6 +142,13 @@ export function useBattle() {
   const [pvpHp2, setPvpHp2] = useState(PLAYER_MAX_HP);
   const [pvpTurn, setPvpTurn] = useState("p1");
   const [pvpWinner, setPvpWinner] = useState(null);
+  const [pvpActionCount, setPvpActionCount] = useState(0);
+  const [pvpBurnP1, setPvpBurnP1] = useState(0);
+  const [pvpBurnP2, setPvpBurnP2] = useState(0);
+  const [pvpFreezeP1, setPvpFreezeP1] = useState(false);
+  const [pvpFreezeP2, setPvpFreezeP2] = useState(false);
+  const [pvpStaticP1, setPvpStaticP1] = useState(0);
+  const [pvpStaticP2, setPvpStaticP2] = useState(0);
 
   // ──── Player ────
   const [starter, setStarter] = useState(null);
@@ -230,6 +247,14 @@ export function useBattle() {
     return isCoopSubActive ? state.allySub : state.starter;
   };
 
+  const getPvpTurnName = (state, turn) => (
+    turn === "p1"
+      ? (state?.starter?.name || "玩家1")
+      : (state?.pvpStarter2?.name || "玩家2")
+  );
+
+  const getOtherPvpTurn = (turn) => (turn === "p1" ? "p2" : "p1");
+
   // ──── Internal refs ────
   const runSeedRef = useRef(0);
   const asyncGateRef = useRef(0);
@@ -252,7 +277,8 @@ export function useBattle() {
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
     tC, tW, maxStreak, defeated,
     coopActiveSlot,
-    pvpStarter2, pvpHp2, pvpTurn, pvpWinner,
+    pvpStarter2, pvpHp2, pvpTurn, pvpWinner, pvpActionCount,
+    pvpBurnP1, pvpBurnP2, pvpFreezeP1, pvpFreezeP2, pvpStaticP1, pvpStaticP2,
   };
   useLayoutEffect(() => { sr.current = _srSnapshot; });
 
@@ -298,8 +324,10 @@ export function useBattle() {
       setAnswered(true);
       setFb({ correct: false, answer: s.q?.answer, steps: s.q?.steps || [] });
       setTW(w => w + 1);
-      setBText(`⏰ ${s.pvpTurn === "p1" ? "玩家1" : "玩家2"} 超時，回合交換！`);
-      setPvpTurn((t) => (t === "p1" ? "p2" : "p1"));
+      const nextTurn = getOtherPvpTurn(s.pvpTurn);
+      setBText(`⏰ ${getPvpTurnName(s, s.pvpTurn)} 超時，回合交換！`);
+      setPvpTurn(nextTurn);
+      setPvpActionCount((c) => c + 1);
       setPhase("text");
       return;
     }
@@ -413,6 +441,7 @@ export function useBattle() {
     if (mode === "pvp") {
       setEnemies([]);
       setCoopActiveSlot("main");
+      const firstTurn = chance(0.5) ? "p1" : "p2";
       dispatchBattle({
         type: "reset_run",
         patch: {
@@ -424,8 +453,12 @@ export function useBattle() {
       });
       setPvpStarter2(rival);
       setPvpHp2(PLAYER_MAX_HP);
-      setPvpTurn("p1");
+      setPvpTurn(firstTurn);
       setPvpWinner(null);
+      setPvpActionCount(0);
+      setPvpBurnP1(0); setPvpBurnP2(0);
+      setPvpFreezeP1(false); setPvpFreezeP2(false);
+      setPvpStaticP1(0); setPvpStaticP2(0);
       setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
       frozenR.current = false;
       abilityModelRef.current = createAbilityModel(2);
@@ -440,7 +473,8 @@ export function useBattle() {
       const enemyPvp = createPvpEnemyFromStarter(rival);
       dispatchBattle({ type: "start_battle", enemy: enemyPvp, enemySub: null, round: 0 });
       setPhase("text");
-      setBText(`⚔️ 雙人對戰開始！${leader?.name || "玩家1"} vs ${rival?.name || "玩家2"}，輪到 ${leader?.name || "玩家1"}！`);
+      const firstName = firstTurn === "p1" ? (leader?.name || "玩家1") : (rival?.name || "玩家2");
+      setBText(`⚔️ 雙人對戰開始！${leader?.name || "玩家1"} vs ${rival?.name || "玩家2"}，先手：${firstName}`);
       setScreen("battle");
       effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim });
       return;
@@ -450,6 +484,10 @@ export function useBattle() {
     setEnemies(newRoster);
     setCoopActiveSlot("main");
     setPvpWinner(null);
+    setPvpActionCount(0);
+    setPvpBurnP1(0); setPvpBurnP2(0);
+    setPvpFreezeP1(false); setPvpFreezeP2(false);
+    setPvpStaticP1(0); setPvpStaticP2(0);
     const isCoop = mode === "coop" || mode === "double";
     const partner = isCoop ? (allyOverride || pickPartnerStarter(leader, pickIndex)) : null;
     dispatchBattle({
@@ -719,65 +757,161 @@ export function useBattle() {
       setFb({ correct, answer: s.q.answer, steps: s.q.steps || [] });
       if (correct) setTC((c) => c + 1);
       else setTW((w) => w + 1);
-      if (correct) {
-        const attackerHp = s.pvpTurn === "p1" ? s.pHp : s.pvpHp2;
-        const strike = resolvePvpStrike({
-          move,
-          moveIdx: s.selIdx,
-          attackerType: attacker.type,
-          defenderType: defender.type,
-          attackerHp,
-          attackerMaxHp: PLAYER_MAX_HP,
-          random: rand,
-        });
-        const dmg = strike.dmg;
-        if (strike.eff > 1) {
-          setEffMsg({ text: "效果絕佳！", color: "#22c55e" });
-          safeTo(() => setEffMsg(null), 1200);
-        } else if (strike.eff < 1) {
-          setEffMsg({ text: "效果不佳", color: "#94a3b8" });
-          safeTo(() => setEffMsg(null), 1200);
+      const currentTurn = s.pvpTurn;
+      const nextTurn = getOtherPvpTurn(currentTurn);
+
+      if (!correct) {
+        setPvpTurn(nextTurn);
+        setPvpActionCount((c) => c + 1);
+        setBText(`❌ ${attacker.name} 答錯，攻擊落空！`);
+        setPhase("text");
+        return;
+      }
+
+      const attackerHp = currentTurn === "p1" ? s.pHp : s.pvpHp2;
+      const strike = resolvePvpStrike({
+        move,
+        moveIdx: s.selIdx,
+        attackerType: attacker.type,
+        defenderType: defender.type,
+        attackerHp,
+        attackerMaxHp: PLAYER_MAX_HP,
+        firstStrike: s.pvpActionCount === 0,
+        random: rand,
+      });
+
+      if (strike.eff > 1) {
+        setEffMsg({ text: "效果絕佳！", color: "#22c55e" });
+        safeTo(() => setEffMsg(null), 1200);
+      } else if (strike.eff < 1) {
+        setEffMsg({ text: "效果不佳", color: "#94a3b8" });
+        safeTo(() => setEffMsg(null), 1200);
+      }
+
+      const vfxType = move.risky && move.type2 ? move.type2 : move.type;
+      const hitAnim = PVP_HIT_ANIMS[vfxType] || "enemyHit 0.45s ease";
+      const runStrike = () => {
+        const s2 = sr.current;
+        const sfxKey = move.risky && move.type2 ? move.type2 : move.type;
+        sfx.play(sfxKey);
+        if (currentTurn === "p1") {
+          setAtkEffect({ type: vfxType, idx: s2.selIdx, lvl: 1 });
+        } else {
+          addP("enemy", 84, 186, 3);
         }
-        if (s.pvpTurn === "p1") {
-          const nh = Math.max(0, s.pvpHp2 - dmg);
+
+        let totalDmg = strike.dmg;
+        const passiveNotes = [];
+        let bonusDmg = 0;
+
+        // Fire passive: apply burn stacks to defender.
+        if (attacker.type === "fire") {
+          if (currentTurn === "p1") setPvpBurnP2((b) => Math.min(PVP_BALANCE.passive.fireBurnCap, b + 1));
+          else setPvpBurnP1((b) => Math.min(PVP_BALANCE.passive.fireBurnCap, b + 1));
+          passiveNotes.push("🔥灼燒");
+        }
+
+        // Water passive: chance to freeze defender's next turn.
+        if (attacker.type === "water" && chance(PVP_BALANCE.passive.waterFreezeChance)) {
+          if (currentTurn === "p1") setPvpFreezeP2(true);
+          else setPvpFreezeP1(true);
+          passiveNotes.push("❄️凍結");
+        }
+
+        // Electric passive: stack discharge on attacker.
+        if (attacker.type === "electric") {
+          if (currentTurn === "p1") {
+            const stack = (s2.pvpStaticP1 || 0) + 1;
+            if (stack >= PVP_BALANCE.passive.electricDischargeAt) {
+              bonusDmg += PVP_BALANCE.passive.electricDischargeDamage;
+              setPvpStaticP1(0);
+              passiveNotes.push("⚡放電");
+              addD(`⚡-${PVP_BALANCE.passive.electricDischargeDamage}`, 140, 55, "#fbbf24");
+              sfx.play("staticDischarge");
+            } else {
+              setPvpStaticP1(stack);
+            }
+          } else {
+            const stack = (s2.pvpStaticP2 || 0) + 1;
+            if (stack >= PVP_BALANCE.passive.electricDischargeAt) {
+              bonusDmg += PVP_BALANCE.passive.electricDischargeDamage;
+              setPvpStaticP2(0);
+              passiveNotes.push("⚡放電");
+              addD(`⚡-${PVP_BALANCE.passive.electricDischargeDamage}`, 60, 170, "#fbbf24");
+              sfx.play("staticDischarge");
+            } else {
+              setPvpStaticP2(stack);
+            }
+          }
+        }
+
+        totalDmg += bonusDmg;
+
+        if (currentTurn === "p1") {
+          const nh = Math.max(0, s2.pvpHp2 - totalDmg);
           setPvpHp2(nh);
           setEHp(nh);
-          setEAnim("enemyHit 0.45s ease");
-          addD(`-${dmg}`, 140, 55, "#ef4444");
+          setEAnim(hitAnim);
+          addD(`-${totalDmg}`, 140, 55, "#ef4444");
+
           if (strike.heal > 0) {
             setPHp((h) => Math.min(PLAYER_MAX_HP, h + strike.heal));
             addD(`+${strike.heal}`, 52, 164, "#22c55e");
+            passiveNotes.push("🌿回復");
           }
-          safeTo(() => setEAnim(""), 500);
+
+          safeTo(() => { setEAnim(""); setAtkEffect(null); }, 520);
           if (nh <= 0) {
             setPvpWinner("p1");
             setScreen("pvp_result");
             return;
           }
         } else {
-          const nh = Math.max(0, s.pHp - dmg);
+          const nh = Math.max(0, s2.pHp - totalDmg);
           setPHp(nh);
           setPAnim("playerHit 0.45s ease");
-          addD(`-${dmg}`, 60, 170, "#ef4444");
+          addD(`-${totalDmg}`, 60, 170, "#ef4444");
+
           if (strike.heal > 0) {
-            const healed = Math.min(PLAYER_MAX_HP, s.pvpHp2 + strike.heal);
+            const healed = Math.min(PLAYER_MAX_HP, s2.pvpHp2 + strike.heal);
             setPvpHp2(healed);
             setEHp(healed);
             addD(`+${strike.heal}`, 146, 54, "#22c55e");
+            passiveNotes.push("🌿回復");
           }
-          safeTo(() => setPAnim(""), 500);
+
+          safeTo(() => { setPAnim(""); setAtkEffect(null); }, 520);
           if (nh <= 0) {
             setPvpWinner("p2");
             setScreen("pvp_result");
             return;
           }
         }
-        setBText(`✅ ${attacker.name} 的 ${move.name} 命中！${strike.passiveLabel ? ` ${strike.passiveLabel}` : ""}`);
+
+        const allNotes = [strike.passiveLabel, ...passiveNotes].filter(Boolean).join(" ");
+        setBText(`✅ ${attacker.name} 的 ${move.name} 命中！${allNotes ? ` ${allNotes}` : ""}`);
+        setPvpTurn(nextTurn);
+        setPvpActionCount((c) => c + 1);
+        setPhase("text");
+      };
+
+      setPhase("playerAtk");
+      if (currentTurn === "p1") {
+        effectOrchestrator.runPlayerLunge({
+          safeTo,
+          setPAnim,
+          startDelay: 120,
+          settleDelay: 280,
+          onReady: runStrike,
+        });
       } else {
-        setBText(`❌ ${attacker.name} 答錯，攻擊落空！`);
+        effectOrchestrator.runEnemyLunge({
+          safeTo,
+          setEAnim,
+          strikeDelay: 320,
+          onStrike: runStrike,
+        });
       }
-      setPvpTurn((t) => (t === "p1" ? "p2" : "p1"));
-      setPhase("text");
       return;
     }
 
@@ -879,8 +1013,67 @@ export function useBattle() {
     }
   };
 
+  const processPvpTurnStart = () => {
+    const s = sr.current;
+    if (s.battleMode !== "pvp" || s.pvpWinner) return false;
+    const currentTurn = s.pvpTurn;
+    const currentName = getPvpTurnName(s, currentTurn);
+    const isP1 = currentTurn === "p1";
+
+    const burnStack = isP1 ? (s.pvpBurnP1 || 0) : (s.pvpBurnP2 || 0);
+    if (burnStack > 0) {
+      const burnDmg = (PVP_BALANCE.passive.fireBurnTickBase || 0)
+        + burnStack * (PVP_BALANCE.passive.fireBurnTickPerStack || 0);
+      if (isP1) {
+        const nh = Math.max(0, s.pHp - burnDmg);
+        setPHp(nh);
+        setPvpBurnP1(Math.max(0, burnStack - 1));
+        setPAnim("playerHit 0.45s ease");
+        addD(`🔥-${burnDmg}`, 60, 170, "#f97316");
+        safeTo(() => setPAnim(""), 480);
+        if (nh <= 0) {
+          setPvpWinner("p2");
+          setScreen("pvp_result");
+          return true;
+        }
+      } else {
+        const nh = Math.max(0, s.pvpHp2 - burnDmg);
+        setPvpHp2(nh);
+        setEHp(nh);
+        setPvpBurnP2(Math.max(0, burnStack - 1));
+        setEAnim("enemyFireHit 0.5s ease");
+        addD(`🔥-${burnDmg}`, 140, 55, "#f97316");
+        safeTo(() => setEAnim(""), 480);
+        if (nh <= 0) {
+          setPvpWinner("p1");
+          setScreen("pvp_result");
+          return true;
+        }
+      }
+      setBText(`🔥 ${currentName} 受到灼燒傷害！`);
+      setPhase("text");
+      return true;
+    }
+
+    const frozen = isP1 ? !!s.pvpFreezeP1 : !!s.pvpFreezeP2;
+    if (frozen) {
+      if (isP1) setPvpFreezeP1(false);
+      else setPvpFreezeP2(false);
+      const nextTurn = getOtherPvpTurn(currentTurn);
+      setPvpTurn(nextTurn);
+      setBText(`❄️ ${currentName} 被凍結，回合跳過！`);
+      setPhase("text");
+      return true;
+    }
+
+    return false;
+  };
+
   const advance = () => {
-    if (phase === "text") { setPhase("menu"); setBText(""); }
+    if (phase === "text") {
+      if (processPvpTurnStart()) return;
+      setPhase("menu"); setBText("");
+    }
     else if (phase === "victory") {
       // Bug #2 fix: if an evolution is pending, go to evolve screen
       // instead of starting next battle (eliminates timer-based race).
@@ -945,7 +1138,8 @@ export function useBattle() {
     screen, timedMode, battleMode, enemies,
     starter, allySub, pHp, pHpSub, pExp, pLvl, pStg,
     coopActiveSlot,
-    pvpStarter2, pvpHp2, pvpTurn, pvpWinner,
+    pvpStarter2, pvpHp2, pvpTurn, pvpWinner, pvpActionCount,
+    pvpBurnP1, pvpBurnP2, pvpFreezeP1, pvpFreezeP2, pvpStaticP1, pvpStaticP2,
     round, enemy, eHp, enemySub, eHpSub,
     streak, passiveCount, charge, tC, tW, defeated, maxStreak,
     mHits, mLvls, mLvlUp,

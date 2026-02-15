@@ -154,6 +154,7 @@ export function resolvePvpStrike({
   defenderType,
   attackerHp = PLAYER_MAX_HP,
   attackerMaxHp = PLAYER_MAX_HP,
+  firstStrike = false,
   random = Math.random,
 }) {
   if (!move || moveIdx == null) {
@@ -190,6 +191,7 @@ export function resolvePvpStrike({
     ? (1 - hpRatio) * (PVP_BALANCE.lightComeback?.maxBonus ?? 0)
     : 0;
   const comebackScale = 1 + lightComebackBonus;
+  const firstStrikeScale = firstStrike ? (PVP_BALANCE.firstStrikeScale ?? 1) : 1;
 
   const rawDamage = basePow
     * PVP_BALANCE.baseScale
@@ -199,6 +201,7 @@ export function resolvePvpStrike({
     * skillScale
     * passiveScale
     * comebackScale
+    * firstStrikeScale
     * effectScale
     * riskyScale;
   const dmg = Math.max(

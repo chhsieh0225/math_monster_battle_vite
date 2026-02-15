@@ -381,8 +381,6 @@ function App() {
 
       {/* ═══ Bottom panel ═══ */}
       <div className="battle-panel" style={{ background: "linear-gradient(to top,#0f172a,#1e293b)", borderTop: "3px solid rgba(255,255,255,0.1)", flexShrink: 0, minHeight: B.phase === "question" ? 210 : 170, position: "relative" }}>
-        <button className="battle-util-btn" onClick={() => openSettings("battle")} style={{ position: "absolute", top: 8, right: 10, background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.55)", fontSize: 13, fontWeight: 700, padding: "5px 10px", borderRadius: 14, cursor: "pointer", zIndex: 5 }}>⚙️ 設定</button>
-
         {/* Move menu */}
         {B.phase === "menu" && B.starter && <div style={{ padding: 10 }}><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
           {B.starter.moves.map((m, i) => {
@@ -401,7 +399,7 @@ function App() {
               {!m.risky && !atCap && <div style={{ height: 3, background: "rgba(0,0,0,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}><div style={{ width: `${(B.mHits[i] % (HITS_PER_LVL * B.mLvls[i])) / (HITS_PER_LVL * B.mLvls[i]) * 100}%`, height: "100%", background: m.color, borderRadius: 2, transition: "width 0.3s" }} /></div>}
             </button>;
           })}
-        </div><div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}><button className="battle-util-btn" onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button><button className="battle-util-btn" onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button></div></div>}
+        </div><div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}><button className="battle-util-btn" onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button><button className="battle-util-btn" onClick={() => openSettings("battle")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⚙️ 設定</button><button className="battle-util-btn" onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button></div></div>}
 
         {/* Question panel */}
         {B.phase === "question" && B.q && <div style={{ padding: "10px 14px", animation: "fadeSlide 0.25s ease" }}>

@@ -168,6 +168,7 @@ const enUS = {
   "app.rotate.hint": "This game supports portrait mode only",
   "app.rotate.continue": "Tap anywhere to continue",
   "app.loading.battle": "Preparing battle...",
+  "app.loading.screen": "Loading screen...",
   "app.pause.title": "Game Paused",
   "app.pause.hint": "Tap anywhere to resume",
   "app.skip.main": "Skip to main content",

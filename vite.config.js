@@ -8,4 +8,25 @@ export default defineConfig({
     open: true,         // npm run dev 時自動開瀏覽器
     host: true,         // 允許手機透過區網 IP 測試
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'vendor-react'
+          }
+          if (id.includes('node_modules')) {
+            return 'vendor'
+          }
+          if (id.includes('/src/data/')) {
+            return 'game-data'
+          }
+          if (id.includes('/src/components/effects/')) {
+            return 'battle-effects'
+          }
+          return undefined
+        },
+      },
+    },
+  },
 })

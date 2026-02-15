@@ -168,6 +168,7 @@ const zhTW = {
   "app.rotate.hint": "本遊戲僅支援直向模式",
   "app.rotate.continue": "點擊任意處繼續遊戲",
   "app.loading.battle": "準備戰鬥中...",
+  "app.loading.screen": "載入畫面中...",
   "app.pause.title": "遊戲暫停",
   "app.pause.hint": "點擊任意處繼續",
   "app.skip.main": "跳到主要內容",

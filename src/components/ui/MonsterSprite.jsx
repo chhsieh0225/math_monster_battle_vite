@@ -12,6 +12,7 @@ const MonsterSprite = React.memo(function MonsterSprite({ svgStr, size = 120, an
       width={size}
       height={size * 100 / 120}
       viewBox="0 0 120 100"
+      overflow="hidden"
       style={{ ...style, animation: anim || "none", imageRendering: "pixelated" }}
     >
       <defs>

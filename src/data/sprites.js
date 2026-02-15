@@ -49,8 +49,17 @@ export const BG_IMGS = {
 };
 
 // SVG wrapper functions — return inner SVG markup using image paths
+// viewBox is 120×100; standard images (~1.2:1) fill it directly.
 function makeSvgFn(key, rendering = 'auto') {
   return () => `<image href="${SPRITE_IMGS[key]}" x="0" y="0" width="120" height="100" style="image-rendering:${rendering}"/>`;
+}
+// For wide-aspect sprites (e.g. lion 677×369 = 1.83:1):
+// scale to fill viewBox height, center horizontally, let viewBox clip sides.
+function makeSvgFnFill(key, natW, natH, rendering = 'auto') {
+  const h = 100;
+  const w = Math.round(natW / natH * h);
+  const x = Math.round((120 - w) / 2);
+  return () => `<image href="${SPRITE_IMGS[key]}" x="${x}" y="0" width="${w}" height="${h}" style="image-rendering:${rendering}"/>`;
 }
 
 export const slimeSVG = makeSvgFn('slime', 'pixelated');
@@ -87,6 +96,6 @@ export const playergrass2SVG = makeSvgFn('player_grass2');
 export const playerelectric0SVG = makeSvgFn('player_electric0');
 export const playerelectric1SVG = makeSvgFn('player_electric1');
 export const playerelectric2SVG = makeSvgFn('player_electric2');
-export const playerlion0SVG = makeSvgFn('player_lion0');
-export const playerlion1SVG = makeSvgFn('player_lion1');
-export const playerlion2SVG = makeSvgFn('player_lion2');
+export const playerlion0SVG = makeSvgFnFill('player_lion0', 677, 369);
+export const playerlion1SVG = makeSvgFnFill('player_lion1', 677, 369);
+export const playerlion2SVG = makeSvgFnFill('player_lion2', 677, 369);

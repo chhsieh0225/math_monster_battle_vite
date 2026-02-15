@@ -158,6 +158,7 @@ export function resolvePvpStrike({
   attackerMaxHp = PLAYER_MAX_HP,
   firstStrike = false,
   random = Math.random,
+  critRandom = null,
 }) {
   if (!move || moveIdx == null) {
     return {
@@ -166,6 +167,8 @@ export function resolvePvpStrike({
       dmg: 0,
       variance: 1,
       heal: 0,
+      isCrit: false,
+      critChance: 0,
       passiveLabel: "",
     };
   }
@@ -194,6 +197,17 @@ export function resolvePvpStrike({
     : 0;
   const comebackScale = 1 + lightComebackBonus;
   const firstStrikeScale = firstStrike ? (PVP_BALANCE.firstStrikeScale ?? 1) : 1;
+  const critRoller = typeof critRandom === "function" ? critRandom : random;
+  const baseCritChance = PVP_BALANCE.crit?.chance ?? 0;
+  const riskyCritBonus = move.risky ? (PVP_BALANCE.crit?.riskyBonus ?? 0) : 0;
+  const cappedCritChance = Math.min(
+    PVP_BALANCE.crit?.maxChance ?? 1,
+    Math.max(0, baseCritChance + riskyCritBonus),
+  );
+  const critChance = Math.max(0, Math.min(1, cappedCritChance));
+  const critRoll = Math.max(0, Math.min(1, critRoller()));
+  const isCrit = critRoll < critChance;
+  const critScale = isCrit ? (PVP_BALANCE.crit?.multiplier ?? 1) : 1;
 
   const rawDamage = basePow
     * PVP_BALANCE.baseScale
@@ -205,7 +219,8 @@ export function resolvePvpStrike({
     * comebackScale
     * firstStrikeScale
     * effectScale
-    * riskyScale;
+    * riskyScale
+    * critScale;
   const dmg = Math.max(
     PVP_BALANCE.minDamage,
     Math.min(PVP_BALANCE.maxDamage, Math.round(rawDamage)),
@@ -224,6 +239,8 @@ export function resolvePvpStrike({
     dmg,
     variance,
     heal,
+    isCrit,
+    critChance,
     passiveLabel: attackerType === "light" && lightComebackBonus >= 0.06
       ? "🦁 勇氣之心"
       : attackerType === "grass" && heal > 0

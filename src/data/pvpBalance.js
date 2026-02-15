@@ -46,6 +46,12 @@ export const PVP_BALANCE = {
   lightComeback: {
     maxBonus: 0.16,
   },
+  crit: {
+    chance: 0.12,
+    riskyBonus: 0.04,
+    maxChance: 0.28,
+    multiplier: 1.45,
+  },
   passive: {
     fireBurnCap: 2,
     fireBurnTickBase: 3,

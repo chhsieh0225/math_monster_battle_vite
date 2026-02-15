@@ -861,7 +861,10 @@ export function useBattle() {
         random: rand,
       });
 
-      if (strike.eff > 1) {
+      if (strike.isCrit) {
+        setEffMsg({ text: "💥 暴擊！", color: "#ff6b00" });
+        safeTo(() => setEffMsg(null), 1200);
+      } else if (strike.eff > 1) {
         setEffMsg({ text: "效果絕佳！", color: "#22c55e" });
         safeTo(() => setEffMsg(null), 1200);
       } else if (strike.eff < 1) {
@@ -875,6 +878,7 @@ export function useBattle() {
         const s2 = sr.current;
         const sfxKey = move.risky && move.type2 ? move.type2 : move.type;
         sfx.play(sfxKey);
+        if (strike.isCrit) sfx.play("crit");
         if (currentTurn === "p1") {
           setAtkEffect({ type: vfxType, idx: s2.selIdx, lvl: 1, targetSide: "enemy" });
         } else {
@@ -1043,7 +1047,7 @@ export function useBattle() {
           setPvpHp2(nh);
           setEHp(nh);
           setEAnim(hitAnim);
-          addD(`-${totalDmg}`, 140, 55, "#ef4444");
+          addD(strike.isCrit ? `💥-${totalDmg}` : `-${totalDmg}`, 140, 55, "#ef4444");
 
           if (strike.heal > 0) {
             setPHp((h) => Math.min(getStageMaxHp(s2.pStg), h + strike.heal));
@@ -1061,7 +1065,7 @@ export function useBattle() {
           const nh = Math.max(0, s2.pHp - totalDmg);
           setPHp(nh);
           setPAnim("playerHit 0.45s ease");
-          addD(`-${totalDmg}`, 60, 170, "#ef4444");
+          addD(strike.isCrit ? `💥-${totalDmg}` : `-${totalDmg}`, 60, 170, "#ef4444");
 
           if (strike.heal > 0) {
             const healed = Math.min(getStarterMaxHp(s2.pvpStarter2), s2.pvpHp2 + strike.heal);
@@ -1079,7 +1083,7 @@ export function useBattle() {
           }
         }
 
-        const allNotes = [strike.passiveLabel, ...passiveNotes, unlockedSpecDef ? "🛡️反制就緒" : ""].filter(Boolean).join(" ");
+        const allNotes = [strike.isCrit ? "💥暴擊" : "", strike.passiveLabel, ...passiveNotes, unlockedSpecDef ? "🛡️反制就緒" : ""].filter(Boolean).join(" ");
         setBText(`✅ ${attacker.name} 的 ${move.name} 命中！${allNotes ? ` ${allNotes}` : ""}`);
         setPvpTurn(nextTurn);
         setPvpActionCount((c) => c + 1);

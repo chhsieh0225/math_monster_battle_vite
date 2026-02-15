@@ -279,6 +279,7 @@ export function useBattle() {
   const asyncGateRef = useRef(0);
   const doEnemyTurnRef = useRef(() => {});
   const pendingEvolve = useRef(false);   // ← Bug #2 fix
+  const coopAutoRotatePendingRef = useRef(false);
   const eventSessionIdRef = useRef(null);
   const sessionClosedRef = useRef(false);
   const sessionStartRef = useRef(0);
@@ -383,6 +384,9 @@ export function useBattle() {
       diffLevel: s.diffLevel ?? null,
       round: s.round ?? 0,
     }, { sessionId: eventSessionIdRef.current });
+    if (s.battleMode === "coop" || s.battleMode === "double") {
+      coopAutoRotatePendingRef.current = true;
+    }
     setBText("⏰ 時間到！來不及出招！");
     setPhase("text");
     // Read enemy from stateRef so we never hit a stale closure
@@ -413,6 +417,25 @@ export function useBattle() {
 
   // Cleanup timer when leaving question phase
   useEffect(() => { if (phase !== "question") clearTimer(); }, [phase, clearTimer]);
+
+  // Coop auto-rotation: one ally takes one turn, then swap automatically.
+  useEffect(() => {
+    if (phase !== "menu" || !coopAutoRotatePendingRef.current) return;
+    coopAutoRotatePendingRef.current = false;
+    const s = sr.current;
+    const canSwitch = (
+      (s.battleMode === "coop" || s.battleMode === "double")
+      && s.allySub
+      && (s.pHpSub || 0) > 0
+    );
+    safeTo(() => {
+      if (!canSwitch) {
+        setCoopActiveSlot("main");
+        return;
+      }
+      setCoopActiveSlot((prev) => (prev === "main" ? "sub" : "main"));
+    }, 0);
+  }, [phase, safeTo]);
 
   // ═══════════════════════════════════════════════════════════════
   //  BATTLE FLOW
@@ -460,6 +483,7 @@ export function useBattle() {
     sessionClosedRef.current = false;
     sessionStartRef.current = nowMs();
     eventSessionIdRef.current = createEventSessionId();
+    coopAutoRotatePendingRef.current = false;
     // Regenerate roster so slime variants are re-randomised each game
     const mode = modeOverride || sr.current.battleMode || battleMode;
     const leader = starterOverride || sr.current.starter;
@@ -1139,6 +1163,9 @@ export function useBattle() {
       round: s.round ?? 0,
     }, { sessionId: eventSessionIdRef.current });
     _updateAbility(s.q?.op, correct);
+    if (s.battleMode === "coop" || s.battleMode === "double") {
+      coopAutoRotatePendingRef.current = true;
+    }
     runPlayerAnswer({
       correct,
       move,
@@ -1286,10 +1313,27 @@ export function useBattle() {
       if (pendingEvolve.current) {
         pendingEvolve.current = false;
         const nextStage = Math.min((sr.current.pStg || 0) + 1, 2);
+        const sNow = sr.current;
+        const coopSync = (sNow.battleMode === "coop" || sNow.battleMode === "double") && sNow.allySub;
+        let nextAlly = null;
+        if (coopSync) {
+          const allyStage = getStarterStageIdx(sNow.allySub);
+          const nextAllyStage = Math.min(allyStage + 1, 2);
+          const allyStageData = sNow.allySub.stages?.[nextAllyStage] || sNow.allySub.stages?.[0];
+          nextAlly = {
+            ...sNow.allySub,
+            selectedStageIdx: nextAllyStage,
+            name: allyStageData?.name || sNow.allySub.name,
+          };
+        }
         // Apply evolution state NOW (deferred from win handler so battle
         // screen kept showing the pre-evolution sprite during victory).
         setPStg(st => { if (st + 1 >= 2) tryUnlock("evolve_max"); return Math.min(st + 1, 2); });
         setPHp(getStageMaxHp(nextStage));
+        if (nextAlly) {
+          setAllySub(nextAlly);
+          setPHpSub(getStarterMaxHp(nextAlly));
+        }
         setMLvls(prev => prev.map(v => Math.min(v + 1, MAX_MOVE_LVL)));
         setScreen("evolve");
         return;

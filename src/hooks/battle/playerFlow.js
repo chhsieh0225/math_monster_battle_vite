@@ -4,7 +4,7 @@ import {
   POWER_CAPS,
 } from '../../data/constants.js';
 import { bestAttackType, freezeChance } from '../../utils/damageCalc.js';
-import { getStageMaxHp, getStarterMaxHp } from '../../utils/playerHp.js';
+import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.js';
 import {
   getAttackEffectClearDelay,
   getAttackEffectHitDelay,
@@ -206,7 +206,7 @@ export function runPlayerAnswer({
             didLevel: didLvl,
             maxPower: POWER_CAPS[s3.selIdx],
             streak: ns,
-            stageBonus: s3.pStg,
+            stageBonus: isSubAttacker ? getStarterStageIdx(s3.allySub) : s3.pStg,
             cursed: s3.cursed,
             starterType: starter.type,
             playerHp: getAttackerHp(s3),

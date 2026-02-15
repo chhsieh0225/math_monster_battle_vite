@@ -72,6 +72,24 @@ export function resolveEnemyPrimaryStrike({
   };
 }
 
+export function resolveEnemyAssistStrike({
+  enemySub,
+  starterType,
+  atkScale = 0.55,
+  damageCap = 24,
+}) {
+  const scaledAtk = Math.max(1, Math.round((enemySub?.atk || 0) * atkScale));
+  const defEff = getEff(enemySub?.mType, starterType);
+  let dmg = calcEnemyDamage(scaledAtk, defEff);
+  if (Number.isFinite(damageCap)) dmg = Math.min(dmg, damageCap);
+
+  return {
+    scaledAtk,
+    defEff,
+    dmg,
+  };
+}
+
 export function resolvePlayerStrike({
   move,
   enemy,

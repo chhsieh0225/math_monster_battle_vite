@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   resolveBossTurnState,
+  resolveEnemyAssistStrike,
   resolveEnemyPrimaryStrike,
   resolvePlayerStrike,
   resolveRiskySelfDamage,
@@ -103,4 +104,18 @@ test('resolveRiskySelfDamage returns a positive backfire value', () => {
     moveIdx: 1,
   });
   assert.ok(sd > 0);
+});
+
+test('resolveEnemyAssistStrike applies cap and effectiveness', () => {
+  withMockRandom(0, () => {
+    const out = resolveEnemyAssistStrike({
+      enemySub: { atk: 100, mType: "fire" },
+      starterType: "grass",
+      atkScale: 0.7,
+      damageCap: 24,
+    });
+    assert.equal(out.scaledAtk, 70);
+    assert.equal(out.defEff, 1.5);
+    assert.equal(out.dmg, 24);
+  });
 });

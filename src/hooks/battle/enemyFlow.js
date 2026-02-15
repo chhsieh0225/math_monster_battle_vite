@@ -2,7 +2,11 @@ import { getEff } from '../../data/typeEffectiveness.js';
 import { calcEnemyDamage } from '../../utils/damageCalc.js';
 import { computeBossPhase } from '../../utils/turnFlow.js';
 import { effectOrchestrator } from './effectOrchestrator.js';
-import { resolveBossTurnState, resolveEnemyPrimaryStrike } from './turnResolver.js';
+import {
+  resolveBossTurnState,
+  resolveEnemyAssistStrike,
+  resolveEnemyPrimaryStrike,
+} from './turnResolver.js';
 
 export function runEnemyTurn({
   sr,
@@ -37,6 +41,60 @@ export function runEnemyTurn({
     setPhase("ko");
     setBText(message);
     setScreen("gameover");
+  };
+
+  const maybeEnemyAssistAttack = (delayMs = 850) => {
+    const s = sr.current;
+    if (!s.enemySub || !s.starter) return false;
+    if (!chance(0.35)) return false;
+
+    safeTo(() => {
+      const s2 = sr.current;
+      if (!s2.enemySub || !s2.starter) {
+        setPhase("menu");
+        setBText("");
+        return;
+      }
+      setBText(`⚔️ ${s2.enemySub.name} 發動支援攻擊！`);
+      setPhase("enemyAtk");
+      effectOrchestrator.runEnemyLunge({
+        safeTo,
+        setEAnim,
+        strikeDelay: 380,
+        onStrike: () => {
+          const s3 = sr.current;
+          if (!s3.enemySub || !s3.starter) {
+            setPhase("menu");
+            setBText("");
+            return;
+          }
+          const { dmg } = resolveEnemyAssistStrike({
+            enemySub: s3.enemySub,
+            starterType: s3.starter.type,
+          });
+          const nh = Math.max(0, s3.pHp - dmg);
+          setPHp(nh);
+          setPAnim("playerHit 0.45s ease");
+          sfx.play("playerHit");
+          addD(`✶-${dmg}`, 60, 170, "#f97316");
+          addP("enemy", 84, 186, 3);
+          safeTo(() => setPAnim(""), 450);
+          if (nh <= 0) {
+            safeTo(() => {
+              sfx.play("ko");
+              loseToGameOver("你的夥伴被雙打夾擊擊倒了...");
+            }, 650);
+            return;
+          }
+          safeTo(() => {
+            setPhase("menu");
+            setBText("");
+          }, 650);
+        },
+      });
+    }, delayMs);
+
+    return true;
   };
 
   function doEnemyAttack(bp) {
@@ -182,13 +240,17 @@ export function runEnemyTurn({
                 addP("enemy", 80, 190, 3);
                 safeTo(() => setPAnim(""), 500);
                 if (nh2 <= 0) safeTo(() => { sfx.play("ko"); loseToGameOver(); }, 800);
-                else safeTo(() => { setPhase("menu"); setBText(""); }, 800);
+                else {
+                  if (maybeEnemyAssistAttack(500)) return;
+                  safeTo(() => { setPhase("menu"); setBText(""); }, 800);
+                }
               },
             });
           }, 1000);
           return;
         }
 
+        if (maybeEnemyAssistAttack(900)) return;
         safeTo(() => { setPhase("menu"); setBText(""); }, 800);
       },
     });

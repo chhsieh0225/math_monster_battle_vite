@@ -18,7 +18,7 @@
  * • Achievements, Encyclopedia, and SessionLog are extracted into sub-hooks
  *   (useAchievements, useEncyclopedia, useSessionLog) to keep this file focused.
  */
-import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useReducer } from 'react';
 
 import { getEff } from '../data/typeEffectiveness';
 import { SCENE_NAMES } from '../data/scenes';
@@ -30,7 +30,7 @@ import {
 import { genQ } from '../utils/questionGenerator';
 import {
   movePower, bestAttackType, bestEffectiveness,
-  calcAttackDamage, calcEnemyDamage, freezeChance,
+  calcEnemyDamage, freezeChance,
 } from '../utils/damageCalc';
 import { useTimer } from './useTimer';
 import { useAchievements } from './useAchievements';
@@ -41,7 +41,7 @@ import { useBattleUIState } from './useBattleUIState';
 import { ENC_TOTAL } from '../data/encyclopedia';
 import sfx from '../utils/sfx';
 import { buildRoster } from '../utils/rosterBuilder';
-import { computeBossPhase, decideBossTurnEvent } from '../utils/turnFlow';
+import { computeBossPhase } from '../utils/turnFlow';
 import {
   createAbilityModel,
   getDifficultyLevelForOps,
@@ -54,6 +54,14 @@ import {
   getAttackEffectHitDelay,
   getAttackEffectNextStepDelay,
 } from '../utils/effectTiming';
+import { battleReducer, createInitialBattleState } from './battle/battleReducer';
+import { effectOrchestrator } from './battle/effectOrchestrator';
+import {
+  resolveBossTurnState,
+  resolveEnemyPrimaryStrike,
+  resolvePlayerStrike,
+  resolveRiskySelfDamage,
+} from './battle/turnResolver';
 
 // ── Constants (module-level to avoid re-allocation per render) ──
 const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
@@ -81,25 +89,45 @@ export function useBattle() {
 
   // ──── Player ────
   const [starter, setStarter] = useState(null);
-  const [pHp, setPHp] = useState(PLAYER_MAX_HP);
-  const [pExp, setPExp] = useState(0);
-  const [pLvl, setPLvl] = useState(1);
-  const [pStg, setPStg] = useState(0);
+  const [battle, dispatchBattle] = useReducer(battleReducer, undefined, createInitialBattleState);
+  const {
+    pHp, pExp, pLvl, pStg,
+    round, enemy, eHp,
+    streak, passiveCount, charge, tC, tW, defeated, maxStreak,
+    mHits, mLvls, mLvlUp,
+    burnStack, frozen, staticStack, specDef, defAnim, cursed,
+    diffLevel,
+    bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
+  } = battle;
 
-  // ──── Battle ────
-  const [round, setRound] = useState(0);
-  const [enemy, setEnemy] = useState(null);
-  const [eHp, setEHp] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [passiveCount, setPassiveCount] = useState(0); // counts consecutive correct answers mod 8 → triggers specDef
-  const [charge, setCharge] = useState(0);
-  const [tC, setTC] = useState(0);
-  const [tW, setTW] = useState(0);
-  const [defeated, setDefeated] = useState(0);
-  const [maxStreak, setMaxStreak] = useState(0);
-  const [mHits, setMHits] = useState([0, 0, 0, 0]);
-  const [mLvls, setMLvls] = useState([1, 1, 1, 1]);
-  const [mLvlUp, setMLvlUp] = useState(null);
+  const setBattleField = (key, value) => dispatchBattle({ type: "set_field", key, value });
+  const setPHp = (value) => setBattleField("pHp", value);
+  const setPExp = (value) => setBattleField("pExp", value);
+  const setPLvl = (value) => setBattleField("pLvl", value);
+  const setPStg = (value) => setBattleField("pStg", value);
+  const setEHp = (value) => setBattleField("eHp", value);
+  const setStreak = (value) => setBattleField("streak", value);
+  const setPassiveCount = (value) => setBattleField("passiveCount", value);
+  const setCharge = (value) => setBattleField("charge", value);
+  const setTC = (value) => setBattleField("tC", value);
+  const setTW = (value) => setBattleField("tW", value);
+  const setDefeated = (value) => setBattleField("defeated", value);
+  const setMaxStreak = (value) => setBattleField("maxStreak", value);
+  const setMHits = (value) => setBattleField("mHits", value);
+  const setMLvls = (value) => setBattleField("mLvls", value);
+  const setMLvlUp = (value) => setBattleField("mLvlUp", value);
+  const setBurnStack = (value) => setBattleField("burnStack", value);
+  const setFrozen = (value) => setBattleField("frozen", value);
+  const setStaticStack = (value) => setBattleField("staticStack", value);
+  const setSpecDef = (value) => setBattleField("specDef", value);
+  const setDefAnim = (value) => setBattleField("defAnim", value);
+  const setCursed = (value) => setBattleField("cursed", value);
+  const setDiffLevel = (value) => setBattleField("diffLevel", value);
+  const setBossPhase = (value) => setBattleField("bossPhase", value);
+  const setBossTurn = (value) => setBattleField("bossTurn", value);
+  const setBossCharging = (value) => setBattleField("bossCharging", value);
+  const setSealedMove = (value) => setBattleField("sealedMove", value);
+  const setSealedTurns = (value) => setBattleField("sealedTurns", value);
 
   // ──── Phase & UI ────
   const {
@@ -119,17 +147,10 @@ export function useBattle() {
     addP, rmP,
   } = UI;
 
-  // ──── Status effects ────
-  const [burnStack, setBurnStack] = useState(0);
-  const [frozen, setFrozen] = useState(false);
+  // ──── Status refs ────
   const frozenR = useRef(false);
-  const [staticStack, setStaticStack] = useState(0);   // electric: static charge
-  const [specDef, setSpecDef] = useState(false);
-  const [defAnim, setDefAnim] = useState(null);
-  const [cursed, setCursed] = useState(false);     // dark slime curse: 0.6x player damage next turn
 
   // ──── Learning model 2.0: per-question-type adaptive difficulty ────
-  const [diffLevel, setDiffLevel] = useState(2); // current/last question difficulty (0..4)
   const abilityModelRef = useRef(createAbilityModel(2));
 
   const _updateAbility = (op, correct) => {
@@ -146,13 +167,6 @@ export function useBattle() {
   const _getMoveDiffLevel = (move) => (
     getDifficultyLevelForOps(abilityModelRef.current, move?.ops, 2)
   );
-
-  // ──── Boss mechanics ────
-  const [bossPhase, setBossPhase] = useState(0);         // 0=not boss, 1/2/3
-  const [bossTurn, setBossTurn] = useState(0);            // turn counter in boss fight
-  const [bossCharging, setBossCharging] = useState(false);// boss is charging next big attack
-  const [sealedMove, setSealedMove] = useState(-1);       // index of sealed move (-1=none)
-  const [sealedTurns, setSealedTurns] = useState(0);      // remaining sealed turns
 
   // ──── Internal refs ────
   const runSeedRef = useRef(0);
@@ -201,14 +215,14 @@ export function useBattle() {
     activeTimers.current.clear();
   }, []);
 
-  const safeTo = (fn, ms) => {
+  const safeTo = useCallback((fn, ms) => {
     const g = asyncGateRef.current;
     const id = setTimeout(() => {
       activeTimers.current.delete(id);
       if (g === asyncGateRef.current) fn();
     }, ms);
     activeTimers.current.add(id);
-  };
+  }, []);
   // Cleanup all pending timers on unmount
   useEffect(() => () => { activeTimers.current.forEach(clearTimeout); activeTimers.current.clear(); }, []);
 
@@ -282,30 +296,14 @@ export function useBattle() {
     clearTimer();
     const list = roster || enemies;
     const e = list[idx];
-    setEnemy(e);
-    setEHp(e.maxHp);
-    setBurnStack(0);
-    setStaticStack(0);
-    setFrozen(false);
+    dispatchBattle({ type: "start_battle", enemy: e, round: idx });
     frozenR.current = false;
-    setSpecDef(false);
-    setDefAnim(null);
-    // Boss mechanics init
-    const isBoss = e.id === "boss";
-    setBossPhase(isBoss ? 1 : 0);
-    setBossTurn(0);
-    setBossCharging(false);
-    setSealedMove(-1);
-    setSealedTurns(0);
-    setRound(idx);
     updateEnc(e); // ← encyclopedia: mark encountered
     const sn = SCENE_NAMES[e.sceneMType || e.mType] || "";
     setPhase("text");
     setBText(`【${sn}】野生的 ${e.name}(${e.typeIcon}${e.typeName}) Lv.${e.lvl} 出現了！`);
     setScreen("battle");
-    setEAnim("slideInBattle 0.6s ease");
-    setPAnim("slideInPlayer 0.6s ease");
-    safeTo(() => { setEAnim(""); setPAnim(""); }, 700);
+    effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim });
   };
 
   // --- Full game reset (starterOverride used on first game when setStarter hasn't rendered yet) ---
@@ -320,17 +318,10 @@ export function useBattle() {
     // Regenerate roster so slime variants are re-randomised each game
     const newRoster = buildNewRoster();
     setEnemies(newRoster);
-    setPHp(PLAYER_MAX_HP); setPExp(0); setPLvl(1); setPStg(0);
-    setStreak(0); setPassiveCount(0); setCharge(0); setTC(0); setTW(0);
-    setDefeated(0); setMaxStreak(0);
-    setMHits([0, 0, 0, 0]); setMLvls([1, 1, 1, 1]); setMLvlUp(null);
+    dispatchBattle({ type: "reset_run", patch: { diffLevel: 2 } });
     setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
-    setBurnStack(0); setStaticStack(0); setFrozen(false); frozenR.current = false;
-    setSpecDef(false); setDefAnim(null); setCursed(false);
-    setBossPhase(0); setBossTurn(0); setBossCharging(false);
-    setSealedMove(-1); setSealedTurns(0);
+    frozenR.current = false;
     abilityModelRef.current = createAbilityModel(2);
-    setDiffLevel(2);
     pendingEvolve.current = false;
     // Init session log — use override on first game since setStarter is async
     const s = starterOverride || sr.current.starter;
@@ -491,32 +482,26 @@ export function useBattle() {
   function doEnemyTurnInner() {
     const s = sr.current;
     if (!s.enemy || !s.starter) return;
-    const isBoss = s.enemy.id === "boss";
-    const bp = isBoss ? computeBossPhase(s.eHp, s.enemy.maxHp) : 0;
-
-    // ── Boss: increment turn counter ──
-    let turnCount = s.bossTurn;
-    if (isBoss) {
-      turnCount = s.bossTurn + 1;
-      setBossTurn(turnCount);
-    }
-
-    const bossEvent = decideBossTurnEvent({
-      isBoss,
+    const bossState = resolveBossTurnState({
+      enemy: s.enemy,
+      eHp: s.eHp,
+      bossPhase: s.bossPhase,
+      bossTurn: s.bossTurn,
       bossCharging: s.bossCharging,
-      turnCount,
-      bossPhase: bp,
       sealedMove: s.sealedMove,
     });
+    const { isBoss, phase: bp, nextBossTurn, bossEvent } = bossState;
+    if (isBoss) setBossTurn(nextBossTurn);
 
     // ── Boss charging mechanic: release big attack ──
     if (bossEvent === "release") {
       setBossCharging(false);
       setBText(`💀 暗黑龍王釋放暗黑吐息！`); sfx.play("bossBoom");
       setPhase("enemyAtk");
-      setEAnim("enemyAttackLunge 0.6s ease");
-      safeTo(() => {
-        setEAnim("");
+      effectOrchestrator.runEnemyLunge({
+        safeTo,
+        setEAnim,
+        onStrike: () => {
         const s2 = sr.current;
         const bigDmg = Math.round(s2.enemy.atk * 2.2);
         const nh = Math.max(0, s2.pHp - bigDmg);
@@ -525,7 +510,8 @@ export function useBattle() {
         safeTo(() => setPAnim(""), 500);
         if (nh <= 0) safeTo(() => { _endSession(false); setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }, 800);
         else safeTo(() => { setPhase("menu"); setBText(""); }, 800);
-      }, 500);
+        },
+      });
       return;
     }
 
@@ -559,9 +545,10 @@ export function useBattle() {
     if (!s.enemy || !s.starter) return;
     setBText(`${s.enemy.name} 發動攻擊！`);
     setPhase("enemyAtk");
-    setEAnim("enemyAttackLunge 0.6s ease");
-    safeTo(() => {
-      setEAnim("");
+    effectOrchestrator.runEnemyLunge({
+      safeTo,
+      setEAnim,
+      onStrike: () => {
       const s2 = sr.current; // re-read after delay
       if (s2.specDef) {
         const st = s2.starter.type;
@@ -622,21 +609,20 @@ export function useBattle() {
         return;
       }
       // Normal enemy attack — boss phase scales damage
-      const atkMult = bp >= 3 ? 2.0 : bp >= 2 ? 1.5 : 1.0;
-      let scaledAtk = Math.round(s2.enemy.atk * atkMult);
-      const trait = s2.enemy.trait || null;
-
-      // ── Blaze trait: ATK +50% when HP below 50% ──
-      const isBlaze = trait === "blaze" && s2.eHp <= s2.enemy.maxHp * 0.5;
-      if (isBlaze) scaledAtk = Math.round(scaledAtk * 1.5);
-
-      // ── Berserk trait: 30% chance 1.5x critical ──
-      const isCrit = trait === "berserk" && chance(0.3);
-      const critMult = isCrit ? 1.5 : 1.0;
-
-      let dmg = calcEnemyDamage(scaledAtk, getEff(s2.enemy.mType, s2.starter.type));
-      dmg = Math.round(dmg * critMult);
-      const defEff = getEff(s2.enemy.mType, s2.starter.type);
+      const {
+        trait,
+        scaledAtk,
+        isBlaze,
+        isCrit,
+        defEff,
+        dmg,
+      } = resolveEnemyPrimaryStrike({
+        enemy: s2.enemy,
+        enemyHp: s2.eHp,
+        starterType: s2.starter.type,
+        bossPhase: bp,
+        chance,
+      });
       const nh = Math.max(0, s2.pHp - dmg);
       setPHp(nh); setPAnim("playerHit 0.5s ease"); sfx.play("playerHit");
       addD(isCrit ? `💥-${dmg}` : `-${dmg}`, 60, 170, isCrit ? "#ff6b00" : "#ef4444"); addP("enemy", 80, 190, 4);
@@ -672,9 +658,10 @@ export function useBattle() {
       if (trait === "swift" && chance(0.25)) {
         safeTo(() => {
           setBText(`⚡ ${s2.enemy.name} 再次攻擊！`);
-          setEAnim("enemyAttackLunge 0.6s ease");
-          safeTo(() => {
-            setEAnim("");
+          effectOrchestrator.runEnemyLunge({
+            safeTo,
+            setEAnim,
+            onStrike: () => {
             const s3 = sr.current;
             const dmg2 = calcEnemyDamage(scaledAtk, getEff(s3.enemy.mType, s3.starter.type));
             const nh2 = Math.max(0, s3.pHp - dmg2);
@@ -683,13 +670,15 @@ export function useBattle() {
             safeTo(() => setPAnim(""), 500);
             if (nh2 <= 0) safeTo(() => { sfx.play("ko"); _endSession(false); setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }, 800);
             else safeTo(() => { setPhase("menu"); setBText(""); }, 800);
-          }, 500);
+            },
+          });
         }, 1000);
         return; // skip the normal phase transition
       }
 
       safeTo(() => { setPhase("menu"); setBText(""); }, 800);
-    }, 500);
+      },
+    });
   }
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
 
@@ -758,10 +747,11 @@ export function useBattle() {
       setMHits(nh);
 
       // Animation chain
-      safeTo(() => {
-        setPhase("playerAtk"); setPAnim("attackLunge 0.6s ease");
-        safeTo(() => {
-          setPAnim("");
+      setPhase("playerAtk");
+      effectOrchestrator.runPlayerLunge({
+        safeTo,
+        setPAnim,
+        onReady: () => {
           const s2 = sr.current;
           const dmgType = bestAttackType(move, s2.enemy);
           const vfxType = move.risky && move.type2 ? move.type2 : dmgType;
@@ -779,16 +769,22 @@ export function useBattle() {
 
           safeTo(() => {
             const s3 = sr.current;
-            const pow = didLvl
-              ? Math.min(move.basePower + s3.mLvls[s3.selIdx] * move.growth, POWER_CAPS[s3.selIdx])
-              : movePower(move, s3.mLvls[s3.selIdx], s3.selIdx);
-            const eff = bestEffectiveness(move, s3.enemy);
-            let dmg = calcAttackDamage({
-              basePow: pow,
+            const strike = resolvePlayerStrike({
+              move,
+              enemy: s3.enemy,
+              moveIdx: s3.selIdx,
+              moveLvl: s3.mLvls[s3.selIdx],
+              didLevel: didLvl,
+              maxPower: POWER_CAPS[s3.selIdx],
               streak: ns,
               stageBonus: s3.pStg,
-              effMult: eff,
+              cursed: s3.cursed,
+              starterType: starter.type,
+              playerHp: s3.pHp,
+              bossPhase: s3.bossPhase,
             });
+            const { eff, isFortress, wasCursed } = strike;
+            let { dmg } = strike;
             // ── Phantom trait: 25% chance to dodge player attack ──
             const isPhantom = s3.enemy.trait === "phantom" && chance(0.25);
             if (isPhantom) {
@@ -799,19 +795,7 @@ export function useBattle() {
               safeTo(() => doEnemyTurn(), effectTimeline.nextDelay);
               return; // skip all damage
             }
-            // ── Fortress trait: enemy takes 30% less damage ──
-            const isFortress = s3.enemy.trait === "fortress";
-            if (isFortress) dmg = Math.round(dmg * 0.7);
-            // ── Curse debuff: player attack weakened by 0.6x ──
-            const wasCursed = s3.cursed;
-            if (wasCursed) { dmg = Math.round(dmg * 0.6); setCursed(false); }
-            // Lion Brave Heart passive: damage bonus scales with missing HP (max +50%)
-            if (starter.type === "light" && s3.pHp < PLAYER_MAX_HP) {
-              const braveMult = 1 + ((PLAYER_MAX_HP - s3.pHp) / PLAYER_MAX_HP) * 0.5;
-              dmg = Math.round(dmg * braveMult);
-            }
-            // Boss Phase 3: 背水一戰 — player gets ×1.3 bonus
-            if (s3.bossPhase >= 3) dmg = Math.round(dmg * 1.3);
+            if (wasCursed) setCursed(false);
 
             if (wasCursed) { setEffMsg({ text: "💀 詛咒弱化了攻擊...", color: "#a855f7" }); safeTo(() => setEffMsg(null), 1500); }
             else if (isFortress) { setEffMsg({ text: "🛡️ 鐵壁減傷！", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
@@ -889,8 +873,8 @@ export function useBattle() {
             else if (willFreeze) safeTo(() => handleFreeze(), effectTimeline.nextDelay);
             else safeTo(() => doEnemyTurn(), effectTimeline.nextDelay);
           }, effectTimeline.hitDelay);
-        }, 400);
-      }, 600);
+        },
+      });
     } else {
       // Wrong answer
       setFb({ correct: false, answer: s.q.answer, steps: s.q.steps || [] }); sfx.play("wrong");
@@ -898,7 +882,11 @@ export function useBattle() {
       safeTo(() => {
         const s2 = sr.current;
         if (move.risky) {
-          const sd = Math.round(movePower(move, s2.mLvls[s2.selIdx], s2.selIdx) * 0.4);
+          const sd = resolveRiskySelfDamage({
+            move,
+            moveLvl: s2.mLvls[s2.selIdx],
+            moveIdx: s2.selIdx,
+          });
           const nh2 = Math.max(0, s2.pHp - sd);
           setPHp(nh2); setPAnim("playerHit 0.5s ease");
           addD(`-${sd}`, 40, 170, "#ef4444");

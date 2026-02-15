@@ -258,7 +258,7 @@ function App() {
     <LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "selection") return (
-    <SelectionScreen onSelect={(s) => { B.sfx.init(); B.setStarter(s); B.startGame(s); }} onBack={() => B.setScreen("title")} />
+    <SelectionScreen onSelect={(s) => { B.sfx.init(); B.setStarter(s); B.startGame(s, B.battleMode); }} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "evolve") return (
     <EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={B.continueAfterEvolve} />
@@ -285,9 +285,20 @@ function App() {
   const st = B.starter.stages[B.pStg];
   const eSvg = B.enemy.svgFn();
   const eSubSvg = B.enemySub ? B.enemySub.svgFn() : null;
+  const allyStage = B.allySub ? B.allySub.stages[0] : null;
+  const pSubSvg = allyStage ? allyStage.svgFn() : null;
   const pSvg = st.svgFn();
   const scene = SCENES[B.enemy.sceneMType || B.enemy.mType] || SCENES.grass;
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
+  const crowdedField = UX.compactUI && (B.enemySub || B.allySub);
+  const enemyMainRight = crowdedField ? "4%" : "10%";
+  const enemySubRight = crowdedField ? "23%" : "24%";
+  const enemySubTop = crowdedField ? "18%" : "14%";
+  const playerMainLeft = crowdedField ? "2%" : "6%";
+  const playerMainBottom = crowdedField ? "12%" : "14%";
+  const playerSubLeft = crowdedField ? "20%" : "24%";
+  const playerSubBottom = crowdedField ? "15%" : "17%";
+  const mainPlayerSize = B.pStg >= 2 ? (crowdedField ? 168 : 200) : B.pStg >= 1 ? (crowdedField ? 148 : 170) : (crowdedField ? 108 : 120);
 
   // Enemy visual center fallback (used before first DOM measurement)
   // Note: MonsterSprite height = size * 100 / 120, so center Y uses sprite height / 2.
@@ -300,8 +311,8 @@ function App() {
     : eSceneType === "steel" ? 16 : 26;
   const fallbackTarget = {
     top: `calc(${eTopPct}% + ${eHeight / 2}px)`,
-    right: `calc(10% + ${eSize / 2}px)`,
-    flyRight: 10 + eSize / 2 * 100 / 390,
+    right: `calc(${crowdedField ? 4 : 10}% + ${eSize / 2}px)`,
+    flyRight: (crowdedField ? 4 : 10) + eSize / 2 * 100 / 390,
     flyTop: eTopPct + eHeight / 2 * 100 / 550,
   };
   const eTarget = measuredTarget || fallbackTarget;
@@ -390,29 +401,39 @@ function App() {
         </div>
 
         {/* Enemy sprite */}
-        <div ref={enemySpriteRef} style={{ position: "absolute", right: "10%", top: B.enemy && (eSceneType === "ghost" || B.enemy.id === "boss") ? "12%" : B.enemy && eSceneType === "steel" ? "16%" : "26%", zIndex: 5, animation: B.eAnim || (UX.lowPerfMode ? "none" : (B.enemy && B.enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite")) }}>
+        <div ref={enemySpriteRef} style={{ position: "absolute", right: enemyMainRight, top: B.enemy && (eSceneType === "ghost" || B.enemy.id === "boss") ? "12%" : B.enemy && eSceneType === "steel" ? "16%" : "26%", zIndex: 5, animation: B.eAnim || (UX.lowPerfMode ? "none" : (B.enemy && B.enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite")) }}>
           <MonsterSprite svgStr={eSvg} size={B.enemy && B.enemy.id === "boss" ? 230 : B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id.startsWith("slime") && B.enemy.isEvolved) ? 190 : B.enemy.isEvolved ? 155 : 120} />
         </div>
         {B.enemySub && eSubSvg && (
-          <div style={{ position: "absolute", right: "24%", top: "14%", zIndex: 4, opacity: 0.8, transform: "scale(0.82)", filter: "saturate(0.9)", animation: UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite" }}>
+          <div style={{ position: "absolute", right: enemySubRight, top: enemySubTop, zIndex: 4, opacity: 0.8, transform: crowdedField ? "scale(0.76)" : "scale(0.82)", filter: "saturate(0.9)", animation: UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite" }}>
             <MonsterSprite svgStr={eSubSvg} size={B.enemySub.id === "boss" ? 160 : B.enemySub.isEvolved ? 120 : 96} />
           </div>
         )}
-        {!B.eAnim && !UX.lowPerfMode && <div style={{ position: "absolute", right: B.enemy && B.enemy.id === "boss" ? "12%" : "14%", top: B.enemy && B.enemy.id === "boss" ? "52%" : B.enemy && eSceneType === "ghost" ? "40%" : B.enemy && eSceneType === "steel" ? "46%" : "54%", width: B.enemy && B.enemy.id === "boss" ? 120 : B.enemy && (B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id.startsWith("slime") && B.enemy.isEvolved)) ? 105 : 80, height: 12, background: "radial-gradient(ellipse,rgba(0,0,0,0.6),transparent)", borderRadius: "50%", zIndex: 4, animation: B.enemy && B.enemy.id === "boss" ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite" }} />}
+        {!B.eAnim && !UX.lowPerfMode && <div style={{ position: "absolute", right: B.enemy && B.enemy.id === "boss" ? (crowdedField ? "8%" : "12%") : (crowdedField ? "10%" : "14%"), top: B.enemy && B.enemy.id === "boss" ? "52%" : B.enemy && eSceneType === "ghost" ? "40%" : B.enemy && eSceneType === "steel" ? "46%" : "54%", width: B.enemy && B.enemy.id === "boss" ? 120 : B.enemy && (B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id.startsWith("slime") && B.enemy.isEvolved)) ? 105 : 80, height: 12, background: "radial-gradient(ellipse,rgba(0,0,0,0.6),transparent)", borderRadius: "50%", zIndex: 4, animation: B.enemy && B.enemy.id === "boss" ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite" }} />}
 
         {/* Player platform & info */}
         <div style={{ position: "absolute", left: "2%", bottom: "12%", width: "50%", height: 10, background: scene.platform1, borderRadius: "50%", filter: "blur(2px)", zIndex: 3 }} />
         <div style={{ position: "absolute", bottom: 10, right: 10, left: "42%", zIndex: 10 }}>
           <HPBar cur={B.pHp} max={PLAYER_MAX_HP} color="#6366f1" label={`${st.name} Lv.${B.pLvl}`} />
+          {B.allySub && (
+            <div style={{ marginTop: 4, opacity: 0.9 }}>
+              <HPBar cur={B.pHpSub} max={PLAYER_MAX_HP} color={B.allySub.c1} label={`夥伴 ${B.allySub.typeIcon}${B.allySub.name}`} />
+            </div>
+          )}
           <XPBar exp={B.pExp} max={B.expNext} />
           {B.cursed && <div style={{ background: "rgba(168,85,247,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, marginTop: 3, display: "inline-block", animation: "popIn 0.3s ease" }}>💀詛咒：下次攻擊弱化</div>}
         </div>
 
         {/* Player sprite */}
-        <div style={{ position: "absolute", left: "6%", bottom: "14%", transform: "scaleX(-1)", zIndex: 5, animation: B.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite") }}>
-          <MonsterSprite svgStr={pSvg} size={B.pStg >= 2 ? 200 : B.pStg >= 1 ? 170 : 120} />
+        <div style={{ position: "absolute", left: playerMainLeft, bottom: playerMainBottom, transform: "scaleX(-1)", zIndex: 5, animation: B.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite") }}>
+          <MonsterSprite svgStr={pSvg} size={mainPlayerSize} />
         </div>
-        {!B.pAnim && !UX.lowPerfMode && <div style={{ position: "absolute", left: "10%", bottom: "12%", width: B.pStg >= 2 ? 100 : B.pStg >= 1 ? 85 : 55, height: 10, background: "radial-gradient(ellipse,rgba(0,0,0,0.55),transparent)", borderRadius: "50%", zIndex: 4, animation: "shadowPulse 3s ease-in-out infinite" }} />}
+        {B.allySub && pSubSvg && (
+          <div style={{ position: "absolute", left: playerSubLeft, bottom: playerSubBottom, transform: "scaleX(-1)", zIndex: 4, opacity: 0.88, animation: UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite" }}>
+            <MonsterSprite svgStr={pSubSvg} size={crowdedField ? 92 : 104} />
+          </div>
+        )}
+        {!B.pAnim && !UX.lowPerfMode && <div style={{ position: "absolute", left: crowdedField ? "6%" : "10%", bottom: "12%", width: B.pStg >= 2 ? 100 : B.pStg >= 1 ? 85 : 55, height: 10, background: "radial-gradient(ellipse,rgba(0,0,0,0.55),transparent)", borderRadius: "50%", zIndex: 4, animation: "shadowPulse 3s ease-in-out infinite" }} />}
 
         {/* Streak badge */}
         {B.streak >= 2 && <div style={{ position: "absolute", top: 10, right: 10, background: "linear-gradient(135deg,#f59e0b,#ef4444)", color: "white", padding: "3px 10px", borderRadius: 16, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease", zIndex: 20 }}>🔥 {B.streak} 連擊！</div>}

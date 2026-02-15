@@ -73,7 +73,7 @@ export default function TitleScreen({
           border: "none", color: "white", fontSize: 15, fontWeight: 800,
           padding: "12px 0", borderRadius: 14,
           boxShadow: "0 4px 20px rgba(14,165,233,0.28)",
-        }}>⚔️ 雙打模式 (1v2)</button>
+        }}>⚔️ 雙人模式 (2v2)</button>
         <div style={{ fontSize: 11, opacity: 0.3, marginTop: -4 }}>計時模式：5 秒內回答</div>
 
         {/* Feature grid */}

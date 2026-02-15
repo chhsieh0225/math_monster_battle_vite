@@ -25,6 +25,7 @@ import {
   MAX_MOVE_LVL,
   TIMER_SEC, PLAYER_MAX_HP,
 } from '../data/constants';
+import { STARTERS } from '../data/starters';
 
 import { genQ } from '../utils/questionGenerator';
 import {
@@ -57,6 +58,23 @@ import { runPlayerAnswer } from './battle/playerFlow';
 
 // ── Constants (module-level to avoid re-allocation per render) ──
 const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
+const PARTNER_BY_STARTER = {
+  fire: "water",
+  water: "electric",
+  grass: "fire",
+  electric: "grass",
+  lion: "water",
+};
+
+function pickPartnerStarter(mainStarter, pickIndex) {
+  if (!mainStarter) return null;
+  const preferId = PARTNER_BY_STARTER[mainStarter.id];
+  const preferred = STARTERS.find((s) => s.id === preferId);
+  if (preferred) return preferred;
+  const pool = STARTERS.filter((s) => s.id !== mainStarter.id);
+  if (pool.length <= 0) return null;
+  return pool[pickIndex(pool.length)];
+}
 
 // ═══════════════════════════════════════════════════════════════════
 export function useBattle() {
@@ -79,7 +97,7 @@ export function useBattle() {
   const [starter, setStarter] = useState(null);
   const [battle, dispatchBattle] = useReducer(battleReducer, undefined, createInitialBattleState);
   const {
-    pHp, pExp, pLvl, pStg,
+    pHp, allySub, pHpSub, pExp, pLvl, pStg,
     round, enemy, eHp, enemySub, eHpSub,
     streak, passiveCount, charge, tC, tW, defeated, maxStreak,
     mHits, mLvls, mLvlUp,
@@ -90,6 +108,8 @@ export function useBattle() {
 
   const setBattleField = (key, value) => dispatchBattle({ type: "set_field", key, value });
   const setPHp = (value) => setBattleField("pHp", value);
+  const setAllySub = (value) => setBattleField("allySub", value);
+  const setPHpSub = (value) => setBattleField("pHpSub", value);
   const setPExp = (value) => setBattleField("pExp", value);
   const setPLvl = (value) => setBattleField("pLvl", value);
   const setPStg = (value) => setBattleField("pStg", value);
@@ -171,7 +191,7 @@ export function useBattle() {
   // from polluting sr.current with intermediate render values.
   const sr = useRef({});
   const _srSnapshot = {
-    enemy, enemySub, starter, eHp, eHpSub, pHp, pExp, pLvl, pStg,
+    enemy, enemySub, starter, allySub, eHp, eHpSub, pHp, pHpSub, pExp, pLvl, pStg,
     streak, passiveCount, charge, burnStack, frozen, staticStack, specDef, cursed,
     mHits, mLvls, selIdx, phase, round, q,
     screen, timedMode, battleMode, diffLevel,
@@ -295,8 +315,13 @@ export function useBattle() {
     if (sub) updateEnc(sub);
     const sn = SCENE_NAMES[e.sceneMType || e.mType] || "";
     setPhase("text");
+    const ally = sr.current.allySub;
     if (sub) {
-      setBText(`【${sn}】雙打戰！${e.name}(${e.typeIcon}${e.typeName}) 與 ${sub.name}(${sub.typeIcon}${sub.typeName}) 出現了！`);
+      if (ally) {
+        setBText(`【${sn}】2v2 開戰！我方 ${starter?.name || "主將"} 與 ${ally.name} 對上 ${e.name} 與 ${sub.name}！`);
+      } else {
+        setBText(`【${sn}】雙打戰！${e.name}(${e.typeIcon}${e.typeName}) 與 ${sub.name}(${sub.typeIcon}${sub.typeName}) 出現了！`);
+      }
     } else {
       setBText(`【${sn}】野生的 ${e.name}(${e.typeIcon}${e.typeName}) Lv.${e.lvl} 出現了！`);
     }
@@ -317,13 +342,22 @@ export function useBattle() {
     const mode = modeOverride || sr.current.battleMode || battleMode;
     const newRoster = buildNewRoster(mode);
     setEnemies(newRoster);
-    dispatchBattle({ type: "reset_run", patch: { diffLevel: 2 } });
+    const leader = starterOverride || sr.current.starter;
+    const partner = mode === "double" ? pickPartnerStarter(leader, pickIndex) : null;
+    dispatchBattle({
+      type: "reset_run",
+      patch: {
+        diffLevel: 2,
+        allySub: partner,
+        pHpSub: partner ? PLAYER_MAX_HP : 0,
+      },
+    });
     setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
     frozenR.current = false;
     abilityModelRef.current = createAbilityModel(2);
     pendingEvolve.current = false;
     // Init session log — use override on first game since setStarter is async
-    const s = starterOverride || sr.current.starter;
+    const s = leader;
     appendEvent("starter_selected", {
       starterId: s?.id || null,
       starterName: s?.name || null,
@@ -378,6 +412,84 @@ export function useBattle() {
     }
     _endSession(false, "quit");
     setScreen("gameover");
+  };
+
+  const handlePlayerPartyKo = ({ target = "main", reason = "你的夥伴倒下了..." }) => {
+    const s = sr.current;
+    if (target === "sub") {
+      setAllySub(null);
+      setPHpSub(0);
+      if ((s.pHp || 0) <= 0) {
+        _endSession(false);
+        setPhase("ko");
+        setBText(reason);
+        setScreen("gameover");
+        return "gameover";
+      }
+      setBText(`💫 ${s.allySub?.name || "副將"} 倒下了！`);
+      setPhase("text");
+      safeTo(() => {
+        setPhase("menu");
+        setBText("");
+      }, 1100);
+      return "sub_down";
+    }
+
+    if ((s.pHpSub || 0) > 0 && s.allySub) {
+      const promoted = s.allySub;
+      setStarter(promoted);
+      setPStg(0);
+      setPHp(s.pHpSub);
+      setAllySub(null);
+      setPHpSub(0);
+      setBText(`💫 ${promoted.name} 接替上場！`);
+      setPhase("text");
+      safeTo(() => {
+        setPhase("menu");
+        setBText("");
+      }, 1200);
+      return "promoted";
+    }
+
+    _endSession(false);
+    setPhase("ko");
+    setBText(reason);
+    setScreen("gameover");
+    return "gameover";
+  };
+
+  const runAllySupportTurn = ({ delayMs = 850, onDone } = {}) => {
+    const s = sr.current;
+    if (s.battleMode !== "double" || !s.allySub || (s.pHpSub || 0) <= 0 || !s.enemy) return false;
+    if (!chance(0.45)) return false;
+
+    safeTo(() => {
+      const s2 = sr.current;
+      if (!s2.allySub || (s2.pHpSub || 0) <= 0 || !s2.enemy) {
+        if (onDone) onDone();
+        return;
+      }
+
+      const base = 16 + Math.max(0, s2.pLvl - 1) * 2;
+      const dmg = Math.min(28, Math.max(6, Math.round(base * (0.85 + rand() * 0.3))));
+      const nh = Math.max(0, s2.eHp - dmg);
+      setBText(`🤝 ${s2.allySub.name} 協同攻擊！`);
+      setPhase("playerAtk");
+      setEAnim("enemyWaterHit 0.45s ease");
+      setEHp(nh);
+      addD(`-${dmg}`, 140, 55, "#60a5fa");
+      addP("starter", 120, 130, 3);
+      sfx.play("water");
+
+      safeTo(() => setEAnim(""), 450);
+      if (nh <= 0) {
+        safeTo(() => handleVictory("被雙人連攜打倒了"), 700);
+        return;
+      }
+      if (onDone) safeTo(onDone, 700);
+    }, delayMs);
+
+    return true;
   };
 
   // --- Handle a defeated enemy ---
@@ -462,6 +574,7 @@ export function useBattle() {
       setEAnim,
       setPAnim,
       setPHp,
+      setPHpSub,
       setSpecDef,
       setDefAnim,
       setEHp,
@@ -472,6 +585,7 @@ export function useBattle() {
       _endSession,
       setScreen,
       handleVictory,
+      handlePlayerPartyKo,
     });
   }
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
@@ -531,6 +645,7 @@ export function useBattle() {
       setBossCharging,
       setBurnStack,
       setPHp,
+      setPHpSub,
       setFrozen,
       frozenR,
       setStaticStack,
@@ -543,6 +658,8 @@ export function useBattle() {
       _endSession,
       setScreen,
       setBText,
+      handlePlayerPartyKo,
+      runAllySupportTurn,
     });
   };
 
@@ -561,6 +678,9 @@ export function useBattle() {
       _finishGame();
     } else {
       setPHp(h => Math.min(h + 10, PLAYER_MAX_HP));
+      if (s.battleMode === "double" && s.allySub && (s.pHpSub || 0) > 0) {
+        setPHpSub(h => Math.min(h + 8, PLAYER_MAX_HP));
+      }
       startBattle(nx);
     }
   };
@@ -618,7 +738,7 @@ export function useBattle() {
   return {
     // ── State (read by render shell) ──
     screen, timedMode, battleMode, enemies,
-    starter, pHp, pExp, pLvl, pStg,
+    starter, allySub, pHp, pHpSub, pExp, pLvl, pStg,
     round, enemy, eHp, enemySub, eHpSub,
     streak, passiveCount, charge, tC, tW, defeated, maxStreak,
     mHits, mLvls, mLvlUp,

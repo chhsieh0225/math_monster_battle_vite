@@ -62,6 +62,8 @@ export function runPlayerAnswer({
   _endSession,
   setScreen,
   setBText,
+  handlePlayerPartyKo,
+  runAllySupportTurn,
 }) {
   const s = sr.current;
   if (!s || !move || !starter) return;
@@ -71,6 +73,14 @@ export function runPlayerAnswer({
     setPhase("ko");
     setBText(message);
     setScreen("gameover");
+  };
+
+  const resolveMainKo = (message = "你的夥伴倒下了...") => {
+    if (handlePlayerPartyKo) {
+      return handlePlayerPartyKo({ target: "main", reason: message });
+    }
+    loseToGameOver(message);
+    return "gameover";
   };
 
   if (correct) {
@@ -248,15 +258,29 @@ export function runPlayerAnswer({
                 setEffMsg({ text: "🛡️ 反擊裝甲！", color: "#60a5fa" });
                 safeTo(() => setEffMsg(null), 1500);
                 safeTo(() => setPAnim(""), 500);
-                if (nh4 <= 0) safeTo(() => { sfx.play("ko"); loseToGameOver("你的夥伴被反擊傷害打倒了..."); }, 800);
+                if (nh4 <= 0) safeTo(() => {
+                  sfx.play("ko");
+                  resolveMainKo("你的主將被反擊傷害打倒了...");
+                }, 800);
               }, 600);
             }
           }
 
           if (afterHp <= 0 && dmg >= s3.enemy.maxHp) tryUnlock("one_hit");
           if (afterHp <= 0) safeTo(() => handleVictory(), effectTimeline.nextDelay);
-          else if (willFreeze) safeTo(() => handleFreeze(), effectTimeline.nextDelay);
-          else safeTo(() => doEnemyTurn(), effectTimeline.nextDelay);
+          else {
+            const continueAfterTurn = () => {
+              if (willFreeze) handleFreeze();
+              else doEnemyTurn();
+            };
+            if (runAllySupportTurn && runAllySupportTurn({
+              delayMs: effectTimeline.nextDelay,
+              onDone: continueAfterTurn,
+            })) {
+              return;
+            }
+            safeTo(continueAfterTurn, effectTimeline.nextDelay);
+          }
         }, effectTimeline.hitDelay);
       },
     });
@@ -286,7 +310,7 @@ export function runPlayerAnswer({
       setBText(`${move.name} 失控了！自己受到 ${sd} 傷害！`);
       setPhase("text");
       safeTo(() => {
-        if (nh2 <= 0) loseToGameOver();
+        if (nh2 <= 0) resolveMainKo("你的主將倒下了...");
         else if (frozenR.current) handleFreeze();
         else doEnemyTurn();
       }, 1500);

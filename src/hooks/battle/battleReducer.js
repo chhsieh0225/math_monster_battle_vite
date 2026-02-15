@@ -3,6 +3,8 @@ import { PLAYER_MAX_HP } from '../../data/constants.js';
 const BASE_STATE = {
   // Player
   pHp: PLAYER_MAX_HP,
+  allySub: null,
+  pHpSub: 0,
   pExp: 0,
   pLvl: 1,
   pStg: 0,

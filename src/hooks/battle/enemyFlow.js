@@ -25,6 +25,7 @@ export function runEnemyTurn({
   setEAnim,
   setPAnim,
   setPHp,
+  setPHpSub,
   setSpecDef,
   setDefAnim,
   setEHp,
@@ -35,12 +36,36 @@ export function runEnemyTurn({
   _endSession,
   setScreen,
   handleVictory,
+  handlePlayerPartyKo,
 }) {
   const loseToGameOver = (message = "你的夥伴倒下了...") => {
     _endSession(false);
     setPhase("ko");
     setBText(message);
     setScreen("gameover");
+  };
+
+  const resolvePlayerTarget = (s) => {
+    const targets = [];
+    if ((s.pHp || 0) > 0) targets.push("main");
+    if (s.allySub && (s.pHpSub || 0) > 0) targets.push("sub");
+    if (targets.length <= 0) return "main";
+    return targets[randInt(0, targets.length - 1)];
+  };
+
+  const applyDamageToTarget = ({ s, target, dmg, label = null, color = "#ef4444" }) => {
+    const isSub = target === "sub";
+    const prevHp = isSub ? (s.pHpSub || 0) : (s.pHp || 0);
+    const nextHp = Math.max(0, prevHp - dmg);
+    if (isSub) {
+      setPHpSub(nextHp);
+    } else {
+      setPHp(nextHp);
+      setPAnim("playerHit 0.5s ease");
+      safeTo(() => setPAnim(""), 500);
+    }
+    addD(label || `-${dmg}`, isSub ? 112 : 60, isSub ? 146 : 170, color);
+    return nextHp;
   };
 
   const maybeEnemyAssistAttack = (delayMs = 850) => {
@@ -68,21 +93,32 @@ export function runEnemyTurn({
             setBText("");
             return;
           }
+          const target = resolvePlayerTarget(s3);
+          const targetName = target === "sub" ? (s3.allySub?.name || "副將") : s3.starter.name;
           const { dmg } = resolveEnemyAssistStrike({
             enemySub: s3.enemySub,
             starterType: s3.starter.type,
           });
-          const nh = Math.max(0, s3.pHp - dmg);
-          setPHp(nh);
-          setPAnim("playerHit 0.45s ease");
+          const nh = applyDamageToTarget({
+            s: s3,
+            target,
+            dmg,
+            label: `✶-${dmg}`,
+            color: "#f97316",
+          });
           sfx.play("playerHit");
-          addD(`✶-${dmg}`, 60, 170, "#f97316");
           addP("enemy", 84, 186, 3);
-          safeTo(() => setPAnim(""), 450);
           if (nh <= 0) {
             safeTo(() => {
               sfx.play("ko");
-              loseToGameOver("你的夥伴被雙打夾擊擊倒了...");
+              if (handlePlayerPartyKo) {
+                handlePlayerPartyKo({
+                  target,
+                  reason: `${targetName} 被雙打夾擊擊倒了...`,
+                });
+              } else {
+                loseToGameOver("你的夥伴被雙打夾擊擊倒了...");
+              }
             }, 650);
             return;
           }
@@ -107,7 +143,9 @@ export function runEnemyTurn({
       setEAnim,
       onStrike: () => {
         const s2 = sr.current; // re-read after delay
-        if (s2.specDef) {
+        const target = resolvePlayerTarget(s2);
+        const targetName = target === "sub" ? (s2.allySub?.name || "副將") : s2.starter.name;
+        if (target === "main" && s2.specDef) {
           const st = s2.starter.type;
           setSpecDef(false);
           setDefAnim(st);
@@ -188,20 +226,29 @@ export function runEnemyTurn({
           bossPhase: bp,
           chance,
         });
-        const nh = Math.max(0, s2.pHp - dmg);
-        setPHp(nh);
-        setPAnim("playerHit 0.5s ease");
+        const nh = applyDamageToTarget({
+          s: s2,
+          target,
+          dmg,
+          label: isCrit ? `💥-${dmg}` : `-${dmg}`,
+          color: isCrit ? "#ff6b00" : "#ef4444",
+        });
         sfx.play("playerHit");
-        addD(isCrit ? `💥-${dmg}` : `-${dmg}`, 60, 170, isCrit ? "#ff6b00" : "#ef4444");
         addP("enemy", 80, 190, 4);
         if (isCrit) { setEffMsg({ text: "🔥 暴擊！", color: "#ff6b00" }); safeTo(() => setEffMsg(null), 1500); }
         else if (isBlaze) { setEffMsg({ text: "🔥 烈焰覺醒！ATK↑", color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
         else if (defEff > 1) { setEffMsg({ text: "敵人招式很有效！", color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
         else if (defEff < 1) { setEffMsg({ text: "敵人招式效果不佳", color: "#64748b" }); safeTo(() => setEffMsg(null), 1500); }
-        safeTo(() => setPAnim(""), 500);
 
         if (nh <= 0) {
-          safeTo(() => { sfx.play("ko"); loseToGameOver(); }, 800);
+          safeTo(() => {
+            sfx.play("ko");
+            if (handlePlayerPartyKo) {
+              handlePlayerPartyKo({ target, reason: `${targetName} 倒下了...` });
+            } else {
+              loseToGameOver();
+            }
+          }, 800);
           return;
         }
 
@@ -231,15 +278,26 @@ export function runEnemyTurn({
               setEAnim,
               onStrike: () => {
                 const s3 = sr.current;
+                const target2 = resolvePlayerTarget(s3);
+                const target2Name = target2 === "sub" ? (s3.allySub?.name || "副將") : s3.starter.name;
                 const dmg2 = calcEnemyDamage(scaledAtk, getEff(s3.enemy.mType, s3.starter.type));
-                const nh2 = Math.max(0, s3.pHp - dmg2);
-                setPHp(nh2);
-                setPAnim("playerHit 0.5s ease");
+                const nh2 = applyDamageToTarget({
+                  s: s3,
+                  target: target2,
+                  dmg: dmg2,
+                  label: `⚡-${dmg2}`,
+                  color: "#eab308",
+                });
                 sfx.play("playerHit");
-                addD(`⚡-${dmg2}`, 60, 170, "#eab308");
                 addP("enemy", 80, 190, 3);
-                safeTo(() => setPAnim(""), 500);
-                if (nh2 <= 0) safeTo(() => { sfx.play("ko"); loseToGameOver(); }, 800);
+                if (nh2 <= 0) safeTo(() => {
+                  sfx.play("ko");
+                  if (handlePlayerPartyKo) {
+                    handlePlayerPartyKo({ target: target2, reason: `${target2Name} 被連擊擊倒了...` });
+                  } else {
+                    loseToGameOver();
+                  }
+                }, 800);
                 else {
                   if (maybeEnemyAssistAttack(500)) return;
                   safeTo(() => { setPhase("menu"); setBText(""); }, 800);
@@ -279,14 +337,24 @@ export function runEnemyTurn({
         setEAnim,
         onStrike: () => {
           const s2 = sr.current;
+          const target = resolvePlayerTarget(s2);
+          const targetName = target === "sub" ? (s2.allySub?.name || "副將") : s2.starter.name;
           const bigDmg = Math.round(s2.enemy.atk * 2.2);
-          const nh = Math.max(0, s2.pHp - bigDmg);
-          setPHp(nh);
-          setPAnim("playerHit 0.5s ease");
-          addD(`💀-${bigDmg}`, 60, 170, "#a855f7");
+          const nh = applyDamageToTarget({
+            s: s2,
+            target,
+            dmg: bigDmg,
+            label: `💀-${bigDmg}`,
+            color: "#a855f7",
+          });
           addP("enemy", 80, 190, 6);
-          safeTo(() => setPAnim(""), 500);
-          if (nh <= 0) safeTo(() => loseToGameOver(), 800);
+          if (nh <= 0) safeTo(() => {
+            if (handlePlayerPartyKo) {
+              handlePlayerPartyKo({ target, reason: `${targetName} 被暗黑吐息擊倒了...` });
+            } else {
+              loseToGameOver();
+            }
+          }, 800);
           else safeTo(() => { setPhase("menu"); setBText(""); }, 800);
         },
       });

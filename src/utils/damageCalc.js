@@ -2,7 +2,7 @@
  * Pure damage calculation functions.
  * Extracted from App.jsx for testability and clarity.
  */
-import { POWER_CAPS, MAX_MOVE_LVL } from '../data/constants';
+import { POWER_CAPS } from '../data/constants';
 import { getEff } from '../data/monsters';
 
 /**
@@ -39,17 +39,6 @@ export function bestEffectiveness(move, enemy) {
   const e1 = enemy ? getEff(move.type, enemy.mType) : 1;
   if (!move.type2 || !enemy) return e1;
   return Math.max(e1, getEff(move.type2, enemy.mType));
-}
-
-/**
- * Whether a move has reached its power cap.
- * @param {Object} move - Move definition
- * @param {number} lvl  - Current level
- * @param {number} idx  - Move index
- * @returns {boolean}
- */
-export function isAtCap(move, lvl, idx) {
-  return lvl >= MAX_MOVE_LVL || move.basePower + lvl * move.growth > POWER_CAPS[idx];
 }
 
 /**

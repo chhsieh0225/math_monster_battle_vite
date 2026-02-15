@@ -7,7 +7,7 @@
  *   2. Battle-screen layout & visual rendering
  *   3. Orientation-lock wrapper (GameShell)
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './App.css';
 
 // Hooks
@@ -47,15 +47,16 @@ function GameShell() {
   const [showRotateHint, setShowRotateHint] = useState(false);
   useEffect(() => {
     try { screen.orientation.lock("portrait-primary").catch(() => {}); } catch (e) {}
+    let tid = null;
     const chk = () => {
       const isLandscape = window.innerWidth > window.innerHeight * 1.05;
       setShowRotateHint(isLandscape && isTouchDevice());
     };
     chk();
-    const ochk = () => setTimeout(chk, 350);
+    const ochk = () => { if (tid) clearTimeout(tid); tid = setTimeout(chk, 350); };
     window.addEventListener("resize", chk);
     window.addEventListener("orientationchange", ochk);
-    return () => { window.removeEventListener("resize", chk); window.removeEventListener("orientationchange", ochk); };
+    return () => { window.removeEventListener("resize", chk); window.removeEventListener("orientationchange", ochk); if (tid) clearTimeout(tid); };
   }, []);
 
   return (
@@ -138,12 +139,12 @@ function App() {
   const eSceneType = B.enemy.sceneMType || B.enemy.mType;
   const eTopPct = (eSceneType === "ghost" || B.enemy.id === "boss") ? 12
     : eSceneType === "steel" ? 16 : 26;
-  const eTarget = {
+  const eTarget = useMemo(() => ({
     top: `calc(${eTopPct}% + ${eSize / 2}px)`,
     right: `calc(10% + ${eSize / 2}px)`,
-    flyRight: 10 + eSize / 2 * 100 / 390,   // approx % for fly calc (~390px mobile width)
-    flyTop: eTopPct + eSize / 2 * 100 / 550, // approx % for fly calc (~550px battle height)
-  };
+    flyRight: 10 + eSize / 2 * 100 / 390,
+    flyTop: eTopPct + eSize / 2 * 100 / 550,
+  }), [eSize, eTopPct]);
 
   return (
     <div onClick={canTapAdvance ? B.advance : undefined} style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}>
@@ -201,7 +202,7 @@ function App() {
         <div style={{ position: "absolute", inset: 0, background: scene.sky, opacity: 0.25, zIndex: 1, transition: "background 1s ease" }} />
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "45%", background: scene.ground, transition: "background 1s ease", zIndex: 2 }} />
         <div style={{ position: "absolute", right: "5%", top: "8%", width: "55%", height: 12, background: scene.platform2, borderRadius: "50%", filter: "blur(2px)", zIndex: 3 }} />
-        <div style={{ position: "absolute", inset: 0, zIndex: 4, pointerEvents: "none" }}>{scene.deco && scene.deco()}</div>
+        <div style={{ position: "absolute", inset: 0, zIndex: 4, pointerEvents: "none" }}>{scene.Deco && <scene.Deco />}</div>
 
         {/* Enemy info */}
         <div style={{ position: "absolute", top: 10, left: 10, right: "42%", zIndex: 10 }}>

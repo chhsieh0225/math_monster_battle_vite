@@ -58,5 +58,8 @@ export function useTimer(timerSec, onTimeoutCallback) {
     runInterval(remainingRef.current);
   }, [paused, runInterval]);
 
+  // Cleanup on unmount to prevent leaked intervals
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
   return { timerLeft, paused, startTimer, clearTimer, pauseTimer, resumeTimer };
 }

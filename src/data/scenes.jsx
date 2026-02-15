@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { BG_IMGS } from './sprites';
 
 /* ─── Pre-computed random seeds (avoid Math.random() in render) ─── */
@@ -48,6 +49,11 @@ const SMOKE_R = [...Array(6)].map((_,i) => ({
   del: i * 0.8,
 }));
 
+const DARK_R = [...Array(8)].map((_,i)=>({
+  t:5+((i*11)%60),l:((i*13)%90),w:2+(i%3),h:2+(i%2)+1,
+  op:0.1+(i%4)*0.05,dur:2+i*0.4,del:i*0.3
+}));
+
 export const SCENES = {
   /* ═══ Grass — wind-blown leaf particles ═══ */
   grass:{
@@ -55,7 +61,7 @@ export const SCENES = {
     sky:"linear-gradient(180deg,#87ceeb 0%,#a8d8ea 30%,#b4e4b4 60%,#90d890 100%)",
     ground:"linear-gradient(180deg,transparent,rgba(34,197,94,0.08) 40%,rgba(34,197,94,0.15))",
     platform1:"rgba(34,197,94,0.25)",platform2:"rgba(34,197,94,0.2)",
-    deco:()=><>
+    Deco:memo(()=><>
       {/* Drifting leaf particles with glow */}
       {LEAF_R.map((r,i)=><div key={`lf${i}`} style={{
         position:"absolute",bottom:`${r.bottom}%`,left:`${r.left}%`,
@@ -68,7 +74,7 @@ export const SCENES = {
       {/* Soft wind streaks */}
       <div style={{position:"absolute",top:"30%",left:0,width:"100%",height:1.5,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent)",animation:"windSweep 6s ease-in-out infinite"}}/>
       <div style={{position:"absolute",top:"55%",left:0,width:"100%",height:1,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent)",animation:"windSweep 8s ease-in-out 2s infinite"}}/>
-    </>
+    </>)
   },
 
   /* ═══ Fire — ember dot particles + lava glow (emoji removed) ═══ */
@@ -77,7 +83,7 @@ export const SCENES = {
     sky:"linear-gradient(180deg,#7c2d12 0%,#c2410c 25%,#ea580c 50%,#92400e 80%,#451a03 100%)",
     ground:"linear-gradient(180deg,transparent,rgba(234,88,12,0.1) 40%,rgba(154,52,18,0.25))",
     platform1:"rgba(234,88,12,0.3)",platform2:"rgba(234,88,12,0.2)",
-    deco:()=><>
+    Deco:memo(()=><>
       {/* Rising ember dots */}
       {[...Array(8)].map((_,i)=><div key={`e${i}`} style={{
         position:"absolute",bottom:`${2+i*3}%`,left:`${6+i*11}%`,
@@ -90,7 +96,7 @@ export const SCENES = {
       <div style={{position:"absolute",bottom:"3%",right:"12%",width:90,height:30,background:"radial-gradient(ellipse,rgba(220,38,38,0.2),transparent)",borderRadius:"50%",animation:"lavaGlow 3.5s ease-in-out 0.8s infinite"}}/>
       {/* Heat haze overlay */}
       <div style={{position:"absolute",top:"0%",left:"0%",width:"100%",height:"25%",background:"linear-gradient(180deg,rgba(251,146,60,0.06),transparent)",animation:"float 5s ease-in-out infinite"}}/>
-    </>
+    </>)
   },
 
   /* ═══ Ghost — firefly glow particles ═══ */
@@ -99,7 +105,7 @@ export const SCENES = {
     sky:"linear-gradient(180deg,#1e1b4b 0%,#312e81 25%,#3730a3 50%,#1e1b4b 80%,#0f0b2e 100%)",
     ground:"linear-gradient(180deg,transparent,rgba(99,102,241,0.05) 40%,rgba(67,56,202,0.12))",
     platform1:"rgba(99,102,241,0.15)",platform2:"rgba(99,102,241,0.1)",
-    deco:()=><>
+    Deco:memo(()=><>
       {/* Firefly particles */}
       {FIREFLY_R.map((r,i)=><div key={`ff${i}`} style={{
         position:"absolute",top:`${r.top}%`,left:`${r.left}%`,
@@ -113,7 +119,7 @@ export const SCENES = {
       <div style={{position:"absolute",top:"22%",left:"55%",width:70,height:50,background:"rgba(139,92,246,0.04)",borderRadius:"50%",filter:"blur(14px)"}}/>
       {/* Faint moonlight glow */}
       <div style={{position:"absolute",top:"3%",right:"22%",width:40,height:40,background:"radial-gradient(circle,rgba(250,250,210,0.10),transparent)",borderRadius:"50%"}}/>
-    </>
+    </>)
   },
 
   /* ═══ Steel — smoke wisps + industrial lights + faint sparks ═══ */
@@ -122,7 +128,7 @@ export const SCENES = {
     sky:"linear-gradient(180deg,#64748b 0%,#94a3b8 20%,#cbd5e1 45%,#94a3b8 70%,#6b7280 100%)",
     ground:"linear-gradient(180deg,transparent,rgba(100,116,139,0.1) 40%,rgba(75,85,99,0.2))",
     platform1:"rgba(100,116,139,0.3)",platform2:"rgba(100,116,139,0.2)",
-    deco:()=><>
+    Deco:memo(()=><>
       {/* Drifting smoke wisps */}
       {SMOKE_R.map((r,i)=><div key={`sm${i}`} style={{
         position:"absolute",bottom:`${r.bottom}%`,left:`${r.left}%`,
@@ -156,7 +162,7 @@ export const SCENES = {
       }}/>)}
       {/* Structural beam (subtle) */}
       <div style={{position:"absolute",bottom:"5%",left:"2%",width:"96%",height:6,background:"linear-gradient(90deg,#6b7280,#9ca3af,#6b7280)",opacity:0.1,borderRadius:2}}/>
-    </>
+    </>)
   },
 
   /* ═══ Dark — white sparkle dots + purple glows (already clean) ═══ */
@@ -165,12 +171,8 @@ export const SCENES = {
     sky:"linear-gradient(180deg,#030712 0%,#0a0415 20%,#1a0a2e 45%,#0f0520 70%,#030712 100%)",
     ground:"linear-gradient(180deg,transparent,rgba(88,28,135,0.06) 40%,rgba(30,10,60,0.2))",
     platform1:"rgba(88,28,135,0.2)",platform2:"rgba(88,28,135,0.15)",
-    _darkR:[...Array(8)].map((_,i)=>({
-      t:5+((i*11)%60),l:((i*13)%90),w:2+(i%3),h:2+(i%2)+1,
-      op:0.1+(i%4)*0.05,dur:2+i*0.4,del:i*0.3
-    })),
-    deco:function(){return<>
-      {this._darkR.map((r,i)=><div key={`d${i}`} style={{
+    Deco:memo(()=><>
+      {DARK_R.map((r,i)=><div key={`d${i}`} style={{
         position:"absolute",top:`${r.t}%`,left:`${r.l}%`,
         width:r.w,height:r.h,background:"white",borderRadius:"50%",
         opacity:r.op,animation:`sparkle ${r.dur}s ease ${r.del}s infinite`
@@ -178,7 +180,7 @@ export const SCENES = {
       <div style={{position:"absolute",top:"10%",left:"50%",width:100,height:100,background:"radial-gradient(circle,rgba(168,85,247,0.06),transparent)",borderRadius:"50%"}}/>
       <div style={{position:"absolute",bottom:"25%",left:"5%",width:60,height:60,background:"radial-gradient(circle,rgba(139,92,246,0.04),transparent)",borderRadius:"50%"}}/>
       {[0,1,2].map(i=><div key={`p${i}`} style={{position:"absolute",bottom:`${10+i*8}%`,left:`${15+i*30}%`,width:30+i*10,height:2,background:`rgba(168,85,247,${0.04+i*0.02})`,filter:"blur(3px)"}}/>)}
-    </>}
+    </>)
   }
 };
 

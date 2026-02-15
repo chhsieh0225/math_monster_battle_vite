@@ -225,11 +225,18 @@ export function useBattle() {
   };
   const rmP = (id) => setParts(f => f.filter(v => v.id !== id));
 
-  // ──── Safe timeout (cancelled on turn/game change) ────
+  // ──── Safe timeout (cancelled on turn/game change or unmount) ────
+  const activeTimers = useRef(new Set());
   const safeTo = (fn, ms) => {
     const g = turnRef.current;
-    setTimeout(() => { if (g === turnRef.current) fn(); }, ms);
+    const id = setTimeout(() => {
+      activeTimers.current.delete(id);
+      if (g === turnRef.current) fn();
+    }, ms);
+    activeTimers.current.add(id);
   };
+  // Cleanup all pending timers on unmount
+  useEffect(() => () => { activeTimers.current.forEach(clearTimeout); activeTimers.current.clear(); }, []);
 
   // ═══════════════════════════════════════════════════════════════
   //  TIMER

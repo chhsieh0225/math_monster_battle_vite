@@ -295,16 +295,6 @@ function App() {
   const pSvg = st.svgFn();
   const scene = SCENES[B.enemy.sceneMType || B.enemy.mType] || SCENES.grass;
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
-  const activeMove = Number.isInteger(B.selIdx) && B.starter?.moves ? B.starter.moves[B.selIdx] : null;
-  const showCastBanner = B.phase === "playerAtk" && !!B.atkEffect && !!activeMove;
-  const castTone = {
-    fire: { bg: "linear-gradient(135deg,rgba(239,68,68,0.9),rgba(249,115,22,0.9))", bd: "rgba(254,215,170,0.75)", glow: "rgba(249,115,22,0.5)" },
-    water: { bg: "linear-gradient(135deg,rgba(14,165,233,0.9),rgba(30,64,175,0.9))", bd: "rgba(186,230,253,0.72)", glow: "rgba(56,189,248,0.45)" },
-    grass: { bg: "linear-gradient(135deg,rgba(34,197,94,0.9),rgba(22,101,52,0.9))", bd: "rgba(187,247,208,0.7)", glow: "rgba(74,222,128,0.42)" },
-    electric: { bg: "linear-gradient(135deg,rgba(245,158,11,0.92),rgba(161,98,7,0.9))", bd: "rgba(254,240,138,0.74)", glow: "rgba(251,191,36,0.48)" },
-    light: { bg: "linear-gradient(135deg,rgba(251,191,36,0.92),rgba(217,119,6,0.9))", bd: "rgba(254,249,195,0.74)", glow: "rgba(245,158,11,0.45)" },
-    dark: { bg: "linear-gradient(135deg,rgba(88,28,135,0.9),rgba(30,27,75,0.9))", bd: "rgba(221,214,254,0.62)", glow: "rgba(147,51,234,0.35)" },
-  }[B.atkEffect?.type || "fire"] || { bg: "rgba(15,23,42,0.85)", bd: "rgba(148,163,184,0.6)", glow: "rgba(71,85,105,0.4)" };
 
   // Enemy visual center fallback (used before first DOM measurement)
   // Note: MonsterSprite height = size * 100 / 120, so center Y uses sprite height / 2.
@@ -348,32 +338,6 @@ function App() {
       {showHeavyFx && B.atkEffect && B.atkEffect.type === "grass" && <GrassEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
       {showHeavyFx && B.atkEffect && B.atkEffect.type === "dark" && <DarkEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
       {showHeavyFx && B.atkEffect && B.atkEffect.type === "light" && <LightEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
-      {showCastBanner && (
-        <div
-          style={{
-            position: "absolute",
-            top: "36%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 220,
-            pointerEvents: "none",
-            color: "white",
-            fontSize: 17,
-            fontWeight: 900,
-            letterSpacing: 1.1,
-            padding: "8px 18px",
-            borderRadius: 999,
-            border: `1px solid ${castTone.bd}`,
-            background: castTone.bg,
-            boxShadow: `0 8px 24px ${castTone.glow}`,
-            textShadow: "0 2px 8px rgba(0,0,0,0.45)",
-            animation: "popIn 0.22s ease",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {activeMove.icon} {activeMove.name}
-        </div>
-      )}
 
       {/* Special Defense animations */}
       {showHeavyFx && B.defAnim === "fire" && <div style={{ position: "absolute", left: "6%", bottom: "14%", width: 160, height: 160, zIndex: 50, pointerEvents: "none" }}>

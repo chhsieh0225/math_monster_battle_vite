@@ -12,6 +12,24 @@ const DESCS = {
   lion: { desc: "來自金色草原的勇敢夥伴。專精求未知數，HP越低攻擊越強的高風險高報酬戰士。", passive: "🦁 勇氣之心：HP越低傷害加成越高（最高+50%），越危險越強大", specDef: "✨ 獅王咆哮：8連擊時擋下攻擊並對敵人造成15點固定傷害" },
 };
 
+function clampStageIdx(starter, idx) {
+  const total = starter?.stages?.length || 1;
+  const maxIdx = Math.max(0, total - 1);
+  const raw = Number.isFinite(idx) ? idx : 0;
+  return Math.max(0, Math.min(maxIdx, raw));
+}
+
+function createStarterVariant(starter, stageIdx = 0) {
+  if (!starter) return null;
+  const idx = clampStageIdx(starter, stageIdx);
+  const stage = starter.stages?.[idx] || starter.stages?.[0];
+  return {
+    ...starter,
+    selectedStageIdx: idx,
+    name: stage?.name || starter.name,
+  };
+}
+
 export default function SelectionScreen({ mode = "single", onSelect, onBack }) {
   const isDual = mode === "coop" || mode === "pvp";
   const [picked, setPicked] = useState(null);
@@ -22,7 +40,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }) {
   const handlePick = (s) => {
     if (!isDual) {
       if (picked?.id === s.id) { setPicked(null); return; }
-      setPicked(s);
+      setPicked(createStarterVariant(s, 0));
       return;
     }
 
@@ -33,7 +51,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }) {
         setFocusSlot("p1");
         return;
       }
-      setPicked1(s);
+      setPicked1(createStarterVariant(s, 0));
       if (!picked2) setFocusSlot("p2");
       return;
     }
@@ -43,7 +61,22 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }) {
       setPicked2(null);
       return;
     }
-    setPicked2(s);
+    setPicked2(createStarterVariant(s, 0));
+  };
+
+  const focusedPicked = !isDual
+    ? picked
+    : (focusSlot === "p1" ? picked1 : picked2);
+
+  const updateFocusedStage = (stageIdx) => {
+    if (!focusedPicked) return;
+    const next = createStarterVariant(focusedPicked, stageIdx);
+    if (!isDual) {
+      setPicked(next);
+      return;
+    }
+    if (focusSlot === "p1") setPicked1(next);
+    else setPicked2(next);
   };
 
   const confirmSingle = () => {
@@ -100,12 +133,51 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }) {
         </div>
       )}
 
+      {focusedPicked && (
+        <div style={{ padding: "0 16px 8px", flexShrink: 0 }}>
+          <div style={{ fontSize: 10, opacity: 0.45, marginBottom: 4 }}>
+            {isDual ? `${focusSlot === "p1" ? "玩家1" : "玩家2"} 進化型態` : "選擇進化型態"}
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            {focusedPicked.stages.map((stage, idx) => {
+              const active = (focusedPicked.selectedStageIdx || 0) === idx;
+              return (
+                <button
+                  className="touch-btn"
+                  key={`${focusedPicked.id}_stage_${idx}`}
+                  onClick={() => updateFocusedStage(idx)}
+                  style={{
+                    flex: 1,
+                    borderRadius: 10,
+                    border: active ? `1px solid ${focusedPicked.c1}` : "1px solid rgba(255,255,255,0.12)",
+                    background: active ? `${focusedPicked.c1}2f` : "rgba(255,255,255,0.04)",
+                    color: "white",
+                    fontSize: 11,
+                    fontWeight: active ? 800 : 600,
+                    padding: "6px 8px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {idx === 0 ? "初階" : idx === 1 ? "進化" : "終階"} · {stage.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Starter cards */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "0 12px 8px", gap: 5, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         {STARTERS.map((s) => {
           const isP1 = picked1?.id === s.id;
           const isP2 = picked2?.id === s.id;
           const sel = isDual ? (isP1 || isP2) : picked?.id === s.id;
+          const selectedStageIdx = !sel
+            ? 0
+            : isDual
+              ? (isP1 ? (picked1?.selectedStageIdx || 0) : (picked2?.selectedStageIdx || 0))
+              : (picked?.selectedStageIdx || 0);
+          const selectedStage = s.stages[selectedStageIdx] || s.stages[0];
           const info = DESCS[s.id];
           return (
             <button className="selection-card-btn" key={s.id} onClick={() => handlePick(s)} style={{
@@ -127,11 +199,11 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }) {
                   animation: sel ? "spinSelect 0.7s ease-in-out" : "none",
                   transition: "transform 0.3s",
                 }}>
-                  <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={sel ? 72 : 56} />
+                  <MonsterSprite svgStr={selectedStage.svgFn(s.c1, s.c2)} size={sel ? 72 : 56} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>
-                    {s.typeIcon} {s.name}
+                    {s.typeIcon} {sel ? selectedStage.name : s.name}
                     <span style={{ fontSize: 10, opacity: 0.5, marginLeft: 5 }}>{s.typeName}系</span>
                     {isDual && isP1 && <span style={{ fontSize: 10, marginLeft: 6, padding: "1px 6px", borderRadius: 8, background: "rgba(96,165,250,0.2)", border: "1px solid rgba(96,165,250,0.5)" }}>玩家1</span>}
                     {isDual && isP2 && <span style={{ fontSize: 10, marginLeft: 6, padding: "1px 6px", borderRadius: 8, background: "rgba(244,114,182,0.2)", border: "1px solid rgba(244,114,182,0.5)" }}>玩家2</span>}

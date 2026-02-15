@@ -99,11 +99,20 @@ const PVP_HIT_ANIMS = {
   light: "enemyFireHit 0.55s ease",
 };
 
+function getStarterStageIdx(starter) {
+  const total = starter?.stages?.length || 1;
+  const maxIdx = Math.max(0, total - 1);
+  const raw = Number.isFinite(starter?.selectedStageIdx) ? starter.selectedStageIdx : 0;
+  return Math.max(0, Math.min(maxIdx, raw));
+}
+
 function createPvpEnemyFromStarter(starter) {
   if (!starter) return null;
+  const stageIdx = getStarterStageIdx(starter);
+  const stage = starter.stages?.[stageIdx] || starter.stages?.[0];
   return {
     id: `pvp_${starter.id}`,
-    name: starter.name,
+    name: stage?.name || starter.name,
     maxHp: PLAYER_MAX_HP,
     hp: PLAYER_MAX_HP,
     atk: 12,
@@ -117,7 +126,9 @@ function createPvpEnemyFromStarter(starter) {
     trait: "normal",
     traitName: "玩家",
     drops: ["🏁"],
-    svgFn: starter.stages[0].svgFn,
+    svgFn: stage?.svgFn || starter.stages[0].svgFn,
+    isEvolved: stageIdx > 0,
+    selectedStageIdx: stageIdx,
   };
 }
 
@@ -454,6 +465,7 @@ export function useBattle() {
     const mode = modeOverride || sr.current.battleMode || battleMode;
     const leader = starterOverride || sr.current.starter;
     const rival = allyOverride || sr.current.pvpStarter2 || pvpStarter2 || pickPartnerStarter(leader, pickIndex);
+    const leaderStageIdx = getStarterStageIdx(leader);
 
     if (mode === "pvp") {
       setEnemies([]);
@@ -467,6 +479,7 @@ export function useBattle() {
           allySub: null,
           pHpSub: 0,
           pHp: PLAYER_MAX_HP,
+          pStg: leaderStageIdx,
         },
       });
       setPvpStarter2(rival);
@@ -523,6 +536,7 @@ export function useBattle() {
         allySub: partner,
         pHpSub: partner ? PLAYER_MAX_HP : 0,
         pHp: PLAYER_MAX_HP,
+        pStg: leaderStageIdx,
       },
     });
     setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
@@ -612,7 +626,7 @@ export function useBattle() {
     if ((s.pHpSub || 0) > 0 && s.allySub) {
       const promoted = s.allySub;
       setStarter(promoted);
-      setPStg(0);
+      setPStg(getStarterStageIdx(promoted));
       setPHp(s.pHpSub);
       setAllySub(null);
       setPHpSub(0);

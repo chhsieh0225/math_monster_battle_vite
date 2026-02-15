@@ -309,6 +309,8 @@ function App() {
     <PvpResultScreen
       p1Starter={B.starter}
       p2Starter={B.pvpStarter2}
+      p1StageIdx={B.pStg}
+      p2StageIdx={B.pvpStarter2?.selectedStageIdx || 0}
       winner={B.pvpWinner}
       onRematch={() => B.starter && B.startGame(B.starter, "pvp")}
       onHome={() => B.setScreen("title")}
@@ -357,7 +359,7 @@ function App() {
   const chargeReadyDisplay = B.battleMode === "pvp" ? pvpActiveCharge >= 3 : B.chargeReady;
   const eSvg = B.enemy.svgFn();
   const eSubSvg = B.enemySub ? B.enemySub.svgFn() : null;
-  const allyStage = B.allySub ? B.allySub.stages[0] : null;
+  const allyStage = B.allySub ? (B.allySub.stages[B.allySub.selectedStageIdx || 0] || B.allySub.stages[0]) : null;
   const pSubSvg = allyStage ? allyStage.svgFn() : null;
   const pSvg = st.svgFn();
   const scene = SCENES[B.enemy.sceneMType || B.enemy.mType] || SCENES.grass;

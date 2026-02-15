@@ -23,7 +23,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }) {
       {/* Header */}
       <div style={{ padding: "16px 16px 10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-          <button onClick={onBack} style={backBtn}>←</button>
+          <button className="back-touch-btn" onClick={onBack} style={backBtn}>←</button>
           <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>📚 怪獸圖鑑</div>
           <div style={{ flex: 1 }} />
           <div style={{ fontSize: 12, opacity: 0.5 }}>{encCount}/{ENC_TOTAL}</div>
@@ -130,7 +130,7 @@ function DetailModal({ entry, enc, def, onClose }) {
           background: `radial-gradient(ellipse at 50% 80%, ${tc}18, transparent 70%)`,
         }}>
           {/* Close button */}
-          <button onClick={onClose} style={{
+          <button className="touch-btn" onClick={onClose} style={{
             position: "absolute", top: 12, right: 12,
             background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
             color: "white", fontSize: 16, fontWeight: 700, width: 32, height: 32,
@@ -315,7 +315,7 @@ function StarterDetailModal({ entry, onClose }) {
           position: "relative", padding: "28px 20px 16px", textAlign: "center",
           background: `radial-gradient(ellipse at 50% 80%, ${tc}18, transparent 70%)`,
         }}>
-          <button onClick={onClose} style={{
+          <button className="touch-btn" onClick={onClose} style={{
             position: "absolute", top: 12, right: 12,
             background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
             color: "white", fontSize: 16, fontWeight: 700, width: 32, height: 32,

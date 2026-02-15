@@ -8,7 +8,7 @@ export default function LeaderboardScreen({ totalEnemies, onBack }) {
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", overflow: "hidden" }}>
       {/* Header */}
       <div style={{ padding: "16px 16px 12px", display: "flex", alignItems: "center", gap: 12 }}>
-        <button onClick={onBack} style={backBtn}>←</button>
+        <button className="back-touch-btn" onClick={onBack} style={backBtn}>←</button>
         <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>🏆 排行榜</div>
       </div>
 

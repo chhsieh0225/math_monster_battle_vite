@@ -21,10 +21,10 @@ export default function SelectionScreen({ onSelect, onBack }) {
   };
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", overflow: "hidden" }}>
+    <div className="selection-screen" style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", overflow: "hidden" }}>
       {/* Header */}
       <div style={{ padding: "12px 16px 6px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-        <button onClick={onBack} style={backBtn}>←</button>
+        <button className="back-touch-btn" onClick={onBack} style={backBtn}>←</button>
         <div>
           <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: 1 }}>選擇你的夥伴！</div>
           <div style={{ fontSize: 10, opacity: 0.4, marginTop: 1 }}>點選角色查看詳細資訊</div>
@@ -37,7 +37,7 @@ export default function SelectionScreen({ onSelect, onBack }) {
           const sel = picked?.id === s.id;
           const info = DESCS[s.id];
           return (
-            <button key={s.id} onClick={() => handlePick(s)} style={{
+            <button className="selection-card-btn" key={s.id} onClick={() => handlePick(s)} style={{
               background: sel
                 ? `linear-gradient(135deg, ${s.c1}44, ${s.c2}33)`
                 : `linear-gradient(135deg, ${s.c1}18, ${s.c2}10)`,
@@ -107,7 +107,7 @@ export default function SelectionScreen({ onSelect, onBack }) {
       {/* Confirm button */}
       {picked && (
         <div style={{ padding: "6px 14px 14px", animation: "fadeIn 0.3s ease", flexShrink: 0 }}>
-          <button onClick={() => onSelect(picked)} style={{
+          <button className="selection-confirm-btn touch-btn" onClick={() => onSelect(picked)} style={{
             width: "100%", padding: "13px 0",
             background: `linear-gradient(135deg, ${picked.c1}, ${picked.c2})`,
             border: "none", borderRadius: 14,

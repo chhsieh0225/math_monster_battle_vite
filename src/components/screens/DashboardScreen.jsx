@@ -57,7 +57,7 @@ export default function DashboardScreen({ onBack }) {
     <div style={{ ...wrap, justifyContent: "flex-start", padding: "16px 12px", overflow: "auto" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", marginBottom: 12 }}>
-        <button onClick={onBack} style={backBtn}>←</button>
+        <button className="back-touch-btn" onClick={onBack} style={backBtn}>←</button>
         <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>📊 家長儀表板</div>
       </div>
 

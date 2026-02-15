@@ -51,7 +51,7 @@ export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, t
             <input value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="你的名字" maxLength={8}
               onKeyDown={e => { if (e.key === "Enter") handleSaveScore(); }}
               style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, color: "white", fontSize: 15, fontWeight: 700, padding: "8px 12px", textAlign: "center", width: 130, outline: "none" }} />
-            <button onClick={handleSaveScore} style={{ background: "linear-gradient(135deg,#22c55e,#16a34a)", border: "none", color: "white", fontSize: 13, fontWeight: 700, padding: "10px 18px", borderRadius: 12 }}>儲存</button>
+            <button className="touch-btn" onClick={handleSaveScore} style={{ background: "linear-gradient(135deg,#22c55e,#16a34a)", border: "none", color: "white", fontSize: 13, fontWeight: 700, padding: "10px 18px", borderRadius: 12 }}>儲存</button>
           </div>
         </div>
       ) : (
@@ -85,9 +85,9 @@ export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, t
 
       {/* Action buttons */}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={onRestart} style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)", border: "none", color: "white", fontSize: 15, fontWeight: 700, padding: "12px 28px", borderRadius: 14 }}>🔄 再挑戰</button>
-        <button onClick={onLeaderboard} style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)", border: "none", color: "white", fontSize: 13, fontWeight: 700, padding: "12px 20px", borderRadius: 14 }}>🏆</button>
-        <button onClick={onHome} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 13, fontWeight: 600, padding: "12px 18px", borderRadius: 14 }}>🏠</button>
+        <button className="end-action-btn touch-btn" onClick={onRestart} style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)", border: "none", color: "white", fontSize: 15, fontWeight: 700, padding: "12px 28px", borderRadius: 14 }}>🔄 再挑戰</button>
+        <button className="end-action-btn touch-btn" onClick={onLeaderboard} style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)", border: "none", color: "white", fontSize: 13, fontWeight: 700, padding: "12px 20px", borderRadius: 14 }}>🏆</button>
+        <button className="end-action-btn touch-btn" onClick={onHome} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 13, fontWeight: 600, padding: "12px 18px", borderRadius: 14 }}>🏠</button>
       </div>
     </div>
   );

@@ -2,12 +2,27 @@ import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters';
 import { VERSION } from '../../data/constants';
 
-export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard, onAchievements, onEncyclopedia, onDashboard }) {
+export default function TitleScreen({
+  onStartNormal,
+  onStartTimed,
+  onLeaderboard,
+  onAchievements,
+  onEncyclopedia,
+  onDashboard,
+  lowPerfMode = false,
+  perfMode = "auto",
+  onCyclePerfMode = () => {},
+}) {
   const row1 = STARTERS.slice(0, 3);
   const row2 = STARTERS.slice(3);
+  const perfLabel = perfMode === "auto"
+    ? `🚀 效能：自動${lowPerfMode ? "（省電）" : "（標準）"}`
+    : perfMode === "on"
+      ? "🚀 效能：省電模式"
+      : "🚀 效能：標準模式";
 
   return (
-    <div style={{
+    <div className="title-screen" style={{
       height: "100%", display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center", gap: 20,
       background: "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)",
@@ -15,16 +30,16 @@ export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard
       position: "relative", overflow: "hidden",
     }}>
       {/* Background sparkles */}
-      <div style={{ position: "absolute", top: "8%", left: "12%", fontSize: 40, opacity: 0.1, animation: "sparkle 3s ease infinite" }}>⭐</div>
-      <div style={{ position: "absolute", top: "18%", right: "18%", fontSize: 30, opacity: 0.06, animation: "sparkle 4s ease 1s infinite" }}>✨</div>
-      <div style={{ position: "absolute", bottom: "15%", left: "8%", fontSize: 24, opacity: 0.05, animation: "sparkle 5s ease 2s infinite" }}>⭐</div>
+      <div style={{ position: "absolute", top: "8%", left: "12%", fontSize: 40, opacity: 0.1, animation: lowPerfMode ? "none" : "sparkle 3s ease infinite" }}>⭐</div>
+      <div style={{ position: "absolute", top: "18%", right: "18%", fontSize: 30, opacity: 0.06, animation: lowPerfMode ? "none" : "sparkle 4s ease 1s infinite" }}>✨</div>
+      <div style={{ position: "absolute", bottom: "15%", left: "8%", fontSize: 24, opacity: 0.05, animation: lowPerfMode ? "none" : "sparkle 5s ease 2s infinite" }}>⭐</div>
 
       {/* ─── Top: Branding ─── */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         {/* Row 1: 3 starters */}
         <div style={{ display: "flex", gap: 10, marginBottom: 6, justifyContent: "center" }}>
           {row1.map((s, i) => (
-            <div key={s.id} style={{ animation: `float ${3 + i * 0.4}s ease-in-out ${i * 0.3}s infinite` }}>
+            <div key={s.id} style={{ animation: lowPerfMode ? "none" : `float ${3 + i * 0.4}s ease-in-out ${i * 0.3}s infinite` }}>
               <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={60} />
             </div>
           ))}
@@ -32,7 +47,7 @@ export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard
         {/* Row 2: remaining starters */}
         <div style={{ display: "flex", gap: 10, marginBottom: 12, justifyContent: "center" }}>
           {row2.map((s, i) => (
-            <div key={s.id} style={{ animation: `float ${3 + (i + 3) * 0.4}s ease-in-out ${(i + 3) * 0.3}s infinite` }}>
+            <div key={s.id} style={{ animation: lowPerfMode ? "none" : `float ${3 + (i + 3) * 0.4}s ease-in-out ${(i + 3) * 0.3}s infinite` }}>
               <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={60} />
             </div>
           ))}
@@ -45,13 +60,13 @@ export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, width: "100%", maxWidth: 320 }}>
         {/* Play buttons */}
         <div style={{ display: "flex", gap: 10, width: "100%" }}>
-          <button onClick={onStartNormal} style={{
+          <button className="title-action-btn touch-btn" onClick={onStartNormal} style={{
             flex: 1, background: "linear-gradient(135deg,#6366f1,#a855f7)",
             border: "none", color: "white", fontSize: 16, fontWeight: 800,
             padding: "14px 0", borderRadius: 14,
             boxShadow: "0 4px 20px rgba(99,102,241,0.35)",
           }}>⚔️ 一般模式</button>
-          <button onClick={onStartTimed} style={{
+          <button className="title-action-btn touch-btn" onClick={onStartTimed} style={{
             flex: 1, background: "linear-gradient(135deg,#ef4444,#f59e0b)",
             border: "none", color: "white", fontSize: 16, fontWeight: 800,
             padding: "14px 0", borderRadius: 14,
@@ -68,7 +83,7 @@ export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard
             { icon: "📚", label: "圖鑑", fn: onEncyclopedia },
             { icon: "📊", label: "家長專區", fn: onDashboard },
           ].map(b => (
-            <button key={b.label} onClick={b.fn} style={{
+            <button className="title-feature-btn touch-btn" key={b.label} onClick={b.fn} style={{
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.1)",
               color: "white", fontSize: 13, fontWeight: 600,
@@ -77,6 +92,16 @@ export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard
             }}>{b.icon} {b.label}</button>
           ))}
         </div>
+        <button className="title-perf-btn touch-btn" onClick={onCyclePerfMode} style={{
+          width: "100%",
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          color: "white",
+          fontSize: 12,
+          fontWeight: 700,
+          padding: "9px 12px",
+          borderRadius: 12,
+        }}>{perfLabel}</button>
       </div>
 
       {/* ─── Bottom: Credits ─── */}

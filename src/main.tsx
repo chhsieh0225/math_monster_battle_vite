@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import App from './App.jsx';
+import App from './App';
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
@@ -8,4 +8,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-createRoot(document.getElementById('root')).render(<App />);
+const rootEl = document.getElementById('root');
+if (!rootEl) throw new Error('Missing #root element');
+
+createRoot(rootEl).render(<App />);

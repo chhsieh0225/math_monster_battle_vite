@@ -26,7 +26,7 @@
 
 #### 核心應用
 - **src/App.jsx** (567行) - 主遊戲邏輯、狀態管理、戰鬥流程控制
-- **src/main.jsx** - React 應用進入點
+- **src/main.tsx** - React 應用進入點
 
 #### 資料層
 - **src/data/constants.js** - 遊戲常數 (MAX_MOVE_LVL, POWER_CAPS, HITS_PER_LVL 等)
@@ -49,8 +49,8 @@
 - **src/components/screens/EvolveScreen.jsx** - 進化動畫與演出
 
 **UI 元素**:
-- **src/components/ui/HPBar.jsx** - 生命值條顯示
-- **src/components/ui/XPBar.jsx** - 經驗值條顯示
+- **src/components/ui/HPBar.tsx** - 生命值條顯示
+- **src/components/ui/XPBar.tsx** - 經驗值條顯示
 - **src/components/ui/MonsterSprite.jsx** - 怪獸 SVG 渲染
 - **src/components/ui/DamagePopup.jsx** - 傷害數字浮出動畫
 - **src/components/ui/Particle.jsx** - 粒子特效
@@ -1185,4 +1185,3 @@ if (pStg < 2 && pLvl % 3 === 0) {
 6. **數據持久化**: 本地排行榜與玩家名稱儲存
 
 專案代碼組織清晰，分層明確，易於擴展與維護。
-

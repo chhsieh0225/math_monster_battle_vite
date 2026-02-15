@@ -1,16 +1,33 @@
-# React + Vite
+# Math Monster Battle (Vite + React)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Commands
 
-Currently, two official plugins are available:
+- `npm run dev` : start local dev server
+- `npm run build` : production build
+- `npm run lint` : ESLint
+- `npm test` : node test suite
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## TypeScript Migration (Incremental)
 
-## React Compiler
+This project is migrating from JS/JSX to TypeScript gradually.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `tsconfig.json` is added with strict mode and `allowJs: true`.
+- Mixed codebase is supported (`.js/.jsx` + `.ts/.tsx`).
+- New/edited leaf UI modules should prefer `.tsx` first.
+- Core battle logic migration should be done module-by-module to reduce risk.
 
-## Expanding the ESLint configuration
+Current migrated files:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `src/main.tsx`
+- `src/components/ui/HPBar.tsx`
+- `src/components/ui/XPBar.tsx`
+
+## Next Recommended TS Steps
+
+1. Install compiler tooling when network is available:
+   - `npm install -D typescript`
+2. Add script:
+   - `"typecheck": "tsc --noEmit"`
+3. Enable TS linting (`@typescript-eslint`) in `eslint.config.js`.
+4. Migrate battle domain files in this order:
+   - `turnResolver` → `battleReducer` → `playerFlow/enemyFlow` → `useBattle`.

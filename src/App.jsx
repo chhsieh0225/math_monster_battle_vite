@@ -139,6 +139,9 @@ function App() {
   const UX = useMobileExperience();
   const showHeavyFx = !UX.lowPerfMode;
   const [audioMuted, setAudioMuted] = useState(() => B.sfx.muted);
+  const battleRootRef = useRef(null);
+  const enemySpriteRef = useRef(null);
+  const [measuredTarget, setMeasuredTarget] = useState(null);
   const settingsReturnRef = useRef("title");
   const resumeBattleAfterSettingsRef = useRef(false);
   const setAudioMute = (next) => {
@@ -165,6 +168,52 @@ function App() {
     }
     resumeBattleAfterSettingsRef.current = false;
   };
+
+  useEffect(() => {
+    if (B.screen !== "battle") return;
+    let rafId = 0;
+    const syncEnemyTarget = () => {
+      const rootEl = battleRootRef.current;
+      const enemyEl = enemySpriteRef.current;
+      if (!rootEl || !enemyEl) return;
+
+      const rootRect = rootEl.getBoundingClientRect();
+      const enemyRect = enemyEl.getBoundingClientRect();
+      if (rootRect.width <= 0 || rootRect.height <= 0 || enemyRect.width <= 0 || enemyRect.height <= 0) return;
+
+      const cx = enemyRect.left - rootRect.left + enemyRect.width / 2;
+      const cy = enemyRect.top - rootRect.top + enemyRect.height / 2;
+      const rightPx = rootRect.width - cx;
+      const topPx = cy;
+
+      setMeasuredTarget({
+        right: `${rightPx}px`,
+        top: `${topPx}px`,
+        flyRight: rightPx / rootRect.width * 100,
+        flyTop: topPx / rootRect.height * 100,
+      });
+    };
+    const scheduleSync = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(syncEnemyTarget);
+    };
+
+    scheduleSync();
+    window.addEventListener("resize", scheduleSync);
+
+    let observer = null;
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(scheduleSync);
+      if (battleRootRef.current) observer.observe(battleRootRef.current);
+      if (enemySpriteRef.current) observer.observe(enemySpriteRef.current);
+    }
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", scheduleSync);
+      if (observer) observer.disconnect();
+    };
+  }, [B.screen, B.phase, B.enemy?.id, B.enemy?.isEvolved, B.enemy?.sceneMType, B.enemy?.mType]);
 
   // ─── Screen routing ───
   if (B.screen === "title") return (
@@ -247,23 +296,25 @@ function App() {
   const scene = SCENES[B.enemy.sceneMType || B.enemy.mType] || SCENES.grass;
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
 
-  // Enemy visual center for targeting attack effects
-  // Sprite: right:10%, top varies, size varies → center = right:10%+size/2, top:topPct+size/2
+  // Enemy visual center fallback (used before first DOM measurement)
+  // Note: MonsterSprite height = size * 100 / 120, so center Y uses sprite height / 2.
   const eSize = B.enemy.id === "boss" ? 230
     : (B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id.startsWith("slime") && B.enemy.isEvolved)) ? 190
     : B.enemy.isEvolved ? 155 : 120;
+  const eHeight = eSize * 100 / 120;
   const eSceneType = B.enemy.sceneMType || B.enemy.mType;
   const eTopPct = (eSceneType === "ghost" || B.enemy.id === "boss") ? 12
     : eSceneType === "steel" ? 16 : 26;
-  const eTarget = {
-    top: `calc(${eTopPct}% + ${eSize / 2}px)`,
+  const fallbackTarget = {
+    top: `calc(${eTopPct}% + ${eHeight / 2}px)`,
     right: `calc(10% + ${eSize / 2}px)`,
     flyRight: 10 + eSize / 2 * 100 / 390,
-    flyTop: eTopPct + eSize / 2 * 100 / 550,
+    flyTop: eTopPct + eHeight / 2 * 100 / 550,
   };
+  const eTarget = measuredTarget || fallbackTarget;
 
   return (
-    <div className={`battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""}`} onClick={canTapAdvance ? B.advance : undefined} style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}>
+    <div ref={battleRootRef} className={`battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""}`} onClick={canTapAdvance ? B.advance : undefined} style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}>
       {/* Pause overlay */}
       {B.gamePaused && <div onClick={B.togglePause} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9000, cursor: "pointer", backdropFilter: UX.lowPerfMode ? "none" : "blur(4px)" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>⏸️</div>
@@ -341,7 +392,7 @@ function App() {
         </div>
 
         {/* Enemy sprite */}
-        <div style={{ position: "absolute", right: "10%", top: B.enemy && (eSceneType === "ghost" || B.enemy.id === "boss") ? "12%" : B.enemy && eSceneType === "steel" ? "16%" : "26%", zIndex: 5, animation: B.eAnim || (UX.lowPerfMode ? "none" : (B.enemy && B.enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite")) }}>
+        <div ref={enemySpriteRef} style={{ position: "absolute", right: "10%", top: B.enemy && (eSceneType === "ghost" || B.enemy.id === "boss") ? "12%" : B.enemy && eSceneType === "steel" ? "16%" : "26%", zIndex: 5, animation: B.eAnim || (UX.lowPerfMode ? "none" : (B.enemy && B.enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite")) }}>
           <MonsterSprite svgStr={eSvg} size={B.enemy && B.enemy.id === "boss" ? 230 : B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id.startsWith("slime") && B.enemy.isEvolved) ? 190 : B.enemy.isEvolved ? 155 : 120} />
         </div>
         {!B.eAnim && !UX.lowPerfMode && <div style={{ position: "absolute", right: B.enemy && B.enemy.id === "boss" ? "12%" : "14%", top: B.enemy && B.enemy.id === "boss" ? "52%" : B.enemy && eSceneType === "ghost" ? "40%" : B.enemy && eSceneType === "steel" ? "46%" : "54%", width: B.enemy && B.enemy.id === "boss" ? 120 : B.enemy && (B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id.startsWith("slime") && B.enemy.isEvolved)) ? 105 : 80, height: 12, background: "radial-gradient(ellipse,rgba(0,0,0,0.6),transparent)", borderRadius: "50%", zIndex: 4, animation: B.enemy && B.enemy.id === "boss" ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite" }} />}

@@ -59,44 +59,6 @@ class ErrorBoundary extends Component {
   }
 }
 
-function QuickSettingsFab({ onClick }) {
-  return (
-    <button
-      className="touch-btn"
-      onClick={onClick}
-      style={{
-        position: "absolute",
-        top: 10,
-        right: 10,
-        width: 38,
-        height: 38,
-        borderRadius: 999,
-        border: "1px solid rgba(255,255,255,0.25)",
-        background: "linear-gradient(135deg,rgba(59,130,246,0.9),rgba(14,165,233,0.85))",
-        color: "white",
-        fontSize: 17,
-        boxShadow: "0 8px 18px rgba(2,6,23,0.35)",
-        backdropFilter: "blur(2px)",
-        cursor: "pointer",
-        zIndex: 1600,
-      }}
-      aria-label="Open settings"
-      title="設定"
-    >
-      ⚙️
-    </button>
-  );
-}
-
-function ScreenWithQuickSettings({ children, onOpenSettings }) {
-  return (
-    <div style={{ height: "100%", position: "relative" }}>
-      {children}
-      <QuickSettingsFab onClick={onOpenSettings} />
-    </div>
-  );
-}
-
 const NOOP_SUBSCRIBE = () => () => {};
 const ZERO_SNAPSHOT = () => 0;
 
@@ -272,19 +234,13 @@ function App() {
     />
   );
   if (B.screen === "achievements") return (
-    <ScreenWithQuickSettings onOpenSettings={() => openSettings("achievements")}>
-      <AchievementScreen unlockedIds={B.achUnlocked} onBack={() => B.setScreen("title")} />
-    </ScreenWithQuickSettings>
+    <AchievementScreen unlockedIds={B.achUnlocked} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "encyclopedia") return (
-    <ScreenWithQuickSettings onOpenSettings={() => openSettings("encyclopedia")}>
-      <EncyclopediaScreen encData={B.encData} onBack={() => B.setScreen("title")} />
-    </ScreenWithQuickSettings>
+    <EncyclopediaScreen encData={B.encData} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "dashboard") return (
-    <ScreenWithQuickSettings onOpenSettings={() => openSettings("dashboard")}>
-      <DashboardScreen onBack={() => B.setScreen("title")} />
-    </ScreenWithQuickSettings>
+    <DashboardScreen onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "settings") return (
     <SettingsScreen
@@ -298,32 +254,24 @@ function App() {
     />
   );
   if (B.screen === "leaderboard") return (
-    <ScreenWithQuickSettings onOpenSettings={() => openSettings("leaderboard")}>
-      <LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen("title")} />
-    </ScreenWithQuickSettings>
+    <LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "selection") return (
-    <ScreenWithQuickSettings onOpenSettings={() => openSettings("selection")}>
-      <SelectionScreen onSelect={(s) => { B.sfx.init(); B.setStarter(s); B.startGame(s); }} onBack={() => B.setScreen("title")} />
-    </ScreenWithQuickSettings>
+    <SelectionScreen onSelect={(s) => { B.sfx.init(); B.setStarter(s); B.startGame(s); }} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "evolve") return (
-    <ScreenWithQuickSettings onOpenSettings={() => openSettings("evolve")}>
-      <EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={B.continueAfterEvolve} />
-    </ScreenWithQuickSettings>
+    <EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={B.continueAfterEvolve} />
   );
   if (B.screen === "gameover") return (
-    <ScreenWithQuickSettings onOpenSettings={() => openSettings("gameover")}>
-      <GameOverScreen
-        defeated={B.defeated} totalEnemies={B.enemies.length}
-        tC={B.tC} tW={B.tW} pLvl={B.pLvl} timedMode={B.timedMode}
-        maxStreak={B.maxStreak} starter={B.starter} mLvls={B.mLvls}
-        getPow={B.getPow}
-        onRestart={() => B.starter && B.startGame()}
-        onLeaderboard={() => B.setScreen("leaderboard")}
-        onHome={() => B.setScreen("title")}
-      />
-    </ScreenWithQuickSettings>
+    <GameOverScreen
+      defeated={B.defeated} totalEnemies={B.enemies.length}
+      tC={B.tC} tW={B.tW} pLvl={B.pLvl} timedMode={B.timedMode}
+      maxStreak={B.maxStreak} starter={B.starter} mLvls={B.mLvls}
+      getPow={B.getPow}
+      onRestart={() => B.starter && B.startGame()}
+      onLeaderboard={() => B.setScreen("leaderboard")}
+      onHome={() => B.setScreen("title")}
+    />
   );
   if (!B.enemy || !B.starter) return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", color: "white", gap: 16 }}>

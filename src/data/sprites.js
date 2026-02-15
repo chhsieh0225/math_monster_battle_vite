@@ -31,6 +31,7 @@ export const SPRITE_IMGS = {
   slime_fire_evolved: `${BASE}sprites/slime_fire_evolved.png`,
   slime_water_evolved: `${BASE}sprites/slime_water_evolved.png`,
   slime_steel_evolved: `${BASE}sprites/slime_steel_evolved.png`,
+  slime_dark_evolved: `${BASE}sprites/slime_dark_evolved.png`,
   dragon_evolved: `${BASE}sprites/dragon_evolved.png`,
   fire_evolved: `${BASE}sprites/fire_evolved.png`,
   ghost_evolved: `${BASE}sprites/ghost_evolved.png`,
@@ -67,6 +68,7 @@ export const slimeElectricEvolvedSVG = makeSvgFn('slime_electric_evolved');
 export const slimeFireEvolvedSVG = makeSvgFn('slime_fire_evolved');
 export const slimeWaterEvolvedSVG = makeSvgFn('slime_water_evolved');
 export const slimeSteelEvolvedSVG = makeSvgFn('slime_steel_evolved');
+export const slimeDarkEvolvedSVG = makeSvgFn('slime_dark_evolved');
 export const fireEvolvedSVG = makeSvgFn('fire_evolved');
 export const ghostEvolvedSVG = makeSvgFn('ghost_evolved');
 export const dragonEvolvedSVG = makeSvgFn('dragon_evolved');

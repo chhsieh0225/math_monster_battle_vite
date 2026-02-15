@@ -19,8 +19,11 @@ This project is migrating from JS/JSX to TypeScript gradually.
 Current migrated files:
 
 - `src/types/game.ts`
+- `src/types/battle.ts`
 - `src/main.tsx`
 - `src/App.tsx`
+- `src/hooks/useBattle.ts` (typed wrapper)
+- `src/hooks/useMobileExperience.ts` (typed wrapper)
 - `src/components/ui/HPBar.tsx`
 - `src/components/ui/XPBar.tsx`
 - `src/components/ui/DamagePopup.tsx`

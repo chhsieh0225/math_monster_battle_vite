@@ -7,14 +7,8 @@
  *   2. Battle-screen layout & visual rendering
  *   3. Orientation-lock wrapper (GameShell)
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { useState, useEffect, useRef, useSyncExternalStore, Component } from 'react';
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import './App.css';
 
 // Hooks
@@ -51,6 +45,7 @@ import SettingsScreen from './components/screens/SettingsScreen';
 import PvpResultScreen from './components/screens/PvpResultScreen';
 import AchievementPopup from './components/ui/AchievementPopup';
 import { ACH_MAP } from './data/achievements';
+import type { ScreenName, TimerSubscribe } from './types/battle';
 
 // ─── ErrorBoundary: catches render crashes to show error instead of black screen ───
 type ErrorBoundaryProps = {
@@ -89,8 +84,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     return this.props.children;
   }
 }
-
-type TimerSubscribe = (listener: () => void) => () => void;
 
 const NOOP_SUBSCRIBE: TimerSubscribe = () => () => {};
 const ZERO_SNAPSHOT = (): number => 0;
@@ -192,9 +185,16 @@ type SpriteTarget = {
   flyTop: number;
 };
 
+type SelectionPayload = Parameters<ComponentProps<typeof SelectionScreen>["onSelect"]>[0];
+type DualSelectionPayload = Extract<SelectionPayload, { p1: unknown; p2: unknown }>;
+
+function isDualSelectionPayload(payload: SelectionPayload): payload is DualSelectionPayload {
+  return typeof payload === "object" && payload !== null && "p1" in payload && "p2" in payload;
+}
+
 function App() {
-  const B = useBattle() as any;
-  const UX = useMobileExperience() as any;
+  const B = useBattle();
+  const UX = useMobileExperience();
   const showHeavyFx = !UX.lowPerfMode;
   const [audioMuted, setAudioMuted] = useState<boolean>(() => Boolean(B.sfx.muted));
   const battleRootRef = useRef<HTMLDivElement | null>(null);
@@ -202,13 +202,13 @@ function App() {
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
   const [measuredEnemyTarget, setMeasuredEnemyTarget] = useState<SpriteTarget | null>(null);
   const [measuredPlayerTarget, setMeasuredPlayerTarget] = useState<SpriteTarget | null>(null);
-  const settingsReturnRef = useRef<string>("title");
+  const settingsReturnRef = useRef<ScreenName>("title");
   const resumeBattleAfterSettingsRef = useRef(false);
   const setAudioMute = (next: boolean) => {
     const muted = B.sfx.setMuted(next);
     setAudioMuted(muted);
   };
-  const openSettings = (fromScreen: string) => {
+  const openSettings = (fromScreen: ScreenName) => {
     settingsReturnRef.current = fromScreen;
     if (fromScreen === "battle" && !B.gamePaused) {
       resumeBattleAfterSettingsRef.current = true;
@@ -337,14 +337,14 @@ function App() {
   if (B.screen === "selection") return (
     <SelectionScreen
       mode={B.battleMode}
-      onSelect={(payload: any) => {
+      onSelect={(payload: SelectionPayload) => {
         B.sfx.init();
-        if (B.battleMode === "coop") {
+        if (B.battleMode === "coop" && isDualSelectionPayload(payload)) {
           B.setStarter(payload.p1);
           B.startGame(payload.p1, "coop", payload.p2);
           return;
         }
-        if (B.battleMode === "pvp") {
+        if (B.battleMode === "pvp" && isDualSelectionPayload(payload)) {
           B.setStarter(payload.p1);
           B.setPvpStarter2(payload.p2);
           B.startGame(payload.p1, "pvp", payload.p2);
@@ -362,7 +362,7 @@ function App() {
       p2Starter={B.pvpStarter2}
       p1StageIdx={B.pStg}
       p2StageIdx={B.pvpStarter2?.selectedStageIdx || 0}
-      winner={B.pvpWinner}
+      winner={B.pvpWinner || "p1"}
       onRematch={() => B.starter && B.startGame(B.starter, "pvp")}
       onHome={() => B.setScreen("title")}
     />
@@ -391,7 +391,7 @@ function App() {
   // ─── Battle screen locals ───
   const st = B.starter.stages[B.pStg];
   const isCoopBattle = B.battleMode === "coop" || B.battleMode === "double";
-  const coopCanSwitch = isCoopBattle && B.allySub && B.pHpSub > 0;
+  const coopCanSwitch = isCoopBattle && Boolean(B.allySub) && B.pHpSub > 0;
   const coopUsingSub = coopCanSwitch && B.coopActiveSlot === "sub";
   const activeStarter = B.battleMode === "pvp"
     ? (B.pvpTurn === "p1" ? B.starter : B.pvpStarter2)
@@ -415,8 +415,8 @@ function App() {
   const pSvg = st.svgFn();
   const mainMaxHp = getStageMaxHp(B.pStg);
   const subMaxHp = B.allySub ? getStarterMaxHp(B.allySub) : getStageMaxHp(0);
-  const sceneKey = (B.enemy.sceneMType || B.enemy.mType) as string;
-  const scene = (SCENES as Record<string, any>)[sceneKey] || (SCENES as Record<string, any>).grass;
+  const sceneKey = (B.enemy.sceneMType || B.enemy.mType) as keyof typeof SCENES;
+  const scene = SCENES[sceneKey] || SCENES.grass;
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
   const hasDualUnits = !!(B.enemySub || B.allySub);
   const compactDual = hasDualUnits && UX.compactUI;
@@ -487,6 +487,11 @@ function App() {
   const eTarget = measuredEnemyTarget || enemyFallbackTarget;
   const pTarget = measuredPlayerTarget || playerFallbackTarget;
   const effectTarget = B.atkEffect?.targetSide === "player" ? pTarget : eTarget;
+  const question = B.q;
+  const feedback = B.fb;
+  const selectedMove = activeStarter && B.selIdx !== null
+    ? activeStarter.moves[B.selIdx]
+    : null;
 
   return (
     <div ref={battleRootRef} className={`battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""}`} onClick={canTapAdvance ? B.advance : undefined} style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}>
@@ -498,8 +503,8 @@ function App() {
       </div>}
 
       {/* Popups & particles */}
-      {B.dmgs.map((d: any) => <DamagePopup key={d.id} value={d.value} x={d.x} y={d.y} color={d.color} onDone={() => B.rmD(d.id)} />)}
-      {showHeavyFx && B.parts.map((p: any) => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} seed={p.id} onDone={() => B.rmP(p.id)} />)}
+      {B.dmgs.map((d) => <DamagePopup key={d.id} value={d.value} x={d.x} y={d.y} color={d.color} onDone={() => B.rmD(d.id)} />)}
+      {showHeavyFx && B.parts.map((p) => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} seed={p.id} onDone={() => B.rmP(p.id)} />)}
 
       {/* Move level-up toast */}
       {B.battleMode !== "pvp" && B.mLvlUp !== null && B.starter && <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: "0 4px 16px rgba(245,158,11,0.4)", whiteSpace: "nowrap" }}>{B.starter.moves[B.mLvlUp].icon} {B.starter.moves[B.mLvlUp].name} 升級到 Lv.{B.mLvls[B.mLvlUp]}！威力 → {B.getPow(B.mLvlUp)}</div>}
@@ -670,7 +675,7 @@ function App() {
             </div>
           )}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
-            {activeStarter.moves.map((m: any, i: number) => {
+            {activeStarter.moves.map((m, i: number) => {
               const sealed = B.battleMode === "pvp" ? false : B.sealedMove === i;
               const pvpLocked = B.battleMode === "pvp" ? (m.risky && !chargeReadyDisplay) : false;
               const locked = B.battleMode === "pvp" ? pvpLocked : ((m.risky && !B.chargeReady) || sealed);
@@ -702,8 +707,8 @@ function App() {
         </div>}
 
         {/* Question panel */}
-        {B.phase === "question" && B.q && activeStarter && <div style={{ padding: "10px 14px", animation: "fadeSlide 0.25s ease" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{activeStarter.moves[B.selIdx].icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{activeStarter.moves[B.selIdx].name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{activeStarter.typeIcon} {activeStarter.name}</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{B.timedMode ? "⏱️ 限時回答！" : "回答正確才能命中"}</span></div>
+        {B.phase === "question" && question && activeStarter && selectedMove && <div style={{ padding: "10px 14px", animation: "fadeSlide 0.25s ease" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{selectedMove.icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{selectedMove.name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{activeStarter.typeIcon} {activeStarter.name}</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{B.timedMode ? "⏱️ 限時回答！" : "回答正確才能命中"}</span></div>
           <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 16px", textAlign: "center", marginBottom: 8, border: "1px solid rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
             {B.timedMode && !B.answered && (
               <QuestionTimerHud
@@ -712,24 +717,24 @@ function App() {
                 getSnapshot={B.getTimerLeft}
               />
             )}
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>{B.q.op === "×" ? "乘法題" : B.q.op === "÷" ? "除法題" : B.q.op === "+" ? "加法題" : B.q.op === "-" ? "減法題" : B.q.op === "mixed2" ? "加減混合題" : B.q.op === "mixed3" ? "乘加混合題" : B.q.op === "mixed4" ? "四則運算題" : B.q.op === "unknown1" ? "加減求未知題" : B.q.op === "unknown2" ? "乘除求未知題" : B.q.op === "unknown3" ? "大數求未知題" : B.q.op === "unknown4" ? "混合求未知題" : "混合題"}</div>
-            <div className="question-expression" style={{ fontSize: 36, fontWeight: 900, color: "white", letterSpacing: 2 }}>{B.q.display}{B.q.op && B.q.op.startsWith("unknown") ? "" : " = ?"}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>{question.op === "×" ? "乘法題" : question.op === "÷" ? "除法題" : question.op === "+" ? "加法題" : question.op === "-" ? "減法題" : question.op === "mixed2" ? "加減混合題" : question.op === "mixed3" ? "乘加混合題" : question.op === "mixed4" ? "四則運算題" : question.op === "unknown1" ? "加減求未知題" : question.op === "unknown2" ? "乘除求未知題" : question.op === "unknown3" ? "大數求未知題" : question.op === "unknown4" ? "混合求未知題" : "混合題"}</div>
+            <div className="question-expression" style={{ fontSize: 36, fontWeight: 900, color: "white", letterSpacing: 2 }}>{question.display}{question.op && question.op.startsWith("unknown") ? "" : " = ?"}</div>
           </div>
-          {B.fb && <div style={{ textAlign: "center", marginBottom: 4, fontSize: 16, fontWeight: 700, color: B.fb.correct ? "#22c55e" : "#ef4444", animation: "popIn 0.2s ease" }}>{B.fb.correct ? "✅ 命中！" : `❌ 答案是 ${B.fb.answer}`}</div>}
-          {B.fb && !B.fb.correct && B.fb.steps && B.fb.steps.length > 0 && (
+          {feedback && <div style={{ textAlign: "center", marginBottom: 4, fontSize: 16, fontWeight: 700, color: feedback.correct ? "#22c55e" : "#ef4444", animation: "popIn 0.2s ease" }}>{feedback.correct ? "✅ 命中！" : `❌ 答案是 ${feedback.answer}`}</div>}
+          {feedback && !feedback.correct && (feedback.steps?.length || 0) > 0 && (
             <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "8px 12px", marginBottom: 6, animation: "fadeIn 0.4s ease" }}>
               <div style={{ fontSize: 11, color: "#fca5a5", fontWeight: 700, marginBottom: 4 }}>📝 解題過程：</div>
-              {B.fb.steps.map((step: string, i: number) => (
+              {(feedback.steps ?? []).map((step: string, i: number) => (
                 <div key={i} style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: 600, lineHeight: 1.8, fontFamily: "monospace" }}>
-                  {B.fb.steps.length > 1 && <span style={{ color: "#fca5a5", fontSize: 11, marginRight: 4 }}>Step {i + 1}.</span>}{step}
+                  {(feedback.steps?.length || 0) > 1 && <span style={{ color: "#fca5a5", fontSize: 11, marginRight: 4 }}>Step {i + 1}.</span>}{step}
                 </div>
               ))}
             </div>
           )}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
-            {B.q.choices.map((c: number, i: number) => {
+            {question.choices.map((c: number, i: number) => {
               let bg = "rgba(255,255,255,0.08)", bd = "rgba(255,255,255,0.15)", co = "white";
-              if (B.fb) { if (c === B.q.answer) { bg = "rgba(34,197,94,0.2)"; bd = "#22c55e"; co = "#22c55e"; } else { bg = "rgba(255,255,255,0.03)"; co = "rgba(255,255,255,0.3)"; } }
+              if (feedback) { if (c === question.answer) { bg = "rgba(34,197,94,0.2)"; bd = "#22c55e"; co = "#22c55e"; } else { bg = "rgba(255,255,255,0.03)"; co = "rgba(255,255,255,0.3)"; } }
               return <button className="answer-btn" key={i} onClick={() => B.onAns(c)} disabled={B.answered} style={{ background: bg, border: `2px solid ${bd}`, borderRadius: 10, padding: "12px 8px", fontSize: 26, fontWeight: 700, color: co, transition: "all 0.2s" }}>{c}</button>;
             })}
           </div>

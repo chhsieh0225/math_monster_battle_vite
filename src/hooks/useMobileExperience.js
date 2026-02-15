@@ -20,11 +20,11 @@ function detectLowEndDevice() {
 
 function normalizePerfMode(mode) {
   if (mode === PERF_ON || mode === PERF_OFF || mode === PERF_AUTO) return mode;
-  return PERF_AUTO;
+  return PERF_OFF;
 }
 
 function readPerfMode() {
-  return normalizePerfMode(readText(PERF_MODE_KEY, PERF_AUTO));
+  return normalizePerfMode(readText(PERF_MODE_KEY, PERF_OFF));
 }
 
 export function useMobileExperience() {

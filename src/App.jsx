@@ -7,7 +7,7 @@
  *   2. Battle-screen layout & visual rendering
  *   3. Orientation-lock wrapper (GameShell)
  */
-import { useState, useEffect, useRef, Component } from 'react';
+import { useState, useEffect, useRef, useSyncExternalStore, Component } from 'react';
 import './App.css';
 
 // Hooks
@@ -94,6 +94,49 @@ function ScreenWithQuickSettings({ children, onOpenSettings }) {
       {children}
       <QuickSettingsFab onClick={onOpenSettings} />
     </div>
+  );
+}
+
+const NOOP_SUBSCRIBE = () => () => {};
+const ZERO_SNAPSHOT = () => 0;
+
+function QuestionTimerHud({ timerSec, subscribe, getSnapshot }) {
+  const timerLeft = useSyncExternalStore(
+    subscribe || NOOP_SUBSCRIBE,
+    getSnapshot || ZERO_SNAPSHOT,
+    getSnapshot || ZERO_SNAPSHOT,
+  );
+  const left = Math.max(0, Math.min(timerSec, timerLeft));
+  const tone = left <= 1.5 ? "#ef4444" : left <= 3 ? "#f59e0b" : "#22c55e";
+
+  return (
+    <>
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          height: 4,
+          background: tone,
+          width: `${left / timerSec * 100}%`,
+          borderRadius: 2,
+          transition: "width 0.05s linear,background 0.3s",
+          animation: left <= 1.5 ? "timerPulse 0.4s ease infinite" : "none",
+        }}
+      />
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          color: left <= 1.5 ? "#ef4444" : left <= 3 ? "#f59e0b" : "rgba(255,255,255,0.4)",
+          marginTop: 2,
+          fontFamily: "'Press Start 2P',monospace",
+          transition: "color 0.3s",
+        }}
+      >
+        {left.toFixed(1)}s
+      </div>
+    </>
   );
 }
 
@@ -456,10 +499,15 @@ function App() {
         {B.phase === "question" && B.q && <div style={{ padding: "10px 14px", animation: "fadeSlide 0.25s ease" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{B.starter.moves[B.selIdx].icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{B.starter.moves[B.selIdx].name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{B.timedMode ? "⏱️ 限時回答！" : "回答正確才能命中"}</span></div>
           <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 16px", textAlign: "center", marginBottom: 8, border: "1px solid rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
-            {B.timedMode && !B.answered && <div style={{ position: "absolute", bottom: 0, left: 0, height: 4, background: B.timerLeft <= 1.5 ? "#ef4444" : B.timerLeft <= 3 ? "#f59e0b" : "#22c55e", width: `${(B.timerLeft / TIMER_SEC) * 100}%`, borderRadius: 2, transition: "width 0.05s linear,background 0.3s", animation: B.timerLeft <= 1.5 ? "timerPulse 0.4s ease infinite" : "none" }} />}
+            {B.timedMode && !B.answered && (
+              <QuestionTimerHud
+                timerSec={TIMER_SEC}
+                subscribe={B.timerSubscribe}
+                getSnapshot={B.getTimerLeft}
+              />
+            )}
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>{B.q.op === "×" ? "乘法題" : B.q.op === "÷" ? "除法題" : B.q.op === "+" ? "加法題" : B.q.op === "-" ? "減法題" : B.q.op === "mixed2" ? "加減混合題" : B.q.op === "mixed3" ? "乘加混合題" : B.q.op === "mixed4" ? "四則運算題" : B.q.op === "unknown1" ? "加減求未知題" : B.q.op === "unknown2" ? "乘除求未知題" : B.q.op === "unknown3" ? "大數求未知題" : B.q.op === "unknown4" ? "混合求未知題" : "混合題"}</div>
             <div className="question-expression" style={{ fontSize: 36, fontWeight: 900, color: "white", letterSpacing: 2 }}>{B.q.display}{B.q.op && B.q.op.startsWith("unknown") ? "" : " = ?"}</div>
-            {B.timedMode && !B.answered && <div style={{ fontSize: 11, fontWeight: 700, color: B.timerLeft <= 1.5 ? "#ef4444" : B.timerLeft <= 3 ? "#f59e0b" : "rgba(255,255,255,0.4)", marginTop: 2, fontFamily: "'Press Start 2P',monospace", transition: "color 0.3s" }}>{B.timerLeft.toFixed(1)}s</div>}
           </div>
           {B.fb && <div style={{ textAlign: "center", marginBottom: 4, fontSize: 16, fontWeight: 700, color: B.fb.correct ? "#22c55e" : "#ef4444", animation: "popIn 0.2s ease" }}>{B.fb.correct ? "✅ 命中！" : `❌ 答案是 ${B.fb.answer}`}</div>}
           {B.fb && !B.fb.correct && B.fb.steps && B.fb.steps.length > 0 && (

@@ -248,8 +248,9 @@ export function useBattle() {
   };
 
   const {
-    timerLeft, paused: _PAUSED,
+    paused: _PAUSED,
     startTimer, clearTimer, pauseTimer, resumeTimer,
+    subscribeTimerLeft, getTimerLeft,
   } = useTimer(TIMER_SEC, onTimeout);
 
   const setScreen = useCallback((nextScreen) => {
@@ -1002,7 +1003,7 @@ export function useBattle() {
     dmgs, parts, eAnim, pAnim, atkEffect, effMsg,
     burnStack, frozen, staticStack, specDef, defAnim, cursed,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, diffLevel,
-    gamePaused, timerLeft,
+    gamePaused, timerSubscribe: subscribeTimerLeft, getTimerLeft,
     expNext, chargeReady,
 
     // ── Achievements & Encyclopedia ──

@@ -1,10 +1,18 @@
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters';
+import type { SelectionMode, StarterId, StarterSelectable } from '../../types/game';
 
 const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
 
-const DESCS = {
+type StarterDesc = {
+  desc: string;
+  passive: string;
+  specDef: string;
+};
+
+const DESCS: Record<StarterId, StarterDesc> = {
   fire: { desc: "來自火山地帶的熱血夥伴。專精乘法運算，攻擊力成長極高。", passive: "🔥 灼燒：攻擊附帶灼燒效果，每回合持續造成傷害", specDef: "🛡️ 防護罩：8連擊時展開火焰護盾，完全擋下攻擊" },
   water: { desc: "來自深海的冷靜夥伴。專精除法運算，擅長精密的計算。", passive: "❄️ 凍結：攻擊有機率凍結敵人，使其跳過一回合", specDef: "💨 完美閃避：8連擊時化為水流，完全迴避攻擊" },
   grass: { desc: "來自古老森林的溫和夥伴。專精加減法，擁有強韌的生命力。", passive: "💚 回血：每次攻擊恢復少量HP，持久作戰的王者", specDef: "🌿 反彈：8連擊時以藤蔓反擊，將傷害反彈給敵人" },
@@ -12,14 +20,14 @@ const DESCS = {
   lion: { desc: "來自金色草原的勇敢夥伴。專精求未知數，HP越低攻擊越強的高風險高報酬戰士。", passive: "🦁 勇氣之心：HP越低傷害加成越高（最高+50%），越危險越強大", specDef: "✨ 獅王咆哮：8連擊時擋下攻擊並對敵人造成15點固定傷害" },
 };
 
-function clampStageIdx(starter, idx) {
+function clampStageIdx(starter: StarterSelectable | null, idx: number): number {
   const total = starter?.stages?.length || 1;
   const maxIdx = Math.max(0, total - 1);
   const raw = Number.isFinite(idx) ? idx : 0;
   return Math.max(0, Math.min(maxIdx, raw));
 }
 
-function createStarterVariant(starter, stageIdx = 0) {
+function createStarterVariant(starter: StarterSelectable | null, stageIdx = 0): StarterSelectable | null {
   if (!starter) return null;
   const idx = clampStageIdx(starter, stageIdx);
   const stage = starter.stages?.[idx] || starter.stages?.[0];
@@ -30,14 +38,26 @@ function createStarterVariant(starter, stageIdx = 0) {
   };
 }
 
-export default function SelectionScreen({ mode = "single", onSelect, onBack }) {
-  const isDual = mode === "coop" || mode === "pvp";
-  const [picked, setPicked] = useState(null);
-  const [picked1, setPicked1] = useState(null);
-  const [picked2, setPicked2] = useState(null);
-  const [focusSlot, setFocusSlot] = useState("p1");
+type DualSelectionPayload = {
+  p1: StarterSelectable;
+  p2: StarterSelectable;
+};
 
-  const handlePick = (s) => {
+type SelectionScreenProps = {
+  mode?: SelectionMode;
+  onSelect: (payload: StarterSelectable | DualSelectionPayload) => void;
+  onBack: () => void;
+};
+
+export default function SelectionScreen({ mode = "single", onSelect, onBack }: SelectionScreenProps) {
+  const starters = STARTERS as StarterSelectable[];
+  const isDual = mode === "coop" || mode === "pvp" || mode === "double";
+  const [picked, setPicked] = useState<StarterSelectable | null>(null);
+  const [picked1, setPicked1] = useState<StarterSelectable | null>(null);
+  const [picked2, setPicked2] = useState<StarterSelectable | null>(null);
+  const [focusSlot, setFocusSlot] = useState<"p1" | "p2">("p1");
+
+  const handlePick = (s: StarterSelectable) => {
     if (!isDual) {
       if (picked?.id === s.id) { setPicked(null); return; }
       setPicked(createStarterVariant(s, 0));
@@ -68,7 +88,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }) {
     ? picked
     : (focusSlot === "p1" ? picked1 : picked2);
 
-  const updateFocusedStage = (stageIdx) => {
+  const updateFocusedStage = (stageIdx: number) => {
     if (!focusedPicked) return;
     const next = createStarterVariant(focusedPicked, stageIdx);
     if (!isDual) {
@@ -168,7 +188,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }) {
 
       {/* Starter cards */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "0 12px 8px", gap: 5, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-        {STARTERS.map((s) => {
+        {starters.map((s) => {
           const isP1 = picked1?.id === s.id;
           const isP2 = picked2?.id === s.id;
           const sel = isDual ? (isP1 || isP2) : picked?.id === s.id;
@@ -290,4 +310,4 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }) {
   );
 }
 
-const backBtn = { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 16, fontWeight: 700, width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 };
+const backBtn: CSSProperties = { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 16, fontWeight: 700, width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 };

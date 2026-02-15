@@ -34,10 +34,11 @@ Current migrated files:
 - `src/components/screens/TitleScreen.tsx`
 - `src/components/screens/PvpResultScreen.tsx`
 - `src/components/screens/SettingsScreen.tsx`
+- `src/components/screens/SelectionScreen.tsx`
 
 ## Next Recommended TS Steps
 
-1. Migrate remaining large screens (`Selection`, `Dashboard`, `Encyclopedia`) to `.tsx`.
+1. Migrate remaining large screens (`Dashboard`, `Encyclopedia`) to `.tsx`.
 2. Migrate battle domain files in this order:
    - `turnResolver` → `battleReducer` → `playerFlow/enemyFlow` → `useBattle`.
 3. Keep `lint + typecheck` green after each migration batch.

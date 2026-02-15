@@ -47,10 +47,29 @@ export type StarterStage = {
   svgFn: (c1: string, c2: string) => string;
 };
 
+export type StarterId = "fire" | "water" | "grass" | "electric" | "lion";
+
+export type StarterMoveLite = {
+  icon: string;
+  name: string;
+  desc?: string;
+  color?: string;
+};
+
 export type StarterLite = {
-  id?: string;
+  id?: StarterId;
   name: string;
   c1: string;
   c2: string;
   stages: StarterStage[];
 };
+
+export type StarterSelectable = StarterLite & {
+  id: StarterId;
+  typeIcon: string;
+  typeName: string;
+  moves: StarterMoveLite[];
+  selectedStageIdx?: number;
+};
+
+export type SelectionMode = "single" | "coop" | "pvp" | "double";

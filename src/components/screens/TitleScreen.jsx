@@ -9,17 +9,11 @@ export default function TitleScreen({
   onAchievements,
   onEncyclopedia,
   onDashboard,
+  onSettings,
   lowPerfMode = false,
-  perfMode = "auto",
-  onCyclePerfMode = () => {},
 }) {
   const row1 = STARTERS.slice(0, 3);
   const row2 = STARTERS.slice(3);
-  const perfLabel = perfMode === "auto"
-    ? `🚀 效能：自動${lowPerfMode ? "（省電）" : "（標準）"}`
-    : perfMode === "on"
-      ? "🚀 效能：省電模式"
-      : "🚀 效能：標準模式";
 
   return (
     <div className="title-screen" style={{
@@ -75,15 +69,17 @@ export default function TitleScreen({
         </div>
         <div style={{ fontSize: 11, opacity: 0.3, marginTop: -4 }}>計時模式：5 秒內回答</div>
 
-        {/* Feature grid — 2×2 icon buttons */}
+        {/* Feature grid */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>
           {[
             { icon: "🏆", label: "排行榜", fn: onLeaderboard },
             { icon: "⭐", label: "成就", fn: onAchievements },
             { icon: "📚", label: "圖鑑", fn: onEncyclopedia },
             { icon: "📊", label: "家長專區", fn: onDashboard },
+            { icon: "⚙️", label: "設定", fn: onSettings, full: true },
           ].map(b => (
             <button className="title-feature-btn touch-btn" key={b.label} onClick={b.fn} style={{
+              gridColumn: b.full ? "1 / -1" : "auto",
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.1)",
               color: "white", fontSize: 13, fontWeight: 600,
@@ -92,16 +88,6 @@ export default function TitleScreen({
             }}>{b.icon} {b.label}</button>
           ))}
         </div>
-        <button className="title-perf-btn touch-btn" onClick={onCyclePerfMode} style={{
-          width: "100%",
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          color: "white",
-          fontSize: 12,
-          fontWeight: 700,
-          padding: "9px 12px",
-          borderRadius: 12,
-        }}>{perfLabel}</button>
       </div>
 
       {/* ─── Bottom: Credits ─── */}

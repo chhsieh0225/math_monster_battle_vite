@@ -7,7 +7,7 @@
  *   2. Battle-screen layout & visual rendering
  *   3. Orientation-lock wrapper (GameShell)
  */
-import { useState, useEffect, Component } from 'react';
+import { useState, useEffect, useRef, Component } from 'react';
 import './App.css';
 
 // Hooks
@@ -38,6 +38,7 @@ import GameOverScreen from './components/screens/GameOverScreen';
 import AchievementScreen from './components/screens/AchievementScreen';
 import EncyclopediaScreen from './components/screens/EncyclopediaScreen';
 import DashboardScreen from './components/screens/DashboardScreen';
+import SettingsScreen from './components/screens/SettingsScreen';
 import AchievementPopup from './components/ui/AchievementPopup';
 import { ACH_MAP } from './data/achievements';
 
@@ -56,6 +57,44 @@ class ErrorBoundary extends Component {
     );
     return this.props.children;
   }
+}
+
+function QuickSettingsFab({ onClick }) {
+  return (
+    <button
+      className="touch-btn"
+      onClick={onClick}
+      style={{
+        position: "absolute",
+        top: 10,
+        right: 10,
+        width: 38,
+        height: 38,
+        borderRadius: 999,
+        border: "1px solid rgba(255,255,255,0.25)",
+        background: "linear-gradient(135deg,rgba(59,130,246,0.9),rgba(14,165,233,0.85))",
+        color: "white",
+        fontSize: 17,
+        boxShadow: "0 8px 18px rgba(2,6,23,0.35)",
+        backdropFilter: "blur(2px)",
+        cursor: "pointer",
+        zIndex: 1600,
+      }}
+      aria-label="Open settings"
+      title="設定"
+    >
+      ⚙️
+    </button>
+  );
+}
+
+function ScreenWithQuickSettings({ children, onOpenSettings }) {
+  return (
+    <div style={{ height: "100%", position: "relative" }}>
+      {children}
+      <QuickSettingsFab onClick={onOpenSettings} />
+    </div>
+  );
 }
 
 // ─── GameShell: orientation lock wrapper ───
@@ -99,8 +138,33 @@ function App() {
   const B = useBattle();
   const UX = useMobileExperience();
   const showHeavyFx = !UX.lowPerfMode;
-  const [sfxMuted, setSfxMuted] = useState(false);
-  const toggleSfxMute = () => { const m = B.sfx.toggleMute(); setSfxMuted(m); };
+  const [audioMuted, setAudioMuted] = useState(() => B.sfx.muted);
+  const settingsReturnRef = useRef("title");
+  const resumeBattleAfterSettingsRef = useRef(false);
+  const setAudioMute = (next) => {
+    const muted = B.sfx.setMuted(next);
+    setAudioMuted(muted);
+  };
+  const openSettings = (fromScreen) => {
+    settingsReturnRef.current = fromScreen;
+    if (fromScreen === "battle" && !B.gamePaused) {
+      resumeBattleAfterSettingsRef.current = true;
+      B.togglePause();
+    } else {
+      resumeBattleAfterSettingsRef.current = false;
+    }
+    B.setScreen("settings");
+  };
+  const closeSettings = () => {
+    const backTo = settingsReturnRef.current || "title";
+    B.setScreen(backTo);
+    if (backTo === "battle" && resumeBattleAfterSettingsRef.current) {
+      setTimeout(() => {
+        B.togglePause();
+      }, 0);
+    }
+    resumeBattleAfterSettingsRef.current = false;
+  };
 
   // ─── Screen routing ───
   if (B.screen === "title") return (
@@ -111,39 +175,63 @@ function App() {
       onAchievements={() => B.setScreen("achievements")}
       onEncyclopedia={() => B.setScreen("encyclopedia")}
       onDashboard={() => B.setScreen("dashboard")}
+      onSettings={() => openSettings("title")}
       lowPerfMode={UX.lowPerfMode}
-      perfMode={UX.perfMode}
-      onCyclePerfMode={UX.cyclePerfMode}
     />
   );
   if (B.screen === "achievements") return (
-    <AchievementScreen unlockedIds={B.achUnlocked} onBack={() => B.setScreen("title")} />
+    <ScreenWithQuickSettings onOpenSettings={() => openSettings("achievements")}>
+      <AchievementScreen unlockedIds={B.achUnlocked} onBack={() => B.setScreen("title")} />
+    </ScreenWithQuickSettings>
   );
   if (B.screen === "encyclopedia") return (
-    <EncyclopediaScreen encData={B.encData} onBack={() => B.setScreen("title")} />
+    <ScreenWithQuickSettings onOpenSettings={() => openSettings("encyclopedia")}>
+      <EncyclopediaScreen encData={B.encData} onBack={() => B.setScreen("title")} />
+    </ScreenWithQuickSettings>
   );
   if (B.screen === "dashboard") return (
-    <DashboardScreen onBack={() => B.setScreen("title")} />
+    <ScreenWithQuickSettings onOpenSettings={() => openSettings("dashboard")}>
+      <DashboardScreen onBack={() => B.setScreen("title")} />
+    </ScreenWithQuickSettings>
+  );
+  if (B.screen === "settings") return (
+    <SettingsScreen
+      onBack={closeSettings}
+      perfMode={UX.perfMode}
+      lowPerfMode={UX.lowPerfMode}
+      autoLowEnd={UX.autoLowEnd}
+      onSetPerfMode={UX.setPerfMode}
+      audioMuted={audioMuted}
+      onSetAudioMuted={setAudioMute}
+    />
   );
   if (B.screen === "leaderboard") return (
-    <LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen("title")} />
+    <ScreenWithQuickSettings onOpenSettings={() => openSettings("leaderboard")}>
+      <LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen("title")} />
+    </ScreenWithQuickSettings>
   );
   if (B.screen === "selection") return (
-    <SelectionScreen onSelect={(s) => { B.sfx.init(); B.setStarter(s); B.startGame(s); }} onBack={() => B.setScreen("title")} />
+    <ScreenWithQuickSettings onOpenSettings={() => openSettings("selection")}>
+      <SelectionScreen onSelect={(s) => { B.sfx.init(); B.setStarter(s); B.startGame(s); }} onBack={() => B.setScreen("title")} />
+    </ScreenWithQuickSettings>
   );
   if (B.screen === "evolve") return (
-    <EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={B.continueAfterEvolve} />
+    <ScreenWithQuickSettings onOpenSettings={() => openSettings("evolve")}>
+      <EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={B.continueAfterEvolve} />
+    </ScreenWithQuickSettings>
   );
   if (B.screen === "gameover") return (
-    <GameOverScreen
-      defeated={B.defeated} totalEnemies={B.enemies.length}
-      tC={B.tC} tW={B.tW} pLvl={B.pLvl} timedMode={B.timedMode}
-      maxStreak={B.maxStreak} starter={B.starter} mLvls={B.mLvls}
-      getPow={B.getPow}
-      onRestart={() => B.starter && B.startGame()}
-      onLeaderboard={() => B.setScreen("leaderboard")}
-      onHome={() => B.setScreen("title")}
-    />
+    <ScreenWithQuickSettings onOpenSettings={() => openSettings("gameover")}>
+      <GameOverScreen
+        defeated={B.defeated} totalEnemies={B.enemies.length}
+        tC={B.tC} tW={B.tW} pLvl={B.pLvl} timedMode={B.timedMode}
+        maxStreak={B.maxStreak} starter={B.starter} mLvls={B.mLvls}
+        getPow={B.getPow}
+        onRestart={() => B.starter && B.startGame()}
+        onLeaderboard={() => B.setScreen("leaderboard")}
+        onHome={() => B.setScreen("title")}
+      />
+    </ScreenWithQuickSettings>
   );
   if (!B.enemy || !B.starter) return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", color: "white", gap: 16 }}>
@@ -293,6 +381,7 @@ function App() {
 
       {/* ═══ Bottom panel ═══ */}
       <div className="battle-panel" style={{ background: "linear-gradient(to top,#0f172a,#1e293b)", borderTop: "3px solid rgba(255,255,255,0.1)", flexShrink: 0, minHeight: B.phase === "question" ? 210 : 170, position: "relative" }}>
+        <button className="battle-util-btn" onClick={() => openSettings("battle")} style={{ position: "absolute", top: 8, right: 10, background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.55)", fontSize: 13, fontWeight: 700, padding: "5px 10px", borderRadius: 14, cursor: "pointer", zIndex: 5 }}>⚙️ 設定</button>
 
         {/* Move menu */}
         {B.phase === "menu" && B.starter && <div style={{ padding: 10 }}><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
@@ -312,7 +401,7 @@ function App() {
               {!m.risky && !atCap && <div style={{ height: 3, background: "rgba(0,0,0,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}><div style={{ width: `${(B.mHits[i] % (HITS_PER_LVL * B.mLvls[i])) / (HITS_PER_LVL * B.mLvls[i]) * 100}%`, height: "100%", background: m.color, borderRadius: 2, transition: "width 0.3s" }} /></div>}
             </button>;
           })}
-        </div><div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}><button className="battle-util-btn" onClick={toggleSfxMute} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>{sfxMuted ? "🔇" : "🔊"}</button><button className="battle-util-btn" onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button><button className="battle-util-btn" onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button></div></div>}
+        </div><div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}><button className="battle-util-btn" onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button><button className="battle-util-btn" onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button></div></div>}
 
         {/* Question panel */}
         {B.phase === "question" && B.q && <div style={{ padding: "10px 14px", animation: "fadeSlide 0.25s ease" }}>

@@ -6,10 +6,12 @@
  * Call sfx.init() once after user gesture to unlock AudioContext.
  * Then call sfx.play("hit") etc. anywhere.
  */
+import { readText, writeText } from './storage';
 
 let ctx = null;   // AudioContext
 let ready = false;
-let muted = false;
+const SFX_MUTED_KEY = "mathMonsterBattle_sfxMuted";
+let muted = readText(SFX_MUTED_KEY, "0") === "1";
 
 // ── Note → frequency lookup (pre-computed, avoids runtime Math) ──
 const NOTE_FREQ = {
@@ -213,7 +215,14 @@ const sfx = {
     if (!ready || muted) return;
     try { const fn = SOUNDS[name]; if (fn) fn(); } catch { /* best-effort SFX */ }
   },
-  toggleMute() { muted = !muted; return muted; },
+  setMuted(next) {
+    muted = !!next;
+    writeText(SFX_MUTED_KEY, muted ? "1" : "0");
+    return muted;
+  },
+  toggleMute() {
+    return sfx.setMuted(!muted);
+  },
   get muted() { return muted; },
   get ready() { return ready; },
 };

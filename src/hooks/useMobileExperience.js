@@ -85,6 +85,7 @@ export function useMobileExperience() {
     lowPerfMode,
     autoLowEnd,
     perfMode,
+    setPerfMode,
     cyclePerfMode,
   };
 }

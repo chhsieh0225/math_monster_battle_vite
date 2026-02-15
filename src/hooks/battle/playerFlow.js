@@ -26,6 +26,7 @@ export function runPlayerAnswer({
   correct,
   move,
   starter,
+  attackerSlot = "main",
   sr,
   safeTo,
   chance,
@@ -50,6 +51,7 @@ export function runPlayerAnswer({
   setBossCharging,
   setBurnStack,
   setPHp,
+  setPHpSub,
   setFrozen,
   frozenR,
   setStaticStack,
@@ -78,6 +80,45 @@ export function runPlayerAnswer({
   const resolveMainKo = (message = "你的夥伴倒下了...") => {
     if (handlePlayerPartyKo) {
       return handlePlayerPartyKo({ target: "main", reason: message });
+    }
+    loseToGameOver(message);
+    return "gameover";
+  };
+
+  const isSubAttacker = attackerSlot === "sub";
+  const attackerName = isSubAttacker ? (s.allySub?.name || "副將") : (s.starter?.name || "主將");
+  const getAttackerHp = (state) => (
+    isSubAttacker ? (state.pHpSub || 0) : (state.pHp || 0)
+  );
+  const healAttacker = (heal) => {
+    if (isSubAttacker && typeof setPHpSub === "function") {
+      setPHpSub((h) => Math.min(h + heal, PLAYER_MAX_HP));
+      return;
+    }
+    setPHp((h) => Math.min(h + heal, PLAYER_MAX_HP));
+  };
+  const applyDamageToAttacker = ({ state, damage, popupText = null, color = "#ef4444" }) => {
+    const baseHp = getAttackerHp(state);
+    const nextHp = Math.max(0, baseHp - damage);
+    if (isSubAttacker && typeof setPHpSub === "function") {
+      setPHpSub(nextHp);
+    } else {
+      setPHp(nextHp);
+      setPAnim("playerHit 0.5s ease");
+      safeTo(() => setPAnim(""), 500);
+    }
+    addD(
+      popupText || `-${damage}`,
+      isSubAttacker ? 112 : 60,
+      isSubAttacker ? 146 : 170,
+      color,
+    );
+    return nextHp;
+  };
+  const resolveActiveKo = (message = "你的夥伴倒下了...") => {
+    if (!isSubAttacker) return resolveMainKo(message);
+    if (handlePlayerPartyKo) {
+      return handlePlayerPartyKo({ target: "sub", reason: message });
     }
     loseToGameOver(message);
     return "gameover";
@@ -162,7 +203,7 @@ export function runPlayerAnswer({
             stageBonus: s3.pStg,
             cursed: s3.cursed,
             starterType: starter.type,
-            playerHp: s3.pHp,
+            playerHp: getAttackerHp(s3),
             bossPhase: s3.bossPhase,
           });
           const { eff, isFortress, wasCursed } = strike;
@@ -183,7 +224,7 @@ export function runPlayerAnswer({
 
           if (wasCursed) { setEffMsg({ text: "💀 詛咒弱化了攻擊...", color: "#a855f7" }); safeTo(() => setEffMsg(null), 1500); }
           else if (isFortress) { setEffMsg({ text: "🛡️ 鐵壁減傷！", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
-          else if (starter.type === "light" && s3.pHp < PLAYER_MAX_HP * 0.5) { setEffMsg({ text: "🦁 勇氣之心！ATK↑", color: "#f59e0b" }); safeTo(() => setEffMsg(null), 1500); }
+          else if (starter.type === "light" && getAttackerHp(s3) < PLAYER_MAX_HP * 0.5) { setEffMsg({ text: "🦁 勇氣之心！ATK↑", color: "#f59e0b" }); safeTo(() => setEffMsg(null), 1500); }
           else if (eff > 1) { setEffMsg({ text: "效果絕佳！", color: "#22c55e" }); safeTo(() => setEffMsg(null), 1500); }
           else if (eff < 1) { setEffMsg({ text: "效果不好...", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
 
@@ -205,9 +246,9 @@ export function runPlayerAnswer({
 
           if (starter.type === "grass") {
             const heal = 2 * s3.mLvls[s3.selIdx];
-            setPHp((h) => Math.min(h + heal, PLAYER_MAX_HP));
+            healAttacker(heal);
             sfx.play("heal");
-            safeTo(() => addD(`+${heal}`, 50, 165, "#22c55e"), 500);
+            safeTo(() => addD(`+${heal}`, isSubAttacker ? 112 : 50, isSubAttacker ? 146 : 165, "#22c55e"), 500);
           }
 
           let willFreeze = false;
@@ -251,16 +292,17 @@ export function runPlayerAnswer({
             if (refDmg > 0) {
               safeTo(() => {
                 const s4 = sr.current;
-                const nh4 = Math.max(0, s4.pHp - refDmg);
-                setPHp(nh4);
-                setPAnim("playerHit 0.5s ease");
-                addD(`🛡️-${refDmg}`, 60, 170, "#60a5fa");
+                const nh4 = applyDamageToAttacker({
+                  state: s4,
+                  damage: refDmg,
+                  popupText: `🛡️-${refDmg}`,
+                  color: "#60a5fa",
+                });
                 setEffMsg({ text: "🛡️ 反擊裝甲！", color: "#60a5fa" });
                 safeTo(() => setEffMsg(null), 1500);
-                safeTo(() => setPAnim(""), 500);
                 if (nh4 <= 0) safeTo(() => {
                   sfx.play("ko");
-                  resolveMainKo("你的主將被反擊傷害打倒了...");
+                  resolveActiveKo(`${attackerName} 被反擊傷害打倒了...`);
                 }, 800);
               }, 600);
             }
@@ -302,15 +344,14 @@ export function runPlayerAnswer({
         moveLvl: s2.mLvls[s2.selIdx],
         moveIdx: s2.selIdx,
       });
-      const nh2 = Math.max(0, s2.pHp - sd);
-      setPHp(nh2);
-      setPAnim("playerHit 0.5s ease");
-      addD(`-${sd}`, 40, 170, "#ef4444");
-      safeTo(() => setPAnim(""), 500);
-      setBText(`${move.name} 失控了！自己受到 ${sd} 傷害！`);
+      const nh2 = applyDamageToAttacker({
+        state: s2,
+        damage: sd,
+      });
+      setBText(`${move.name} 失控了！${attackerName} 受到 ${sd} 傷害！`);
       setPhase("text");
       safeTo(() => {
-        if (nh2 <= 0) resolveMainKo("你的主將倒下了...");
+        if (nh2 <= 0) resolveActiveKo(`${attackerName} 倒下了...`);
         else if (frozenR.current) handleFreeze();
         else doEnemyTurn();
       }, 1500);

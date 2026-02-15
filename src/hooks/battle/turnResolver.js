@@ -1,4 +1,5 @@
 import { PLAYER_MAX_HP } from '../../data/constants.js';
+import { PVP_BALANCE } from '../../data/pvpBalance.js';
 import { getEff } from '../../data/typeEffectiveness.js';
 import {
   bestEffectiveness,
@@ -144,4 +145,55 @@ export function resolvePlayerStrike({
 
 export function resolveRiskySelfDamage({ move, moveLvl, moveIdx }) {
   return Math.round(movePower(move, moveLvl, moveIdx) * 0.4);
+}
+
+export function resolvePvpStrike({
+  move,
+  moveIdx,
+  attackerType,
+  defenderType,
+  random = Math.random,
+}) {
+  if (!move || moveIdx == null) {
+    return {
+      basePow: 0,
+      eff: 1,
+      dmg: 0,
+      variance: 1,
+    };
+  }
+
+  const basePow = movePower(move, 1, moveIdx);
+  const eff = bestEffectiveness(move, defenderType ? { mType: defenderType } : null);
+  const effectScale = eff > 1
+    ? PVP_BALANCE.effectScale.strong
+    : eff < 1
+      ? PVP_BALANCE.effectScale.weak
+      : PVP_BALANCE.effectScale.neutral;
+
+  const rand01 = Math.max(0, Math.min(1, random()));
+  const variance = PVP_BALANCE.varianceMin
+    + rand01 * (PVP_BALANCE.varianceMax - PVP_BALANCE.varianceMin);
+  const slotScale = PVP_BALANCE.moveSlotScale[moveIdx] ?? 1;
+  const typeScale = PVP_BALANCE.typeScale[attackerType] ?? 1;
+  const riskyScale = move.risky ? PVP_BALANCE.riskyScale : 1;
+
+  const rawDamage = basePow
+    * PVP_BALANCE.baseScale
+    * variance
+    * slotScale
+    * typeScale
+    * effectScale
+    * riskyScale;
+  const dmg = Math.max(
+    PVP_BALANCE.minDamage,
+    Math.min(PVP_BALANCE.maxDamage, Math.round(rawDamage)),
+  );
+
+  return {
+    basePow,
+    eff,
+    dmg,
+    variance,
+  };
 }

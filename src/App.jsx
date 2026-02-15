@@ -313,9 +313,12 @@ function App() {
 
   // ─── Battle screen locals ───
   const st = B.starter.stages[B.pStg];
+  const isCoopBattle = B.battleMode === "coop" || B.battleMode === "double";
+  const coopCanSwitch = isCoopBattle && B.allySub && B.pHpSub > 0;
+  const coopUsingSub = coopCanSwitch && B.coopActiveSlot === "sub";
   const activeStarter = B.battleMode === "pvp"
     ? (B.pvpTurn === "p1" ? B.starter : B.pvpStarter2)
-    : B.starter;
+    : (coopUsingSub ? B.allySub : B.starter);
   const eSvg = B.enemy.svgFn();
   const eSubSvg = B.enemySub ? B.enemySub.svgFn() : null;
   const allyStage = B.allySub ? B.allySub.stages[0] : null;
@@ -447,10 +450,10 @@ function App() {
         {/* Player platform & info */}
         <div style={{ position: "absolute", left: "2%", bottom: "12%", width: "50%", height: 10, background: scene.platform1, borderRadius: "50%", filter: "blur(2px)", zIndex: 3 }} />
         <div style={{ position: "absolute", bottom: 10, right: 10, left: "42%", zIndex: 10 }}>
-          <HPBar cur={B.pHp} max={PLAYER_MAX_HP} color="#6366f1" label={`${st.name} Lv.${B.pLvl}`} />
+          <HPBar cur={B.pHp} max={PLAYER_MAX_HP} color="#6366f1" label={`${isCoopBattle && !coopUsingSub ? "▶ " : ""}${st.name} Lv.${B.pLvl}`} />
           {B.allySub && (
             <div style={{ marginTop: 4, opacity: 0.9 }}>
-              <HPBar cur={B.pHpSub} max={PLAYER_MAX_HP} color={B.allySub.c1} label={`夥伴 ${B.allySub.typeIcon}${B.allySub.name}`} />
+              <HPBar cur={B.pHpSub} max={PLAYER_MAX_HP} color={B.allySub.c1} label={`${isCoopBattle && coopUsingSub ? "▶ " : ""}夥伴 ${B.allySub.typeIcon}${B.allySub.name}`} />
             </div>
           )}
           <XPBar exp={B.pExp} max={B.expNext} />
@@ -458,11 +461,11 @@ function App() {
         </div>
 
         {/* Player sprite */}
-        <div style={{ position: "absolute", left: playerMainLeft, bottom: playerMainBottom, transform: "scaleX(-1)", zIndex: 5, animation: B.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite") }}>
+        <div style={{ position: "absolute", left: playerMainLeft, bottom: playerMainBottom, transform: "scaleX(-1)", zIndex: 5, filter: isCoopBattle && !coopUsingSub ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))" : "none", transition: "filter 0.2s ease", animation: B.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite") }}>
           <MonsterSprite svgStr={pSvg} size={mainPlayerSize} />
         </div>
         {B.allySub && pSubSvg && (
-          <div style={{ position: "absolute", left: playerSubLeft, bottom: playerSubBottom, transform: "scaleX(-1)", zIndex: 4, opacity: 0.88, animation: UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite" }}>
+          <div style={{ position: "absolute", left: playerSubLeft, bottom: playerSubBottom, transform: "scaleX(-1)", zIndex: 4, opacity: 0.88, filter: isCoopBattle && coopUsingSub ? "drop-shadow(0 0 12px rgba(34,197,94,0.75))" : "none", transition: "filter 0.2s ease", animation: UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite" }}>
             <MonsterSprite svgStr={pSubSvg} size={crowdedField ? 92 : 104} />
           </div>
         )}
@@ -491,6 +494,11 @@ function App() {
       <div className="battle-panel" style={{ background: "linear-gradient(to top,#0f172a,#1e293b)", borderTop: "3px solid rgba(255,255,255,0.1)", flexShrink: 0, minHeight: B.phase === "question" ? 210 : 170, position: "relative" }}>
         {/* Move menu */}
         {B.phase === "menu" && activeStarter && <div style={{ padding: 10 }}>
+          {isCoopBattle && (
+            <div style={{ marginBottom: 8, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.75)" }}>
+              🤝 雙人合作 · 目前出招：{activeStarter.typeIcon} {activeStarter.name}
+            </div>
+          )}
           {B.battleMode === "pvp" && (
             <div style={{ marginBottom: 8, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.75)" }}>
               {B.pvpTurn === "p1" ? "🔵 玩家1 回合" : "🔴 玩家2 回合"} · {activeStarter.typeIcon} {activeStarter.name}
@@ -516,6 +524,11 @@ function App() {
             })}
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}>
+            {isCoopBattle && (
+              <button className="battle-util-btn" onClick={B.toggleCoopActive} disabled={!coopCanSwitch} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: coopCanSwitch ? "rgba(255,255,255,0.45)" : "rgba(148,163,184,0.45)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: coopCanSwitch ? "pointer" : "not-allowed", opacity: coopCanSwitch ? 1 : 0.55 }}>
+                🔁 {coopUsingSub ? "主將出招" : "副將出招"}
+              </button>
+            )}
             <button className="battle-util-btn" onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button>
             <button className="battle-util-btn" onClick={() => openSettings("battle")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⚙️ 設定</button>
             <button className="battle-util-btn" onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button>
@@ -524,7 +537,7 @@ function App() {
 
         {/* Question panel */}
         {B.phase === "question" && B.q && activeStarter && <div style={{ padding: "10px 14px", animation: "fadeSlide 0.25s ease" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{activeStarter.moves[B.selIdx].icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{activeStarter.moves[B.selIdx].name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{B.timedMode ? "⏱️ 限時回答！" : "回答正確才能命中"}</span></div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{activeStarter.moves[B.selIdx].icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{activeStarter.moves[B.selIdx].name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{activeStarter.typeIcon} {activeStarter.name}</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{B.timedMode ? "⏱️ 限時回答！" : "回答正確才能命中"}</span></div>
           <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 16px", textAlign: "center", marginBottom: 8, border: "1px solid rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
             {B.timedMode && !B.answered && (
               <QuestionTimerHud

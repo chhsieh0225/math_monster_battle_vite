@@ -4,6 +4,7 @@ import {
   resolveBossTurnState,
   resolveEnemyAssistStrike,
   resolveEnemyPrimaryStrike,
+  resolvePvpStrike,
   resolvePlayerStrike,
   resolveRiskySelfDamage,
 } from './turnResolver.js';
@@ -118,4 +119,54 @@ test('resolveEnemyAssistStrike applies cap and effectiveness', () => {
     assert.equal(out.defEff, 1.5);
     assert.equal(out.dmg, 24);
   });
+});
+
+test('resolvePvpStrike respects type/effect scaling and clamps by caps', () => {
+  const neutral = resolvePvpStrike({
+    move: { basePower: 40, growth: 3, type: "fire", risky: true },
+    moveIdx: 3,
+    attackerType: "fire",
+    defenderType: "dark",
+    random: () => 0,
+  });
+  assert.equal(neutral.dmg, 26);
+  assert.equal(neutral.eff, 1);
+
+  const strong = resolvePvpStrike({
+    move: { basePower: 40, growth: 3, type: "fire", risky: true },
+    moveIdx: 3,
+    attackerType: "fire",
+    defenderType: "grass",
+    random: () => 0,
+  });
+  assert.equal(strong.dmg, 30);
+  assert.equal(strong.eff, 1.5);
+
+  const weak = resolvePvpStrike({
+    move: { basePower: 40, growth: 3, type: "fire", risky: true },
+    moveIdx: 3,
+    attackerType: "fire",
+    defenderType: "water",
+    random: () => 0,
+  });
+  assert.equal(weak.dmg, 22);
+  assert.equal(weak.eff, 0.6);
+
+  const capped = resolvePvpStrike({
+    move: { basePower: 120, growth: 3, type: "light", risky: false },
+    moveIdx: 0,
+    attackerType: "light",
+    defenderType: "dark",
+    random: () => 1,
+  });
+  assert.equal(capped.dmg, 42);
+
+  const floored = resolvePvpStrike({
+    move: { basePower: 4, growth: 0, type: "water", risky: false },
+    moveIdx: 0,
+    attackerType: "water",
+    defenderType: "water",
+    random: () => 0,
+  });
+  assert.equal(floored.dmg, 8);
 });

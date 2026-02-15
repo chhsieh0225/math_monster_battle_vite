@@ -29,7 +29,6 @@ import { STARTERS } from '../data/starters';
 
 import { genQ } from '../utils/questionGenerator';
 import {
-  calcAttackDamage,
   movePower,
   bestEffectiveness,
 } from '../utils/damageCalc';
@@ -57,6 +56,7 @@ import {
 import { effectOrchestrator } from './battle/effectOrchestrator';
 import { runEnemyTurn } from './battle/enemyFlow';
 import { runPlayerAnswer } from './battle/playerFlow';
+import { resolvePvpStrike } from './battle/turnResolver';
 
 // ── Constants (module-level to avoid re-allocation per render) ──
 const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
@@ -127,6 +127,7 @@ export function useBattle() {
   const [screen, setScreenState] = useState("title");
   const [timedMode, setTimedMode] = useState(false);
   const [battleMode, setBattleMode] = useState("single");
+  const [coopActiveSlot, setCoopActiveSlot] = useState("main");
   const [pvpStarter2, setPvpStarter2] = useState(null);
   const [pvpHp2, setPvpHp2] = useState(PLAYER_MAX_HP);
   const [pvpTurn, setPvpTurn] = useState("p1");
@@ -215,6 +216,20 @@ export function useBattle() {
     getDifficultyLevelForOps(abilityModelRef.current, move?.ops, 2)
   );
 
+  const getActingStarter = (state) => {
+    if (!state) return null;
+    if (state.battleMode === "pvp") {
+      return state.pvpTurn === "p1" ? state.starter : state.pvpStarter2;
+    }
+    const isCoopSubActive = (
+      (state.battleMode === "coop" || state.battleMode === "double")
+      && state.coopActiveSlot === "sub"
+      && state.allySub
+      && (state.pHpSub || 0) > 0
+    );
+    return isCoopSubActive ? state.allySub : state.starter;
+  };
+
   // ──── Internal refs ────
   const runSeedRef = useRef(0);
   const asyncGateRef = useRef(0);
@@ -236,6 +251,7 @@ export function useBattle() {
     screen, timedMode, battleMode, diffLevel,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
     tC, tW, maxStreak, defeated,
+    coopActiveSlot,
     pvpStarter2, pvpHp2, pvpTurn, pvpWinner,
   };
   useLayoutEffect(() => { sr.current = _srSnapshot; });
@@ -296,6 +312,7 @@ export function useBattle() {
     // ── Session logging: timeout counts as wrong ──
     const answerTimeMs = logAns(s.q, false);
     _updateAbility(s.q?.op, false);
+    const actingStarter = getActingStarter(s);
     appendEvent("question_answered", {
       outcome: "timeout",
       correct: false,
@@ -305,8 +322,8 @@ export function useBattle() {
       op: s.q?.op ?? null,
       display: s.q?.display ?? null,
       moveIndex: s.selIdx ?? -1,
-      moveName: s.starter?.moves?.[s.selIdx]?.name || null,
-      moveType: s.starter?.moves?.[s.selIdx]?.type || null,
+      moveName: actingStarter?.moves?.[s.selIdx]?.name || null,
+      moveType: actingStarter?.moves?.[s.selIdx]?.type || null,
       timedMode: !!s.timedMode,
       diffLevel: s.diffLevel ?? null,
       round: s.round ?? 0,
@@ -395,6 +412,7 @@ export function useBattle() {
 
     if (mode === "pvp") {
       setEnemies([]);
+      setCoopActiveSlot("main");
       dispatchBattle({
         type: "reset_run",
         patch: {
@@ -430,6 +448,7 @@ export function useBattle() {
 
     const newRoster = buildNewRoster(mode);
     setEnemies(newRoster);
+    setCoopActiveSlot("main");
     setPvpWinner(null);
     const isCoop = mode === "coop" || mode === "double";
     const partner = isCoop ? (allyOverride || pickPartnerStarter(leader, pickIndex)) : null;
@@ -509,6 +528,7 @@ export function useBattle() {
     if (target === "sub") {
       setAllySub(null);
       setPHpSub(0);
+      setCoopActiveSlot("main");
       if ((s.pHp || 0) <= 0) {
         _endSession(false);
         setPhase("ko");
@@ -532,6 +552,7 @@ export function useBattle() {
       setPHp(s.pHpSub);
       setAllySub(null);
       setPHpSub(0);
+      setCoopActiveSlot("main");
       setBText(`💫 ${promoted.name} 接替上場！`);
       setPhase("text");
       safeTo(() => {
@@ -629,9 +650,7 @@ export function useBattle() {
   const selectMove = (i) => {
     if (phase !== "menu") return;
     const s = sr.current;
-    const activeStarter = s.battleMode === "pvp"
-      ? (s.pvpTurn === "p1" ? s.starter : s.pvpStarter2)
-      : s.starter;
+    const activeStarter = getActingStarter(s);
     if (!activeStarter) return;
     // Boss: sealed move check
     if (s.battleMode !== "pvp" && s.sealedMove === i) return; // silently blocked, UI shows lock
@@ -687,7 +706,7 @@ export function useBattle() {
 
   // --- Player answers a question ---
   const onAns = (choice) => {
-    if (answered || !starter) return;
+    if (answered) return;
     setAnswered(true);
     clearTimer();
     const s = sr.current;
@@ -701,14 +720,21 @@ export function useBattle() {
       if (correct) setTC((c) => c + 1);
       else setTW((w) => w + 1);
       if (correct) {
-        const basePow = movePower(move, 1, s.selIdx);
-        const eff = bestEffectiveness(move, { mType: defender.type });
-        const dmg = calcAttackDamage({
-          basePow,
-          streak: 0,
-          stageBonus: 0,
-          effMult: eff,
+        const strike = resolvePvpStrike({
+          move,
+          moveIdx: s.selIdx,
+          attackerType: attacker.type,
+          defenderType: defender.type,
+          random: rand,
         });
+        const dmg = strike.dmg;
+        if (strike.eff > 1) {
+          setEffMsg({ text: "效果絕佳！", color: "#22c55e" });
+          safeTo(() => setEffMsg(null), 1200);
+        } else if (strike.eff < 1) {
+          setEffMsg({ text: "效果不佳", color: "#94a3b8" });
+          safeTo(() => setEffMsg(null), 1200);
+        }
         if (s.pvpTurn === "p1") {
           const nh = Math.max(0, s.pvpHp2 - dmg);
           setPvpHp2(nh);
@@ -742,7 +768,15 @@ export function useBattle() {
       return;
     }
 
-    const move = starter.moves[s.selIdx];
+    const actingStarter = getActingStarter(s);
+    const isCoopSubActive = !!(
+      (s.battleMode === "coop" || s.battleMode === "double")
+      && actingStarter
+      && s.allySub
+      && actingStarter.id === s.allySub.id
+    );
+    if (!actingStarter || s.selIdx == null) return;
+    const move = actingStarter.moves[s.selIdx];
     const correct = choice === s.q.answer;
 
     // ── Session logging ──
@@ -766,7 +800,8 @@ export function useBattle() {
     runPlayerAnswer({
       correct,
       move,
-      starter,
+      starter: actingStarter,
+      attackerSlot: isCoopSubActive ? "sub" : "main",
       sr,
       safeTo,
       chance,
@@ -878,6 +913,17 @@ export function useBattle() {
     continueFromVictory();
   };
 
+  const toggleCoopActive = useCallback(() => {
+    const s = sr.current;
+    const canSwitch = (
+      (s.battleMode === "coop" || s.battleMode === "double")
+      && s.allySub
+      && (s.pHpSub || 0) > 0
+    );
+    if (!canSwitch) return;
+    setCoopActiveSlot((prev) => (prev === "main" ? "sub" : "main"));
+  }, []);
+
   // ═══════════════════════════════════════════════════════════════
   //  PUBLIC API
   // ═══════════════════════════════════════════════════════════════
@@ -885,6 +931,7 @@ export function useBattle() {
     // ── State (read by render shell) ──
     screen, timedMode, battleMode, enemies,
     starter, allySub, pHp, pHpSub, pExp, pLvl, pStg,
+    coopActiveSlot,
     pvpStarter2, pvpHp2, pvpTurn, pvpWinner,
     round, enemy, eHp, enemySub, eHpSub,
     streak, passiveCount, charge, tC, tW, defeated, maxStreak,
@@ -902,7 +949,7 @@ export function useBattle() {
     // ── Actions ──
     setTimedMode, setBattleMode, setScreen, setStarter, setPvpStarter2,
     startGame, selectMove, onAns, advance, continueAfterEvolve,
-    quitGame, togglePause,
+    quitGame, togglePause, toggleCoopActive,
 
     // ── Helpers exposed for render ──
     getPow, dualEff,

@@ -187,7 +187,7 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
     );
   }
 
-  // --- idx 3: 終極爆破 — dark thunder prison + chain lightning ---
+  // --- idx 3: 暗雷獄鏈 — dark thunder prison + chain lightning ---
   const D = 0.34;
   const boltN = 5 + lvl;
   const arcN = 2 + Math.floor(lvl / 2);

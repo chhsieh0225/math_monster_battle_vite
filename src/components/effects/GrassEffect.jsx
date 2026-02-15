@@ -149,7 +149,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
     );
   }
 
-  // --- idx 3: 終極爆破 — abyss bramble collapse ---
+  // --- idx 3: 暗棘森崩 — abyss bramble collapse ---
   const D = 0.34;
   const ringN = 2 + Math.floor(lvl / 2);
   const vineN = 3 + lvl;

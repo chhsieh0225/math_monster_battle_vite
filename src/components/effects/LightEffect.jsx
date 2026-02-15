@@ -146,7 +146,7 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
     );
   }
 
-  // --- idx 3: 終極爆破 (Ultimate Burst) — eclipse lion roar ---
+  // --- idx 3: 日蝕獅吼 — eclipse lion roar ---
   const D = 0.34;
   const ringN = 2 + Math.floor(lvl / 2);
   const roarN = 2 + lvl;

@@ -143,7 +143,7 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
     );
   }
 
-  // --- idx 3: 終極爆破 — darkfire meteor + abyss heatwave ---
+  // --- idx 3: 暗火隕爆 — darkfire meteor + abyss heatwave ---
   const D = 0.34;
   const meteorN = 3 + lvl;
   const shockN = 2 + Math.floor(lvl / 2);

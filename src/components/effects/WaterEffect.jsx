@@ -139,7 +139,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
     );
   }
 
-  // --- idx 3: 終極爆破 — abyss tide vortex + pressure crash ---
+  // --- idx 3: 暗潮渦葬 — abyss tide vortex + pressure crash ---
   const D = 0.34;
   const ringN = 2 + Math.floor(lvl / 2);
   const currentN = 2 + lvl;

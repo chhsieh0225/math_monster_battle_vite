@@ -440,6 +440,7 @@ export function useBattle() {
 
     if (mode === "pvp") {
       setEnemies([]);
+      setTimedMode(true);
       setCoopActiveSlot("main");
       const firstTurn = chance(0.5) ? "p1" : "p2";
       dispatchBattle({
@@ -467,9 +468,9 @@ export function useBattle() {
         starterId: leader?.id || null,
         starterName: leader?.name || null,
         starterType: leader?.type || null,
-        timedMode: false,
+        timedMode: true,
       }, { sessionId: eventSessionIdRef.current });
-      initSession(leader, false);
+      initSession(leader, true);
       const enemyPvp = createPvpEnemyFromStarter(rival);
       dispatchBattle({ type: "start_battle", enemy: enemyPvp, enemySub: null, round: 0 });
       setPhase("text");
@@ -704,7 +705,7 @@ export function useBattle() {
     setPhase("question");
     markQStart(); // ← log question start time
     // Timed mode always uses standard question timer.
-    if (timedMode) startTimer();
+    if (timedMode || s.battleMode === "pvp") startTimer();
   };
 
   // --- Enemy turn logic (reads from stateRef) ---
@@ -795,8 +796,9 @@ export function useBattle() {
         const sfxKey = move.risky && move.type2 ? move.type2 : move.type;
         sfx.play(sfxKey);
         if (currentTurn === "p1") {
-          setAtkEffect({ type: vfxType, idx: s2.selIdx, lvl: 1 });
+          setAtkEffect({ type: vfxType, idx: s2.selIdx, lvl: 1, targetSide: "enemy" });
         } else {
+          setAtkEffect({ type: vfxType, idx: s2.selIdx, lvl: 1, targetSide: "player" });
           addP("enemy", 84, 186, 3);
         }
 

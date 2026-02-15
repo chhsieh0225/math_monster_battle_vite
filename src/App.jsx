@@ -147,7 +147,9 @@ function App() {
   const [audioMuted, setAudioMuted] = useState(() => B.sfx.muted);
   const battleRootRef = useRef(null);
   const enemySpriteRef = useRef(null);
-  const [measuredTarget, setMeasuredTarget] = useState(null);
+  const playerSpriteRef = useRef(null);
+  const [measuredEnemyTarget, setMeasuredEnemyTarget] = useState(null);
+  const [measuredPlayerTarget, setMeasuredPlayerTarget] = useState(null);
   const settingsReturnRef = useRef("title");
   const resumeBattleAfterSettingsRef = useRef(false);
   const setAudioMute = (next) => {
@@ -178,30 +180,50 @@ function App() {
   useEffect(() => {
     if (B.screen !== "battle") return;
     let rafId = 0;
-    const syncEnemyTarget = () => {
+    const syncTargets = () => {
       const rootEl = battleRootRef.current;
       const enemyEl = enemySpriteRef.current;
-      if (!rootEl || !enemyEl) return;
+      const playerEl = playerSpriteRef.current;
+      if (!rootEl) return;
 
       const rootRect = rootEl.getBoundingClientRect();
-      const enemyRect = enemyEl.getBoundingClientRect();
-      if (rootRect.width <= 0 || rootRect.height <= 0 || enemyRect.width <= 0 || enemyRect.height <= 0) return;
+      if (rootRect.width <= 0 || rootRect.height <= 0) return;
 
-      const cx = enemyRect.left - rootRect.left + enemyRect.width / 2;
-      const cy = enemyRect.top - rootRect.top + enemyRect.height / 2;
-      const rightPx = rootRect.width - cx;
-      const topPx = cy;
+      if (enemyEl) {
+        const enemyRect = enemyEl.getBoundingClientRect();
+        if (enemyRect.width > 0 && enemyRect.height > 0) {
+          const cx = enemyRect.left - rootRect.left + enemyRect.width / 2;
+          const cy = enemyRect.top - rootRect.top + enemyRect.height / 2;
+          const rightPx = rootRect.width - cx;
+          const topPx = cy;
+          setMeasuredEnemyTarget({
+            right: `${rightPx}px`,
+            top: `${topPx}px`,
+            flyRight: rightPx / rootRect.width * 100,
+            flyTop: topPx / rootRect.height * 100,
+          });
+        }
+      }
 
-      setMeasuredTarget({
-        right: `${rightPx}px`,
-        top: `${topPx}px`,
-        flyRight: rightPx / rootRect.width * 100,
-        flyTop: topPx / rootRect.height * 100,
-      });
+      if (playerEl) {
+        const playerRect = playerEl.getBoundingClientRect();
+        if (playerRect.width > 0 && playerRect.height > 0) {
+          const cx = playerRect.left - rootRect.left + playerRect.width / 2;
+          const cy = playerRect.top - rootRect.top + playerRect.height / 2;
+          const rightPx = rootRect.width - cx;
+          const topPx = cy;
+          setMeasuredPlayerTarget({
+            right: `${rightPx}px`,
+            top: `${topPx}px`,
+            flyRight: rightPx / rootRect.width * 100,
+            flyTop: topPx / rootRect.height * 100,
+          });
+        }
+      }
     };
     const scheduleSync = () => {
       cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(syncEnemyTarget);
+      rafId = requestAnimationFrame(syncTargets);
     };
 
     scheduleSync();
@@ -212,6 +234,7 @@ function App() {
       observer = new ResizeObserver(scheduleSync);
       if (battleRootRef.current) observer.observe(battleRootRef.current);
       if (enemySpriteRef.current) observer.observe(enemySpriteRef.current);
+      if (playerSpriteRef.current) observer.observe(playerSpriteRef.current);
     }
 
     return () => {
@@ -219,7 +242,7 @@ function App() {
       window.removeEventListener("resize", scheduleSync);
       if (observer) observer.disconnect();
     };
-  }, [B.screen, B.phase, B.enemy?.id, B.enemy?.isEvolved, B.enemy?.sceneMType, B.enemy?.mType]);
+  }, [B.screen, B.phase, B.enemy?.id, B.enemy?.isEvolved, B.enemy?.sceneMType, B.enemy?.mType, B.pStg, B.battleMode, B.pvpTurn]);
 
   // ─── Screen routing ───
   if (B.screen === "title") return (
@@ -227,7 +250,7 @@ function App() {
       onStartNormal={() => { B.setTimedMode(false); B.setBattleMode("single"); B.setScreen("selection"); }}
       onStartTimed={() => { B.setTimedMode(true); B.setBattleMode("single"); B.setScreen("selection"); }}
       onStartCoop={() => { B.setTimedMode(false); B.setBattleMode("coop"); B.setScreen("selection"); }}
-      onStartPvp={() => { B.setTimedMode(false); B.setBattleMode("pvp"); B.setScreen("selection"); }}
+      onStartPvp={() => { B.setTimedMode(true); B.setBattleMode("pvp"); B.setScreen("selection"); }}
       onLeaderboard={() => B.setScreen("leaderboard")}
       onAchievements={() => B.setScreen("achievements")}
       onEncyclopedia={() => B.setScreen("encyclopedia")}
@@ -371,13 +394,24 @@ function App() {
   const eBaseTopPct = (eSceneType === "ghost" || B.enemy.id === "boss") ? 12
     : eSceneType === "steel" ? 16 : 26;
   const eTopPct = eBaseTopPct + (hasDualUnits ? (compactDual ? 8 : 6) : 0);
-  const fallbackTarget = {
+  const enemyFallbackTarget = {
     top: `calc(${eTopPct}% + ${eHeight / 2}px)`,
     right: `calc(${enemyMainRightPct}% + ${eSize / 2}px)`,
     flyRight: enemyMainRightPct + eSize / 2 * 100 / 390,
     flyTop: eTopPct + eHeight / 2 * 100 / 550,
   };
-  const eTarget = measuredTarget || fallbackTarget;
+  const pMainHeight = mainPlayerSize * 100 / 120;
+  const playerCenterTopPct = Math.max(8, 100 - playerMainBottomPct - (pMainHeight * 100 / 550) / 2);
+  const playerCenterRightPct = Math.max(8, 100 - playerMainLeftPct - (mainPlayerSize * 100 / 390) / 2);
+  const playerFallbackTarget = {
+    top: `calc(${playerCenterTopPct}% + 0px)`,
+    right: `calc(${playerCenterRightPct}% + 0px)`,
+    flyRight: playerCenterRightPct,
+    flyTop: playerCenterTopPct,
+  };
+  const eTarget = measuredEnemyTarget || enemyFallbackTarget;
+  const pTarget = measuredPlayerTarget || playerFallbackTarget;
+  const effectTarget = B.atkEffect?.targetSide === "player" ? pTarget : eTarget;
 
   return (
     <div ref={battleRootRef} className={`battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""}`} onClick={canTapAdvance ? B.advance : undefined} style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}>
@@ -398,12 +432,12 @@ function App() {
       {B.achPopup && ACH_MAP[B.achPopup] && <AchievementPopup achievement={ACH_MAP[B.achPopup]} onDone={B.dismissAch} />}
 
       {/* Attack effects */}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "fire" && <FireEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "electric" && <ElecEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "water" && <WaterEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "grass" && <GrassEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "dark" && <DarkEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "light" && <LightEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} />}
+      {showHeavyFx && B.atkEffect && B.atkEffect.type === "fire" && <FireEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
+      {showHeavyFx && B.atkEffect && B.atkEffect.type === "electric" && <ElecEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
+      {showHeavyFx && B.atkEffect && B.atkEffect.type === "water" && <WaterEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
+      {showHeavyFx && B.atkEffect && B.atkEffect.type === "grass" && <GrassEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
+      {showHeavyFx && B.atkEffect && B.atkEffect.type === "dark" && <DarkEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
+      {showHeavyFx && B.atkEffect && B.atkEffect.type === "light" && <LightEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
 
       {/* Special Defense animations */}
       {showHeavyFx && B.defAnim === "fire" && <div style={{ position: "absolute", left: "6%", bottom: "14%", width: 160, height: 160, zIndex: 50, pointerEvents: "none" }}>
@@ -511,7 +545,7 @@ function App() {
         </div>
 
         {/* Player sprite */}
-        <div style={{ position: "absolute", left: `${playerMainLeftPct}%`, bottom: `${playerMainBottomPct}%`, transform: "scaleX(-1)", zIndex: 6, filter: isCoopBattle && !coopUsingSub ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))" : "none", transition: "filter 0.2s ease", animation: B.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite") }}>
+        <div ref={playerSpriteRef} style={{ position: "absolute", left: `${playerMainLeftPct}%`, bottom: `${playerMainBottomPct}%`, transform: "scaleX(-1)", zIndex: 6, filter: isCoopBattle && !coopUsingSub ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))" : "none", transition: "filter 0.2s ease", animation: B.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite") }}>
           <MonsterSprite svgStr={pSvg} size={mainPlayerSize} />
         </div>
         {B.allySub && pSubSvg && (

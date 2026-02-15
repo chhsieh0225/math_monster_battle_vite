@@ -42,12 +42,14 @@
 
 #### UI 組件
 **屏幕組件**:
-- **src/components/screens/TitleScreen.jsx** - 標題與模式選擇
+- **src/components/screens/TitleScreen.tsx** - 標題與模式選擇
 - **src/components/screens/SelectionScreen.jsx** - 初始怪獸選擇
 - **src/components/screens/GameOverScreen.tsx** - 遊戲結束、成績、排行榜入選
 - **src/components/screens/LeaderboardScreen.tsx** - 排行榜顯示
 - **src/components/screens/AchievementScreen.tsx** - 成就列表顯示
 - **src/components/screens/EvolveScreen.tsx** - 進化動畫與演出
+- **src/components/screens/PvpResultScreen.tsx** - 雙人對戰結算畫面
+- **src/components/screens/SettingsScreen.tsx** - 設定畫面（聲音/效能）
 
 **UI 元素**:
 - **src/components/ui/HPBar.tsx** - 生命值條顯示

@@ -2,10 +2,23 @@
  * SettingsScreen — Unified runtime settings.
  * Includes performance and audio controls.
  */
+import type { CSSProperties } from 'react';
 
 const PAGE_BG = "radial-gradient(120% 80% at 50% 0%, #1f2a44 0%, #131a2f 45%, #0a1020 100%)";
 
-const cardStyle = {
+type PerfMode = "auto" | "on" | "off";
+
+type SettingsScreenProps = {
+  onBack: () => void;
+  perfMode: PerfMode;
+  lowPerfMode: boolean;
+  autoLowEnd: boolean;
+  onSetPerfMode: (nextMode: PerfMode) => void;
+  audioMuted: boolean;
+  onSetAudioMuted: (muted: boolean) => void;
+};
+
+const cardStyle: CSSProperties = {
   background: "linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.05))",
   border: "1px solid rgba(255,255,255,0.16)",
   borderRadius: 16,
@@ -22,7 +35,7 @@ export default function SettingsScreen({
   onSetPerfMode,
   audioMuted,
   onSetAudioMuted,
-}) {
+}: SettingsScreenProps) {
   const soundOn = !audioMuted;
   const perfResolved = lowPerfMode ? "省電執行" : "標準執行";
 
@@ -100,7 +113,14 @@ export default function SettingsScreen({
   );
 }
 
-function OptionButton({ label, active, tone, onClick }) {
+type OptionButtonProps = {
+  label: string;
+  active: boolean;
+  tone: "green" | "gray";
+  onClick: () => void;
+};
+
+function OptionButton({ label, active, tone, onClick }: OptionButtonProps) {
   const activeStyle = tone === "green"
     ? "linear-gradient(135deg, rgba(34,197,94,0.95), rgba(22,163,74,0.95))"
     : "linear-gradient(135deg, rgba(100,116,139,0.9), rgba(71,85,105,0.9))";
@@ -125,7 +145,14 @@ function OptionButton({ label, active, tone, onClick }) {
   );
 }
 
-function ModeButton({ title, subtitle, active, onClick }) {
+type ModeButtonProps = {
+  title: string;
+  subtitle: string;
+  active: boolean;
+  onClick: () => void;
+};
+
+function ModeButton({ title, subtitle, active, onClick }: ModeButtonProps) {
   return (
     <button
       className="touch-btn"

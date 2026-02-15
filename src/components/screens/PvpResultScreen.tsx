@@ -1,4 +1,21 @@
+import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
+import type { StarterLite, StarterStage } from '../../types/game';
+
+type PvpStarter = StarterLite & {
+  typeIcon?: string;
+  stages: StarterStage[];
+};
+
+type PvpResultScreenProps = {
+  p1Starter: PvpStarter | null;
+  p2Starter: PvpStarter | null;
+  p1StageIdx?: number;
+  p2StageIdx?: number;
+  winner: "p1" | "p2";
+  onRematch: () => void;
+  onHome: () => void;
+};
 
 export default function PvpResultScreen({
   p1Starter,
@@ -8,8 +25,8 @@ export default function PvpResultScreen({
   winner,
   onRematch,
   onHome,
-}) {
-  const clampIdx = (starter, idx) => {
+}: PvpResultScreenProps) {
+  const clampIdx = (starter: PvpStarter | null, idx: number) => {
     const total = starter?.stages?.length || 1;
     const maxIdx = Math.max(0, total - 1);
     const raw = Number.isFinite(idx) ? idx : 0;
@@ -67,11 +84,24 @@ export default function PvpResultScreen({
           }}
         />
       ))}
-      {Array.from({ length: 10 }, (_, i) => (
-        <div key={`op_${i}`} style={{ position: "absolute", left: "50%", top: "40%", width: 0, height: 0, animation: `evolveSpin ${2.2 + i * 0.25}s linear ${i * 0.12}s infinite`, zIndex: 3, "--orbit": `${45 + i * 7}px` }}>
-          <div style={{ width: 4 + i % 3 * 2, height: 4 + i % 3 * 2, borderRadius: "50%", background: ECOLORS[i % ECOLORS.length], boxShadow: `0 0 ${6 + i * 2}px ${ECOLORS[i % ECOLORS.length]}`, opacity: 0.85 }} />
-        </div>
-      ))}
+      {Array.from({ length: 10 }, (_, i) => {
+        const orbitStyle = {
+          position: "absolute",
+          left: "50%",
+          top: "40%",
+          width: 0,
+          height: 0,
+          animation: `evolveSpin ${2.2 + i * 0.25}s linear ${i * 0.12}s infinite`,
+          zIndex: 3,
+          "--orbit": `${45 + i * 7}px`,
+        } as CSSProperties;
+
+        return (
+          <div key={`op_${i}`} style={orbitStyle}>
+            <div style={{ width: 4 + i % 3 * 2, height: 4 + i % 3 * 2, borderRadius: "50%", background: ECOLORS[i % ECOLORS.length], boxShadow: `0 0 ${6 + i * 2}px ${ECOLORS[i % ECOLORS.length]}`, opacity: 0.85 }} />
+          </div>
+        );
+      })}
       <div style={{ position: "relative", zIndex: 6 }}>
         <div style={{ fontSize: 16, fontWeight: 800, opacity: 0.9, marginBottom: 6, animation: "fadeSlide 0.4s ease both" }}>
           🏆 勝利者
@@ -81,7 +111,7 @@ export default function PvpResultScreen({
         </div>
         <div style={{ animation: "growIn 1.2s ease 0.15s both", marginBottom: 8 }}>
           <div style={{ animation: "evolveGlow 2s ease 1s infinite" }}>
-            <MonsterSprite svgStr={winnerStage?.svgFn?.(winnerStarter?.c1, winnerStarter?.c2)} size={180} />
+            <MonsterSprite svgStr={winnerStage?.svgFn?.(winnerStarter?.c1 || "#6366f1", winnerStarter?.c2 || "#a855f7") || ""} size={180} />
           </div>
         </div>
       </div>
@@ -90,7 +120,7 @@ export default function PvpResultScreen({
         <div style={{ position: "relative", zIndex: 6, opacity: 0.62, marginBottom: 4 }}>
           <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 2 }}>對手</div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-            <MonsterSprite svgStr={loserStage.svgFn(loserStarter?.c1, loserStarter?.c2)} size={58} />
+            <MonsterSprite svgStr={loserStage.svgFn(loserStarter?.c1 || "#64748b", loserStarter?.c2 || "#475569")} size={58} />
             <div style={{ fontSize: 13 }}>{loserStarter?.typeIcon} {loserName}</div>
           </div>
         </div>

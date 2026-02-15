@@ -1,6 +1,28 @@
+import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters';
 import { VERSION } from '../../data/constants';
+import type { StarterLite, StarterStage } from '../../types/game';
+
+type TitleStarter = StarterLite & {
+  id: string;
+  stages: StarterStage[];
+};
+
+type TitleAction = () => void;
+
+type TitleScreenProps = {
+  onStartNormal: TitleAction;
+  onStartTimed: TitleAction;
+  onStartCoop: TitleAction;
+  onStartPvp: TitleAction;
+  onLeaderboard: TitleAction;
+  onAchievements: TitleAction;
+  onEncyclopedia: TitleAction;
+  onDashboard: TitleAction;
+  onSettings: TitleAction;
+  lowPerfMode?: boolean;
+};
 
 export default function TitleScreen({
   onStartNormal,
@@ -13,9 +35,11 @@ export default function TitleScreen({
   onDashboard,
   onSettings,
   lowPerfMode = false,
-}) {
-  const row1 = STARTERS.slice(0, 3);
-  const row2 = STARTERS.slice(3);
+}: TitleScreenProps) {
+  const starters = STARTERS as TitleStarter[];
+  const row1 = starters.slice(0, 3);
+  const row2 = starters.slice(3);
+  const versionText = String(VERSION);
 
   return (
     <div className="title-screen" style={{
@@ -93,7 +117,7 @@ export default function TitleScreen({
             { icon: "📚", label: "圖鑑", fn: onEncyclopedia },
             { icon: "📊", label: "家長專區", fn: onDashboard },
             { icon: "⚙️", label: "設定", fn: onSettings, full: true },
-          ].map(b => (
+          ].map((b) => (
             <button className="title-feature-btn touch-btn" key={b.label} onClick={b.fn} style={{
               gridColumn: b.full ? "1 / -1" : "auto",
               background: "rgba(255,255,255,0.05)",
@@ -101,7 +125,7 @@ export default function TitleScreen({
               color: "white", fontSize: 13, fontWeight: 600,
               padding: "10px 0", borderRadius: 12,
               display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-            }}>{b.icon} {b.label}</button>
+            } as CSSProperties}>{b.icon} {b.label}</button>
           ))}
         </div>
       </div>
@@ -111,7 +135,7 @@ export default function TitleScreen({
         <div>設計：Chung-Han Hsieh (ch.hsieh@mx.nthu.edu.tw)</div>
         <div>Claude (Anthropic) 協助開發</div>
         <div style={{ marginTop: 2 }}>© 2025-2026 Chung-Han Hsieh. All rights reserved.</div>
-        <div style={{ fontFamily: "monospace", marginTop: 2 }}>{VERSION}</div>
+        <div style={{ fontFamily: "monospace", marginTop: 2 }}>{versionText}</div>
       </div>
     </div>
   );

@@ -10,6 +10,8 @@
  * • A `stateRef` (sr) is kept in sync with the latest render so that
  *   setTimeout chains inside safeTo() always read *current* state,
  *   eliminating the stale-closure family of bugs.
+ * • Async callbacks are guarded by an explicit gate token, invalidated on
+ *   run/screen/battle transitions to prevent stale timers from mutating state.
  * • Evolution no longer races with advance() — a `pendingEvolve` ref
  *   gates the screen transition so it only fires when the user taps.
  * • Damage math is delegated to utils/damageCalc.js (pure, testable).
@@ -74,7 +76,7 @@ export function useBattle() {
   const [enemies, setEnemies] = useState(buildNewRoster);
 
   // ──── Screen & mode ────
-  const [screen, setScreen] = useState("title");
+  const [screen, setScreenState] = useState("title");
   const [timedMode, setTimedMode] = useState(false);
 
   // ──── Player ────
@@ -153,7 +155,8 @@ export function useBattle() {
   const [sealedTurns, setSealedTurns] = useState(0);      // remaining sealed turns
 
   // ──── Internal refs ────
-  const turnRef = useRef(0);
+  const runSeedRef = useRef(0);
+  const asyncGateRef = useRef(0);
   const doEnemyTurnRef = useRef(() => {});
   const pendingEvolve = useRef(false);   // ← Bug #2 fix
   const evolveRound = useRef(0);        // round to resume after evolve screen
@@ -190,13 +193,19 @@ export function useBattle() {
     [enemy],
   );
 
-  // ──── Safe timeout (cancelled on turn/game change or unmount) ────
+  // ──── Safe timeout (cancelled on async-gate change or unmount) ────
   const activeTimers = useRef(new Set());
+  const invalidateAsyncWork = useCallback(() => {
+    asyncGateRef.current += 1;
+    activeTimers.current.forEach(clearTimeout);
+    activeTimers.current.clear();
+  }, []);
+
   const safeTo = (fn, ms) => {
-    const g = turnRef.current;
+    const g = asyncGateRef.current;
     const id = setTimeout(() => {
       activeTimers.current.delete(id);
-      if (g === turnRef.current) fn();
+      if (g === asyncGateRef.current) fn();
     }, ms);
     activeTimers.current.add(id);
   };
@@ -243,6 +252,15 @@ export function useBattle() {
     startTimer, clearTimer, pauseTimer, resumeTimer,
   } = useTimer(TIMER_SEC, onTimeout);
 
+  const setScreen = useCallback((nextScreen) => {
+    const prevScreen = sr.current.screen;
+    if (prevScreen === "battle" && nextScreen !== "battle") {
+      clearTimer();
+      invalidateAsyncWork();
+    }
+    setScreenState(nextScreen);
+  }, [clearTimer, invalidateAsyncWork]);
+
   const [gamePaused, setGamePaused] = useState(false);
 
   const togglePause = useCallback(() => {
@@ -259,6 +277,8 @@ export function useBattle() {
 
   // --- Start a battle against enemies[idx], optionally from a fresh roster ---
   const startBattle = (idx, roster) => {
+    invalidateAsyncWork();
+    clearTimer();
     const list = roster || enemies;
     const e = list[idx];
     setEnemy(e);
@@ -289,8 +309,9 @@ export function useBattle() {
 
   // --- Full game reset (starterOverride used on first game when setStarter hasn't rendered yet) ---
   const startGame = (starterOverride) => {
-    turnRef.current++;
-    reseed(turnRef.current * 2654435761);
+    invalidateAsyncWork();
+    runSeedRef.current += 1;
+    reseed(runSeedRef.current * 2654435761);
     clearTimer();
     sessionClosedRef.current = false;
     sessionStartRef.current = Date.now();

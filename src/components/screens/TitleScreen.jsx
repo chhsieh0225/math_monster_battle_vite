@@ -5,7 +5,8 @@ import { VERSION } from '../../data/constants';
 export default function TitleScreen({
   onStartNormal,
   onStartTimed,
-  onStartDouble,
+  onStartCoop,
+  onStartPvp,
   onLeaderboard,
   onAchievements,
   onEncyclopedia,
@@ -68,12 +69,20 @@ export default function TitleScreen({
             boxShadow: "0 4px 20px rgba(239,68,68,0.3)",
           }}>⏱️ 計時模式</button>
         </div>
-        <button className="title-action-btn touch-btn" onClick={onStartDouble} style={{
-          width: "100%", background: "linear-gradient(135deg,#0ea5e9,#22d3ee)",
-          border: "none", color: "white", fontSize: 15, fontWeight: 800,
-          padding: "12px 0", borderRadius: 14,
-          boxShadow: "0 4px 20px rgba(14,165,233,0.28)",
-        }}>⚔️ 雙人模式 (2v2)</button>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, width: "100%" }}>
+          <button className="title-action-btn touch-btn" onClick={onStartCoop} style={{
+            width: "100%", background: "linear-gradient(135deg,#0ea5e9,#22d3ee)",
+            border: "none", color: "white", fontSize: 14, fontWeight: 800,
+            padding: "12px 0", borderRadius: 14,
+            boxShadow: "0 4px 20px rgba(14,165,233,0.28)",
+          }}>🤝 雙人合作</button>
+          <button className="title-action-btn touch-btn" onClick={onStartPvp} style={{
+            width: "100%", background: "linear-gradient(135deg,#ec4899,#f43f5e)",
+            border: "none", color: "white", fontSize: 14, fontWeight: 800,
+            padding: "12px 0", borderRadius: 14,
+            boxShadow: "0 4px 20px rgba(244,63,94,0.25)",
+          }}>⚔️ 雙人對戰</button>
+        </div>
         <div style={{ fontSize: 11, opacity: 0.3, marginTop: -4 }}>計時模式：5 秒內回答</div>
 
         {/* Feature grid */}

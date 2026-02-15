@@ -29,7 +29,9 @@ import { STARTERS } from '../data/starters';
 
 import { genQ } from '../utils/questionGenerator';
 import {
-  movePower, bestEffectiveness,
+  calcAttackDamage,
+  movePower,
+  bestEffectiveness,
 } from '../utils/damageCalc';
 import { useTimer } from './useTimer';
 import { useAchievements } from './useAchievements';
@@ -76,6 +78,39 @@ function pickPartnerStarter(mainStarter, pickIndex) {
   return pool[pickIndex(pool.length)];
 }
 
+const TYPE_TO_SCENE = {
+  fire: "fire",
+  ghost: "ghost",
+  steel: "steel",
+  dark: "dark",
+  grass: "grass",
+  water: "grass",
+  electric: "steel",
+  light: "grass",
+};
+
+function createPvpEnemyFromStarter(starter) {
+  if (!starter) return null;
+  return {
+    id: `pvp_${starter.id}`,
+    name: starter.name,
+    maxHp: PLAYER_MAX_HP,
+    hp: PLAYER_MAX_HP,
+    atk: 12,
+    lvl: 1,
+    mType: starter.type,
+    sceneMType: TYPE_TO_SCENE[starter.type] || "grass",
+    typeIcon: starter.typeIcon,
+    typeName: starter.typeName,
+    c1: starter.c1,
+    c2: starter.c2,
+    trait: "normal",
+    traitName: "玩家",
+    drops: ["🏁"],
+    svgFn: starter.stages[0].svgFn,
+  };
+}
+
 // ═══════════════════════════════════════════════════════════════════
 export function useBattle() {
   // ──── Sub-hooks ────
@@ -92,6 +127,10 @@ export function useBattle() {
   const [screen, setScreenState] = useState("title");
   const [timedMode, setTimedMode] = useState(false);
   const [battleMode, setBattleMode] = useState("single");
+  const [pvpStarter2, setPvpStarter2] = useState(null);
+  const [pvpHp2, setPvpHp2] = useState(PLAYER_MAX_HP);
+  const [pvpTurn, setPvpTurn] = useState("p1");
+  const [pvpWinner, setPvpWinner] = useState(null);
 
   // ──── Player ────
   const [starter, setStarter] = useState(null);
@@ -197,6 +236,7 @@ export function useBattle() {
     screen, timedMode, battleMode, diffLevel,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
     tC, tW, maxStreak, defeated,
+    pvpStarter2, pvpHp2, pvpTurn, pvpWinner,
   };
   useLayoutEffect(() => { sr.current = _srSnapshot; });
 
@@ -238,6 +278,15 @@ export function useBattle() {
   // ═══════════════════════════════════════════════════════════════
   const onTimeout = () => {
     const s = sr.current;
+    if (s.battleMode === "pvp") {
+      setAnswered(true);
+      setFb({ correct: false, answer: s.q?.answer, steps: s.q?.steps || [] });
+      setTW(w => w + 1);
+      setBText(`⏰ ${s.pvpTurn === "p1" ? "玩家1" : "玩家2"} 超時，回合交換！`);
+      setPvpTurn((t) => (t === "p1" ? "p2" : "p1"));
+      setPhase("text");
+      return;
+    }
     setAnswered(true);
     setFb({ correct: false, answer: s.q?.answer, steps: s.q?.steps || [] });
     sfx.play("timeout");
@@ -308,7 +357,8 @@ export function useBattle() {
       return;
     }
     const mode = sr.current.battleMode || battleMode;
-    const sub = mode === "double" ? (list[idx + 1] || null) : null;
+    const isTeamMode = mode === "double" || mode === "coop";
+    const sub = isTeamMode ? (list[idx + 1] || null) : null;
     dispatchBattle({ type: "start_battle", enemy: e, enemySub: sub, round: idx });
     frozenR.current = false;
     updateEnc(e); // ← encyclopedia: mark encountered
@@ -330,7 +380,7 @@ export function useBattle() {
   };
 
   // --- Full game reset (starterOverride used on first game when setStarter hasn't rendered yet) ---
-  const startGame = (starterOverride, modeOverride = null) => {
+  const startGame = (starterOverride, modeOverride = null, allyOverride = null) => {
     invalidateAsyncWork();
     runSeedRef.current += 1;
     reseed(runSeedRef.current * 2654435761);
@@ -340,16 +390,56 @@ export function useBattle() {
     eventSessionIdRef.current = createEventSessionId();
     // Regenerate roster so slime variants are re-randomised each game
     const mode = modeOverride || sr.current.battleMode || battleMode;
+    const leader = starterOverride || sr.current.starter;
+    const rival = allyOverride || sr.current.pvpStarter2 || pvpStarter2 || pickPartnerStarter(leader, pickIndex);
+
+    if (mode === "pvp") {
+      setEnemies([]);
+      dispatchBattle({
+        type: "reset_run",
+        patch: {
+          diffLevel: 2,
+          allySub: null,
+          pHpSub: 0,
+          pHp: PLAYER_MAX_HP,
+        },
+      });
+      setPvpStarter2(rival);
+      setPvpHp2(PLAYER_MAX_HP);
+      setPvpTurn("p1");
+      setPvpWinner(null);
+      setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
+      frozenR.current = false;
+      abilityModelRef.current = createAbilityModel(2);
+      pendingEvolve.current = false;
+      appendEvent("starter_selected", {
+        starterId: leader?.id || null,
+        starterName: leader?.name || null,
+        starterType: leader?.type || null,
+        timedMode: false,
+      }, { sessionId: eventSessionIdRef.current });
+      initSession(leader, false);
+      const enemyPvp = createPvpEnemyFromStarter(rival);
+      dispatchBattle({ type: "start_battle", enemy: enemyPvp, enemySub: null, round: 0 });
+      setPhase("text");
+      setBText(`⚔️ 雙人對戰開始！${leader?.name || "玩家1"} vs ${rival?.name || "玩家2"}，輪到 ${leader?.name || "玩家1"}！`);
+      setScreen("battle");
+      effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim });
+      return;
+    }
+
     const newRoster = buildNewRoster(mode);
     setEnemies(newRoster);
-    const leader = starterOverride || sr.current.starter;
-    const partner = mode === "double" ? pickPartnerStarter(leader, pickIndex) : null;
+    setPvpWinner(null);
+    const isCoop = mode === "coop" || mode === "double";
+    const partner = isCoop ? (allyOverride || pickPartnerStarter(leader, pickIndex)) : null;
     dispatchBattle({
       type: "reset_run",
       patch: {
         diffLevel: 2,
         allySub: partner,
         pHpSub: partner ? PLAYER_MAX_HP : 0,
+        pHp: PLAYER_MAX_HP,
       },
     });
     setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
@@ -460,7 +550,7 @@ export function useBattle() {
 
   const runAllySupportTurn = ({ delayMs = 850, onDone } = {}) => {
     const s = sr.current;
-    if (s.battleMode !== "double" || !s.allySub || (s.pHpSub || 0) <= 0 || !s.enemy) return false;
+    if ((s.battleMode !== "double" && s.battleMode !== "coop") || !s.allySub || (s.pHpSub || 0) <= 0 || !s.enemy) return false;
     if (!chance(0.45)) return false;
 
     safeTo(() => {
@@ -537,12 +627,17 @@ export function useBattle() {
 
   // --- Player selects a move ---
   const selectMove = (i) => {
-    if (phase !== "menu" || !starter) return;
+    if (phase !== "menu") return;
+    const s = sr.current;
+    const activeStarter = s.battleMode === "pvp"
+      ? (s.pvpTurn === "p1" ? s.starter : s.pvpStarter2)
+      : s.starter;
+    if (!activeStarter) return;
     // Boss: sealed move check
-    if (sr.current.sealedMove === i) return; // silently blocked, UI shows lock
+    if (s.battleMode !== "pvp" && s.sealedMove === i) return; // silently blocked, UI shows lock
     sfx.play("select");
     setSelIdx(i);
-    const move = starter.moves[i];
+    const move = activeStarter.moves[i];
     const lv = _getMoveDiffLevel(move);
     const diffMod = DIFF_MODS[lv] ?? DIFF_MODS[2];
     setDiffLevel(lv);
@@ -596,6 +691,57 @@ export function useBattle() {
     setAnswered(true);
     clearTimer();
     const s = sr.current;
+    if (s.battleMode === "pvp") {
+      const attacker = s.pvpTurn === "p1" ? s.starter : s.pvpStarter2;
+      const defender = s.pvpTurn === "p1" ? s.pvpStarter2 : s.starter;
+      if (!attacker || !defender || s.selIdx == null) return;
+      const move = attacker.moves[s.selIdx];
+      const correct = choice === s.q.answer;
+      setFb({ correct, answer: s.q.answer, steps: s.q.steps || [] });
+      if (correct) setTC((c) => c + 1);
+      else setTW((w) => w + 1);
+      if (correct) {
+        const basePow = movePower(move, 1, s.selIdx);
+        const eff = bestEffectiveness(move, { mType: defender.type });
+        const dmg = calcAttackDamage({
+          basePow,
+          streak: 0,
+          stageBonus: 0,
+          effMult: eff,
+        });
+        if (s.pvpTurn === "p1") {
+          const nh = Math.max(0, s.pvpHp2 - dmg);
+          setPvpHp2(nh);
+          setEHp(nh);
+          setEAnim("enemyHit 0.45s ease");
+          addD(`-${dmg}`, 140, 55, "#ef4444");
+          safeTo(() => setEAnim(""), 500);
+          if (nh <= 0) {
+            setPvpWinner("p1");
+            setScreen("pvp_result");
+            return;
+          }
+        } else {
+          const nh = Math.max(0, s.pHp - dmg);
+          setPHp(nh);
+          setPAnim("playerHit 0.45s ease");
+          addD(`-${dmg}`, 60, 170, "#ef4444");
+          safeTo(() => setPAnim(""), 500);
+          if (nh <= 0) {
+            setPvpWinner("p2");
+            setScreen("pvp_result");
+            return;
+          }
+        }
+        setBText(`✅ ${attacker.name} 的 ${move.name} 命中！`);
+      } else {
+        setBText(`❌ ${attacker.name} 答錯，攻擊落空！`);
+      }
+      setPvpTurn((t) => (t === "p1" ? "p2" : "p1"));
+      setPhase("text");
+      return;
+    }
+
     const move = starter.moves[s.selIdx];
     const correct = choice === s.q.answer;
 
@@ -666,7 +812,7 @@ export function useBattle() {
   // --- Advance from text / victory phase ---
   const continueFromVictory = () => {
     const s = sr.current;
-    if (s.battleMode === "double" && s.enemySub) {
+    if ((s.battleMode === "double" || s.battleMode === "coop") && s.enemySub) {
       setScreen("battle");
       dispatchBattle({ type: "promote_enemy_sub" });
       setBText(`💥 ${s.enemySub.name} 補位上場！`);
@@ -678,7 +824,7 @@ export function useBattle() {
       _finishGame();
     } else {
       setPHp(h => Math.min(h + 10, PLAYER_MAX_HP));
-      if (s.battleMode === "double" && s.allySub && (s.pHpSub || 0) > 0) {
+      if ((s.battleMode === "double" || s.battleMode === "coop") && s.allySub && (s.pHpSub || 0) > 0) {
         setPHpSub(h => Math.min(h + 8, PLAYER_MAX_HP));
       }
       startBattle(nx);
@@ -739,6 +885,7 @@ export function useBattle() {
     // ── State (read by render shell) ──
     screen, timedMode, battleMode, enemies,
     starter, allySub, pHp, pHpSub, pExp, pLvl, pStg,
+    pvpStarter2, pvpHp2, pvpTurn, pvpWinner,
     round, enemy, eHp, enemySub, eHpSub,
     streak, passiveCount, charge, tC, tW, defeated, maxStreak,
     mHits, mLvls, mLvlUp,
@@ -753,7 +900,7 @@ export function useBattle() {
     achUnlocked, achPopup, encData, dismissAch,
 
     // ── Actions ──
-    setTimedMode, setBattleMode, setScreen, setStarter,
+    setTimedMode, setBattleMode, setScreen, setStarter, setPvpStarter2,
     startGame, selectMove, onAns, advance, continueAfterEvolve,
     quitGame, togglePause,
 

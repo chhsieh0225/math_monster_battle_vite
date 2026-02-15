@@ -95,9 +95,10 @@ export function runEnemyTurn({
           }
           const target = resolvePlayerTarget(s3);
           const targetName = target === "sub" ? (s3.allySub?.name || "副將") : s3.starter.name;
+          const defenderType = target === "sub" ? (s3.allySub?.type || s3.starter.type) : s3.starter.type;
           const { dmg } = resolveEnemyAssistStrike({
             enemySub: s3.enemySub,
-            starterType: s3.starter.type,
+            starterType: defenderType,
           });
           const nh = applyDamageToTarget({
             s: s3,
@@ -145,6 +146,7 @@ export function runEnemyTurn({
         const s2 = sr.current; // re-read after delay
         const target = resolvePlayerTarget(s2);
         const targetName = target === "sub" ? (s2.allySub?.name || "副將") : s2.starter.name;
+        const defenderType = target === "sub" ? (s2.allySub?.type || s2.starter.type) : s2.starter.type;
         if (target === "main" && s2.specDef) {
           const st = s2.starter.type;
           setSpecDef(false);
@@ -222,7 +224,7 @@ export function runEnemyTurn({
         } = resolveEnemyPrimaryStrike({
           enemy: s2.enemy,
           enemyHp: s2.eHp,
-          starterType: s2.starter.type,
+          starterType: defenderType,
           bossPhase: bp,
           chance,
         });
@@ -280,7 +282,8 @@ export function runEnemyTurn({
                 const s3 = sr.current;
                 const target2 = resolvePlayerTarget(s3);
                 const target2Name = target2 === "sub" ? (s3.allySub?.name || "副將") : s3.starter.name;
-                const dmg2 = calcEnemyDamage(scaledAtk, getEff(s3.enemy.mType, s3.starter.type));
+                const defenderType2 = target2 === "sub" ? (s3.allySub?.type || s3.starter.type) : s3.starter.type;
+                const dmg2 = calcEnemyDamage(scaledAtk, getEff(s3.enemy.mType, defenderType2));
                 const nh2 = applyDamageToTarget({
                   s: s3,
                   target: target2,

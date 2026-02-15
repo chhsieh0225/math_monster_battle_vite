@@ -39,6 +39,7 @@ import AchievementScreen from './components/screens/AchievementScreen';
 import EncyclopediaScreen from './components/screens/EncyclopediaScreen';
 import DashboardScreen from './components/screens/DashboardScreen';
 import SettingsScreen from './components/screens/SettingsScreen';
+import PvpResultScreen from './components/screens/PvpResultScreen';
 import AchievementPopup from './components/ui/AchievementPopup';
 import { ACH_MAP } from './data/achievements';
 
@@ -225,7 +226,8 @@ function App() {
     <TitleScreen
       onStartNormal={() => { B.setTimedMode(false); B.setBattleMode("single"); B.setScreen("selection"); }}
       onStartTimed={() => { B.setTimedMode(true); B.setBattleMode("single"); B.setScreen("selection"); }}
-      onStartDouble={() => { B.setTimedMode(false); B.setBattleMode("double"); B.setScreen("selection"); }}
+      onStartCoop={() => { B.setTimedMode(false); B.setBattleMode("coop"); B.setScreen("selection"); }}
+      onStartPvp={() => { B.setTimedMode(false); B.setBattleMode("pvp"); B.setScreen("selection"); }}
       onLeaderboard={() => B.setScreen("leaderboard")}
       onAchievements={() => B.setScreen("achievements")}
       onEncyclopedia={() => B.setScreen("encyclopedia")}
@@ -258,7 +260,35 @@ function App() {
     <LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen("title")} />
   );
   if (B.screen === "selection") return (
-    <SelectionScreen onSelect={(s) => { B.sfx.init(); B.setStarter(s); B.startGame(s, B.battleMode); }} onBack={() => B.setScreen("title")} />
+    <SelectionScreen
+      mode={B.battleMode}
+      onSelect={(payload) => {
+        B.sfx.init();
+        if (B.battleMode === "coop") {
+          B.setStarter(payload.p1);
+          B.startGame(payload.p1, "coop", payload.p2);
+          return;
+        }
+        if (B.battleMode === "pvp") {
+          B.setStarter(payload.p1);
+          B.setPvpStarter2(payload.p2);
+          B.startGame(payload.p1, "pvp", payload.p2);
+          return;
+        }
+        B.setStarter(payload);
+        B.startGame(payload, B.battleMode);
+      }}
+      onBack={() => B.setScreen("title")}
+    />
+  );
+  if (B.screen === "pvp_result") return (
+    <PvpResultScreen
+      p1Starter={B.starter}
+      p2Starter={B.pvpStarter2}
+      winner={B.pvpWinner}
+      onRematch={() => B.starter && B.startGame(B.starter, "pvp")}
+      onHome={() => B.setScreen("title")}
+    />
   );
   if (B.screen === "evolve") return (
     <EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={B.continueAfterEvolve} />
@@ -283,6 +313,9 @@ function App() {
 
   // ─── Battle screen locals ───
   const st = B.starter.stages[B.pStg];
+  const activeStarter = B.battleMode === "pvp"
+    ? (B.pvpTurn === "p1" ? B.starter : B.pvpStarter2)
+    : B.starter;
   const eSvg = B.enemy.svgFn();
   const eSubSvg = B.enemySub ? B.enemySub.svgFn() : null;
   const allyStage = B.allySub ? B.allySub.stages[0] : null;
@@ -331,7 +364,7 @@ function App() {
       {showHeavyFx && B.parts.map(p => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} seed={p.id} onDone={() => B.rmP(p.id)} />)}
 
       {/* Move level-up toast */}
-      {B.mLvlUp !== null && B.starter && <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: "0 4px 16px rgba(245,158,11,0.4)", whiteSpace: "nowrap" }}>{B.starter.moves[B.mLvlUp].icon} {B.starter.moves[B.mLvlUp].name} 升級到 Lv.{B.mLvls[B.mLvlUp]}！威力 → {B.getPow(B.mLvlUp)}</div>}
+      {B.battleMode !== "pvp" && B.mLvlUp !== null && B.starter && <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: "0 4px 16px rgba(245,158,11,0.4)", whiteSpace: "nowrap" }}>{B.starter.moves[B.mLvlUp].icon} {B.starter.moves[B.mLvlUp].name} 升級到 Lv.{B.mLvls[B.mLvlUp]}！威力 → {B.getPow(B.mLvlUp)}</div>}
       {/* Achievement popup */}
       {B.achPopup && ACH_MAP[B.achPopup] && <AchievementPopup achievement={ACH_MAP[B.achPopup]} onDone={B.dismissAch} />}
 
@@ -457,28 +490,41 @@ function App() {
       {/* ═══ Bottom panel ═══ */}
       <div className="battle-panel" style={{ background: "linear-gradient(to top,#0f172a,#1e293b)", borderTop: "3px solid rgba(255,255,255,0.1)", flexShrink: 0, minHeight: B.phase === "question" ? 210 : 170, position: "relative" }}>
         {/* Move menu */}
-        {B.phase === "menu" && B.starter && <div style={{ padding: 10 }}><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
-          {B.starter.moves.map((m, i) => {
-            const sealed = B.sealedMove === i;
-            const locked = (m.risky && !B.chargeReady) || sealed;
-            const lv = B.mLvls[i]; const pw = B.getPow(i);
-            const atCap = lv >= MAX_MOVE_LVL || m.basePower + lv * m.growth > POWER_CAPS[i];
-            const eff = B.dualEff(m);
-            return <button className="battle-menu-btn" key={i} onClick={() => !locked && B.selectMove(i)} style={{ background: locked ? "rgba(255,255,255,0.03)" : eff > 1 ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))` : eff < 1 ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))` : m.bg, border: `2px solid ${sealed ? "rgba(168,85,247,0.4)" : locked ? "rgba(255,255,255,0.08)" : eff > 1 ? "#22c55e66" : m.color + "44"}`, borderRadius: 12, padding: "10px 10px", textAlign: "left", opacity: locked ? 0.4 : 1, cursor: locked ? "default" : "pointer", transition: "all 0.2s", animation: `fadeSlide 0.3s ease ${i * 0.05}s both`, position: "relative", overflow: "hidden" }}>
-              {sealed && <div style={{ position: "absolute", inset: 0, background: "rgba(168,85,247,0.1)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2, borderRadius: 12 }}><span style={{ fontSize: 20 }}>🔮封印中 ({B.sealedTurns})</span></div>}
-              {lv > 1 && <div style={{ position: "absolute", top: 4, right: eff !== 1 ? 44 : 6, background: atCap ? "linear-gradient(135deg,#f59e0b,#ef4444)" : m.color, color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8, fontFamily: "'Press Start 2P',monospace" }}>Lv{lv}</div>}
-              {eff > 1 && <div style={{ position: "absolute", top: 4, right: 6, background: "#22c55e", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8 }}>效果↑</div>}
-              {eff < 1 && <div style={{ position: "absolute", top: 4, right: 6, background: "#64748b", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8 }}>效果↓</div>}
-              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}><span style={{ fontSize: 20 }}>{m.icon}</span><span className="move-name" style={{ fontSize: 15, fontWeight: 700, color: locked ? "#64748b" : m.color }}>{m.name}</span></div>
-              <div style={{ fontSize: 12, color: locked ? "#475569" : "#64748b" }}>{m.desc} · 威力 <b style={{ color: lv > 1 ? m.color : "inherit" }}>{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && !B.chargeReady && " 🔒"}{m.risky && B.chargeReady && " ⚡蓄力完成！"}{!m.risky && !atCap && lv > 1 && " ↑"}{atCap && " ✦MAX"}</div>
-              {!m.risky && !atCap && <div style={{ height: 3, background: "rgba(0,0,0,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}><div style={{ width: `${(B.mHits[i] % (HITS_PER_LVL * B.mLvls[i])) / (HITS_PER_LVL * B.mLvls[i]) * 100}%`, height: "100%", background: m.color, borderRadius: 2, transition: "width 0.3s" }} /></div>}
-            </button>;
-          })}
-        </div><div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}><button className="battle-util-btn" onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button><button className="battle-util-btn" onClick={() => openSettings("battle")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⚙️ 設定</button><button className="battle-util-btn" onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button></div></div>}
+        {B.phase === "menu" && activeStarter && <div style={{ padding: 10 }}>
+          {B.battleMode === "pvp" && (
+            <div style={{ marginBottom: 8, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.75)" }}>
+              {B.pvpTurn === "p1" ? "🔵 玩家1 回合" : "🔴 玩家2 回合"} · {activeStarter.typeIcon} {activeStarter.name}
+            </div>
+          )}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
+            {activeStarter.moves.map((m, i) => {
+              const sealed = B.battleMode === "pvp" ? false : B.sealedMove === i;
+              const locked = B.battleMode === "pvp" ? false : ((m.risky && !B.chargeReady) || sealed);
+              const lv = B.mLvls[i];
+              const pw = B.battleMode === "pvp" ? m.basePower : B.getPow(i);
+              const atCap = lv >= MAX_MOVE_LVL || m.basePower + lv * m.growth > POWER_CAPS[i];
+              const eff = B.battleMode === "pvp" ? 1 : B.dualEff(m);
+              return <button className="battle-menu-btn" key={i} onClick={() => !locked && B.selectMove(i)} style={{ background: locked ? "rgba(255,255,255,0.03)" : eff > 1 ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))` : eff < 1 ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))` : m.bg, border: `2px solid ${sealed ? "rgba(168,85,247,0.4)" : locked ? "rgba(255,255,255,0.08)" : eff > 1 ? "#22c55e66" : m.color + "44"}`, borderRadius: 12, padding: "10px 10px", textAlign: "left", opacity: locked ? 0.4 : 1, cursor: locked ? "default" : "pointer", transition: "all 0.2s", animation: `fadeSlide 0.3s ease ${i * 0.05}s both`, position: "relative", overflow: "hidden" }}>
+                {sealed && <div style={{ position: "absolute", inset: 0, background: "rgba(168,85,247,0.1)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2, borderRadius: 12 }}><span style={{ fontSize: 20 }}>🔮封印中 ({B.sealedTurns})</span></div>}
+                {B.battleMode !== "pvp" && lv > 1 && <div style={{ position: "absolute", top: 4, right: eff !== 1 ? 44 : 6, background: atCap ? "linear-gradient(135deg,#f59e0b,#ef4444)" : m.color, color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8, fontFamily: "'Press Start 2P',monospace" }}>Lv{lv}</div>}
+                {eff > 1 && <div style={{ position: "absolute", top: 4, right: 6, background: "#22c55e", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8 }}>效果↑</div>}
+                {eff < 1 && <div style={{ position: "absolute", top: 4, right: 6, background: "#64748b", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8 }}>效果↓</div>}
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}><span style={{ fontSize: 20 }}>{m.icon}</span><span className="move-name" style={{ fontSize: 15, fontWeight: 700, color: locked ? "#64748b" : m.color }}>{m.name}</span></div>
+                <div style={{ fontSize: 12, color: locked ? "#475569" : "#64748b" }}>{m.desc} · 威力 <b style={{ color: lv > 1 ? m.color : "inherit" }}>{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && !B.chargeReady && B.battleMode !== "pvp" && " 🔒"}{m.risky && B.chargeReady && B.battleMode !== "pvp" && " ⚡蓄力完成！"}{B.battleMode !== "pvp" && !m.risky && !atCap && lv > 1 && " ↑"}{B.battleMode !== "pvp" && atCap && " ✦MAX"}</div>
+                {B.battleMode !== "pvp" && !m.risky && !atCap && <div style={{ height: 3, background: "rgba(0,0,0,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}><div style={{ width: `${(B.mHits[i] % (HITS_PER_LVL * B.mLvls[i])) / (HITS_PER_LVL * B.mLvls[i]) * 100}%`, height: "100%", background: m.color, borderRadius: 2, transition: "width 0.3s" }} /></div>}
+              </button>;
+            })}
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}>
+            <button className="battle-util-btn" onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ 暫停</button>
+            <button className="battle-util-btn" onClick={() => openSettings("battle")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⚙️ 設定</button>
+            <button className="battle-util-btn" onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ 逃跑</button>
+          </div>
+        </div>}
 
         {/* Question panel */}
-        {B.phase === "question" && B.q && <div style={{ padding: "10px 14px", animation: "fadeSlide 0.25s ease" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{B.starter.moves[B.selIdx].icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{B.starter.moves[B.selIdx].name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{B.timedMode ? "⏱️ 限時回答！" : "回答正確才能命中"}</span></div>
+        {B.phase === "question" && B.q && activeStarter && <div style={{ padding: "10px 14px", animation: "fadeSlide 0.25s ease" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{activeStarter.moves[B.selIdx].icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{activeStarter.moves[B.selIdx].name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{B.timedMode ? "⏱️ 限時回答！" : "回答正確才能命中"}</span></div>
           <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 16px", textAlign: "center", marginBottom: 8, border: "1px solid rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
             {B.timedMode && !B.answered && (
               <QuestionTimerHud

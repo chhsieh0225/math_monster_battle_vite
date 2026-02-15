@@ -12,12 +12,48 @@ const DESCS = {
   lion: { desc: "來自金色草原的勇敢夥伴。專精求未知數，HP越低攻擊越強的高風險高報酬戰士。", passive: "🦁 勇氣之心：HP越低傷害加成越高（最高+50%），越危險越強大", specDef: "✨ 獅王咆哮：8連擊時擋下攻擊並對敵人造成15點固定傷害" },
 };
 
-export default function SelectionScreen({ onSelect, onBack }) {
+export default function SelectionScreen({ mode = "single", onSelect, onBack }) {
+  const isDual = mode === "coop" || mode === "pvp";
   const [picked, setPicked] = useState(null);
+  const [picked1, setPicked1] = useState(null);
+  const [picked2, setPicked2] = useState(null);
+  const [focusSlot, setFocusSlot] = useState("p1");
 
   const handlePick = (s) => {
-    if (picked?.id === s.id) { setPicked(null); return; }
-    setPicked(s);
+    if (!isDual) {
+      if (picked?.id === s.id) { setPicked(null); return; }
+      setPicked(s);
+      return;
+    }
+
+    if (focusSlot === "p1") {
+      if (picked2?.id === s.id) return;
+      if (picked1?.id === s.id) {
+        setPicked1(null);
+        setFocusSlot("p1");
+        return;
+      }
+      setPicked1(s);
+      if (!picked2) setFocusSlot("p2");
+      return;
+    }
+
+    if (picked1?.id === s.id) return;
+    if (picked2?.id === s.id) {
+      setPicked2(null);
+      return;
+    }
+    setPicked2(s);
+  };
+
+  const confirmSingle = () => {
+    if (!picked) return;
+    onSelect(picked);
+  };
+
+  const confirmDual = () => {
+    if (!picked1 || !picked2) return;
+    onSelect({ p1: picked1, p2: picked2 });
   };
 
   return (
@@ -26,22 +62,59 @@ export default function SelectionScreen({ onSelect, onBack }) {
       <div style={{ padding: "12px 16px 6px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
         <button className="back-touch-btn" onClick={onBack} style={backBtn}>←</button>
         <div>
-          <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: 1 }}>選擇你的夥伴！</div>
-          <div style={{ fontSize: 10, opacity: 0.4, marginTop: 1 }}>點選角色查看詳細資訊</div>
+          <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: 1 }}>
+            {isDual ? (mode === "pvp" ? "選擇雙方角色！" : "選擇雙人夥伴！") : "選擇你的夥伴！"}
+          </div>
+          <div style={{ fontSize: 10, opacity: 0.4, marginTop: 1 }}>
+            {isDual ? "每個角色只能被一位玩家選取" : "點選角色查看詳細資訊"}
+          </div>
         </div>
       </div>
+
+      {isDual && (
+        <div style={{ padding: "0 16px 6px", display: "flex", gap: 8, flexShrink: 0 }}>
+          <button className="touch-btn" onClick={() => setFocusSlot("p1")} style={{
+            flex: 1,
+            borderRadius: 10,
+            border: focusSlot === "p1" ? "1px solid #60a5fa" : "1px solid rgba(255,255,255,0.12)",
+            background: focusSlot === "p1" ? "rgba(96,165,250,0.2)" : "rgba(255,255,255,0.04)",
+            color: "white",
+            fontSize: 12,
+            fontWeight: 700,
+            padding: "6px 8px",
+          }}>
+            玩家1：{picked1 ? `${picked1.typeIcon}${picked1.name}` : "未選"}
+          </button>
+          <button className="touch-btn" onClick={() => setFocusSlot("p2")} style={{
+            flex: 1,
+            borderRadius: 10,
+            border: focusSlot === "p2" ? "1px solid #f472b6" : "1px solid rgba(255,255,255,0.12)",
+            background: focusSlot === "p2" ? "rgba(244,114,182,0.2)" : "rgba(255,255,255,0.04)",
+            color: "white",
+            fontSize: 12,
+            fontWeight: 700,
+            padding: "6px 8px",
+          }}>
+            玩家2：{picked2 ? `${picked2.typeIcon}${picked2.name}` : "未選"}
+          </button>
+        </div>
+      )}
 
       {/* Starter cards */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "0 12px 8px", gap: 5, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         {STARTERS.map((s) => {
-          const sel = picked?.id === s.id;
+          const isP1 = picked1?.id === s.id;
+          const isP2 = picked2?.id === s.id;
+          const sel = isDual ? (isP1 || isP2) : picked?.id === s.id;
           const info = DESCS[s.id];
           return (
             <button className="selection-card-btn" key={s.id} onClick={() => handlePick(s)} style={{
               background: sel
                 ? `linear-gradient(135deg, ${s.c1}44, ${s.c2}33)`
                 : `linear-gradient(135deg, ${s.c1}18, ${s.c2}10)`,
-              border: sel ? `2px solid ${s.c1}` : `1px solid ${s.c1}22`,
+              border: isDual
+                ? isP1 ? "2px solid #60a5fa" : isP2 ? "2px solid #f472b6" : `1px solid ${s.c1}22`
+                : sel ? `2px solid ${s.c1}` : `1px solid ${s.c1}22`,
               borderRadius: 12, padding: sel ? "10px 12px" : "8px 12px",
               display: "flex", flexDirection: "column", gap: 0,
               cursor: "pointer", textAlign: "left", color: "white",
@@ -60,6 +133,8 @@ export default function SelectionScreen({ onSelect, onBack }) {
                   <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>
                     {s.typeIcon} {s.name}
                     <span style={{ fontSize: 10, opacity: 0.5, marginLeft: 5 }}>{s.typeName}系</span>
+                    {isDual && isP1 && <span style={{ fontSize: 10, marginLeft: 6, padding: "1px 6px", borderRadius: 8, background: "rgba(96,165,250,0.2)", border: "1px solid rgba(96,165,250,0.5)" }}>玩家1</span>}
+                    {isDual && isP2 && <span style={{ fontSize: 10, marginLeft: 6, padding: "1px 6px", borderRadius: 8, background: "rgba(244,114,182,0.2)", border: "1px solid rgba(244,114,182,0.5)" }}>玩家2</span>}
                   </div>
                   <div style={{ fontSize: 10, opacity: 0.5, lineHeight: 1.4 }}>
                     {s.moves.slice(0, 3).map((m, j) => (
@@ -105,9 +180,9 @@ export default function SelectionScreen({ onSelect, onBack }) {
       </div>
 
       {/* Confirm button */}
-      {picked && (
+      {!isDual && picked && (
         <div style={{ padding: "6px 14px 14px", animation: "fadeIn 0.3s ease", flexShrink: 0 }}>
-          <button className="selection-confirm-btn touch-btn" onClick={() => onSelect(picked)} style={{
+          <button className="selection-confirm-btn touch-btn" onClick={confirmSingle} style={{
             width: "100%", padding: "13px 0",
             background: `linear-gradient(135deg, ${picked.c1}, ${picked.c2})`,
             border: "none", borderRadius: 14,
@@ -116,6 +191,26 @@ export default function SelectionScreen({ onSelect, onBack }) {
             boxShadow: `0 4px 20px ${picked.c1}66`,
           }}>
             選擇 {picked.typeIcon} {picked.name} 出發！
+          </button>
+        </div>
+      )}
+      {isDual && picked1 && picked2 && (
+        <div style={{ padding: "6px 14px 14px", animation: "fadeIn 0.3s ease", flexShrink: 0 }}>
+          <button className="selection-confirm-btn touch-btn" onClick={confirmDual} style={{
+            width: "100%", padding: "13px 0",
+            background: mode === "pvp"
+              ? "linear-gradient(135deg,#ec4899,#f43f5e)"
+              : "linear-gradient(135deg,#0ea5e9,#22d3ee)",
+            border: "none", borderRadius: 14,
+            color: "white", fontSize: 16, fontWeight: 800,
+            letterSpacing: 1, cursor: "pointer",
+            boxShadow: mode === "pvp"
+              ? "0 4px 20px rgba(244,63,94,0.32)"
+              : "0 4px 20px rgba(14,165,233,0.32)",
+          }}>
+            {mode === "pvp"
+              ? `玩家1 ${picked1.typeIcon}${picked1.name} vs 玩家2 ${picked2.typeIcon}${picked2.name}`
+              : `雙人出發：${picked1.typeIcon}${picked1.name} + ${picked2.typeIcon}${picked2.name}`}
           </button>
         </div>
       )}

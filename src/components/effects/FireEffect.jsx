@@ -143,97 +143,122 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
     );
   }
 
-  // --- idx 3: 終極爆破 — purple core + fire particles ---
-  const D = 0.5;
-  const ringN = 3 + lvl;
-  const rayN = 8 + lvl * 2;
-  const flameN = 5 + lvl * 2;
+  // --- idx 3: 終極爆破 — meteor drop + heatwave blast ---
+  const D = 0.34;
+  const meteorN = 3 + lvl;
+  const shockN = 2 + Math.floor(lvl / 2);
+  const emberN = 7 + lvl * 2;
   return (
     <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
-      {/* Phase 1: Purple orb approach */}
-      <svg width="36" height="36" viewBox="0 0 36 36"
+      {/* Phase 1: Meteors fall from sky toward target */}
+      {Array.from({ length: meteorN }, (_, i) => {
+        const startLeft = 10 + i * 8 + rr("meteor-left", i, -2, 4);
+        const startTop = 8 + rr("meteor-top", i, -2, 8);
+        const meteorScale = 0.9 + rr("meteor-scale", i, 0, 0.4);
+        return (
+          <svg key={`m${i}`} width="34" height="42" viewBox="0 0 20 30"
+            style={{
+              position:"absolute",
+              left:`${startLeft}%`,
+              top:`${startTop}%`,
+              "--fly-x":`${100 - T.flyRight - startLeft}vw`,
+              "--fly-y":`${T.flyTop - startTop}vh`,
+              opacity:0,
+              transform:`scale(${meteorScale}) rotate(${rr("meteor-rot", i, -20, 20)}deg)`,
+              filter:`drop-shadow(0 0 ${glow + 2}px #fbbf24) drop-shadow(0 0 ${glow + 8}px #ea580c)`,
+              animation:`flameFly ${0.55 + lvl * 0.05 + i * 0.07}s cubic-bezier(.18,.82,.34,1) ${i * 0.06}s forwards`,
+            }}>
+            <defs>
+              <radialGradient id={`fmtr${i}`} cx="45%" cy="30%">
+                <stop offset="0%" stopColor="#fef3c7"/>
+                <stop offset="35%" stopColor="#fbbf24"/>
+                <stop offset="72%" stopColor="#f97316"/>
+                <stop offset="100%" stopColor="#dc2626"/>
+              </radialGradient>
+            </defs>
+            <path d={FLAME} fill={`url(#fmtr${i})`} />
+          </svg>
+        );
+      })}
+
+      {/* Phase 2: Main explosion core */}
+      <svg width="190" height="190" viewBox="0 0 190 190"
         style={{
-          position:"absolute", left:"10%", bottom:"35%",
-          "--fly-x":`${100-T.flyRight-10}vw`,
-          "--fly-y":`${T.flyTop-65}vh`,
-          filter:`drop-shadow(0 0 ${glow}px #7c3aed) drop-shadow(0 0 ${glow+4}px #581c87)`,
-          animation:`ultApproach 0.55s ease forwards`,
+          position:"absolute",
+          right:T.right,
+          top:T.top,
+          transform:"translate(50%,-30%)",
+          filter:`drop-shadow(0 0 ${glow + 8}px #f97316) drop-shadow(0 0 ${glow + 14}px #dc2626)`,
         }}>
-        <defs><radialGradient id="fOrb" cx="40%" cy="40%">
-          <stop offset="0%" stopColor="#e9d5ff" stopOpacity="0.6"/>
-          <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.4"/>
-          <stop offset="100%" stopColor="#581c87" stopOpacity="0"/>
-        </radialGradient></defs>
-        <circle cx="18" cy="18" r="14" fill="url(#fOrb)"/>
+        <defs>
+          <radialGradient id="fImpact" cx="50%" cy="50%">
+            <stop offset="0%" stopColor="#fff7ed" stopOpacity="0.95"/>
+            <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.86"/>
+            <stop offset="58%" stopColor="#f97316" stopOpacity="0.66"/>
+            <stop offset="100%" stopColor="#dc2626" stopOpacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="95" cy="95" r={26 + lvl * 4} fill="url(#fImpact)"
+          style={{ animation:`fireExpand ${dur / 1000}s ease ${D}s forwards` }}/>
       </svg>
-      {/* Phase 2: Purple void core */}
-      <svg width="160" height="160" viewBox="0 0 160 160"
-        style={{
-          position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
-          filter:`drop-shadow(0 0 ${glow+6}px #581c87) drop-shadow(0 0 ${glow+10}px #7c3aed)`,
-        }}>
-        <defs><radialGradient id="fVoid" cx="50%" cy="50%">
-          <stop offset="0%" stopColor="#1e1b4b" stopOpacity="0.9"/>
-          <stop offset="35%" stopColor="#581c87" stopOpacity="0.7"/>
-          <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.4"/>
-          <stop offset="100%" stopColor="#a855f7" stopOpacity="0"/>
-        </radialGradient></defs>
-        <circle cx="80" cy="80" r={20+lvl*4} fill="url(#fVoid)"
-          style={{ animation:`fireExpand ${dur/1000}s ease ${D}s forwards` }}/>
-      </svg>
-      {/* Phase 3: Purple pulse rings */}
-      {Array.from({ length: ringN }, (_, i) => (
-        <svg key={`r${i}`} width="160" height="160" viewBox="0 0 160 160"
+
+      {/* Phase 3: Heatwave rings */}
+      {Array.from({ length: shockN }, (_, i) => (
+        <svg key={`h${i}`} width="220" height="120" viewBox="0 0 220 120"
           style={{
-            position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
-            animation:`darkRingExpand ${0.8+lvl*0.05}s ease ${D+i*0.1}s forwards`, opacity:0,
+            position:"absolute",
+            right:`calc(${T.right} - 28px)`,
+            top:`calc(${T.top} - 22px)`,
+            opacity:0,
+            filter:`drop-shadow(0 0 ${glow + 2}px rgba(251,146,60,0.65))`,
+            animation:`fireExpand ${0.62 + i * 0.12}s ease ${D + 0.08 + i * 0.1}s forwards`,
           }}>
-          <circle cx="80" cy="80" r={16+i*9} fill="none"
-            stroke={i%2===0?"#7c3aed":"#a855f7"} strokeWidth={2.5-i*0.2}
-            style={{ filter:`drop-shadow(0 0 ${glow}px #7c3aed)` }} opacity={0.85-i*0.06}/>
+          <ellipse cx="110" cy="60" rx={62 + i * 26} ry={18 + i * 6}
+            fill="none" stroke={i % 2 === 0 ? "rgba(251,146,60,0.75)" : "rgba(248,113,113,0.62)"} strokeWidth={4 - i * 0.7}/>
         </svg>
       ))}
-      {/* Phase 4: Purple radial light rays */}
-      {Array.from({ length: rayN }, (_, i) => {
-        const angle = (i / rayN) * 360;
-        const len = 24 + lvl * 6;
-        const w = 3.5 + lvl * 0.4;
+
+      {/* Phase 4: Lateral hot wind */}
+      {Array.from({ length: 2 + lvl }, (_, i) => (
+        <div key={`w${i}`}
+          style={{
+            position:"absolute",
+            right:`calc(${T.right} - ${32 + i * 8}px)`,
+            top:`calc(${T.top} + ${rr("wind-top", i, -8, 12)}px)`,
+            width:`${120 + lvl * 18}px`,
+            height:`${7 + rr("wind-h", i, 0, 4)}px`,
+            borderRadius:999,
+            background:"linear-gradient(90deg,rgba(255,255,255,0),rgba(251,146,60,0.82),rgba(239,68,68,0.6),rgba(255,255,255,0))",
+            opacity:0,
+            filter:`blur(${0.4 + rr("wind-blur", i, 0, 0.7)}px)`,
+            animation:`windSweep ${0.5 + rr("wind-anim", i, 0, 0.25)}s ease ${D + 0.1 + i * 0.04}s forwards`,
+          }}
+        />
+      ))}
+
+      {/* Phase 5: Embers scatter */}
+      {Array.from({ length: emberN }, (_, i) => {
+        const angle = (i / emberN) * 360;
+        const dist = 35 + rr("ember-dist", i, 0, 55);
         return (
-          <svg key={`ray${i}`} width={w+4} height={len} viewBox={`0 0 ${w+4} ${len}`}
+          <svg key={`e${i}`} width="28" height="34" viewBox="0 0 20 30"
             style={{
-              position:"absolute", right:`calc(${T.right} + ${Math.cos(angle*Math.PI/180)*4}px)`,
-              top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
-              transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
-              opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
-              animation:`sparkle ${0.4 + rr("ult-ray-anim", i, 0, 0.3)}s ease ${D+0.06+i*0.03}s both`,
+              position:"absolute",
+              right:T.right,
+              top:T.top,
+              opacity:0,
+              filter:`drop-shadow(0 0 ${glow}px #fbbf24)`,
+              "--lx":`${Math.cos(angle * Math.PI / 180) * dist}px`,
+              "--ly":`${Math.sin(angle * Math.PI / 180) * dist}px`,
+              animation:`leafSpin ${0.48 + rr("ember-anim", i, 0, 0.35)}s ease ${D + 0.12 + i * 0.035}s forwards`,
             }}>
-            <defs><linearGradient id={`fray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
-              <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.8"/>
-              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0"/>
-            </linearGradient></defs>
-            <rect x="1" y="0" width={w} height={len} rx={w/2} fill={`url(#fray${i})`}/>
+            <path d={FLAME} fill={i % 3 === 0 ? "#fbbf24" : i % 3 === 1 ? "#fb923c" : "#ef4444"} opacity="0.78"/>
           </svg>
         );
       })}
-      {/* Phase 5: Fire-specific flame particles */}
-      {Array.from({ length: flameN }, (_, i) => {
-        const angle = (i / flameN) * 360;
-        const dist = 28 + rr("flame-dist", i, 0, 45);
-        return (
-          <svg key={`fl${i}`} width="28" height="34" viewBox="0 0 20 30"
-            style={{
-              position:"absolute", right:T.right, top:T.top,
-              opacity:0, filter:`drop-shadow(0 0 ${glow}px #fbbf24)`,
-              "--lx":`${Math.cos(angle*Math.PI/180)*dist}px`,
-              "--ly":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`leafSpin ${0.5 + rr("flame-anim", i, 0, 0.3)}s ease ${D+0.1+i*0.04}s forwards`,
-            }}>
-            <path d={FLAME} fill={i%3===0?"#fbbf24":i%3===1?"#f97316":"#ef4444"} opacity="0.7"/>
-          </svg>
-        );
-      })}
-      {/* Phase 6: Purple glow */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(124,58,237,${0.08+lvl*0.02}), rgba(88,28,135,${0.04+lvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+
+      {/* Phase 6: Screen heat glow */}
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(251,146,60,${0.11 + lvl * 0.03}), rgba(239,68,68,${0.05 + lvl * 0.015}) 42%, transparent 72%)`, animation:`ultGlow ${dur/1000*1.15}s ease ${D}s` }}/>
     </div>
   );
 }

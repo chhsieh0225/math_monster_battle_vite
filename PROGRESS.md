@@ -45,8 +45,9 @@
 - **src/components/screens/TitleScreen.jsx** - 標題與模式選擇
 - **src/components/screens/SelectionScreen.jsx** - 初始怪獸選擇
 - **src/components/screens/GameOverScreen.jsx** - 遊戲結束、成績、排行榜入選
-- **src/components/screens/LeaderboardScreen.jsx** - 排行榜顯示
-- **src/components/screens/EvolveScreen.jsx** - 進化動畫與演出
+- **src/components/screens/LeaderboardScreen.tsx** - 排行榜顯示
+- **src/components/screens/AchievementScreen.tsx** - 成就列表顯示
+- **src/components/screens/EvolveScreen.tsx** - 進化動畫與演出
 
 **UI 元素**:
 - **src/components/ui/HPBar.tsx** - 生命值條顯示

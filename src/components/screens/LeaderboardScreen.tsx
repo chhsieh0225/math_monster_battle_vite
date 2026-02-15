@@ -1,9 +1,16 @@
+import type { CSSProperties } from 'react';
 import { loadScores } from '../../utils/leaderboard';
+import type { LeaderboardEntry } from '../../types/game';
 
 const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
 
-export default function LeaderboardScreen({ totalEnemies, onBack }) {
-  const scores = loadScores();
+type LeaderboardScreenProps = {
+  totalEnemies: number;
+  onBack: () => void;
+};
+
+export default function LeaderboardScreen({ totalEnemies, onBack }: LeaderboardScreenProps) {
+  const scores = loadScores() as LeaderboardEntry[];
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", overflow: "hidden" }}>
       {/* Header */}
@@ -49,4 +56,4 @@ export default function LeaderboardScreen({ totalEnemies, onBack }) {
   );
 }
 
-const backBtn = { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 16, fontWeight: 700, width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 };
+const backBtn: CSSProperties = { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 16, fontWeight: 700, width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 };

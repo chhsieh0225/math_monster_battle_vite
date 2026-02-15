@@ -1,12 +1,20 @@
+import type { CSSProperties } from 'react';
 import { ACHIEVEMENTS } from '../../data/achievements';
+import type { AchievementDef, AchievementId } from '../../types/game';
 
 const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
 
-export default function AchievementScreen({ unlockedIds = [], onBack }) {
-  const unlocked = new Set(unlockedIds);
-  const total = ACHIEVEMENTS.length;
+type AchievementScreenProps = {
+  unlockedIds?: AchievementId[];
+  onBack: () => void;
+};
+
+export default function AchievementScreen({ unlockedIds = [], onBack }: AchievementScreenProps) {
+  const achievements = ACHIEVEMENTS as AchievementDef[];
+  const unlocked = new Set<AchievementId>(unlockedIds);
+  const total = achievements.length;
   const done = unlockedIds.length;
-  const pct = Math.round(done / total * 100);
+  const pct = Math.round(done / Math.max(1, total) * 100);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", overflow: "hidden" }}>
@@ -26,7 +34,7 @@ export default function AchievementScreen({ unlockedIds = [], onBack }) {
       {/* Grid */}
       <div style={{ flex: 1, overflowY: "auto", padding: "6px 12px 16px", WebkitOverflowScrolling: "touch" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          {ACHIEVEMENTS.map(a => {
+          {achievements.map((a) => {
             const ok = unlocked.has(a.id);
             return (
               <div key={a.id} style={{
@@ -50,4 +58,4 @@ export default function AchievementScreen({ unlockedIds = [], onBack }) {
   );
 }
 
-const backBtn = { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 16, fontWeight: 700, width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 };
+const backBtn: CSSProperties = { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 16, fontWeight: 700, width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 };

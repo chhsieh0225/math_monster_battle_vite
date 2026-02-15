@@ -69,6 +69,7 @@ export type EnemyVm = {
   isEvolved?: boolean;
   trait?: string;
   traitName?: string;
+  traitDesc?: string;
   svgFn: (...args: string[]) => string;
 };
 

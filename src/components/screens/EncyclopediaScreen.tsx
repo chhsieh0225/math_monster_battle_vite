@@ -3,6 +3,7 @@ import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia';
 import { useI18n } from '../../i18n';
+import { hasSpecialTrait } from '../../utils/traits';
 import type {
   EncyclopediaCounts,
   EncyclopediaData,
@@ -300,7 +301,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
                   ✨ {t("encyclopedia.tag.evolved", "Evolved")}
                 </span>
               )}
-              {entry.traitName && entry.traitName !== '普通' && (
+              {hasSpecialTrait(entry.traitName, entry.traitDesc) && (
                 <span
                   style={{
                     background: 'rgba(99,102,241,0.2)',
@@ -341,7 +342,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
             </div>
           )}
 
-          {entry.traitDesc && entry.traitName !== '普通' && (
+          {hasSpecialTrait(entry.traitName, entry.traitDesc) && (
             <div
               style={{
                 background: 'rgba(99,102,241,0.08)',

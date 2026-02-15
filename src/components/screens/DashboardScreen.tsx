@@ -8,6 +8,7 @@
 import { useMemo, useState } from 'react';
 import type { ChangeEvent, CSSProperties, KeyboardEvent } from 'react';
 import { loadSessions, clearSessions, loadPin, savePin } from '../../utils/sessionLogger';
+import { useI18n } from '../../i18n';
 import {
   OPS,
   buildDashboardInsights,
@@ -133,15 +134,27 @@ type DashboardInsights = {
   practiceTasks: PracticeTask[];
 };
 
+type DashboardTranslate = (
+  key: string,
+  fallback?: string,
+  params?: Record<string, string | number>,
+) => string;
+
 const OPS_TYPED = OPS as DashboardOp[];
 const CORE_OPS: DashboardOp[] = ['+', '-', '×', '÷'];
 const loadSessionsTyped = loadSessions as () => DashboardSession[];
 const clearSessionsTyped = clearSessions as () => void;
 const loadPinTyped = loadPin as () => string;
 const savePinTyped = savePin as (pin: string) => void;
-const buildDashboardInsightsTyped = buildDashboardInsights as (sessions: DashboardSession[]) => DashboardInsights;
+const buildDashboardInsightsTyped = buildDashboardInsights as (
+  sessions: DashboardSession[],
+  options?: { t?: DashboardTranslate },
+) => DashboardInsights;
 const opIconTyped = opIcon as (op: DashboardOp) => string;
-const opNameTyped = opName as (op: DashboardOp) => string;
+const opNameTyped = opName as (
+  op: DashboardOp,
+  options?: { t?: DashboardTranslate },
+) => string;
 
 // ─── PIN Gate ───
 type PINGateProps = {
@@ -150,6 +163,7 @@ type PINGateProps = {
 };
 
 function PINGate({ onUnlock, onBack }: PINGateProps) {
+  const { t } = useI18n();
   const [input, setInput] = useState('');
   const [error, setError] = useState(false);
   const pin = loadPinTyped();
@@ -162,8 +176,8 @@ function PINGate({ onUnlock, onBack }: PINGateProps) {
   return (
     <div style={wrap}>
       <div style={{ fontSize: 48, marginBottom: 12 }}>🔒</div>
-      <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>家長專區</div>
-      <div style={{ fontSize: 12, opacity: 0.5, marginBottom: 20 }}>請輸入 PIN（預設 1234）</div>
+      <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>{t("dashboard.pin.title", "Parent Area")}</div>
+      <div style={{ fontSize: 12, opacity: 0.5, marginBottom: 20 }}>{t("dashboard.pin.subtitle", "Please enter PIN (default 1234)")}</div>
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
         <input
           type="password"
@@ -172,12 +186,13 @@ function PINGate({ onUnlock, onBack }: PINGateProps) {
           value={input}
           onChange={(e: ChangeEvent<HTMLInputElement>) => { setInput(e.target.value); setError(false); }}
           onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') check(); }}
+          aria-label={t("dashboard.a11y.pinInput", "PIN input")}
           style={{ background: 'rgba(255,255,255,0.1)', border: error ? '2px solid #ef4444' : '1px solid rgba(255,255,255,0.2)', borderRadius: 10, color: 'white', fontSize: 24, fontWeight: 700, padding: '8px 12px', textAlign: 'center', width: 120, outline: 'none', letterSpacing: 8 }}
         />
-        <button onClick={check} style={btnPrimary}>確認</button>
+        <button onClick={check} aria-label={t("dashboard.a11y.pinConfirm", "Confirm PIN")} style={btnPrimary}>{t("common.confirm", "Confirm")}</button>
       </div>
-      {error && <div style={{ color: '#ef4444', fontSize: 12, marginBottom: 8 }}>PIN 錯誤，請重試</div>}
-      <button onClick={onBack} style={btnGhost}>← 返回</button>
+      {error && <div style={{ color: '#ef4444', fontSize: 12, marginBottom: 8 }}>{t("dashboard.pin.error", "Wrong PIN, please try again")}</div>}
+      <button onClick={onBack} aria-label={t("a11y.common.backToTitle", "Back to title")} style={btnGhost}>← {t("common.back", "Back")}</button>
     </div>
   );
 }
@@ -188,6 +203,7 @@ type DashboardScreenProps = {
 };
 
 export default function DashboardScreen({ onBack }: DashboardScreenProps) {
+  const { t } = useI18n();
   const [unlocked, setUnlocked] = useState(false);
   const [tab, setTab] = useState<DashboardTab>('overview');
   const [sessions, setSessions] = useState<DashboardSession[]>(() => loadSessionsTyped());
@@ -198,23 +214,23 @@ export default function DashboardScreen({ onBack }: DashboardScreenProps) {
 
   const refresh = () => setSessions(loadSessionsTyped());
   const tabs: Array<{ key: DashboardTab; label: string }> = [
-    { key: 'overview', label: '📈 總覽' },
-    { key: 'history', label: '📋 歷史' },
-    { key: 'settings', label: '⚙️ 設定' },
+    { key: 'overview', label: `📈 ${t("dashboard.tab.overview", "Overview")}` },
+    { key: 'history', label: `📋 ${t("dashboard.tab.history", "History")}` },
+    { key: 'settings', label: `⚙️ ${t("dashboard.tab.settings", "Settings")}` },
   ];
 
   return (
     <div style={{ ...wrap, justifyContent: 'flex-start', padding: '16px 12px', overflow: 'auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', marginBottom: 12 }}>
-        <button className="back-touch-btn" onClick={onBack} style={backBtn}>←</button>
-        <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>📊 家長儀表板</div>
+        <button className="back-touch-btn" onClick={onBack} aria-label={t("a11y.common.backToTitle", "Back to title")} style={backBtn}>←</button>
+        <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>📊 {t("dashboard.title", "Parent Dashboard")}</div>
       </div>
 
       {/* Tab bar */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 14, width: '100%' }}>
         {tabs.map((item) => (
-          <button key={item.key} onClick={() => setTab(item.key)} style={{ flex: 1, background: tab === item.key ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.06)', border: tab === item.key ? '1px solid #6366f1' : '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 12, fontWeight: 700, padding: '8px 0', borderRadius: 10 }}>{item.label}</button>
+          <button key={item.key} onClick={() => setTab(item.key)} aria-label={item.label} style={{ flex: 1, background: tab === item.key ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.06)', border: tab === item.key ? '1px solid #6366f1' : '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 12, fontWeight: 700, padding: '8px 0', borderRadius: 10 }}>{item.label}</button>
         ))}
       </div>
 
@@ -233,7 +249,8 @@ type OverviewTabProps = {
 };
 
 function OverviewTab({ sessions }: OverviewTabProps) {
-  const insights = useMemo(() => buildDashboardInsightsTyped(sessions), [sessions]);
+  const { t } = useI18n();
+  const insights = useMemo(() => buildDashboardInsightsTyped(sessions, { t }), [sessions, t]);
   const { overview: stats, weakSuggestions, weeklyReport, practiceTasks } = insights;
   const visibleOps = OPS_TYPED.filter((op) => stats.opData[op]?.attempted > 0 || CORE_OPS.includes(op));
 
@@ -241,35 +258,35 @@ function OverviewTab({ sessions }: OverviewTabProps) {
     <div style={{ width: '100%' }}>
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
-        <Card label="總遊戲次數" value={stats.totalSessions} color="#6366f1" />
-        <Card label="總答題數" value={stats.totalQ} color="#8b5cf6" />
-        <Card label="整體正確率" value={`${stats.overallAcc}%`} color={stats.overallAcc >= 70 ? '#22c55e' : stats.overallAcc >= 50 ? '#f59e0b' : '#ef4444'} />
-        <Card label="平均回答時間" value={stats.avgTimeS === '—' ? '—' : `${stats.avgTimeS}s`} color="#3b82f6" />
+        <Card label={t("dashboard.card.sessions", "Total Sessions")} value={stats.totalSessions} color="#6366f1" />
+        <Card label={t("dashboard.card.questions", "Total Questions")} value={stats.totalQ} color="#8b5cf6" />
+        <Card label={t("dashboard.card.acc", "Overall Accuracy")} value={`${stats.overallAcc}%`} color={stats.overallAcc >= 70 ? '#22c55e' : stats.overallAcc >= 50 ? '#f59e0b' : '#ef4444'} />
+        <Card label={t("dashboard.card.avgTime", "Average Response Time")} value={stats.avgTimeS === '—' ? '—' : `${stats.avgTimeS}s`} color="#3b82f6" />
       </div>
 
-      <SectionTitle text="弱點題型建議" />
+      <SectionTitle text={t("dashboard.section.weak", "Weak Area Suggestions")} />
       <WeakSuggestions items={weakSuggestions} />
 
-      <SectionTitle text="每週學習報告" />
+      <SectionTitle text={t("dashboard.section.weekly", "Weekly Report")} />
       <WeeklyReportView report={weeklyReport} />
 
-      <SectionTitle text="練習任務推薦" />
+      <SectionTitle text={t("dashboard.section.practice", "Practice Tasks")} />
       <PracticeTaskList tasks={practiceTasks} />
 
-      {sessions.length === 0 && <Empty text="尚無遊戲記錄，開始遊戲後儀表板會自動更新分析。" />}
+      {sessions.length === 0 && <Empty text={t("dashboard.empty.overview", "No records yet. Start playing to generate analytics.")} />}
 
       {/* Per-operation accuracy */}
-      <SectionTitle text="各運算正確率" />
+      <SectionTitle text={t("dashboard.section.opAcc", "Accuracy by Operation")} />
       <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
         {visibleOps.map((op) => {
           const d = stats.opData[op] || { attempted: 0, correct: 0, totalMs: 0, acc: 0, avgTimeSec: null, avgTime: '—', weak: false };
           return (
             <div key={op} style={{ flex: 1, background: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: '10px 6px', textAlign: 'center', border: d.weak ? '1px solid #ef4444' : '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: 20, marginBottom: 4 }}>{opIconTyped(op)}</div>
-              <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 2 }}>{opNameTyped(op)}</div>
+              <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 2 }}>{opNameTyped(op, { t })}</div>
               <div style={{ fontSize: 18, fontWeight: 900, color: d.acc >= 70 ? '#22c55e' : d.acc >= 50 ? '#f59e0b' : '#ef4444' }}>{d.attempted > 0 ? `${d.acc}%` : '—'}</div>
-              <div style={{ fontSize: 10, opacity: 0.4 }}>{d.attempted} 題</div>
-              {d.weak && <div style={{ fontSize: 10, color: '#ef4444', fontWeight: 700, marginTop: 2 }}>⚠️ 需加強</div>}
+              <div style={{ fontSize: 10, opacity: 0.4 }}>{t("dashboard.attemptedCount", "{count} items", { count: d.attempted })}</div>
+              {d.weak && <div style={{ fontSize: 10, color: '#ef4444', fontWeight: 700, marginTop: 2 }}>⚠️ {t("dashboard.weakTag", "Needs Practice")}</div>}
             </div>
           );
         })}
@@ -277,12 +294,12 @@ function OverviewTab({ sessions }: OverviewTabProps) {
 
       {/* Accuracy trend (last 10 sessions as simple bar chart) */}
       {sessions.length >= 2 && <>
-        <SectionTitle text="最近 10 場正確率趨勢" />
+        <SectionTitle text={t("dashboard.section.trend", "Recent 10-Session Accuracy Trend")} />
         <BarChart data={stats.recentAcc} />
       </>}
 
       {/* Per-operation avg time */}
-      <SectionTitle text="各運算平均回答時間" />
+      <SectionTitle text={t("dashboard.section.opTime", "Average Time by Operation")} />
       <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
         {visibleOps.map((op) => {
           const d = stats.opData[op] || { attempted: 0, correct: 0, totalMs: 0, acc: 0, avgTimeSec: null, avgTime: '—', weak: false };
@@ -303,7 +320,8 @@ type WeakSuggestionsProps = {
 };
 
 function WeakSuggestions({ items }: WeakSuggestionsProps) {
-  if (!items.length) return <Empty text="目前尚無弱點建議。" />;
+  const { t } = useI18n();
+  if (!items.length) return <Empty text={t("dashboard.empty.weak", "No weak-area suggestions yet.")} />;
   return (
     <div style={{ display: 'grid', gap: 8, marginBottom: 14 }}>
       {items.map((item) => (
@@ -322,10 +340,11 @@ type WeeklyReportProps = {
 };
 
 function WeeklyReportView({ report }: WeeklyReportProps) {
+  const { t } = useI18n();
   const avgTimeText = report.current.avgTimeSec == null ? '—' : `${report.current.avgTimeSec.toFixed(1)}s`;
   const accDelta = formatDelta(report.delta.acc, '%');
-  const qDelta = formatDelta(report.delta.questions, '題');
-  const sDelta = formatDelta(report.delta.sessions, '場');
+  const qDelta = formatDelta(report.delta.questions, t("dashboard.unit.items", " items"));
+  const sDelta = formatDelta(report.delta.sessions, t("dashboard.unit.sessions", " sessions"));
   const strongest = report.current.strongest;
   const weakest = report.current.weakest;
 
@@ -334,19 +353,19 @@ function WeeklyReportView({ report }: WeeklyReportProps) {
       <div style={{ fontSize: 11, opacity: 0.45, marginBottom: 6 }}>{report.range.startLabel} - {report.range.endLabel}</div>
       <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 10 }}>{report.headline}</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-        <MiniCard label="本週場次" value={`${report.current.sessions}`} />
-        <MiniCard label="本週題數" value={`${report.current.totalQ}`} />
-        <MiniCard label="本週正確率" value={`${report.current.acc}%`} />
-        <MiniCard label="平均作答" value={avgTimeText} />
+        <MiniCard label={t("dashboard.weekly.sessions", "This Week Sessions")} value={`${report.current.sessions}`} />
+        <MiniCard label={t("dashboard.weekly.questions", "This Week Questions")} value={`${report.current.totalQ}`} />
+        <MiniCard label={t("dashboard.weekly.acc", "This Week Accuracy")} value={`${report.current.acc}%`} />
+        <MiniCard label={t("dashboard.weekly.avgTime", "Average Time")} value={avgTimeText} />
       </div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-        <DeltaPill label="正確率" value={accDelta} />
-        <DeltaPill label="題量" value={qDelta} />
-        <DeltaPill label="場次" value={sDelta} />
+        <DeltaPill label={t("dashboard.delta.acc", "Accuracy")} value={accDelta} />
+        <DeltaPill label={t("dashboard.delta.questions", "Questions")} value={qDelta} />
+        <DeltaPill label={t("dashboard.delta.sessions", "Sessions")} value={sDelta} />
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <Tag text={strongest ? `強項 ${strongest.icon}${strongest.label} ${strongest.acc}%` : '強項資料不足'} color="rgba(34,197,94,0.2)" />
-        <Tag text={weakest ? `弱項 ${weakest.icon}${weakest.label} ${weakest.acc}%` : '弱項資料不足'} color="rgba(239,68,68,0.2)" />
+        <Tag text={strongest ? t("dashboard.weekly.strong", "Strong: {label} {acc}%", { label: `${strongest.icon}${strongest.label}`, acc: strongest.acc }) : t("dashboard.weekly.strongEmpty", "Strong area data unavailable")} color="rgba(34,197,94,0.2)" />
+        <Tag text={weakest ? t("dashboard.weekly.weak", "Weak: {label} {acc}%", { label: `${weakest.icon}${weakest.label}`, acc: weakest.acc }) : t("dashboard.weekly.weakEmpty", "Weak area data unavailable")} color="rgba(239,68,68,0.2)" />
       </div>
     </div>
   );
@@ -357,19 +376,20 @@ type PracticeTaskListProps = {
 };
 
 function PracticeTaskList({ tasks }: PracticeTaskListProps) {
-  if (!tasks.length) return <Empty text="目前尚無任務建議。" />;
+  const { t } = useI18n();
+  if (!tasks.length) return <Empty text={t("dashboard.empty.practice", "No practice tasks yet.")} />;
   return (
     <div style={{ display: 'grid', gap: 8, marginBottom: 14 }}>
       {tasks.map((task, i) => (
         <div key={task.id} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, padding: '10px 12px', textAlign: 'left' }}>
-          <div style={{ fontSize: 11, opacity: 0.45, marginBottom: 2 }}>任務 {i + 1}</div>
+          <div style={{ fontSize: 11, opacity: 0.45, marginBottom: 2 }}>{t("dashboard.task.index", "Task {index}", { index: i + 1 })}</div>
           <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 4 }}>{task.title}</div>
           <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 6 }}>{task.summary}</div>
-          <div style={{ fontSize: 11, color: '#93c5fd', marginBottom: 8 }}>目標：{task.goal}</div>
+          <div style={{ fontSize: 11, color: '#93c5fd', marginBottom: 8 }}>{t("dashboard.task.goal", "Goal: {goal}", { goal: task.goal })}</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {(task.focusOps || []).slice(0, 4).map((op) => (
               <span key={`${task.id}-${op}`} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                {opIconTyped(op)} {opNameTyped(op)}
+                {opIconTyped(op)} {opNameTyped(op, { t })}
               </span>
             ))}
           </div>
@@ -387,12 +407,13 @@ type HistoryTabProps = {
 };
 
 function HistoryTab({ sessions }: HistoryTabProps) {
-  if (sessions.length === 0) return <Empty text="尚無遊戲記錄。" />;
+  const { t } = useI18n();
+  if (sessions.length === 0) return <Empty text={t("dashboard.empty.history", "No game records yet.")} />;
   const sorted = [...sessions].reverse(); // newest first
 
   return (
     <div style={{ width: '100%' }}>
-      <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8 }}>共 {sessions.length} 場（最新在前）</div>
+      <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8 }}>{t("dashboard.history.total", "{count} sessions (newest first)", { count: sessions.length })}</div>
       {sorted.map((s, i) => {
         const correct = Number(s.tC) || 0;
         const wrong = Number(s.tW) || 0;
@@ -402,15 +423,15 @@ function HistoryTab({ sessions }: HistoryTabProps) {
           <div key={s.id || i} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 12px', marginBottom: 6, border: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <div style={{ fontSize: 12, fontWeight: 700 }}>
-                {s.starterName || '—'} {s.timedMode ? '⏱️' : '⚔️'} {s.completed ? '✅通關' : `💀第${s.defeated || 0}關`}
+                {s.starterName || '—'} {s.timedMode ? '⏱️' : '⚔️'} {s.completed ? t("dashboard.history.clear", "✅Cleared") : t("dashboard.history.stage", "💀Stage {stage}", { stage: s.defeated || 0 })}
               </div>
               <div style={{ fontSize: 10, opacity: 0.4 }}>{dt.toLocaleDateString()} {dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
             </div>
             <div style={{ display: 'flex', gap: 12, fontSize: 11 }}>
-              <span>正確率 <b style={{ color: acc >= 70 ? '#22c55e' : '#f59e0b' }}>{acc}%</b></span>
-              <span>答對 <b style={{ color: '#22c55e' }}>{correct}</b></span>
-              <span>答錯 <b style={{ color: '#ef4444' }}>{wrong}</b></span>
-              <span>連擊 <b style={{ color: '#f97316' }}>{s.maxStreak || 0}</b></span>
+              <span>{t("dashboard.history.acc", "Accuracy")} <b style={{ color: acc >= 70 ? '#22c55e' : '#f59e0b' }}>{acc}%</b></span>
+              <span>{t("dashboard.history.correct", "Correct")} <b style={{ color: '#22c55e' }}>{correct}</b></span>
+              <span>{t("dashboard.history.wrong", "Wrong")} <b style={{ color: '#ef4444' }}>{wrong}</b></span>
+              <span>{t("dashboard.history.streak", "Streak")} <b style={{ color: '#f97316' }}>{s.maxStreak || 0}</b></span>
               <span>Lv.<b>{s.finalLevel || 1}</b></span>
             </div>
             {/* Mini op breakdown */}
@@ -442,12 +463,13 @@ type SettingsTabProps = {
 };
 
 function SettingsTab({ pinInput, setPinInput, pinMsg, setPinMsg, sessions, refresh }: SettingsTabProps) {
+  const { t } = useI18n();
   const [confirmClear, setConfirmClear] = useState(false);
 
   const handlePinChange = () => {
-    if (pinInput.length < 4) { setPinMsg('PIN 至少 4 位數'); return; }
+    if (pinInput.length < 4) { setPinMsg(t("dashboard.pin.tooShort", "PIN must be at least 4 digits")); return; }
     savePinTyped(pinInput);
-    setPinMsg('✅ PIN 已更新');
+    setPinMsg(t("dashboard.pin.updated", "✅ PIN updated"));
     setPinInput('');
   };
 
@@ -461,7 +483,7 @@ function SettingsTab({ pinInput, setPinInput, pinMsg, setPinMsg, sessions, refre
   return (
     <div style={{ width: '100%' }}>
       {/* Change PIN */}
-      <SectionTitle text="更改 PIN" />
+      <SectionTitle text={t("dashboard.settings.changePin", "Change PIN")} />
       <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
         <input
           type="password"
@@ -469,25 +491,26 @@ function SettingsTab({ pinInput, setPinInput, pinMsg, setPinMsg, sessions, refre
           maxLength={6}
           value={pinInput}
           onChange={(e: ChangeEvent<HTMLInputElement>) => { setPinInput(e.target.value); setPinMsg(''); }}
-          placeholder="新 PIN"
+          placeholder={t("dashboard.settings.newPin", "New PIN")}
+          aria-label={t("dashboard.a11y.newPin", "New PIN")}
           style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, color: 'white', fontSize: 16, fontWeight: 700, padding: '8px 12px', width: 100, outline: 'none', textAlign: 'center', letterSpacing: 4 }}
         />
-        <button onClick={handlePinChange} style={btnPrimary}>更新</button>
+        <button onClick={handlePinChange} aria-label={t("dashboard.a11y.updatePin", "Update PIN")} style={btnPrimary}>{t("dashboard.settings.update", "Update")}</button>
       </div>
       {pinMsg && <div style={{ fontSize: 12, color: pinMsg.startsWith('✅') ? '#22c55e' : '#ef4444', marginBottom: 12 }}>{pinMsg}</div>}
 
       {/* Clear data */}
-      <SectionTitle text="資料管理" />
-      <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8 }}>目前共 {sessions.length} 場記錄</div>
-      <button onClick={handleClear} style={{ ...btnGhost, border: '1px solid #ef4444', color: '#ef4444' }}>
-        {confirmClear ? '⚠️ 確認清除所有記錄？' : '🗑️ 清除所有遊戲記錄'}
+      <SectionTitle text={t("dashboard.settings.data", "Data Management")} />
+      <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8 }}>{t("dashboard.settings.recordCount", "{count} records currently", { count: sessions.length })}</div>
+      <button onClick={handleClear} aria-label={t("dashboard.a11y.clearRecords", "Clear all records")} style={{ ...btnGhost, border: '1px solid #ef4444', color: '#ef4444' }}>
+        {confirmClear ? t("dashboard.settings.clearConfirm", "⚠️ Confirm clear all records?") : t("dashboard.settings.clear", "🗑️ Clear all game records")}
       </button>
-      {confirmClear && <button onClick={() => setConfirmClear(false)} style={{ ...btnGhost, marginTop: 6 }}>取消</button>}
+      {confirmClear && <button onClick={() => setConfirmClear(false)} aria-label={t("common.cancel", "Cancel")} style={{ ...btnGhost, marginTop: 6 }}>{t("common.cancel", "Cancel")}</button>}
 
       <div style={{ marginTop: 20, fontSize: 10, opacity: 0.3, lineHeight: 1.8 }}>
-        <div>• 遊戲數據自動記錄於裝置本地（localStorage）</div>
-        <div>• 最多保留最近 100 場記錄</div>
-        <div>• 清除瀏覽器資料會導致記錄遺失</div>
+        <div>{t("dashboard.settings.note1", "• Game data is stored locally (localStorage)")}</div>
+        <div>{t("dashboard.settings.note2", "• Up to the latest 100 records are kept")}</div>
+        <div>{t("dashboard.settings.note3", "• Clearing browser data will erase records")}</div>
       </div>
     </div>
   );

@@ -23,6 +23,7 @@ import { SCENES } from './data/scenes';
 import { TIMER_SEC, HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from './data/constants';
 import { PVP_BALANCE } from './data/pvpBalance';
 import { getStageMaxHp, getStarterMaxHp } from './utils/playerHp';
+import { hasSpecialTrait } from './utils/traits';
 
 // UI Components
 import MonsterSprite from './components/ui/MonsterSprite';
@@ -699,7 +700,7 @@ function App() {
               </>
             ) : (
               <>
-                {B.enemy.traitName && B.enemy.traitName !== "普通" && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>✦{B.enemy.traitName}</div>}
+                {hasSpecialTrait(B.enemy.traitName, B.enemy.traitDesc) && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>✦{B.enemy.traitName}</div>}
                 {B.burnStack > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥 {t("battle.status.burnStack", "Burn x{count}", { count: B.burnStack })}</div>}
                 {B.frozen && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️ {t("battle.status.freeze", "Freeze")}</div>}
                 {B.staticStack > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡ {t("battle.status.staticStack", "Static x{count}", { count: B.staticStack })}{B.staticStack >= 2 ? " ⚠️" : ""}</div>}

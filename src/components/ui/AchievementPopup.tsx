@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useI18n } from '../../i18n';
 
 type AchievementPopupItem = {
   icon: string;
@@ -12,6 +13,7 @@ type AchievementPopupProps = {
 };
 
 export default function AchievementPopup({ achievement, onDone }: AchievementPopupProps) {
+  const { t } = useI18n();
   const [out, setOut] = useState(false);
   useEffect(() => {
     const t1 = setTimeout(() => setOut(true), 3400);
@@ -29,7 +31,9 @@ export default function AchievementPopup({ achievement, onDone }: AchievementPop
       animation: out ? "fadeSlide 0.5s ease reverse forwards" : "popIn 0.35s ease",
       backdropFilter:"blur(8px)",
     }}>
-      <div style={{fontSize:11,opacity:0.7,fontWeight:700,marginBottom:4}}>🏅 成就解鎖！</div>
+      <div style={{fontSize:11,opacity:0.7,fontWeight:700,marginBottom:4}}>
+        🏅 {t("achievement.popup.unlocked", "Achievement Unlocked!")}
+      </div>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <span style={{fontSize:28}}>{achievement.icon}</span>
         <div>

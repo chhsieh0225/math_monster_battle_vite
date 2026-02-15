@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters';
 import type { SelectionMode, StarterId, StarterSelectable } from '../../types/game';
+import { useI18n } from '../../i18n';
 
 const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
 
@@ -12,13 +13,38 @@ type StarterDesc = {
   specDef: string;
 };
 
-const DESCS: Record<StarterId, StarterDesc> = {
-  fire: { desc: "來自火山地帶的熱血夥伴。專精乘法運算，攻擊力成長極高。", passive: "🔥 灼燒：攻擊附帶灼燒效果，每回合持續造成傷害", specDef: "🛡️ 防護罩：8連擊時展開火焰護盾，完全擋下攻擊" },
-  water: { desc: "來自深海的冷靜夥伴。專精除法運算，擅長精密的計算。", passive: "❄️ 凍結：攻擊有機率凍結敵人，使其跳過一回合", specDef: "💨 完美閃避：8連擊時化為水流，完全迴避攻擊" },
-  grass: { desc: "來自古老森林的溫和夥伴。專精加減法，擁有強韌的生命力。", passive: "💚 回血：每次攻擊恢復少量HP，持久作戰的王者", specDef: "🌿 反彈：8連擊時以藤蔓反擊，將傷害反彈給敵人" },
-  electric: { desc: "來自雷雲深處的敏捷夥伴。專精四則混合運算，全方位的實力派。", passive: "⚡ 靜電蓄積：答對累積靜電，滿3層自動放電造成額外傷害", specDef: "⚡ 電流麻痺：8連擊時釋放電流，使敵人麻痺無法行動" },
-  lion: { desc: "來自金色草原的勇敢夥伴。專精求未知數，HP越低攻擊越強的高風險高報酬戰士。", passive: "🦁 勇氣之心：HP越低傷害加成越高（最高+50%），越危險越強大", specDef: "✨ 獅王咆哮：8連擊時擋下攻擊並對敵人造成15點固定傷害" },
-};
+type TranslateParams = Record<string, string | number>;
+type TranslateFn = (key: string, fallback?: string, params?: TranslateParams) => string;
+
+function buildStarterDescs(t: TranslateFn): Record<StarterId, StarterDesc> {
+  return {
+    fire: {
+      desc: t("selection.fire.desc", "A fiery partner from volcanic lands. Excels at multiplication with high attack growth."),
+      passive: t("selection.fire.passive", "🔥 Burn: attacks can apply burning damage over time."),
+      specDef: t("selection.fire.specDef", "🛡️ Shield: at 8-combo, blocks an incoming hit completely."),
+    },
+    water: {
+      desc: t("selection.water.desc", "A calm partner from the deep sea. Excels at division and precise calculations."),
+      passive: t("selection.water.passive", "❄️ Freeze: attacks may freeze enemies and skip their turn."),
+      specDef: t("selection.water.specDef", "💨 Perfect Dodge: at 8-combo, evades an incoming hit completely."),
+    },
+    grass: {
+      desc: t("selection.grass.desc", "A gentle partner from ancient forests. Excels at addition/subtraction with high endurance."),
+      passive: t("selection.grass.passive", "💚 Heal: recover a little HP on each attack."),
+      specDef: t("selection.grass.specDef", "🌿 Reflect: at 8-combo, reflects damage back to enemy."),
+    },
+    electric: {
+      desc: t("selection.electric.desc", "A nimble partner from thunderclouds. Excels at mixed operations."),
+      passive: t("selection.electric.passive", "⚡ Static Charge: correct answers build charge; 3 stacks trigger bonus damage."),
+      specDef: t("selection.electric.specDef", "⚡ Paralysis: at 8-combo, paralyzes the enemy."),
+    },
+    lion: {
+      desc: t("selection.lion.desc", "A brave partner from golden plains. Excels at unknowns with high-risk high-reward style."),
+      passive: t("selection.lion.passive", "🦁 Courage: lower HP grants higher damage (up to +50%)."),
+      specDef: t("selection.lion.specDef", "✨ Roar: at 8-combo, blocks a hit and deals fixed counter damage."),
+    },
+  };
+}
 
 function clampStageIdx(starter: StarterSelectable | null, idx: number): number {
   const total = starter?.stages?.length || 1;
@@ -50,6 +76,8 @@ type SelectionScreenProps = {
 };
 
 export default function SelectionScreen({ mode = "single", onSelect, onBack }: SelectionScreenProps) {
+  const { t } = useI18n();
+  const DESCS = buildStarterDescs(t);
   const starters = STARTERS as StarterSelectable[];
   const isDual = mode === "coop" || mode === "pvp" || mode === "double";
   const [picked, setPicked] = useState<StarterSelectable | null>(null);
@@ -113,20 +141,26 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
     <div className="selection-screen" style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", overflow: "hidden" }}>
       {/* Header */}
       <div style={{ padding: "12px 16px 6px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-        <button className="back-touch-btn" onClick={onBack} aria-label="返回主畫面" style={backBtn}>←</button>
+        <button className="back-touch-btn" onClick={onBack} aria-label={t("a11y.common.backToTitle", "Back to title")} style={backBtn}>←</button>
         <div>
           <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: 1 }}>
-            {isDual ? (mode === "pvp" ? "選擇雙方角色！" : "選擇雙人夥伴！") : "選擇你的夥伴！"}
+            {isDual
+              ? (mode === "pvp"
+                ? t("selection.title.pvp", "Choose both sides!")
+                : t("selection.title.dual", "Choose 2 partners!"))
+              : t("selection.title.single", "Choose your partner!")}
           </div>
           <div style={{ fontSize: 10, opacity: 0.4, marginTop: 1 }}>
-            {isDual ? "每個角色只能被一位玩家選取" : "點選角色查看詳細資訊"}
+            {isDual
+              ? t("selection.subtitle.dual", "Each role can only be picked by one player")
+              : t("selection.subtitle.single", "Tap a role to view details")}
           </div>
         </div>
       </div>
 
       {isDual && (
         <div style={{ padding: "0 16px 6px", display: "flex", gap: 8, flexShrink: 0 }}>
-          <button className="touch-btn" onClick={() => setFocusSlot("p1")} aria-label="選擇玩家1角色欄位" style={{
+          <button className="touch-btn" onClick={() => setFocusSlot("p1")} aria-label={t("selection.a11y.slotP1", "Choose player 1 slot")} style={{
             flex: 1,
             borderRadius: 10,
             border: focusSlot === "p1" ? "1px solid #60a5fa" : "1px solid rgba(255,255,255,0.12)",
@@ -136,9 +170,9 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
             fontWeight: 700,
             padding: "6px 8px",
           }}>
-            玩家1：{picked1 ? `${picked1.typeIcon}${picked1.name}` : "未選"}
+            {t("selection.slot.p1", "Player 1")}：{picked1 ? `${picked1.typeIcon}${picked1.name}` : t("selection.slot.empty", "None")}
           </button>
-          <button className="touch-btn" onClick={() => setFocusSlot("p2")} aria-label="選擇玩家2角色欄位" style={{
+          <button className="touch-btn" onClick={() => setFocusSlot("p2")} aria-label={t("selection.a11y.slotP2", "Choose player 2 slot")} style={{
             flex: 1,
             borderRadius: 10,
             border: focusSlot === "p2" ? "1px solid #f472b6" : "1px solid rgba(255,255,255,0.12)",
@@ -148,7 +182,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
             fontWeight: 700,
             padding: "6px 8px",
           }}>
-            玩家2：{picked2 ? `${picked2.typeIcon}${picked2.name}` : "未選"}
+            {t("selection.slot.p2", "Player 2")}：{picked2 ? `${picked2.typeIcon}${picked2.name}` : t("selection.slot.empty", "None")}
           </button>
         </div>
       )}
@@ -156,17 +190,24 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
       {focusedPicked && (
         <div style={{ padding: "0 16px 8px", flexShrink: 0 }}>
           <div style={{ fontSize: 10, opacity: 0.45, marginBottom: 4 }}>
-            {isDual ? `${focusSlot === "p1" ? "玩家1" : "玩家2"} 進化型態` : "選擇進化型態"}
+            {isDual
+              ? t("selection.stage.pickFor", "{player} stage", { player: focusSlot === "p1" ? t("selection.slot.p1", "Player 1") : t("selection.slot.p2", "Player 2") })
+              : t("selection.stage.pick", "Choose stage")}
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             {focusedPicked.stages.map((stage, idx) => {
               const active = (focusedPicked.selectedStageIdx || 0) === idx;
+              const stageLabel = idx === 0
+                ? t("selection.stage.base", "Base")
+                : idx === 1
+                  ? t("selection.stage.evolved", "Evolved")
+                  : t("selection.stage.final", "Final");
               return (
                 <button
                   className="touch-btn"
                   key={`${focusedPicked.id}_stage_${idx}`}
                   onClick={() => updateFocusedStage(idx)}
-                  aria-label={`選擇${stage.name}型態`}
+                  aria-label={t("selection.a11y.pickStage", "Choose stage {name}", { name: stage.name })}
                   style={{
                     flex: 1,
                     borderRadius: 10,
@@ -179,7 +220,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
                     cursor: "pointer",
                   }}
                 >
-                  {idx === 0 ? "初階" : idx === 1 ? "進化" : "終階"} · {stage.name}
+                  {stageLabel} · {stage.name}
                 </button>
               );
             })}
@@ -201,7 +242,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
           const selectedStage = s.stages[selectedStageIdx] || s.stages[0];
           const info = DESCS[s.id];
           return (
-            <button className="selection-card-btn" key={s.id} onClick={() => handlePick(s)} aria-label={`選擇角色 ${s.name}`} style={{
+            <button className="selection-card-btn" key={s.id} onClick={() => handlePick(s)} aria-label={t("selection.a11y.pickStarter", "Choose starter {name}", { name: s.name })} style={{
               background: sel
                 ? `linear-gradient(135deg, ${s.c1}44, ${s.c2}33)`
                 : `linear-gradient(135deg, ${s.c1}18, ${s.c2}10)`,
@@ -220,14 +261,16 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
                   animation: sel ? "spinSelect 0.7s ease-in-out" : "none",
                   transition: "transform 0.3s",
                 }}>
-                  <MonsterSprite svgStr={selectedStage.svgFn(s.c1, s.c2)} size={sel ? 72 : 56} ariaLabel={`${s.name} 角色圖像`} />
+                  <MonsterSprite svgStr={selectedStage.svgFn(s.c1, s.c2)} size={sel ? 72 : 56} ariaLabel={t("selection.a11y.starterSprite", "{name} sprite", { name: s.name })} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>
                     {s.typeIcon} {sel ? selectedStage.name : s.name}
-                    <span style={{ fontSize: 10, opacity: 0.5, marginLeft: 5 }}>{s.typeName}系</span>
-                    {isDual && isP1 && <span style={{ fontSize: 10, marginLeft: 6, padding: "1px 6px", borderRadius: 8, background: "rgba(96,165,250,0.2)", border: "1px solid rgba(96,165,250,0.5)" }}>玩家1</span>}
-                    {isDual && isP2 && <span style={{ fontSize: 10, marginLeft: 6, padding: "1px 6px", borderRadius: 8, background: "rgba(244,114,182,0.2)", border: "1px solid rgba(244,114,182,0.5)" }}>玩家2</span>}
+                    <span style={{ fontSize: 10, opacity: 0.5, marginLeft: 5 }}>
+                      {t("selection.typeTag", "{type} type", { type: s.typeName })}
+                    </span>
+                    {isDual && isP1 && <span style={{ fontSize: 10, marginLeft: 6, padding: "1px 6px", borderRadius: 8, background: "rgba(96,165,250,0.2)", border: "1px solid rgba(96,165,250,0.5)" }}>{t("selection.slot.p1", "Player 1")}</span>}
+                    {isDual && isP2 && <span style={{ fontSize: 10, marginLeft: 6, padding: "1px 6px", borderRadius: 8, background: "rgba(244,114,182,0.2)", border: "1px solid rgba(244,114,182,0.5)" }}>{t("selection.slot.p2", "Player 2")}</span>}
                   </div>
                   <div style={{ fontSize: 10, opacity: 0.5, lineHeight: 1.4 }}>
                     {s.moves.slice(0, 3).map((m, j) => (
@@ -247,10 +290,10 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
                   <div style={{ fontSize: 11, opacity: 0.8, lineHeight: 1.6, marginBottom: 6 }}>{info.desc}</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 3, marginBottom: 8 }}>
                     <div style={{ fontSize: 10, background: "rgba(255,255,255,0.06)", padding: "4px 8px", borderRadius: 8, lineHeight: 1.5 }}>
-                      <span style={{ opacity: 0.5 }}>被動｜</span>{info.passive}
+                      <span style={{ opacity: 0.5 }}>{t("selection.label.passive", "Passive")}｜</span>{info.passive}
                     </div>
                     <div style={{ fontSize: 10, background: "rgba(255,255,255,0.06)", padding: "4px 8px", borderRadius: 8, lineHeight: 1.5 }}>
-                      <span style={{ opacity: 0.5 }}>連擊｜</span>{info.specDef}
+                      <span style={{ opacity: 0.5 }}>{t("selection.label.combo", "Combo")}｜</span>{info.specDef}
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 5 }}>
@@ -275,7 +318,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
       {/* Confirm button */}
       {!isDual && picked && (
         <div style={{ padding: "6px 14px 14px", animation: "fadeIn 0.3s ease", flexShrink: 0 }}>
-          <button className="selection-confirm-btn touch-btn" onClick={confirmSingle} aria-label={`確認選擇 ${picked.name}`} style={{
+          <button className="selection-confirm-btn touch-btn" onClick={confirmSingle} aria-label={t("selection.a11y.confirmSingle", "Confirm {name}", { name: picked.name })} style={{
             width: "100%", padding: "13px 0",
             background: `linear-gradient(135deg, ${picked.c1}, ${picked.c2})`,
             border: "none", borderRadius: 14,
@@ -283,13 +326,13 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
             letterSpacing: 2, cursor: "pointer",
             boxShadow: `0 4px 20px ${picked.c1}66`,
           }}>
-            選擇 {picked.typeIcon} {picked.name} 出發！
+            {t("selection.confirm.single", "Start with {icon} {name}!", { icon: picked.typeIcon, name: picked.name })}
           </button>
         </div>
       )}
       {isDual && picked1 && picked2 && (
         <div style={{ padding: "6px 14px 14px", animation: "fadeIn 0.3s ease", flexShrink: 0 }}>
-          <button className="selection-confirm-btn touch-btn" onClick={confirmDual} aria-label="確認雙人角色並出發" style={{
+          <button className="selection-confirm-btn touch-btn" onClick={confirmDual} aria-label={t("selection.a11y.confirmDual", "Confirm dual selection")} style={{
             width: "100%", padding: "13px 0",
             background: mode === "pvp"
               ? "linear-gradient(135deg,#ec4899,#f43f5e)"
@@ -302,8 +345,16 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
               : "0 4px 20px rgba(14,165,233,0.32)",
           }}>
             {mode === "pvp"
-              ? `玩家1 ${picked1.typeIcon}${picked1.name} vs 玩家2 ${picked2.typeIcon}${picked2.name}`
-              : `雙人出發：${picked1.typeIcon}${picked1.name} + ${picked2.typeIcon}${picked2.name}`}
+              ? t("selection.confirm.pvp", "{p1Label} {p1} vs {p2Label} {p2}", {
+                  p1Label: t("selection.slot.p1", "Player 1"),
+                  p2Label: t("selection.slot.p2", "Player 2"),
+                  p1: `${picked1.typeIcon}${picked1.name}`,
+                  p2: `${picked2.typeIcon}${picked2.name}`,
+                })
+              : t("selection.confirm.coop", "Co-op: {p1} + {p2}", {
+                  p1: `${picked1.typeIcon}${picked1.name}`,
+                  p2: `${picked2.typeIcon}${picked2.name}`,
+                })}
           </button>
         </div>
       )}

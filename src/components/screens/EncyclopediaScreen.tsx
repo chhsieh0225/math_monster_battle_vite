@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia';
+import { useI18n } from '../../i18n';
 import type {
   EncyclopediaCounts,
   EncyclopediaData,
@@ -38,6 +39,7 @@ function handleKeyboardActivate(ev: KeyboardEvent<HTMLElement>, action: () => vo
 }
 
 export default function EncyclopediaScreen({ encData = {}, onBack }: EncyclopediaScreenProps) {
+  const { t } = useI18n();
   const enemyEntries = ENC_ENTRIES as EncyclopediaEnemyEntry[];
   const starterEntries = STARTER_ENTRIES as EncyclopediaStarterEntry[];
   const enc: EncyclopediaCounts = encData.encountered || {};
@@ -51,8 +53,8 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: PAGE_BG, color: 'white', overflow: 'hidden' }}>
       <div style={{ padding: '16px 16px 10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <button className="back-touch-btn" onClick={onBack} aria-label="返回主畫面" style={backBtn}>←</button>
-          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>📚 怪獸圖鑑</div>
+          <button className="back-touch-btn" onClick={onBack} aria-label={t("a11y.common.backToTitle", "Back to title")} style={backBtn}>←</button>
+          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>📚 {t("encyclopedia.title", "Encyclopedia")}</div>
           <div style={{ flex: 1 }} />
           <div style={{ fontSize: 12, opacity: 0.5 }}>{encCount}/{ENC_TOTAL}</div>
         </div>
@@ -62,7 +64,11 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '6px 10px 16px', WebkitOverflowScrolling: 'touch' }}>
-        <SectionDivider icon="🐾" label="野生怪獸" sub={`${encCount}/${ENC_TOTAL} 發現`} />
+        <SectionDivider
+          icon="🐾"
+          label={t("encyclopedia.section.enemies", "Wild Monsters")}
+          sub={t("encyclopedia.section.enemiesSub", "{count}/{total} discovered", { count: encCount, total: ENC_TOTAL })}
+        />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 18 }}>
           {enemyEntries.map((e) => {
             const seen = Boolean(enc[e.key]);
@@ -72,7 +78,9 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                 key={e.key}
                 role={seen ? "button" : undefined}
                 tabIndex={seen ? 0 : -1}
-                aria-label={seen ? `查看圖鑑：${e.name}` : "尚未解鎖怪獸"}
+                aria-label={seen
+                  ? t("encyclopedia.a11y.viewEnemy", "View encyclopedia: {name}", { name: e.name })
+                  : t("encyclopedia.a11y.lockedEnemy", "Locked monster")}
                 onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => {
                   if (!seen) return;
                   handleKeyboardActivate(ev, () => setSelected({ entry: e, kind: 'enemy' }));
@@ -99,27 +107,35 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                     filter: seen ? 'none' : 'brightness(0) opacity(0.15)',
                   }}
                 >
-                  <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={`${seen ? e.name : "未知怪獸"} 圖像`} />
+                  <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={seen
+                    ? t("encyclopedia.a11y.enemySprite", "{name} sprite", { name: e.name })
+                    : t("encyclopedia.a11y.unknownEnemySprite", "Unknown monster sprite")} />
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{seen ? e.name : '???'}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{seen ? e.name : t("encyclopedia.unknownName", "???")}</div>
                 <div style={{ fontSize: 10, opacity: 0.5 }}>
-                  {seen ? `${e.typeIcon} ${e.typeName}` : '??'}
-                  {e.isEvolved && seen && <span style={{ marginLeft: 4, fontSize: 9, background: 'rgba(168,85,247,0.25)', padding: '1px 5px', borderRadius: 6 }}>進化</span>}
+                  {seen ? `${e.typeIcon} ${e.typeName}` : t("encyclopedia.unknownType", "??")}
+                  {e.isEvolved && seen && <span style={{ marginLeft: 4, fontSize: 9, background: 'rgba(168,85,247,0.25)', padding: '1px 5px', borderRadius: 6 }}>{t("encyclopedia.tag.evolved", "Evolved")}</span>}
                 </div>
-                {seen && <div style={{ fontSize: 9, opacity: 0.25, marginTop: 3 }}>遭遇 {enc[e.key] || 0} / 擊敗 {def[e.key] || 0}</div>}
+                {seen && <div style={{ fontSize: 9, opacity: 0.25, marginTop: 3 }}>
+                  {t("encyclopedia.countLine", "Encounter {enc} / Defeat {def}", { enc: enc[e.key] || 0, def: def[e.key] || 0 })}
+                </div>}
               </div>
             );
           })}
         </div>
 
-        <SectionDivider icon="⚔️" label="夥伴角色" sub={`${starterEntries.length} 種形態`} />
+        <SectionDivider
+          icon="⚔️"
+          label={t("encyclopedia.section.starters", "Partner Roles")}
+          sub={t("encyclopedia.section.startersSub", "{count} forms", { count: starterEntries.length })}
+        />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
           {starterEntries.map((e) => (
             <div
               key={e.key}
               role="button"
               tabIndex={0}
-              aria-label={`查看夥伴圖鑑：${e.name}`}
+              aria-label={t("encyclopedia.a11y.viewStarter", "View partner encyclopedia: {name}", { name: e.name })}
               onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, () => setSelected({ entry: e, kind: 'starter' }))}
               onClick={() => setSelected({ entry: e, kind: 'starter' })}
               style={{
@@ -142,7 +158,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                   justifyContent: 'center',
                 }}
               >
-                <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={`${e.name} 圖像`} />
+                <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={t("encyclopedia.a11y.starterSprite", "{name} sprite", { name: e.name })} />
               </div>
               <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{e.name}</div>
               <div style={{ fontSize: 10, opacity: 0.5 }}>{e.typeIcon} {e.typeName}</div>
@@ -166,6 +182,7 @@ type DetailModalProps = {
 };
 
 function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
+  const { t } = useI18n();
   const tc = TYPE_COLORS[entry.mType] || '#6366f1';
   const encounterCount = enc[entry.key] || 0;
   const defeatCount = def[entry.key] || 0;
@@ -175,7 +192,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
     <div
       role="button"
       tabIndex={0}
-      aria-label="關閉怪獸詳情"
+      aria-label={t("encyclopedia.a11y.closeEnemyDetail", "Close monster details")}
       onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, onClose)}
       onClick={onClose}
       style={{
@@ -217,7 +234,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
           <button
             className="touch-btn"
             onClick={onClose}
-            aria-label="關閉"
+            aria-label={t("common.cancel", "Close")}
             style={{
               position: 'absolute',
               top: 12,
@@ -249,7 +266,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
               animation: 'float 3s ease-in-out infinite',
             }}
           >
-            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} ariaLabel={`${entry.name} 圖像`} />
+            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} ariaLabel={t("encyclopedia.a11y.enemySprite", "{name} sprite", { name: entry.name })} />
           </div>
 
           <div style={{ marginTop: 12 }}>
@@ -266,7 +283,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
                   color: tc,
                 }}
               >
-                {entry.typeIcon} {entry.typeName}系
+                {entry.typeIcon} {t("encyclopedia.typeTag", "{type} type", { type: entry.typeName })}
               </span>
               {entry.isEvolved && (
                 <span
@@ -280,7 +297,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
                     color: '#c084fc',
                   }}
                 >
-                  ✨ 進化型態
+                  ✨ {t("encyclopedia.tag.evolved", "Evolved")}
                 </span>
               )}
               {entry.traitName && entry.traitName !== '普通' && (
@@ -304,9 +321,9 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
 
         <div style={{ padding: '0 18px 20px' }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-            <StatBox icon="❤️" label="HP" value={entry.hp} color="#ef4444" />
-            <StatBox icon="⚔️" label="ATK" value={entry.atk} color="#f59e0b" />
-            <StatBox icon="📍" label="棲息地" color="#6366f1" sub={entry.habitat} />
+            <StatBox icon="❤️" label={t("encyclopedia.stat.hp", "HP")} value={entry.hp} color="#ef4444" />
+            <StatBox icon="⚔️" label={t("encyclopedia.stat.atk", "ATK")} value={entry.atk} color="#f59e0b" />
+            <StatBox icon="📍" label={t("encyclopedia.stat.habitat", "Habitat")} color="#6366f1" sub={entry.habitat} />
           </div>
 
           {entry.desc && (
@@ -319,7 +336,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
                 border: '1px solid rgba(255,255,255,0.06)',
               }}
             >
-              <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 4 }}>📖 圖鑑說明</div>
+              <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 4 }}>📖 {t("encyclopedia.section.desc", "Description")}</div>
               <div style={{ fontSize: 13, lineHeight: 1.7, opacity: 0.8 }}>{entry.desc}</div>
             </div>
           )}
@@ -334,7 +351,9 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
                 border: '1px solid rgba(99,102,241,0.15)',
               }}
             >
-              <div style={{ fontSize: 11, color: '#818cf8', fontWeight: 700, marginBottom: 4 }}>✦ 特性：{entry.traitName}</div>
+              <div style={{ fontSize: 11, color: '#818cf8', fontWeight: 700, marginBottom: 4 }}>
+                ✦ {t("encyclopedia.section.trait", "Trait")}: {entry.traitName}
+              </div>
               <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.8 }}>{entry.traitDesc}</div>
             </div>
           )}
@@ -349,8 +368,8 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
                   border: '1px solid rgba(239,68,68,0.15)',
                 }}
               >
-                <div style={{ fontSize: 10, color: '#ef4444', fontWeight: 700, marginBottom: 4 }}>⚠️ 弱點</div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{entry.weakAgainst.map((t) => `${t}系`).join('、')}</div>
+                <div style={{ fontSize: 10, color: '#ef4444', fontWeight: 700, marginBottom: 4 }}>⚠️ {t("encyclopedia.section.weakness", "Weakness")}</div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{entry.weakAgainst.map((typeName) => t("encyclopedia.typeTag", "{type} type", { type: typeName })).join('、')}</div>
               </div>
             )}
             {entry.resistAgainst.length > 0 && (
@@ -362,8 +381,8 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
                   border: '1px solid rgba(34,197,94,0.15)',
                 }}
               >
-                <div style={{ fontSize: 10, color: '#22c55e', fontWeight: 700, marginBottom: 4 }}>🛡️ 抗性</div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{entry.resistAgainst.map((t) => `${t}系`).join('、')}</div>
+                <div style={{ fontSize: 10, color: '#22c55e', fontWeight: 700, marginBottom: 4 }}>🛡️ {t("encyclopedia.section.resistance", "Resistance")}</div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{entry.resistAgainst.map((typeName) => t("encyclopedia.typeTag", "{type} type", { type: typeName })).join('、')}</div>
               </div>
             )}
           </div>
@@ -381,7 +400,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
                 gap: 8,
               }}
             >
-              <div style={{ fontSize: 10, opacity: 0.4 }}>🎁 掉落物</div>
+              <div style={{ fontSize: 10, opacity: 0.4 }}>🎁 {t("encyclopedia.section.drops", "Drops")}</div>
               <div style={{ display: 'flex', gap: 6 }}>
                 {entry.drops.map((drop, index) => <span key={`${entry.key}_drop_${index}`} style={{ fontSize: 20 }}>{drop}</span>)}
               </div>
@@ -401,17 +420,17 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
           >
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 20, fontWeight: 900, color: '#6366f1' }}>{encounterCount}</div>
-              <div style={{ fontSize: 10, opacity: 0.4 }}>遭遇次數</div>
+              <div style={{ fontSize: 10, opacity: 0.4 }}>{t("encyclopedia.stat.encounters", "Encounters")}</div>
             </div>
             <div style={{ width: 1, background: 'rgba(255,255,255,0.08)' }} />
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 20, fontWeight: 900, color: '#22c55e' }}>{defeatCount}</div>
-              <div style={{ fontSize: 10, opacity: 0.4 }}>擊敗次數</div>
+              <div style={{ fontSize: 10, opacity: 0.4 }}>{t("encyclopedia.stat.defeats", "Defeats")}</div>
             </div>
             <div style={{ width: 1, background: 'rgba(255,255,255,0.08)' }} />
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 20, fontWeight: 900, color: '#f59e0b' }}>{defeatRate}%</div>
-              <div style={{ fontSize: 10, opacity: 0.4 }}>擊敗率</div>
+              <div style={{ fontSize: 10, opacity: 0.4 }}>{t("encyclopedia.stat.defeatRate", "Defeat Rate")}</div>
             </div>
           </div>
         </div>
@@ -471,6 +490,7 @@ type StarterDetailModalProps = {
 };
 
 function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
+  const { t } = useI18n();
   const tc = TYPE_COLORS[entry.mType] || '#6366f1';
   const stageStars = ['⭐', '⭐⭐', '⭐⭐⭐'][entry.stageIdx] || '⭐';
 
@@ -478,7 +498,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
     <div
       role="button"
       tabIndex={0}
-      aria-label="關閉夥伴詳情"
+      aria-label={t("encyclopedia.a11y.closeStarterDetail", "Close partner details")}
       onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, onClose)}
       onClick={onClose}
       style={{
@@ -520,7 +540,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
           <button
             className="touch-btn"
             onClick={onClose}
-            aria-label="關閉"
+            aria-label={t("common.cancel", "Close")}
             style={{
               position: 'absolute',
               top: 12,
@@ -554,7 +574,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
               animation: 'float 3s ease-in-out infinite',
             }}
           >
-            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} ariaLabel={`${entry.name} 圖像`} />
+            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} ariaLabel={t("encyclopedia.a11y.starterSprite", "{name} sprite", { name: entry.name })} />
           </div>
 
           <div style={{ marginTop: 12 }}>
@@ -571,7 +591,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
                   color: tc,
                 }}
               >
-                {entry.typeIcon} {entry.typeName}系
+                {entry.typeIcon} {t("encyclopedia.typeTag", "{type} type", { type: entry.typeName })}
               </span>
               {entry.skill && (
                 <span
@@ -603,7 +623,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
                 border: '1px solid rgba(255,255,255,0.06)',
               }}
             >
-              <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 4 }}>📖 圖鑑說明</div>
+              <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 4 }}>📖 {t("encyclopedia.section.desc", "Description")}</div>
               <div style={{ fontSize: 13, lineHeight: 1.7, opacity: 0.8 }}>{entry.desc}</div>
             </div>
           )}
@@ -618,7 +638,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
                 border: '1px solid rgba(255,255,255,0.06)',
               }}
             >
-              <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8 }}>🎯 專屬招式</div>
+              <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8 }}>🎯 {t("encyclopedia.section.moves", "Signature Moves")}</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {entry.moves.map((move, index) => (
                   <div

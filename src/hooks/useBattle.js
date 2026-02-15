@@ -25,7 +25,6 @@ import {
   MAX_MOVE_LVL,
   TIMER_SEC,
 } from '../data/constants';
-import { PVP_BALANCE } from '../data/pvpBalance';
 import { STARTERS } from '../data/starters';
 
 import { genQ } from '../utils/questionGenerator';
@@ -62,7 +61,13 @@ import {
 import { effectOrchestrator } from './battle/effectOrchestrator';
 import { runEnemyTurn } from './battle/enemyFlow';
 import { runPlayerAnswer } from './battle/playerFlow';
-import { resolvePvpStrike } from './battle/turnResolver';
+import {
+  createPvpEnemyFromStarter,
+  handlePvpAnswer,
+  processPvpTurnStart,
+} from './battle/pvpFlow';
+import { buildNextEvolvedAlly } from './battle/coopFlow';
+import { useCoopTurnRotation } from './useCoopTurnRotation';
 
 // ── Constants (module-level to avoid re-allocation per render) ──
 const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
@@ -82,53 +87,6 @@ function pickPartnerStarter(mainStarter, pickIndex) {
   const pool = STARTERS.filter((s) => s.id !== mainStarter.id);
   if (pool.length <= 0) return null;
   return pool[pickIndex(pool.length)];
-}
-
-const TYPE_TO_SCENE = {
-  fire: "fire",
-  ghost: "ghost",
-  steel: "steel",
-  dark: "dark",
-  grass: "grass",
-  water: "grass",
-  electric: "steel",
-  light: "grass",
-};
-
-const PVP_HIT_ANIMS = {
-  fire: "enemyFireHit 0.55s ease",
-  electric: "enemyElecHit 0.55s ease",
-  water: "enemyWaterHit 0.6s ease",
-  grass: "enemyGrassHit 0.55s ease",
-  dark: "enemyDarkHit 0.7s ease",
-  light: "enemyFireHit 0.55s ease",
-};
-
-function createPvpEnemyFromStarter(starter) {
-  if (!starter) return null;
-  const stageIdx = getStarterStageIdx(starter);
-  const stage = starter.stages?.[stageIdx] || starter.stages?.[0];
-  const maxHp = getStarterMaxHp(starter);
-  return {
-    id: `pvp_${starter.id}`,
-    name: stage?.name || starter.name,
-    maxHp,
-    hp: maxHp,
-    atk: 12,
-    lvl: 1,
-    mType: starter.type,
-    sceneMType: TYPE_TO_SCENE[starter.type] || "grass",
-    typeIcon: starter.typeIcon,
-    typeName: starter.typeName,
-    c1: starter.c1,
-    c2: starter.c2,
-    trait: "normal",
-    traitName: "玩家",
-    drops: ["🏁"],
-    svgFn: stage?.svgFn || starter.stages[0].svgFn,
-    isEvolved: stageIdx > 0,
-    selectedStageIdx: stageIdx,
-  };
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -272,14 +230,12 @@ export function useBattle() {
   );
 
   const getOtherPvpTurn = (turn) => (turn === "p1" ? "p2" : "p1");
-  const pvpSpecDefTrigger = PVP_BALANCE.passive.specDefComboTrigger || 4;
 
   // ──── Internal refs ────
   const runSeedRef = useRef(0);
   const asyncGateRef = useRef(0);
   const doEnemyTurnRef = useRef(() => {});
   const pendingEvolve = useRef(false);   // ← Bug #2 fix
-  const coopAutoRotatePendingRef = useRef(false);
   const eventSessionIdRef = useRef(null);
   const sessionClosedRef = useRef(false);
   const sessionStartRef = useRef(0);
@@ -336,6 +292,16 @@ export function useBattle() {
   // Cleanup all pending timers on unmount
   useEffect(() => () => { activeTimers.current.forEach(clearTimeout); activeTimers.current.clear(); }, []);
 
+  const {
+    markPending: markCoopRotatePending,
+    resetPending: resetCoopRotatePending,
+  } = useCoopTurnRotation({
+    phase,
+    safeTo,
+    sr,
+    setCoopActiveSlot,
+  });
+
   // ═══════════════════════════════════════════════════════════════
   //  TIMER
   // ═══════════════════════════════════════════════════════════════
@@ -385,7 +351,7 @@ export function useBattle() {
       round: s.round ?? 0,
     }, { sessionId: eventSessionIdRef.current });
     if (s.battleMode === "coop" || s.battleMode === "double") {
-      coopAutoRotatePendingRef.current = true;
+      markCoopRotatePending();
     }
     setBText("⏰ 時間到！來不及出招！");
     setPhase("text");
@@ -417,25 +383,6 @@ export function useBattle() {
 
   // Cleanup timer when leaving question phase
   useEffect(() => { if (phase !== "question") clearTimer(); }, [phase, clearTimer]);
-
-  // Coop auto-rotation: one ally takes one turn, then swap automatically.
-  useEffect(() => {
-    if (phase !== "menu" || !coopAutoRotatePendingRef.current) return;
-    coopAutoRotatePendingRef.current = false;
-    const s = sr.current;
-    const canSwitch = (
-      (s.battleMode === "coop" || s.battleMode === "double")
-      && s.allySub
-      && (s.pHpSub || 0) > 0
-    );
-    safeTo(() => {
-      if (!canSwitch) {
-        setCoopActiveSlot("main");
-        return;
-      }
-      setCoopActiveSlot((prev) => (prev === "main" ? "sub" : "main"));
-    }, 0);
-  }, [phase, safeTo]);
 
   // ═══════════════════════════════════════════════════════════════
   //  BATTLE FLOW
@@ -483,7 +430,7 @@ export function useBattle() {
     sessionClosedRef.current = false;
     sessionStartRef.current = nowMs();
     eventSessionIdRef.current = createEventSessionId();
-    coopAutoRotatePendingRef.current = false;
+    resetCoopRotatePending();
     // Regenerate roster so slime variants are re-randomised each game
     const mode = modeOverride || sr.current.battleMode || battleMode;
     const leader = starterOverride || sr.current.starter;
@@ -816,323 +763,48 @@ export function useBattle() {
     setAnswered(true);
     clearTimer();
     const s = sr.current;
-    if (s.battleMode === "pvp") {
-      const attacker = s.pvpTurn === "p1" ? s.starter : s.pvpStarter2;
-      const defender = s.pvpTurn === "p1" ? s.pvpStarter2 : s.starter;
-      if (!attacker || !defender || s.selIdx == null) return;
-      const move = attacker.moves[s.selIdx];
-      const correct = choice === s.q.answer;
-      setFb({ correct, answer: s.q.answer, steps: s.q.steps || [] });
-      if (correct) setTC((c) => c + 1);
-      else setTW((w) => w + 1);
-      const currentTurn = s.pvpTurn;
-      const nextTurn = getOtherPvpTurn(currentTurn);
-
-      if (!correct) {
-        if (currentTurn === "p1") {
-          setPvpChargeP1(0);
-          setPvpComboP1(0);
-        } else {
-          setPvpChargeP2(0);
-          setPvpComboP2(0);
-        }
-        setPvpTurn(nextTurn);
-        setPvpActionCount((c) => c + 1);
-        setBText(`❌ ${attacker.name} 答錯，攻擊落空！`);
-        setPhase("text");
-        return;
-      }
-
-      let unlockedSpecDef = false;
-      if (currentTurn === "p1") {
-        setPvpChargeP1((c) => Math.min(c + 1, 3));
-        if (!s.pvpSpecDefP1) {
-          const nextCombo = (s.pvpComboP1 || 0) + 1;
-          if (nextCombo >= pvpSpecDefTrigger) {
-            setPvpComboP1(0);
-            setPvpSpecDefP1(true);
-            unlockedSpecDef = true;
-          } else {
-            setPvpComboP1(nextCombo);
-          }
-        }
-      } else {
-        setPvpChargeP2((c) => Math.min(c + 1, 3));
-        if (!s.pvpSpecDefP2) {
-          const nextCombo = (s.pvpComboP2 || 0) + 1;
-          if (nextCombo >= pvpSpecDefTrigger) {
-            setPvpComboP2(0);
-            setPvpSpecDefP2(true);
-            unlockedSpecDef = true;
-          } else {
-            setPvpComboP2(nextCombo);
-          }
-        }
-      }
-
-      const attackerHp = currentTurn === "p1" ? s.pHp : s.pvpHp2;
-      const attackerMaxHp = currentTurn === "p1"
-        ? getStageMaxHp(s.pStg)
-        : getStarterMaxHp(s.pvpStarter2);
-      const strike = resolvePvpStrike({
-        move,
-        moveIdx: s.selIdx,
-        attackerType: attacker.type,
-        defenderType: defender.type,
-        attackerHp,
-        attackerMaxHp,
-        firstStrike: s.pvpActionCount === 0,
-        random: rand,
-      });
-
-      if (strike.isCrit) {
-        setEffMsg({ text: "💥 暴擊！", color: "#ff6b00" });
-        safeTo(() => setEffMsg(null), 1200);
-      } else if (strike.eff > 1) {
-        setEffMsg({ text: "效果絕佳！", color: "#22c55e" });
-        safeTo(() => setEffMsg(null), 1200);
-      } else if (strike.eff < 1) {
-        setEffMsg({ text: "效果不佳", color: "#94a3b8" });
-        safeTo(() => setEffMsg(null), 1200);
-      }
-
-      const vfxType = move.risky && move.type2 ? move.type2 : move.type;
-      const hitAnim = PVP_HIT_ANIMS[vfxType] || "enemyHit 0.45s ease";
-      const runStrike = () => {
-        const s2 = sr.current;
-        const sfxKey = move.risky && move.type2 ? move.type2 : move.type;
-        sfx.play(sfxKey);
-        if (strike.isCrit) sfx.play("crit");
-        if (currentTurn === "p1") {
-          setAtkEffect({ type: vfxType, idx: s2.selIdx, lvl: 1, targetSide: "enemy" });
-        } else {
-          setAtkEffect({ type: vfxType, idx: s2.selIdx, lvl: 1, targetSide: "player" });
-          addP("enemy", 84, 186, 3);
-        }
-
-        const defenderSpecDefReady = currentTurn === "p1" ? !!s2.pvpSpecDefP2 : !!s2.pvpSpecDefP1;
-        if (defenderSpecDefReady) {
-          if (currentTurn === "p1") setPvpSpecDefP2(false);
-          else setPvpSpecDefP1(false);
-
-          const defenderMainX = currentTurn === "p1" ? 140 : 60;
-          const defenderMainY = currentTurn === "p1" ? 55 : 170;
-          const attackerMainX = currentTurn === "p1" ? 60 : 140;
-          const attackerMainY = currentTurn === "p1" ? 170 : 55;
-          const finishWithTurnSwap = () => {
-            setPvpTurn(nextTurn);
-            setPvpActionCount((c) => c + 1);
-            setPhase("text");
-          };
-
-          if (defender.type === "fire") {
-            addD("🛡️BLOCK", defenderMainX, defenderMainY, "#fbbf24");
-            sfx.play("specDef");
-            setBText(`🛡️ ${defender.name} 展開防護罩，擋下了攻擊！`);
-            safeTo(() => setAtkEffect(null), 380);
-            finishWithTurnSwap();
-            return;
-          }
-
-          if (defender.type === "water") {
-            if (currentTurn === "p1") setEAnim("dodgeSlide 0.9s ease");
-            else setPAnim("dodgeSlide 0.9s ease");
-            addD("MISS!", defenderMainX, defenderMainY, "#38bdf8");
-            sfx.play("specDef");
-            setBText(`💨 ${defender.name} 完美閃避！`);
-            safeTo(() => {
-              setEAnim("");
-              setPAnim("");
-              setAtkEffect(null);
-            }, 680);
-            finishWithTurnSwap();
-            return;
-          }
-
-          if (defender.type === "electric") {
-            if (currentTurn === "p1") setPvpParalyzeP1(true);
-            else setPvpParalyzeP2(true);
-            if (currentTurn === "p1") setPAnim("playerHit 0.45s ease");
-            else setEAnim("enemyElecHit 0.55s ease");
-            addD("⚡麻痺", attackerMainX, attackerMainY, "#fbbf24");
-            sfx.play("specDef");
-            setBText(`⚡ ${defender.name} 觸發反制電流！${attacker.name} 下回合麻痺！`);
-            safeTo(() => {
-              setPAnim("");
-              setEAnim("");
-              setAtkEffect(null);
-            }, 520);
-            finishWithTurnSwap();
-            return;
-          }
-
-          const applyCounterToAttacker = (dmg, color, anim) => {
-            if (currentTurn === "p1") {
-              const nh = Math.max(0, s2.pHp - dmg);
-              setPHp(nh);
-              setPAnim("playerHit 0.45s ease");
-              addD(`-${dmg}`, attackerMainX, attackerMainY, color);
-              safeTo(() => setPAnim(""), 520);
-              return nh <= 0;
-            }
-            const nh = Math.max(0, s2.pvpHp2 - dmg);
-            setPvpHp2(nh);
-            setEHp(nh);
-            setEAnim(anim);
-            addD(`-${dmg}`, attackerMainX, attackerMainY, color);
-            safeTo(() => setEAnim(""), 520);
-            return nh <= 0;
-          };
-
-          if (defender.type === "light") {
-            const counterDmg = PVP_BALANCE.passive.lightCounterDamage || 14;
-            addD("🛡️BLOCK", defenderMainX, defenderMainY, "#f59e0b");
-            const killed = applyCounterToAttacker(counterDmg, "#f59e0b", "enemyFireHit 0.55s ease");
-            sfx.play("light");
-            setBText(`✨ ${defender.name} 咆哮反擊！`);
-            safeTo(() => setAtkEffect(null), 420);
-            if (killed) {
-              setPvpWinner(currentTurn === "p1" ? "p2" : "p1");
-              setScreen("pvp_result");
-              return;
-            }
-            finishWithTurnSwap();
-            return;
-          }
-
-          const reflectRaw = Math.round(strike.dmg * (PVP_BALANCE.passive.grassReflectRatio || 0.32));
-          const reflectDmg = Math.min(
-            PVP_BALANCE.passive.grassReflectCap || 18,
-            Math.max(PVP_BALANCE.passive.grassReflectMin || 8, reflectRaw),
-          );
-          addD("🛡️BLOCK", defenderMainX, defenderMainY, "#22c55e");
-          const killed = applyCounterToAttacker(reflectDmg, "#22c55e", "enemyGrassHit 0.55s ease");
-          sfx.play("specDef");
-          setBText(`🌿 ${defender.name} 反彈攻擊！`);
-          safeTo(() => setAtkEffect(null), 420);
-          if (killed) {
-            setPvpWinner(currentTurn === "p1" ? "p2" : "p1");
-            setScreen("pvp_result");
-            return;
-          }
-          finishWithTurnSwap();
-          return;
-        }
-
-        let totalDmg = strike.dmg;
-        const passiveNotes = [];
-        let bonusDmg = 0;
-
-        // Fire passive: apply burn stacks to defender.
-        if (attacker.type === "fire") {
-          if (currentTurn === "p1") setPvpBurnP2((b) => Math.min(PVP_BALANCE.passive.fireBurnCap, b + 1));
-          else setPvpBurnP1((b) => Math.min(PVP_BALANCE.passive.fireBurnCap, b + 1));
-          passiveNotes.push("🔥灼燒");
-        }
-
-        // Water passive: chance to freeze defender's next turn.
-        if (attacker.type === "water" && chance(PVP_BALANCE.passive.waterFreezeChance)) {
-          if (currentTurn === "p1") setPvpFreezeP2(true);
-          else setPvpFreezeP1(true);
-          passiveNotes.push("❄️凍結");
-        }
-
-        // Electric passive: stack discharge on attacker.
-        if (attacker.type === "electric") {
-          if (currentTurn === "p1") {
-            const stack = (s2.pvpStaticP1 || 0) + 1;
-            if (stack >= PVP_BALANCE.passive.electricDischargeAt) {
-              bonusDmg += PVP_BALANCE.passive.electricDischargeDamage;
-              setPvpStaticP1(0);
-              passiveNotes.push("⚡放電");
-              addD(`⚡-${PVP_BALANCE.passive.electricDischargeDamage}`, 140, 55, "#fbbf24");
-              sfx.play("staticDischarge");
-            } else {
-              setPvpStaticP1(stack);
-            }
-          } else {
-            const stack = (s2.pvpStaticP2 || 0) + 1;
-            if (stack >= PVP_BALANCE.passive.electricDischargeAt) {
-              bonusDmg += PVP_BALANCE.passive.electricDischargeDamage;
-              setPvpStaticP2(0);
-              passiveNotes.push("⚡放電");
-              addD(`⚡-${PVP_BALANCE.passive.electricDischargeDamage}`, 60, 170, "#fbbf24");
-              sfx.play("staticDischarge");
-            } else {
-              setPvpStaticP2(stack);
-            }
-          }
-        }
-
-        totalDmg += bonusDmg;
-
-        if (currentTurn === "p1") {
-          const nh = Math.max(0, s2.pvpHp2 - totalDmg);
-          setPvpHp2(nh);
-          setEHp(nh);
-          setEAnim(hitAnim);
-          addD(strike.isCrit ? `💥-${totalDmg}` : `-${totalDmg}`, 140, 55, "#ef4444");
-
-          if (strike.heal > 0) {
-            setPHp((h) => Math.min(getStageMaxHp(s2.pStg), h + strike.heal));
-            addD(`+${strike.heal}`, 52, 164, "#22c55e");
-            passiveNotes.push("🌿回復");
-          }
-
-          safeTo(() => { setEAnim(""); setAtkEffect(null); }, 520);
-          if (nh <= 0) {
-            setPvpWinner("p1");
-            setScreen("pvp_result");
-            return;
-          }
-        } else {
-          const nh = Math.max(0, s2.pHp - totalDmg);
-          setPHp(nh);
-          setPAnim("playerHit 0.45s ease");
-          addD(strike.isCrit ? `💥-${totalDmg}` : `-${totalDmg}`, 60, 170, "#ef4444");
-
-          if (strike.heal > 0) {
-            const healed = Math.min(getStarterMaxHp(s2.pvpStarter2), s2.pvpHp2 + strike.heal);
-            setPvpHp2(healed);
-            setEHp(healed);
-            addD(`+${strike.heal}`, 146, 54, "#22c55e");
-            passiveNotes.push("🌿回復");
-          }
-
-          safeTo(() => { setPAnim(""); setAtkEffect(null); }, 520);
-          if (nh <= 0) {
-            setPvpWinner("p2");
-            setScreen("pvp_result");
-            return;
-          }
-        }
-
-        const allNotes = [strike.isCrit ? "💥暴擊" : "", strike.passiveLabel, ...passiveNotes, unlockedSpecDef ? "🛡️反制就緒" : ""].filter(Boolean).join(" ");
-        setBText(`✅ ${attacker.name} 的 ${move.name} 命中！${allNotes ? ` ${allNotes}` : ""}`);
-        setPvpTurn(nextTurn);
-        setPvpActionCount((c) => c + 1);
-        setPhase("text");
-      };
-
-      setPhase("playerAtk");
-      if (currentTurn === "p1") {
-        effectOrchestrator.runPlayerLunge({
-          safeTo,
-          setPAnim,
-          startDelay: 120,
-          settleDelay: 280,
-          onReady: runStrike,
-        });
-      } else {
-        effectOrchestrator.runEnemyLunge({
-          safeTo,
-          setEAnim,
-          strikeDelay: 320,
-          onStrike: runStrike,
-        });
-      }
-      return;
-    }
+    if (handlePvpAnswer({
+      choice,
+      state: s,
+      sr,
+      rand,
+      chance,
+      safeTo,
+      sfx,
+      getOtherPvpTurn,
+      setFb,
+      setTC,
+      setTW,
+      setPvpChargeP1,
+      setPvpChargeP2,
+      setPvpComboP1,
+      setPvpComboP2,
+      setPvpTurn,
+      setPvpActionCount,
+      setBText,
+      setPhase,
+      setPvpSpecDefP1,
+      setPvpSpecDefP2,
+      setEffMsg,
+      setAtkEffect,
+      addP,
+      setPvpParalyzeP1,
+      setPvpParalyzeP2,
+      setPAnim,
+      setEAnim,
+      addD,
+      setPHp,
+      setPvpHp2,
+      setEHp,
+      setScreen,
+      setPvpWinner,
+      setPvpBurnP1,
+      setPvpBurnP2,
+      setPvpFreezeP1,
+      setPvpFreezeP2,
+      setPvpStaticP1,
+      setPvpStaticP2,
+    })) return;
 
     const actingStarter = getActingStarter(s);
     const isCoopSubActive = !!(
@@ -1164,7 +836,7 @@ export function useBattle() {
     }, { sessionId: eventSessionIdRef.current });
     _updateAbility(s.q?.op, correct);
     if (s.battleMode === "coop" || s.battleMode === "double") {
-      coopAutoRotatePendingRef.current = true;
+      markCoopRotatePending();
     }
     runPlayerAnswer({
       correct,
@@ -1235,76 +907,31 @@ export function useBattle() {
     }
   };
 
-  const processPvpTurnStart = () => {
-    const s = sr.current;
-    if (s.battleMode !== "pvp" || s.pvpWinner) return false;
-    const currentTurn = s.pvpTurn;
-    const currentName = getPvpTurnName(s, currentTurn);
-    const isP1 = currentTurn === "p1";
-
-    const burnStack = isP1 ? (s.pvpBurnP1 || 0) : (s.pvpBurnP2 || 0);
-    if (burnStack > 0) {
-      const burnDmg = (PVP_BALANCE.passive.fireBurnTickBase || 0)
-        + burnStack * (PVP_BALANCE.passive.fireBurnTickPerStack || 0);
-      if (isP1) {
-        const nh = Math.max(0, s.pHp - burnDmg);
-        setPHp(nh);
-        setPvpBurnP1(Math.max(0, burnStack - 1));
-        setPAnim("playerHit 0.45s ease");
-        addD(`🔥-${burnDmg}`, 60, 170, "#f97316");
-        safeTo(() => setPAnim(""), 480);
-        if (nh <= 0) {
-          setPvpWinner("p2");
-          setScreen("pvp_result");
-          return true;
-        }
-      } else {
-        const nh = Math.max(0, s.pvpHp2 - burnDmg);
-        setPvpHp2(nh);
-        setEHp(nh);
-        setPvpBurnP2(Math.max(0, burnStack - 1));
-        setEAnim("enemyFireHit 0.5s ease");
-        addD(`🔥-${burnDmg}`, 140, 55, "#f97316");
-        safeTo(() => setEAnim(""), 480);
-        if (nh <= 0) {
-          setPvpWinner("p1");
-          setScreen("pvp_result");
-          return true;
-        }
-      }
-      setBText(`🔥 ${currentName} 受到灼燒傷害！`);
-      setPhase("text");
-      return true;
-    }
-
-    const paralyzed = isP1 ? !!s.pvpParalyzeP1 : !!s.pvpParalyzeP2;
-    if (paralyzed) {
-      if (isP1) setPvpParalyzeP1(false);
-      else setPvpParalyzeP2(false);
-      const nextTurn = getOtherPvpTurn(currentTurn);
-      setPvpTurn(nextTurn);
-      setBText(`⚡ ${currentName} 麻痺，回合跳過！`);
-      setPhase("text");
-      return true;
-    }
-
-    const frozen = isP1 ? !!s.pvpFreezeP1 : !!s.pvpFreezeP2;
-    if (frozen) {
-      if (isP1) setPvpFreezeP1(false);
-      else setPvpFreezeP2(false);
-      const nextTurn = getOtherPvpTurn(currentTurn);
-      setPvpTurn(nextTurn);
-      setBText(`❄️ ${currentName} 被凍結，回合跳過！`);
-      setPhase("text");
-      return true;
-    }
-
-    return false;
-  };
-
   const advance = () => {
     if (phase === "text") {
-      if (processPvpTurnStart()) return;
+      if (processPvpTurnStart({
+        state: sr.current,
+        safeTo,
+        getOtherPvpTurn,
+        getPvpTurnName,
+        setPHp,
+        setPvpBurnP1,
+        setPAnim,
+        addD,
+        setPvpWinner,
+        setScreen,
+        setPvpHp2,
+        setEHp,
+        setPvpBurnP2,
+        setEAnim,
+        setBText,
+        setPhase,
+        setPvpParalyzeP1,
+        setPvpParalyzeP2,
+        setPvpTurn,
+        setPvpFreezeP1,
+        setPvpFreezeP2,
+      })) return;
       setPhase("menu"); setBText("");
     }
     else if (phase === "victory") {
@@ -1315,17 +942,7 @@ export function useBattle() {
         const nextStage = Math.min((sr.current.pStg || 0) + 1, 2);
         const sNow = sr.current;
         const coopSync = (sNow.battleMode === "coop" || sNow.battleMode === "double") && sNow.allySub;
-        let nextAlly = null;
-        if (coopSync) {
-          const allyStage = getStarterStageIdx(sNow.allySub);
-          const nextAllyStage = Math.min(allyStage + 1, 2);
-          const allyStageData = sNow.allySub.stages?.[nextAllyStage] || sNow.allySub.stages?.[0];
-          nextAlly = {
-            ...sNow.allySub,
-            selectedStageIdx: nextAllyStage,
-            name: allyStageData?.name || sNow.allySub.name,
-          };
-        }
+        const nextAlly = coopSync ? buildNextEvolvedAlly(sNow.allySub) : null;
         // Apply evolution state NOW (deferred from win handler so battle
         // screen kept showing the pre-evolution sprite during victory).
         setPStg(st => { if (st + 1 >= 2) tryUnlock("evolve_max"); return Math.min(st + 1, 2); });

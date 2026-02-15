@@ -1,6 +1,6 @@
 export default function TextBox({ text, onClick }) {
   return (
-    <div onClick={onClick} style={{
+    <div onClick={(e) => { e.stopPropagation(); onClick && onClick(); }} style={{
       position: "absolute", bottom: 0, left: 0, right: 0,
       background: "linear-gradient(to top,rgba(15,23,42,0.98),rgba(15,23,42,0.92))",
       borderTop: "3px solid rgba(255,255,255,0.15)",

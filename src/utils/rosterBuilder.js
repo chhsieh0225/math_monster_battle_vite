@@ -1,12 +1,24 @@
 import { MONSTERS, SLIME_VARIANTS, EVOLVED_SLIME_VARIANTS } from '../data/monsters.js';
-import { STAGE_SCALE_BASE, STAGE_SCALE_STEP, STAGE_WAVES } from '../data/stageConfigs.js';
+import {
+  DOUBLE_STAGE_WAVES,
+  STAGE_SCALE_BASE,
+  STAGE_SCALE_STEP,
+  STAGE_WAVES,
+} from '../data/stageConfigs.js';
 
 const MONSTER_BY_ID = new Map(MONSTERS.map(mon => [mon.id, mon]));
 
-export function buildRoster(pickIndex) {
-  const pick = (arr) => arr[pickIndex(arr.length)];
+function pickSlimeVariant({ pool, preferredType, pick }) {
+  if (!preferredType) return pick(pool);
+  const typedPool = pool.filter(v => v.mType === preferredType);
+  return pick(typedPool.length > 0 ? typedPool : pool);
+}
 
-  return STAGE_WAVES.map((wave, i) => {
+export function buildRoster(pickIndex, mode = "single") {
+  const pick = (arr) => arr[pickIndex(arr.length)];
+  const waves = mode === "double" ? DOUBLE_STAGE_WAVES : STAGE_WAVES;
+
+  return waves.map((wave, i) => {
     const b = MONSTER_BY_ID.get(wave.monsterId);
     if (!b) throw new Error(`[rosterBuilder] unknown monsterId: ${wave.monsterId}`);
     const sc = STAGE_SCALE_BASE + i * STAGE_SCALE_STEP;
@@ -14,8 +26,20 @@ export function buildRoster(pickIndex) {
 
     let variant = null;
     let evolvedVariant = null;
-    if (b.id === "slime" && !isEvolved) variant = pick(SLIME_VARIANTS);
-    if (b.id === "slime" && isEvolved) evolvedVariant = pick(EVOLVED_SLIME_VARIANTS);
+    if (b.id === "slime" && !isEvolved) {
+      variant = pickSlimeVariant({
+        pool: SLIME_VARIANTS,
+        preferredType: wave.slimeType,
+        pick,
+      });
+    }
+    if (b.id === "slime" && isEvolved) {
+      evolvedVariant = pickSlimeVariant({
+        pool: EVOLVED_SLIME_VARIANTS,
+        preferredType: wave.slimeType,
+        pick,
+      });
+    }
 
     const activeVariant = evolvedVariant || variant;
     const hm = activeVariant ? (activeVariant.hpMult || 1) : 1;
@@ -37,7 +61,7 @@ export function buildRoster(pickIndex) {
       }),
       name: evolvedVariant ? evolvedVariant.name : (isEvolved && b.evolvedName ? b.evolvedName : (variant ? variant.name : b.name)),
       svgFn: evolvedVariant ? evolvedVariant.svgFn : (isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn)),
-      sceneMType: b.mType,
+      sceneMType: wave.sceneType || b.mType,
       hp: Math.round(b.hp * sc * hm),
       maxHp: Math.round(b.hp * sc * hm),
       atk: Math.round(b.atk * sc * am),

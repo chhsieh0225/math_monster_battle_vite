@@ -8,16 +8,37 @@ import {
   SLIME_VARIANT_CONFIGS,
 } from './monsterConfigs.js';
 import { SKILL_SETS } from './skillSets.js';
-import { STAGE_SCALE_BASE, STAGE_SCALE_STEP, STAGE_WAVES } from './stageConfigs.js';
+import {
+  DOUBLE_STAGE_WAVES,
+  STAGE_SCALE_BASE,
+  STAGE_SCALE_STEP,
+  STAGE_WAVES,
+} from './stageConfigs.js';
 
 test('stage config references valid monster ids', () => {
   const knownIds = new Set(MONSTER_CONFIGS.map(mon => mon.id));
+  const knownTypes = new Set([
+    "grass", "fire", "water", "electric", "ghost", "steel", "dark",
+  ]);
+  const knownSceneTypes = new Set(["grass", "fire", "ghost", "steel", "dark"]);
   assert.ok(STAGE_SCALE_BASE > 0);
   assert.ok(STAGE_SCALE_STEP > 0);
   assert.ok(STAGE_WAVES.length > 0);
+  assert.ok(DOUBLE_STAGE_WAVES.length > 0);
+  assert.equal(DOUBLE_STAGE_WAVES.length % 2, 0, "double waves should be paired");
 
   for (const wave of STAGE_WAVES) {
     assert.ok(knownIds.has(wave.monsterId), `unknown monsterId: ${wave.monsterId}`);
+  }
+
+  for (const wave of DOUBLE_STAGE_WAVES) {
+    assert.ok(knownIds.has(wave.monsterId), `unknown double monsterId: ${wave.monsterId}`);
+    if (wave.slimeType) {
+      assert.ok(knownTypes.has(wave.slimeType), `unknown slimeType: ${wave.slimeType}`);
+    }
+    if (wave.sceneType) {
+      assert.ok(knownSceneTypes.has(wave.sceneType), `unknown sceneType: ${wave.sceneType}`);
+    }
   }
 });
 
@@ -52,4 +73,3 @@ test('skill sets have required structure for all starters', () => {
     }
   }
 });
-

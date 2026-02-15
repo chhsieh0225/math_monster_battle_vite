@@ -67,8 +67,8 @@ export function useBattle() {
   const { rand, randInt, chance, pickIndex, reseed } = useBattleRng();
   const UI = useBattleUIState({ rand, randInt });
 
-  const buildNewRoster = useCallback(() => buildRoster(pickIndex), [pickIndex]);
-  const [enemies, setEnemies] = useState(buildNewRoster);
+  const buildNewRoster = useCallback((mode = "single") => buildRoster(pickIndex, mode), [pickIndex]);
+  const [enemies, setEnemies] = useState(() => buildNewRoster("single"));
 
   // ──── Screen & mode ────
   const [screen, setScreenState] = useState("title");
@@ -305,7 +305,7 @@ export function useBattle() {
   };
 
   // --- Full game reset (starterOverride used on first game when setStarter hasn't rendered yet) ---
-  const startGame = (starterOverride) => {
+  const startGame = (starterOverride, modeOverride = null) => {
     invalidateAsyncWork();
     runSeedRef.current += 1;
     reseed(runSeedRef.current * 2654435761);
@@ -314,7 +314,8 @@ export function useBattle() {
     sessionStartRef.current = nowMs();
     eventSessionIdRef.current = createEventSessionId();
     // Regenerate roster so slime variants are re-randomised each game
-    const newRoster = buildNewRoster();
+    const mode = modeOverride || sr.current.battleMode || battleMode;
+    const newRoster = buildNewRoster(mode);
     setEnemies(newRoster);
     dispatchBattle({ type: "reset_run", patch: { diffLevel: 2 } });
     setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);

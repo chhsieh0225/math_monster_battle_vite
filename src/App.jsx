@@ -26,7 +26,7 @@ import Particle from './components/ui/Particle';
 import TextBox from './components/ui/TextBox';
 
 // Effects
-import { FireEffect, ElecEffect, WaterEffect, GrassEffect, DarkEffect } from './components/effects';
+import { FireEffect, ElecEffect, WaterEffect, GrassEffect, DarkEffect, LightEffect } from './components/effects';
 
 // Screens
 import TitleScreen from './components/screens/TitleScreen';
@@ -122,7 +122,12 @@ function App() {
       onHome={() => B.setScreen("title")}
     />
   );
-  if (!B.enemy || !B.starter) return null;
+  if (!B.enemy || !B.starter) return (
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", color: "white", gap: 16 }}>
+      <div style={{ fontSize: 48, animation: "float 2s ease-in-out infinite" }}>⚔️</div>
+      <div style={{ fontSize: 16, fontWeight: 700, opacity: 0.6 }}>準備戰鬥中...</div>
+    </div>
+  );
 
   // ─── Battle screen locals ───
   const st = B.starter.stages[B.pStg];
@@ -170,6 +175,7 @@ function App() {
       {B.atkEffect && B.atkEffect.type === "water" && <WaterEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
       {B.atkEffect && B.atkEffect.type === "grass" && <GrassEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
       {B.atkEffect && B.atkEffect.type === "dark" && <DarkEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
+      {B.atkEffect && B.atkEffect.type === "light" && <LightEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={eTarget} onDone={() => {}} />}
 
       {/* Special Defense animations */}
       {B.defAnim === "fire" && <div style={{ position: "absolute", left: "6%", bottom: "14%", width: 160, height: 160, zIndex: 50, pointerEvents: "none" }}>
@@ -191,7 +197,13 @@ function App() {
         <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: "3px solid rgba(251,191,36,0.6)", animation: "shieldPulse 1.2s ease 0.1s forwards", opacity: 0 }} />
         <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 48, animation: "popIn 0.3s ease", filter: "drop-shadow(0 0 12px rgba(251,191,36,0.8))" }}>⚡</div>
       </div>}
-      {B.defAnim && <div style={{ position: "absolute", inset: 0, zIndex: 45, pointerEvents: "none", animation: B.defAnim === "fire" ? "shieldFlash 0.8s ease" : B.defAnim === "water" ? "dodgeFlash 0.8s ease" : B.defAnim === "electric" ? "shieldFlash 0.8s ease" : "counterFlash 0.8s ease" }} />}
+      {B.defAnim === "light" && <div style={{ position: "absolute", left: "6%", bottom: "14%", width: 170, height: 170, zIndex: 50, pointerEvents: "none" }}>
+        <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle,rgba(245,158,11,0.55),rgba(251,191,36,0.2),transparent 70%)", animation: "shieldPulse 1.2s ease forwards" }} />
+        <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: "3px solid rgba(245,158,11,0.6)", animation: "shieldPulse 1.2s ease 0.1s forwards", opacity: 0 }} />
+        <div style={{ position: "absolute", inset: -16, borderRadius: "50%", border: "2px solid rgba(251,191,36,0.3)", animation: "shieldPulse 1.2s ease 0.2s forwards", opacity: 0 }} />
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 48, animation: "popIn 0.3s ease", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.9))" }}>✨</div>
+      </div>}
+      {B.defAnim && <div style={{ position: "absolute", inset: 0, zIndex: 45, pointerEvents: "none", animation: B.defAnim === "fire" ? "shieldFlash 0.8s ease" : B.defAnim === "water" ? "dodgeFlash 0.8s ease" : B.defAnim === "electric" ? "shieldFlash 0.8s ease" : B.defAnim === "light" ? "shieldFlash 0.8s ease" : "counterFlash 0.8s ease" }} />}
 
       {/* Type effectiveness popup */}
       {B.effMsg && <div style={{ position: "absolute", top: "38%", left: "50%", transform: "translateX(-50%)", background: B.effMsg.color === "#22c55e" ? "linear-gradient(135deg,rgba(34,197,94,0.95),rgba(22,163,74,0.95))" : "linear-gradient(135deg,rgba(100,116,139,0.9),rgba(71,85,105,0.9))", color: "white", padding: "6px 20px", borderRadius: 20, fontSize: 14, fontWeight: 800, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: `0 4px 16px ${B.effMsg.color}44`, letterSpacing: 1 }}>{B.effMsg.text}</div>}
@@ -253,7 +265,7 @@ function App() {
         {/* Special defense ready badge */}
         {B.bossPhase >= 3 && <div style={{ position: "absolute", bottom: 92, left: 10, zIndex: 20, background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease, specDefReady 2s ease infinite", boxShadow: "0 2px 12px rgba(251,191,36,0.4)" }}>🔥背水一戰 DMG×1.3</div>}
         {B.bossCharging && <div style={{ position: "absolute", top: "40%", left: "50%", transform: "translateX(-50%)", zIndex: 20, background: "rgba(251,191,36,0.95)", color: "#000", padding: "6px 16px", borderRadius: 12, fontSize: 14, fontWeight: 800, animation: "popIn 0.3s ease", boxShadow: "0 4px 20px rgba(251,191,36,0.6)" }}>⚠️ 答對可以打斷蓄力！</div>}
-        {B.specDef && <div style={{ position: "absolute", bottom: 70, left: 10, zIndex: 20, background: B.starter.type === "fire" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))" : B.starter.type === "water" ? "linear-gradient(135deg,rgba(56,189,248,0.9),rgba(14,165,233,0.9))" : B.starter.type === "electric" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(234,179,8,0.9))" : "linear-gradient(135deg,rgba(34,197,94,0.9),rgba(22,163,74,0.9))", color: "white", padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease, specDefReady 2s ease infinite", boxShadow: B.starter.type === "fire" ? "0 2px 12px rgba(251,191,36,0.4)" : B.starter.type === "water" ? "0 2px 12px rgba(56,189,248,0.4)" : B.starter.type === "electric" ? "0 2px 12px rgba(234,179,8,0.4)" : "0 2px 12px rgba(34,197,94,0.4)" }}>{B.starter.type === "fire" ? "🛡️防護罩" : B.starter.type === "water" ? "💨完美閃避" : B.starter.type === "electric" ? "⚡電流麻痺" : "🌿反彈"} 準備！</div>}
+        {B.specDef && <div style={{ position: "absolute", bottom: 70, left: 10, zIndex: 20, background: B.starter.type === "fire" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))" : B.starter.type === "water" ? "linear-gradient(135deg,rgba(56,189,248,0.9),rgba(14,165,233,0.9))" : B.starter.type === "electric" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(234,179,8,0.9))" : B.starter.type === "light" ? "linear-gradient(135deg,rgba(245,158,11,0.9),rgba(217,119,6,0.9))" : "linear-gradient(135deg,rgba(34,197,94,0.9),rgba(22,163,74,0.9))", color: "white", padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease, specDefReady 2s ease infinite", boxShadow: B.starter.type === "fire" ? "0 2px 12px rgba(251,191,36,0.4)" : B.starter.type === "water" ? "0 2px 12px rgba(56,189,248,0.4)" : B.starter.type === "electric" ? "0 2px 12px rgba(234,179,8,0.4)" : B.starter.type === "light" ? "0 2px 12px rgba(245,158,11,0.4)" : "0 2px 12px rgba(34,197,94,0.4)" }}>{B.starter.type === "fire" ? "🛡️防護罩" : B.starter.type === "water" ? "💨完美閃避" : B.starter.type === "electric" ? "⚡電流麻痺" : B.starter.type === "light" ? "✨獅王咆哮" : "🌿反彈"} 準備！</div>}
       </div>
 
       {/* ═══ Bottom panel ═══ */}
@@ -284,8 +296,8 @@ function App() {
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{B.starter.moves[B.selIdx].icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{B.starter.moves[B.selIdx].name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{B.timedMode ? "⏱️ 限時回答！" : "回答正確才能命中"}</span></div>
           <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 16px", textAlign: "center", marginBottom: 8, border: "1px solid rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
             {B.timedMode && !B.answered && <div style={{ position: "absolute", bottom: 0, left: 0, height: 4, background: B.timerLeft <= 1.5 ? "#ef4444" : B.timerLeft <= 3 ? "#f59e0b" : "#22c55e", width: `${(B.timerLeft / TIMER_SEC) * 100}%`, borderRadius: 2, transition: "width 0.05s linear,background 0.3s", animation: B.timerLeft <= 1.5 ? "timerPulse 0.4s ease infinite" : "none" }} />}
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>{B.q.op === "×" ? "乘法題" : B.q.op === "÷" ? "除法題" : B.q.op === "+" ? "加法題" : B.q.op === "-" ? "減法題" : B.q.op === "mixed2" ? "加減混合題" : B.q.op === "mixed3" ? "乘加混合題" : B.q.op === "mixed4" ? "四則運算題" : "混合題"}</div>
-            <div style={{ fontSize: 36, fontWeight: 900, color: "white", letterSpacing: 2 }}>{B.q.display} = ?</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>{B.q.op === "×" ? "乘法題" : B.q.op === "÷" ? "除法題" : B.q.op === "+" ? "加法題" : B.q.op === "-" ? "減法題" : B.q.op === "mixed2" ? "加減混合題" : B.q.op === "mixed3" ? "乘加混合題" : B.q.op === "mixed4" ? "四則運算題" : B.q.op === "unknown1" ? "加減求未知題" : B.q.op === "unknown2" ? "乘除求未知題" : B.q.op === "unknown3" ? "大數求未知題" : B.q.op === "unknown4" ? "混合求未知題" : "混合題"}</div>
+            <div style={{ fontSize: 36, fontWeight: 900, color: "white", letterSpacing: 2 }}>{B.q.display}{B.q.op && B.q.op.startsWith("unknown") ? "" : " = ?"}</div>
             {B.timedMode && !B.answered && <div style={{ fontSize: 11, fontWeight: 700, color: B.timerLeft <= 1.5 ? "#ef4444" : B.timerLeft <= 3 ? "#f59e0b" : "rgba(255,255,255,0.4)", marginTop: 2, fontFamily: "'Press Start 2P',monospace", transition: "color 0.3s" }}>{B.timerLeft.toFixed(1)}s</div>}
           </div>
           {B.fb && <div style={{ textAlign: "center", marginBottom: 4, fontSize: 16, fontWeight: 700, color: B.fb.correct ? "#22c55e" : "#ef4444", animation: "popIn 0.2s ease" }}>{B.fb.correct ? "✅ 命中！" : `❌ 答案是 ${B.fb.answer}`}</div>}

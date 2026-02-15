@@ -3,12 +3,15 @@ import { STARTERS } from '../../data/starters';
 import { VERSION } from '../../data/constants';
 
 export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard, onAchievements, onEncyclopedia, onDashboard }) {
+  const row1 = STARTERS.slice(0, 3);
+  const row2 = STARTERS.slice(3);
+
   return (
     <div style={{
       height: "100%", display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center", gap: 28,
+      alignItems: "center", justifyContent: "center", gap: 20,
       background: "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)",
-      color: "white", padding: "32px 20px 20px", textAlign: "center",
+      color: "white", padding: "24px 20px 16px", textAlign: "center",
       position: "relative", overflow: "hidden",
     }}>
       {/* Background sparkles */}
@@ -18,19 +21,28 @@ export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard
 
       {/* ─── Top: Branding ─── */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <div style={{ display: "flex", gap: 6, marginBottom: 14, alignItems: "flex-end" }}>
-          {STARTERS.map((s, i) => (
+        {/* Row 1: 3 starters */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 6, justifyContent: "center" }}>
+          {row1.map((s, i) => (
             <div key={s.id} style={{ animation: `float ${3 + i * 0.4}s ease-in-out ${i * 0.3}s infinite` }}>
-              <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={75} />
+              <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={60} />
             </div>
           ))}
         </div>
-        <h1 style={{ fontSize: 30, fontWeight: 900, margin: 0, letterSpacing: 2, textShadow: "0 0 30px rgba(99,102,241,0.5)" }}>數學寶可夢</h1>
+        {/* Row 2: remaining starters */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 12, justifyContent: "center" }}>
+          {row2.map((s, i) => (
+            <div key={s.id} style={{ animation: `float ${3 + (i + 3) * 0.4}s ease-in-out ${(i + 3) * 0.3}s infinite` }}>
+              <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={60} />
+            </div>
+          ))}
+        </div>
+        <h1 style={{ fontSize: 28, fontWeight: 900, margin: 0, letterSpacing: 2, textShadow: "0 0 30px rgba(99,102,241,0.5)" }}>數學寶可夢</h1>
         <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.4, marginTop: 4 }}>Math Monster Battle</div>
       </div>
 
       {/* ─── Middle: Actions ─── */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: "100%", maxWidth: 320 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, width: "100%", maxWidth: 320 }}>
         {/* Play buttons */}
         <div style={{ display: "flex", gap: 10, width: "100%" }}>
           <button onClick={onStartNormal} style={{
@@ -46,7 +58,7 @@ export default function TitleScreen({ onStartNormal, onStartTimed, onLeaderboard
             boxShadow: "0 4px 20px rgba(239,68,68,0.3)",
           }}>⏱️ 計時模式</button>
         </div>
-        <div style={{ fontSize: 11, opacity: 0.3, marginTop: -6 }}>計時模式：5 秒內回答</div>
+        <div style={{ fontSize: 11, opacity: 0.3, marginTop: -4 }}>計時模式：5 秒內回答</div>
 
         {/* Feature grid — 2×2 icon buttons */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>

@@ -79,8 +79,8 @@ MONSTERS.forEach(m => {
         mType: v.mType,
         typeIcon: v.typeIcon,
         typeName: v.typeName,
-        hp: m.hp,
-        atk: m.atk,
+        hp: Math.round(m.hp * (v.hpMult || 1)),
+        atk: Math.round(m.atk * (v.atkMult || 1)),
         svgFn: v.svgFn,
         c1: v.c1, c2: v.c2,
         weakAgainst: weaknesses(v.mType).map(t => TYPE_LABEL[t] || t),
@@ -90,6 +90,9 @@ MONSTERS.forEach(m => {
         habitat: HABITATS[v.id] || "",
         rarity: RARITY[v.id] || "★",
         drops: v.drops,
+        trait: v.trait || null,
+        traitName: v.traitName || null,
+        traitDesc: v.traitDesc || null,
       });
     });
     // Evolved slime (叢林巨魔) — still one entry

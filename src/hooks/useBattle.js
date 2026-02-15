@@ -67,15 +67,19 @@ export function useBattle() {
         variant = SLIME_VARIANTS[Math.floor(Math.random() * SLIME_VARIANTS.length)];
       }
 
+      // Trait-based HP/ATK multipliers for slime variants
+      const hm = variant ? (variant.hpMult || 1) : 1;
+      const am = variant ? (variant.atkMult || 1) : 1;
+
       return {
         ...b,
         // Apply variant overrides for non-evolved slimes
-        ...(variant && { id: variant.id, name: variant.name, svgFn: variant.svgFn, c1: variant.c1, c2: variant.c2, mType: variant.mType, typeIcon: variant.typeIcon, typeName: variant.typeName, drops: variant.drops }),
+        ...(variant && { id: variant.id, name: variant.name, svgFn: variant.svgFn, c1: variant.c1, c2: variant.c2, mType: variant.mType, typeIcon: variant.typeIcon, typeName: variant.typeName, drops: variant.drops, trait: variant.trait, traitName: variant.traitName }),
         name: isEvolved && b.evolvedName ? b.evolvedName : (variant ? variant.name : b.name),
         svgFn: isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn),
         sceneMType: b.mType,   // scene always follows base monster species
-        hp: Math.round(b.hp * sc), maxHp: Math.round(b.hp * sc),
-        atk: Math.round(b.atk * sc), lvl: i + 1, isEvolved,
+        hp: Math.round(b.hp * sc * hm), maxHp: Math.round(b.hp * sc * hm),
+        atk: Math.round(b.atk * sc * am), lvl: i + 1, isEvolved,
       };
     });
   };
@@ -127,6 +131,7 @@ export function useBattle() {
   const [staticStack, setStaticStack] = useState(0);   // electric: static charge
   const [specDef, setSpecDef] = useState(false);
   const [defAnim, setDefAnim] = useState(null);
+  const [cursed, setCursed] = useState(false);     // dark slime curse: 0.6x player damage next turn
 
   // ──── Adaptive difficulty ────
   const [diffLevel, setDiffLevel] = useState(2);     // start at normal (1.0)
@@ -167,7 +172,7 @@ export function useBattle() {
   const sr = useRef({});
   const _srSnapshot = {
     enemy, starter, eHp, pHp, pExp, pLvl, pStg,
-    streak, charge, burnStack, frozen, staticStack, specDef,
+    streak, charge, burnStack, frozen, staticStack, specDef, cursed,
     mHits, mLvls, selIdx, phase, round, q,
     screen, timedMode, diffLevel,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
@@ -297,7 +302,7 @@ export function useBattle() {
     setMHits([0, 0, 0, 0]); setMLvls([1, 1, 1, 1]); setMLvlUp(null);
     setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
     setBurnStack(0); setStaticStack(0); setFrozen(false); frozenR.current = false;
-    setSpecDef(false); setDefAnim(null);
+    setSpecDef(false); setDefAnim(null); setCursed(false);
     setBossPhase(0); setBossTurn(0); setBossCharging(false);
     setSealedMove(-1); setSealedTurns(0);
     setDiffLevel(2); recentAnsRef.current = [];
@@ -327,6 +332,7 @@ export function useBattle() {
   const handleVictory = (verb = "被打倒了") => {
     const s = sr.current;
     setBurnStack(0); setStaticStack(0); setFrozen(false); frozenR.current = false;
+    setCursed(false);
     setBossPhase(0); setBossTurn(0); setBossCharging(false);
     setSealedMove(-1); setSealedTurns(0);
     const xp = s.enemy.lvl * 15;
@@ -542,16 +548,66 @@ export function useBattle() {
       // Normal enemy attack — boss phase scales damage
       const atkMult = bp >= 3 ? 2.0 : bp >= 2 ? 1.5 : 1.0;
       const scaledAtk = Math.round(s2.enemy.atk * atkMult);
-      const dmg = calcEnemyDamage(scaledAtk, getEff(s2.enemy.mType, s2.starter.type));
+      const trait = s2.enemy.trait || null;
+
+      // ── Berserk trait: 30% chance 1.5x critical ──
+      const isCrit = trait === "berserk" && Math.random() < 0.3;
+      const critMult = isCrit ? 1.5 : 1.0;
+
+      let dmg = calcEnemyDamage(scaledAtk, getEff(s2.enemy.mType, s2.starter.type));
+      dmg = Math.round(dmg * critMult);
       const defEff = getEff(s2.enemy.mType, s2.starter.type);
       const nh = Math.max(0, s2.pHp - dmg);
       setPHp(nh); setPAnim("playerHit 0.5s ease"); sfx.play("playerHit");
-      addD(`-${dmg}`, 60, 170, "#ef4444"); addP("enemy", 80, 190, 4);
-      if (defEff > 1) { setEffMsg({ text: "敵人招式很有效！", color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
+      addD(isCrit ? `💥-${dmg}` : `-${dmg}`, 60, 170, isCrit ? "#ff6b00" : "#ef4444"); addP("enemy", 80, 190, 4);
+      if (isCrit) { setEffMsg({ text: "🔥 暴擊！", color: "#ff6b00" }); safeTo(() => setEffMsg(null), 1500); }
+      else if (defEff > 1) { setEffMsg({ text: "敵人招式很有效！", color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
       else if (defEff < 1) { setEffMsg({ text: "敵人招式效果不佳", color: "#64748b" }); safeTo(() => setEffMsg(null), 1500); }
       safeTo(() => setPAnim(""), 500);
-      if (nh <= 0) safeTo(() => { sfx.play("ko"); _endSession(false); setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }, 800);
-      else safeTo(() => { setPhase("menu"); setBText(""); }, 800);
+
+      if (nh <= 0) { safeTo(() => { sfx.play("ko"); _endSession(false); setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }, 800); return; }
+
+      // ── Tenacity trait: heal 15% maxHP after attacking ──
+      if (trait === "tenacity") {
+        const heal = Math.round(s2.enemy.maxHp * 0.15);
+        const newEHp = Math.min(sr.current.eHp + heal, s2.enemy.maxHp);
+        safeTo(() => {
+          setEHp(newEHp);
+          addD(`+${heal}`, 155, 50, "#3b82f6");
+          setBText(`💧 ${s2.enemy.name} 回復了體力！`);
+        }, 600);
+      }
+
+      // ── Curse trait: 35% chance to weaken player's next attack ──
+      if (trait === "curse" && Math.random() < 0.35) {
+        setCursed(true);
+        safeTo(() => {
+          addD("💀詛咒", 60, 140, "#a855f7");
+          setBText(`💀 ${s2.enemy.name} 的詛咒弱化了你的下次攻擊！`);
+        }, 600);
+      }
+
+      // ── Swift trait: 25% chance double attack ──
+      if (trait === "swift" && Math.random() < 0.25) {
+        safeTo(() => {
+          setBText(`⚡ ${s2.enemy.name} 再次攻擊！`);
+          setEAnim("enemyAttackLunge 0.6s ease");
+          safeTo(() => {
+            setEAnim("");
+            const s3 = sr.current;
+            const dmg2 = calcEnemyDamage(scaledAtk, getEff(s3.enemy.mType, s3.starter.type));
+            const nh2 = Math.max(0, s3.pHp - dmg2);
+            setPHp(nh2); setPAnim("playerHit 0.5s ease"); sfx.play("playerHit");
+            addD(`⚡-${dmg2}`, 60, 170, "#eab308"); addP("enemy", 80, 190, 3);
+            safeTo(() => setPAnim(""), 500);
+            if (nh2 <= 0) safeTo(() => { sfx.play("ko"); _endSession(false); setPhase("ko"); setBText("你的夥伴倒下了..."); setScreen("gameover"); }, 800);
+            else safeTo(() => { setPhase("menu"); setBText(""); }, 800);
+          }, 500);
+        }, 1000);
+        return; // skip the normal phase transition
+      }
+
+      safeTo(() => { setPhase("menu"); setBText(""); }, 800);
     }, 500);
   };
 
@@ -618,10 +674,18 @@ export function useBattle() {
               stageBonus: s3.pStg,
               effMult: eff,
             });
+            // ── Fortress trait: enemy takes 30% less damage ──
+            const isFortress = s3.enemy.trait === "fortress";
+            if (isFortress) dmg = Math.round(dmg * 0.7);
+            // ── Curse debuff: player attack weakened by 0.6x ──
+            const wasCursed = s3.cursed;
+            if (wasCursed) { dmg = Math.round(dmg * 0.6); setCursed(false); }
             // Boss Phase 3: 背水一戰 — player gets ×1.3 bonus
             if (s3.bossPhase >= 3) dmg = Math.round(dmg * 1.3);
 
-            if (eff > 1) { setEffMsg({ text: "效果絕佳！", color: "#22c55e" }); safeTo(() => setEffMsg(null), 1500); }
+            if (wasCursed) { setEffMsg({ text: "💀 詛咒弱化了攻擊...", color: "#a855f7" }); safeTo(() => setEffMsg(null), 1500); }
+            else if (isFortress) { setEffMsg({ text: "🛡️ 鐵壁減傷！", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
+            else if (eff > 1) { setEffMsg({ text: "效果絕佳！", color: "#22c55e" }); safeTo(() => setEffMsg(null), 1500); }
             else if (eff < 1) { setEffMsg({ text: "效果不好...", color: "#94a3b8" }); safeTo(() => setEffMsg(null), 1500); }
 
             // Boss: interrupt charging on correct answer
@@ -789,7 +853,7 @@ export function useBattle() {
     mHits, mLvls, mLvlUp,
     phase, selIdx, q, fb, bText, answered,
     dmgs, parts, eAnim, pAnim, atkEffect, effMsg,
-    burnStack, frozen, staticStack, specDef, defAnim,
+    burnStack, frozen, staticStack, specDef, defAnim, cursed,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, diffLevel,
     gamePaused, timerLeft,
     expNext, chargeReady,

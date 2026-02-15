@@ -22,6 +22,10 @@ export const SPRITE_IMGS = {
   player_electric1: `${BASE}sprites/player_electric1.png`,
   player_electric2: `${BASE}sprites/player_electric2.png`,
   slime_fire: `${BASE}sprites/slime_fire.png`,
+  slime_water: `${BASE}sprites/slime_water.png`,
+  slime_electric: `${BASE}sprites/slime_electric.png`,
+  slime_dark: `${BASE}sprites/slime_dark.png`,
+  slime_steel: `${BASE}sprites/slime_steel.png`,
   slime_evolved: `${BASE}sprites/slime_evolved.png`,
   dragon_evolved: `${BASE}sprites/dragon_evolved.png`,
   fire_evolved: `${BASE}sprites/fire_evolved.png`,
@@ -43,59 +47,12 @@ function makeSvgFn(key, rendering = 'auto') {
 
 export const slimeSVG = makeSvgFn('slime', 'pixelated');
 
-/**
- * Tinted slime variant — two-layer approach:
- *   Layer 1: feColorMatrix recolours the entire PNG (body changes colour).
- *   Layer 2: extracts only near-white pixels (eyes) from the original image
- *            and composites them on top, so eyes stay white.
- *
- * The "white extraction" filter uses feColorMatrix to measure luminance,
- * then feComponentTransfer with a steep discrete step to keep only pixels
- * whose RGB channels are all high (≥ ~0.75), i.e. white / near-white.
- */
-let _svC = 0;
-export function makeSlimeVariantSvg(matrix) {
-  const fid = `sv${_svC++}`;
-  const wf = `${fid}w`;          // white-extraction filter id
-  return () =>
-    `<defs>` +
-      `<filter id="${fid}"><feColorMatrix type="matrix" values="${matrix.join(' ')}"/></filter>` +
-      `<filter id="${wf}" color-interpolation-filters="sRGB">` +
-        // Step 1: threshold each channel independently — ≥0.67 → 1, else → 0
-        `<feComponentTransfer>` +
-          `<feFuncR type="discrete" tableValues="0 0 1"/>` +
-          `<feFuncG type="discrete" tableValues="0 0 1"/>` +
-          `<feFuncB type="discrete" tableValues="0 0 1"/>` +
-          `<feFuncA type="identity"/>` +
-        `</feComponentTransfer>` +
-        // Step 2: RGB→white, alpha = 2R+2G+2B−5 → only (1,1,1) yields alpha=1
-        `<feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  2 2 2 0 -5"/>` +
-      `</filter>` +
-    `</defs>` +
-    // Layer 1: tinted body
-    `<image href="${SPRITE_IMGS.slime}" x="0" y="0" width="120" height="100" style="image-rendering:pixelated" filter="url(#${fid})"/>` +
-    // Layer 2: white eyes overlay
-    `<image href="${SPRITE_IMGS.slime}" x="0" y="0" width="120" height="100" style="image-rendering:pixelated" filter="url(#${wf})"/>`;
-}
-
-// Red slime (火): dedicated PNG with white eyes
-export const slimeRedSVG = makeSvgFn('slime_fire', 'pixelated');
-// Blue slime (水): green→blue
-export const slimeBlueSVG = makeSlimeVariantSvg([
-  0.2,0,0,0,0,  0,0.3,0,0,0,  0,1,0.3,0,0,  0,0,0,1,0,
-]);
-// Yellow slime (電): green→yellow
-export const slimeYellowSVG = makeSlimeVariantSvg([
-  0,1,0,0,0.1,  0,1,0,0,0,  0,0,0.15,0,0,  0,0,0,1,0,
-]);
-// Black slime (暗): desaturate+darken
-export const slimeDarkSVG = makeSlimeVariantSvg([
-  0.15,0.15,0.15,0,0,  0.1,0.1,0.1,0,0,  0.12,0.12,0.12,0,0,  0,0,0,1,0,
-]);
-// Steel slime (鋼): desaturate+lighten
-export const slimeSteelSVG = makeSlimeVariantSvg([
-  0.35,0.35,0.35,0,0.05,  0.33,0.33,0.33,0,0.05,  0.38,0.38,0.38,0,0.08,  0,0,0,1,0,
-]);
+// ── Slime variant PNGs (dedicated sprites with white eyes) ──
+export const slimeRedSVG    = makeSvgFn('slime_fire', 'pixelated');
+export const slimeBlueSVG   = makeSvgFn('slime_water', 'pixelated');
+export const slimeYellowSVG = makeSvgFn('slime_electric', 'pixelated');
+export const slimeDarkSVG   = makeSvgFn('slime_dark', 'pixelated');
+export const slimeSteelSVG  = makeSvgFn('slime_steel', 'pixelated');
 
 export const fireLizardSVG = makeSvgFn('fire');
 export const ghostSVG = makeSvgFn('ghost');

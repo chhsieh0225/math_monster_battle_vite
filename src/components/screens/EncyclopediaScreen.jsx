@@ -161,6 +161,10 @@ function DetailModal({ entry, enc, def, onClose }) {
                 background: "rgba(168,85,247,0.2)", border: "1px solid rgba(168,85,247,0.3)",
                 padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, color: "#c084fc",
               }}>✨ 進化型態</span>}
+              {e.traitName && e.traitName !== "普通" && <span style={{
+                background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.3)",
+                padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, color: "#a5b4fc",
+              }}>✦ {e.traitName}</span>}
             </div>
           </div>
         </div>
@@ -185,6 +189,16 @@ function DetailModal({ entry, enc, def, onClose }) {
           }}>
             <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 4 }}>📖 圖鑑說明</div>
             <div style={{ fontSize: 13, lineHeight: 1.7, opacity: 0.8 }}>{e.desc}</div>
+          </div>}
+
+          {/* Trait */}
+          {e.traitDesc && e.traitName !== "普通" && <div style={{
+            background: "rgba(99,102,241,0.08)", borderRadius: 12,
+            padding: "10px 14px", marginBottom: 12,
+            border: "1px solid rgba(99,102,241,0.15)",
+          }}>
+            <div style={{ fontSize: 11, color: "#818cf8", fontWeight: 700, marginBottom: 4 }}>✦ 特性：{e.traitName}</div>
+            <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.8 }}>{e.traitDesc}</div>
           </div>}
 
           {/* Type matchups */}

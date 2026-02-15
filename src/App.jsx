@@ -207,6 +207,7 @@ function App() {
         <div style={{ position: "absolute", top: 10, left: 10, right: "42%", zIndex: 10 }}>
           <HPBar cur={B.eHp} max={B.enemy.maxHp} color={B.enemy.c1} label={`${B.enemy.typeIcon}${B.enemy.name} Lv.${B.enemy.lvl}`} />
           <div style={{ display: "flex", gap: 4, marginTop: 3, flexWrap: "wrap" }}>
+            {B.enemy.traitName && B.enemy.traitName !== "普通" && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>✦{B.enemy.traitName}</div>}
             {B.burnStack > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥灼燒 x{B.burnStack}</div>}
             {B.frozen && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️凍結</div>}
             {B.staticStack > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡靜電 x{B.staticStack}{B.staticStack >= 2 ? " ⚠️" : ""}</div>}
@@ -226,6 +227,7 @@ function App() {
         <div style={{ position: "absolute", bottom: 10, right: 10, left: "42%", zIndex: 10 }}>
           <HPBar cur={B.pHp} max={PLAYER_MAX_HP} color="#6366f1" label={`${st.name} Lv.${B.pLvl}`} />
           <XPBar exp={B.pExp} max={B.expNext} />
+          {B.cursed && <div style={{ background: "rgba(168,85,247,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, marginTop: 3, display: "inline-block", animation: "popIn 0.3s ease" }}>💀詛咒：下次攻擊弱化</div>}
         </div>
 
         {/* Player sprite */}

@@ -66,7 +66,16 @@ import {
   handlePvpAnswer,
   processPvpTurnStart,
 } from './battle/pvpFlow';
-import { buildNextEvolvedAlly } from './battle/coopFlow';
+import {
+  buildNextEvolvedAlly,
+  handleCoopPartyKo,
+  isCoopBattleMode,
+  runCoopAllySupportTurn,
+} from './battle/coopFlow';
+import {
+  applyGameCompletionAchievements,
+  applyVictoryAchievements,
+} from './battle/achievementFlow';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
 
 // ── Constants (module-level to avoid re-allocation per render) ──
@@ -215,7 +224,7 @@ export function useBattle() {
       return state.pvpTurn === "p1" ? state.starter : state.pvpStarter2;
     }
     const isCoopSubActive = (
-      (state.battleMode === "coop" || state.battleMode === "double")
+      isCoopBattleMode(state.battleMode)
       && state.coopActiveSlot === "sub"
       && state.allySub
       && (state.pHpSub || 0) > 0
@@ -350,7 +359,7 @@ export function useBattle() {
       diffLevel: s.diffLevel ?? null,
       round: s.round ?? 0,
     }, { sessionId: eventSessionIdRef.current });
-    if (s.battleMode === "coop" || s.battleMode === "double") {
+    if (isCoopBattleMode(s.battleMode)) {
       markCoopRotatePending();
     }
     setBText("⏰ 時間到！來不及出招！");
@@ -573,83 +582,41 @@ export function useBattle() {
   };
 
   const handlePlayerPartyKo = ({ target = "main", reason = "你的夥伴倒下了..." }) => {
-    const s = sr.current;
-    if (target === "sub") {
-      setAllySub(null);
-      setPHpSub(0);
-      setCoopActiveSlot("main");
-      if ((s.pHp || 0) <= 0) {
-        _endSession(false);
-        setPhase("ko");
-        setBText(reason);
-        setScreen("gameover");
-        return "gameover";
-      }
-      setBText(`💫 ${s.allySub?.name || "副將"} 倒下了！`);
-      setPhase("text");
-      safeTo(() => {
-        setPhase("menu");
-        setBText("");
-      }, 1100);
-      return "sub_down";
-    }
-
-    if ((s.pHpSub || 0) > 0 && s.allySub) {
-      const promoted = s.allySub;
-      setStarter(promoted);
-      setPStg(getStarterStageIdx(promoted));
-      setPHp(s.pHpSub);
-      setAllySub(null);
-      setPHpSub(0);
-      setCoopActiveSlot("main");
-      setBText(`💫 ${promoted.name} 接替上場！`);
-      setPhase("text");
-      safeTo(() => {
-        setPhase("menu");
-        setBText("");
-      }, 1200);
-      return "promoted";
-    }
-
-    _endSession(false);
-    setPhase("ko");
-    setBText(reason);
-    setScreen("gameover");
-    return "gameover";
+    return handleCoopPartyKo({
+      state: sr.current,
+      target,
+      reason,
+      setStarter,
+      setPStg,
+      setPHp,
+      setAllySub,
+      setPHpSub,
+      setCoopActiveSlot,
+      setPhase,
+      setBText,
+      safeTo,
+      endSession: _endSession,
+      setScreen,
+    });
   };
 
   const runAllySupportTurn = ({ delayMs = 850, onDone } = {}) => {
-    const s = sr.current;
-    if ((s.battleMode !== "double" && s.battleMode !== "coop") || !s.allySub || (s.pHpSub || 0) <= 0 || !s.enemy) return false;
-    if (!chance(0.45)) return false;
-
-    safeTo(() => {
-      const s2 = sr.current;
-      if (!s2.allySub || (s2.pHpSub || 0) <= 0 || !s2.enemy) {
-        if (onDone) onDone();
-        return;
-      }
-
-      const base = 16 + Math.max(0, s2.pLvl - 1) * 2;
-      const dmg = Math.min(28, Math.max(6, Math.round(base * (0.85 + rand() * 0.3))));
-      const nh = Math.max(0, s2.eHp - dmg);
-      setBText(`🤝 ${s2.allySub.name} 協同攻擊！`);
-      setPhase("playerAtk");
-      setEAnim("enemyWaterHit 0.45s ease");
-      setEHp(nh);
-      addD(`-${dmg}`, 140, 55, "#60a5fa");
-      addP("starter", 120, 130, 3);
-      sfx.play("water");
-
-      safeTo(() => setEAnim(""), 450);
-      if (nh <= 0) {
-        safeTo(() => handleVictory("被雙人連攜打倒了"), 700);
-        return;
-      }
-      if (onDone) safeTo(onDone, 700);
-    }, delayMs);
-
-    return true;
+    return runCoopAllySupportTurn({
+      sr,
+      safeTo,
+      chance,
+      rand,
+      setBText,
+      setPhase,
+      setEAnim,
+      setEHp,
+      addD,
+      addP,
+      sfx,
+      handleVictory,
+      delayMs,
+      onDone,
+    });
   };
 
   // --- Handle a defeated enemy ---
@@ -677,10 +644,7 @@ export function useBattle() {
     }
     setDefeated(d => d + 1);
     updateEncDefeated(s.enemy); // ← encyclopedia: mark defeated
-    // ── Achievement checks on victory ──
-    tryUnlock("first_win");
-    if (s.enemy.id === "boss") tryUnlock("boss_kill");
-    if (s.pHp <= 5) tryUnlock("low_hp");
+    applyVictoryAchievements({ state: s, tryUnlock });
     const drop = s.enemy.drops[randInt(0, s.enemy.drops.length - 1)];
     setBText(`${s.enemy.name} ${verb}！獲得 ${xp} 經驗值 ${drop}`);
     setPhase("victory"); sfx.play("victory");
@@ -808,7 +772,7 @@ export function useBattle() {
 
     const actingStarter = getActingStarter(s);
     const isCoopSubActive = !!(
-      (s.battleMode === "coop" || s.battleMode === "double")
+      isCoopBattleMode(s.battleMode)
       && actingStarter
       && s.allySub
       && actingStarter.id === s.allySub.id
@@ -835,7 +799,7 @@ export function useBattle() {
       round: s.round ?? 0,
     }, { sessionId: eventSessionIdRef.current });
     _updateAbility(s.q?.op, correct);
-    if (s.battleMode === "coop" || s.battleMode === "double") {
+    if (isCoopBattleMode(s.battleMode)) {
       markCoopRotatePending();
     }
     runPlayerAnswer({
@@ -888,7 +852,7 @@ export function useBattle() {
   // --- Advance from text / victory phase ---
   const continueFromVictory = () => {
     const s = sr.current;
-    if ((s.battleMode === "double" || s.battleMode === "coop") && s.enemySub) {
+    if (isCoopBattleMode(s.battleMode) && s.enemySub) {
       setScreen("battle");
       dispatchBattle({ type: "promote_enemy_sub" });
       setBText(`💥 ${s.enemySub.name} 補位上場！`);
@@ -900,7 +864,7 @@ export function useBattle() {
       _finishGame();
     } else {
       setPHp(h => Math.min(h + 10, getStageMaxHp(s.pStg)));
-      if ((s.battleMode === "double" || s.battleMode === "coop") && s.allySub && (s.pHpSub || 0) > 0) {
+      if (isCoopBattleMode(s.battleMode) && s.allySub && (s.pHpSub || 0) > 0) {
         setPHpSub(h => Math.min(h + 8, getStarterMaxHp(s.allySub)));
       }
       startBattle(nx);
@@ -941,7 +905,7 @@ export function useBattle() {
         pendingEvolve.current = false;
         const nextStage = Math.min((sr.current.pStg || 0) + 1, 2);
         const sNow = sr.current;
-        const coopSync = (sNow.battleMode === "coop" || sNow.battleMode === "double") && sNow.allySub;
+        const coopSync = isCoopBattleMode(sNow.battleMode) && sNow.allySub;
         const nextAlly = coopSync ? buildNextEvolvedAlly(sNow.allySub) : null;
         // Apply evolution state NOW (deferred from win handler so battle
         // screen kept showing the pre-evolution sprite during victory).
@@ -962,21 +926,11 @@ export function useBattle() {
   // --- Shared game-completion logic (achievements + session save) ---
   const _finishGame = () => {
     const s = sr.current;
-    if (s.tW === 0) tryUnlock("perfect");
-    if (s.timedMode) tryUnlock("timed_clear");
-    if (s.pHp >= getStageMaxHp(s.pStg)) tryUnlock("no_damage");
-    if (s.starter) {
-      const sid = s.starter.id;
-      if (sid === "fire") tryUnlock("fire_clear");
-      else if (sid === "water") tryUnlock("water_clear");
-      else if (sid === "grass") tryUnlock("grass_clear");
-      else if (sid === "electric") tryUnlock("electric_clear");
-      else if (sid === "lion") tryUnlock("lion_clear");
-    }
-    setEncData(prev => {
-      if (Object.keys(prev.encountered).length >= ENC_TOTAL) tryUnlock("enc_all");
-      if (Object.keys(prev.defeated).length >= ENC_TOTAL) tryUnlock("enc_defeat");
-      return prev;
+    applyGameCompletionAchievements({
+      state: s,
+      tryUnlock,
+      setEncData,
+      encTotal: ENC_TOTAL,
     });
     _endSession(true);
     setScreen("gameover");
@@ -990,7 +944,7 @@ export function useBattle() {
   const toggleCoopActive = useCallback(() => {
     const s = sr.current;
     const canSwitch = (
-      (s.battleMode === "coop" || s.battleMode === "double")
+      isCoopBattleMode(s.battleMode)
       && s.allySub
       && (s.pHpSub || 0) > 0
     );

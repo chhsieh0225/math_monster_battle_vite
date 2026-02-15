@@ -19,6 +19,14 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `playerFlow.js`
   - Player answer / attack flow orchestration.
   - Uses resolver + orchestrator + injected state/effects.
+- `pvpFlow.js`
+  - PvP-only turn flow and status-resolution orchestration.
+  - Keeps `useBattle` free of PvP branch details.
+- `coopFlow.js`
+  - Co-op only helper flows (party KO handling, support turns, evolution sync helpers).
+- `achievementFlow.js`
+  - Achievement unlock checks for victory and full-run completion.
+  - Injected via callbacks so it remains UI/framework-agnostic.
 
 `useBattle.js` should remain a coordinator that wires these modules together.
 

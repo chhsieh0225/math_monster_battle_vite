@@ -1,3 +1,5 @@
+import { readJson, readText, removeKey, writeJson, writeText } from './storage';
+
 /**
  * sessionLogger.js — Per-session learning analytics persistence.
  *
@@ -13,26 +15,23 @@
 const SESSIONS_KEY = "mathMonsterBattle_sessions";
 const PIN_KEY      = "mathMonsterBattle_dashPin";
 const MAX_SESSIONS = 100;
+const OPS = ["+", "-", "×", "÷", "mixed2", "mixed3", "mixed4", "unknown1", "unknown2", "unknown3", "unknown4"];
 
 // ─── Session CRUD ───
 
 export function loadSessions() {
-  try { return JSON.parse(localStorage.getItem(SESSIONS_KEY)) || []; }
-  catch { return []; }
+  return readJson(SESSIONS_KEY, []);
 }
 
 export function saveSession(session) {
-  try {
-    const all = loadSessions();
-    all.push(session);
-    // Keep only last MAX_SESSIONS
-    while (all.length > MAX_SESSIONS) all.shift();
-    localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
-  } catch {}
+  const all = loadSessions();
+  all.push(session);
+  while (all.length > MAX_SESSIONS) all.shift();
+  writeJson(SESSIONS_KEY, all);
 }
 
 export function clearSessions() {
-  try { localStorage.removeItem(SESSIONS_KEY); } catch {}
+  removeKey(SESSIONS_KEY);
 }
 
 // ─── PIN ───
@@ -40,18 +39,20 @@ export function clearSessions() {
 const DEFAULT_PIN = "1234";
 
 export function loadPin() {
-  try { return localStorage.getItem(PIN_KEY) || DEFAULT_PIN; }
-  catch { return DEFAULT_PIN; }
+  return readText(PIN_KEY, DEFAULT_PIN);
 }
 
 export function savePin(pin) {
-  try { localStorage.setItem(PIN_KEY, pin); } catch {}
+  writeText(PIN_KEY, pin);
 }
 
 // ─── Session builder (used inside useBattle) ───
 
 /** Create a fresh session log object at game start. */
 export function initSessionLog(starter, timedMode) {
+  const opStats = {};
+  for (const op of OPS) opStats[op] = s();
+
   return {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     startTime: Date.now(),
@@ -67,7 +68,7 @@ export function initSessionLog(starter, timedMode) {
     tW: 0,
     pHp: 100,              // HP at end
     // Per-operation breakdown { "+": { attempted, correct, totalMs }, ... }
-    opStats: { "+": s(), "-": s(), "×": s(), "÷": s(), "mixed2": s(), "mixed3": s(), "mixed4": s() },
+    opStats,
     // Detailed answer log
     answers: [],
   };

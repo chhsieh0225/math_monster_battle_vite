@@ -1,3 +1,5 @@
+import { readJson, writeJson } from './storage';
+
 const LB_KEY = "mathMonsterBattle_lb";
 const LB_MAX = 10;
 
@@ -14,11 +16,7 @@ export function calcScore(defeated, correct, wrong, level, timed, maxStreak = 0)
 }
 
 export function loadScores() {
-  try {
-    return JSON.parse(localStorage.getItem(LB_KEY)) || [];
-  } catch (e) {
-    return [];
-  }
+  return readJson(LB_KEY, []);
 }
 
 export function saveScore(entry) {
@@ -26,8 +24,6 @@ export function saveScore(entry) {
   scores.push(entry);
   scores.sort((a, b) => b.score - a.score);
   if (scores.length > LB_MAX) scores.length = LB_MAX;
-  try {
-    localStorage.setItem(LB_KEY, JSON.stringify(scores));
-  } catch (e) {}
+  writeJson(LB_KEY, scores);
   return scores.indexOf(entry); // rank (0-based), -1 if not in top 10
 }

@@ -179,7 +179,7 @@ function App() {
 
       {/* Popups & particles */}
       {B.dmgs.map(d => <DamagePopup key={d.id} value={d.value} x={d.x} y={d.y} color={d.color} onDone={() => B.rmD(d.id)} />)}
-      {B.parts.map(p => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} onDone={() => B.rmP(p.id)} />)}
+      {B.parts.map(p => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} seed={p.id} onDone={() => B.rmP(p.id)} />)}
 
       {/* Move level-up toast */}
       {B.mLvlUp !== null && B.starter && <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: "0 4px 16px rgba(245,158,11,0.4)", whiteSpace: "nowrap" }}>{B.starter.moves[B.mLvlUp].icon} {B.starter.moves[B.mLvlUp].name} 升級到 Lv.{B.mLvls[B.mLvlUp]}！威力 → {B.getPow(B.mLvlUp)}</div>}

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { seedRange } from '../../utils/prng';
 
 // Golden light orb shape
 const ORB = "M12,2 C6,2 2,6 2,12 C2,18 6,22 12,22 C18,22 22,18 22,12 C22,6 18,2 12,2Z";
@@ -9,7 +10,8 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
   const dur = 700 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
-  useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [onDone]);
+  const rr = (slot, i, min, max) => seedRange(`light-${idx}-${lvl}-${slot}-${i}`, min, max);
+  useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [dur, onDone]);
 
   // --- idx 0: 獵爪撲 (Light Claw) — golden orbs fly toward enemy ---
   if (idx === 0) {
@@ -120,7 +122,7 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
         {/* Radial golden rays */}
         {Array.from({ length: rayN }, (_, i) => {
           const angle = (i / rayN) * 360;
-          const len = 28 + lvl * 6 + Math.random() * 15;
+          const len = 28 + lvl * 6 + rr("burst-len", i, 0, 15);
           const w = 3.5 + lvl * 0.5;
           return (
             <svg key={i} width={w+4} height={len} viewBox={`0 0 ${w+4} ${len}`}
@@ -129,7 +131,7 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
                 top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*5}px)`,
                 transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
                 opacity:0, filter:`drop-shadow(0 0 ${glow}px #fbbf24)`,
-                animation:`sparkle ${0.35+Math.random()*0.25}s ease ${i*0.025}s both`,
+                animation:`sparkle ${0.35 + rr("burst-anim", i, 0, 0.25)}s ease ${i*0.025}s both`,
               }}>
               <defs>
                 <linearGradient id={`lray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
@@ -208,7 +210,7 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
               top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
               transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #f59e0b)`,
-              animation:`sparkle ${0.4+Math.random()*0.3}s ease ${D+0.06+i*0.03}s both`,
+              animation:`sparkle ${0.4 + rr("ult-ray-anim", i, 0, 0.3)}s ease ${D+0.06+i*0.03}s both`,
             }}>
             <defs><linearGradient id={`lrr${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
               <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8"/>
@@ -221,7 +223,7 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
       {/* Phase 5: Golden orb particles */}
       {Array.from({ length: orbN }, (_, i) => {
         const angle = (i / orbN) * 360;
-        const dist = 28 + Math.random() * 45;
+        const dist = 28 + rr("ult-orb-dist", i, 0, 45);
         return (
           <svg key={`ob${i}`} width="24" height="24" viewBox="0 0 24 24"
             style={{
@@ -229,7 +231,7 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #fbbf24)`,
               "--lx":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--ly":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`leafSpin ${0.5+Math.random()*0.3}s ease ${D+0.1+i*0.04}s forwards`,
+              animation:`leafSpin ${0.5 + rr("ult-orb-anim", i, 0, 0.3)}s ease ${D+0.1+i*0.04}s forwards`,
             }}>
             <circle cx="12" cy="12" r={5+lvl*0.4}
               fill={i%3===0?"#fbbf24":i%3===1?"#f59e0b":"#fef08a"} opacity="0.7"/>

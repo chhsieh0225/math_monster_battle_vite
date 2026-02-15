@@ -1,3 +1,5 @@
+import { readJson, writeJson } from './storage';
+
 /**
  * localStorage helpers for achievements & encyclopedia.
  */
@@ -7,20 +9,18 @@ const ENC_KEY = "mathMonsterBattle_enc";
 
 // ─── Achievements ───
 export function loadAch() {
-  try { return JSON.parse(localStorage.getItem(ACH_KEY)) || []; }
-  catch { return []; }
+  return readJson(ACH_KEY, []);
 }
 export function saveAch(ids) {
-  try { localStorage.setItem(ACH_KEY, JSON.stringify(ids)); } catch {}
+  writeJson(ACH_KEY, ids);
 }
 
 // ─── Encyclopedia ───
 const EMPTY_ENC = { encountered: {}, defeated: {} };
 
 export function loadEnc() {
-  try { return JSON.parse(localStorage.getItem(ENC_KEY)) || { ...EMPTY_ENC }; }
-  catch { return { ...EMPTY_ENC }; }
+  return readJson(ENC_KEY, EMPTY_ENC);
 }
 export function saveEnc(data) {
-  try { localStorage.setItem(ENC_KEY, JSON.stringify(data)); } catch {}
+  writeJson(ENC_KEY, data);
 }

@@ -207,11 +207,11 @@ const sfx = {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
       if (ctx.state === "suspended") await ctx.resume();
       ready = true;
-    } catch (_) { /* audio not available */ }
+    } catch { /* audio not available */ }
   },
   play(name) {
     if (!ready || muted) return;
-    try { const fn = SOUNDS[name]; if (fn) fn(); } catch (_) {}
+    try { const fn = SOUNDS[name]; if (fn) fn(); } catch { /* best-effort SFX */ }
   },
   toggleMute() { muted = !muted; return muted; },
   get muted() { return muted; },

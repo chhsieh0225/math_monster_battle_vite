@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { seedRange } from '../../utils/prng';
 
 const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
 
@@ -6,7 +7,8 @@ export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
   const dur = 800 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
-  useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [onDone]);
+  const rr = (slot, i, min, max) => seedRange(`water-${idx}-${lvl}-${slot}-${i}`, min, max);
+  useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [dur, onDone]);
 
   // --- idx 0: 水泡攻擊 (Bubble Attack) ---
   if (idx === 0) {
@@ -14,7 +16,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
     return (
       <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
         {Array.from({ length: n }, (_, i) => {
-          const r = 7 + lvl * 2 + Math.random() * 5;
+          const r = 7 + lvl * 2 + rr("bubble-r", i, 0, 5);
           const sz = r * 2 + 12;
           return (
             <svg key={i} width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}
@@ -113,15 +115,15 @@ export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
         </svg>
         {/* Splash droplets */}
         {Array.from({ length: splashN }, (_, i) => {
-          const r = 2.5 + lvl * 0.8 + Math.random() * 2;
+          const r = 2.5 + lvl * 0.8 + rr("splash-r", i, 0, 2);
           const sz = r * 2 + 6;
           return (
             <svg key={`s${i}`} width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}
               style={{
                 position:"absolute",
-                right:`calc(${T.right} + ${-10+Math.random()*20}%)`, top:`calc(${T.top} + ${-6+Math.random()*16}%)`,
+                right:`calc(${T.right} + ${rr("splash-right", i, -10, 10)}%)`, top:`calc(${T.top} + ${rr("splash-top", i, -6, 10)}%)`,
                 opacity:0, filter:`drop-shadow(0 0 3px #60a5fa)`,
-                "--px":`${-18+Math.random()*36}px`, "--py":`${-8+Math.random()*28}px`,
+                "--px":`${rr("splash-px", i, -18, 18)}px`, "--py":`${rr("splash-py", i, -8, 20)}px`,
                 animation:`splashBurst 0.6s ease ${0.12+i*0.04}s forwards`,
               }}>
               <defs>
@@ -201,7 +203,7 @@ export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
               top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
               transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
-              animation:`sparkle ${0.4+Math.random()*0.3}s ease ${D+0.06+i*0.03}s both`,
+              animation:`sparkle ${0.4 + rr("ult-ray-anim", i, 0, 0.3)}s ease ${D+0.06+i*0.03}s both`,
             }}>
             <defs><linearGradient id={`wray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
               <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.8"/>
@@ -214,8 +216,8 @@ export default function WaterEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
       {/* Phase 5: Water-specific splash droplets */}
       {Array.from({ length: splashN }, (_, i) => {
         const angle = (i / splashN) * 360;
-        const dist = 28 + Math.random() * 45;
-        const r = 4 + lvl + Math.random() * 2;
+        const dist = 28 + rr("ult-splash-dist", i, 0, 45);
+        const r = 4 + lvl + rr("ult-splash-r", i, 0, 2);
         const sz = r * 2 + 6;
         return (
           <svg key={`sp${i}`} width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}

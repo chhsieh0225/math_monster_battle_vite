@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { seedRange } from '../../utils/prng';
 
 // SVG 8-pointed star
 const STAR = "M0,-8 L2,-2 L8,0 L2,2 L0,8 L-2,2 L-8,0 L-2,-2Z";
@@ -10,7 +11,8 @@ export default function DarkEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
   const dur = 800 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
-  useEffect(() => { const t = setTimeout(onDone, dur + 400); return () => clearTimeout(t); }, [onDone]);
+  const rr = (slot, i, min, max) => seedRange(`dark-${idx}-${lvl}-${slot}-${i}`, min, max);
+  useEffect(() => { const t = setTimeout(onDone, dur + 400); return () => clearTimeout(t); }, [dur, onDone]);
 
   // --- idx 0: 暗影彈 (Shadow Bolt) ---
   if (idx === 0) {
@@ -90,7 +92,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
             style={{
               position:"absolute", right:`calc(${T.right} + ${i*3}%)`, top:`calc(${T.top} + ${i*4}%)`,
               opacity:0, filter:`drop-shadow(0 0 ${glow-1}px #a855f7)`,
-              "--sx":`${-15+Math.random()*30}px`, "--sy":`${-10+Math.random()*20}px`,
+              "--sx":`${rr("claw-star-x", i, -15, 15)}px`, "--sy":`${rr("claw-star-y", i, -10, 10)}px`,
               animation:`darkStarSpin ${0.5+lvl*0.04}s ease ${dur/1000*0.6+i*0.06}s forwards`,
             }}>
             <path d={STAR} fill="#c4b5fd" opacity={0.7}/>
@@ -139,17 +141,17 @@ export default function DarkEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
           </svg>
         ))}
         {/* Scattered star particles */}
-        {Array.from({ length: starN }, (_, i) => {
-          const angle = (i / starN) * 360;
-          const dist = 30 + Math.random() * 50;
-          return (
+      {Array.from({ length: starN }, (_, i) => {
+        const angle = (i / starN) * 360;
+        const dist = 30 + rr("storm-star-dist", i, 0, 50);
+        return (
             <svg key={`s${i}`} width="20" height="20" viewBox="-10 -10 20 20"
               style={{
                 position:"absolute", right:T.right, top:T.top,
                 opacity:0, filter:`drop-shadow(0 0 ${glow-1}px #a855f7)`,
                 "--sx":`${Math.cos(angle*Math.PI/180)*dist}px`,
                 "--sy":`${Math.sin(angle*Math.PI/180)*dist}px`,
-                animation:`darkStarSpin ${0.5+Math.random()*0.3}s ease ${0.1+i*0.04}s forwards`,
+                animation:`darkStarSpin ${0.5 + rr("storm-star-anim", i, 0, 0.3)}s ease ${0.1+i*0.04}s forwards`,
               }}>
               <path d={i%2===0 ? STAR : SPARK4}
                 fill={i%3===0?"#c4b5fd":"#a855f7"}
@@ -225,7 +227,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
               top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
               transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
-              animation:`sparkle ${0.4+Math.random()*0.3}s ease ${D+0.06+i*0.03}s both`,
+              animation:`sparkle ${0.4 + rr("ult-ray-anim", i, 0, 0.3)}s ease ${D+0.06+i*0.03}s both`,
             }}>
             <defs><linearGradient id={`dray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
               <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.8"/>
@@ -238,7 +240,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
       {/* Phase 5: Dark-specific star explosion */}
       {Array.from({ length: starN }, (_, i) => {
         const angle = (i / starN) * 360;
-        const dist = 30 + Math.random() * 55;
+        const dist = 30 + rr("ult-star-dist", i, 0, 55);
         return (
           <svg key={`st${i}`} width="22" height="22" viewBox="-10 -10 20 20"
             style={{
@@ -246,7 +248,7 @@ export default function DarkEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
               "--sx":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--sy":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`darkStarSpin ${0.5+Math.random()*0.35}s ease ${D+0.1+i*0.035}s forwards`,
+              animation:`darkStarSpin ${0.5 + rr("ult-star-anim", i, 0, 0.35)}s ease ${D+0.1+i*0.035}s forwards`,
             }}>
             <path d={i%2===0 ? STAR : SPARK4}
               fill={i%3===0?"#e9d5ff":i%3===1?"#c4b5fd":"#a855f7"}

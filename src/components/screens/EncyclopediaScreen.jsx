@@ -64,7 +64,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }) {
                   {seen ? `${e.typeIcon} ${e.typeName}` : "??"}
                   {e.isEvolved && seen && <span style={{ marginLeft: 4, fontSize: 9, background: "rgba(168,85,247,0.25)", padding: "1px 5px", borderRadius: 6 }}>進化</span>}
                 </div>
-                {seen && <div style={{ fontSize: 9, opacity: 0.25, marginTop: 3 }}>遭遇 {enc[e.key] || 0}　擊敗 {def[e.key] || 0}</div>}
+                {seen && <div style={{ fontSize: 9, opacity: 0.25, marginTop: 3 }}>遭遇 {enc[e.key] || 0} / 擊敗 {def[e.key] || 0}</div>}
               </div>
             );
           })}

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { seedRange } from '../../utils/prng';
 
 // SVG flame shape (teardrop)
 const FLAME = "M10,28 C10,28 2,18 2,12 C2,5 5.5,0 10,0 C14.5,0 18,5 18,12 C18,18 10,28 10,28Z";
@@ -9,7 +10,8 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
   const dur = 700 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
-  useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [onDone]);
+  const rr = (slot, i, min, max) => seedRange(`fire-${idx}-${lvl}-${slot}-${i}`, min, max);
+  useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [dur, onDone]);
 
   // --- idx 0: 火花彈 (Fireball) ---
   if (idx === 0) {
@@ -117,7 +119,7 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
         {/* Radial flame rays */}
         {Array.from({ length: rayN }, (_, i) => {
           const angle = (i / rayN) * 360;
-          const len = 25 + lvl * 7 + Math.random() * 15;
+          const len = 25 + lvl * 7 + rr("ray-len", i, 0, 15);
           const w = 4 + lvl * 0.5;
           return (
             <svg key={i} width={w+4} height={len} viewBox={`0 0 ${w+4} ${len}`}
@@ -126,7 +128,7 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
                 top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*5}px)`,
                 transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
                 opacity:0, filter:`drop-shadow(0 0 ${glow}px #fbbf24)`,
-                animation:`sparkle ${0.35+Math.random()*0.25}s ease ${i*0.025}s both`,
+                animation:`sparkle ${0.35 + rr("ray-anim", i, 0, 0.25)}s ease ${i*0.025}s both`,
               }}>
               <defs>
                 <linearGradient id={`ray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
@@ -205,7 +207,7 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
               top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
               transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
-              animation:`sparkle ${0.4+Math.random()*0.3}s ease ${D+0.06+i*0.03}s both`,
+              animation:`sparkle ${0.4 + rr("ult-ray-anim", i, 0, 0.3)}s ease ${D+0.06+i*0.03}s both`,
             }}>
             <defs><linearGradient id={`fray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
               <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.8"/>
@@ -218,7 +220,7 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
       {/* Phase 5: Fire-specific flame particles */}
       {Array.from({ length: flameN }, (_, i) => {
         const angle = (i / flameN) * 360;
-        const dist = 28 + Math.random() * 45;
+        const dist = 28 + rr("flame-dist", i, 0, 45);
         return (
           <svg key={`fl${i}`} width="28" height="34" viewBox="0 0 20 30"
             style={{
@@ -226,7 +228,7 @@ export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #fbbf24)`,
               "--lx":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--ly":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`leafSpin ${0.5+Math.random()*0.3}s ease ${D+0.1+i*0.04}s forwards`,
+              animation:`leafSpin ${0.5 + rr("flame-anim", i, 0, 0.3)}s ease ${D+0.1+i*0.04}s forwards`,
             }}>
             <path d={FLAME} fill={i%3===0?"#fbbf24":i%3===1?"#f97316":"#ef4444"} opacity="0.7"/>
           </svg>

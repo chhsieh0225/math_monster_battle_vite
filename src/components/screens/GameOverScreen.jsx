@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { calcScore, saveScore } from '../../utils/leaderboard';
+import { readText, writeText } from '../../utils/storage';
 
 export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, timedMode, maxStreak = 0, starter, mLvls, getPow, onRestart, onLeaderboard, onHome }) {
   const won = defeated >= totalEnemies;
@@ -7,7 +8,7 @@ export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, t
   const [lastRank, setLastRank] = useState(-1);
   const [nameSaved, setNameSaved] = useState(false);
   const [playerName, setPlayerName] = useState(() => {
-    try { return localStorage.getItem("mathMonsterBattle_name") || ""; } catch { return ""; }
+    return readText("mathMonsterBattle_name", "");
   });
   const scoreSaved = useRef(false);
 
@@ -16,7 +17,7 @@ export default function GameOverScreen({ defeated, totalEnemies, tC, tW, pLvl, t
     scoreSaved.current = true;
     const acc = (tC + tW > 0) ? Math.round(tC / (tC + tW) * 100) : 0;
     const nm = playerName.trim() || "???";
-    try { localStorage.setItem("mathMonsterBattle_name", nm); } catch {}
+    writeText("mathMonsterBattle_name", nm);
     const entry = { score: finalScore, name: nm, defeated, correct: tC, wrong: tW, accuracy: acc, level: pLvl, timed: timedMode, maxStreak, completed: won, date: new Date().toISOString() };
     setLastRank(saveScore(entry));
     setNameSaved(true);

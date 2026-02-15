@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { seedRange } from '../../utils/prng';
 
 // SVG paths
 const LEAF = "M0,-10 C5,-10 10,-4 10,0 C10,4 5,10 0,10 C-2,6 -3,2 -3,0 C-3,-2 -2,-6 0,-10Z";
@@ -9,7 +10,8 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
   const dur = 700 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
-  useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [onDone]);
+  const rr = (slot, i, min, max) => seedRange(`grass-${idx}-${lvl}-${slot}-${i}`, min, max);
+  useEffect(() => { const t = setTimeout(onDone, dur + 350); return () => clearTimeout(t); }, [dur, onDone]);
 
   // --- idx 0: 葉刃切 (Leaf Blade) ---
   if (idx === 0) {
@@ -40,7 +42,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
             style={{
               position:"absolute", left:`${14+i*7}%`, bottom:`${38-i*3}%`,
               opacity:0, filter:`drop-shadow(0 0 3px #4ade80)`,
-              "--lx":`${25+Math.random()*50}px`, "--ly":`${-15-Math.random()*30}px`,
+              "--lx":`${rr("leaf-trail-x", i, 25, 75)}px`, "--ly":`${rr("leaf-trail-y", i, -45, -15)}px`,
               animation:`leafSpin 0.55s ease ${0.06+i*0.06}s forwards`,
             }}>
             <path d={LEAF} fill="#4ade80" opacity="0.5" transform={`scale(0.4) rotate(${i*55})`}/>
@@ -94,7 +96,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
             style={{
               position:"absolute", right:`${10+i*4}%`, top:`${15+i*5}%`,
               opacity:0, filter:`drop-shadow(0 0 4px rgba(74,222,128,0.3)) blur(0.4px)`,
-              "--lx":`${-15+Math.random()*30}px`, "--ly":`${-10+Math.random()*20}px`,
+              "--lx":`${rr("branch-leaf-x", i, -15, 15)}px`, "--ly":`${rr("branch-leaf-y", i, -10, 10)}px`,
               animation:`leafSpin 0.5s ease ${dur/1000*0.7+i*0.06}s forwards`,
             }}>
             <path d={LEAF} fill="rgba(74,222,128,0.35)" transform={`scale(0.35) rotate(${i*70})`}/>
@@ -124,22 +126,22 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
         ))}
         {/* Scattered leaf blades */}
         {Array.from({ length: n }, (_, i) => {
-          const sz = 20 + lvl * 3 + Math.random() * 8;
+          const sz = 20 + lvl * 3 + rr("storm-size", i, 0, 8);
           return (
             <svg key={i} width={sz} height={sz} viewBox="-12 -12 24 24"
               style={{
                 position:"absolute",
-                right:`calc(${T.right} + ${-12+Math.random()*24}%)`, top:`calc(${T.top} + ${-10+Math.random()*25}%)`,
+                right:`calc(${T.right} + ${rr("storm-right", i, -12, 12)}%)`, top:`calc(${T.top} + ${rr("storm-top", i, -10, 15)}%)`,
                 opacity:0, filter:`drop-shadow(0 0 ${glow}px #22c55e)`,
-                "--lx":`${40+Math.random()*80}px`, "--ly":`${-20-Math.random()*45}px`,
-                animation:`leafSpin ${0.45+Math.random()*0.25}s ease ${i*0.04}s forwards`,
+                "--lx":`${rr("storm-lx", i, 40, 120)}px`, "--ly":`${rr("storm-ly", i, -65, -20)}px`,
+                animation:`leafSpin ${0.45 + rr("storm-anim", i, 0, 0.25)}s ease ${i*0.04}s forwards`,
               }}>
               <defs>
                 <linearGradient id={`slf${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#4ade80"/><stop offset="100%" stopColor="#166534"/>
                 </linearGradient>
               </defs>
-              <path d={LEAF} fill={`url(#slf${i})`} transform={`rotate(${Math.random()*360})`}/>
+              <path d={LEAF} fill={`url(#slf${i})`} transform={`rotate(${rr("storm-rot", i, 0, 360)})`}/>
             </svg>
           );
         })}
@@ -211,7 +213,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
               top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
               transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
-              animation:`sparkle ${0.4+Math.random()*0.3}s ease ${D+0.06+i*0.03}s both`,
+              animation:`sparkle ${0.4 + rr("ult-ray-anim", i, 0, 0.3)}s ease ${D+0.06+i*0.03}s both`,
             }}>
             <defs><linearGradient id={`gray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
               <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.8"/>
@@ -224,7 +226,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
       {/* Phase 5: Grass-specific leaf explosion */}
       {Array.from({ length: leafN }, (_, i) => {
         const angle = (i / leafN) * 360;
-        const dist = 30 + Math.random() * 50;
+        const dist = 30 + rr("ult-leaf-dist", i, 0, 50);
         return (
           <svg key={`lf${i}`} width="22" height="22" viewBox="-12 -12 24 24"
             style={{
@@ -232,7 +234,7 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onD
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #4ade80)`,
               "--lx":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--ly":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`leafSpin ${0.5+Math.random()*0.35}s ease ${D+0.1+i*0.04}s forwards`,
+              animation:`leafSpin ${0.5 + rr("ult-leaf-anim", i, 0, 0.35)}s ease ${D+0.1+i*0.04}s forwards`,
             }}>
             <path d={LEAF} fill={i%2===0?"#4ade80":"#22c55e"} transform={`rotate(${angle})`}/>
           </svg>

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { seedRange } from '../../utils/prng';
 
 // Primary bolt paths (jagged lightning shapes)
 const BOLT_A = "M60,0 L55,30 L70,32 L50,65 L62,42 L48,40 L60,0";
@@ -14,7 +15,8 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
   const dur = 600 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
-  useEffect(() => { const t = setTimeout(onDone, dur + 400); return () => clearTimeout(t); }, [onDone]);
+  const rr = (slot, i, min, max) => seedRange(`elec-${idx}-${lvl}-${slot}-${i}`, min, max);
+  useEffect(() => { const t = setTimeout(onDone, dur + 400); return () => clearTimeout(t); }, [dur, onDone]);
 
   // --- idx 0: 基礎電擊 (Basic Bolt) — bolts strike near enemy ---
   if (idx === 0) {
@@ -97,7 +99,7 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
         {Array.from({ length: 3 + lvl }, (_, i) => (
           <svg key={`s${i}`} width="14" height="14" viewBox="-8 -8 16 16"
             style={{
-              position:"absolute", right:`calc(${T.right} + ${-8+Math.random()*16}%)`, top:`calc(${T.top} + ${-5+Math.random()*15}%)`,
+              position:"absolute", right:`calc(${T.right} + ${rr("chain-spark-right", i, -8, 8)}%)`, top:`calc(${T.top} + ${rr("chain-spark-top", i, -5, 10)}%)`,
               opacity:0, filter:`drop-shadow(0 0 3px #fbbf24)`,
               animation:`sparkle 0.4s ease ${0.08+i*0.07}s both`,
             }}>
@@ -174,7 +176,7 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
         {Array.from({ length: 4 + lvl * 2 }, (_, i) => (
           <svg key={`s${i}`} width="12" height="12" viewBox="-8 -8 16 16"
             style={{
-              position:"absolute", right:`calc(${T.right} + ${-10+Math.random()*20}%)`, top:`calc(${T.top} + ${-8+Math.random()*20}%)`,
+              position:"absolute", right:`calc(${T.right} + ${rr("storm-spark-right", i, -10, 10)}%)`, top:`calc(${T.top} + ${rr("storm-spark-top", i, -8, 12)}%)`,
               opacity:0, filter:`drop-shadow(0 0 3px #fbbf24)`,
               animation:`sparkle 0.35s ease ${0.05+i*0.05}s both`,
             }}>
@@ -251,7 +253,7 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
               top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
               transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
               opacity:0, filter:`drop-shadow(0 0 ${glow}px #a855f7)`,
-              animation:`sparkle ${0.4+Math.random()*0.3}s ease ${D+0.06+i*0.03}s both`,
+              animation:`sparkle ${0.4 + rr("ult-ray-anim", i, 0, 0.3)}s ease ${D+0.06+i*0.03}s both`,
             }}>
             <defs><linearGradient id={`eray${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
               <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.8"/>
@@ -280,7 +282,7 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEF_TARGET, onDo
       {Array.from({ length: 4 + lvl }, (_, i) => (
         <svg key={`sk${i}`} width="12" height="12" viewBox="-8 -8 16 16"
           style={{
-            position:"absolute", right:`calc(${T.right} + ${-8+Math.random()*16}%)`, top:`calc(${T.top} + ${-6+Math.random()*16}%)`,
+            position:"absolute", right:`calc(${T.right} + ${rr("ult-spark-right", i, -8, 8)}%)`, top:`calc(${T.top} + ${rr("ult-spark-top", i, -6, 10)}%)`,
             opacity:0, filter:`drop-shadow(0 0 3px #fbbf24)`,
             animation:`sparkle 0.4s ease ${D+0.12+i*0.04}s both`,
           }}>

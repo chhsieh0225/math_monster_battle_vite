@@ -18,7 +18,7 @@
  */
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 
-import { MONSTERS, SLIME_VARIANTS, EVOLVED_SLIME_VARIANTS, getEff } from '../data/monsters';
+import { getEff } from '../data/monsters';
 import { SCENE_NAMES } from '../data/scenes';
 import {
   MAX_MOVE_LVL, POWER_CAPS, HITS_PER_LVL,
@@ -34,8 +34,10 @@ import { useTimer } from './useTimer';
 import { useAchievements } from './useAchievements';
 import { useEncyclopedia } from './useEncyclopedia';
 import { useSessionLog } from './useSessionLog';
+import { useBattleRng } from './useBattleRng';
 import { ENC_TOTAL } from '../data/encyclopedia';
 import sfx from '../utils/sfx';
+import { buildRoster } from '../utils/rosterBuilder';
 
 // ── Constants (module-level to avoid re-allocation per render) ──
 const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
@@ -52,46 +54,10 @@ export function useBattle() {
   const { achUnlocked, achPopup, tryUnlock, dismissAch } = useAchievements();
   const { encData, setEncData, updateEnc, updateEncDefeated } = useEncyclopedia();
   const { initSession, markQStart, logAns, endSession } = useSessionLog();
+  const { rand, randInt, chance, pickIndex, reseed } = useBattleRng();
 
-  // ──── Enemy roster (regenerated each game for slime variant randomisation) ────
-  const buildRoster = () => {
-    const order = [0, 1, 0, 2, 0, 1, 3, 2, 3, 4];
-    return order.map((idx, i) => {
-      const b = MONSTERS[idx];
-      const sc = 1 + i * 0.12;
-      const isEvolved = b.evolveLvl && (i + 1) >= b.evolveLvl;
-
-      // Slime colour variant — random type each non-evolved encounter
-      let variant = null;
-      let evolvedVariant = null;
-      if (idx === 0 && !isEvolved) {
-        variant = SLIME_VARIANTS[Math.floor(Math.random() * SLIME_VARIANTS.length)];
-      }
-      // Evolved slime variant — random evolved form (叢林巨魔 / 雷霆巨魔)
-      if (idx === 0 && isEvolved) {
-        evolvedVariant = EVOLVED_SLIME_VARIANTS[Math.floor(Math.random() * EVOLVED_SLIME_VARIANTS.length)];
-      }
-
-      // Trait-based HP/ATK multipliers for slime variants (both base and evolved)
-      const activeVariant = evolvedVariant || variant;
-      const hm = activeVariant ? (activeVariant.hpMult || 1) : 1;
-      const am = activeVariant ? (activeVariant.atkMult || 1) : 1;
-
-      return {
-        ...b,
-        // Apply variant overrides for non-evolved slimes
-        ...(variant && { id: variant.id, name: variant.name, svgFn: variant.svgFn, c1: variant.c1, c2: variant.c2, mType: variant.mType, typeIcon: variant.typeIcon, typeName: variant.typeName, drops: variant.drops, trait: variant.trait, traitName: variant.traitName }),
-        // Apply evolved variant overrides (including trait)
-        ...(evolvedVariant && { id: evolvedVariant.id, name: evolvedVariant.name, svgFn: evolvedVariant.svgFn, c1: evolvedVariant.c1, c2: evolvedVariant.c2, mType: evolvedVariant.mType, typeIcon: evolvedVariant.typeIcon, typeName: evolvedVariant.typeName, drops: evolvedVariant.drops, trait: evolvedVariant.trait, traitName: evolvedVariant.traitName }),
-        name: evolvedVariant ? evolvedVariant.name : (isEvolved && b.evolvedName ? b.evolvedName : (variant ? variant.name : b.name)),
-        svgFn: evolvedVariant ? evolvedVariant.svgFn : (isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn)),
-        sceneMType: b.mType,   // scene always follows base monster species
-        hp: Math.round(b.hp * sc * hm), maxHp: Math.round(b.hp * sc * hm),
-        atk: Math.round(b.atk * sc * am), lvl: i + 1, isEvolved,
-      };
-    });
-  };
-  const [enemies, setEnemies] = useState(buildRoster);
+  const buildNewRoster = useCallback(() => buildRoster(pickIndex), [pickIndex]);
+  const [enemies, setEnemies] = useState(buildNewRoster);
 
   // ──── Screen & mode ────
   const [screen, setScreen] = useState("title");
@@ -171,6 +137,7 @@ export function useBattle() {
   const did = useRef(0);
   const pid = useRef(0);
   const turnRef = useRef(0);
+  const doEnemyTurnRef = useRef(() => {});
   const pendingEvolve = useRef(false);   // ← Bug #2 fix
   const evolveRound = useRef(0);        // round to resume after evolve screen
 
@@ -216,9 +183,9 @@ export function useBattle() {
     for (let i = 0; i < n; i++) {
       np.push({
         id: pid.current++,
-        emoji: es[Math.floor(Math.random() * es.length)],
-        x: x + Math.random() * 40 - 20,
-        y: y + Math.random() * 20 - 10,
+        emoji: es[randInt(0, es.length - 1)],
+        x: x + rand() * 40 - 20,
+        y: y + rand() * 20 - 10,
       });
     }
     setParts(p => [...p, ...np]);
@@ -241,7 +208,7 @@ export function useBattle() {
   // ═══════════════════════════════════════════════════════════════
   //  TIMER
   // ═══════════════════════════════════════════════════════════════
-  const onTimeout = useCallback(() => {
+  const onTimeout = () => {
     setAnswered(true);
     setFb({ correct: false, answer: sr.current.q?.answer, steps: sr.current.q?.steps || [] });
     sfx.play("timeout");
@@ -253,11 +220,11 @@ export function useBattle() {
     setBText("⏰ 時間到！來不及出招！");
     setPhase("text");
     // Read enemy from stateRef so we never hit a stale closure
-    safeTo(() => doEnemyTurn(), 1500);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    safeTo(() => doEnemyTurnRef.current(), 1500);
+  };
 
   const {
-    timerLeft, paused,
+    timerLeft, paused: _PAUSED,
     startTimer, clearTimer, pauseTimer, resumeTimer,
   } = useTimer(TIMER_SEC, onTimeout);
 
@@ -308,9 +275,10 @@ export function useBattle() {
   // --- Full game reset (starterOverride used on first game when setStarter hasn't rendered yet) ---
   const startGame = (starterOverride) => {
     turnRef.current++;
+    reseed(turnRef.current * 2654435761);
     clearTimer();
     // Regenerate roster so slime variants are re-randomised each game
-    const newRoster = buildRoster();
+    const newRoster = buildNewRoster();
     setEnemies(newRoster);
     setPHp(PLAYER_MAX_HP); setPExp(0); setPLvl(1); setPStg(0);
     setStreak(0); setPassiveCount(0); setCharge(0); setTC(0); setTW(0);
@@ -381,7 +349,7 @@ export function useBattle() {
     tryUnlock("first_win");
     if (s.enemy.id === "boss") tryUnlock("boss_kill");
     if (s.pHp <= 5) tryUnlock("low_hp");
-    const drop = s.enemy.drops[Math.floor(Math.random() * s.enemy.drops.length)];
+    const drop = s.enemy.drops[randInt(0, s.enemy.drops.length - 1)];
     setBText(`${s.enemy.name} ${verb}！獲得 ${xp} 經驗值 ${drop}`);
     setPhase("victory"); sfx.play("victory");
   };
@@ -420,7 +388,7 @@ export function useBattle() {
   };
 
   // --- Enemy turn logic (reads from stateRef) ---
-  const doEnemyTurn = () => {
+  function doEnemyTurn() {
     const s = sr.current;
     if (!s.enemy || !s.starter) return;
     const isBoss = s.enemy.id === "boss";
@@ -452,9 +420,9 @@ export function useBattle() {
       }
     }
     doEnemyTurnInner();
-  };
+  }
 
-  const doEnemyTurnInner = () => {
+  function doEnemyTurnInner() {
     const s = sr.current;
     if (!s.enemy || !s.starter) return;
     const isBoss = s.enemy.id === "boss";
@@ -499,7 +467,7 @@ export function useBattle() {
 
     // ── Boss Phase 2+: seal a random move ──
     if (isBoss && bp >= 2 && s.sealedMove < 0 && turnCount > 0 && turnCount % 3 === 0) {
-      const sealIdx = Math.floor(Math.random() * 3); // only seal moves 0-2, not ultimate
+      const sealIdx = randInt(0, 2); // only seal moves 0-2, not ultimate
       setSealedMove(sealIdx); sfx.play("seal");
       setSealedTurns(2);
       const moveName = s.starter.moves[sealIdx]?.name || "???";
@@ -510,9 +478,9 @@ export function useBattle() {
     }
 
     doEnemyAttack(bp);
-  };
+  }
 
-  const doEnemyAttack = (bp) => {
+  function doEnemyAttack(bp) {
     const s = sr.current;
     if (!s.enemy || !s.starter) return;
     setBText(`${s.enemy.name} 發動攻擊！`);
@@ -561,7 +529,7 @@ export function useBattle() {
             else { setPhase("menu"); setBText(""); }
           }, 1800);
         } else {
-          const rawDmg = Math.round(s2.enemy.atk * (0.8 + Math.random() * 0.4));
+          const rawDmg = Math.round(s2.enemy.atk * (0.8 + rand() * 0.4));
           const refDmg = Math.round(rawDmg * 1.2);
           const nh = Math.max(0, sr.current.eHp - refDmg);
           setEHp(nh);
@@ -589,7 +557,7 @@ export function useBattle() {
       if (isBlaze) scaledAtk = Math.round(scaledAtk * 1.5);
 
       // ── Berserk trait: 30% chance 1.5x critical ──
-      const isCrit = trait === "berserk" && Math.random() < 0.3;
+      const isCrit = trait === "berserk" && chance(0.3);
       const critMult = isCrit ? 1.5 : 1.0;
 
       let dmg = calcEnemyDamage(scaledAtk, getEff(s2.enemy.mType, s2.starter.type));
@@ -618,7 +586,7 @@ export function useBattle() {
       }
 
       // ── Curse trait: 35% chance to weaken player's next attack ──
-      if (trait === "curse" && Math.random() < 0.35) {
+      if (trait === "curse" && chance(0.35)) {
         setCursed(true);
         safeTo(() => {
           addD("💀詛咒", 60, 140, "#a855f7");
@@ -627,7 +595,7 @@ export function useBattle() {
       }
 
       // ── Swift trait: 25% chance double attack ──
-      if (trait === "swift" && Math.random() < 0.25) {
+      if (trait === "swift" && chance(0.25)) {
         safeTo(() => {
           setBText(`⚡ ${s2.enemy.name} 再次攻擊！`);
           setEAnim("enemyAttackLunge 0.6s ease");
@@ -648,7 +616,8 @@ export function useBattle() {
 
       safeTo(() => { setPhase("menu"); setBText(""); }, 800);
     }, 500);
-  };
+  }
+  useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
 
   // --- Player answers a question ---
   const onAns = (choice) => {
@@ -722,7 +691,7 @@ export function useBattle() {
               effMult: eff,
             });
             // ── Phantom trait: 25% chance to dodge player attack ──
-            const isPhantom = s3.enemy.trait === "phantom" && Math.random() < 0.25;
+            const isPhantom = s3.enemy.trait === "phantom" && chance(0.25);
             if (isPhantom) {
               setEAnim("dodgeSlide 0.9s ease");
               setEffMsg({ text: "👻 幻影閃避！", color: "#c084fc" }); safeTo(() => setEffMsg(null), 1500);
@@ -776,7 +745,7 @@ export function useBattle() {
             // Water: freeze
             let willFreeze = false;
             if (starter.type === "water" && afterHp > 0) {
-              if (Math.random() < freezeChance(s3.mLvls[s3.selIdx])) {
+              if (chance(freezeChance(s3.mLvls[s3.selIdx]))) {
                 willFreeze = true; setFrozen(true); frozenR.current = true; sfx.play("freeze");
                 safeTo(() => addD("❄️凍結", 155, 50, "#38bdf8"), 600);
               }

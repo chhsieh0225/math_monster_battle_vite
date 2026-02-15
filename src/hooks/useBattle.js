@@ -720,11 +720,14 @@ export function useBattle() {
       if (correct) setTC((c) => c + 1);
       else setTW((w) => w + 1);
       if (correct) {
+        const attackerHp = s.pvpTurn === "p1" ? s.pHp : s.pvpHp2;
         const strike = resolvePvpStrike({
           move,
           moveIdx: s.selIdx,
           attackerType: attacker.type,
           defenderType: defender.type,
+          attackerHp,
+          attackerMaxHp: PLAYER_MAX_HP,
           random: rand,
         });
         const dmg = strike.dmg;
@@ -741,6 +744,10 @@ export function useBattle() {
           setEHp(nh);
           setEAnim("enemyHit 0.45s ease");
           addD(`-${dmg}`, 140, 55, "#ef4444");
+          if (strike.heal > 0) {
+            setPHp((h) => Math.min(PLAYER_MAX_HP, h + strike.heal));
+            addD(`+${strike.heal}`, 52, 164, "#22c55e");
+          }
           safeTo(() => setEAnim(""), 500);
           if (nh <= 0) {
             setPvpWinner("p1");
@@ -752,6 +759,12 @@ export function useBattle() {
           setPHp(nh);
           setPAnim("playerHit 0.45s ease");
           addD(`-${dmg}`, 60, 170, "#ef4444");
+          if (strike.heal > 0) {
+            const healed = Math.min(PLAYER_MAX_HP, s.pvpHp2 + strike.heal);
+            setPvpHp2(healed);
+            setEHp(healed);
+            addD(`+${strike.heal}`, 146, 54, "#22c55e");
+          }
           safeTo(() => setPAnim(""), 500);
           if (nh <= 0) {
             setPvpWinner("p2");
@@ -759,7 +772,7 @@ export function useBattle() {
             return;
           }
         }
-        setBText(`✅ ${attacker.name} 的 ${move.name} 命中！`);
+        setBText(`✅ ${attacker.name} 的 ${move.name} 命中！${strike.passiveLabel ? ` ${strike.passiveLabel}` : ""}`);
       } else {
         setBText(`❌ ${attacker.name} 答錯，攻擊落空！`);
       }

@@ -152,6 +152,8 @@ export function resolvePvpStrike({
   moveIdx,
   attackerType,
   defenderType,
+  attackerHp = PLAYER_MAX_HP,
+  attackerMaxHp = PLAYER_MAX_HP,
   random = Math.random,
 }) {
   if (!move || moveIdx == null) {
@@ -160,6 +162,8 @@ export function resolvePvpStrike({
       eff: 1,
       dmg: 0,
       variance: 1,
+      heal: 0,
+      passiveLabel: "",
     };
   }
 
@@ -176,13 +180,25 @@ export function resolvePvpStrike({
     + rand01 * (PVP_BALANCE.varianceMax - PVP_BALANCE.varianceMin);
   const slotScale = PVP_BALANCE.moveSlotScale[moveIdx] ?? 1;
   const typeScale = PVP_BALANCE.typeScale[attackerType] ?? 1;
+  const skillScale = PVP_BALANCE.skillScaleByType[attackerType]?.[moveIdx] ?? 1;
+  const passiveScale = PVP_BALANCE.passiveScaleByType[attackerType] ?? 1;
   const riskyScale = move.risky ? PVP_BALANCE.riskyScale : 1;
+  const hpRatio = attackerMaxHp > 0
+    ? Math.max(0, Math.min(1, attackerHp / attackerMaxHp))
+    : 1;
+  const lightComebackBonus = attackerType === "light"
+    ? (1 - hpRatio) * (PVP_BALANCE.lightComeback?.maxBonus ?? 0)
+    : 0;
+  const comebackScale = 1 + lightComebackBonus;
 
   const rawDamage = basePow
     * PVP_BALANCE.baseScale
     * variance
     * slotScale
     * typeScale
+    * skillScale
+    * passiveScale
+    * comebackScale
     * effectScale
     * riskyScale;
   const dmg = Math.max(
@@ -190,10 +206,23 @@ export function resolvePvpStrike({
     Math.min(PVP_BALANCE.maxDamage, Math.round(rawDamage)),
   );
 
+  const heal = attackerType === "grass"
+    ? Math.min(
+      PVP_BALANCE.grassSustain.healCap,
+      Math.max(0, Math.round(dmg * PVP_BALANCE.grassSustain.healRatio)),
+    )
+    : 0;
+
   return {
     basePow,
     eff,
     dmg,
     variance,
+    heal,
+    passiveLabel: attackerType === "light" && lightComebackBonus >= 0.06
+      ? "🦁 勇氣之心"
+      : attackerType === "grass" && heal > 0
+        ? "🌿 生機回復"
+        : "",
   };
 }

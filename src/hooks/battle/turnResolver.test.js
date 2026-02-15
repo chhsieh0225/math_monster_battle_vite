@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { SKILL_SETS } from '../../data/skillSets.js';
 import {
   resolveBossTurnState,
   resolveEnemyAssistStrike,
@@ -129,7 +130,7 @@ test('resolvePvpStrike respects type/effect scaling and clamps by caps', () => {
     defenderType: "dark",
     random: () => 0,
   });
-  assert.equal(neutral.dmg, 26);
+  assert.equal(neutral.dmg, 24);
   assert.equal(neutral.eff, 1);
 
   const strong = resolvePvpStrike({
@@ -139,7 +140,7 @@ test('resolvePvpStrike respects type/effect scaling and clamps by caps', () => {
     defenderType: "grass",
     random: () => 0,
   });
-  assert.equal(strong.dmg, 30);
+  assert.equal(strong.dmg, 29);
   assert.equal(strong.eff, 1.5);
 
   const weak = resolvePvpStrike({
@@ -149,7 +150,7 @@ test('resolvePvpStrike respects type/effect scaling and clamps by caps', () => {
     defenderType: "water",
     random: () => 0,
   });
-  assert.equal(weak.dmg, 22);
+  assert.equal(weak.dmg, 21);
   assert.equal(weak.eff, 0.6);
 
   const capped = resolvePvpStrike({
@@ -157,6 +158,8 @@ test('resolvePvpStrike respects type/effect scaling and clamps by caps', () => {
     moveIdx: 0,
     attackerType: "light",
     defenderType: "dark",
+    attackerHp: 0,
+    attackerMaxHp: 100,
     random: () => 1,
   });
   assert.equal(capped.dmg, 42);
@@ -169,4 +172,68 @@ test('resolvePvpStrike respects type/effect scaling and clamps by caps', () => {
     random: () => 0,
   });
   assert.equal(floored.dmg, 8);
+});
+
+test('resolvePvpStrike applies grass sustain and light comeback passive tuning', () => {
+  const grass = resolvePvpStrike({
+    move: { basePower: 40, growth: 3, type: "grass", risky: false },
+    moveIdx: 2,
+    attackerType: "grass",
+    defenderType: "dark",
+    random: () => 0.5,
+  });
+  assert.ok(grass.heal > 0);
+  assert.ok(grass.heal <= 6);
+  assert.equal(grass.passiveLabel, "🌿 生機回復");
+
+  const lightFullHp = resolvePvpStrike({
+    move: { basePower: 40, growth: 3, type: "light", risky: false },
+    moveIdx: 2,
+    attackerType: "light",
+    defenderType: "grass",
+    attackerHp: 100,
+    attackerMaxHp: 100,
+    random: () => 0.5,
+  });
+  const lightLowHp = resolvePvpStrike({
+    move: { basePower: 40, growth: 3, type: "light", risky: false },
+    moveIdx: 2,
+    attackerType: "light",
+    defenderType: "grass",
+    attackerHp: 20,
+    attackerMaxHp: 100,
+    random: () => 0.5,
+  });
+  assert.ok(lightLowHp.dmg > lightFullHp.dmg);
+  assert.equal(lightLowHp.passiveLabel, "🦁 勇氣之心");
+});
+
+test('starter average PvP damage profiles stay within tuning band', () => {
+  const profiles = [
+    { id: "fire", type: "fire", moves: SKILL_SETS.fire },
+    { id: "water", type: "water", moves: SKILL_SETS.water },
+    { id: "grass", type: "grass", moves: SKILL_SETS.grass },
+    { id: "electric", type: "electric", moves: SKILL_SETS.electric },
+    { id: "lion", type: "light", moves: SKILL_SETS.lion },
+  ];
+  const averages = profiles.map((starter) => {
+    const damages = starter.moves.map((move, idx) => (
+      resolvePvpStrike({
+        move,
+        moveIdx: idx,
+        attackerType: starter.type,
+        defenderType: null,
+        attackerHp: 100,
+        attackerMaxHp: 100,
+        random: () => 0.5,
+      }).dmg
+    ));
+    const avg = damages.reduce((a, b) => a + b, 0) / damages.length;
+    return { id: starter.id, avg };
+  });
+
+  const maxAvg = Math.max(...averages.map((x) => x.avg));
+  const minAvg = Math.min(...averages.map((x) => x.avg));
+  // Keep overall starter profile spread controlled to reduce "one best character".
+  assert.ok(maxAvg / minAvg <= 1.2);
 });

@@ -341,6 +341,17 @@ function App() {
   const mainPlayerScale = hasDualUnits ? (compactDual ? 0.82 : 0.9) : 1;
   const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale);
   const subPlayerSize = Math.round((compactDual ? 96 : 104) * (hasDualUnits ? (compactDual ? 0.82 : 0.88) : 1));
+  const pvpEnemyBarActive = B.battleMode !== "pvp" || B.pvpTurn === "p2";
+  const mainBarActive = B.battleMode === "pvp"
+    ? B.pvpTurn === "p1"
+    : (isCoopBattle ? !coopUsingSub : true);
+  const subBarActive = isCoopBattle && !!B.allySub && coopUsingSub;
+  const hpBarFocusStyle = (active) => ({
+    opacity: active ? 1 : 0.62,
+    transform: active ? "scale(1)" : "scale(0.98)",
+    filter: active ? "none" : "saturate(0.72)",
+    transition: "opacity 0.2s ease,transform 0.2s ease,filter 0.2s ease",
+  });
 
   // Enemy visual center fallback (used before first DOM measurement)
   // Note: MonsterSprite height = size * 100 / 120, so center Y uses sprite height / 2.
@@ -429,9 +440,11 @@ function App() {
 
         {/* Enemy info */}
         <div style={{ position: "absolute", top: 10, left: 10, right: enemyInfoRight, zIndex: 10 }}>
-          <HPBar cur={B.eHp} max={B.enemy.maxHp} color={B.enemy.c1} label={`${B.enemy.typeIcon}${B.enemy.name} Lv.${B.enemy.lvl}`} />
+          <div style={hpBarFocusStyle(pvpEnemyBarActive)}>
+            <HPBar cur={B.eHp} max={B.enemy.maxHp} color={B.enemy.c1} label={`${B.enemy.typeIcon}${B.enemy.name} Lv.${B.enemy.lvl}`} />
+          </div>
           {B.enemySub && (
-            <div style={{ marginTop: 4, opacity: 0.88 }}>
+            <div style={{ marginTop: 4, ...hpBarFocusStyle(false) }}>
               <HPBar cur={B.eHpSub} max={B.enemySub.maxHp} color={B.enemySub.c1} label={`副將 ${B.enemySub.typeIcon}${B.enemySub.name} Lv.${B.enemySub.lvl}`} />
             </div>
           )}
@@ -459,9 +472,11 @@ function App() {
         {/* Player platform & info */}
         <div style={{ position: "absolute", left: "2%", bottom: "12%", width: "50%", height: 10, background: scene.platform1, borderRadius: "50%", filter: "blur(2px)", zIndex: 3 }} />
         <div style={{ position: "absolute", bottom: 10, right: 10, left: playerInfoLeft, zIndex: 10 }}>
-          <HPBar cur={B.pHp} max={PLAYER_MAX_HP} color="#6366f1" label={`${isCoopBattle && !coopUsingSub ? "▶ " : ""}${st.name} Lv.${B.pLvl}`} />
+          <div style={hpBarFocusStyle(mainBarActive)}>
+            <HPBar cur={B.pHp} max={PLAYER_MAX_HP} color="#6366f1" label={`${isCoopBattle && !coopUsingSub ? "▶ " : ""}${st.name} Lv.${B.pLvl}`} />
+          </div>
           {B.allySub && (
-            <div style={{ marginTop: 4, opacity: 0.9 }}>
+            <div style={{ marginTop: 4, ...hpBarFocusStyle(subBarActive) }}>
               <HPBar cur={B.pHpSub} max={PLAYER_MAX_HP} color={B.allySub.c1} label={`${isCoopBattle && coopUsingSub ? "▶ " : ""}夥伴 ${B.allySub.typeIcon}${B.allySub.name}`} />
             </div>
           )}

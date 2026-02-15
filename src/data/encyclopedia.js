@@ -153,6 +153,9 @@ MONSTERS.forEach(m => {
       habitat: HABITATS[m.id] || "",
       rarity: RARITY[m.id] || "★",
       drops: m.drops,
+      trait: m.trait || null,
+      traitName: m.traitName || null,
+      traitDesc: m.traitDesc || null,
     });
     // Evolved form (boss has none)
     if (m.evolvedSvgFn) {
@@ -174,6 +177,9 @@ MONSTERS.forEach(m => {
         habitat: HABITATS[ek] || "",
         rarity: RARITY[ek] || "★",
         drops: m.drops,
+        trait: m.trait || null,
+        traitName: m.traitName || null,
+        traitDesc: m.traitDesc || null,
       });
     }
   }

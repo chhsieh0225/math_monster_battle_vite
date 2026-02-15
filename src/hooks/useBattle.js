@@ -109,6 +109,7 @@ export function useBattle() {
   const [enemy, setEnemy] = useState(null);
   const [eHp, setEHp] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [passiveCount, setPassiveCount] = useState(0); // counts consecutive correct answers mod 8 → triggers specDef
   const [charge, setCharge] = useState(0);
   const [tC, setTC] = useState(0);
   const [tW, setTW] = useState(0);
@@ -180,7 +181,7 @@ export function useBattle() {
   const sr = useRef({});
   const _srSnapshot = {
     enemy, starter, eHp, pHp, pExp, pLvl, pStg,
-    streak, charge, burnStack, frozen, staticStack, specDef, cursed,
+    streak, passiveCount, charge, burnStack, frozen, staticStack, specDef, cursed,
     mHits, mLvls, selIdx, phase, round, q,
     screen, timedMode, diffLevel,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
@@ -238,7 +239,7 @@ export function useBattle() {
     setFb({ correct: false, answer: sr.current.q?.answer, steps: sr.current.q?.steps || [] });
     sfx.play("timeout");
     setTW(w => w + 1);
-    setStreak(0);
+    setStreak(0); setPassiveCount(0);
     setCharge(0);
     // ── Session logging: timeout counts as wrong ──
     logAns(sr.current.q, false);
@@ -305,7 +306,7 @@ export function useBattle() {
     const newRoster = buildRoster();
     setEnemies(newRoster);
     setPHp(PLAYER_MAX_HP); setPExp(0); setPLvl(1); setPStg(0);
-    setStreak(0); setCharge(0); setTC(0); setTW(0);
+    setStreak(0); setPassiveCount(0); setCharge(0); setTC(0); setTW(0);
     setDefeated(0); setMaxStreak(0);
     setMHits([0, 0, 0, 0]); setMLvls([1, 1, 1, 1]); setMLvlUp(null);
     setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
@@ -515,7 +516,7 @@ export function useBattle() {
       const s2 = sr.current; // re-read after delay
       if (s2.specDef) {
         const st = s2.starter.type;
-        setSpecDef(false); setStreak(0); setDefAnim(st);
+        setSpecDef(false); setDefAnim(st);  // streak no longer resets — passiveCount handles passive trigger independently
         if (st === "fire") {
           setBText("🛡️ 防護罩擋下了攻擊！");
           addD("🛡️BLOCK", 60, 170, "#fbbf24"); addP("starter", 50, 170, 6);
@@ -555,8 +556,12 @@ export function useBattle() {
       }
       // Normal enemy attack — boss phase scales damage
       const atkMult = bp >= 3 ? 2.0 : bp >= 2 ? 1.5 : 1.0;
-      const scaledAtk = Math.round(s2.enemy.atk * atkMult);
+      let scaledAtk = Math.round(s2.enemy.atk * atkMult);
       const trait = s2.enemy.trait || null;
+
+      // ── Blaze trait: ATK +50% when HP below 50% ──
+      const isBlaze = trait === "blaze" && s2.eHp <= s2.enemy.maxHp * 0.5;
+      if (isBlaze) scaledAtk = Math.round(scaledAtk * 1.5);
 
       // ── Berserk trait: 30% chance 1.5x critical ──
       const isCrit = trait === "berserk" && Math.random() < 0.3;
@@ -569,6 +574,7 @@ export function useBattle() {
       setPHp(nh); setPAnim("playerHit 0.5s ease"); sfx.play("playerHit");
       addD(isCrit ? `💥-${dmg}` : `-${dmg}`, 60, 170, isCrit ? "#ff6b00" : "#ef4444"); addP("enemy", 80, 190, 4);
       if (isCrit) { setEffMsg({ text: "🔥 暴擊！", color: "#ff6b00" }); safeTo(() => setEffMsg(null), 1500); }
+      else if (isBlaze) { setEffMsg({ text: "🔥 烈焰覺醒！ATK↑", color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
       else if (defEff > 1) { setEffMsg({ text: "敵人招式很有效！", color: "#ef4444" }); safeTo(() => setEffMsg(null), 1500); }
       else if (defEff < 1) { setEffMsg({ text: "敵人招式效果不佳", color: "#64748b" }); safeTo(() => setEffMsg(null), 1500); }
       safeTo(() => setPAnim(""), 500);
@@ -638,7 +644,15 @@ export function useBattle() {
       sfx.play(ns >= 5 ? "crit" : "hit");
       setStreak(ns); setCharge(c => Math.min(c + 1, 3));
       if (ns > s.maxStreak) setMaxStreak(ns);
-      if (ns >= 8 && !s.specDef) { setSpecDef(true); tryUnlock("spec_def"); sfx.play("specDef"); }
+
+      // ── Passive counter: triggers specDef every 8 consecutive correct answers ──
+      const np = s.passiveCount + 1;
+      if (np >= 8) {
+        setPassiveCount(0);
+        if (!s.specDef) { setSpecDef(true); tryUnlock("spec_def"); sfx.play("specDef"); }
+      } else {
+        setPassiveCount(np);
+      }
 
       // ── Achievement: streak milestones ──
       if (ns >= 5) tryUnlock("streak_5");
@@ -682,6 +696,16 @@ export function useBattle() {
               stageBonus: s3.pStg,
               effMult: eff,
             });
+            // ── Phantom trait: 25% chance to dodge player attack ──
+            const isPhantom = s3.enemy.trait === "phantom" && Math.random() < 0.25;
+            if (isPhantom) {
+              setEAnim("dodgeSlide 0.9s ease");
+              setEffMsg({ text: "👻 幻影閃避！", color: "#c084fc" }); safeTo(() => setEffMsg(null), 1500);
+              addD("MISS!", 155, 50, "#c084fc");
+              safeTo(() => { setEAnim(""); setAtkEffect(null); }, 800);
+              safeTo(() => doEnemyTurn(), 1200);
+              return; // skip all damage
+            }
             // ── Fortress trait: enemy takes 30% less damage ──
             const isFortress = s3.enemy.trait === "fortress";
             if (isFortress) dmg = Math.round(dmg * 0.7);
@@ -744,6 +768,22 @@ export function useBattle() {
             addD(`-${dmg}`, 140, 55, dmgColor);
             safeTo(() => { setEAnim(""); setAtkEffect(null); }, 800);
 
+            // ── Counter trait: reflect 20% damage back to player ──
+            if (s3.enemy.trait === "counter" && afterHp > 0) {
+              const refDmg = Math.round(dmg * 0.2);
+              if (refDmg > 0) {
+                safeTo(() => {
+                  const s4 = sr.current;
+                  const nh4 = Math.max(0, s4.pHp - refDmg);
+                  setPHp(nh4); setPAnim("playerHit 0.5s ease");
+                  addD(`🛡️-${refDmg}`, 60, 170, "#60a5fa");
+                  setEffMsg({ text: "🛡️ 反擊裝甲！", color: "#60a5fa" }); safeTo(() => setEffMsg(null), 1500);
+                  safeTo(() => setPAnim(""), 500);
+                  if (nh4 <= 0) safeTo(() => { sfx.play("ko"); _endSession(false); setPhase("ko"); setBText("你的夥伴被反擊傷害打倒了..."); setScreen("gameover"); }, 800);
+                }, 600);
+              }
+            }
+
             // Achievement: one-hit KO (dealt damage >= enemy maxHp)
             if (afterHp <= 0 && dmg >= s3.enemy.maxHp) tryUnlock("one_hit");
             if (afterHp <= 0) safeTo(() => handleVictory(), 900);
@@ -755,7 +795,7 @@ export function useBattle() {
     } else {
       // Wrong answer
       setFb({ correct: false, answer: s.q.answer, steps: s.q.steps || [] }); sfx.play("wrong");
-      setTW(w => w + 1); setStreak(0); setCharge(0);
+      setTW(w => w + 1); setStreak(0); setPassiveCount(0); setCharge(0);
       safeTo(() => {
         const s2 = sr.current;
         if (move.risky) {
@@ -857,7 +897,7 @@ export function useBattle() {
     screen, timedMode, enemies,
     starter, pHp, pExp, pLvl, pStg,
     round, enemy, eHp,
-    streak, charge, tC, tW, defeated, maxStreak,
+    streak, passiveCount, charge, tC, tW, defeated, maxStreak,
     mHits, mLvls, mLvlUp,
     phase, selIdx, q, fb, bText, answered,
     dmgs, parts, eAnim, pAnim, atkEffect, effMsg,

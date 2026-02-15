@@ -10,17 +10,31 @@ import { loadEnc, saveEnc } from '../utils/achievementStore';
 export function useEncyclopedia() {
   const [encData, setEncData] = useState(() => loadEnc());
 
+  // Derive the encyclopedia key for an enemy object.
+  // For evolved slime variants, id already contains "Evolved" (e.g. "slimeElectricEvolved"),
+  // so we must NOT append "Evolved" again.
+  const _encKey = (obj) => {
+    if (!obj.isEvolved) return obj.id;
+    return obj.id.endsWith("Evolved") ? obj.id : obj.id + "Evolved";
+  };
+
   const updateEnc = (enemyObj) => {
     setEncData(prev => {
-      const key = enemyObj.isEvolved ? enemyObj.id + "Evolved" : enemyObj.id;
+      const key = _encKey(enemyObj);
       const next = {
         encountered: { ...prev.encountered, [key]: (prev.encountered[key] || 0) + 1 },
         defeated: { ...prev.defeated },
       };
-      // Also mark base form as encountered if evolved
+      // Also mark base form as encountered if evolved (use original base id)
       if (enemyObj.isEvolved) {
-        next.encountered[enemyObj.id] = (prev.encountered[enemyObj.id] || 0);
-        if (!next.encountered[enemyObj.id]) next.encountered[enemyObj.id] = 1;
+        const baseId = enemyObj.id.endsWith("Evolved")
+          ? enemyObj.id                     // evolved variant id IS the key
+          : enemyObj.id;                    // non-variant evolved: base id
+        // Ensure at least 1 encounter on the base entry for non-variant evolved forms
+        if (!enemyObj.id.endsWith("Evolved")) {
+          next.encountered[baseId] = (prev.encountered[baseId] || 0);
+          if (!next.encountered[baseId]) next.encountered[baseId] = 1;
+        }
       }
       saveEnc(next);
       return next;
@@ -29,14 +43,11 @@ export function useEncyclopedia() {
 
   const updateEncDefeated = (enemyObj) => {
     setEncData(prev => {
-      const key = enemyObj.isEvolved ? enemyObj.id + "Evolved" : enemyObj.id;
+      const key = _encKey(enemyObj);
       const next = {
         encountered: { ...prev.encountered },
         defeated: { ...prev.defeated, [key]: (prev.defeated[key] || 0) + 1 },
       };
-      if (enemyObj.isEvolved) {
-        if (!next.defeated[enemyObj.id]) next.defeated[enemyObj.id] = 0;
-      }
       saveEnc(next);
       return next;
     });

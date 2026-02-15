@@ -1,6 +1,7 @@
 import {
   slimeSVG, fireLizardSVG, ghostSVG, dragonSVG, darkLordSVG,
-  slimeEvolvedSVG, fireEvolvedSVG, ghostEvolvedSVG, dragonEvolvedSVG,
+  slimeEvolvedSVG, slimeElectricEvolvedSVG, slimeFireEvolvedSVG,
+  fireEvolvedSVG, ghostEvolvedSVG, dragonEvolvedSVG,
   slimeRedSVG, slimeBlueSVG, slimeYellowSVG, slimeDarkSVG, slimeSteelSVG,
 } from './sprites';
 
@@ -31,6 +32,17 @@ export const SLIME_VARIANTS = [
   { id:"slime_yellow",name:"黃史萊姆", svgFn:slimeYellowSVG,  c1:"#facc15",c2:"#ca8a04", mType:"electric", typeIcon:"⚡", typeName:"電", drops:["⚡","🍬"],  trait:"swift",    traitName:"迅捷",  traitDesc:"行動速度極快，有機率在一回合內連續攻擊兩次！",            hpMult:0.9, atkMult:1.1 },
   { id:"slime_dark",  name:"黑史萊姆", svgFn:slimeDarkSVG,    c1:"#a1a1aa",c2:"#3f3f46", mType:"dark",     typeIcon:"💀", typeName:"暗", drops:["💀","🍬"],  trait:"curse",    traitName:"詛咒",  traitDesc:"散發不祥氣息，攻擊時有機率弱化對手的下一次攻擊。",      hpMult:1.0, atkMult:1.0 },
   { id:"slime_steel", name:"鋼史萊姆", svgFn:slimeSteelSVG,   c1:"#94a3b8",c2:"#475569", mType:"steel",    typeIcon:"🛡️", typeName:"鋼", drops:["🛡️","🍬"],  trait:"fortress", traitName:"鐵壁",  traitDesc:"全身覆蓋金屬外殼，攻擊力低但受到的傷害減少30%。",      hpMult:1.5, atkMult:0.7 },
+];
+
+/**
+ * Evolved slime variants — randomly picked when a slime encounter is evolved.
+ * Each shares the same base stats as the original 叢林巨魔 but has different
+ * appearance, type, and drops. Appears on the same stage (草原).
+ */
+export const EVOLVED_SLIME_VARIANTS = [
+  { id:"slimeEvolved",          name:"叢林巨魔",   svgFn:slimeEvolvedSVG,          c1:"#4ade80",c2:"#16a34a", mType:"grass",    typeIcon:"🌿", typeName:"草", drops:["🍬","🧪"] },
+  { id:"slimeElectricEvolved",  name:"雷霆巨魔",   svgFn:slimeElectricEvolvedSVG,  c1:"#facc15",c2:"#ca8a04", mType:"electric", typeIcon:"⚡", typeName:"電", drops:["⚡","🧪"] },
+  { id:"slimeFireEvolved",     name:"烈焰巨魔",   svgFn:slimeFireEvolvedSVG,     c1:"#f87171",c2:"#b91c1c", mType:"fire",     typeIcon:"🔥", typeName:"火", drops:["🔥","🧪"] },
 ];
 
 export const MONSTERS = [

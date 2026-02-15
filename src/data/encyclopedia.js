@@ -7,7 +7,7 @@
  *   ENC_ENTRIES       — enemy monsters (used for "collect all" achievement)
  *   STARTER_ENTRIES   — player starters × 3 stages (always visible, no unlock)
  */
-import { MONSTERS, SLIME_VARIANTS, TYPE_EFF } from './monsters';
+import { MONSTERS, SLIME_VARIANTS, EVOLVED_SLIME_VARIANTS, TYPE_EFF } from './monsters';
 import { STARTERS } from './starters';
 
 function weaknesses(mType) {
@@ -37,6 +37,8 @@ const DESCS = {
   slime_dark:  "在黑暗深淵中誕生的神秘史萊姆。幾乎不反射光線，總是默默地潛伏在陰影中。",
   slime_steel:  "吞食了大量金屬礦石後硬化的史萊姆。外殼堅硬如鋼，但內部依然柔軟。",
   slimeEvolved:"史萊姆的最終進化型態。在叢林深處吸收了大量自然能量後，體型暴增數倍，成為令人畏懼的巨魔。",
+  slimeElectricEvolved:"黃史萊姆吸收了無數次雷擊後的終極進化。全身電弧環繞，一聲怒吼就能引發雷暴。與叢林巨魔齊名的草原霸主。",
+  slimeFireEvolved:"紅史萊姆在熔岩中浴火重生的終極型態。體表不斷噴發火焰，所到之處寸草不生。據說連火焰蜥都敬畏三分。",
   fire:        "棲息在火山口附近的蜥蜴型怪獸。背部的鱗片能聚集熱能，在戰鬥中噴射灼熱火焰。",
   fireEvolved: "火焰蜥的最終進化。吸收了火山核心的能量後化身為巨龍，翅膀上的火焰永不熄滅。",
   ghost:       "出沒於古老墓地的靈體怪獸。能穿越牆壁，用幽冥之力操控敵人的心智。白天幾乎看不到它的身影。",
@@ -51,6 +53,8 @@ const HABITATS = {
   slime_blue: "🌿 綠意草原",  slime_yellow: "🌿 綠意草原",
   slime_dark: "🌿 綠意草原",  slime_steel: "🌿 綠意草原",
   slimeEvolved: "🌿 綠意草原",
+  slimeElectricEvolved: "🌿 綠意草原",
+  slimeFireEvolved: "🌿 綠意草原",
   fire: "🌋 炎熱火山",        fireEvolved: "🌋 炎熱火山",
   ghost: "🌙 幽暗墓地",       ghostEvolved: "🌙 幽暗墓地",
   dragon: "⚙️ 鋼鐵要塞",      dragonEvolved: "⚙️ 鋼鐵要塞",
@@ -61,6 +65,8 @@ const RARITY = {
   slime: "★",       slime_red: "★",     slime_blue: "★",
   slime_yellow: "★", slime_dark: "★★",   slime_steel: "★★",
   slimeEvolved: "★★★",
+  slimeElectricEvolved: "★★★",
+  slimeFireEvolved: "★★★",
   fire: "★★",       fireEvolved: "★★★",
   ghost: "★★",      ghostEvolved: "★★★",
   dragon: "★★★",    dragonEvolved: "★★★★",
@@ -95,24 +101,26 @@ MONSTERS.forEach(m => {
         traitDesc: v.traitDesc || null,
       });
     });
-    // Evolved slime (叢林巨魔) — still one entry
-    ENC_ENTRIES.push({
-      key: m.id + "Evolved",
-      name: m.evolvedName,
-      mType: m.mType,
-      typeIcon: m.typeIcon,
-      typeName: m.typeName,
-      hp: m.hp,
-      atk: m.atk,
-      svgFn: m.evolvedSvgFn,
-      c1: m.c1, c2: m.c2,
-      weakAgainst: weaknesses(m.mType).map(t => TYPE_LABEL[t] || t),
-      resistAgainst: resistances(m.mType).map(t => TYPE_LABEL[t] || t),
-      isEvolved: true,
-      desc: DESCS.slimeEvolved || "",
-      habitat: HABITATS.slimeEvolved || "",
-      rarity: RARITY.slimeEvolved || "★",
-      drops: m.drops,
+    // Evolved slime variants (叢林巨魔 / 雷霆巨魔 / ...)
+    EVOLVED_SLIME_VARIANTS.forEach(ev => {
+      ENC_ENTRIES.push({
+        key: ev.id,
+        name: ev.name,
+        mType: ev.mType,
+        typeIcon: ev.typeIcon,
+        typeName: ev.typeName,
+        hp: m.hp,
+        atk: m.atk,
+        svgFn: ev.svgFn,
+        c1: ev.c1, c2: ev.c2,
+        weakAgainst: weaknesses(ev.mType).map(t => TYPE_LABEL[t] || t),
+        resistAgainst: resistances(ev.mType).map(t => TYPE_LABEL[t] || t),
+        isEvolved: true,
+        desc: DESCS[ev.id] || "",
+        habitat: HABITATS[ev.id] || "",
+        rarity: RARITY[ev.id] || "★",
+        drops: ev.drops,
+      });
     });
   } else {
     // Base form

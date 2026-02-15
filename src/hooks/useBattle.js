@@ -18,7 +18,7 @@
  */
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 
-import { MONSTERS, SLIME_VARIANTS, getEff } from '../data/monsters';
+import { MONSTERS, SLIME_VARIANTS, EVOLVED_SLIME_VARIANTS, getEff } from '../data/monsters';
 import { SCENE_NAMES } from '../data/scenes';
 import {
   MAX_MOVE_LVL, POWER_CAPS, HITS_PER_LVL,
@@ -63,8 +63,13 @@ export function useBattle() {
 
       // Slime colour variant — random type each non-evolved encounter
       let variant = null;
+      let evolvedVariant = null;
       if (idx === 0 && !isEvolved) {
         variant = SLIME_VARIANTS[Math.floor(Math.random() * SLIME_VARIANTS.length)];
+      }
+      // Evolved slime variant — random evolved form (叢林巨魔 / 雷霆巨魔)
+      if (idx === 0 && isEvolved) {
+        evolvedVariant = EVOLVED_SLIME_VARIANTS[Math.floor(Math.random() * EVOLVED_SLIME_VARIANTS.length)];
       }
 
       // Trait-based HP/ATK multipliers for slime variants
@@ -75,8 +80,10 @@ export function useBattle() {
         ...b,
         // Apply variant overrides for non-evolved slimes
         ...(variant && { id: variant.id, name: variant.name, svgFn: variant.svgFn, c1: variant.c1, c2: variant.c2, mType: variant.mType, typeIcon: variant.typeIcon, typeName: variant.typeName, drops: variant.drops, trait: variant.trait, traitName: variant.traitName }),
-        name: isEvolved && b.evolvedName ? b.evolvedName : (variant ? variant.name : b.name),
-        svgFn: isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn),
+        // Apply evolved variant overrides
+        ...(evolvedVariant && { id: evolvedVariant.id, name: evolvedVariant.name, svgFn: evolvedVariant.svgFn, c1: evolvedVariant.c1, c2: evolvedVariant.c2, mType: evolvedVariant.mType, typeIcon: evolvedVariant.typeIcon, typeName: evolvedVariant.typeName, drops: evolvedVariant.drops }),
+        name: evolvedVariant ? evolvedVariant.name : (isEvolved && b.evolvedName ? b.evolvedName : (variant ? variant.name : b.name)),
+        svgFn: evolvedVariant ? evolvedVariant.svgFn : (isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn)),
         sceneMType: b.mType,   // scene always follows base monster species
         hp: Math.round(b.hp * sc * hm), maxHp: Math.round(b.hp * sc * hm),
         atk: Math.round(b.atk * sc * am), lvl: i + 1, isEvolved,

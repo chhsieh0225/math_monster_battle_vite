@@ -4,6 +4,7 @@
  */
 import { POWER_CAPS } from '../data/constants.ts';
 import { getEff } from '../data/typeEffectiveness.ts';
+import { randomFloat } from './prng.ts';
 
 type MoveLite = {
   basePower: number;
@@ -55,7 +56,7 @@ type AttackDamageParams = {
  * Calculate raw damage for a correct-answer attack.
  */
 export function calcAttackDamage({ basePow, streak, stageBonus, effMult }: AttackDamageParams): number {
-  let dmg = Math.round(basePow * (0.85 + Math.random() * 0.15));
+  let dmg = Math.round(basePow * randomFloat(0.85, 1));
   // Streak bonus
   if (streak >= 5) dmg = Math.round(dmg * 1.8);
   else if (streak >= 3) dmg = Math.round(dmg * 1.5);
@@ -70,7 +71,7 @@ export function calcAttackDamage({ basePow, streak, stageBonus, effMult }: Attac
  * Calculate enemy attack damage against the player.
  */
 export function calcEnemyDamage(atkStat: number, defEff: number): number {
-  const raw = Math.round(atkStat * (0.8 + Math.random() * 0.4));
+  const raw = Math.round(atkStat * randomFloat(0.8, 1.2));
   return Math.round(raw * defEff);
 }
 

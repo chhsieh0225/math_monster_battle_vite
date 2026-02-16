@@ -1,4 +1,5 @@
 import { readJson, readText, removeKey, writeJson, writeText } from './storage.ts';
+import { randomToken } from './prng.ts';
 
 /**
  * sessionLogger.ts — Per-session learning analytics persistence.
@@ -116,7 +117,7 @@ export function initSessionLog(starter: StarterForSession, timedMode?: boolean):
     : null;
 
   return {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    id: Date.now().toString(36) + randomToken(4),
     startTime: Date.now(),
     endTime: null,
     starterId: starter?.id || null,

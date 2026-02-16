@@ -1,6 +1,7 @@
 /**
  * Generate a math question based on move configuration.
  */
+import { chance, pickOne, random, randomInt, shuffleInPlace } from './prng.ts';
 
 type TemplateParams = Record<string, string | number>;
 
@@ -28,7 +29,7 @@ export type GeneratedQuestion = QuestionDraft & {
 
 // Helper: random int in [lo, hi]
 function rr(lo: number, hi: number): number {
-  return Math.floor(Math.random() * (hi - lo + 1)) + lo;
+  return randomInt(lo, hi);
 }
 
 function formatTemplate(template: string, params?: TemplateParams): string {
@@ -71,8 +72,8 @@ function genMixed2(range: [number, number], depth = 0): QuestionDraft {
   const a = rr(range[0], range[1]);
   const b = rr(range[0], range[1]);
   const c = rr(range[0], range[1]);
-  const op1 = Math.random() < 0.5 ? "+" : "-";
-  const op2 = Math.random() < 0.5 ? "+" : "-";
+  const op1 = chance(0.5) ? "+" : "-";
+  const op2 = chance(0.5) ? "+" : "-";
   const step1 = op1 === "+" ? a + b : a - b;
   const ans = op2 === "+" ? step1 + c : step1 - c;
   if (ans < 0) return genMixed2(range, depth + 1);
@@ -113,7 +114,7 @@ function genMixed3(range: [number, number], tr: Translator, depth = 0): Question
   const a = rr(range[0], range[1]);
   const b = rr(range[0], range[1]);
   const c = rr(range[0], range[1]);
-  const op2 = Math.random() < 0.5 ? "+" : "-";
+  const op2 = chance(0.5) ? "+" : "-";
   const product = a * b;
   const ans = op2 === "+" ? product + c : product - c;
   if (ans < 0) return genMixed3(range, tr, depth + 1);
@@ -158,7 +159,7 @@ function genMixed4(range: [number, number], tr: Translator, depth = 0): Question
       ],
     };
   }
-  const pattern = Math.random();
+  const pattern = random();
   let d = "";
   let ans = 0;
   let steps: string[] = [];
@@ -168,7 +169,7 @@ function genMixed4(range: [number, number], tr: Translator, depth = 0): Question
     const a = rr(range[0] + 3, range[1] * 2);
     const b = rr(range[0], range[1]);
     const c = rr(range[0], range[1]);
-    const op = Math.random() < 0.5 ? "+" : "-";
+    const op = chance(0.5) ? "+" : "-";
     const prod = b * c;
     ans = op === "+" ? a + prod : a - prod;
     if (ans < 0) return genMixed4(range, tr, depth + 1);
@@ -189,7 +190,7 @@ function genMixed4(range: [number, number], tr: Translator, depth = 0): Question
     const b = rr(range[0], Math.min(range[1], 6));
     const c = rr(range[0], Math.min(range[1], 6));
     const dd = rr(range[0], Math.min(range[1], 6));
-    const op = Math.random() < 0.6 ? "+" : "-";
+    const op = chance(0.6) ? "+" : "-";
     const p1 = a * b;
     const p2 = c * dd;
     ans = op === "+" ? p1 + p2 : p1 - p2;
@@ -212,8 +213,8 @@ function genMixed4(range: [number, number], tr: Translator, depth = 0): Question
     const b = rr(range[0], range[1]);
     const c = rr(range[0], range[1]);
     const dd = rr(range[0], range[1]);
-    const op1 = Math.random() < 0.5 ? "+" : "-";
-    const op2 = Math.random() < 0.5 ? "+" : "-";
+    const op1 = chance(0.5) ? "+" : "-";
+    const op2 = chance(0.5) ? "+" : "-";
     const prod = b * c;
     const mid = op1 === "+" ? a + prod : a - prod;
     ans = op2 === "+" ? mid + dd : mid - dd;
@@ -258,7 +259,7 @@ function genUnknown1(range: [number, number], depth = 0): QuestionDraft {
       steps: [`? + ${b} = ${a + b}`, `? = ${a + b} - ${b}`, `? = ${a}`],
     };
   }
-  const op = Math.random() < 0.5 ? "+" : "-";
+  const op = chance(0.5) ? "+" : "-";
   if (op === "+") {
     const ans = rr(range[0], range[1]);
     const b = rr(range[0], range[1]);
@@ -288,7 +289,7 @@ function genUnknown1(range: [number, number], depth = 0): QuestionDraft {
  * e.g. ? × 4 = 28 → ans = 7
  */
 function genUnknown2(range: [number, number]): QuestionDraft {
-  const op = Math.random() < 0.5 ? "×" : "÷";
+  const op = chance(0.5) ? "×" : "÷";
   if (op === "×") {
     const ans = rr(range[0], range[1]);
     const b = Math.max(2, rr(range[0], range[1]));
@@ -327,7 +328,7 @@ function genUnknown3(range: [number, number], depth = 0): QuestionDraft {
       steps: [`? + ${b} = ${a + b}`, `? = ${a + b} - ${b}`, `? = ${a}`],
     };
   }
-  const pattern = Math.random();
+  const pattern = random();
   if (pattern < 0.35) {
     // ? + b = c
     const ans = rr(range[0], range[1]);
@@ -383,7 +384,7 @@ function genUnknown4(range: [number, number], depth = 0): QuestionDraft {
       steps: [`(? + ${a}) × ${b} = ${c}`, `? + ${a} = ${c} ÷ ${b} = ${c / b}`, `? = ${c / b} - ${a} = ${ans}`],
     };
   }
-  const pattern = Math.random();
+  const pattern = random();
   if (pattern < 0.5) {
     // (? + a) × b = c
     const a = rr(1, Math.min(range[1], 6));
@@ -426,7 +427,7 @@ export function genQ(
   const range: [number, number] = [minRange, maxRange];
 
   const ops = Array.isArray(move.ops) && move.ops.length > 0 ? move.ops : ["+"];
-  const op = ops[Math.floor(Math.random() * ops.length)] ?? "+";
+  const op = pickOne(ops) ?? "+";
 
   // ── Mixed operations (electric starter) ──
   if (op === "mixed2") return makeChoices(genMixed2(range));
@@ -511,7 +512,7 @@ function makeChoices({ display, answer, op, steps }: QuestionDraft): GeneratedQu
   const ch = new Set<number>([answer]);
   let guard = 0;
   while (ch.size < 4 && guard++ < 50) {
-    const w = answer + Math.floor(Math.random() * spread * 2 + 1) - spread;
+    const w = answer + randomInt(-spread, spread);
     if (w >= 0 && w !== answer) ch.add(w);
   }
   let fb = 1;
@@ -520,9 +521,6 @@ function makeChoices({ display, answer, op, steps }: QuestionDraft): GeneratedQu
     fb += 1;
   }
   const arr = Array.from(ch);
-  for (let i = arr.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
+  shuffleInPlace(arr);
   return { display, answer, choices: arr, op, steps: steps || [] };
 }

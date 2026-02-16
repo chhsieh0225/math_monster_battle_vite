@@ -7,6 +7,7 @@
  * Then call sfx.play("hit") etc. anywhere.
  */
 import { readText, writeText } from './storage.ts';
+import { randomFloat } from './prng.ts';
 
 let ctx: AudioContext | null = null;
 let ready = false;
@@ -118,7 +119,7 @@ function noiseBurst({
   const data = buf.getChannelData(0);
   for (let i = 0; i < bufSize; i += 1) {
     // Very short decay in noise source gives a punchier transient.
-    const n = Math.random() * 2 - 1;
+    const n = randomFloat(-1, 1);
     const env = 1 - (i / bufSize) * 0.7;
     data[i] = n * env;
   }

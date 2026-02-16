@@ -93,11 +93,11 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         ? this.state.error
         : this.state.error.message;
       return (
-      <div style={{ height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"#1e1b4b", color:"white", padding:24, textAlign:"center", gap:12 }}>
-        <div style={{ fontSize:40 }}>⚠️</div>
-        <div style={{ fontSize:16, fontWeight:800 }}>{staticT("app.error.title", "A game error occurred")}</div>
-        <div style={{ fontSize:11, opacity:0.6, maxWidth:320, wordBreak:"break-all" }}>{errorText}</div>
-        <button onClick={() => { this.setState({ error: null }); }} style={{ marginTop:12, background:"rgba(255,255,255,0.15)", border:"1px solid rgba(255,255,255,0.3)", color:"white", padding:"8px 20px", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer" }}>{staticT("app.error.reload", "Reload")}</button>
+      <div className="app-error-wrap">
+        <div className="app-error-icon">⚠️</div>
+        <div className="app-error-title">{staticT("app.error.title", "A game error occurred")}</div>
+        <div className="app-error-detail">{errorText}</div>
+        <button onClick={() => { this.setState({ error: null }); }} className="app-error-reload">{staticT("app.error.reload", "Reload")}</button>
       </div>
       );
     }
@@ -182,16 +182,17 @@ function GameShell() {
   }, []);
 
   return (
-    <div style={{ position: "fixed", inset: 0, overflow: "hidden", background: "#0f172a", display: "flex", justifyContent: "center" }}>
+    <div className="shell-root">
       <a className="skip-link" href="#main-content" aria-label={t("a11y.skip.main", "Skip to main content")}>
         {t("app.skip.main", "Skip to main content")}
       </a>
-      <div style={{ width: "100%", maxWidth: 480, height: "100%", position: "relative", background: "#000", boxShadow: "0 0 40px rgba(0,0,0,0.5)" }}>
+      <div className="shell-stage">
         <ErrorBoundary><App /></ErrorBoundary>
         {showRotateHint && (
           <div
             role="button"
             tabIndex={0}
+            className="rotate-overlay"
             aria-label={t("a11y.overlay.rotateDismiss", "Dismiss rotate hint and continue")}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
@@ -200,12 +201,11 @@ function GameShell() {
               }
             }}
             onClick={() => setShowRotateHint(false)}
-            style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9999, cursor: "pointer" }}
           >
-            <div style={{ fontSize: 56, marginBottom: 20, animation: "float 3s ease-in-out infinite" }}>📱</div>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>{t("app.rotate.title", "Please rotate your phone to portrait")}</div>
-            <div style={{ fontSize: 13, opacity: 0.5 }}>{t("app.rotate.hint", "This game supports portrait mode only")}</div>
-            <div style={{ fontSize: 12, opacity: 0.35, marginTop: 24 }}>{t("app.rotate.continue", "Tap anywhere to continue")}</div>
+            <div className="rotate-overlay-icon">📱</div>
+            <div className="rotate-overlay-title">{t("app.rotate.title", "Please rotate your phone to portrait")}</div>
+            <div className="rotate-overlay-subtitle">{t("app.rotate.hint", "This game supports portrait mode only")}</div>
+            <div className="rotate-overlay-hint">{t("app.rotate.continue", "Tap anywhere to continue")}</div>
           </div>
         )}
       </div>
@@ -279,9 +279,9 @@ function App() {
   }
 
   if (!B.enemy || !B.starter) return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", color: "white", gap: 16 }}>
-      <div style={{ fontSize: 48, animation: "float 2s ease-in-out infinite" }}>⚔️</div>
-      <div style={{ fontSize: 16, fontWeight: 700, opacity: 0.6 }}>{t("app.loading.battle", "Preparing battle...")}</div>
+    <div className="battle-loading-wrap">
+      <div className="battle-loading-icon">⚔️</div>
+      <div className="battle-loading-text">{t("app.loading.battle", "Preparing battle...")}</div>
     </div>
   );
 
@@ -426,7 +426,7 @@ function App() {
     <div
       id="main-content"
       ref={battleRootRef}
-      className={`battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""}`}
+      className={`battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""} ${canTapAdvance ? "battle-root-advance" : ""}`}
       role={canTapAdvance ? "button" : undefined}
       tabIndex={canTapAdvance ? 0 : -1}
       aria-label={canTapAdvance ? t("a11y.battle.advance", "Advance to next step") : undefined}
@@ -438,7 +438,6 @@ function App() {
         }
       }}
       onClick={canTapAdvance ? B.advance : undefined}
-      style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", cursor: canTapAdvance ? "pointer" : "default" }}
     >
       {/* Pause overlay */}
       {B.gamePaused && <div
@@ -485,32 +484,44 @@ function App() {
       {showHeavyFx && B.atkEffect && B.atkEffect.type === "light" && <LightEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
 
       {/* Special Defense animations */}
-      {showHeavyFx && B.defAnim === "fire" && <div style={{ position: "absolute", left: "6%", bottom: "14%", width: 160, height: 160, zIndex: 50, pointerEvents: "none" }}>
-        <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle,rgba(251,191,36,0.5),rgba(245,158,11,0.15),transparent 70%)", animation: "shieldPulse 1.2s ease forwards" }} />
-        <div style={{ position: "absolute", inset: -10, borderRadius: "50%", border: "3px solid rgba(251,191,36,0.6)", animation: "shieldPulse 1.2s ease 0.1s forwards", opacity: 0 }} />
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 48, animation: "popIn 0.3s ease", filter: "drop-shadow(0 0 12px rgba(251,191,36,0.8))" }}>🛡️</div>
-      </div>}
-      {showHeavyFx && B.defAnim === "water" && <div style={{ position: "absolute", left: "6%", bottom: "14%", width: 130, height: 130, zIndex: 50, pointerEvents: "none" }}>
-        {[0, 1, 2].map(i => <div key={i} style={{ position: "absolute", inset: 0, background: "radial-gradient(circle,rgba(56,189,248,0.35),transparent 70%)", borderRadius: "50%", animation: `shieldPulse 0.8s ease ${i * 0.15}s forwards`, opacity: 0 }} />)}
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 40, animation: "popIn 0.3s ease", filter: "drop-shadow(0 0 10px rgba(56,189,248,0.8))" }}>💨</div>
-      </div>}
-      {showHeavyFx && B.defAnim === "grass" && <div style={{ position: "absolute", left: "6%", bottom: "14%", width: 160, height: 160, zIndex: 50, pointerEvents: "none" }}>
-        <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle,rgba(34,197,94,0.45),rgba(22,163,74,0.12),transparent 70%)", animation: "vineCounter 1.4s ease forwards" }} />
-        <div style={{ position: "absolute", inset: -5, borderRadius: "50%", border: "3px solid rgba(34,197,94,0.5)", animation: "vineCounter 1.4s ease 0.1s forwards", opacity: 0 }} />
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 44, animation: "popIn 0.3s ease", filter: "drop-shadow(0 0 10px rgba(34,197,94,0.8))" }}>🌿</div>
-      </div>}
-      {showHeavyFx && B.defAnim === "electric" && <div style={{ position: "absolute", left: "6%", bottom: "14%", width: 160, height: 160, zIndex: 50, pointerEvents: "none" }}>
-        <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle,rgba(251,191,36,0.5),rgba(234,179,8,0.15),transparent 70%)", animation: "shieldPulse 1.2s ease forwards" }} />
-        <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: "3px solid rgba(251,191,36,0.6)", animation: "shieldPulse 1.2s ease 0.1s forwards", opacity: 0 }} />
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 48, animation: "popIn 0.3s ease", filter: "drop-shadow(0 0 12px rgba(251,191,36,0.8))" }}>⚡</div>
-      </div>}
-      {showHeavyFx && B.defAnim === "light" && <div style={{ position: "absolute", left: "6%", bottom: "14%", width: 170, height: 170, zIndex: 50, pointerEvents: "none" }}>
-        <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "radial-gradient(circle,rgba(245,158,11,0.55),rgba(251,191,36,0.2),transparent 70%)", animation: "shieldPulse 1.2s ease forwards" }} />
-        <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: "3px solid rgba(245,158,11,0.6)", animation: "shieldPulse 1.2s ease 0.1s forwards", opacity: 0 }} />
-        <div style={{ position: "absolute", inset: -16, borderRadius: "50%", border: "2px solid rgba(251,191,36,0.3)", animation: "shieldPulse 1.2s ease 0.2s forwards", opacity: 0 }} />
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 48, animation: "popIn 0.3s ease", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.9))" }}>✨</div>
-      </div>}
-      {showHeavyFx && B.defAnim && <div style={{ position: "absolute", inset: 0, zIndex: 45, pointerEvents: "none", animation: B.defAnim === "fire" ? "shieldFlash 0.8s ease" : B.defAnim === "water" ? "dodgeFlash 0.8s ease" : B.defAnim === "electric" ? "shieldFlash 0.8s ease" : B.defAnim === "light" ? "shieldFlash 0.8s ease" : "counterFlash 0.8s ease" }} />}
+      {showHeavyFx && B.defAnim === "fire" && (
+        <div className="battle-def-fx battle-def-fx-fire">
+          <div className="battle-def-layer battle-def-layer-fire-core" />
+          <div className="battle-def-layer battle-def-layer-fire-ring" />
+          <div className="battle-def-icon battle-def-icon-fire">🛡️</div>
+        </div>
+      )}
+      {showHeavyFx && B.defAnim === "water" && (
+        <div className="battle-def-fx battle-def-fx-water">
+          <div className="battle-def-layer battle-def-layer-water-ripple-1" />
+          <div className="battle-def-layer battle-def-layer-water-ripple-2" />
+          <div className="battle-def-layer battle-def-layer-water-ripple-3" />
+          <div className="battle-def-icon battle-def-icon-water">💨</div>
+        </div>
+      )}
+      {showHeavyFx && B.defAnim === "grass" && (
+        <div className="battle-def-fx battle-def-fx-grass">
+          <div className="battle-def-layer battle-def-layer-grass-core" />
+          <div className="battle-def-layer battle-def-layer-grass-ring" />
+          <div className="battle-def-icon battle-def-icon-grass">🌿</div>
+        </div>
+      )}
+      {showHeavyFx && B.defAnim === "electric" && (
+        <div className="battle-def-fx battle-def-fx-electric">
+          <div className="battle-def-layer battle-def-layer-electric-core" />
+          <div className="battle-def-layer battle-def-layer-electric-ring" />
+          <div className="battle-def-icon battle-def-icon-electric">⚡</div>
+        </div>
+      )}
+      {showHeavyFx && B.defAnim === "light" && (
+        <div className="battle-def-fx battle-def-fx-light">
+          <div className="battle-def-layer battle-def-layer-light-core" />
+          <div className="battle-def-layer battle-def-layer-light-ring" />
+          <div className="battle-def-layer battle-def-layer-light-ring-outer" />
+          <div className="battle-def-icon battle-def-icon-light">✨</div>
+        </div>
+      )}
+      {showHeavyFx && B.defAnim && <div className={`battle-def-screen battle-def-screen-${B.defAnim}`} />}
 
       {/* Type effectiveness popup */}
       {B.effMsg && (
@@ -523,12 +534,12 @@ function App() {
       )}
 
       {/* ═══ Battle arena ═══ */}
-      <div style={{ flex: 1, position: "relative", minHeight: 0, background: "#111", transition: "background 1s ease" }}>
+      <div className="battle-arena">
         {scene.bgImg && <div className="scene-bg" style={{ backgroundImage: `url(${scene.bgImg})` }} />}
         <div style={{ position: "absolute", inset: 0, background: scene.sky, opacity: 0.25, zIndex: 1, transition: "background 1s ease" }} />
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "45%", background: scene.ground, transition: "background 1s ease", zIndex: 2 }} />
         <div style={{ position: "absolute", right: "5%", top: "8%", width: "55%", height: 12, background: scene.platform2, borderRadius: "50%", filter: "blur(2px)", zIndex: 3 }} />
-        <div style={{ position: "absolute", inset: 0, zIndex: 4, pointerEvents: "none" }}>{showHeavyFx && scene.Deco && <scene.Deco />}</div>
+        <div className="battle-scene-deco">{showHeavyFx && scene.Deco && <scene.Deco />}</div>
 
         {/* Enemy info */}
         <div style={{ position: "absolute", top: 10, left: 10, right: enemyInfoRight, zIndex: 10 }}>
@@ -659,7 +670,7 @@ function App() {
       </div>
 
       {/* ═══ Bottom panel ═══ */}
-      <div className="battle-panel" style={{ minHeight: B.phase === "question" ? 210 : 170 }}>
+      <div className={`battle-panel ${B.phase === "question" ? "is-question" : "is-normal"}`}>
         {/* Move menu */}
         {B.phase === "menu" && activeStarter && <div className="battle-menu-wrap">
           {isCoopBattle && (

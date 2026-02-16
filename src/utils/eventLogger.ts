@@ -1,4 +1,5 @@
 import { readJson, removeKey, writeJson } from './storage.ts';
+import { randomToken } from './prng.ts';
 
 const EVENTS_KEY = 'mathMonsterBattle_events';
 export const EVENT_LOG_LIMIT = 1000;
@@ -50,7 +51,7 @@ let storageRef: StorageLike | null = null;
 let exitFlushBound = false;
 
 function createId(ts = Date.now()): string {
-  return `${ts.toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  return `${ts.toString(36)}-${randomToken(6)}`;
 }
 
 function normalizePayload(payload: unknown): EventPayload {

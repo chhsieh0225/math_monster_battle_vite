@@ -69,7 +69,7 @@ import { createBattleFieldSetters } from './battle/battleFieldSetters';
 import { effectOrchestrator } from './battle/effectOrchestrator';
 import { runAnswerController } from './battle/answerController.ts';
 import {
-  buildPlayerAnswerHandlerDeps,
+  buildRunAnswerControllerArgs,
   buildPvpAnswerHandlerDeps,
 } from './battle/answerDepsBuilder.ts';
 import { runEnemyTurnController } from './battle/enemyTurnController.ts';
@@ -87,6 +87,10 @@ import {
   buildSelectMoveFlowArgs,
 } from './battle/turnActionDepsBuilder.ts';
 import { runVictoryFlow } from './battle/victoryFlow';
+import {
+  buildContinueFromVictoryFlowArgs,
+  buildVictoryFlowArgs,
+} from './battle/progressionDepsBuilder.ts';
 import { runAdvanceController } from './battle/advanceController.ts';
 import {
   buildAdvancePvpTurnStartDeps,
@@ -208,25 +212,14 @@ export function useBattle() {
     setPHp,
     setAllySub,
     setPHpSub,
-    setPExp,
-    setPLvl,
     setPStg,
     setEHp,
     setStreak,
     setPassiveCount,
     setCharge,
     setTW,
-    setDefeated,
-    setBurnStack,
     setFrozen,
-    setStaticStack,
-    setCursed,
     setDiffLevel,
-    setBossPhase,
-    setBossTurn,
-    setBossCharging,
-    setSealedMove,
-    setSealedTurns,
   } = battleFieldSetters;
 
   // ──── Phase & UI ────
@@ -552,35 +545,24 @@ export function useBattle() {
 
   // --- Handle a defeated enemy ---
   const handleVictory = (verb = t("battle.victory.verb.defeated", "was defeated")) => {
-    runVictoryFlow({
-      sr,
+    runVictoryFlow(buildVictoryFlowArgs({
       verb,
-      randInt,
-      resolveLevelProgress,
-      getStageMaxHp,
-      tryUnlock,
-      applyVictoryAchievements,
-      updateEncDefeated,
-      setBurnStack,
-      setStaticStack,
-      setFrozen,
+      sr,
+      runtime: {
+        randInt,
+        resolveLevelProgress,
+        getStageMaxHp,
+        tryUnlock,
+        applyVictoryAchievements,
+        updateEncDefeated,
+        sfx,
+        t,
+      },
+      battleFields: battleFieldSetters,
+      ui: UI,
       frozenRef: frozenR,
-      setCursed,
-      setBossPhase,
-      setBossTurn,
-      setBossCharging,
-      setSealedMove,
-      setSealedTurns,
-      setPExp,
-      setPLvl,
-      setPHp,
-      setDefeated,
-      setBText,
-      setPhase,
-      sfx,
-      t,
-      setPendingEvolve: (value) => { pendingEvolve.current = value; },
-    });
+      pendingEvolveRef: pendingEvolve,
+    }));
   };
 
   // --- Frozen enemy skips turn ---
@@ -658,64 +640,66 @@ export function useBattle() {
 
   // --- Player answers a question ---
   const onAns = (choice) => {
-    const playerAnswerHandlerDeps = buildPlayerAnswerHandlerDeps({
-      runtime: {
-        sr,
-        safeTo,
-        chance,
-        sfx,
-        t,
-      },
-      ui: UI,
-      battleFields: battleFieldSetters,
-      callbacks: {
-        tryUnlock,
-        frozenR,
-        doEnemyTurn,
-        handleVictory,
-        handleFreeze,
-        _endSession,
-        setScreen,
-        handlePlayerPartyKo,
-        runAllySupportTurn,
-      },
-    });
-
-    runAnswerController({
+    runAnswerController(buildRunAnswerControllerArgs({
       choice,
       answered,
       setAnswered,
       clearTimer,
       sr,
       pvpHandlerDeps: pvpAnswerHandlerDeps,
-      playerHandlerDeps: playerAnswerHandlerDeps,
-      getActingStarter,
-      logAns,
-      appendSessionEvent,
-      updateAbility: _updateAbility,
-      markCoopRotatePending,
-    });
+      player: {
+        runtime: {
+          sr,
+          safeTo,
+          chance,
+          sfx,
+          t,
+        },
+        ui: UI,
+        battleFields: battleFieldSetters,
+        callbacks: {
+          tryUnlock,
+          frozenR,
+          doEnemyTurn,
+          handleVictory,
+          handleFreeze,
+          _endSession,
+          setScreen,
+          handlePlayerPartyKo,
+          runAllySupportTurn,
+        },
+      },
+      flow: {
+        getActingStarter,
+        logAns,
+        appendSessionEvent,
+        updateAbility: _updateAbility,
+        markCoopRotatePending,
+      },
+    }));
   };
 
   // --- Advance from text / victory phase ---
   const continueFromVictory = () => {
-    continueFromVictoryFlow({
-      state: sr.current,
+    continueFromVictoryFlow(buildContinueFromVictoryFlowArgs({
+      sr,
       enemiesLength: enemies.length,
-      setScreen,
-      dispatchBattle,
-      localizeEnemy,
-      locale,
-      setBText,
-      setPhase,
-      finishGame: _finishGame,
-      setPHp,
-      setPHpSub,
-      getStageMaxHp,
-      getStarterMaxHp,
-      startBattle,
-      t,
-    });
+      runtime: {
+        setScreen,
+        dispatchBattle,
+        localizeEnemy,
+        locale,
+        getStageMaxHp,
+        getStarterMaxHp,
+        t,
+      },
+      battleFields: battleFieldSetters,
+      ui: UI,
+      callbacks: {
+        finishGame: _finishGame,
+        startBattle,
+      },
+    }));
   };
 
   const advance = () => {

@@ -77,6 +77,7 @@ import { runTimeoutController } from './battle/timeoutController.ts';
 import { buildTimeoutControllerArgs } from './battle/timeoutDepsBuilder.ts';
 import { runStartGameController } from './battle/startGameController.ts';
 import { runStartBattleFlow } from './battle/startBattleFlow';
+import { runStartBattleController } from './battle/startBattleController.ts';
 import {
   buildPvpStartDeps,
   buildStandardStartDeps,
@@ -100,6 +101,8 @@ import {
 import {
   continueFromVictoryFlow,
 } from './battle/advanceFlow';
+import { runResetRuntimeState } from './battle/runtimeReset.ts';
+import { runScreenTransition } from './battle/screenTransition.ts';
 import {
   runEndSessionController,
   runFinishGameController,
@@ -347,21 +350,28 @@ export function useBattle() {
     subscribeTimerLeft, getTimerLeft,
   } = useTimer(TIMER_SEC, onTimeout);
 
-  const setScreen = (nextScreen) => {
-    const prevScreen = sr.current.screen;
-    if (prevScreen === "battle" && nextScreen !== "battle") {
-      clearTimer();
-      invalidateAsyncWork();
-    }
-    setScreenState(nextScreen);
-  };
+  const setScreen = useCallback((nextScreen) => {
+    runScreenTransition({
+      prevScreen: sr.current.screen,
+      nextScreen,
+      clearTimer,
+      invalidateAsyncWork,
+      setScreenState,
+    });
+  }, [clearTimer, invalidateAsyncWork, sr]);
 
   const [gamePaused, setGamePaused] = useState(false);
 
   const togglePause = useCallback(() => {
-    if (gamePaused) { resumeTimer(); setGamePaused(false); }
-    else { pauseTimer(); setGamePaused(true); }
-  }, [gamePaused, pauseTimer, resumeTimer]);
+    setGamePaused((prevPaused) => {
+      if (prevPaused) {
+        resumeTimer();
+        return false;
+      }
+      pauseTimer();
+      return true;
+    });
+  }, [pauseTimer, resumeTimer]);
 
   // Cleanup timer when leaving question phase
   useEffect(() => { if (phase !== "question") clearTimer(); }, [phase, clearTimer]);
@@ -370,18 +380,40 @@ export function useBattle() {
   //  BATTLE FLOW
   // ═══════════════════════════════════════════════════════════════
 
-  const playBattleIntro = () => {
+  const playBattleIntro = useCallback(() => {
     effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim });
-  };
+  }, [safeTo, setEAnim, setPAnim]);
+
+  // ── Finalize and persist session log ──
+  const _endSession = useCallback((isCompleted, reasonOverride = null) => {
+    runEndSessionController({
+      sr,
+      endSessionOnce,
+      isCompleted,
+      reasonOverride,
+    });
+  }, [sr, endSessionOnce]);
+
+  // --- Shared game-completion logic (achievements + session save) ---
+  const _finishGame = useCallback(() => {
+    runFinishGameController({
+      sr,
+      tryUnlock,
+      setEncData,
+      encTotal: ENC_TOTAL,
+      endSession: _endSession,
+      setScreen,
+    });
+  }, [sr, tryUnlock, setEncData, _endSession, setScreen]);
 
   // --- Start a battle against enemies[idx], optionally from a fresh roster ---
-  const startBattle = (idx, roster) => {
-    invalidateAsyncWork();
-    clearTimer();
-    runStartBattleFlow({
+  const startBattle = useCallback((idx, roster) => {
+    runStartBattleController({
       idx,
       roster,
-      ...buildStartBattleSharedArgs({
+      invalidateAsyncWork,
+      clearTimer,
+      startBattleSharedArgs: buildStartBattleSharedArgs({
         sr,
         enemies,
         locale,
@@ -400,19 +432,40 @@ export function useBattle() {
         resetFrozen: () => { frozenR.current = false; },
         playBattleIntro,
       }),
+      runStartBattleFlow,
     });
-  };
+  }, [
+    invalidateAsyncWork,
+    clearTimer,
+    sr,
+    enemies,
+    locale,
+    battleMode,
+    starter,
+    t,
+    dispatchBattle,
+    updateEnc,
+    setPhase,
+    setBText,
+    setScreen,
+    _finishGame,
+    playBattleIntro,
+  ]);
 
   // --- Full game reset (starterOverride used on first game when setStarter hasn't rendered yet) ---
-  const resetRunRuntimeState = () => {
-    setDmgs([]);
-    setParts([]);
-    setAtkEffect(null);
-    setEffMsg(null);
-    frozenR.current = false;
-    abilityModelRef.current = createAbilityModel(2);
-    pendingEvolve.current = false;
-  };
+  const resetRunRuntimeState = useCallback(() => {
+    runResetRuntimeState({
+      setDmgs,
+      setParts,
+      setAtkEffect,
+      setEffMsg,
+      frozenRef: frozenR,
+      abilityModelRef,
+      createAbilityModel,
+      abilityBaselineLevel: 2,
+      pendingEvolveRef: pendingEvolve,
+    });
+  }, [setDmgs, setParts, setAtkEffect, setEffMsg]);
 
   const startGame = (starterOverride, modeOverride = null, allyOverride = null) => {
     invalidateAsyncWork();
@@ -468,16 +521,6 @@ export function useBattle() {
       getStageMaxHp,
       pvpStartDeps,
       standardStartDeps,
-    });
-  };
-
-  // ── Finalize and persist session log ──
-  const _endSession = (isCompleted, reasonOverride = null) => {
-    runEndSessionController({
-      sr,
-      endSessionOnce,
-      isCompleted,
-      reasonOverride,
     });
   };
 
@@ -724,18 +767,6 @@ export function useBattle() {
       setBText,
       pendingEvolutionArgs,
       continueFromVictory,
-    });
-  };
-
-  // --- Shared game-completion logic (achievements + session save) ---
-  const _finishGame = () => {
-    runFinishGameController({
-      sr,
-      tryUnlock,
-      setEncData,
-      encTotal: ENC_TOTAL,
-      endSession: _endSession,
-      setScreen,
     });
   };
 

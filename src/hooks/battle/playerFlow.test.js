@@ -211,3 +211,23 @@ test('runPlayerAnswer wrong risky sub attack can trigger sub ko handling', () =>
   assert.equal(calls.ko[0].target, 'sub');
   assert.equal(calls.doEnemyTurn, 0);
 });
+
+test('runPlayerAnswer wrong path tolerates missing question payload', () => {
+  const { calls, deps, counters } = createTestContext({
+    q: null,
+    streak: 2,
+    passiveCount: 1,
+  });
+
+  runPlayerAnswer({
+    correct: false,
+    move: { name: '炎牙', basePower: 12, growth: 2, type: 'fire', risky: false },
+    starter: { name: '火狐', type: 'fire' },
+    ...deps,
+  });
+
+  assert.deepEqual(calls.fb[0], { correct: false, answer: undefined, steps: [] });
+  assert.equal(counters.tw.getValue(), 1);
+  assert.equal(calls.phase.includes('text'), true);
+  assert.equal(calls.doEnemyTurn, 1);
+});

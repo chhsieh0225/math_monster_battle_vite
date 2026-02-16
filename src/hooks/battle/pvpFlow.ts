@@ -380,9 +380,11 @@ export function handlePvpAnswer({
   if (state.battleMode !== 'pvp') return false;
   const attacker = state.pvpTurn === 'p1' ? state.starter : state.pvpStarter2;
   const defender = state.pvpTurn === 'p1' ? state.pvpStarter2 : state.starter;
-  if (!attacker || !defender || state.selIdx == null) return true;
+  if (!attacker || !defender || state.selIdx == null) return false;
 
-  const move = attacker.moves[state.selIdx];
+  const move = attacker.moves?.[state.selIdx];
+  if (!move || !state.q || typeof state.q.answer !== 'number') return false;
+
   const correct = choice === state.q.answer;
   setFb({ correct, answer: state.q.answer, steps: state.q.steps || [] });
   if (correct) setTC((c) => c + 1);

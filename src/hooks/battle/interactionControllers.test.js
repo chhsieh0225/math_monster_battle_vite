@@ -27,14 +27,14 @@ test('runAnswerController no-ops when answer already submitted', () => {
   assert.equal(clearTimerCalls, 0);
 });
 
-test('runAnswerController marks answered and clears timer in non-pvp flow', () => {
-  let setAnsweredCalls = 0;
+test('runAnswerController unlocks answered flag when flow cannot proceed', () => {
+  const answeredValues = [];
   let clearTimerCalls = 0;
 
   runAnswerController({
     choice: 1,
     answered: false,
-    setAnswered: () => { setAnsweredCalls += 1; },
+    setAnswered: (value) => { answeredValues.push(value); },
     clearTimer: () => { clearTimerCalls += 1; },
     sr: { current: { battleMode: 'single', selIdx: 0, q: { answer: 2 } } },
     pvpHandlerDeps: {},
@@ -46,8 +46,36 @@ test('runAnswerController marks answered and clears timer in non-pvp flow', () =
     markCoopRotatePending: () => {},
   });
 
-  assert.equal(setAnsweredCalls, 1);
+  assert.deepEqual(answeredValues, [true, false]);
   assert.equal(clearTimerCalls, 1);
+});
+
+test('runAnswerController does not fall back to standard flow in pvp mode', () => {
+  const answeredValues = [];
+  let clearTimerCalls = 0;
+  let getActingStarterCalls = 0;
+
+  runAnswerController({
+    choice: 1,
+    answered: false,
+    setAnswered: (value) => { answeredValues.push(value); },
+    clearTimer: () => { clearTimerCalls += 1; },
+    sr: { current: { battleMode: 'pvp', starter: null } },
+    pvpHandlerDeps: {},
+    playerHandlerDeps: {},
+    getActingStarter: () => {
+      getActingStarterCalls += 1;
+      return null;
+    },
+    logAns: () => 0,
+    appendSessionEvent: () => {},
+    updateAbility: () => {},
+    markCoopRotatePending: () => {},
+  });
+
+  assert.deepEqual(answeredValues, [true, false]);
+  assert.equal(clearTimerCalls, 1);
+  assert.equal(getActingStarterCalls, 0);
 });
 
 test('runAdvanceController text phase falls back to menu when not pvp turn-start', () => {
@@ -154,4 +182,3 @@ test('runTimeoutController executes latest doEnemyTurnRef callback', () => {
 
   assert.deepEqual(calls, ['second']);
 });
-

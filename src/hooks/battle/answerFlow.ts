@@ -83,6 +83,8 @@ export function buildAnswerContext({
   choice,
   getActingStarter,
 }: BuildAnswerContextArgs): AnswerContext | null {
+  if (!state.q || typeof state.q.answer !== 'number') return null;
+
   const actingStarter = getActingStarter(state);
   if (!actingStarter || state.selIdx == null) return null;
 
@@ -96,7 +98,7 @@ export function buildAnswerContext({
     && actingStarter.id === state.allySub.id,
   );
 
-  const correct = choice === state.q?.answer;
+  const correct = choice === state.q.answer;
 
   return {
     actingStarter,

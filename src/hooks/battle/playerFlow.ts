@@ -553,7 +553,7 @@ export function runPlayerAnswer({
     return;
   }
 
-  setFb({ correct: false, answer: s.q.answer, steps: s.q.steps || [] });
+  setFb({ correct: false, answer: s.q?.answer, steps: s.q?.steps || [] });
   sfx.play('wrong');
   setTW((w) => w + 1);
   setStreak(0);

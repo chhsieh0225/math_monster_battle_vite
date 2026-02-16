@@ -163,6 +163,171 @@ test('handlePvpAnswer wrong answer swaps turn and resets current attacker resour
   assert.equal(text.includes('answered wrong'), true);
 });
 
+test('handlePvpAnswer returns false when pvp participants are missing', () => {
+  const state = createBasePvpState({
+    starter: null,
+  });
+  let fbCalls = 0;
+  let twCalls = 0;
+
+  const out = handlePvpAnswer({
+    choice: 1,
+    state,
+    sr: { current: state },
+    rand: () => 0.5,
+    chance: () => false,
+    safeTo: () => {},
+    sfx: { play: () => {} },
+    getOtherPvpTurn: () => 'p2',
+    setFb: () => { fbCalls += 1; },
+    setTC: () => {},
+    setTW: () => { twCalls += 1; },
+    setPvpChargeP1: () => {},
+    setPvpChargeP2: () => {},
+    setPvpComboP1: () => {},
+    setPvpComboP2: () => {},
+    setPvpTurn: () => {},
+    setPvpActionCount: () => {},
+    setBText: () => {},
+    setPhase: () => {},
+    setPvpSpecDefP1: () => {},
+    setPvpSpecDefP2: () => {},
+    setEffMsg: () => {},
+    setAtkEffect: () => {},
+    addP: () => {},
+    setPvpParalyzeP1: () => {},
+    setPvpParalyzeP2: () => {},
+    setPAnim: () => {},
+    setEAnim: () => {},
+    addD: () => {},
+    setPHp: () => {},
+    setPvpHp2: () => {},
+    setEHp: () => {},
+    setScreen: () => {},
+    setPvpWinner: () => {},
+    setPvpBurnP1: () => {},
+    setPvpBurnP2: () => {},
+    setPvpFreezeP1: () => {},
+    setPvpFreezeP2: () => {},
+    setPvpStaticP1: () => {},
+    setPvpStaticP2: () => {},
+  });
+
+  assert.equal(out, false);
+  assert.equal(fbCalls, 0);
+  assert.equal(twCalls, 0);
+});
+
+test('handlePvpAnswer returns false when selected move is missing', () => {
+  const state = createBasePvpState({
+    selIdx: 9,
+  });
+  let fbCalls = 0;
+  let twCalls = 0;
+
+  const out = handlePvpAnswer({
+    choice: 8,
+    state,
+    sr: { current: state },
+    rand: () => 0.5,
+    chance: () => false,
+    safeTo: () => {},
+    sfx: { play: () => {} },
+    getOtherPvpTurn: () => 'p2',
+    setFb: () => { fbCalls += 1; },
+    setTC: () => {},
+    setTW: () => { twCalls += 1; },
+    setPvpChargeP1: () => {},
+    setPvpChargeP2: () => {},
+    setPvpComboP1: () => {},
+    setPvpComboP2: () => {},
+    setPvpTurn: () => {},
+    setPvpActionCount: () => {},
+    setBText: () => {},
+    setPhase: () => {},
+    setPvpSpecDefP1: () => {},
+    setPvpSpecDefP2: () => {},
+    setEffMsg: () => {},
+    setAtkEffect: () => {},
+    addP: () => {},
+    setPvpParalyzeP1: () => {},
+    setPvpParalyzeP2: () => {},
+    setPAnim: () => {},
+    setEAnim: () => {},
+    addD: () => {},
+    setPHp: () => {},
+    setPvpHp2: () => {},
+    setEHp: () => {},
+    setScreen: () => {},
+    setPvpWinner: () => {},
+    setPvpBurnP1: () => {},
+    setPvpBurnP2: () => {},
+    setPvpFreezeP1: () => {},
+    setPvpFreezeP2: () => {},
+    setPvpStaticP1: () => {},
+    setPvpStaticP2: () => {},
+  });
+
+  assert.equal(out, false);
+  assert.equal(fbCalls, 0);
+  assert.equal(twCalls, 0);
+});
+
+test('handlePvpAnswer returns false when question payload is missing', () => {
+  const state = createBasePvpState({
+    q: null,
+  });
+  let fbCalls = 0;
+  let twCalls = 0;
+
+  const out = handlePvpAnswer({
+    choice: 8,
+    state,
+    sr: { current: state },
+    rand: () => 0.5,
+    chance: () => false,
+    safeTo: () => {},
+    sfx: { play: () => {} },
+    getOtherPvpTurn: () => 'p2',
+    setFb: () => { fbCalls += 1; },
+    setTC: () => {},
+    setTW: () => { twCalls += 1; },
+    setPvpChargeP1: () => {},
+    setPvpChargeP2: () => {},
+    setPvpComboP1: () => {},
+    setPvpComboP2: () => {},
+    setPvpTurn: () => {},
+    setPvpActionCount: () => {},
+    setBText: () => {},
+    setPhase: () => {},
+    setPvpSpecDefP1: () => {},
+    setPvpSpecDefP2: () => {},
+    setEffMsg: () => {},
+    setAtkEffect: () => {},
+    addP: () => {},
+    setPvpParalyzeP1: () => {},
+    setPvpParalyzeP2: () => {},
+    setPAnim: () => {},
+    setEAnim: () => {},
+    addD: () => {},
+    setPHp: () => {},
+    setPvpHp2: () => {},
+    setEHp: () => {},
+    setScreen: () => {},
+    setPvpWinner: () => {},
+    setPvpBurnP1: () => {},
+    setPvpBurnP2: () => {},
+    setPvpFreezeP1: () => {},
+    setPvpFreezeP2: () => {},
+    setPvpStaticP1: () => {},
+    setPvpStaticP2: () => {},
+  });
+
+  assert.equal(out, false);
+  assert.equal(fbCalls, 0);
+  assert.equal(twCalls, 0);
+});
+
 test('processPvpTurnStart resolves lethal burn tick and declares winner', () => {
   const state = createBasePvpState({
     pvpTurn: 'p1',

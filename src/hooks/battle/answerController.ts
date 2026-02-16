@@ -60,16 +60,22 @@ export function runAnswerController({
   const state = sr.current;
 
   const pvpHandlers = createPvpAnswerHandlers(pvpHandlerDeps);
-  if (tryHandlePvpAnswer({
+  const pvpHandled = tryHandlePvpAnswer({
     choice,
     state: state as TryHandlePvpAnswerArgs['state'],
     handlers: pvpHandlers,
-  })) {
+  });
+  if (state.battleMode === 'pvp') {
+    if (!pvpHandled) {
+      // Defensive unlock: invalid PvP transient state should not freeze question UI.
+      setAnswered(false);
+    }
     return;
   }
+  if (pvpHandled) return;
 
   const playerHandlers = createPlayerAnswerHandlers(playerHandlerDeps);
-  runStandardAnswerFlow({
+  const handled = runStandardAnswerFlow({
     choice,
     state,
     getActingStarter,
@@ -79,4 +85,8 @@ export function runAnswerController({
     markCoopRotatePending,
     handlers: playerHandlers,
   });
+  if (!handled) {
+    // Defensive unlock: avoid freezing the question UI when answer flow cannot proceed.
+    setAnswered(false);
+  }
 }

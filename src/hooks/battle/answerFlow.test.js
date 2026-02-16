@@ -44,6 +44,20 @@ test('buildAnswerContext returns null when selected move is missing', () => {
   assert.equal(out, null);
 });
 
+test('buildAnswerContext returns null when question payload is missing', () => {
+  const out = buildAnswerContext({
+    state: {
+      battleMode: 'single',
+      selIdx: 0,
+      q: null,
+    },
+    choice: 3,
+    getActingStarter: () => ({ moves: [{ name: 'A' }] }),
+  });
+
+  assert.equal(out, null);
+});
+
 test('logSubmittedAnswer emits session event and marks coop rotation', () => {
   const events = [];
   let updateArgs = null;

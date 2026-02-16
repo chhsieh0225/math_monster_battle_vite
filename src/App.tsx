@@ -504,7 +504,14 @@ function App() {
       {showHeavyFx && B.defAnim && <div style={{ position: "absolute", inset: 0, zIndex: 45, pointerEvents: "none", animation: B.defAnim === "fire" ? "shieldFlash 0.8s ease" : B.defAnim === "water" ? "dodgeFlash 0.8s ease" : B.defAnim === "electric" ? "shieldFlash 0.8s ease" : B.defAnim === "light" ? "shieldFlash 0.8s ease" : "counterFlash 0.8s ease" }} />}
 
       {/* Type effectiveness popup */}
-      {B.effMsg && <div style={{ position: "absolute", top: "38%", left: "50%", transform: "translateX(-50%)", background: B.effMsg.color === "#22c55e" ? "linear-gradient(135deg,rgba(34,197,94,0.95),rgba(22,163,74,0.95))" : "linear-gradient(135deg,rgba(100,116,139,0.9),rgba(71,85,105,0.9))", color: "white", padding: "6px 20px", borderRadius: 20, fontSize: 14, fontWeight: 800, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: `0 4px 16px ${B.effMsg.color}44`, letterSpacing: 1 }}>{B.effMsg.text}</div>}
+      {B.effMsg && (
+        <div
+          className={`battle-eff-toast ${B.effMsg.color === "#22c55e" ? "battle-eff-toast-good" : "battle-eff-toast-bad"}`}
+          style={{ boxShadow: `0 8px 22px ${B.effMsg.color}55` }}
+        >
+          {B.effMsg.text}
+        </div>
+      )}
 
       {/* ═══ Battle arena ═══ */}
       <div style={{ flex: 1, position: "relative", minHeight: 0, background: "#111", transition: "background 1s ease" }}>
@@ -637,20 +644,20 @@ function App() {
       </div>
 
       {/* ═══ Bottom panel ═══ */}
-      <div className="battle-panel" style={{ background: "linear-gradient(to top,#0f172a,#1e293b)", borderTop: "3px solid rgba(255,255,255,0.1)", flexShrink: 0, minHeight: B.phase === "question" ? 210 : 170, position: "relative" }}>
+      <div className="battle-panel" style={{ minHeight: B.phase === "question" ? 210 : 170 }}>
         {/* Move menu */}
-        {B.phase === "menu" && activeStarter && <div style={{ padding: 10 }}>
+        {B.phase === "menu" && activeStarter && <div className="battle-menu-wrap">
           {isCoopBattle && (
-            <div style={{ marginBottom: 8, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.75)" }}>
+            <div className="battle-menu-hint">
               🤝 {t("battle.coopTurn", "Co-op · Active:")} {activeStarter.typeIcon} {activeStarter.name}
             </div>
           )}
           {B.battleMode === "pvp" && (
-            <div style={{ marginBottom: 8, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.75)" }}>
+            <div className="battle-menu-hint">
               {B.pvpTurn === "p1" ? t("battle.pvpTurn.p1", "🔵 Player 1 Turn") : t("battle.pvpTurn.p2", "🔴 Player 2 Turn")} · {activeStarter.typeIcon} {activeStarter.name} · ⚡{pvpActiveCharge}/3 · {pvpActiveSpecDefReady ? `🛡️${t("battle.status.counterReady", "Counter Ready")}` : `🛡️${pvpActiveCombo}/${pvpComboTrigger}`}
             </div>
           )}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
+          <div className="battle-menu-grid">
             {activeStarter.moves.map((m, i: number) => {
               const sealed = B.battleMode === "pvp" ? false : B.sealedMove === i;
               const pvpLocked = B.battleMode === "pvp" ? (m.risky && !chargeReadyDisplay) : false;
@@ -659,32 +666,57 @@ function App() {
               const pw = B.battleMode === "pvp" ? m.basePower : B.getPow(i);
               const atCap = lv >= MAX_MOVE_LVL || m.basePower + lv * m.growth > POWER_CAPS[i];
               const eff = B.battleMode === "pvp" ? 1 : B.dualEff(m);
-              return <button className="battle-menu-btn" key={i} onClick={() => !locked && B.selectMove(i)} style={{ background: locked ? "rgba(255,255,255,0.03)" : eff > 1 ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))` : eff < 1 ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))` : m.bg, border: `2px solid ${sealed ? "rgba(168,85,247,0.4)" : locked ? "rgba(255,255,255,0.08)" : eff > 1 ? "#22c55e66" : m.color + "44"}`, borderRadius: 12, padding: "10px 10px", textAlign: "left", opacity: locked ? 0.4 : 1, cursor: locked ? "default" : "pointer", transition: "all 0.2s", animation: `fadeSlide 0.3s ease ${i * 0.05}s both`, position: "relative", overflow: "hidden" }}>
-                {sealed && <div style={{ position: "absolute", inset: 0, background: "rgba(168,85,247,0.1)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2, borderRadius: 12 }}><span style={{ fontSize: 20 }}>{t("battle.sealed", "🔮 Sealed ({turns})", { turns: B.sealedTurns })}</span></div>}
-                {B.battleMode !== "pvp" && lv > 1 && <div style={{ position: "absolute", top: 4, right: 6, background: atCap ? "linear-gradient(135deg,#f59e0b,#ef4444)" : m.color, color: "white", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 8, fontFamily: "'Press Start 2P',monospace" }}>Lv{lv}</div>}
-                {eff > 1 && <div style={{ position: "absolute", top: 24, right: 6, background: "#22c55e", color: "white", fontSize: 9, fontWeight: 800, padding: "2px 6px", borderRadius: 8, lineHeight: 1 }}>{t("battle.effect.up", "Effect Up")}</div>}
-                {eff < 1 && <div style={{ position: "absolute", top: 24, right: 6, background: "#64748b", color: "white", fontSize: 9, fontWeight: 800, padding: "2px 6px", borderRadius: 8, lineHeight: 1 }}>{t("battle.effect.down", "Effect Down")}</div>}
-                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}><span style={{ fontSize: 20 }}>{m.icon}</span><span className="move-name" style={{ fontSize: 15, fontWeight: 700, color: locked ? "#64748b" : m.color }}>{m.name}</span></div>
-                <div style={{ fontSize: 12, color: locked ? "#475569" : "#64748b" }}>{m.desc} · {t("battle.power", "Power")} <b style={{ color: lv > 1 ? m.color : "inherit" }}>{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && B.battleMode === "pvp" && !chargeReadyDisplay && ` ${t("battle.risky.lockedPvp", "🔒Need 3 correct")}`}{m.risky && B.battleMode === "pvp" && chargeReadyDisplay && ` ${t("battle.risky.readyPvp", "⚡Cast Ready")}`}{m.risky && !B.chargeReady && B.battleMode !== "pvp" && ` ${t("battle.risky.locked", "🔒")}`}{m.risky && B.chargeReady && B.battleMode !== "pvp" && ` ${t("battle.risky.ready", "⚡Charge Ready!")}`}{B.battleMode !== "pvp" && !m.risky && !atCap && lv > 1 && " ↑"}{B.battleMode !== "pvp" && atCap && ` ${t("battle.max", "✦MAX")}`}</div>
-                {B.battleMode !== "pvp" && !m.risky && !atCap && <div style={{ height: 3, background: "rgba(0,0,0,0.1)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}><div style={{ width: `${(B.mHits[i] % (HITS_PER_LVL * B.mLvls[i])) / (HITS_PER_LVL * B.mLvls[i]) * 100}%`, height: "100%", background: m.color, borderRadius: 2, transition: "width 0.3s" }} /></div>}
+              return <button
+                className={`battle-menu-btn ${locked ? "is-locked" : ""}`}
+                key={i}
+                onClick={() => !locked && B.selectMove(i)}
+                style={{
+                  background: locked ? "rgba(255,255,255,0.03)" : eff > 1 ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))` : eff < 1 ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))` : m.bg,
+                  border: `2px solid ${sealed ? "rgba(168,85,247,0.4)" : locked ? "rgba(255,255,255,0.08)" : eff > 1 ? "#22c55e66" : m.color + "44"}`,
+                  opacity: locked ? 0.4 : 1,
+                  cursor: locked ? "default" : "pointer",
+                  animation: `fadeSlide 0.3s ease ${i * 0.05}s both`,
+                }}
+              >
+                {sealed && <div className="move-sealed-mask"><span className="move-sealed-text">{t("battle.sealed", "🔮 Sealed ({turns})", { turns: B.sealedTurns })}</span></div>}
+                <div className="move-badge-stack">
+                  {B.battleMode !== "pvp" && lv > 1 && (
+                    <div
+                      className={`move-badge move-badge-level ${atCap ? "cap" : ""}`}
+                      style={atCap ? undefined : { background: m.color }}
+                    >
+                      Lv{lv}
+                    </div>
+                  )}
+                  {eff > 1 && <div className="move-badge move-badge-up">{t("battle.effect.up", "Effect Up")}</div>}
+                  {eff < 1 && <div className="move-badge move-badge-down">{t("battle.effect.down", "Effect Down")}</div>}
+                </div>
+                <div className="move-name-row">
+                  <span className="move-icon">{m.icon}</span>
+                  <span className="move-name" style={{ color: locked ? "#94a3b8" : m.color }}>{m.name}</span>
+                </div>
+                <div className="move-desc-row" style={{ color: locked ? "#64748b" : "#94a3b8" }}>
+                  {m.desc} · {t("battle.power", "Power")} <b style={{ color: lv > 1 ? m.color : "inherit" }}>{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && B.battleMode === "pvp" && !chargeReadyDisplay && ` ${t("battle.risky.lockedPvp", "🔒Need 3 correct")}`}{m.risky && B.battleMode === "pvp" && chargeReadyDisplay && ` ${t("battle.risky.readyPvp", "⚡Cast Ready")}`}{m.risky && !B.chargeReady && B.battleMode !== "pvp" && ` ${t("battle.risky.locked", "🔒")}`}{m.risky && B.chargeReady && B.battleMode !== "pvp" && ` ${t("battle.risky.ready", "⚡Charge Ready!")}`}{B.battleMode !== "pvp" && !m.risky && !atCap && lv > 1 && " ↑"}{B.battleMode !== "pvp" && atCap && ` ${t("battle.max", "✦MAX")}`}
+                </div>
+                {B.battleMode !== "pvp" && !m.risky && !atCap && <div className="move-progress-track"><div className="move-progress-fill" style={{ width: `${(B.mHits[i] % (HITS_PER_LVL * B.mLvls[i])) / (HITS_PER_LVL * B.mLvls[i]) * 100}%`, background: m.color }} /></div>}
               </button>;
             })}
           </div>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}>
+          <div className="battle-util-row">
             {isCoopBattle && (
-              <button className="battle-util-btn" onClick={B.toggleCoopActive} disabled={!coopCanSwitch} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: coopCanSwitch ? "rgba(255,255,255,0.45)" : "rgba(148,163,184,0.45)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: coopCanSwitch ? "pointer" : "not-allowed", opacity: coopCanSwitch ? 1 : 0.55 }}>
+              <button className="battle-util-btn" onClick={B.toggleCoopActive} disabled={!coopCanSwitch}>
                 🔁 {coopUsingSub ? t("battle.coop.mainTurn", "Main Turn") : t("battle.coop.subTurn", "Sub Turn")}
               </button>
             )}
-            <button className="battle-util-btn" aria-label={t("a11y.battle.pause", "Pause game")} onClick={B.togglePause} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⏸️ {t("battle.pause", "Pause")}</button>
-            <button className="battle-util-btn" aria-label={t("a11y.battle.settings", "Open battle settings")} onClick={() => openSettings("battle")} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>⚙️ {t("battle.settings", "Settings")}</button>
-            <button className="battle-util-btn" aria-label={t("a11y.battle.run", "Run from battle")} onClick={B.quitGame} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, padding: "5px 14px", borderRadius: 16, cursor: "pointer" }}>🏳️ {t("battle.run", "Run")}</button>
+            <button className="battle-util-btn" aria-label={t("a11y.battle.pause", "Pause game")} onClick={B.togglePause}>⏸️ {t("battle.pause", "Pause")}</button>
+            <button className="battle-util-btn" aria-label={t("a11y.battle.settings", "Open battle settings")} onClick={() => openSettings("battle")}>⚙️ {t("battle.settings", "Settings")}</button>
+            <button className="battle-util-btn battle-util-btn-danger" aria-label={t("a11y.battle.run", "Run from battle")} onClick={B.quitGame}>🏳️ {t("battle.run", "Run")}</button>
           </div>
         </div>}
 
         {/* Question panel */}
-        {B.phase === "question" && question && activeStarter && selectedMove && <div style={{ padding: "10px 14px", animation: "fadeSlide 0.25s ease" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}><span style={{ fontSize: 18 }}>{selectedMove.icon}</span><span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{selectedMove.name}！</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{activeStarter.typeIcon} {activeStarter.name}</span><span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{B.timedMode ? t("battle.answer.timed", "⏱️ Timed Answer!") : t("battle.answer.hit", "Answer correctly to hit")}</span></div>
+        {B.phase === "question" && question && activeStarter && selectedMove && <div className="battle-question-wrap">
+          <div className="battle-question-head"><span style={{ fontSize: 18 }}>{selectedMove.icon}</span><span className="battle-question-title">{selectedMove.name}！</span><span className="battle-question-sub">{activeStarter.typeIcon} {activeStarter.name}</span><span className="battle-question-note">{B.timedMode ? t("battle.answer.timed", "⏱️ Timed Answer!") : t("battle.answer.hit", "Answer correctly to hit")}</span></div>
           <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 16px", textAlign: "center", marginBottom: 8, border: "1px solid rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
             {B.timedMode && !B.answered && (
               <QuestionTimerHud

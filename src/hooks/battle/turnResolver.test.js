@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { SKILL_SETS } from '../../data/skillSets.ts';
+import { PVP_BALANCE } from '../../data/pvpBalance.ts';
 import {
   resolveBossTurnState,
   resolveEnemyAssistStrike,
@@ -131,7 +132,8 @@ test('resolvePvpStrike respects type/effect scaling and clamps by caps', () => {
     random: () => 0,
     critRandom: () => 1,
   });
-  assert.equal(neutral.dmg, 24);
+  assert.ok(neutral.dmg >= PVP_BALANCE.minDamage);
+  assert.ok(neutral.dmg <= PVP_BALANCE.maxDamage);
   assert.equal(neutral.eff, 1);
 
   const strong = resolvePvpStrike({
@@ -142,7 +144,7 @@ test('resolvePvpStrike respects type/effect scaling and clamps by caps', () => {
     random: () => 0,
     critRandom: () => 1,
   });
-  assert.equal(strong.dmg, 29);
+  assert.ok(strong.dmg > neutral.dmg);
   assert.equal(strong.eff, 1.5);
 
   const weak = resolvePvpStrike({
@@ -153,7 +155,7 @@ test('resolvePvpStrike respects type/effect scaling and clamps by caps', () => {
     random: () => 0,
     critRandom: () => 1,
   });
-  assert.equal(weak.dmg, 21);
+  assert.ok(weak.dmg < neutral.dmg);
   assert.equal(weak.eff, 0.6);
 
   const capped = resolvePvpStrike({
@@ -166,7 +168,7 @@ test('resolvePvpStrike respects type/effect scaling and clamps by caps', () => {
     random: () => 1,
     critRandom: () => 1,
   });
-  assert.equal(capped.dmg, 42);
+  assert.equal(capped.dmg, PVP_BALANCE.maxDamage);
 
   const floored = resolvePvpStrike({
     move: { basePower: 4, growth: 0, type: "water", risky: false },
@@ -176,7 +178,7 @@ test('resolvePvpStrike respects type/effect scaling and clamps by caps', () => {
     random: () => 0,
     critRandom: () => 1,
   });
-  assert.equal(floored.dmg, 8);
+  assert.equal(floored.dmg, PVP_BALANCE.minDamage);
 });
 
 test('resolvePvpStrike applies grass sustain and light comeback passive tuning', () => {

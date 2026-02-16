@@ -5,10 +5,11 @@
  */
 export const PVP_BALANCE = {
   baseScale: 0.84,
-  varianceMin: 0.9,
-  varianceMax: 1.08,
+  // Tighten RNG spread so outcome relies more on answer quality than high-roll spikes.
+  varianceMin: 0.92,
+  varianceMax: 1.06,
   minDamage: 8,
-  maxDamage: 42,
+  maxDamage: 40,
   riskyScale: 0.94,
   moveSlotScale: [0.94, 0.98, 1.02, 0.9],
   typeScale: {
@@ -47,11 +48,11 @@ export const PVP_BALANCE = {
     maxBonus: 0.16,
   },
   crit: {
-    chance: 0.12,
+    chance: 0.1,
     riskyBonus: 0.04,
     minChance: 0.02,
-    maxChance: 0.28,
-    multiplier: 1.45,
+    maxChance: 0.24,
+    multiplier: 1.4,
     // Type-specific crit tuning.
     // critChanceBonus: added to attacker's crit chance.
     // critDamageBonus: added to crit multiplier.
@@ -68,9 +69,10 @@ export const PVP_BALANCE = {
   },
   passive: {
     fireBurnCap: 2,
-    fireBurnTickBase: 3,
+    // Burn in PvP should matter even when fights are short.
+    fireBurnTickBase: 4,
     fireBurnTickPerStack: 2,
-    waterFreezeChance: 0.14,
+    waterFreezeChance: 0.12,
     electricDischargeAt: 3,
     electricDischargeDamage: 10,
     specDefComboTrigger: 4,
@@ -79,7 +81,8 @@ export const PVP_BALANCE = {
     grassReflectMin: 8,
     grassReflectCap: 18,
   },
-  firstStrikeScale: 0.9,
+  // Slightly reduce first-turn snowball in timed PvP starts.
+  firstStrikeScale: 0.88,
   effectScale: {
     strong: 1.18,
     weak: 0.86,

@@ -82,6 +82,10 @@ import {
   buildStartBattleSharedArgs,
 } from './battle/startDepsBuilder.ts';
 import { runSelectMoveFlow } from './battle/selectMoveFlow';
+import {
+  buildEnemyTurnArgs,
+  buildSelectMoveFlowArgs,
+} from './battle/turnActionDepsBuilder.ts';
 import { runVictoryFlow } from './battle/victoryFlow';
 import { runAdvanceController } from './battle/advanceController.ts';
 import {
@@ -216,8 +220,6 @@ export function useBattle() {
     setBurnStack,
     setFrozen,
     setStaticStack,
-    setSpecDef,
-    setDefAnim,
     setCursed,
     setDiffLevel,
     setBossPhase,
@@ -230,8 +232,8 @@ export function useBattle() {
   // ──── Phase & UI ────
   const {
     phase, setPhase,
-    selIdx, setSelIdx,
-    q, setQ,
+    selIdx,
+    q,
     fb, setFb,
     bText, setBText,
     answered, setAnswered,
@@ -596,60 +598,45 @@ export function useBattle() {
 
   // --- Player selects a move ---
   const selectMove = (i) => {
-    runSelectMoveFlow({
+    runSelectMoveFlow(buildSelectMoveFlowArgs({
       index: i,
-      state: sr.current,
-      timedMode,
-      diffMods: DIFF_MODS,
-      t,
-      getActingStarter,
-      getMoveDiffLevel: _getMoveDiffLevel,
-      genQuestion: genQ,
-      startTimer,
-      markQStart,
-      sfx,
-      setSelIdx,
-      setDiffLevel,
-      setQ,
-      setFb,
-      setAnswered,
-      setPhase,
-    });
+      sr,
+      runtime: {
+        timedMode,
+        diffMods: DIFF_MODS,
+        t,
+        getActingStarter,
+        getMoveDiffLevel: _getMoveDiffLevel,
+        genQuestion: genQ,
+        startTimer,
+        markQStart,
+        sfx,
+      },
+      ui: UI,
+    }));
   };
 
   // --- Enemy turn logic (reads from stateRef) ---
   function doEnemyTurn() {
-    runEnemyTurnController({
+    runEnemyTurnController(buildEnemyTurnArgs({
       sr,
-      safeTo,
-      rand,
-      randInt,
-      chance,
-      sfx,
-      setSealedTurns,
-      setSealedMove,
-      setBossPhase,
-      setBossTurn,
-      setBossCharging,
-      setBText,
-      setPhase,
-      setEAnim,
-      setPAnim,
-      setPHp,
-      setPHpSub,
-      setSpecDef,
-      setDefAnim,
-      setEHp,
-      setEffMsg,
-      setCursed,
-      addD,
-      addP,
-      _endSession,
-      setScreen,
-      handleVictory,
-      handlePlayerPartyKo,
-      t,
-    });
+      runtime: {
+        safeTo,
+        rand,
+        randInt,
+        chance,
+        sfx,
+        setScreen,
+        t,
+      },
+      battleFields: battleFieldSetters,
+      ui: UI,
+      callbacks: {
+        _endSession,
+        handleVictory,
+        handlePlayerPartyKo,
+      },
+    }));
   }
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
 

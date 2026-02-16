@@ -69,22 +69,18 @@ import { createBattleFieldSetters } from './battle/battleFieldSetters';
 import { effectOrchestrator } from './battle/effectOrchestrator';
 import {
   createEnemyTurnHandlers,
-  createPlayerAnswerHandlers,
-  createPvpAnswerHandlers,
-  createPvpTurnStartHandlers,
 } from './battle/flowHandlers';
+import { runAnswerController } from './battle/answerController.ts';
 import { runEnemyTurn } from './battle/enemyFlow';
 import { handleTimeoutFlow } from './battle/timeoutFlow';
-import { runPvpStartFlow, runStandardStartFlow } from './battle/startGameFlow';
+import { runStartGameController } from './battle/startGameController.ts';
 import { runStartBattleFlow } from './battle/startBattleFlow';
 import { runSelectMoveFlow } from './battle/selectMoveFlow';
 import { runVictoryFlow } from './battle/victoryFlow';
+import { runAdvanceController } from './battle/advanceController.ts';
 import {
   continueFromVictoryFlow,
-  handlePendingEvolution,
-  tryProcessPvpTextAdvance,
 } from './battle/advanceFlow';
-import { runStandardAnswerFlow, tryHandlePvpAnswer } from './battle/answerFlow';
 import {
   getActingStarter as resolveActingStarter,
   getOtherPvpTurn,
@@ -420,25 +416,19 @@ export function useBattle() {
     beginRun();
     clearTimer();
     resetCoopRotatePending();
-    // Regenerate roster so slime variants are re-randomised each game
-    const mode = modeOverride || sr.current.battleMode || battleMode;
-    const leader = localizeStarter(starterOverride || sr.current.starter, locale);
-    const rival = localizeStarter(
-      allyOverride
-      || sr.current.pvpStarter2
-      || pvpStarter2
-      || pickPartnerStarter(leader, pickIndex, locale),
+    runStartGameController({
+      starterOverride,
+      modeOverride,
+      allyOverride,
+      sr,
+      battleMode,
+      pvpStarter2,
       locale,
-    );
-    const leaderStageIdx = getStarterStageIdx(leader);
-    const leaderMaxHp = getStageMaxHp(leaderStageIdx);
-
-    if (mode === "pvp") {
-      runPvpStartFlow({
-        leader,
-        rival,
-        leaderMaxHp,
-        leaderStageIdx,
+      localizeStarter,
+      pickPartnerStarter: (mainStarter) => pickPartnerStarter(mainStarter, pickIndex, locale),
+      getStarterStageIdx,
+      getStageMaxHp,
+      pvpStartDeps: {
         chance,
         getStarterMaxHp,
         t,
@@ -458,32 +448,20 @@ export function useBattle() {
         setBText,
         setScreen,
         playBattleIntro: () => effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim }),
-      });
-      return;
-    }
-
-    const isCoop = mode === "coop" || mode === "double";
-    const partner = isCoop
-      ? localizeStarter(allyOverride || pickPartnerStarter(leader, pickIndex, locale), locale)
-      : null;
-    runStandardStartFlow({
-      mode,
-      leader,
-      partner,
-      leaderMaxHp,
-      leaderStageIdx,
-      currentTimedMode: !!sr.current.timedMode,
-      buildNewRoster,
-      getStarterMaxHp,
-      setEnemies,
-      setCoopActiveSlot,
-      resetPvpRuntime,
-      dispatchBattle,
-      resetRunRuntimeState,
-      appendSessionEvent,
-      initSession,
-      setScreen,
-      startBattle,
+      },
+      standardStartDeps: {
+        buildNewRoster,
+        getStarterMaxHp,
+        setEnemies,
+        setCoopActiveSlot,
+        resetPvpRuntime,
+        dispatchBattle,
+        resetRunRuntimeState,
+        appendSessionEvent,
+        initSession,
+        setScreen,
+        startBattle,
+      },
     });
   };
 
@@ -642,104 +620,100 @@ export function useBattle() {
 
   // --- Player answers a question ---
   const onAns = (choice) => {
-    if (answered) return;
-    setAnswered(true);
-    clearTimer();
-    const s = sr.current;
-    const pvpAnswerHandlers = createPvpAnswerHandlers({
-      sr,
-      rand,
-      chance,
-      safeTo,
-      sfx,
-      getOtherPvpTurn,
-      setFb,
-      setTC,
-      setTW,
-      setPvpChargeP1,
-      setPvpChargeP2,
-      setPvpComboP1,
-      setPvpComboP2,
-      setPvpTurn,
-      setPvpActionCount,
-      setBText,
-      setPhase,
-      setPvpSpecDefP1,
-      setPvpSpecDefP2,
-      setEffMsg,
-      setAtkEffect,
-      addP,
-      setPvpParalyzeP1,
-      setPvpParalyzeP2,
-      setPAnim,
-      setEAnim,
-      addD,
-      setPHp,
-      setPvpHp2,
-      setEHp,
-      setScreen,
-      setPvpWinner,
-      setPvpBurnP1,
-      setPvpBurnP2,
-      setPvpFreezeP1,
-      setPvpFreezeP2,
-      setPvpStaticP1,
-      setPvpStaticP2,
-      t,
-    });
-    if (tryHandlePvpAnswer({ choice, state: s, handlers: pvpAnswerHandlers })) return;
-
-    const playerAnswerHandlers = createPlayerAnswerHandlers({
-      sr,
-      safeTo,
-      chance,
-      sfx,
-      setFb,
-      setTC,
-      setTW,
-      setStreak,
-      setPassiveCount,
-      setCharge,
-      setMaxStreak,
-      setSpecDef,
-      tryUnlock,
-      setMLvls,
-      setMLvlUp,
-      setMHits,
-      setPhase,
-      setPAnim,
-      setAtkEffect,
-      setEAnim,
-      setEffMsg,
-      setBossCharging,
-      setBurnStack,
-      setPHp,
-      setPHpSub,
-      setFrozen,
-      frozenR,
-      setStaticStack,
-      setEHp,
-      addD,
-      doEnemyTurn,
-      handleVictory,
-      handleFreeze,
-      setCursed,
-      _endSession,
-      setScreen,
-      setBText,
-      handlePlayerPartyKo,
-      runAllySupportTurn,
-      t,
-    });
-    runStandardAnswerFlow({
+    runAnswerController({
       choice,
-      state: s,
+      answered,
+      setAnswered,
+      clearTimer,
+      sr,
+      pvpHandlerDeps: {
+        sr,
+        rand,
+        chance,
+        safeTo,
+        sfx,
+        getOtherPvpTurn,
+        setFb,
+        setTC,
+        setTW,
+        setPvpChargeP1,
+        setPvpChargeP2,
+        setPvpComboP1,
+        setPvpComboP2,
+        setPvpTurn,
+        setPvpActionCount,
+        setBText,
+        setPhase,
+        setPvpSpecDefP1,
+        setPvpSpecDefP2,
+        setEffMsg,
+        setAtkEffect,
+        addP,
+        setPvpParalyzeP1,
+        setPvpParalyzeP2,
+        setPAnim,
+        setEAnim,
+        addD,
+        setPHp,
+        setPvpHp2,
+        setEHp,
+        setScreen,
+        setPvpWinner,
+        setPvpBurnP1,
+        setPvpBurnP2,
+        setPvpFreezeP1,
+        setPvpFreezeP2,
+        setPvpStaticP1,
+        setPvpStaticP2,
+        t,
+      },
+      playerHandlerDeps: {
+        sr,
+        safeTo,
+        chance,
+        sfx,
+        setFb,
+        setTC,
+        setTW,
+        setStreak,
+        setPassiveCount,
+        setCharge,
+        setMaxStreak,
+        setSpecDef,
+        tryUnlock,
+        setMLvls,
+        setMLvlUp,
+        setMHits,
+        setPhase,
+        setPAnim,
+        setAtkEffect,
+        setEAnim,
+        setEffMsg,
+        setBossCharging,
+        setBurnStack,
+        setPHp,
+        setPHpSub,
+        setFrozen,
+        frozenR,
+        setStaticStack,
+        setEHp,
+        addD,
+        doEnemyTurn,
+        handleVictory,
+        handleFreeze,
+        setCursed,
+        _endSession,
+        setScreen,
+        setBText,
+        handlePlayerPartyKo,
+        runAllySupportTurn,
+        t,
+      },
       getActingStarter,
       logAns,
       appendSessionEvent,
       updateAbility: _updateAbility,
       markCoopRotatePending,
-      handlers: playerAnswerHandlers,
     });
   };
 
@@ -765,8 +739,10 @@ export function useBattle() {
   };
 
   const advance = () => {
-    if (phase === "text") {
-      const pvpTurnStartHandlers = createPvpTurnStartHandlers({
+    runAdvanceController({
+      phase,
+      sr,
+      pvpTurnStartHandlerDeps: {
         safeTo,
         getOtherPvpTurn,
         getPvpTurnName,
@@ -788,16 +764,11 @@ export function useBattle() {
         setPvpFreezeP1,
         setPvpFreezeP2,
         t,
-      });
-      if (tryProcessPvpTextAdvance({ state: sr.current, handlers: pvpTurnStartHandlers })) return;
-      setPhase("menu"); setBText("");
-    }
-    else if (phase === "victory") {
-      // Bug #2 fix: if an evolution is pending, go to evolve screen
-      // instead of starting next battle (eliminates timer-based race).
-      if (handlePendingEvolution({
+      },
+      setPhase,
+      setBText,
+      pendingEvolutionArgs: {
         pendingEvolveRef: pendingEvolve,
-        state: sr.current,
         setPStg,
         tryUnlock,
         getStageMaxHp,
@@ -808,11 +779,9 @@ export function useBattle() {
         setMLvls,
         maxMoveLvl: MAX_MOVE_LVL,
         setScreen,
-      })) {
-        return;
-      }
-      continueFromVictory();
-    }
+      },
+      continueFromVictory,
+    });
   };
 
   // --- Shared game-completion logic (achievements + session save) ---

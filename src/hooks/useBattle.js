@@ -18,7 +18,7 @@
  * • Achievements, Encyclopedia, and SessionLog are extracted into sub-hooks
  *   (useAchievements, useEncyclopedia, useSessionLog) to keep this file focused.
  */
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, useReducer } from 'react';
+import { useState, useEffect, useRef, useCallback, useReducer } from 'react';
 import { useI18n } from '../i18n';
 
 import { SCENE_NAMES } from '../data/scenes';
@@ -84,6 +84,7 @@ import {
   applyVictoryAchievements,
 } from './battle/achievementFlow';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
+import { useBattleAsyncGate, useBattleStateRef } from './useBattleRuntime';
 
 // ── Constants (module-level to avoid re-allocation per render) ──
 const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
@@ -253,7 +254,6 @@ export function useBattle() {
 
   // ──── Internal refs ────
   const runSeedRef = useRef(0);
-  const asyncGateRef = useRef(0);
   const doEnemyTurnRef = useRef(() => {});
   const pendingEvolve = useRef(false);   // ← Bug #2 fix
   const eventSessionIdRef = useRef(null);
@@ -261,11 +261,7 @@ export function useBattle() {
   const sessionStartRef = useRef(0);
 
   // ──── State ref — always points at latest committed values ────
-  // Use useLayoutEffect so the ref is updated synchronously after DOM commit,
-  // before any setTimeout/safeTo callbacks fire. This prevents Concurrent Mode
-  // from polluting sr.current with intermediate render values.
-  const sr = useRef({});
-  const _srSnapshot = {
+  const sr = useBattleStateRef({
     enemy, enemySub, starter, allySub, eHp, eHpSub, pHp, pHpSub, pExp, pLvl, pStg,
     streak, passiveCount, charge, burnStack, frozen, staticStack, specDef, cursed,
     mHits, mLvls, selIdx, phase, round, q,
@@ -276,8 +272,7 @@ export function useBattle() {
     pvpStarter2, pvpHp2, pvpTurn, pvpWinner, pvpChargeP1, pvpChargeP2, pvpActionCount,
     pvpBurnP1, pvpBurnP2, pvpFreezeP1, pvpFreezeP2, pvpStaticP1, pvpStaticP2,
     pvpParalyzeP1, pvpParalyzeP2, pvpComboP1, pvpComboP2, pvpSpecDefP1, pvpSpecDefP2,
-  };
-  useLayoutEffect(() => { sr.current = _srSnapshot; });
+  });
 
   // ──── Computed ────
   const expNext = pLvl * 30;
@@ -294,23 +289,7 @@ export function useBattle() {
   );
 
   // ──── Safe timeout (cancelled on async-gate change or unmount) ────
-  const activeTimers = useRef(new Set());
-  const invalidateAsyncWork = useCallback(() => {
-    asyncGateRef.current += 1;
-    activeTimers.current.forEach(clearTimeout);
-    activeTimers.current.clear();
-  }, []);
-
-  const safeTo = useCallback((fn, ms) => {
-    const g = asyncGateRef.current;
-    const id = setTimeout(() => {
-      activeTimers.current.delete(id);
-      if (g === asyncGateRef.current) fn();
-    }, ms);
-    activeTimers.current.add(id);
-  }, []);
-  // Cleanup all pending timers on unmount
-  useEffect(() => () => { activeTimers.current.forEach(clearTimeout); activeTimers.current.clear(); }, []);
+  const { safeTo, invalidateAsyncWork } = useBattleAsyncGate();
 
   const {
     markPending: markCoopRotatePending,
@@ -385,14 +364,14 @@ export function useBattle() {
     subscribeTimerLeft, getTimerLeft,
   } = useTimer(TIMER_SEC, onTimeout);
 
-  const setScreen = useCallback((nextScreen) => {
+  const setScreen = (nextScreen) => {
     const prevScreen = sr.current.screen;
     if (prevScreen === "battle" && nextScreen !== "battle") {
       clearTimer();
       invalidateAsyncWork();
     }
     setScreenState(nextScreen);
-  }, [clearTimer, invalidateAsyncWork]);
+  };
 
   const [gamePaused, setGamePaused] = useState(false);
 
@@ -998,7 +977,7 @@ export function useBattle() {
     continueFromVictory();
   };
 
-  const toggleCoopActive = useCallback(() => {
+  const toggleCoopActive = () => {
     const s = sr.current;
     const canSwitch = (
       isCoopBattleMode(s.battleMode)
@@ -1007,7 +986,7 @@ export function useBattle() {
     );
     if (!canSwitch) return;
     setCoopActiveSlot((prev) => (prev === "main" ? "sub" : "main"));
-  }, []);
+  };
 
   const setStarterLocalized = useCallback((nextStarter) => {
     setStarter(localizeStarter(nextStarter, locale));

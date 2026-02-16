@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 
 import { STREAK_TOWER_BLUEPRINT } from '../../data/challengeCatalog.ts';
 import { useI18n } from '../../i18n';
+import type { DailyChallengePlan, StreakTowerPlan } from '../../types/challenges.ts';
 import { buildDailyChallengePlan, buildStreakTowerPlan, nextDailyReset } from '../../utils/challengePlanner.ts';
 import {
   beginDailyChallengeRun,
@@ -23,12 +24,13 @@ const cardStyle: CSSProperties = {
 
 type DailyChallengeScreenProps = {
   onBack: () => void;
-  onStartDaily: () => void;
-  onStartTower: () => void;
+  onStartDaily: (plan: DailyChallengePlan) => void;
+  onStartTower: (plan: StreakTowerPlan) => void;
 };
 
 function statusTone(status: string): string {
   if (status === 'cleared') return '#22c55e';
+  if (status === 'failed') return '#ef4444';
   if (status === 'in_progress') return '#f59e0b';
   return '#94a3b8';
 }
@@ -55,6 +57,8 @@ export default function DailyChallengeScreen({
   const dailyStatus = todayRun?.status || 'idle';
   const dailyStatusLabel = dailyStatus === 'cleared'
     ? t('daily.status.cleared', 'Cleared')
+    : dailyStatus === 'failed'
+      ? t('daily.status.failed', 'Failed')
     : dailyStatus === 'in_progress'
       ? t('daily.status.inProgress', 'In Progress')
       : t('daily.status.idle', 'Not Started');
@@ -66,15 +70,20 @@ export default function DailyChallengeScreen({
   const handleStartDaily = () => {
     const next = beginDailyChallengeRun(dailyPlan);
     setDailyProgress(next);
-    onStartDaily();
+    onStartDaily(dailyPlan);
   };
 
   const handleEnterTower = () => {
-    const next = towerProgress.currentRunId
+    const nextProgress = towerProgress.currentRunId
       ? loadTowerProgress()
       : startTowerRun(Math.max(1, towerProgress.currentFloor));
-    setTowerProgress(next);
-    onStartTower();
+    setTowerProgress(nextProgress);
+    const nextPlan = buildStreakTowerPlan({
+      runId: nextProgress.currentRunId || undefined,
+      startFloor: nextProgress.currentFloor,
+      floorCount: 3,
+    });
+    onStartTower(nextPlan);
   };
 
   const towerActionLabel = towerProgress.currentRunId

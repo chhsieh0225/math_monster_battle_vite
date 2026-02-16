@@ -1,4 +1,5 @@
 import type { AchievementId, EncyclopediaData, StarterId } from './game';
+import type { DailyChallengePlan } from './challenges';
 
 export type BattleMode = "single" | "coop" | "pvp" | "double";
 export type ScreenName =
@@ -205,6 +206,8 @@ export type UseBattleActions = {
   setTimedMode: (next: boolean) => void;
   setBattleMode: (mode: BattleMode) => void;
   setScreen: (screen: ScreenName) => void;
+  queueDailyChallenge: (plan: DailyChallengePlan) => void;
+  clearChallengeRun: () => void;
   setStarter: (starter: unknown) => void;
   setPvpStarter2: (starter: unknown) => void;
   startGame: (starter?: unknown, mode?: BattleMode, starter2?: unknown) => void;

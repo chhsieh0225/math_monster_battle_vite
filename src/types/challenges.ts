@@ -105,7 +105,7 @@ export type StreakTowerPlan = {
   floors: StreakTowerFloorPlan[];
 };
 
-export type DailyRunStatus = 'idle' | 'in_progress' | 'cleared';
+export type DailyRunStatus = 'idle' | 'in_progress' | 'cleared' | 'failed';
 
 export type DailyRunRecord = {
   dateKey: string;

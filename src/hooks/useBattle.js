@@ -35,6 +35,7 @@ import {
 } from '../utils/contentLocalization';
 
 import { genQ } from '../utils/questionGenerator.ts';
+import { withRandomSource } from '../utils/prng.ts';
 import {
   movePower,
   bestEffectiveness,
@@ -55,6 +56,10 @@ import { useBattleSessionLifecycle } from './useBattleSessionLifecycle';
 import { ENC_TOTAL } from '../data/encyclopedia.ts';
 import sfx from '../utils/sfx.ts';
 import { buildRoster } from '../utils/rosterBuilder';
+import {
+  markDailyChallengeCleared,
+  markDailyChallengeFailed,
+} from '../utils/challengeProgress.ts';
 import {
   createAbilityModel,
   getDifficultyLevelForOps,
@@ -125,6 +130,10 @@ import {
 import {
   applyVictoryAchievements,
 } from './battle/achievementFlow';
+import {
+  buildDailyChallengeRoster,
+  getDailyChallengeSeed,
+} from './battle/challengeRuntime.ts';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
 import { useBattleAsyncGate, useBattleStateRef } from './useBattleRuntime';
 
@@ -169,6 +178,8 @@ export function useBattle() {
   const [screen, setScreenState] = useState("title");
   const [timedMode, setTimedMode] = useState(false);
   const [battleMode, setBattleMode] = useState("single");
+  const [queuedChallenge, setQueuedChallenge] = useState(null);
+  const [activeChallenge, setActiveChallenge] = useState(null);
   const [coopActiveSlot, setCoopActiveSlot] = useState("main");
   const pvpState = usePvpState();
   const {
@@ -304,6 +315,23 @@ export function useBattle() {
     [enemy],
   );
 
+  const clearChallengeRun = useCallback(() => {
+    setQueuedChallenge(null);
+    setActiveChallenge(null);
+  }, []);
+
+  const queueDailyChallenge = useCallback((plan) => {
+    if (!plan) return;
+    setQueuedChallenge({ kind: 'daily', plan });
+    setTimedMode(true);
+    setBattleMode('single');
+  }, []);
+
+  const genBattleQuestion = useCallback(
+    (move, diffMod, options) => withRandomSource(rand, () => genQ(move, diffMod, options)),
+    [rand],
+  );
+
   // ──── Safe timeout (cancelled on async-gate change or unmount) ────
   const { safeTo, invalidateAsyncWork } = useBattleAsyncGate();
 
@@ -349,6 +377,9 @@ export function useBattle() {
   } = useTimer(TIMER_SEC, onTimeout);
 
   const setScreen = useCallback((nextScreen) => {
+    if (nextScreen === 'title') {
+      clearChallengeRun();
+    }
     runScreenTransition({
       prevScreen: sr.current.screen,
       nextScreen,
@@ -356,7 +387,7 @@ export function useBattle() {
       invalidateAsyncWork,
       setScreenState,
     });
-  }, [clearTimer, invalidateAsyncWork, sr]);
+  }, [clearChallengeRun, clearTimer, invalidateAsyncWork, sr]);
 
   const [gamePaused, setGamePaused] = useState(false);
 
@@ -384,16 +415,26 @@ export function useBattle() {
 
   // ── Finalize and persist session log ──
   const _endSession = useCallback((isCompleted, reasonOverride = null) => {
+    if (!isCompleted && activeChallenge?.kind === 'daily' && activeChallenge.plan) {
+      markDailyChallengeFailed(activeChallenge.plan, sr.current?.defeated || 0);
+      setActiveChallenge(null);
+      setQueuedChallenge(null);
+    }
     runEndSessionController({
       sr,
       endSessionOnce,
       isCompleted,
       reasonOverride,
     });
-  }, [sr, endSessionOnce]);
+  }, [activeChallenge, sr, endSessionOnce]);
 
   // --- Shared game-completion logic (achievements + session save) ---
   const _finishGame = useCallback(() => {
+    if (activeChallenge?.kind === 'daily' && activeChallenge.plan) {
+      markDailyChallengeCleared(activeChallenge.plan, activeChallenge.plan.battles?.length || 1);
+      setActiveChallenge(null);
+      setQueuedChallenge(null);
+    }
     runFinishGameController({
       sr,
       tryUnlock,
@@ -402,7 +443,7 @@ export function useBattle() {
       endSession: _endSession,
       setScreen,
     });
-  }, [sr, tryUnlock, setEncData, _endSession, setScreen]);
+  }, [activeChallenge, sr, tryUnlock, setEncData, _endSession, setScreen]);
 
   // --- Start a battle against enemies[idx], optionally from a fresh roster ---
   const startBattle = useCallback((idx, roster) => {
@@ -466,10 +507,21 @@ export function useBattle() {
   }, [setDmgs, setParts, setAtkEffect, setEffMsg]);
 
   const startGame = (starterOverride, modeOverride = null, allyOverride = null) => {
+    const challengeContext = queuedChallenge || activeChallenge;
+    const runSeed = challengeContext?.kind === 'daily'
+      ? getDailyChallengeSeed(challengeContext.plan)
+      : null;
+    const buildRosterForRun = (mode) => {
+      const baseRoster = buildNewRoster(mode);
+      if (challengeContext?.kind !== 'daily') return baseRoster;
+      return buildDailyChallengeRoster(baseRoster, challengeContext.plan);
+    };
+
     runStartGameOrchestrator({
       starterOverride,
       modeOverride,
       allyOverride,
+      runSeed,
       invalidateAsyncWork,
       beginRun,
       clearTimer,
@@ -495,7 +547,7 @@ export function useBattle() {
       },
       standardStartDepsArgs: {
         runtime: {
-          buildNewRoster,
+          buildNewRoster: buildRosterForRun,
           getStarterMaxHp,
           setEnemies,
           setCoopActiveSlot,
@@ -519,6 +571,11 @@ export function useBattle() {
         getStageMaxHp,
       },
     });
+
+    if (queuedChallenge) {
+      setActiveChallenge(queuedChallenge);
+      setQueuedChallenge(null);
+    }
   };
 
   const quitGame = () => {
@@ -617,7 +674,7 @@ export function useBattle() {
         t,
         getActingStarter,
         getMoveDiffLevel: _getMoveDiffLevel,
-        genQuestion: genQ,
+        genQuestion: genBattleQuestion,
         startTimer,
         markQStart,
         sfx,
@@ -812,7 +869,8 @@ export function useBattle() {
 
   const actions = {
     dismissAch,
-    setTimedMode, setBattleMode, setScreen, setStarter: setStarterLocalized, setPvpStarter2: setPvpStarter2Localized,
+    setTimedMode, setBattleMode, setScreen, queueDailyChallenge, clearChallengeRun,
+    setStarter: setStarterLocalized, setPvpStarter2: setPvpStarter2Localized,
     startGame, selectMove, onAns, advance, continueAfterEvolve,
     quitGame, togglePause, toggleCoopActive,
     rmD, rmP,

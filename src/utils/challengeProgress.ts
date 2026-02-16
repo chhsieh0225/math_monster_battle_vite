@@ -142,6 +142,40 @@ export function markDailyChallengeCleared(
   });
 }
 
+export function markDailyChallengeFailed(
+  plan: DailyChallengePlan,
+  battlesCleared = 0,
+  now = Date.now(),
+): DailyChallengeProgress {
+  const progress = loadDailyChallengeProgress();
+  const prevRun = progress.runs[plan.dateKey];
+  if (prevRun?.status === 'cleared') {
+    return saveDailyChallengeProgress({
+      ...progress,
+      lastPlayedDate: plan.dateKey,
+    });
+  }
+
+  const run: DailyRunRecord = {
+    dateKey: plan.dateKey,
+    challengeId: plan.challengeId,
+    status: 'failed',
+    attempts: Math.max(1, prevRun?.attempts || 0),
+    startedAt: prevRun?.startedAt || now,
+    clearedAt: null,
+    battlesCleared: Math.max(0, Math.floor(battlesCleared)),
+  };
+
+  return saveDailyChallengeProgress({
+    ...progress,
+    lastPlayedDate: plan.dateKey,
+    runs: {
+      ...progress.runs,
+      [plan.dateKey]: run,
+    },
+  });
+}
+
 export function loadTowerProgress(): TowerProgress {
   const raw = readChallenge<TowerProgress>(TOWER_SCOPE, DEFAULT_TOWER_PROGRESS);
   return normalizeTowerProgress(raw);

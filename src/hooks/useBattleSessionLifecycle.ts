@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { appendEvent, createEventSessionId } from '../utils/eventLogger.ts';
+import { hashSeed } from '../utils/prng.ts';
 import { nowMs } from '../utils/time.ts';
 import {
   buildBattleResultPayload,
@@ -34,9 +35,10 @@ type UseBattleSessionLifecycleArgs = {
 };
 
 type SessionPayload = Record<string, unknown>;
+type BeginRunSeed = string | number | null | undefined;
 
 type UseBattleSessionLifecycleResult = {
-  beginRun: () => void;
+  beginRun: (seed?: BeginRunSeed) => void;
   appendSessionEvent: (name: string, payload: SessionPayload) => void;
   endSessionOnce: (
     state: SessionStateSnapshot,
@@ -64,9 +66,11 @@ export function useBattleSessionLifecycle({
   const sessionClosedRef = useRef(false);
   const sessionStartRef = useRef(0);
 
-  const beginRun = useCallback(() => {
+  const beginRun = useCallback((seed: BeginRunSeed = null) => {
     runSeedRef.current += 1;
-    reseed(runSeedRef.current * 2654435761);
+    const fallbackSeed = runSeedRef.current * 2654435761;
+    const seeded = seed == null ? 0 : hashSeed(seed);
+    reseed((seeded || fallbackSeed) >>> 0);
     sessionClosedRef.current = false;
     sessionStartRef.current = nowMsTyped();
     eventSessionIdRef.current = createEventSessionIdTyped();

@@ -64,6 +64,7 @@ const zhTW = {
   "daily.status.idle": "尚未開始",
   "daily.status.inProgress": "挑戰中",
   "daily.status.cleared": "已完成",
+  "daily.status.failed": "挑戰失敗",
   "daily.battle.label": "第 {index} 戰",
   "daily.enemy.count": "敵人 x{count}",
   "daily.start": "開始每日挑戰",

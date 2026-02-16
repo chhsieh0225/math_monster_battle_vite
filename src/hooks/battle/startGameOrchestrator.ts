@@ -9,8 +9,9 @@ type RunStartGameOrchestratorArgs = {
   starterOverride?: RunStartGameControllerArgs['starterOverride'];
   modeOverride?: RunStartGameControllerArgs['modeOverride'];
   allyOverride?: RunStartGameControllerArgs['allyOverride'];
+  runSeed?: string | number | null;
   invalidateAsyncWork: () => void;
-  beginRun: () => void;
+  beginRun: (seed?: string | number | null) => void;
   clearTimer: () => void;
   resetCoopRotatePending: () => void;
   pvpStartDepsArgs: BuildPvpStartDepsArgs;
@@ -28,6 +29,7 @@ export function runStartGameOrchestrator({
   starterOverride,
   modeOverride = null,
   allyOverride = null,
+  runSeed = null,
   invalidateAsyncWork,
   beginRun,
   clearTimer,
@@ -40,7 +42,7 @@ export function runStartGameOrchestrator({
   runStartGameControllerFn = runStartGameController,
 }: RunStartGameOrchestratorArgs): void {
   invalidateAsyncWork();
-  beginRun();
+  beginRun(runSeed);
   clearTimer();
   resetCoopRotatePending();
 

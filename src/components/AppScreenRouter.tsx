@@ -79,21 +79,25 @@ export default function AppScreenRouter({
     return wrapMain(
       <TitleScreen
         onStartNormal={() => {
+          battle.clearChallengeRun();
           battle.setTimedMode(false);
           battle.setBattleMode('single');
           battle.setScreen('selection');
         }}
         onStartTimed={() => {
+          battle.clearChallengeRun();
           battle.setTimedMode(true);
           battle.setBattleMode('single');
           battle.setScreen('selection');
         }}
         onStartCoop={() => {
+          battle.clearChallengeRun();
           battle.setTimedMode(false);
           battle.setBattleMode('coop');
           battle.setScreen('selection');
         }}
         onStartPvp={() => {
+          battle.clearChallengeRun();
           battle.setTimedMode(true);
           battle.setBattleMode('pvp');
           battle.setScreen('selection');
@@ -114,12 +118,12 @@ export default function AppScreenRouter({
       withScreenSuspense(
         <DailyChallengeScreen
           onBack={() => battle.setScreen('title')}
-          onStartDaily={() => {
-            battle.setTimedMode(true);
-            battle.setBattleMode('single');
+          onStartDaily={(plan) => {
+            battle.queueDailyChallenge(plan);
             battle.setScreen('selection');
           }}
           onStartTower={() => {
+            battle.clearChallengeRun();
             battle.setTimedMode(true);
             battle.setBattleMode('single');
             battle.setScreen('selection');

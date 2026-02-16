@@ -92,3 +92,24 @@ test('runStartGameOrchestrator forwards null defaults for mode/ally overrides', 
   assert.equal(controllerArgsReceived?.modeOverride, null);
   assert.equal(controllerArgsReceived?.allyOverride, null);
 });
+
+test('runStartGameOrchestrator forwards runSeed to beginRun', () => {
+  let receivedSeed = null;
+
+  runStartGameOrchestrator({
+    starterOverride: { id: 'fire' },
+    runSeed: 'daily:2026-02-16',
+    invalidateAsyncWork: () => {},
+    beginRun: (seed) => { receivedSeed = seed; },
+    clearTimer: () => {},
+    resetCoopRotatePending: () => {},
+    pvpStartDepsArgs: { runtime: {}, pvp: {}, ui: {}, resetRunRuntimeState: () => {} },
+    standardStartDepsArgs: { runtime: {}, pvp: {}, resetRunRuntimeState: () => {} },
+    startGameControllerArgs: createControllerArgsStub(),
+    buildPvpStartDepsFn: () => ({}),
+    buildStandardStartDepsFn: () => ({}),
+    runStartGameControllerFn: () => {},
+  });
+
+  assert.equal(receivedSeed, 'daily:2026-02-16');
+});

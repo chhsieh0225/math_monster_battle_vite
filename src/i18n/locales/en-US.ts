@@ -64,6 +64,7 @@ const enUS = {
   "daily.status.idle": "Not Started",
   "daily.status.inProgress": "In Progress",
   "daily.status.cleared": "Cleared",
+  "daily.status.failed": "Failed",
   "daily.battle.label": "Battle {index}",
   "daily.enemy.count": "Enemies x{count}",
   "daily.start": "Start Daily Challenge",

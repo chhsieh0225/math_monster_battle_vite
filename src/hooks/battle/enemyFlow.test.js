@@ -16,6 +16,7 @@ function createBaseArgs(overrides = {}) {
     sealedMove: [],
     eAnim: [],
     pAnim: [],
+    defAnim: [],
     effects: [],
     damage: [],
     particles: [],
@@ -56,7 +57,7 @@ function createBaseArgs(overrides = {}) {
     setPHp: (value) => { calls.pHp.push(value); },
     setPHpSub: (value) => { calls.pHpSub.push(value); },
     setSpecDef: () => {},
-    setDefAnim: () => {},
+    setDefAnim: (value) => { calls.defAnim.push(value); },
     setEHp: () => {},
     setEffMsg: (value) => { calls.effects.push(value); },
     setCursed: () => {},
@@ -163,4 +164,54 @@ test('runEnemyTurn shows boss phase transition text before next action', () => {
   assert.equal(calls.eAnim[0], 'bossShake 0.5s ease');
   assert.deepEqual(safeToCalls, [600, 1500]);
   assert.equal(calls.endSession.length, 0);
+});
+
+test('runEnemyTurn ignores stale delayed menu reset after battle state changed', () => {
+  const queue = [];
+  const { calls, args } = createBaseArgs({
+    sr: {
+      current: {
+        pHp: 100,
+        pHpSub: 0,
+        allySub: null,
+        starter: { name: '火狐', type: 'fire', moves: [{ name: '炎牙' }, { name: '火球' }, { name: '爆裂' }] },
+        enemy: { id: 'slime', name: '史萊姆', atk: 20, maxHp: 100, mType: 'water', trait: '' },
+        enemySub: null,
+        eHp: 100,
+        specDef: true,
+        bossTurn: 0,
+        bossCharging: false,
+        sealedMove: -1,
+        sealedTurns: 0,
+        bossPhase: 0,
+        cursed: false,
+        phase: 'enemyAtk',
+        screen: 'battle',
+      },
+    },
+    safeTo: (fn) => { queue.push(fn); },
+  });
+
+  args.setPhase = (value) => {
+    calls.phase.push(value);
+    args.sr.current.phase = value;
+  };
+
+  runEnemyTurn(args);
+  assert.equal(queue.length > 0, true);
+
+  const first = queue.shift();
+  first();
+  assert.equal(queue.length > 0, true);
+
+  args.sr.current.phase = 'ko';
+  args.sr.current.screen = 'gameover';
+  while (queue.length > 0) {
+    const fn = queue.shift();
+    fn();
+  }
+
+  assert.equal(calls.phase.includes('enemyAtk'), true);
+  assert.equal(calls.phase.includes('menu'), false);
+  assert.equal(calls.defAnim.includes(null), true);
 });

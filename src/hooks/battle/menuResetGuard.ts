@@ -18,6 +18,10 @@ export function shouldSkipMenuReset(state: unknown): boolean {
   return current.phase === 'ko' || current.phase === 'victory';
 }
 
+export function isBattleActiveState(state: unknown): boolean {
+  return !shouldSkipMenuReset(state);
+}
+
 export function tryReturnToMenu(
   getState: () => unknown,
   setPhase: PhaseSetter,

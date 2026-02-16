@@ -2,7 +2,7 @@ import { getEff } from '../../data/typeEffectiveness.ts';
 import { calcEnemyDamage } from '../../utils/damageCalc.ts';
 import { computeBossPhase } from '../../utils/turnFlow.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
-import { tryReturnToMenu } from './menuResetGuard.ts';
+import { isBattleActiveState, tryReturnToMenu } from './menuResetGuard.ts';
 import {
   resolveBossTurnState,
   resolveEnemyAssistStrike,
@@ -199,6 +199,7 @@ export function runEnemyTurn({
   const tryReturnToBattleMenu = (): void => {
     tryReturnToMenu(() => sr.current, setPhase, setBText);
   };
+  const isBattleActive = (): boolean => isBattleActiveState(sr.current);
 
   const resolvePlayerTarget = (s: BattleRuntimeState): TargetSlot => {
     const targets: TargetSlot[] = [];
@@ -229,6 +230,7 @@ export function runEnemyTurn({
     if (!chance(0.35)) return false;
 
     safeTo(() => {
+      if (!isBattleActive()) return;
       const s2 = sr.current;
       if (!s2.enemySub || !s2.starter) {
         tryReturnToBattleMenu();
@@ -241,6 +243,7 @@ export function runEnemyTurn({
         setEAnim,
         strikeDelay: 380,
         onStrike: () => {
+          if (!isBattleActive()) return;
           const s3 = sr.current;
           if (!s3.enemySub || !s3.starter) {
             tryReturnToBattleMenu();
@@ -295,6 +298,7 @@ export function runEnemyTurn({
       safeTo,
       setEAnim,
       onStrike: () => {
+        if (!isBattleActive()) return;
         const s2 = sr.current;
         const target = resolvePlayerTarget(s2);
         const targetName = target === 'sub' ? (s2.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s2.starter?.name || tr(t, 'battle.role.main', 'Main'));
@@ -448,11 +452,13 @@ export function runEnemyTurn({
 
         if (trait === 'swift' && chance(0.25)) {
           safeTo(() => {
+            if (!isBattleActive()) return;
             setBText(tr(t, 'battle.enemy.swiftExtra', '⚡ {enemy} attacks again!', { enemy: s2.enemy?.name || 'Enemy' }));
             effectOrchestratorTyped.runEnemyLunge({
               safeTo,
               setEAnim,
               onStrike: () => {
+                if (!isBattleActive()) return;
                 const s3 = sr.current;
                 const target2 = resolvePlayerTarget(s3);
                 const target2Name = target2 === 'sub' ? (s3.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s3.starter?.name || tr(t, 'battle.role.main', 'Main'));
@@ -497,6 +503,7 @@ export function runEnemyTurn({
   }
 
   function doEnemyTurnInner(): void {
+    if (!isBattleActive()) return;
     const s = sr.current;
     if (!s.enemy || !s.starter) return;
     const bossState = resolveBossTurnState({
@@ -518,6 +525,7 @@ export function runEnemyTurn({
         safeTo,
         setEAnim,
         onStrike: () => {
+          if (!isBattleActive()) return;
           const s2 = sr.current;
           const target = resolvePlayerTarget(s2);
           const targetName = target === 'sub' ? (s2.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s2.starter?.name || tr(t, 'battle.role.main', 'Main'));
@@ -555,6 +563,7 @@ export function runEnemyTurn({
       setPhase('text');
       setEAnim('bossShake 0.5s ease infinite');
       safeTo(() => {
+        if (!isBattleActive()) return;
         tryReturnToBattleMenu();
         setEAnim('');
       }, 2000);
@@ -569,7 +578,10 @@ export function runEnemyTurn({
       const moveName = s.starter.moves?.[sealIdx]?.name || '???';
       setBText(tr(t, 'battle.boss.sealMove', '💀 Dark Dragon King sealed your "{move}"! (2 turns)', { move: moveName }));
       setPhase('text');
-      safeTo(() => doEnemyAttack(bp), 1500);
+      safeTo(() => {
+        if (!isBattleActive()) return;
+        doEnemyAttack(bp);
+      }, 1500);
       return;
     }
 
@@ -578,6 +590,7 @@ export function runEnemyTurn({
 
   const s = sr.current;
   if (!s.enemy || !s.starter) return;
+  if (!isBattleActive()) return;
   const isBoss = s.enemy.id === 'boss';
 
   if (isBoss && s.sealedTurns > 0) {
@@ -598,7 +611,10 @@ export function runEnemyTurn({
         setPhase('text');
         setEAnim('bossShake 0.5s ease');
         safeTo(() => setEAnim(''), 600);
-        safeTo(() => doEnemyTurnInner(), 1500);
+        safeTo(() => {
+          if (!isBattleActive()) return;
+          doEnemyTurnInner();
+        }, 1500);
         return;
       }
     }

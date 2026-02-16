@@ -186,3 +186,51 @@ test('handleCoopPartyKo skips stale delayed menu reset after battle ended', () =
   assert.equal(phaseCalls.includes("menu"), false);
   assert.equal(textCalls.includes(""), false);
 });
+
+test('runCoopAllySupportTurn ignores stale callback after battle ended', () => {
+  const queue = [];
+  const sr = {
+    current: {
+      battleMode: "coop",
+      allySub: { name: "火狐" },
+      pHpSub: 20,
+      enemy: { name: "史萊姆" },
+      pLvl: 1,
+      eHp: 18,
+      phase: "menu",
+      screen: "battle",
+    },
+  };
+  let victoryCalls = 0;
+  let onDoneCalls = 0;
+
+  const out = runCoopAllySupportTurn({
+    sr,
+    safeTo: (fn) => { queue.push(fn); },
+    chance: () => true,
+    rand: () => 0,
+    setBText: () => {},
+    setPhase: () => {},
+    setEAnim: () => {},
+    setEHp: (nextHp) => { sr.current.eHp = nextHp; },
+    addD: () => {},
+    addP: () => {},
+    sfx: { play: () => {} },
+    handleVictory: () => { victoryCalls += 1; },
+    onDone: () => { onDoneCalls += 1; },
+  });
+
+  assert.equal(out, true);
+  assert.equal(queue.length > 0, true);
+
+  sr.current.phase = "ko";
+  sr.current.screen = "gameover";
+  while (queue.length > 0) {
+    const fn = queue.shift();
+    fn();
+  }
+
+  assert.equal(victoryCalls, 0);
+  assert.equal(onDoneCalls, 0);
+  assert.equal(sr.current.eHp, 18);
+});

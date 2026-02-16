@@ -215,3 +215,50 @@ test('runEnemyTurn ignores stale delayed menu reset after battle state changed',
   assert.equal(calls.phase.includes('menu'), false);
   assert.equal(calls.defAnim.includes(null), true);
 });
+
+test('runEnemyTurn ignores stale strike callback after battle ended', () => {
+  const queue = [];
+  const { calls, args } = createBaseArgs({
+    sr: {
+      current: {
+        pHp: 100,
+        pHpSub: 0,
+        allySub: null,
+        starter: { name: '火狐', type: 'fire', moves: [{ name: '炎牙' }, { name: '火球' }, { name: '爆裂' }] },
+        enemy: { id: 'slime', name: '史萊姆', atk: 20, maxHp: 100, mType: 'water', trait: '' },
+        enemySub: null,
+        eHp: 100,
+        specDef: false,
+        bossTurn: 0,
+        bossCharging: false,
+        sealedMove: -1,
+        sealedTurns: 0,
+        bossPhase: 0,
+        cursed: false,
+        phase: 'menu',
+        screen: 'battle',
+      },
+    },
+    safeTo: (fn) => { queue.push(fn); },
+  });
+
+  args.setPhase = (value) => {
+    calls.phase.push(value);
+    args.sr.current.phase = value;
+  };
+  args.setScreen = (value) => {
+    calls.screen.push(value);
+    args.sr.current.screen = value;
+  };
+
+  runEnemyTurn(args);
+  assert.equal(queue.length > 0, true);
+
+  args.sr.current.phase = 'ko';
+  args.sr.current.screen = 'gameover';
+  queue[0]();
+
+  assert.equal(calls.pHp.length, 0);
+  assert.equal(calls.damage.length, 0);
+  assert.equal(calls.phase.includes('menu'), false);
+});

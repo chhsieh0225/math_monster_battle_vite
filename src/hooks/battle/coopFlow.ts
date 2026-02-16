@@ -1,5 +1,5 @@
 import { getStarterStageIdx } from '../../utils/playerHp.ts';
-import { tryReturnToMenu } from './menuResetGuard.ts';
+import { isBattleActiveState, tryReturnToMenu } from './menuResetGuard.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -206,6 +206,7 @@ export function runCoopAllySupportTurn({
   t,
 }: RunCoopAllySupportTurnArgs): boolean {
   const state = sr.current;
+  if (!isBattleActiveState(state)) return false;
   if (
     !isCoopBattleMode(state.battleMode)
     || !state.allySub
@@ -215,6 +216,7 @@ export function runCoopAllySupportTurn({
   if (!chance(0.45)) return false;
 
   safeTo(() => {
+    if (!isBattleActiveState(sr.current)) return;
     const s2 = sr.current;
     if (!s2.allySub || (s2.pHpSub || 0) <= 0 || !s2.enemy) {
       if (onDone) onDone();
@@ -234,10 +236,16 @@ export function runCoopAllySupportTurn({
 
     safeTo(() => setEAnim(''), 450);
     if (nh <= 0) {
-      safeTo(() => handleVictory(tr(t, 'battle.victory.verb.coopCombo', 'was defeated by co-op combo')), 700);
+      safeTo(() => {
+        if (!isBattleActiveState(sr.current)) return;
+        handleVictory(tr(t, 'battle.victory.verb.coopCombo', 'was defeated by co-op combo'));
+      }, 700);
       return;
     }
-    if (onDone) safeTo(onDone, 700);
+    if (onDone) safeTo(() => {
+      if (!isBattleActiveState(sr.current)) return;
+      onDone();
+    }, 700);
   }, delayMs);
 
   return true;

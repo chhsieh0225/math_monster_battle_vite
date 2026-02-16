@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { battleReducer, createInitialBattleState } from './battleReducer.js';
+import { battleReducer, createInitialBattleState } from './battleReducer.ts';
 
 test('battleReducer set_field supports value and updater function', () => {
   let state = createInitialBattleState();

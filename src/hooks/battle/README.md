@@ -4,7 +4,7 @@ This folder holds the battle-domain layering used by `useBattle`.
 
 ## Layer Boundaries
 
-- `battleReducer.js`
+- `battleReducer.ts`
   - Owns persistent battle state transitions.
   - Pure reducer only. No timers, no side effects.
 - `turnResolver.js`
@@ -37,7 +37,7 @@ When adding new combat mechanics:
 1. Add pure calculations to `turnResolver.js`.
 2. Keep animation timing in `effectOrchestrator.js`.
 3. Keep flow-specific branching in `enemyFlow.js` or `playerFlow.js`.
-4. Only use `battleReducer.js` for persistent state transitions.
+4. Only use `battleReducer.ts` for persistent state transitions.
 5. Do not add direct `setTimeout` chains in `useBattle.js`.
 
 ## Testing Guidance

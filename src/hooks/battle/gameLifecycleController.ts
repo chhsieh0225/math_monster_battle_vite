@@ -1,4 +1,5 @@
 import { applyGameCompletionAchievements } from './achievementFlow.ts';
+import { tryReturnToMenu } from './menuResetGuard.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -118,21 +119,13 @@ export function runHandleFreezeController({
   t,
 }: RunHandleFreezeControllerArgs): void {
   const state = sr.current;
-  const shouldSkipMenuReset = (nextState: SessionBattleState): boolean => {
-    const screen = nextState.screen;
-    const phase = nextState.phase;
-    if (typeof screen === 'string' && screen !== 'battle') return true;
-    return phase === 'ko' || phase === 'victory';
-  };
 
   frozenRef.current = false;
   setFrozen(false);
   setBText(tr(t, 'battle.freeze.enemySkip', '❄️ {enemy} is frozen and cannot attack!', { enemy: state.enemy?.name || '' }));
   setPhase('text');
   safeTo(() => {
-    if (shouldSkipMenuReset(sr.current)) return;
-    setPhase('menu');
-    setBText('');
+    tryReturnToMenu(() => sr.current, setPhase, setBText);
   }, 1500);
 }
 

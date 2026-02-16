@@ -2,6 +2,7 @@ import { getEff } from '../../data/typeEffectiveness.ts';
 import { calcEnemyDamage } from '../../utils/damageCalc.ts';
 import { computeBossPhase } from '../../utils/turnFlow.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
+import { tryReturnToMenu } from './menuResetGuard.ts';
 import {
   resolveBossTurnState,
   resolveEnemyAssistStrike,
@@ -195,16 +196,8 @@ export function runEnemyTurn({
     setScreen('gameover');
   };
 
-  const shouldSkipMenuReset = (state: BattleRuntimeState): boolean => {
-    if (state.screen && state.screen !== 'battle') return true;
-    return state.phase === 'ko' || state.phase === 'victory';
-  };
-
-  const tryReturnToMenu = (): void => {
-    const state = sr.current;
-    if (shouldSkipMenuReset(state)) return;
-    setPhase('menu');
-    setBText('');
+  const tryReturnToBattleMenu = (): void => {
+    tryReturnToMenu(() => sr.current, setPhase, setBText);
   };
 
   const resolvePlayerTarget = (s: BattleRuntimeState): TargetSlot => {
@@ -238,7 +231,7 @@ export function runEnemyTurn({
     safeTo(() => {
       const s2 = sr.current;
       if (!s2.enemySub || !s2.starter) {
-        tryReturnToMenu();
+        tryReturnToBattleMenu();
         return;
       }
       setBText(tr(t, 'battle.enemy.assistAttack', '⚔️ {enemy} launched an assist attack!', { enemy: s2.enemySub.name || 'Enemy' }));
@@ -250,7 +243,7 @@ export function runEnemyTurn({
         onStrike: () => {
           const s3 = sr.current;
           if (!s3.enemySub || !s3.starter) {
-            tryReturnToMenu();
+            tryReturnToBattleMenu();
             return;
           }
           const target = resolvePlayerTarget(s3);
@@ -284,7 +277,7 @@ export function runEnemyTurn({
             return;
           }
           safeTo(() => {
-            tryReturnToMenu();
+            tryReturnToBattleMenu();
           }, 650);
         },
       });
@@ -316,7 +309,7 @@ export function runEnemyTurn({
             addP('starter', 50, 170, 6);
             safeTo(() => {
               setDefAnim(null);
-              tryReturnToMenu();
+              tryReturnToBattleMenu();
             }, 1800);
           } else if (st === 'water') {
             setPAnim('dodgeSlide 0.9s ease');
@@ -325,7 +318,7 @@ export function runEnemyTurn({
             safeTo(() => {
               setPAnim('');
               setDefAnim(null);
-              tryReturnToMenu();
+              tryReturnToBattleMenu();
             }, 1800);
           } else if (st === 'electric') {
             setBText(tr(t, 'battle.specdef.electric.stun', '⚡ Electric stun! Enemy cannot move!'));
@@ -338,7 +331,7 @@ export function runEnemyTurn({
               setBText(tr(t, 'battle.enemy.paralyzedSkip', '⚡ {enemy} is paralyzed and cannot attack!', { enemy: sr.current.enemy?.name || 'Enemy' }));
               setPhase('text');
               safeTo(() => {
-                tryReturnToMenu();
+                tryReturnToBattleMenu();
               }, 1500);
             }, 1800);
           } else if (st === 'light') {
@@ -359,7 +352,7 @@ export function runEnemyTurn({
               setDefAnim(null);
               if (nh <= 0) safeTo(() => handleVictory(tr(t, 'battle.victory.verb.lionRoar', "was defeated by lion's roar")), 500);
               else {
-                tryReturnToMenu();
+                tryReturnToBattleMenu();
               }
             }, 1800);
           } else {
@@ -379,7 +372,7 @@ export function runEnemyTurn({
               setDefAnim(null);
               if (nh <= 0) safeTo(() => handleVictory(tr(t, 'battle.victory.verb.reflected', 'was defeated by reflected damage')), 500);
               else {
-                tryReturnToMenu();
+                tryReturnToBattleMenu();
               }
             }, 1800);
           }
@@ -486,7 +479,7 @@ export function runEnemyTurn({
                 } else {
                   if (maybeEnemyAssistAttack(500)) return;
                   safeTo(() => {
-                    tryReturnToMenu();
+                    tryReturnToBattleMenu();
                   }, 800);
                 }
               },
@@ -497,7 +490,7 @@ export function runEnemyTurn({
 
         if (maybeEnemyAssistAttack(900)) return;
         safeTo(() => {
-          tryReturnToMenu();
+          tryReturnToBattleMenu();
         }, 800);
       },
     });
@@ -547,7 +540,7 @@ export function runEnemyTurn({
             }, 800);
           } else {
             safeTo(() => {
-              tryReturnToMenu();
+              tryReturnToBattleMenu();
             }, 800);
           }
         },
@@ -562,7 +555,7 @@ export function runEnemyTurn({
       setPhase('text');
       setEAnim('bossShake 0.5s ease infinite');
       safeTo(() => {
-        tryReturnToMenu();
+        tryReturnToBattleMenu();
         setEAnim('');
       }, 2000);
       return;

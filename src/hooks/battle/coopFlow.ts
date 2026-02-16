@@ -1,4 +1,5 @@
 import { getStarterStageIdx } from '../../utils/playerHp.ts';
+import { tryReturnToMenu } from './menuResetGuard.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -139,15 +140,8 @@ export function handleCoopPartyKo({
   setScreen,
   t,
 }: HandleCoopPartyKoArgs): 'gameover' | 'sub_down' | 'promoted' {
-  const getLatestState = (): BattleState => (stateRef?.current || state);
-  const shouldSkipMenuReset = (nextState: BattleState): boolean => {
-    if (nextState.screen && nextState.screen !== 'battle') return true;
-    return nextState.phase === 'ko' || nextState.phase === 'victory';
-  };
-  const tryReturnToMenu = (): void => {
-    if (shouldSkipMenuReset(getLatestState())) return;
-    setPhase('menu');
-    setBText('');
+  const tryReturnToBattleMenu = (): void => {
+    tryReturnToMenu(() => stateRef?.current || state, setPhase, setBText);
   };
 
   if (target === 'sub') {
@@ -166,7 +160,7 @@ export function handleCoopPartyKo({
     }));
     setPhase('text');
     safeTo(() => {
-      tryReturnToMenu();
+      tryReturnToBattleMenu();
     }, 1100);
     return 'sub_down';
   }
@@ -182,7 +176,7 @@ export function handleCoopPartyKo({
     setBText(tr(t, 'battle.coop.promoted', '💫 {name} takes the field!', { name: promoted.name }));
     setPhase('text');
     safeTo(() => {
-      tryReturnToMenu();
+      tryReturnToBattleMenu();
     }, 1200);
     return 'promoted';
   }

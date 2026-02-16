@@ -76,6 +76,11 @@ import { runEnemyTurnController } from './battle/enemyTurnController.ts';
 import { runTimeoutController } from './battle/timeoutController.ts';
 import { runStartGameController } from './battle/startGameController.ts';
 import { runStartBattleFlow } from './battle/startBattleFlow';
+import {
+  buildPvpStartDeps,
+  buildStandardStartDeps,
+  buildStartBattleSharedArgs,
+} from './battle/startDepsBuilder.ts';
 import { runSelectMoveFlow } from './battle/selectMoveFlow';
 import { runVictoryFlow } from './battle/victoryFlow';
 import { runAdvanceController } from './battle/advanceController.ts';
@@ -152,7 +157,7 @@ export function useBattle() {
   const pvpState = usePvpState();
   const {
     pvpStarter2, setPvpStarter2,
-    pvpHp2, setPvpHp2,
+    pvpHp2,
     pvpTurn, setPvpTurn,
     pvpWinner,
     pvpChargeP1, setPvpChargeP1,
@@ -170,7 +175,6 @@ export function useBattle() {
     pvpComboP2, setPvpComboP2,
     pvpSpecDefP1,
     pvpSpecDefP2,
-    resetPvpRuntime,
   } = pvpState;
 
   // ──── Player ────
@@ -377,6 +381,10 @@ export function useBattle() {
   //  BATTLE FLOW
   // ═══════════════════════════════════════════════════════════════
 
+  const playBattleIntro = () => {
+    effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim });
+  };
+
   // --- Start a battle against enemies[idx], optionally from a fresh roster ---
   const startBattle = (idx, roster) => {
     invalidateAsyncWork();
@@ -384,23 +392,25 @@ export function useBattle() {
     runStartBattleFlow({
       idx,
       roster,
-      enemies,
-      locale,
-      battleMode: sr.current.battleMode || battleMode,
-      allySub: sr.current.allySub,
-      starter,
-      t,
-      sceneNames: SCENE_NAMES,
-      localizeEnemy,
-      localizeSceneName,
-      dispatchBattle,
-      updateEnc,
-      setPhase,
-      setBText,
-      setScreen,
-      finishGame: _finishGame,
-      resetFrozen: () => { frozenR.current = false; },
-      playBattleIntro: () => effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim }),
+      ...buildStartBattleSharedArgs({
+        sr,
+        enemies,
+        locale,
+        fallbackBattleMode: battleMode,
+        starter,
+        t,
+        sceneNames: SCENE_NAMES,
+        localizeEnemy,
+        localizeSceneName,
+        dispatchBattle,
+        updateEnc,
+        setPhase,
+        setBText,
+        setScreen,
+        finishGame: _finishGame,
+        resetFrozen: () => { frozenR.current = false; },
+        playBattleIntro,
+      }),
     });
   };
 
@@ -420,6 +430,41 @@ export function useBattle() {
     beginRun();
     clearTimer();
     resetCoopRotatePending();
+    const pvpStartDeps = buildPvpStartDeps({
+      runtime: {
+        chance,
+        getStarterMaxHp,
+        t,
+        setEnemies,
+        setTimedMode,
+        setCoopActiveSlot,
+        dispatchBattle,
+        appendSessionEvent,
+        initSession,
+        createPvpEnemyFromStarter,
+        setScreen,
+        playBattleIntro,
+      },
+      pvp: pvpState,
+      ui: UI,
+      resetRunRuntimeState,
+    });
+    const standardStartDeps = buildStandardStartDeps({
+      runtime: {
+        buildNewRoster,
+        getStarterMaxHp,
+        setEnemies,
+        setCoopActiveSlot,
+        dispatchBattle,
+        appendSessionEvent,
+        initSession,
+        setScreen,
+        startBattle,
+      },
+      pvp: pvpState,
+      resetRunRuntimeState,
+    });
+
     runStartGameController({
       starterOverride,
       modeOverride,
@@ -432,40 +477,8 @@ export function useBattle() {
       pickPartnerStarter: (mainStarter) => pickPartnerStarter(mainStarter, pickIndex, locale),
       getStarterStageIdx,
       getStageMaxHp,
-      pvpStartDeps: {
-        chance,
-        getStarterMaxHp,
-        t,
-        setEnemies,
-        setTimedMode,
-        setCoopActiveSlot,
-        dispatchBattle,
-        setPvpStarter2,
-        setPvpHp2,
-        setPvpTurn,
-        resetPvpRuntime,
-        resetRunRuntimeState,
-        appendSessionEvent,
-        initSession,
-        createPvpEnemyFromStarter,
-        setPhase,
-        setBText,
-        setScreen,
-        playBattleIntro: () => effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim }),
-      },
-      standardStartDeps: {
-        buildNewRoster,
-        getStarterMaxHp,
-        setEnemies,
-        setCoopActiveSlot,
-        resetPvpRuntime,
-        dispatchBattle,
-        resetRunRuntimeState,
-        appendSessionEvent,
-        initSession,
-        setScreen,
-        startBattle,
-      },
+      pvpStartDeps,
+      standardStartDeps,
     });
   };
 

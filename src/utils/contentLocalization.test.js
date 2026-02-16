@@ -10,6 +10,7 @@ import {
 } from './contentLocalization.js';
 
 const EN = "en-US";
+const ZH = "zh-TW";
 const CJK_RE = /[\u3400-\u9fff]/;
 
 function hasCjk(text) {
@@ -133,5 +134,28 @@ test('localizeStarterDisplayName maps stored Chinese names to English in en-US',
   assert.equal(
     localizeStarterDisplayName("Voltkit", "electric", EN),
     "Voltkit",
+  );
+  assert.equal(
+    localizeStarterDisplayName("x", "lion", EN, 2),
+    "Solar King",
+  );
+});
+
+test('localizeStarterDisplayName maps stored English names back to Chinese in zh-TW', () => {
+  assert.equal(
+    localizeStarterDisplayName("Blazebeast", "fire", ZH),
+    "烈焰獸",
+  );
+  assert.equal(
+    localizeStarterDisplayName("", "water", ZH),
+    "小水獸",
+  );
+  assert.equal(
+    localizeStarterDisplayName("小雷獸", "electric", ZH),
+    "小雷獸",
+  );
+  assert.equal(
+    localizeStarterDisplayName("x", "fire", ZH, 1),
+    "烈焰獸",
   );
 });

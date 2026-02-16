@@ -35,6 +35,7 @@ type DashboardSession = {
   startTime: number;
   starterId?: string | null;
   starterName?: string | null;
+  starterStageIdx?: number | null;
   timedMode?: boolean;
   completed?: boolean;
   defeated?: number;
@@ -421,7 +422,12 @@ function HistoryTab({ sessions }: HistoryTabProps) {
         const wrong = Number(s.tW) || 0;
         const acc = correct + wrong > 0 ? Math.round(correct / (correct + wrong) * 100) : 0;
         const dt = new Date(Number(s.startTime) || 0);
-        const starterName = String(localizeStarterDisplayName(s.starterName, s.starterId, locale) || '—');
+        const starterName = String(localizeStarterDisplayName(
+          s.starterName,
+          s.starterId,
+          locale,
+          s.starterStageIdx,
+        ) || '—');
         return (
           <div key={s.id || i} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 12px', marginBottom: 6, border: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>

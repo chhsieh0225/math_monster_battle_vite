@@ -1,4 +1,5 @@
 const EN_LOCALE = "en-US";
+const ZH_LOCALE = "zh-TW";
 
 const TYPE_NAME_EN_BY_ID = {
   fire: "Fire",
@@ -199,6 +200,33 @@ const STARTER_NAME_EN_BY_ZH = {
   獅焰王: "Solar King",
 };
 
+const STARTER_NAME_ZH_BY_EN = Object.fromEntries(
+  Object.entries(STARTER_NAME_EN_BY_ZH).map(([zhName, enName]) => [enName, zhName]),
+);
+
+const STARTER_TEXT_ZH = {
+  fire: {
+    name: "小火獸",
+    stages: ["小火獸", "烈焰獸", "炎龍王"],
+  },
+  water: {
+    name: "小水獸",
+    stages: ["小水獸", "波濤獸", "海龍王"],
+  },
+  grass: {
+    name: "小草獸",
+    stages: ["小草獸", "花葉獸", "森林王"],
+  },
+  electric: {
+    name: "小雷獸",
+    stages: ["小雷獸", "雷電獸", "雷龍王"],
+  },
+  lion: {
+    name: "小獅獸",
+    stages: ["小獅獸", "獅鬃獸", "獅焰王"],
+  },
+};
+
 const TRAIT_TEXT_EN_BY_ID = {
   normal: {
     name: "Normal",
@@ -261,6 +289,10 @@ function isObject(value) {
 
 export function isEnglishLocale(locale) {
   return locale === EN_LOCALE;
+}
+
+export function isZhLocale(locale) {
+  return locale === ZH_LOCALE;
 }
 
 export function localizeTypeName(typeNameOrId, locale) {
@@ -333,20 +365,59 @@ export function localizeStarterList(starters, locale) {
   return starters.map((starter) => localizeStarter(starter, locale));
 }
 
-export function localizeStarterDisplayName(name, starterId, locale) {
+/**
+ * @param {string | null | undefined} name
+ * @param {string | null | undefined} starterId
+ * @param {string | null | undefined} locale
+ * @param {number | null | undefined} stageIdx
+ * @returns {string}
+ */
+export function localizeStarterDisplayName(name, starterId, locale, stageIdx = null) {
   const resolvedName = typeof name === "string" ? name.trim() : "";
-  if (!isEnglishLocale(locale)) return resolvedName || name;
+  const resolvedStageIdx = Number.isFinite(stageIdx) ? stageIdx : null;
+  if (!isEnglishLocale(locale) && !isZhLocale(locale)) return resolvedName || name;
 
-  if (resolvedName && STARTER_NAME_EN_BY_ZH[resolvedName]) {
-    return STARTER_NAME_EN_BY_ZH[resolvedName];
+  if (isEnglishLocale(locale)) {
+    if (starterId && resolvedStageIdx !== null) {
+      const stageName = STARTER_TEXT_EN[starterId]?.stages?.[resolvedStageIdx];
+      if (stageName) return stageName;
+    }
+
+    if (resolvedName && STARTER_NAME_EN_BY_ZH[resolvedName]) {
+      return STARTER_NAME_EN_BY_ZH[resolvedName];
+    }
+
+    if (!resolvedName && starterId && STARTER_TEXT_EN[starterId]?.name) {
+      return STARTER_TEXT_EN[starterId].name;
+    }
+
+    return resolvedName || name;
   }
 
-  if (!resolvedName && starterId && STARTER_TEXT_EN[starterId]?.name) {
-    return STARTER_TEXT_EN[starterId].name;
+  if (starterId && resolvedStageIdx !== null) {
+    const stageName = STARTER_TEXT_ZH[starterId]?.stages?.[resolvedStageIdx];
+    if (stageName) return stageName;
+  }
+
+  if (resolvedName && STARTER_NAME_ZH_BY_EN[resolvedName]) {
+    return STARTER_NAME_ZH_BY_EN[resolvedName];
+  }
+
+  if (!resolvedName && starterId) {
+    const starterZh = STARTERS_FALLBACK_ZH[starterId];
+    if (starterZh) return starterZh;
   }
 
   return resolvedName || name;
 }
+
+const STARTERS_FALLBACK_ZH = {
+  fire: "小火獸",
+  water: "小水獸",
+  grass: "小草獸",
+  electric: "小雷獸",
+  lion: "小獅獸",
+};
 
 export function localizeEnemy(enemy, locale) {
   if (!isObject(enemy) || !isEnglishLocale(locale)) return enemy;

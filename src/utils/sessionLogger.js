@@ -52,6 +52,9 @@ export function savePin(pin) {
 export function initSessionLog(starter, timedMode) {
   const opStats = {};
   for (const op of OPS) opStats[op] = s();
+  const starterStageIdx = Number.isFinite(starter?.selectedStageIdx)
+    ? starter.selectedStageIdx
+    : null;
 
   return {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -59,6 +62,7 @@ export function initSessionLog(starter, timedMode) {
     endTime: null,
     starterId: starter?.id || null,
     starterName: starter?.name || null,
+    starterStageIdx,
     timedMode: !!timedMode,
     completed: false,      // beat all 10 enemies
     defeated: 0,

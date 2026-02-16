@@ -19,7 +19,7 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `playerFlow.ts`
   - Player answer / attack flow orchestration.
   - Uses resolver + orchestrator + injected state/effects.
-- `pvpFlow.js`
+- `pvpFlow.ts`
   - PvP-only turn flow and status-resolution orchestration.
   - Keeps `useBattle` free of PvP branch details.
 - `coopFlow.js`

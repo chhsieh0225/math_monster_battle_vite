@@ -6,11 +6,12 @@ import {
 
 type TryProcessPvpTextAdvanceArgs = Parameters<typeof tryProcessPvpTextAdvance>[0];
 type HandlePendingEvolutionArgs = Parameters<typeof handlePendingEvolution>[0];
+type PvpTurnStartHandlers = TryProcessPvpTextAdvanceArgs['handlers'];
 
 type RunAdvanceControllerArgs = {
   phase: string;
   sr: { current: TryProcessPvpTextAdvanceArgs['state'] };
-  pvpTurnStartHandlerDeps: Record<string, unknown>;
+  pvpTurnStartHandlerDeps: PvpTurnStartHandlers;
   setPhase: (value: string) => void;
   setBText: (value: string) => void;
   pendingEvolutionArgs: Omit<HandlePendingEvolutionArgs, 'state'>;
@@ -33,7 +34,7 @@ export function runAdvanceController({
   continueFromVictory,
 }: RunAdvanceControllerArgs): void {
   if (phase === 'text') {
-    const handlers = createPvpTurnStartHandlers(pvpTurnStartHandlerDeps) as TryProcessPvpTextAdvanceArgs['handlers'];
+    const handlers = createPvpTurnStartHandlers(pvpTurnStartHandlerDeps);
     if (tryProcessPvpTextAdvance({
       state: sr.current,
       handlers,

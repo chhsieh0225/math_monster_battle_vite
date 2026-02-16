@@ -14,14 +14,17 @@ type StateRef = {
   current: RunStandardAnswerFlowArgs['state'];
 };
 
+type PvpAnswerHandlers = TryHandlePvpAnswerArgs['handlers'];
+type PlayerAnswerHandlers = RunStandardAnswerFlowArgs['handlers'];
+
 type RunAnswerControllerArgs = {
   choice: number;
   answered: boolean;
   setAnswered: (value: boolean) => void;
   clearTimer: () => void;
   sr: StateRef;
-  pvpHandlerDeps: Record<string, unknown>;
-  playerHandlerDeps: Record<string, unknown>;
+  pvpHandlerDeps: PvpAnswerHandlers;
+  playerHandlerDeps: PlayerAnswerHandlers;
   getActingStarter: RunStandardAnswerFlowArgs['getActingStarter'];
   logAns: RunStandardAnswerFlowArgs['logAns'];
   appendSessionEvent: RunStandardAnswerFlowArgs['appendSessionEvent'];
@@ -56,7 +59,7 @@ export function runAnswerController({
 
   const state = sr.current;
 
-  const pvpHandlers = createPvpAnswerHandlers(pvpHandlerDeps) as TryHandlePvpAnswerArgs['handlers'];
+  const pvpHandlers = createPvpAnswerHandlers(pvpHandlerDeps);
   if (tryHandlePvpAnswer({
     choice,
     state: state as TryHandlePvpAnswerArgs['state'],
@@ -65,7 +68,7 @@ export function runAnswerController({
     return;
   }
 
-  const playerHandlers = createPlayerAnswerHandlers(playerHandlerDeps) as RunStandardAnswerFlowArgs['handlers'];
+  const playerHandlers = createPlayerAnswerHandlers(playerHandlerDeps);
   runStandardAnswerFlow({
     choice,
     state,

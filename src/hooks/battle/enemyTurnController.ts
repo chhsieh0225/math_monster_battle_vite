@@ -8,7 +8,7 @@ type RunEnemyTurnArgs = Parameters<typeof runEnemyTurn>[0];
  *
  * Builds the enemy-turn handler bag and executes the shared enemy turn flow.
  */
-export function runEnemyTurnController(deps: Record<string, unknown>): void {
-  const handlers = createEnemyTurnHandlers(deps) as RunEnemyTurnArgs;
+export function runEnemyTurnController(deps: RunEnemyTurnArgs): void {
+  const handlers = createEnemyTurnHandlers(deps);
   runEnemyTurn(handlers);
 }

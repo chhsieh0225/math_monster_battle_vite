@@ -1,7 +1,13 @@
-type HandlerDeps = Record<string, unknown>;
-type HandlerMap = Record<string, unknown>;
+import type { runStandardAnswerFlow, tryHandlePvpAnswer } from './answerFlow.ts';
+import type { tryProcessPvpTextAdvance } from './advanceFlow.ts';
+import type { runEnemyTurn } from './enemyFlow.ts';
 
-export function createEnemyTurnHandlers(deps: HandlerDeps): HandlerMap {
+type EnemyTurnHandlers = Parameters<typeof runEnemyTurn>[0];
+type PvpAnswerHandlers = Parameters<typeof tryHandlePvpAnswer>[0]['handlers'];
+type PlayerAnswerHandlers = Parameters<typeof runStandardAnswerFlow>[0]['handlers'];
+type PvpTurnStartHandlers = Parameters<typeof tryProcessPvpTextAdvance>[0]['handlers'];
+
+export function createEnemyTurnHandlers(deps: EnemyTurnHandlers): EnemyTurnHandlers {
   return {
     sr: deps.sr,
     safeTo: deps.safeTo,
@@ -35,7 +41,7 @@ export function createEnemyTurnHandlers(deps: HandlerDeps): HandlerMap {
   };
 }
 
-export function createPvpAnswerHandlers(deps: HandlerDeps): HandlerMap {
+export function createPvpAnswerHandlers(deps: PvpAnswerHandlers): PvpAnswerHandlers {
   return {
     sr: deps.sr,
     rand: deps.rand,
@@ -79,7 +85,7 @@ export function createPvpAnswerHandlers(deps: HandlerDeps): HandlerMap {
   };
 }
 
-export function createPlayerAnswerHandlers(deps: HandlerDeps): HandlerMap {
+export function createPlayerAnswerHandlers(deps: PlayerAnswerHandlers): PlayerAnswerHandlers {
   return {
     sr: deps.sr,
     safeTo: deps.safeTo,
@@ -124,7 +130,7 @@ export function createPlayerAnswerHandlers(deps: HandlerDeps): HandlerMap {
   };
 }
 
-export function createPvpTurnStartHandlers(deps: HandlerDeps): HandlerMap {
+export function createPvpTurnStartHandlers(deps: PvpTurnStartHandlers): PvpTurnStartHandlers {
   return {
     safeTo: deps.safeTo,
     getOtherPvpTurn: deps.getOtherPvpTurn,

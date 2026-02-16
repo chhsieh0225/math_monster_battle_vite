@@ -6,13 +6,23 @@
  */
 import { useState, useRef, useCallback } from 'react';
 import { loadAch, saveAch } from '../utils/achievementStore';
+import type { AchievementId } from '../types/game';
 
-export function useAchievements() {
-  const [achUnlocked, setAchUnlocked] = useState(() => loadAch());
-  const [achPopup, setAchPopup] = useState(null);
-  const achRef = useRef(new Set(loadAch()));
+type UseAchievementsResult = {
+  achUnlocked: AchievementId[];
+  achPopup: AchievementId | null;
+  tryUnlock: (id: AchievementId) => void;
+  dismissAch: () => void;
+};
 
-  const tryUnlock = useCallback((id) => {
+export function useAchievements(): UseAchievementsResult {
+  const [achUnlocked, setAchUnlocked] = useState<AchievementId[]>(
+    () => loadAch() as AchievementId[],
+  );
+  const [achPopup, setAchPopup] = useState<AchievementId | null>(null);
+  const achRef = useRef<Set<AchievementId>>(new Set(loadAch() as AchievementId[]));
+
+  const tryUnlock = useCallback((id: AchievementId) => {
     if (achRef.current.has(id)) return;
     achRef.current.add(id);
     const arr = [...achRef.current];

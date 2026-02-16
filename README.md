@@ -6,6 +6,7 @@
 - `npm run build` : production build
 - `npm run lint` : ESLint
 - `npm test` : node test suite
+- `npm run typecheck` : TypeScript type check (`tsc --noEmit`)
 
 ## TypeScript Migration (Incremental)
 
@@ -26,6 +27,20 @@ Current migrated files:
 - `src/hooks/useMobileExperience.ts`
 - `src/hooks/useBattleRng.ts`
 - `src/hooks/useTimer.ts`
+- `src/hooks/useAchievements.ts`
+- `src/hooks/useEncyclopedia.ts`
+- `src/hooks/useSessionLog.ts`
+- `src/hooks/useBattleRuntime.ts`
+- `src/hooks/useCoopTurnRotation.ts`
+- `src/hooks/useBattleUIState.ts`
+- `src/hooks/battle/battleReducer.ts`
+- `src/hooks/battle/turnResolver.ts`
+- `src/hooks/battle/effectOrchestrator.ts`
+- `src/hooks/battle/playerFlow.ts`
+- `src/hooks/battle/enemyFlow.ts`
+- `src/hooks/battle/pvpFlow.ts`
+- `src/hooks/battle/coopFlow.ts`
+- `src/hooks/battle/achievementFlow.ts`
 - `src/components/ui/HPBar.tsx`
 - `src/components/ui/XPBar.tsx`
 - `src/components/ui/DamagePopup.tsx`
@@ -46,7 +61,6 @@ Current migrated files:
 
 ## Next Recommended TS Steps
 
-1. Migrate battle domain files in this order:
-   - `turnResolver` → `battleReducer` → `playerFlow/enemyFlow` → `useBattle`.
+1. Migrate `src/hooks/useBattle.js` to `src/hooks/useBattle.ts` (remove wrapper indirection).
 2. Introduce type-aware ESLint rules for TS files only (`@typescript-eslint` typed config).
-3. Keep `lint + typecheck` green after each migration batch.
+3. Keep `lint + typecheck + test + build` green after each migration batch.

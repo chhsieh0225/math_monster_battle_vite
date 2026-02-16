@@ -6,6 +6,15 @@
 
 ---
 
+## 2026-02-16 TypeScript 遷移進度（增量）
+
+- 已完成 battle 子模組 TS 化：`battleReducer.ts`、`turnResolver.ts`、`effectOrchestrator.ts`、`playerFlow.ts`、`enemyFlow.ts`、`pvpFlow.ts`、`coopFlow.ts`、`achievementFlow.ts`。
+- 已完成 battle 周邊 hooks TS 化：`useAchievements.ts`、`useEncyclopedia.ts`、`useSessionLog.ts`、`useBattleRuntime.ts`、`useCoopTurnRotation.ts`、`useBattleUIState.ts`。
+- 目前 hooks 層僅剩 `useBattle.js` 為 JS 主協調器（已有 `useBattle.ts` typed wrapper）。
+- 每次遷移批次皆驗證 `npm run typecheck`、`npm run lint`、`npm test`、`npm run build` 全綠。
+
+---
+
 ## 目錄
 1. [專案結構](#專案結構)
 2. [遊戲流程](#遊戲流程)

@@ -5,7 +5,7 @@ import {
   handleCoopPartyKo,
   isCoopBattleMode,
   runCoopAllySupportTurn,
-} from './coopFlow.js';
+} from './coopFlow.ts';
 
 test('isCoopBattleMode identifies coop and double modes', () => {
   assert.equal(isCoopBattleMode("coop"), true);

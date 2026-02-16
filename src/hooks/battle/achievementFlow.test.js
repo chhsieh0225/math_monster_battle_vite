@@ -4,7 +4,7 @@ import { getStageMaxHp } from '../../utils/playerHp.js';
 import {
   applyGameCompletionAchievements,
   applyVictoryAchievements,
-} from './achievementFlow.js';
+} from './achievementFlow.ts';
 
 test('applyVictoryAchievements unlocks boss and low-hp rewards', () => {
   const unlocked = [];

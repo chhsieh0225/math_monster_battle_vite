@@ -4,8 +4,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
  * Keeps a ref synchronized with the latest committed snapshot so async
  * callbacks always read fresh battle state.
  */
-export function useBattleStateRef(snapshot) {
-  const stateRef = useRef(snapshot);
+export function useBattleStateRef<T>(snapshot: T) {
+  const stateRef = useRef<T>(snapshot);
   useLayoutEffect(() => {
     stateRef.current = snapshot;
   });
@@ -17,9 +17,12 @@ export function useBattleStateRef(snapshot) {
  * - `safeTo` schedules guarded callbacks.
  * - `invalidateAsyncWork` cancels and invalidates all pending callbacks.
  */
-export function useBattleAsyncGate() {
+export function useBattleAsyncGate(): {
+  safeTo: (fn: () => void, ms: number) => void;
+  invalidateAsyncWork: () => void;
+} {
   const asyncGateRef = useRef(0);
-  const activeTimers = useRef(new Set());
+  const activeTimers = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   const invalidateAsyncWork = useCallback(() => {
     asyncGateRef.current += 1;
@@ -27,7 +30,7 @@ export function useBattleAsyncGate() {
     activeTimers.current.clear();
   }, []);
 
-  const safeTo = useCallback((fn, ms) => {
+  const safeTo = useCallback((fn: () => void, ms: number) => {
     const gate = asyncGateRef.current;
     const timerId = setTimeout(() => {
       activeTimers.current.delete(timerId);

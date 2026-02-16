@@ -10,7 +10,7 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `turnResolver.ts`
   - Pure combat math / turn decision helpers.
   - No React state and no async scheduling.
-- `effectOrchestrator.js`
+- `effectOrchestrator.ts`
   - Schedules animation/timing chains through injected `safeTo`.
   - No domain decisions.
 - `enemyFlow.ts`
@@ -22,9 +22,9 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `pvpFlow.ts`
   - PvP-only turn flow and status-resolution orchestration.
   - Keeps `useBattle` free of PvP branch details.
-- `coopFlow.js`
+- `coopFlow.ts`
   - Co-op only helper flows (party KO handling, support turns, evolution sync helpers).
-- `achievementFlow.js`
+- `achievementFlow.ts`
   - Achievement unlock checks for victory and full-run completion.
   - Injected via callbacks so it remains UI/framework-agnostic.
 
@@ -35,7 +35,7 @@ This folder holds the battle-domain layering used by `useBattle`.
 When adding new combat mechanics:
 
 1. Add pure calculations to `turnResolver.ts`.
-2. Keep animation timing in `effectOrchestrator.js`.
+2. Keep animation timing in `effectOrchestrator.ts`.
 3. Keep flow-specific branching in `enemyFlow.ts` or `playerFlow.ts`.
 4. Only use `battleReducer.ts` for persistent state transitions.
 5. Do not add direct `setTimeout` chains in `useBattle.js`.

@@ -1,5 +1,5 @@
 import { isCoopBattleMode } from './coopFlow.ts';
-import { isBattleActiveState } from './menuResetGuard.ts';
+import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -167,8 +167,5 @@ export function handleTimeoutFlow({
 
   setBText(tr(t, 'battle.timeoutMiss', "⏰ Time's up! Too late to attack!"));
   setPhase('text');
-  safeTo(() => {
-    if (!isBattleActiveState(sr.current)) return;
-    doEnemyTurn();
-  }, 1500);
+  scheduleIfBattleActive(safeTo, () => sr.current, doEnemyTurn, 1500);
 }

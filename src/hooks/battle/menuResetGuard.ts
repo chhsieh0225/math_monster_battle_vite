@@ -1,5 +1,6 @@
 type PhaseSetter = (value: string) => void;
 type TextSetter = (value: string) => void;
+type SafeTo = (fn: () => void, ms: number) => void;
 
 type ResetStateLike = {
   phase?: unknown;
@@ -20,6 +21,18 @@ export function shouldSkipMenuReset(state: unknown): boolean {
 
 export function isBattleActiveState(state: unknown): boolean {
   return !shouldSkipMenuReset(state);
+}
+
+export function scheduleIfBattleActive(
+  safeTo: SafeTo,
+  getState: () => unknown,
+  fn: () => void,
+  ms: number,
+): void {
+  safeTo(() => {
+    if (!isBattleActiveState(getState())) return;
+    fn();
+  }, ms);
 }
 
 export function tryReturnToMenu(

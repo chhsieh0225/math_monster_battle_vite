@@ -1,5 +1,5 @@
 import { getStarterStageIdx } from '../../utils/playerHp.ts';
-import { isBattleActiveState, tryReturnToMenu } from './menuResetGuard.ts';
+import { isBattleActiveState, scheduleIfBattleActive, tryReturnToMenu } from './menuResetGuard.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -143,6 +143,9 @@ export function handleCoopPartyKo({
   const tryReturnToBattleMenu = (): void => {
     tryReturnToMenu(() => stateRef?.current || state, setPhase, setBText);
   };
+  const safeToIfBattleActive = (fn: () => void, ms: number): void => (
+    scheduleIfBattleActive(safeTo, () => stateRef?.current || state, fn, ms)
+  );
 
   if (target === 'sub') {
     setAllySub(null);
@@ -159,7 +162,7 @@ export function handleCoopPartyKo({
       name: state.allySub?.name || tr(t, 'battle.role.sub', 'Sub'),
     }));
     setPhase('text');
-    safeTo(() => {
+    safeToIfBattleActive(() => {
       tryReturnToBattleMenu();
     }, 1100);
     return 'sub_down';
@@ -175,7 +178,7 @@ export function handleCoopPartyKo({
     setCoopActiveSlot('main');
     setBText(tr(t, 'battle.coop.promoted', '💫 {name} takes the field!', { name: promoted.name }));
     setPhase('text');
-    safeTo(() => {
+    safeToIfBattleActive(() => {
       tryReturnToBattleMenu();
     }, 1200);
     return 'promoted';
@@ -214,9 +217,11 @@ export function runCoopAllySupportTurn({
     || !state.enemy
   ) return false;
   if (!chance(0.45)) return false;
+  const safeToIfBattleActive = (fn: () => void, ms: number): void => (
+    scheduleIfBattleActive(safeTo, () => sr.current, fn, ms)
+  );
 
-  safeTo(() => {
-    if (!isBattleActiveState(sr.current)) return;
+  safeToIfBattleActive(() => {
     const s2 = sr.current;
     if (!s2.allySub || (s2.pHpSub || 0) <= 0 || !s2.enemy) {
       if (onDone) onDone();
@@ -234,16 +239,14 @@ export function runCoopAllySupportTurn({
     addP('starter', 120, 130, 3);
     sfx.play('water');
 
-    safeTo(() => setEAnim(''), 450);
+    safeToIfBattleActive(() => setEAnim(''), 450);
     if (nh <= 0) {
-      safeTo(() => {
-        if (!isBattleActiveState(sr.current)) return;
+      safeToIfBattleActive(() => {
         handleVictory(tr(t, 'battle.victory.verb.coopCombo', 'was defeated by co-op combo'));
       }, 700);
       return;
     }
-    if (onDone) safeTo(() => {
-      if (!isBattleActiveState(sr.current)) return;
+    if (onDone) safeToIfBattleActive(() => {
       onDone();
     }, 700);
   }, delayMs);

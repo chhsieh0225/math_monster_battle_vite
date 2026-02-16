@@ -11,7 +11,7 @@ import {
   getAttackEffectNextStepDelay,
 } from '../../utils/effectTiming.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
-import { isBattleActiveState } from './menuResetGuard.ts';
+import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
 import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
 
 type TranslatorParams = Record<string, string | number>;
@@ -265,12 +265,9 @@ export function runPlayerAnswer({
   if (!isBattleActiveState(s)) return;
 
   const isBattleActive = (): boolean => isBattleActiveState(sr.current);
-  const safeToIfBattleActive = (fn: () => void, ms: number): void => {
-    safeTo(() => {
-      if (!isBattleActive()) return;
-      fn();
-    }, ms);
-  };
+  const safeToIfBattleActive = (fn: () => void, ms: number): void => (
+    scheduleIfBattleActive(safeTo, () => sr.current, fn, ms)
+  );
 
   const loseToGameOver = (message = tr(t, 'battle.ally.ko', 'Your partner has fallen...')): void => {
     _endSession(false);
@@ -319,7 +316,7 @@ export function runPlayerAnswer({
     } else {
       setPHp(nextHp);
       setPAnim('playerHit 0.5s ease');
-      safeTo(() => setPAnim(''), 500);
+      safeToIfBattleActive(() => setPAnim(''), 500);
     }
     addD(
       popupText || `-${damage}`,

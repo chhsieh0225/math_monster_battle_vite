@@ -213,7 +213,7 @@ test('runEnemyTurn ignores stale delayed menu reset after battle state changed',
 
   assert.equal(calls.phase.includes('enemyAtk'), true);
   assert.equal(calls.phase.includes('menu'), false);
-  assert.equal(calls.defAnim.includes(null), true);
+  assert.equal(calls.defAnim.includes(null), false);
 });
 
 test('runEnemyTurn ignores stale strike callback after battle ended', () => {

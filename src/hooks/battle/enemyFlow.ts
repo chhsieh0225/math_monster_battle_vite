@@ -2,7 +2,7 @@ import { getEff } from '../../data/typeEffectiveness.ts';
 import { calcEnemyDamage } from '../../utils/damageCalc.ts';
 import { computeBossPhase } from '../../utils/turnFlow.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
-import { isBattleActiveState, tryReturnToMenu } from './menuResetGuard.ts';
+import { isBattleActiveState, scheduleIfBattleActive, tryReturnToMenu } from './menuResetGuard.ts';
 import {
   resolveBossTurnState,
   resolveEnemyAssistStrike,
@@ -200,6 +200,9 @@ export function runEnemyTurn({
     tryReturnToMenu(() => sr.current, setPhase, setBText);
   };
   const isBattleActive = (): boolean => isBattleActiveState(sr.current);
+  const safeToIfBattleActive = (fn: () => void, ms: number): void => (
+    scheduleIfBattleActive(safeTo, () => sr.current, fn, ms)
+  );
 
   const resolvePlayerTarget = (s: BattleRuntimeState): TargetSlot => {
     const targets: TargetSlot[] = [];
@@ -218,7 +221,7 @@ export function runEnemyTurn({
     } else {
       setPHp(nextHp);
       setPAnim('playerHit 0.5s ease');
-      safeTo(() => setPAnim(''), 500);
+      safeToIfBattleActive(() => setPAnim(''), 500);
     }
     addD(label || `-${dmg}`, isSub ? 112 : 60, isSub ? 146 : 170, color);
     return nextHp;
@@ -229,7 +232,7 @@ export function runEnemyTurn({
     if (!s.enemySub || !s.starter) return false;
     if (!chance(0.35)) return false;
 
-    safeTo(() => {
+    safeToIfBattleActive(() => {
       if (!isBattleActive()) return;
       const s2 = sr.current;
       if (!s2.enemySub || !s2.starter) {
@@ -266,7 +269,7 @@ export function runEnemyTurn({
           sfx.play('playerHit');
           addP('enemy', 84, 186, 3);
           if (nh <= 0) {
-            safeTo(() => {
+            safeToIfBattleActive(() => {
               sfx.play('ko');
               if (handlePlayerPartyKo) {
                 handlePlayerPartyKo({
@@ -279,7 +282,7 @@ export function runEnemyTurn({
             }, 650);
             return;
           }
-          safeTo(() => {
+          safeToIfBattleActive(() => {
             tryReturnToBattleMenu();
           }, 650);
         },
@@ -311,7 +314,7 @@ export function runEnemyTurn({
             setBText(tr(t, 'battle.specdef.fire.block', '🛡️ Barrier blocked the attack!'));
             addD('🛡️BLOCK', 60, 170, '#fbbf24');
             addP('starter', 50, 170, 6);
-            safeTo(() => {
+            safeToIfBattleActive(() => {
               setDefAnim(null);
               tryReturnToBattleMenu();
             }, 1800);
@@ -319,7 +322,7 @@ export function runEnemyTurn({
             setPAnim('dodgeSlide 0.9s ease');
             setBText(tr(t, 'battle.specdef.water.dodge', '💨 Perfect dodge!'));
             addD('MISS!', 60, 170, '#38bdf8');
-            safeTo(() => {
+            safeToIfBattleActive(() => {
               setPAnim('');
               setDefAnim(null);
               tryReturnToBattleMenu();
@@ -329,12 +332,12 @@ export function runEnemyTurn({
             addD(tr(t, 'battle.pvp.tag.paralyze', '⚡Paralyzed'), 60, 170, '#fbbf24');
             setEAnim('enemyElecHit 0.6s ease');
             addP('electric', 155, 80, 5);
-            safeTo(() => {
+            safeToIfBattleActive(() => {
               setEAnim('');
               setDefAnim(null);
               setBText(tr(t, 'battle.enemy.paralyzedSkip', '⚡ {enemy} is paralyzed and cannot attack!', { enemy: sr.current.enemy?.name || 'Enemy' }));
               setPhase('text');
-              safeTo(() => {
+              safeToIfBattleActive(() => {
                 tryReturnToBattleMenu();
               }, 1500);
             }, 1800);
@@ -346,15 +349,15 @@ export function runEnemyTurn({
             addD('🛡️BLOCK', 60, 170, '#f59e0b');
             addP('starter', 50, 170, 6);
             sfx.play('light');
-            safeTo(() => {
+            safeToIfBattleActive(() => {
               addD(`-${roarDmg}`, 155, 50, '#f59e0b');
               setEAnim('enemyFireHit 0.6s ease');
               addP('starter', 155, 80, 5);
             }, 500);
-            safeTo(() => {
+            safeToIfBattleActive(() => {
               setEAnim('');
               setDefAnim(null);
-              if (nh <= 0) safeTo(() => handleVictory(tr(t, 'battle.victory.verb.lionRoar', "was defeated by lion's roar")), 500);
+              if (nh <= 0) safeToIfBattleActive(() => handleVictory(tr(t, 'battle.victory.verb.lionRoar', "was defeated by lion's roar")), 500);
               else {
                 tryReturnToBattleMenu();
               }
@@ -366,15 +369,15 @@ export function runEnemyTurn({
             setEHp(nh);
             setBText(tr(t, 'battle.specdef.grass.reflect', '🌿 Reflected attack!'));
             addD('🛡️BLOCK', 60, 170, '#22c55e');
-            safeTo(() => {
+            safeToIfBattleActive(() => {
               addD(`-${refDmg}`, 155, 50, '#22c55e');
               setEAnim('enemyGrassHit 0.6s ease');
               addP('starter', 155, 80, 5);
             }, 500);
-            safeTo(() => {
+            safeToIfBattleActive(() => {
               setEAnim('');
               setDefAnim(null);
-              if (nh <= 0) safeTo(() => handleVictory(tr(t, 'battle.victory.verb.reflected', 'was defeated by reflected damage')), 500);
+              if (nh <= 0) safeToIfBattleActive(() => handleVictory(tr(t, 'battle.victory.verb.reflected', 'was defeated by reflected damage')), 500);
               else {
                 tryReturnToBattleMenu();
               }
@@ -408,20 +411,20 @@ export function runEnemyTurn({
         addP('enemy', 80, 190, 4);
         if (isCrit) {
           setEffMsg({ text: tr(t, 'battle.enemy.effect.crit', '🔥 Critical!'), color: '#ff6b00' });
-          safeTo(() => setEffMsg(null), 1500);
+          safeToIfBattleActive(() => setEffMsg(null), 1500);
         } else if (isBlaze) {
           setEffMsg({ text: tr(t, 'battle.enemy.effect.blazeAwaken', '🔥 Blaze awakened! ATK↑'), color: '#ef4444' });
-          safeTo(() => setEffMsg(null), 1500);
+          safeToIfBattleActive(() => setEffMsg(null), 1500);
         } else if (defEff > 1) {
           setEffMsg({ text: tr(t, 'battle.enemy.effect.super', 'Enemy move is super effective!'), color: '#ef4444' });
-          safeTo(() => setEffMsg(null), 1500);
+          safeToIfBattleActive(() => setEffMsg(null), 1500);
         } else if (defEff < 1) {
           setEffMsg({ text: tr(t, 'battle.enemy.effect.notVery', 'Enemy move is not very effective'), color: '#64748b' });
-          safeTo(() => setEffMsg(null), 1500);
+          safeToIfBattleActive(() => setEffMsg(null), 1500);
         }
 
         if (nh <= 0) {
-          safeTo(() => {
+          safeToIfBattleActive(() => {
             sfx.play('ko');
             if (handlePlayerPartyKo) {
               handlePlayerPartyKo({ target, reason: tr(t, 'battle.ko.fallen', '{name} has fallen...', { name: targetName }) });
@@ -435,7 +438,7 @@ export function runEnemyTurn({
         if (trait === 'tenacity') {
           const heal = Math.round((s2.enemy?.maxHp || 0) * 0.15);
           const newEHp = Math.min(sr.current.eHp + heal, s2.enemy?.maxHp || sr.current.eHp + heal);
-          safeTo(() => {
+          safeToIfBattleActive(() => {
             setEHp(newEHp);
             addD(`+${heal}`, 155, 50, '#3b82f6');
             setBText(tr(t, 'battle.enemy.tenacityHeal', '💧 {enemy} recovered HP!', { enemy: s2.enemy?.name || 'Enemy' }));
@@ -444,14 +447,14 @@ export function runEnemyTurn({
 
         if (trait === 'curse' && chance(0.35)) {
           setCursed(true);
-          safeTo(() => {
+          safeToIfBattleActive(() => {
             addD(tr(t, 'battle.tag.curse', '💀Curse'), 60, 140, '#a855f7');
             setBText(tr(t, 'battle.enemy.curseApplied', "💀 {enemy}'s curse weakens your next attack!", { enemy: s2.enemy?.name || 'Enemy' }));
           }, 600);
         }
 
         if (trait === 'swift' && chance(0.25)) {
-          safeTo(() => {
+          safeToIfBattleActive(() => {
             if (!isBattleActive()) return;
             setBText(tr(t, 'battle.enemy.swiftExtra', '⚡ {enemy} attacks again!', { enemy: s2.enemy?.name || 'Enemy' }));
             effectOrchestratorTyped.runEnemyLunge({
@@ -474,7 +477,7 @@ export function runEnemyTurn({
                 sfx.play('playerHit');
                 addP('enemy', 80, 190, 3);
                 if (nh2 <= 0) {
-                  safeTo(() => {
+                  safeToIfBattleActive(() => {
                     sfx.play('ko');
                     if (handlePlayerPartyKo) {
                       handlePlayerPartyKo({ target: target2, reason: tr(t, 'battle.ko.comboDown', '{name} was knocked out by combo hits...', { name: target2Name }) });
@@ -484,7 +487,7 @@ export function runEnemyTurn({
                   }, 800);
                 } else {
                   if (maybeEnemyAssistAttack(500)) return;
-                  safeTo(() => {
+                  safeToIfBattleActive(() => {
                     tryReturnToBattleMenu();
                   }, 800);
                 }
@@ -495,7 +498,7 @@ export function runEnemyTurn({
         }
 
         if (maybeEnemyAssistAttack(900)) return;
-        safeTo(() => {
+        safeToIfBattleActive(() => {
           tryReturnToBattleMenu();
         }, 800);
       },
@@ -539,7 +542,7 @@ export function runEnemyTurn({
           });
           addP('enemy', 80, 190, 6);
           if (nh <= 0) {
-            safeTo(() => {
+            safeToIfBattleActive(() => {
               if (handlePlayerPartyKo) {
                 handlePlayerPartyKo({ target, reason: tr(t, 'battle.ko.bossBreath', '{name} was knocked out by dark breath...', { name: targetName }) });
               } else {
@@ -547,7 +550,7 @@ export function runEnemyTurn({
               }
             }, 800);
           } else {
-            safeTo(() => {
+            safeToIfBattleActive(() => {
               tryReturnToBattleMenu();
             }, 800);
           }
@@ -562,7 +565,7 @@ export function runEnemyTurn({
       setBText(tr(t, 'battle.boss.charge', '⚠️ Dark Dragon King is charging! It will unleash a big move next turn!'));
       setPhase('text');
       setEAnim('bossShake 0.5s ease infinite');
-      safeTo(() => {
+      safeToIfBattleActive(() => {
         if (!isBattleActive()) return;
         tryReturnToBattleMenu();
         setEAnim('');
@@ -578,7 +581,7 @@ export function runEnemyTurn({
       const moveName = s.starter.moves?.[sealIdx]?.name || '???';
       setBText(tr(t, 'battle.boss.sealMove', '💀 Dark Dragon King sealed your "{move}"! (2 turns)', { move: moveName }));
       setPhase('text');
-      safeTo(() => {
+      safeToIfBattleActive(() => {
         if (!isBattleActive()) return;
         doEnemyAttack(bp);
       }, 1500);
@@ -610,8 +613,8 @@ export function runEnemyTurn({
         setBText(phaseMsg);
         setPhase('text');
         setEAnim('bossShake 0.5s ease');
-        safeTo(() => setEAnim(''), 600);
-        safeTo(() => {
+        safeToIfBattleActive(() => setEAnim(''), 600);
+        safeToIfBattleActive(() => {
           if (!isBattleActive()) return;
           doEnemyTurnInner();
         }, 1500);

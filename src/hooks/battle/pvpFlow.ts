@@ -1,7 +1,7 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
 import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
-import { isBattleActiveState } from './menuResetGuard.ts';
+import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
 import { resolvePvpStrike } from './turnResolver.ts';
 
 type TranslatorParams = Record<string, string | number>;
@@ -384,12 +384,9 @@ export function handlePvpAnswer({
   if (state.battleMode !== 'pvp') return false;
   if (!isBattleActiveState(state)) return false;
   const isBattleActive = (): boolean => isBattleActiveState(sr.current);
-  const safeToIfBattleActive = (fn: () => void, ms: number): void => {
-    safeTo(() => {
-      if (!isBattleActive()) return;
-      fn();
-    }, ms);
-  };
+  const safeToIfBattleActive = (fn: () => void, ms: number): void => (
+    scheduleIfBattleActive(safeTo, () => sr.current, fn, ms)
+  );
   const attacker = state.pvpTurn === 'p1' ? state.starter : state.pvpStarter2;
   const defender = state.pvpTurn === 'p1' ? state.pvpStarter2 : state.starter;
   if (!attacker || !defender || state.selIdx == null) return false;
@@ -757,16 +754,14 @@ export function processPvpTurnStart({
 }: ProcessPvpTurnStartArgs): boolean {
   if (state.battleMode !== 'pvp' || state.pvpWinner) return false;
   if (!isBattleActiveState(state)) return false;
-  const isBattleActive = (): boolean => {
-    if (sr?.current) return isBattleActiveState(sr.current);
-    return isBattleActiveState(state);
-  };
-  const safeToIfBattleActive = (fn: () => void, ms: number): void => {
-    safeTo(() => {
-      if (!isBattleActive()) return;
-      fn();
-    }, ms);
-  };
+  const safeToIfBattleActive = (fn: () => void, ms: number): void => (
+    scheduleIfBattleActive(
+      safeTo,
+      () => sr?.current || state,
+      fn,
+      ms,
+    )
+  );
   const currentTurn = state.pvpTurn;
   const currentName = getPvpTurnName(state, currentTurn);
   const isP1 = currentTurn === 'p1';

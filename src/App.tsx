@@ -7,8 +7,8 @@
  *   2. Battle-screen layout & visual rendering
  *   3. Orientation-lock wrapper (GameShell)
  */
-import { useState, useEffect, useRef, useSyncExternalStore, Component, Suspense, lazy } from 'react';
-import type { ComponentProps, ReactNode } from 'react';
+import { useState, useEffect, useRef, useSyncExternalStore, Component } from 'react';
+import type { ReactNode } from 'react';
 import './App.css';
 import { useI18n } from './i18n';
 import zhTW from './i18n/locales/zh-TW';
@@ -38,20 +38,10 @@ import TextBox from './components/ui/TextBox';
 import { FireEffect, ElecEffect, WaterEffect, GrassEffect, DarkEffect, LightEffect } from './components/effects';
 
 // Screens
-import TitleScreen from './components/screens/TitleScreen';
-import SelectionScreen from './components/screens/SelectionScreen';
+import AppScreenRouter from './components/AppScreenRouter';
 import AchievementPopup from './components/ui/AchievementPopup';
 import { ACH_MAP } from './data/achievements';
 import type { ScreenName, TimerSubscribe, UseBattlePublicApi } from './types/battle';
-
-const LeaderboardScreen = lazy(() => import('./components/screens/LeaderboardScreen'));
-const EvolveScreen = lazy(() => import('./components/screens/EvolveScreen'));
-const GameOverScreen = lazy(() => import('./components/screens/GameOverScreen'));
-const AchievementScreen = lazy(() => import('./components/screens/AchievementScreen'));
-const EncyclopediaScreen = lazy(() => import('./components/screens/EncyclopediaScreen'));
-const DashboardScreen = lazy(() => import('./components/screens/DashboardScreen'));
-const SettingsScreen = lazy(() => import('./components/screens/SettingsScreen'));
-const PvpResultScreen = lazy(() => import('./components/screens/PvpResultScreen'));
 
 type StaticLocaleCode = "zh-TW" | "en-US";
 
@@ -224,13 +214,6 @@ function GameShell() {
 }
 
 // ─── App: main game component (render only) ───
-type SelectionPayload = Parameters<ComponentProps<typeof SelectionScreen>["onSelect"]>[0];
-type DualSelectionPayload = Extract<SelectionPayload, { p1: unknown; p2: unknown }>;
-
-function isDualSelectionPayload(payload: SelectionPayload): payload is DualSelectionPayload {
-  return typeof payload === "object" && payload !== null && "p1" in payload && "p2" in payload;
-}
-
 function App() {
   const { t } = useI18n();
   const B: UseBattlePublicApi = useBattle();
@@ -281,108 +264,21 @@ function App() {
     resumeBattleAfterSettingsRef.current = false;
   };
 
-  const wrapMain = (node: ReactNode) => (
-    <div id="main-content" style={{ height: "100%" }}>
-      {node}
-    </div>
-  );
-  const screenLoadingFallback = (
-    <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", color: "white", fontSize: 14, fontWeight: 700, opacity: 0.75 }}>
-      {t("app.loading.screen", "Loading screen...")}
-    </div>
-  );
-  const withScreenSuspense = (node: ReactNode) => (
-    <Suspense fallback={screenLoadingFallback}>
-      {node}
-    </Suspense>
-  );
+  if (B.screen !== "battle") {
+    return (
+      <AppScreenRouter
+        battle={B}
+        mobile={UX}
+        audioMuted={audioMuted}
+        onSetAudioMuted={setAudioMute}
+        onOpenSettings={openSettings}
+        onCloseSettings={closeSettings}
+        t={t}
+      />
+    );
+  }
 
-  // ─── Screen routing ───
-  if (B.screen === "title") return wrapMain(
-    <TitleScreen
-      onStartNormal={() => { B.setTimedMode(false); B.setBattleMode("single"); B.setScreen("selection"); }}
-      onStartTimed={() => { B.setTimedMode(true); B.setBattleMode("single"); B.setScreen("selection"); }}
-      onStartCoop={() => { B.setTimedMode(false); B.setBattleMode("coop"); B.setScreen("selection"); }}
-      onStartPvp={() => { B.setTimedMode(true); B.setBattleMode("pvp"); B.setScreen("selection"); }}
-      onLeaderboard={() => B.setScreen("leaderboard")}
-      onAchievements={() => B.setScreen("achievements")}
-      onEncyclopedia={() => B.setScreen("encyclopedia")}
-      onDashboard={() => B.setScreen("dashboard")}
-      onSettings={() => openSettings("title")}
-      lowPerfMode={UX.lowPerfMode}
-    />
-  );
-  if (B.screen === "achievements") return wrapMain(
-    withScreenSuspense(<AchievementScreen unlockedIds={B.achUnlocked} onBack={() => B.setScreen("title")} />)
-  );
-  if (B.screen === "encyclopedia") return wrapMain(
-    withScreenSuspense(<EncyclopediaScreen encData={B.encData} onBack={() => B.setScreen("title")} />)
-  );
-  if (B.screen === "dashboard") return wrapMain(
-    withScreenSuspense(<DashboardScreen onBack={() => B.setScreen("title")} />)
-  );
-  if (B.screen === "settings") return wrapMain(
-    withScreenSuspense(<SettingsScreen
-      onBack={closeSettings}
-      perfMode={UX.perfMode}
-      lowPerfMode={UX.lowPerfMode}
-      autoLowEnd={UX.autoLowEnd}
-      onSetPerfMode={UX.setPerfMode}
-      audioMuted={audioMuted}
-      onSetAudioMuted={setAudioMute}
-    />)
-  );
-  if (B.screen === "leaderboard") return wrapMain(
-    withScreenSuspense(<LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen("title")} />)
-  );
-  if (B.screen === "selection") return wrapMain(
-    <SelectionScreen
-      mode={B.battleMode}
-      onSelect={(payload: SelectionPayload) => {
-        B.sfx.init();
-        if (B.battleMode === "coop" && isDualSelectionPayload(payload)) {
-          B.setStarter(payload.p1);
-          B.startGame(payload.p1, "coop", payload.p2);
-          return;
-        }
-        if (B.battleMode === "pvp" && isDualSelectionPayload(payload)) {
-          B.setStarter(payload.p1);
-          B.setPvpStarter2(payload.p2);
-          B.startGame(payload.p1, "pvp", payload.p2);
-          return;
-        }
-        B.setStarter(payload);
-        B.startGame(payload, B.battleMode);
-      }}
-      onBack={() => B.setScreen("title")}
-    />
-  );
-  if (B.screen === "pvp_result") return wrapMain(
-    withScreenSuspense(<PvpResultScreen
-      p1Starter={B.starter}
-      p2Starter={B.pvpStarter2}
-      p1StageIdx={B.pStg}
-      p2StageIdx={B.pvpStarter2?.selectedStageIdx || 0}
-      winner={B.pvpWinner || "p1"}
-      onRematch={() => B.starter && B.startGame(B.starter, "pvp")}
-      onHome={() => B.setScreen("title")}
-    />)
-  );
-  if (B.screen === "evolve") return wrapMain(
-    withScreenSuspense(<EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={B.continueAfterEvolve} />)
-  );
-  if (B.screen === "gameover") return wrapMain(
-    withScreenSuspense(<GameOverScreen
-      defeated={B.defeated} totalEnemies={B.enemies.length}
-      tC={B.tC} tW={B.tW} pLvl={B.pLvl} timedMode={B.timedMode}
-      maxStreak={B.maxStreak} starter={B.starter} mLvls={B.mLvls}
-      getPow={B.getPow}
-      onRestart={() => B.starter && B.startGame()}
-      onLeaderboard={() => B.setScreen("leaderboard")}
-      onHome={() => B.setScreen("title")}
-    />)
-  );
-  if (!B.enemy || !B.starter) return wrapMain(
+  if (!B.enemy || !B.starter) return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", color: "white", gap: 16 }}>
       <div style={{ fontSize: 48, animation: "float 2s ease-in-out infinite" }}>⚔️</div>
       <div style={{ fontSize: 16, fontWeight: 700, opacity: 0.6 }}>{t("app.loading.battle", "Preparing battle...")}</div>

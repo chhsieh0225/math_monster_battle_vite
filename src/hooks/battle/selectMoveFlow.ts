@@ -46,6 +46,10 @@ type RunSelectMoveFlowArgs = {
   setPhase: (value: string) => void;
 };
 
+function isFn(value: unknown): value is (...args: unknown[]) => unknown {
+  return typeof value === 'function';
+}
+
 export function runSelectMoveFlow({
   index,
   state,
@@ -69,8 +73,12 @@ export function runSelectMoveFlow({
 
   const activeStarter = getActingStarter(state);
   if (!activeStarter) return false;
-
   const move = activeStarter.moves[index];
+  if (!move) return false;
+
+  if (!isFn(setSelIdx) || !isFn(setDiffLevel) || !isFn(setQ) || !isFn(setFb) || !isFn(setAnswered) || !isFn(setPhase)) {
+    return false;
+  }
   if (state.battleMode === 'pvp' && move?.risky) {
     const chargeNow = state.pvpTurn === 'p1' ? (state.pvpChargeP1 || 0) : (state.pvpChargeP2 || 0);
     if (chargeNow < 3) return false;

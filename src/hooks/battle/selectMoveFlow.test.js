@@ -114,3 +114,25 @@ test('runSelectMoveFlow blocks sealed move in non-pvp mode', () => {
   assert.equal(calls.setSelIdx.length, 0);
   assert.equal(calls.markQStart, 0);
 });
+
+test('runSelectMoveFlow returns false when selected move is missing', () => {
+  const { calls, args } = createDeps({
+    index: 99,
+  });
+  const out = runSelectMoveFlow(args);
+  assert.equal(out, false);
+  assert.equal(calls.sfx.length, 0);
+  assert.equal(calls.setSelIdx.length, 0);
+  assert.equal(calls.startTimer, 0);
+});
+
+test('runSelectMoveFlow returns false when required setter is missing', () => {
+  const { calls, args } = createDeps({
+    setDiffLevel: undefined,
+  });
+  const out = runSelectMoveFlow(args);
+  assert.equal(out, false);
+  assert.equal(calls.sfx.length, 0);
+  assert.equal(calls.setSelIdx.length, 0);
+  assert.equal(calls.markQStart, 0);
+});

@@ -5,6 +5,7 @@ import {
   localizeEnemy,
   localizeEncyclopediaEnemyEntries,
   localizeEncyclopediaStarterEntries,
+  localizeStarterDisplayName,
   localizeStarterList,
 } from './contentLocalization.js';
 
@@ -118,4 +119,19 @@ test('localizeEncyclopediaStarterEntries maps starter entries and moves to Engli
       assert.ok(!hasCjk(move.name), `encyclopedia starter move still contains CJK: ${move.name}`);
     }
   }
+});
+
+test('localizeStarterDisplayName maps stored Chinese names to English in en-US', () => {
+  assert.equal(
+    localizeStarterDisplayName("烈焰獸", "fire", EN),
+    "Blazebeast",
+  );
+  assert.equal(
+    localizeStarterDisplayName("", "water", EN),
+    "Aquabub",
+  );
+  assert.equal(
+    localizeStarterDisplayName("Voltkit", "electric", EN),
+    "Voltkit",
+  );
 });

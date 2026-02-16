@@ -181,6 +181,24 @@ const STARTER_DESC_EN = {
 
 const STAGE_LABEL_EN = ["Base", "Evolved", "Final"];
 
+const STARTER_NAME_EN_BY_ZH = {
+  小火獸: "Embercub",
+  烈焰獸: "Blazebeast",
+  炎龍王: "Infernodrake",
+  小水獸: "Aquabub",
+  波濤獸: "Tidera",
+  海龍王: "Abyssdrake",
+  小草獸: "Sproutlet",
+  花葉獸: "Bloomvine",
+  森林王: "Sylvan King",
+  小雷獸: "Voltkit",
+  雷電獸: "Thundra",
+  雷龍王: "Stormdrake",
+  小獅獸: "Lioncub",
+  獅鬃獸: "Manelion",
+  獅焰王: "Solar King",
+};
+
 const TRAIT_TEXT_EN_BY_ID = {
   normal: {
     name: "Normal",
@@ -313,6 +331,21 @@ export function localizeStarterList(starters, locale) {
   if (!Array.isArray(starters)) return starters;
   if (!isEnglishLocale(locale)) return starters;
   return starters.map((starter) => localizeStarter(starter, locale));
+}
+
+export function localizeStarterDisplayName(name, starterId, locale) {
+  const resolvedName = typeof name === "string" ? name.trim() : "";
+  if (!isEnglishLocale(locale)) return resolvedName || name;
+
+  if (resolvedName && STARTER_NAME_EN_BY_ZH[resolvedName]) {
+    return STARTER_NAME_EN_BY_ZH[resolvedName];
+  }
+
+  if (!resolvedName && starterId && STARTER_TEXT_EN[starterId]?.name) {
+    return STARTER_TEXT_EN[starterId].name;
+  }
+
+  return resolvedName || name;
 }
 
 export function localizeEnemy(enemy, locale) {

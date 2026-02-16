@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import type { ChangeEvent, CSSProperties, KeyboardEvent } from 'react';
 import { loadSessions, clearSessions, loadPin, savePin } from '../../utils/sessionLogger';
 import { useI18n } from '../../i18n';
+import { localizeStarterDisplayName } from '../../utils/contentLocalization';
 import {
   OPS,
   buildDashboardInsights,
@@ -32,6 +33,7 @@ type SessionOpStat = {
 type DashboardSession = {
   id?: string;
   startTime: number;
+  starterId?: string | null;
   starterName?: string | null;
   timedMode?: boolean;
   completed?: boolean;
@@ -407,7 +409,7 @@ type HistoryTabProps = {
 };
 
 function HistoryTab({ sessions }: HistoryTabProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   if (sessions.length === 0) return <Empty text={t("dashboard.empty.history", "No game records yet.")} />;
   const sorted = [...sessions].reverse(); // newest first
 
@@ -419,11 +421,12 @@ function HistoryTab({ sessions }: HistoryTabProps) {
         const wrong = Number(s.tW) || 0;
         const acc = correct + wrong > 0 ? Math.round(correct / (correct + wrong) * 100) : 0;
         const dt = new Date(Number(s.startTime) || 0);
+        const starterName = String(localizeStarterDisplayName(s.starterName, s.starterId, locale) || '—');
         return (
           <div key={s.id || i} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 12px', marginBottom: 6, border: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <div style={{ fontSize: 12, fontWeight: 700 }}>
-                {s.starterName || '—'} {s.timedMode ? '⏱️' : '⚔️'} {s.completed ? t("dashboard.history.clear", "✅Cleared") : t("dashboard.history.stage", "💀Stage {stage}", { stage: s.defeated || 0 })}
+                {starterName} {s.timedMode ? '⏱️' : '⚔️'} {s.completed ? t("dashboard.history.clear", "✅Cleared") : t("dashboard.history.stage", "💀Stage {stage}", { stage: s.defeated || 0 })}
               </div>
               <div style={{ fontSize: 10, opacity: 0.4 }}>{dt.toLocaleDateString()} {dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
             </div>

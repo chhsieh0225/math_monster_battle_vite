@@ -7,6 +7,9 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `battleReducer.ts`
   - Owns persistent battle state transitions.
   - Pure reducer only. No timers, no side effects.
+- `battleFieldSetters.ts`
+  - Builds `set_field` wrapper setters used by `useBattle`.
+  - Keeps repetitive reducer field-updater wiring out of the hook body.
 - `turnResolver.ts`
   - Pure combat math / turn decision helpers.
   - No React state and no async scheduling.

@@ -65,6 +65,7 @@ import {
   battleReducer,
   createInitialBattleState,
 } from './battle/battleReducer';
+import { createBattleFieldSetters } from './battle/battleFieldSetters';
 import { effectOrchestrator } from './battle/effectOrchestrator';
 import { runEnemyTurn } from './battle/enemyFlow';
 import { handleTimeoutFlow } from './battle/timeoutFlow';
@@ -175,36 +176,37 @@ export function useBattle() {
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
   } = battle;
 
-  const setBattleField = (key, value) => dispatchBattle({ type: "set_field", key, value });
-  const setPHp = (value) => setBattleField("pHp", value);
-  const setAllySub = (value) => setBattleField("allySub", value);
-  const setPHpSub = (value) => setBattleField("pHpSub", value);
-  const setPExp = (value) => setBattleField("pExp", value);
-  const setPLvl = (value) => setBattleField("pLvl", value);
-  const setPStg = (value) => setBattleField("pStg", value);
-  const setEHp = (value) => setBattleField("eHp", value);
-  const setStreak = (value) => setBattleField("streak", value);
-  const setPassiveCount = (value) => setBattleField("passiveCount", value);
-  const setCharge = (value) => setBattleField("charge", value);
-  const setTC = (value) => setBattleField("tC", value);
-  const setTW = (value) => setBattleField("tW", value);
-  const setDefeated = (value) => setBattleField("defeated", value);
-  const setMaxStreak = (value) => setBattleField("maxStreak", value);
-  const setMHits = (value) => setBattleField("mHits", value);
-  const setMLvls = (value) => setBattleField("mLvls", value);
-  const setMLvlUp = (value) => setBattleField("mLvlUp", value);
-  const setBurnStack = (value) => setBattleField("burnStack", value);
-  const setFrozen = (value) => setBattleField("frozen", value);
-  const setStaticStack = (value) => setBattleField("staticStack", value);
-  const setSpecDef = (value) => setBattleField("specDef", value);
-  const setDefAnim = (value) => setBattleField("defAnim", value);
-  const setCursed = (value) => setBattleField("cursed", value);
-  const setDiffLevel = (value) => setBattleField("diffLevel", value);
-  const setBossPhase = (value) => setBattleField("bossPhase", value);
-  const setBossTurn = (value) => setBattleField("bossTurn", value);
-  const setBossCharging = (value) => setBattleField("bossCharging", value);
-  const setSealedMove = (value) => setBattleField("sealedMove", value);
-  const setSealedTurns = (value) => setBattleField("sealedTurns", value);
+  const {
+    setPHp,
+    setAllySub,
+    setPHpSub,
+    setPExp,
+    setPLvl,
+    setPStg,
+    setEHp,
+    setStreak,
+    setPassiveCount,
+    setCharge,
+    setTC,
+    setTW,
+    setDefeated,
+    setMaxStreak,
+    setMHits,
+    setMLvls,
+    setMLvlUp,
+    setBurnStack,
+    setFrozen,
+    setStaticStack,
+    setSpecDef,
+    setDefAnim,
+    setCursed,
+    setDiffLevel,
+    setBossPhase,
+    setBossTurn,
+    setBossCharging,
+    setSealedMove,
+    setSealedTurns,
+  } = createBattleFieldSetters(dispatchBattle);
 
   // ──── Phase & UI ────
   const {

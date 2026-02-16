@@ -37,6 +37,9 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `advanceFlow.ts`
   - Advance-phase helpers (continue after victory, pending evolution routing).
   - Keeps `advance` branch logic focused in one module.
+- `answerFlow.ts`
+  - Answer-phase helpers (acting starter context + answer event logging).
+  - Keeps `onAns` pre-processing concise.
 - `coopFlow.ts`
   - Co-op only helper flows (party KO handling, support turns, evolution sync helpers).
 - `achievementFlow.ts`

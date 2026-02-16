@@ -1,0 +1,118 @@
+import { isCoopBattleMode } from './coopFlow';
+
+type MoveLite = {
+  name?: string;
+  type?: string;
+  [key: string]: unknown;
+};
+
+type StarterLite = {
+  id?: string;
+  moves?: MoveLite[];
+  [key: string]: unknown;
+};
+
+type BattleQuestion = {
+  answer?: number;
+  op?: string;
+  display?: string;
+  [key: string]: unknown;
+};
+
+type BattleState = {
+  battleMode?: string;
+  allySub?: StarterLite | null;
+  selIdx?: number;
+  q?: BattleQuestion | null;
+  timedMode?: boolean;
+  diffLevel?: number;
+  round?: number;
+  [key: string]: unknown;
+};
+
+type BuildAnswerContextArgs = {
+  state: BattleState;
+  choice: number;
+  getActingStarter: (state: BattleState) => StarterLite | null;
+};
+
+type AnswerContext = {
+  actingStarter: StarterLite;
+  isCoopSubActive: boolean;
+  move: MoveLite;
+  correct: boolean;
+};
+
+type LogSubmittedAnswerArgs = {
+  state: BattleState;
+  choice: number;
+  move: MoveLite;
+  logAns: (question: BattleQuestion | null | undefined, isCorrect: boolean) => number;
+  appendSessionEvent: (name: string, payload: Record<string, unknown>) => void;
+  updateAbility: (op: string | undefined, correct: boolean) => void;
+  markCoopRotatePending: () => void;
+  correct: boolean;
+};
+
+export function buildAnswerContext({
+  state,
+  choice,
+  getActingStarter,
+}: BuildAnswerContextArgs): AnswerContext | null {
+  const actingStarter = getActingStarter(state);
+  if (!actingStarter || state.selIdx == null) return null;
+
+  const move = actingStarter.moves?.[state.selIdx];
+  if (!move) return null;
+
+  const isCoopSubActive = Boolean(
+    isCoopBattleMode(state.battleMode)
+    && actingStarter
+    && state.allySub
+    && actingStarter.id === state.allySub.id,
+  );
+
+  const correct = choice === state.q?.answer;
+
+  return {
+    actingStarter,
+    isCoopSubActive,
+    move,
+    correct,
+  };
+}
+
+export function logSubmittedAnswer({
+  state,
+  choice,
+  move,
+  logAns,
+  appendSessionEvent,
+  updateAbility,
+  markCoopRotatePending,
+  correct,
+}: LogSubmittedAnswerArgs): void {
+  const answerTimeMs = logAns(state.q, correct);
+
+  appendSessionEvent('question_answered', {
+    outcome: 'submitted',
+    correct,
+    selectedAnswer: choice,
+    expectedAnswer: state.q?.answer ?? null,
+    answerTimeMs,
+    op: state.q?.op ?? null,
+    display: state.q?.display ?? null,
+    moveIndex: state.selIdx ?? -1,
+    moveName: move?.name || null,
+    moveType: move?.type || null,
+    timedMode: !!state.timedMode,
+    diffLevel: state.diffLevel ?? null,
+    round: state.round ?? 0,
+  });
+
+  updateAbility(state.q?.op, correct);
+
+  if (isCoopBattleMode(state.battleMode)) {
+    markCoopRotatePending();
+  }
+}

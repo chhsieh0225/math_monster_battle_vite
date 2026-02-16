@@ -48,6 +48,7 @@ Current migrated files:
 - `src/hooks/battle/turnHelpers.ts`
 - `src/hooks/battle/victoryFlow.ts`
 - `src/hooks/battle/advanceFlow.ts`
+- `src/hooks/battle/answerFlow.ts`
 - `src/components/ui/HPBar.tsx`
 - `src/components/ui/XPBar.tsx`
 - `src/components/ui/DamagePopup.tsx`

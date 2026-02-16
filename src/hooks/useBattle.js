@@ -72,6 +72,7 @@ import { handleTimeoutFlow } from './battle/timeoutFlow';
 import { runPvpStartFlow, runStandardStartFlow } from './battle/startGameFlow';
 import { runVictoryFlow } from './battle/victoryFlow';
 import { continueFromVictoryFlow, handlePendingEvolution } from './battle/advanceFlow';
+import { buildAnswerContext, logSubmittedAnswer } from './battle/answerFlow';
 import {
   getActingStarter as resolveActingStarter,
   getOtherPvpTurn,
@@ -707,38 +708,30 @@ export function useBattle() {
       t,
     })) return;
 
-    const actingStarter = getActingStarter(s);
-    const isCoopSubActive = !!(
-      isCoopBattleMode(s.battleMode)
-      && actingStarter
-      && s.allySub
-      && actingStarter.id === s.allySub.id
-    );
-    if (!actingStarter || s.selIdx == null) return;
-    const move = actingStarter.moves[s.selIdx];
-    const correct = choice === s.q.answer;
-
-    // ── Session logging ──
-    const answerTimeMs = logAns(s.q, correct);
-    appendSessionEvent("question_answered", {
-      outcome: "submitted",
-      correct,
-      selectedAnswer: choice,
-      expectedAnswer: s.q?.answer ?? null,
-      answerTimeMs,
-      op: s.q?.op ?? null,
-      display: s.q?.display ?? null,
-      moveIndex: s.selIdx ?? -1,
-      moveName: move?.name || null,
-      moveType: move?.type || null,
-      timedMode: !!s.timedMode,
-      diffLevel: s.diffLevel ?? null,
-      round: s.round ?? 0,
+    const answerContext = buildAnswerContext({
+      state: s,
+      choice,
+      getActingStarter,
     });
-    _updateAbility(s.q?.op, correct);
-    if (isCoopBattleMode(s.battleMode)) {
-      markCoopRotatePending();
-    }
+    if (!answerContext) return;
+
+    const {
+      actingStarter,
+      isCoopSubActive,
+      move,
+      correct,
+    } = answerContext;
+
+    logSubmittedAnswer({
+      state: s,
+      choice,
+      move,
+      logAns,
+      appendSessionEvent,
+      updateAbility: _updateAbility,
+      markCoopRotatePending,
+      correct,
+    });
     runPlayerAnswer({
       correct,
       move,

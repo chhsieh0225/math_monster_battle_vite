@@ -74,6 +74,7 @@ import {
 } from './battle/answerDepsBuilder.ts';
 import { runEnemyTurnController } from './battle/enemyTurnController.ts';
 import { runTimeoutController } from './battle/timeoutController.ts';
+import { buildTimeoutControllerArgs } from './battle/timeoutDepsBuilder.ts';
 import { runStartGameController } from './battle/startGameController.ts';
 import { runStartBattleFlow } from './battle/startBattleFlow';
 import {
@@ -172,11 +173,11 @@ export function useBattle() {
   const {
     pvpStarter2, setPvpStarter2,
     pvpHp2,
-    pvpTurn, setPvpTurn,
+    pvpTurn,
     pvpWinner,
-    pvpChargeP1, setPvpChargeP1,
-    pvpChargeP2, setPvpChargeP2,
-    pvpActionCount, setPvpActionCount,
+    pvpChargeP1,
+    pvpChargeP2,
+    pvpActionCount,
     pvpBurnP1,
     pvpBurnP2,
     pvpFreezeP1,
@@ -185,8 +186,8 @@ export function useBattle() {
     pvpStaticP2,
     pvpParalyzeP1,
     pvpParalyzeP2,
-    pvpComboP1, setPvpComboP1,
-    pvpComboP2, setPvpComboP2,
+    pvpComboP1,
+    pvpComboP2,
     pvpSpecDefP1,
     pvpSpecDefP2,
   } = pvpState;
@@ -214,10 +215,6 @@ export function useBattle() {
     setPHpSub,
     setPStg,
     setEHp,
-    setStreak,
-    setPassiveCount,
-    setCharge,
-    setTW,
     setFrozen,
     setDiffLevel,
   } = battleFieldSetters;
@@ -227,7 +224,7 @@ export function useBattle() {
     phase, setPhase,
     selIdx,
     q,
-    fb, setFb,
+    fb,
     bText, setBText,
     answered, setAnswered,
     dmgs, setDmgs,
@@ -323,34 +320,25 @@ export function useBattle() {
   //  TIMER
   // ═══════════════════════════════════════════════════════════════
   const onTimeout = () => {
-    runTimeoutController({
-      sr,
-      t,
-      getPvpTurnName,
-      getOtherPvpTurn,
-      setAnswered,
-      setFb,
-      setTW,
-      setPvpChargeP1,
-      setPvpChargeP2,
-      setPvpComboP1,
-      setPvpComboP2,
-      setBText,
-      setPvpTurn,
-      setPvpActionCount,
-      setPhase,
-      sfx,
-      setStreak,
-      setPassiveCount,
-      setCharge,
-      logAns,
-      updateAbility: _updateAbility,
-      getActingStarter,
-      appendSessionEvent,
-      markCoopRotatePending,
-      safeTo,
-      doEnemyTurnRef,
-    });
+    runTimeoutController(buildTimeoutControllerArgs({
+      runtime: {
+        sr,
+        t,
+        getPvpTurnName,
+        getOtherPvpTurn,
+        sfx,
+        logAns,
+        updateAbility: _updateAbility,
+        getActingStarter,
+        appendSessionEvent,
+        markCoopRotatePending,
+        safeTo,
+        doEnemyTurnRef,
+      },
+      ui: UI,
+      pvp: pvpState,
+      battleFields: battleFieldSetters,
+    }));
   };
 
   const {

@@ -28,6 +28,9 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `timeoutFlow.ts`
   - Timer timeout resolution (PvP turn swap + PvE timeout handling).
   - Keeps timer-branch logic out of `useBattle`.
+- `timeoutDepsBuilder.ts`
+  - Typed dependency builder for `runTimeoutController`.
+  - Prevents hook-level setter wiring mistakes on timeout paths.
 - `startGameFlow.ts`
   - Start-of-run flow orchestration for PvP and standard modes.
   - Keeps `startGame` branch logic out of `useBattle`.

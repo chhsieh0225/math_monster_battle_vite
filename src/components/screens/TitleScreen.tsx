@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
-import { STARTERS } from '../../data/starters';
+import { STARTERS } from '../../data/starters.ts';
 import { VERSION } from '../../data/constants';
 import type { StarterLite, StarterStage } from '../../types/game';
 import { useI18n } from '../../i18n';

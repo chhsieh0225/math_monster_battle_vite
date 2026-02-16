@@ -1,4 +1,4 @@
-import { PLAYER_MAX_HP } from '../../data/constants.js';
+import { PLAYER_MAX_HP } from '../../data/constants.ts';
 
 type UnknownRecord = Record<string, unknown>;
 

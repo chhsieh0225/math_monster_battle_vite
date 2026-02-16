@@ -15,7 +15,7 @@ import {
   buildDashboardInsights,
   opIcon,
   opName,
-} from '../../utils/dashboardInsights';
+} from '../../utils/dashboardInsights.ts';
 
 type DashboardOp =
   | '+' | '-' | '×' | '÷'
@@ -143,7 +143,7 @@ type DashboardTranslate = (
   params?: Record<string, string | number>,
 ) => string;
 
-const OPS_TYPED = OPS as DashboardOp[];
+const OPS_TYPED = OPS as unknown as DashboardOp[];
 const CORE_OPS: DashboardOp[] = ['+', '-', '×', '÷'];
 const loadSessionsTyped: () => DashboardSession[] = loadSessions;
 const clearSessionsTyped: () => void = clearSessions;

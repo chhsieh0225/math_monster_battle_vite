@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { SKILL_SETS } from '../../data/skillSets.js';
+import { SKILL_SETS } from '../../data/skillSets.ts';
 import {
   resolveBossTurnState,
   resolveEnemyAssistStrike,

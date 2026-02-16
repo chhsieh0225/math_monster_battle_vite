@@ -197,7 +197,7 @@ export type UseBattlePublicApi = {
   expNext: number;
   chargeReady: boolean;
   achUnlocked: AchievementId[];
-  achPopup: string | null;
+  achPopup: AchievementId | null;
   encData: EncyclopediaData;
   dismissAch: () => void;
   setTimedMode: (next: boolean) => void;

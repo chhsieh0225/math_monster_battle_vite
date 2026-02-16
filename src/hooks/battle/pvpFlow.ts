@@ -1,4 +1,4 @@
-import { PVP_BALANCE } from '../../data/pvpBalance.js';
+import { PVP_BALANCE } from '../../data/pvpBalance.ts';
 import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
 import { resolvePvpStrike } from './turnResolver.ts';

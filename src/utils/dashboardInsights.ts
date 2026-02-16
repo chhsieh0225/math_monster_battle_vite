@@ -1,12 +1,131 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+type TemplateParams = Record<string, string | number>;
+type Translator = (key: string, fallback?: string, params?: TemplateParams) => string;
+
+type DashboardOptions = {
+  t?: Translator;
+  minAttempts?: number;
+  maxItems?: number;
+  now?: number;
+};
+
 export const OPS = [
   '+', '-', '×', '÷',
   'mixed2', 'mixed3', 'mixed4',
   'unknown1', 'unknown2', 'unknown3', 'unknown4',
-];
+ ] as const;
 
-const OP_GROUPS_BASE = [
+type OpId = (typeof OPS)[number];
+
+type RawOpStat = {
+  attempted?: number;
+  correct?: number;
+  totalMs?: number;
+};
+
+type SessionData = {
+  startTime?: number;
+  tC?: number;
+  tW?: number;
+  opStats?: Partial<Record<OpId, RawOpStat>>;
+};
+
+type OpAggEntry = { a: number; c: number; ms: number };
+type OpAgg = Record<OpId, OpAggEntry>;
+
+type OpDataEntry = {
+  attempted: number;
+  correct: number;
+  totalMs: number;
+  acc: number;
+  avgTimeSec: number | null;
+  avgTime: string;
+  weak: boolean;
+};
+
+type OpData = Record<OpId, OpDataEntry>;
+
+type GroupDataEntry = {
+  id: string;
+  icon: string;
+  ops: string[];
+  label: string;
+  attempted: number;
+  correct: number;
+  totalMs: number;
+  acc: number;
+  avgTimeSec: number | null;
+  weaknessScore: number;
+};
+
+type WeakSuggestion = {
+  id: string;
+  groupId: string;
+  icon: string;
+  label: string;
+  title: string;
+  summary: string;
+  action: string;
+  focusOps: string[];
+  score: number;
+};
+
+type PeriodSummary = {
+  sessions: number;
+  activeDays: number;
+  totalQ: number;
+  totalC: number;
+  totalW: number;
+  acc: number;
+  avgTimeSec: number | null;
+  groupData: GroupDataEntry[];
+  strongest: GroupDataEntry | null;
+  weakest: GroupDataEntry | null;
+};
+
+type WeeklyReport = {
+  range: {
+    start: number;
+    end: number;
+    startLabel: string;
+    endLabel: string;
+  };
+  current: PeriodSummary;
+  previous: PeriodSummary;
+  delta: {
+    acc: number | null;
+    questions: number;
+    sessions: number;
+  };
+  headline: string;
+};
+
+type PracticeTask = {
+  id: string;
+  title: string;
+  summary: string;
+  goal: string;
+  focusOps: string[];
+  level: string;
+};
+
+type OverviewStats = {
+  totalSessions: number;
+  totalQ: number;
+  overallAcc: number;
+  avgTimeS: string;
+  opData: OpData;
+  recentAcc: Array<{ label: string; value: number }>;
+  groupData: GroupDataEntry[];
+};
+
+type GroupBase = {
+  id: string;
+  icon: string;
+  ops: OpId[];
+};
+const OP_GROUPS_BASE: GroupBase[] = [
   { id: 'add', icon: '➕', ops: ['+'] },
   { id: 'sub', icon: '➖', ops: ['-'] },
   { id: 'mul', icon: '✖️', ops: ['×'] },
@@ -15,7 +134,7 @@ const OP_GROUPS_BASE = [
   { id: 'mixed', icon: '⚡', ops: ['mixed2', 'mixed3', 'mixed4'] },
 ];
 
-const GROUP_LABEL_FALLBACKS = {
+const GROUP_LABEL_FALLBACKS: Record<string, string> = {
   add: 'Addition',
   sub: 'Subtraction',
   mul: 'Multiplication',
@@ -24,7 +143,7 @@ const GROUP_LABEL_FALLBACKS = {
   mixed: 'Mixed Ops',
 };
 
-const GROUP_LABEL_KEYS = {
+const GROUP_LABEL_KEYS: Record<string, string> = {
   add: 'dashboard.op.group.add',
   sub: 'dashboard.op.group.sub',
   mul: 'dashboard.op.group.mul',
@@ -33,12 +152,12 @@ const GROUP_LABEL_KEYS = {
   mixed: 'dashboard.op.group.mixed',
 };
 
-export const OP_GROUPS = OP_GROUPS_BASE.map((group) => ({
+export const OP_GROUPS: Array<GroupBase & { label: string }> = OP_GROUPS_BASE.map((group) => ({
   ...group,
   label: GROUP_LABEL_FALLBACKS[group.id] || group.id,
 }));
 
-const OP_ICONS = {
+const OP_ICONS: Record<string, string> = {
   '+': '➕',
   '-': '➖',
   '×': '✖️',
@@ -52,7 +171,7 @@ const OP_ICONS = {
   unknown4: '🦁',
 };
 
-const OP_NAME_FALLBACKS = {
+const OP_NAME_FALLBACKS: Record<string, string> = {
   '+': 'Addition',
   '-': 'Subtraction',
   '×': 'Multiplication',
@@ -66,7 +185,7 @@ const OP_NAME_FALLBACKS = {
   unknown4: 'Unknown Mixed',
 };
 
-const OP_NAME_KEYS = {
+const OP_NAME_KEYS: Record<string, string> = {
   '+': 'dashboard.op.name.add',
   '-': 'dashboard.op.name.sub',
   '×': 'dashboard.op.name.mul',
@@ -80,7 +199,7 @@ const OP_NAME_KEYS = {
   unknown4: 'dashboard.op.name.unknown4',
 };
 
-const WEAK_ACTIONS = {
+const WEAK_ACTIONS: Record<string, string> = {
   add: 'Start with single-digit and carry problems. Aim for 2 runs/day and 85% accuracy.',
   sub: 'Split into complement and borrowing drills. Do at least 10 subtraction questions per run.',
   mul: 'Solidify multiplication tables first, then move to two-digit multiplication.',
@@ -90,7 +209,7 @@ const WEAK_ACTIONS = {
   default: 'Use segmented practice and increase pace gradually while keeping accuracy.',
 };
 
-const WEAK_ACTION_KEYS = {
+const WEAK_ACTION_KEYS: Record<string, string> = {
   add: 'dashboard.weak.action.add',
   sub: 'dashboard.weak.action.sub',
   mul: 'dashboard.weak.action.mul',
@@ -99,54 +218,55 @@ const WEAK_ACTION_KEYS = {
   mixed: 'dashboard.weak.action.mixed',
 };
 
-function toNum(v) {
+function toNum(v: unknown): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
 
-function toFixed1(v) {
+function toFixed1(v: number): number {
   return Number((Math.round(v * 10) / 10).toFixed(1));
 }
 
-function formatTemplate(template, params) {
+function formatTemplate(template: string, params?: TemplateParams): string {
   if (!params) return template;
-  return template.replace(/\{(\w+)\}/g, (_match, key) => String(params[key] ?? ''));
+  return template.replace(/\{(\w+)\}/g, (_match, key: string) => String(params[key] ?? ''));
 }
 
-function createTranslator(options = {}) {
+function createTranslator(options: DashboardOptions = {}): Translator {
   const t = typeof options.t === 'function' ? options.t : null;
   return (key, fallback, params) => {
+    const safeFallback = fallback ?? '';
     if (t) {
-      const translated = t(key, fallback, params);
+      const translated = t(key, safeFallback, params);
       if (typeof translated === 'string' && translated.length > 0) {
         return translated;
       }
     }
-    return formatTemplate(fallback, params);
+    return formatTemplate(safeFallback, params);
   };
 }
 
-function resolveGroupLabel(groupId, translate, fallbackLabel) {
+function resolveGroupLabel(groupId: string, translate: Translator, fallbackLabel?: string): string {
   const key = GROUP_LABEL_KEYS[groupId] || 'dashboard.op.group.unknown';
   const fallback = fallbackLabel || GROUP_LABEL_FALLBACKS[groupId] || groupId;
   return translate(key, fallback);
 }
 
-function createOpAgg() {
-  const agg = {};
+function createOpAgg(): OpAgg {
+  const agg = {} as OpAgg;
   for (const op of OPS) agg[op] = { a: 0, c: 0, ms: 0 };
   return agg;
 }
 
-function getSessionTs(session) {
+function getSessionTs(session: SessionData | undefined): number {
   return toNum(session?.startTime);
 }
 
-function isWithin(ts, from, to) {
+function isWithin(ts: number, from: number, to: number): boolean {
   return ts >= from && ts < to;
 }
 
-function groupByDateCount(sessions) {
+function groupByDateCount(sessions: SessionData[]): number {
   const dates = new Set();
   for (const s of sessions) {
     const ts = getSessionTs(s);
@@ -156,7 +276,7 @@ function groupByDateCount(sessions) {
   return dates.size;
 }
 
-function aggregateOpStats(sessions) {
+function aggregateOpStats(sessions: SessionData[]): OpAgg {
   const agg = createOpAgg();
   for (const s of sessions) {
     if (!s?.opStats) continue;
@@ -171,8 +291,8 @@ function aggregateOpStats(sessions) {
   return agg;
 }
 
-function deriveOpData(opAgg) {
-  const opData = {};
+function deriveOpData(opAgg: OpAgg): OpData {
+  const opData = {} as OpData;
   for (const op of OPS) {
     const d = opAgg[op] || { a: 0, c: 0, ms: 0 };
     const attempted = toNum(d.a);
@@ -194,7 +314,7 @@ function deriveOpData(opAgg) {
   return opData;
 }
 
-function deriveGroupData(opData, options = {}) {
+function deriveGroupData(opData: OpData, options: DashboardOptions = {}): GroupDataEntry[] {
   const translate = createTranslator(options);
   return OP_GROUPS.map((g) => {
     let attempted = 0;
@@ -228,7 +348,7 @@ function deriveGroupData(opData, options = {}) {
   });
 }
 
-function findExtremes(groupData) {
+function findExtremes(groupData: GroupDataEntry[]): { strongest: GroupDataEntry | null; weakest: GroupDataEntry | null } {
   const candidates = groupData.filter((g) => g.attempted >= 5);
   if (!candidates.length) {
     return { strongest: null, weakest: null };
@@ -247,7 +367,7 @@ function findExtremes(groupData) {
   return { strongest, weakest };
 }
 
-function summarizePeriod(sessions, options = {}) {
+function summarizePeriod(sessions: SessionData[], options: DashboardOptions = {}): PeriodSummary {
   let totalC = 0;
   let totalW = 0;
   for (const s of sessions) {
@@ -284,11 +404,11 @@ function summarizePeriod(sessions, options = {}) {
   };
 }
 
-export function opIcon(op) {
+export function opIcon(op: string): string {
   return OP_ICONS[op] || op;
 }
 
-export function opName(op, options = {}) {
+export function opName(op: string, options: DashboardOptions = {}): string {
   const translate = createTranslator(options);
   const key = OP_NAME_KEYS[op];
   const fallback = OP_NAME_FALLBACKS[op] || op;
@@ -296,7 +416,7 @@ export function opName(op, options = {}) {
   return translate(key, fallback);
 }
 
-export function computeOverviewStats(sessions, options = {}) {
+export function computeOverviewStats(sessions: SessionData[], options: DashboardOptions = {}): OverviewStats {
   const safeSessions = Array.isArray(sessions) ? sessions : [];
 
   let totalC = 0;
@@ -338,7 +458,7 @@ export function computeOverviewStats(sessions, options = {}) {
   };
 }
 
-export function buildWeaknessSuggestions(overview, options = {}) {
+export function buildWeaknessSuggestions(overview: OverviewStats | null | undefined, options: DashboardOptions = {}): WeakSuggestion[] {
   const translate = createTranslator(options);
   const stats = overview || computeOverviewStats([], options);
   const minAttempts = toNum(options.minAttempts) || 6;
@@ -404,7 +524,7 @@ export function buildWeaknessSuggestions(overview, options = {}) {
   }];
 }
 
-export function buildWeeklyReport(sessions, options = {}) {
+export function buildWeeklyReport(sessions: SessionData[], options: DashboardOptions = {}): WeeklyReport {
   const translate = createTranslator(options);
   const safeSessions = Array.isArray(sessions) ? sessions : [];
   const now = toNum(options.now) || Date.now();
@@ -464,7 +584,7 @@ export function buildWeeklyReport(sessions, options = {}) {
   };
 }
 
-function makeConsistencyTask(weeklyReport, translate) {
+function makeConsistencyTask(weeklyReport: WeeklyReport, translate: Translator): PracticeTask {
   const c = weeklyReport.current;
   if (c.sessions < 4) {
     return {
@@ -498,7 +618,7 @@ function makeConsistencyTask(weeklyReport, translate) {
   };
 }
 
-function makeSpeedOrChallengeTask(overview, weeklyReport, translate) {
+function makeSpeedOrChallengeTask(overview: OverviewStats, weeklyReport: WeeklyReport, translate: Translator): PracticeTask {
   const avg = overview.avgTimeS === '—' ? null : toNum(overview.avgTimeS);
   if (avg != null && avg > 8.5) {
     return {
@@ -536,7 +656,7 @@ function makeSpeedOrChallengeTask(overview, weeklyReport, translate) {
   };
 }
 
-function getFoundationTasks(translate) {
+function getFoundationTasks(translate: Translator): PracticeTask[] {
   return [
     {
       id: 'task-foundation-addsub',
@@ -557,7 +677,12 @@ function getFoundationTasks(translate) {
   ];
 }
 
-export function buildPracticeRecommendations(overview, weeklyReport, weakSuggestions, options = {}) {
+export function buildPracticeRecommendations(
+  overview: OverviewStats,
+  weeklyReport: WeeklyReport,
+  weakSuggestions: WeakSuggestion[],
+  options: DashboardOptions = {},
+): PracticeTask[] {
   const translate = createTranslator(options);
   const maxItems = toNum(options.maxItems) || 3;
   const tasks = [];
@@ -599,7 +724,12 @@ export function buildPracticeRecommendations(overview, weeklyReport, weakSuggest
   return uniq;
 }
 
-export function buildDashboardInsights(sessions, options = {}) {
+export function buildDashboardInsights(sessions: SessionData[], options: DashboardOptions = {}): {
+  overview: OverviewStats;
+  weakSuggestions: WeakSuggestion[];
+  weeklyReport: WeeklyReport;
+  practiceTasks: PracticeTask[];
+} {
   const overview = computeOverviewStats(sessions, options);
   const weakSuggestions = buildWeaknessSuggestions(overview, options);
   const weeklyReport = buildWeeklyReport(sessions, options);

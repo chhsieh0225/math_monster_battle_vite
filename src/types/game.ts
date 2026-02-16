@@ -56,6 +56,19 @@ export type StarterMoveLite = {
   color?: string;
 };
 
+export type StarterMoveDef = StarterMoveLite & {
+  type: string;
+  type2?: string;
+  desc: string;
+  basePower: number;
+  growth: number;
+  range: [number, number];
+  ops: string[];
+  color: string;
+  bg: string;
+  risky?: boolean;
+};
+
 export type StarterLite = {
   id?: StarterId;
   name: string;
@@ -68,8 +81,12 @@ export type StarterSelectable = StarterLite & {
   id: StarterId;
   typeIcon: string;
   typeName: string;
-  moves: StarterMoveLite[];
+  moves: StarterMoveDef[];
   selectedStageIdx?: number;
+};
+
+export type StarterConfig = StarterSelectable & {
+  type: string;
 };
 
 export type SelectionMode = "single" | "coop" | "pvp" | "double";
@@ -119,4 +136,69 @@ export type EncyclopediaStarterEntry = {
   skill?: string;
   stageLabel: string;
   moves: StarterMoveLite[];
+};
+
+export type MonsterType =
+  | "grass"
+  | "fire"
+  | "water"
+  | "electric"
+  | "ghost"
+  | "steel"
+  | "dark";
+
+export type MonsterTraitFields = {
+  trait?: string;
+  traitName?: string;
+  traitDesc?: string;
+};
+
+export type MonsterConfig = MonsterTraitFields & {
+  id: string;
+  name: string;
+  hp: number;
+  atk: number;
+  c1: string;
+  c2: string;
+  spriteKey: string;
+  evolvedSpriteKey?: string;
+  evolvedName?: string;
+  evolveLvl?: number;
+  dropTable: string;
+  mType: MonsterType;
+  typeIcon: string;
+  typeName: string;
+};
+
+export type SlimeVariantConfig = MonsterTraitFields & {
+  id: string;
+  name: string;
+  spriteKey: string;
+  c1: string;
+  c2: string;
+  mType: MonsterType;
+  typeIcon: string;
+  typeName: string;
+  dropTable: string;
+  hpMult: number;
+  atkMult: number;
+};
+
+export type SpriteFn = (c1: string, c2: string) => string;
+
+export type HydratedMonster = Omit<
+  MonsterConfig,
+  "spriteKey" | "evolvedSpriteKey" | "dropTable"
+> & {
+  svgFn: SpriteFn;
+  evolvedSvgFn?: SpriteFn;
+  drops: string[];
+};
+
+export type HydratedSlimeVariant = Omit<
+  SlimeVariantConfig,
+  "spriteKey" | "dropTable"
+> & {
+  svgFn: SpriteFn;
+  drops: string[];
 };

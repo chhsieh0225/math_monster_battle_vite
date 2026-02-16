@@ -1,6 +1,6 @@
 // Vite 會根據 vite.config.js 的 base 設定自動填入正確的前綴
 // 本地開發時 BASE = '/'，GitHub Pages 部署時 BASE = './'
-const BASE = import.meta.env.BASE_URL;
+const BASE = import.meta.env?.BASE_URL || '/';
 
 // Sprite image paths — loaded as static assets from public/
 export const SPRITE_IMGS = {

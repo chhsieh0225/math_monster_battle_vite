@@ -2,7 +2,9 @@
  * Enemy and variant content definitions (no runtime sprite/drop wiring).
  * Runtime adapters map sprite keys and drop table keys to concrete values.
  */
-export const MONSTER_CONFIGS = [
+import type { MonsterConfig, SlimeVariantConfig } from '../types/game';
+
+export const MONSTER_CONFIGS: MonsterConfig[] = [
   {
     id: "slime",
     name: "史萊姆",
@@ -94,7 +96,7 @@ export const MONSTER_CONFIGS = [
   },
 ];
 
-export const SLIME_VARIANT_CONFIGS = [
+export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
   {
     id: "slime",
     name: "綠史萊姆",
@@ -193,7 +195,7 @@ export const SLIME_VARIANT_CONFIGS = [
   },
 ];
 
-export const EVOLVED_SLIME_VARIANT_CONFIGS = [
+export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
   {
     id: "slimeEvolved",
     name: "叢林巨魔",
@@ -291,4 +293,3 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS = [
     atkMult: 1.0,
   },
 ];
-

@@ -12,7 +12,7 @@ type AchievementScreenProps = {
 
 export default function AchievementScreen({ unlockedIds = [], onBack }: AchievementScreenProps) {
   const { t } = useI18n();
-  const achievements = ACHIEVEMENTS as AchievementDef[];
+  const achievements: AchievementDef[] = ACHIEVEMENTS;
   const unlocked = new Set<AchievementId>(unlockedIds);
   const total = achievements.length;
   const done = unlockedIds.length;

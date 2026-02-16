@@ -14,7 +14,7 @@
  *   run/screen/battle transitions to prevent stale timers from mutating state.
  * • Evolution no longer races with advance() — a `pendingEvolve` ref
  *   gates the screen transition so it only fires when the user taps.
- * • Damage math is delegated to utils/damageCalc.js (pure, testable).
+ * • Damage math is delegated to utils/damageCalc.ts (pure, testable).
  * • Achievements, Encyclopedia, and SessionLog are extracted into sub-hooks
  *   (useAchievements, useEncyclopedia, useSessionLog) to keep this file focused.
  */
@@ -26,7 +26,7 @@ import {
   MAX_MOVE_LVL,
   TIMER_SEC,
 } from '../data/constants';
-import { STARTERS } from '../data/starters';
+import { STARTERS } from '../data/starters.ts';
 import {
   localizeEnemy,
   localizeEnemyRoster,
@@ -34,7 +34,7 @@ import {
   localizeStarter,
 } from '../utils/contentLocalization';
 
-import { genQ } from '../utils/questionGenerator';
+import { genQ } from '../utils/questionGenerator.ts';
 import {
   movePower,
   bestEffectiveness,

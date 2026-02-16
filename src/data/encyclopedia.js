@@ -7,8 +7,8 @@
  *   ENC_ENTRIES       — enemy monsters (used for "collect all" achievement)
  *   STARTER_ENTRIES   — player starters × 3 stages (always visible, no unlock)
  */
-import { MONSTERS, SLIME_VARIANTS, EVOLVED_SLIME_VARIANTS, TYPE_EFF } from './monsters';
-import { STARTERS } from './starters';
+import { MONSTERS, SLIME_VARIANTS, EVOLVED_SLIME_VARIANTS, TYPE_EFF } from './monsters.ts';
+import { STARTERS } from './starters.ts';
 
 function weaknesses(mType) {
   const weak = [];

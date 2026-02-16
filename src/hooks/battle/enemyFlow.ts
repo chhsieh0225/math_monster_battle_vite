@@ -1,5 +1,5 @@
-import { getEff } from '../../data/typeEffectiveness.js';
-import { calcEnemyDamage } from '../../utils/damageCalc.js';
+import { getEff } from '../../data/typeEffectiveness.ts';
+import { calcEnemyDamage } from '../../utils/damageCalc.ts';
 import { computeBossPhase } from '../../utils/turnFlow.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
 import {

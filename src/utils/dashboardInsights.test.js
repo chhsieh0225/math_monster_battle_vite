@@ -7,7 +7,7 @@ import {
   buildWeaknessSuggestions,
   buildWeeklyReport,
   computeOverviewStats,
-} from './dashboardInsights.js';
+} from './dashboardInsights.ts';
 
 const CJK_RE = /[\u3400-\u9fff]/;
 

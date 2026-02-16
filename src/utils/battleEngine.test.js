@@ -8,7 +8,7 @@ import {
   resolveLevelProgress,
   updateAbilityModel,
   updateAdaptiveDifficulty,
-} from './battleEngine.js';
+} from './battleEngine.ts';
 
 test('updateAdaptiveDifficulty raises and lowers level by recent accuracy window', () => {
   const hard = updateAdaptiveDifficulty({

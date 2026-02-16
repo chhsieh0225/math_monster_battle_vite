@@ -1,19 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { DROP_TABLES } from './dropTables.js';
+import { DROP_TABLES } from './dropTables.ts';
 import {
   EVOLVED_SLIME_VARIANT_CONFIGS,
   MONSTER_CONFIGS,
   SLIME_VARIANT_CONFIGS,
-} from './monsterConfigs.js';
-import { SKILL_SETS } from './skillSets.js';
+} from './monsterConfigs.ts';
+import { SKILL_SETS } from './skillSets.ts';
 import {
   DOUBLE_STAGE_WAVES,
   STAGE_SCALE_BASE,
   STAGE_SCALE_STEP,
   STAGE_WAVES,
-} from './stageConfigs.js';
+} from './stageConfigs.ts';
 
 test('stage config references valid monster ids', () => {
   const knownIds = new Set(MONSTER_CONFIGS.map(mon => mon.id));

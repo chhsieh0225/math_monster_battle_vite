@@ -4,14 +4,15 @@ import {
   playergrass0SVG, playergrass1SVG, playergrass2SVG,
   playerelectric0SVG, playerelectric1SVG, playerelectric2SVG,
   playerlion0SVG, playerlion1SVG, playerlion2SVG,
-} from './sprites';
-import { SKILL_SETS } from './skillSets';
+} from './sprites.js';
+import type { StarterConfig } from '../types/game';
+import { SKILL_SETS } from './skillSets.ts';
 
 // growth = 每升一級增加的威力
 // 簡單招 growth 高（勤練就強），困難招 growth 低（起手就強）
 // 所有招式 Lv.6 時威力趨近：42 / 45 / 45 / 55
 
-export const STARTERS = [
+export const STARTERS: StarterConfig[] = [
   {id:"fire",name:"小火獸",type:"fire",typeIcon:"🔥",typeName:"火",c1:"#f87171",c2:"#b91c1c",
    stages:[
      {name:"小火獸",emoji:"🔥",svgFn:playerfire0SVG},

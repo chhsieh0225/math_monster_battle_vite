@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { genQ } from './questionGenerator.js';
+import { genQ } from './questionGenerator.ts';
 
 test('genQ returns 4 choices and includes the answer', () => {
   const move = { range: [2, 10], ops: ["+"] };

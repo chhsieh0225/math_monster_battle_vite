@@ -2,8 +2,8 @@ import {
   HITS_PER_LVL,
   MAX_MOVE_LVL,
   POWER_CAPS,
-} from '../../data/constants.js';
-import { bestAttackType, freezeChance } from '../../utils/damageCalc.js';
+} from '../../data/constants.ts';
+import { bestAttackType, freezeChance } from '../../utils/damageCalc.ts';
 import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import {
   getAttackEffectClearDelay,

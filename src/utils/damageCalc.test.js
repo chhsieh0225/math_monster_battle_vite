@@ -7,7 +7,7 @@ import {
   calcAttackDamage,
   calcEnemyDamage,
   freezeChance,
-} from './damageCalc.js';
+} from './damageCalc.ts';
 
 function withMockRandom(value, fn) {
   const original = Math.random;

@@ -1,12 +1,12 @@
-import { PLAYER_MAX_HP } from '../../data/constants.js';
-import { PVP_BALANCE } from '../../data/pvpBalance.js';
-import { getEff } from '../../data/typeEffectiveness.js';
+import { PLAYER_MAX_HP } from '../../data/constants.ts';
+import { PVP_BALANCE } from '../../data/pvpBalance.ts';
+import { getEff } from '../../data/typeEffectiveness.ts';
 import {
   bestEffectiveness,
   calcAttackDamage,
   calcEnemyDamage,
   movePower,
-} from '../../utils/damageCalc.js';
+} from '../../utils/damageCalc.ts';
 import { computeBossPhase, decideBossTurnEvent } from '../../utils/turnFlow.ts';
 
 type ChanceFn = (probability: number) => boolean;

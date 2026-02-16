@@ -15,6 +15,20 @@
 - 已完成紀錄/成就 utils TS 化：`sessionLogger.ts`、`achievementStore.ts`。
 - 已完成事件追蹤 utils TS 化：`eventLogger.ts`（含既有事件 FIFO 上限測試維持通過）。
 - 已完成音效模組 TS 化：`sfx.ts`（Web Audio API 行為維持不變）。
+- 已完成學習模型/升級計算 utils TS 化：`battleEngine.ts`（原行為與測試結果維持一致）。
+- 已完成敵人波次生成 TS 化：`rosterBuilder.ts`，並新增其行為測試覆蓋（單人/雙打波次與 slime 屬性對齊）。
+- 已補強 `sprites.js` 在非 Vite 環境的 `BASE_URL` fallback，避免 Node 測試直接匯入時崩潰。
+- 已完成傷害公式 utils TS 化：`damageCalc.ts`（含既有傷害/凍結機率測試全綠）。
+- 已完成題目生成引擎 TS 化：`questionGenerator.ts`（mixed/unknown 題型行為與測試維持一致）。
+- 已完成儀表板分析引擎 TS 化：`dashboardInsights.ts`（週報/弱點/任務建議邏輯型別化，測試全綠）。
+- 已完成核心常數資料 TS 化：`constants.ts`（battle/runtime 匯入已同步更新）。
+- 已完成屬性相剋資料 TS 化：`typeEffectiveness.ts`，並同步更新 battle/damage 模組引用。
+- 已完成關卡波次資料 TS 化：`stageConfigs.ts`（內容設定測試維持通過）。
+- 已完成掉落/技能/成就資料 TS 化：`dropTables.ts`、`skillSets.ts`、`achievements.ts`。
+- 已完成 PvP 平衡參數 TS 化：`pvpBalance.ts`（戰鬥計算行為維持一致）。
+- 已完成怪獸內容配置 TS 化：`monsterConfigs.ts`（怪獸/史萊姆變體資料具名型別化）。
+- 已完成怪獸資料組裝 TS 化：`monsters.ts`（sprite/drop hydration 流程型別化）。
+- 已完成玩家初始角色資料 TS 化：`starters.ts`（starter + 招式集合以共享型別標註）。
 - 已新增 `usePvpState.ts`，將 `useBattle.js` 的 PvP 狀態/重置邏輯抽離，降低主 hook 重複與複雜度。
 - 已新增 `useBattleSessionLifecycle.ts`，集中管理 run seed、事件 session id、結算與退出事件記錄，移除 `useBattle.js` 內重複 lifecycle 程式碼。
 - `useBattle.js` 已再抽出 `resetRunRuntimeState()`，合併 PvP/一般開局共用的 runtime 重置流程。

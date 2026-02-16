@@ -21,8 +21,9 @@ type BuildSelectMoveFlowArgsArgs = {
   >;
   ui: Pick<
     RunSelectMoveFlowArgs,
-    'setSelIdx' | 'setDiffLevel' | 'setQ' | 'setFb' | 'setAnswered' | 'setPhase'
+    'setSelIdx' | 'setQ' | 'setFb' | 'setAnswered' | 'setPhase'
   >;
+  battleFields: Pick<RunSelectMoveFlowArgs, 'setDiffLevel'>;
 };
 
 type BuildEnemyTurnArgsArgs = {
@@ -60,6 +61,7 @@ export function buildSelectMoveFlowArgs({
   sr,
   runtime,
   ui,
+  battleFields,
 }: BuildSelectMoveFlowArgsArgs): RunSelectMoveFlowArgs {
   return {
     index,
@@ -74,7 +76,7 @@ export function buildSelectMoveFlowArgs({
     markQStart: runtime.markQStart,
     sfx: runtime.sfx,
     setSelIdx: ui.setSelIdx,
-    setDiffLevel: ui.setDiffLevel,
+    setDiffLevel: battleFields.setDiffLevel,
     setQ: ui.setQ,
     setFb: ui.setFb,
     setAnswered: ui.setAnswered,

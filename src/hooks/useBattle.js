@@ -595,6 +595,7 @@ export function useBattle() {
         sfx,
       },
       ui: UI,
+      battleFields: battleFieldSetters,
     }));
   };
 

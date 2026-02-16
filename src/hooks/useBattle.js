@@ -69,7 +69,7 @@ import { createBattleFieldSetters } from './battle/battleFieldSetters';
 import { effectOrchestrator } from './battle/effectOrchestrator';
 import { runAnswerController } from './battle/answerController.ts';
 import {
-  buildRunAnswerControllerArgs,
+  buildPlayerAnswerHandlerDeps,
   buildPvpAnswerHandlerDeps,
 } from './battle/answerDepsBuilder.ts';
 import { runEnemyTurnController } from './battle/enemyTurnController.ts';
@@ -640,43 +640,43 @@ export function useBattle() {
 
   // --- Player answers a question ---
   const onAns = (choice) => {
-    runAnswerController(buildRunAnswerControllerArgs({
+    const playerAnswerHandlerDeps = buildPlayerAnswerHandlerDeps({
+      runtime: {
+        sr,
+        safeTo,
+        chance,
+        sfx,
+        t,
+      },
+      ui: UI,
+      battleFields: battleFieldSetters,
+      callbacks: {
+        tryUnlock,
+        frozenR,
+        doEnemyTurn,
+        handleVictory,
+        handleFreeze,
+        _endSession,
+        setScreen,
+        handlePlayerPartyKo,
+        runAllySupportTurn,
+      },
+    });
+
+    runAnswerController({
       choice,
       answered,
       setAnswered,
       clearTimer,
       sr,
       pvpHandlerDeps: pvpAnswerHandlerDeps,
-      player: {
-        runtime: {
-          sr,
-          safeTo,
-          chance,
-          sfx,
-          t,
-        },
-        ui: UI,
-        battleFields: battleFieldSetters,
-        callbacks: {
-          tryUnlock,
-          frozenR,
-          doEnemyTurn,
-          handleVictory,
-          handleFreeze,
-          _endSession,
-          setScreen,
-          handlePlayerPartyKo,
-          runAllySupportTurn,
-        },
-      },
-      flow: {
-        getActingStarter,
-        logAns,
-        appendSessionEvent,
-        updateAbility: _updateAbility,
-        markCoopRotatePending,
-      },
-    }));
+      playerHandlerDeps: playerAnswerHandlerDeps,
+      getActingStarter,
+      logAns,
+      appendSessionEvent,
+      updateAbility: _updateAbility,
+      markCoopRotatePending,
+    });
   };
 
   // --- Advance from text / victory phase ---

@@ -1,12 +1,10 @@
 import type { useBattleUIState } from '../useBattleUIState.ts';
 import type { usePvpState } from '../usePvpState.ts';
 import type { createBattleFieldSetters } from './battleFieldSetters.ts';
-import type { runAnswerController } from './answerController.ts';
 import type { runStandardAnswerFlow, tryHandlePvpAnswer } from './answerFlow.ts';
 
 type PvpAnswerHandlers = Parameters<typeof tryHandlePvpAnswer>[0]['handlers'];
 type PlayerAnswerHandlers = Parameters<typeof runStandardAnswerFlow>[0]['handlers'];
-type RunAnswerControllerArgs = Parameters<typeof runAnswerController>[0];
 
 type BattleUiState = ReturnType<typeof useBattleUIState>;
 type PvpState = ReturnType<typeof usePvpState>;
@@ -47,20 +45,6 @@ type BuildPlayerAnswerHandlerDepsArgs = {
   ui: BattleUiState;
   battleFields: BattleFieldSetters;
   callbacks: PlayerCallbackDeps;
-};
-
-type BuildRunAnswerControllerArgsArgs = {
-  choice: RunAnswerControllerArgs['choice'];
-  answered: RunAnswerControllerArgs['answered'];
-  setAnswered: RunAnswerControllerArgs['setAnswered'];
-  clearTimer: RunAnswerControllerArgs['clearTimer'];
-  sr: RunAnswerControllerArgs['sr'];
-  pvpHandlerDeps: RunAnswerControllerArgs['pvpHandlerDeps'];
-  player: BuildPlayerAnswerHandlerDepsArgs;
-  flow: Pick<
-    RunAnswerControllerArgs,
-    'getActingStarter' | 'logAns' | 'appendSessionEvent' | 'updateAbility' | 'markCoopRotatePending'
-  >;
 };
 
 export function buildPvpAnswerHandlerDeps({
@@ -159,31 +143,5 @@ export function buildPlayerAnswerHandlerDeps({
     handlePlayerPartyKo: callbacks.handlePlayerPartyKo,
     runAllySupportTurn: callbacks.runAllySupportTurn,
     t: runtime.t,
-  };
-}
-
-export function buildRunAnswerControllerArgs({
-  choice,
-  answered,
-  setAnswered,
-  clearTimer,
-  sr,
-  pvpHandlerDeps,
-  player,
-  flow,
-}: BuildRunAnswerControllerArgsArgs): RunAnswerControllerArgs {
-  return {
-    choice,
-    answered,
-    setAnswered,
-    clearTimer,
-    sr,
-    pvpHandlerDeps,
-    playerHandlerDeps: buildPlayerAnswerHandlerDeps(player),
-    getActingStarter: flow.getActingStarter,
-    logAns: flow.logAns,
-    appendSessionEvent: flow.appendSessionEvent,
-    updateAbility: flow.updateAbility,
-    markCoopRotatePending: flow.markCoopRotatePending,
   };
 }

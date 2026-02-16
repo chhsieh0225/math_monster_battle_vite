@@ -1,4 +1,5 @@
 import { isCoopBattleMode } from './coopFlow';
+import { handlePvpAnswer } from './pvpFlow';
 
 type MoveLite = {
   name?: string;
@@ -52,6 +53,14 @@ type LogSubmittedAnswerArgs = {
   updateAbility: (op: string | undefined, correct: boolean) => void;
   markCoopRotatePending: () => void;
   correct: boolean;
+};
+
+type PvpAnswerArgs = Parameters<typeof handlePvpAnswer>[0];
+
+type TryHandlePvpAnswerArgs = {
+  choice: number;
+  state: PvpAnswerArgs['state'];
+  handlers: Omit<PvpAnswerArgs, 'choice' | 'state'>;
 };
 
 export function buildAnswerContext({
@@ -115,4 +124,16 @@ export function logSubmittedAnswer({
   if (isCoopBattleMode(state.battleMode)) {
     markCoopRotatePending();
   }
+}
+
+export function tryHandlePvpAnswer({
+  choice,
+  state,
+  handlers,
+}: TryHandlePvpAnswerArgs): boolean {
+  return handlePvpAnswer({
+    choice,
+    state,
+    ...handlers,
+  });
 }

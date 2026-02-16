@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { getStageMaxHp } from '../../utils/playerHp.js';
+import { getStageMaxHp } from '../../utils/playerHp.ts';
 import {
   applyGameCompletionAchievements,
   applyVictoryAchievements,

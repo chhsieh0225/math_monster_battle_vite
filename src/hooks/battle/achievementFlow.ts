@@ -1,4 +1,4 @@
-import { getStageMaxHp } from '../../utils/playerHp.js';
+import { getStageMaxHp } from '../../utils/playerHp.ts';
 import type { AchievementId } from '../../types/game';
 
 type TryUnlock = (id: AchievementId) => void;

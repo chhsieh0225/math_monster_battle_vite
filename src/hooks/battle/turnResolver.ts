@@ -7,7 +7,7 @@ import {
   calcEnemyDamage,
   movePower,
 } from '../../utils/damageCalc.js';
-import { computeBossPhase, decideBossTurnEvent } from '../../utils/turnFlow.js';
+import { computeBossPhase, decideBossTurnEvent } from '../../utils/turnFlow.ts';
 
 type ChanceFn = (probability: number) => boolean;
 type RandomFn = () => number;

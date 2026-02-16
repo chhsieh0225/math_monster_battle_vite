@@ -27,6 +27,10 @@ Current migrated files:
 - `src/hooks/useMobileExperience.ts`
 - `src/hooks/useBattleRng.ts`
 - `src/hooks/useTimer.ts`
+- `src/utils/prng.ts`
+- `src/utils/playerHp.ts`
+- `src/utils/effectTiming.ts`
+- `src/utils/turnFlow.ts`
 - `src/hooks/useAchievements.ts`
 - `src/hooks/useEncyclopedia.ts`
 - `src/hooks/useSessionLog.ts`

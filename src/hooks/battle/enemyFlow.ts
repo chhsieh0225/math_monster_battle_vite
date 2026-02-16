@@ -1,6 +1,6 @@
 import { getEff } from '../../data/typeEffectiveness.js';
 import { calcEnemyDamage } from '../../utils/damageCalc.js';
-import { computeBossPhase } from '../../utils/turnFlow.js';
+import { computeBossPhase } from '../../utils/turnFlow.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
 import {
   resolveBossTurnState,

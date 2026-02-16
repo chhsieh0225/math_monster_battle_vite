@@ -1,4 +1,4 @@
-import { getStarterStageIdx } from '../../utils/playerHp.js';
+import { getStarterStageIdx } from '../../utils/playerHp.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;

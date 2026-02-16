@@ -4,12 +4,12 @@ import {
   POWER_CAPS,
 } from '../../data/constants.js';
 import { bestAttackType, freezeChance } from '../../utils/damageCalc.js';
-import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.js';
+import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import {
   getAttackEffectClearDelay,
   getAttackEffectHitDelay,
   getAttackEffectNextStepDelay,
-} from '../../utils/effectTiming.js';
+} from '../../utils/effectTiming.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
 import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
 

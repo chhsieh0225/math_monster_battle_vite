@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { computeBossPhase, decideBossTurnEvent } from './turnFlow.js';
+import { computeBossPhase, decideBossTurnEvent } from './turnFlow.ts';
 
 test('computeBossPhase transitions at 60% and 30% hp thresholds', () => {
   assert.equal(computeBossPhase(100, 100), 1);

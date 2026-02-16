@@ -3,6 +3,7 @@ import type { AchievementId, EncyclopediaData, StarterId } from './game';
 export type BattleMode = "single" | "coop" | "pvp" | "double";
 export type ScreenName =
   | "title"
+  | "daily_challenge"
   | "selection"
   | "battle"
   | "achievements"

@@ -104,3 +104,36 @@ export type StreakTowerPlan = {
   startFloor: number;
   floors: StreakTowerFloorPlan[];
 };
+
+export type DailyRunStatus = 'idle' | 'in_progress' | 'cleared';
+
+export type DailyRunRecord = {
+  dateKey: string;
+  challengeId: string;
+  status: DailyRunStatus;
+  attempts: number;
+  startedAt: number;
+  clearedAt: number | null;
+  battlesCleared: number;
+};
+
+export type DailyChallengeProgress = {
+  version: 1;
+  streakCount: number;
+  totalClears: number;
+  lastClearedDate: string | null;
+  lastPlayedDate: string | null;
+  runs: Record<string, DailyRunRecord>;
+};
+
+export type TowerProgress = {
+  version: 1;
+  seasonId: string;
+  currentRunId: string | null;
+  currentFloor: number;
+  bestFloor: number;
+  winStreak: number;
+  totalClears: number;
+  totalRuns: number;
+  lastPlayedAt: number | null;
+};

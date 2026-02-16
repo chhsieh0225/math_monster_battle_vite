@@ -23,6 +23,7 @@ type TitleScreenProps = {
   onAchievements: TitleAction;
   onEncyclopedia: TitleAction;
   onDashboard: TitleAction;
+  onDailyChallenge: TitleAction;
   onSettings: TitleAction;
   lowPerfMode?: boolean;
 };
@@ -36,6 +37,7 @@ export default function TitleScreen({
   onAchievements,
   onEncyclopedia,
   onDashboard,
+  onDailyChallenge,
   onSettings,
   lowPerfMode = false,
 }: TitleScreenProps) {
@@ -53,6 +55,7 @@ export default function TitleScreen({
     { icon: '⭐', label: t('title.feature.achievements', 'Achievements'), fn: onAchievements, aria: t('a11y.title.openAchievements', 'Open achievements') },
     { icon: '📚', label: t('title.feature.encyclopedia', 'Encyclopedia'), fn: onEncyclopedia, aria: t('a11y.title.openEncyclopedia', 'Open encyclopedia') },
     { icon: '📊', label: t('title.feature.dashboard', 'Parent Dashboard'), fn: onDashboard, aria: t('a11y.title.openDashboard', 'Open parent dashboard') },
+    { icon: '🗓️', label: t('title.feature.daily', 'Daily Challenge'), fn: onDailyChallenge, aria: t('a11y.title.openDailyChallenge', 'Open daily challenge') },
     { icon: '⚙️', label: t('title.feature.settings', 'Settings'), fn: onSettings, aria: t('a11y.title.openSettings', 'Open settings'), full: true },
   ];
 

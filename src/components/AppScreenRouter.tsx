@@ -13,6 +13,7 @@ const EncyclopediaScreen = lazy(() => import('./screens/EncyclopediaScreen'));
 const DashboardScreen = lazy(() => import('./screens/DashboardScreen'));
 const SettingsScreen = lazy(() => import('./screens/SettingsScreen'));
 const PvpResultScreen = lazy(() => import('./screens/PvpResultScreen'));
+const DailyChallengeScreen = lazy(() => import('./screens/DailyChallengeScreen'));
 
 type SelectionPayload = Parameters<ComponentProps<typeof SelectionScreen>['onSelect']>[0];
 type DualSelectionPayload = Extract<SelectionPayload, { p1: unknown; p2: unknown }>;
@@ -101,9 +102,30 @@ export default function AppScreenRouter({
         onAchievements={() => battle.setScreen('achievements')}
         onEncyclopedia={() => battle.setScreen('encyclopedia')}
         onDashboard={() => battle.setScreen('dashboard')}
+        onDailyChallenge={() => battle.setScreen('daily_challenge')}
         onSettings={() => onOpenSettings('title')}
         lowPerfMode={mobile.lowPerfMode}
       />,
+    );
+  }
+
+  if (battle.screen === 'daily_challenge') {
+    return wrapMain(
+      withScreenSuspense(
+        <DailyChallengeScreen
+          onBack={() => battle.setScreen('title')}
+          onStartDaily={() => {
+            battle.setTimedMode(true);
+            battle.setBattleMode('single');
+            battle.setScreen('selection');
+          }}
+          onStartTower={() => {
+            battle.setTimedMode(true);
+            battle.setBattleMode('single');
+            battle.setScreen('selection');
+          }}
+        />,
+      ),
     );
   }
 

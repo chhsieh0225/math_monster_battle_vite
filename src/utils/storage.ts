@@ -1,4 +1,5 @@
 const DEV = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
+const CHALLENGE_PREFIX = 'mathMonsterBattle_challenge_';
 
 function warn(action: string, key: string, error: unknown): void {
   if (!DEV) return;
@@ -9,6 +10,10 @@ function cloneFallback<T>(fallback: T): T {
   if (Array.isArray(fallback)) return [...fallback] as T;
   if (fallback && typeof fallback === 'object') return { ...(fallback as Record<string, unknown>) } as T;
   return fallback;
+}
+
+function challengeKey(scope: string): string {
+  return `${CHALLENGE_PREFIX}${scope}`;
 }
 
 export function readJson<T>(key: string, fallback: T): T {
@@ -61,4 +66,16 @@ export function removeKey(key: string): boolean {
     warn('removeKey', key, error);
     return false;
   }
+}
+
+export function readChallenge<T>(scope: string, fallback: T): T {
+  return readJson<T>(challengeKey(scope), fallback);
+}
+
+export function writeChallenge<T>(scope: string, value: T): boolean {
+  return writeJson<T>(challengeKey(scope), value);
+}
+
+export function removeChallenge(scope: string): boolean {
+  return removeKey(challengeKey(scope));
 }

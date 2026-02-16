@@ -75,12 +75,10 @@ import {
 import { runEnemyTurnController } from './battle/enemyTurnController.ts';
 import { runTimeoutController } from './battle/timeoutController.ts';
 import { buildTimeoutControllerArgs } from './battle/timeoutDepsBuilder.ts';
-import { runStartGameController } from './battle/startGameController.ts';
+import { runStartGameOrchestrator } from './battle/startGameOrchestrator.ts';
 import { runStartBattleFlow } from './battle/startBattleFlow';
 import { runStartBattleController } from './battle/startBattleController.ts';
 import {
-  buildPvpStartDeps,
-  buildStandardStartDeps,
   buildStartBattleSharedArgs,
 } from './battle/startDepsBuilder.ts';
 import { runSelectMoveFlow } from './battle/selectMoveFlow';
@@ -468,59 +466,58 @@ export function useBattle() {
   }, [setDmgs, setParts, setAtkEffect, setEffMsg]);
 
   const startGame = (starterOverride, modeOverride = null, allyOverride = null) => {
-    invalidateAsyncWork();
-    beginRun();
-    clearTimer();
-    resetCoopRotatePending();
-    const pvpStartDeps = buildPvpStartDeps({
-      runtime: {
-        chance,
-        getStarterMaxHp,
-        t,
-        setEnemies,
-        setTimedMode,
-        setCoopActiveSlot,
-        dispatchBattle,
-        appendSessionEvent,
-        initSession,
-        createPvpEnemyFromStarter,
-        setScreen,
-        playBattleIntro,
-      },
-      pvp: pvpState,
-      ui: UI,
-      resetRunRuntimeState,
-    });
-    const standardStartDeps = buildStandardStartDeps({
-      runtime: {
-        buildNewRoster,
-        getStarterMaxHp,
-        setEnemies,
-        setCoopActiveSlot,
-        dispatchBattle,
-        appendSessionEvent,
-        initSession,
-        setScreen,
-        startBattle,
-      },
-      pvp: pvpState,
-      resetRunRuntimeState,
-    });
-
-    runStartGameController({
+    runStartGameOrchestrator({
       starterOverride,
       modeOverride,
       allyOverride,
-      sr,
-      battleMode,
-      pvpStarter2,
-      locale,
-      localizeStarter,
-      pickPartnerStarter: (mainStarter) => pickPartnerStarter(mainStarter, pickIndex, locale),
-      getStarterStageIdx,
-      getStageMaxHp,
-      pvpStartDeps,
-      standardStartDeps,
+      invalidateAsyncWork,
+      beginRun,
+      clearTimer,
+      resetCoopRotatePending,
+      pvpStartDepsArgs: {
+        runtime: {
+          chance,
+          getStarterMaxHp,
+          t,
+          setEnemies,
+          setTimedMode,
+          setCoopActiveSlot,
+          dispatchBattle,
+          appendSessionEvent,
+          initSession,
+          createPvpEnemyFromStarter,
+          setScreen,
+          playBattleIntro,
+        },
+        pvp: pvpState,
+        ui: UI,
+        resetRunRuntimeState,
+      },
+      standardStartDepsArgs: {
+        runtime: {
+          buildNewRoster,
+          getStarterMaxHp,
+          setEnemies,
+          setCoopActiveSlot,
+          dispatchBattle,
+          appendSessionEvent,
+          initSession,
+          setScreen,
+          startBattle,
+        },
+        pvp: pvpState,
+        resetRunRuntimeState,
+      },
+      startGameControllerArgs: {
+        sr,
+        battleMode,
+        pvpStarter2,
+        locale,
+        localizeStarter,
+        pickPartnerStarter: (mainStarter) => pickPartnerStarter(mainStarter, pickIndex, locale),
+        getStarterStageIdx,
+        getStageMaxHp,
+      },
     });
   };
 

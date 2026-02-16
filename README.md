@@ -33,6 +33,7 @@ Current migrated files:
 - `src/hooks/useBattleRuntime.ts`
 - `src/hooks/useCoopTurnRotation.ts`
 - `src/hooks/useBattleUIState.ts`
+- `src/hooks/usePvpState.ts`
 - `src/hooks/battle/battleReducer.ts`
 - `src/hooks/battle/turnResolver.ts`
 - `src/hooks/battle/effectOrchestrator.ts`

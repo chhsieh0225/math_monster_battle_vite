@@ -50,6 +50,7 @@ import { useEncyclopedia } from './useEncyclopedia';
 import { useSessionLog } from './useSessionLog';
 import { useBattleRng } from './useBattleRng';
 import { useBattleUIState } from './useBattleUIState';
+import { usePvpState } from './usePvpState';
 import { ENC_TOTAL } from '../data/encyclopedia';
 import sfx from '../utils/sfx';
 import { buildRoster } from '../utils/rosterBuilder';
@@ -127,25 +128,28 @@ export function useBattle() {
   const [timedMode, setTimedMode] = useState(false);
   const [battleMode, setBattleMode] = useState("single");
   const [coopActiveSlot, setCoopActiveSlot] = useState("main");
-  const [pvpStarter2, setPvpStarter2] = useState(null);
-  const [pvpHp2, setPvpHp2] = useState(getStageMaxHp(0));
-  const [pvpTurn, setPvpTurn] = useState("p1");
-  const [pvpWinner, setPvpWinner] = useState(null);
-  const [pvpChargeP1, setPvpChargeP1] = useState(0);
-  const [pvpChargeP2, setPvpChargeP2] = useState(0);
-  const [pvpActionCount, setPvpActionCount] = useState(0);
-  const [pvpBurnP1, setPvpBurnP1] = useState(0);
-  const [pvpBurnP2, setPvpBurnP2] = useState(0);
-  const [pvpFreezeP1, setPvpFreezeP1] = useState(false);
-  const [pvpFreezeP2, setPvpFreezeP2] = useState(false);
-  const [pvpStaticP1, setPvpStaticP1] = useState(0);
-  const [pvpStaticP2, setPvpStaticP2] = useState(0);
-  const [pvpParalyzeP1, setPvpParalyzeP1] = useState(false);
-  const [pvpParalyzeP2, setPvpParalyzeP2] = useState(false);
-  const [pvpComboP1, setPvpComboP1] = useState(0);
-  const [pvpComboP2, setPvpComboP2] = useState(0);
-  const [pvpSpecDefP1, setPvpSpecDefP1] = useState(false);
-  const [pvpSpecDefP2, setPvpSpecDefP2] = useState(false);
+  const {
+    pvpStarter2, setPvpStarter2,
+    pvpHp2, setPvpHp2,
+    pvpTurn, setPvpTurn,
+    pvpWinner, setPvpWinner,
+    pvpChargeP1, setPvpChargeP1,
+    pvpChargeP2, setPvpChargeP2,
+    pvpActionCount, setPvpActionCount,
+    pvpBurnP1, setPvpBurnP1,
+    pvpBurnP2, setPvpBurnP2,
+    pvpFreezeP1, setPvpFreezeP1,
+    pvpFreezeP2, setPvpFreezeP2,
+    pvpStaticP1, setPvpStaticP1,
+    pvpStaticP2, setPvpStaticP2,
+    pvpParalyzeP1, setPvpParalyzeP1,
+    pvpParalyzeP2, setPvpParalyzeP2,
+    pvpComboP1, setPvpComboP1,
+    pvpComboP2, setPvpComboP2,
+    pvpSpecDefP1, setPvpSpecDefP1,
+    pvpSpecDefP2, setPvpSpecDefP2,
+    resetPvpRuntime,
+  } = usePvpState();
 
   // ──── Player ────
   const [starter, setStarter] = useState(null);
@@ -483,15 +487,7 @@ export function useBattle() {
       setPvpStarter2(rival);
       setPvpHp2(getStarterMaxHp(rival));
       setPvpTurn(firstTurn);
-      setPvpWinner(null);
-      setPvpChargeP1(0); setPvpChargeP2(0);
-      setPvpActionCount(0);
-      setPvpBurnP1(0); setPvpBurnP2(0);
-      setPvpFreezeP1(false); setPvpFreezeP2(false);
-      setPvpStaticP1(0); setPvpStaticP2(0);
-      setPvpParalyzeP1(false); setPvpParalyzeP2(false);
-      setPvpComboP1(0); setPvpComboP2(0);
-      setPvpSpecDefP1(false); setPvpSpecDefP2(false);
+      resetPvpRuntime();
       setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
       frozenR.current = false;
       abilityModelRef.current = createAbilityModel(2);
@@ -520,15 +516,7 @@ export function useBattle() {
     const newRoster = buildNewRoster(mode);
     setEnemies(newRoster);
     setCoopActiveSlot("main");
-    setPvpWinner(null);
-    setPvpChargeP1(0); setPvpChargeP2(0);
-    setPvpActionCount(0);
-    setPvpBurnP1(0); setPvpBurnP2(0);
-    setPvpFreezeP1(false); setPvpFreezeP2(false);
-    setPvpStaticP1(0); setPvpStaticP2(0);
-    setPvpParalyzeP1(false); setPvpParalyzeP2(false);
-    setPvpComboP1(0); setPvpComboP2(0);
-    setPvpSpecDefP1(false); setPvpSpecDefP2(false);
+    resetPvpRuntime();
     const isCoop = mode === "coop" || mode === "double";
     const partner = isCoop
       ? localizeStarter(allyOverride || pickPartnerStarter(leader, pickIndex, locale), locale)
@@ -994,7 +982,7 @@ export function useBattle() {
 
   const setPvpStarter2Localized = useCallback((nextStarter) => {
     setPvpStarter2(localizeStarter(nextStarter, locale));
-  }, [locale]);
+  }, [locale, setPvpStarter2]);
 
   // ═══════════════════════════════════════════════════════════════
   //  PUBLIC API

@@ -69,6 +69,7 @@ import { effectOrchestrator } from './battle/effectOrchestrator';
 import { runEnemyTurn } from './battle/enemyFlow';
 import { runPlayerAnswer } from './battle/playerFlow';
 import { handleTimeoutFlow } from './battle/timeoutFlow';
+import { runPvpStartFlow, runStandardStartFlow } from './battle/startGameFlow';
 import {
   getActingStarter as resolveActingStarter,
   getOtherPvpTurn,
@@ -445,76 +446,57 @@ export function useBattle() {
     const leaderMaxHp = getStageMaxHp(leaderStageIdx);
 
     if (mode === "pvp") {
-      setEnemies([]);
-      setTimedMode(true);
-      setCoopActiveSlot("main");
-      const firstTurn = chance(0.5) ? "p1" : "p2";
-      dispatchBattle({
-        type: "reset_run",
-        patch: {
-          diffLevel: 2,
-          allySub: null,
-          pHpSub: 0,
-          pHp: leaderMaxHp,
-          pStg: leaderStageIdx,
-        },
+      runPvpStartFlow({
+        leader,
+        rival,
+        leaderMaxHp,
+        leaderStageIdx,
+        chance,
+        getStarterMaxHp,
+        t,
+        setEnemies,
+        setTimedMode,
+        setCoopActiveSlot,
+        dispatchBattle,
+        setPvpStarter2,
+        setPvpHp2,
+        setPvpTurn,
+        resetPvpRuntime,
+        resetRunRuntimeState,
+        appendSessionEvent,
+        initSession,
+        createPvpEnemyFromStarter,
+        setPhase,
+        setBText,
+        setScreen,
+        playBattleIntro: () => effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim }),
       });
-      setPvpStarter2(rival);
-      setPvpHp2(getStarterMaxHp(rival));
-      setPvpTurn(firstTurn);
-      resetPvpRuntime();
-      resetRunRuntimeState();
-      appendSessionEvent("starter_selected", {
-        starterId: leader?.id || null,
-        starterName: leader?.name || null,
-        starterType: leader?.type || null,
-        timedMode: true,
-      });
-      initSession(leader, true);
-      const enemyPvp = createPvpEnemyFromStarter(rival, t);
-      dispatchBattle({ type: "start_battle", enemy: enemyPvp, enemySub: null, round: 0 });
-      setPhase("text");
-      const firstName = firstTurn === "p1" ? (leader?.name || t("battle.pvp.player1", "Player 1")) : (rival?.name || t("battle.pvp.player2", "Player 2"));
-      setBText(t("battle.pvp.start", "⚔️ PvP start! {p1} vs {p2}, first turn: {first}", {
-        p1: leader?.name || t("battle.pvp.player1", "Player 1"),
-        p2: rival?.name || t("battle.pvp.player2", "Player 2"),
-        first: firstName,
-      }));
-      setScreen("battle");
-      effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim });
       return;
     }
 
-    const newRoster = buildNewRoster(mode);
-    setEnemies(newRoster);
-    setCoopActiveSlot("main");
-    resetPvpRuntime();
     const isCoop = mode === "coop" || mode === "double";
     const partner = isCoop
       ? localizeStarter(allyOverride || pickPartnerStarter(leader, pickIndex, locale), locale)
       : null;
-    dispatchBattle({
-      type: "reset_run",
-      patch: {
-        diffLevel: 2,
-        allySub: partner,
-        pHpSub: partner ? getStarterMaxHp(partner) : 0,
-        pHp: leaderMaxHp,
-        pStg: leaderStageIdx,
-      },
+    runStandardStartFlow({
+      mode,
+      leader,
+      partner,
+      leaderMaxHp,
+      leaderStageIdx,
+      currentTimedMode: !!sr.current.timedMode,
+      buildNewRoster,
+      getStarterMaxHp,
+      setEnemies,
+      setCoopActiveSlot,
+      resetPvpRuntime,
+      dispatchBattle,
+      resetRunRuntimeState,
+      appendSessionEvent,
+      initSession,
+      setScreen,
+      startBattle,
     });
-    resetRunRuntimeState();
-    // Init session log — use override on first game since setStarter is async
-    const s = leader;
-    appendSessionEvent("starter_selected", {
-      starterId: s?.id || null,
-      starterName: s?.name || null,
-      starterType: s?.type || null,
-      timedMode: !!sr.current.timedMode,
-    });
-    initSession(s, sr.current.timedMode);
-    setScreen("battle");
-    startBattle(0, newRoster);
   };
 
   // ── Finalize and persist session log ──

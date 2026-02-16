@@ -15,6 +15,7 @@
 - `useBattle.js` 已再抽出 `resetRunRuntimeState()`，合併 PvP/一般開局共用的 runtime 重置流程。
 - 已新增 `battle/timeoutFlow.ts`，將 on-timeout 的 PvP/PvE 分支從 `useBattle.js` 抽離。
 - 已新增 `battle/turnHelpers.ts`，抽離「當前出手者判定 / PvP 名稱與回合切換」共用函式。
+- 已新增 `battle/startGameFlow.ts`，將 `startGame` 的 PvP 與一般模式開局流程抽離。
 - 目前 hooks 層僅剩 `useBattle.js` 為 JS 主協調器（已有 `useBattle.ts` typed wrapper）。
 - 每次遷移批次皆驗證 `npm run typecheck`、`npm run lint`、`npm test`、`npm run build` 全綠。
 

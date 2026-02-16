@@ -4,7 +4,7 @@ type TimerListener = () => void;
 
 type TimerHookApi = {
   paused: boolean;
-  startTimer: () => void;
+  startTimer: (durationSec?: number) => void;
   clearTimer: () => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
@@ -75,12 +75,15 @@ export function useTimer(timerSec: number, onTimeoutCallback?: () => void): Time
     }, 100);
   }, [clearTimer, setTimerLeft]);
 
-  const startTimer = useCallback(() => {
+  const startTimer = useCallback((durationSec?: number) => {
+    const nextDuration = Number.isFinite(durationSec) && Number(durationSec) > 0
+      ? Number(durationSec)
+      : timerSec;
     clearTimer();
-    setTimerLeft(timerSec);
-    remainingRef.current = timerSec;
+    setTimerLeft(nextDuration);
+    remainingRef.current = nextDuration;
     setPaused(false);
-    runInterval(timerSec);
+    runInterval(nextDuration);
   }, [timerSec, clearTimer, runInterval, setTimerLeft]);
 
   const pauseTimer = useCallback(() => {

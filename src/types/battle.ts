@@ -194,6 +194,7 @@ export type UseBattleState = {
   sealedTurns: number;
   diffLevel: number;
   gamePaused: boolean;
+  questionTimerSec: number;
   expNext: number;
   chargeReady: boolean;
   achUnlocked: AchievementId[];

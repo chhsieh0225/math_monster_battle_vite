@@ -62,6 +62,20 @@ export function getDailyChallengeSeed(plan: DailyChallengePlan | null | undefine
   return typeof plan.dateKey === 'string' ? `daily:${plan.dateKey}` : null;
 }
 
+export function resolveDailyBattleRule(
+  plan: DailyChallengePlan | null | undefined,
+  roundIndex: number,
+): DailyChallengeBattlePlan | null {
+  if (!plan || !Array.isArray(plan.battles) || plan.battles.length <= 0) return null;
+  let remaining = Math.max(0, Math.floor(Number(roundIndex) || 0));
+  for (const battle of plan.battles) {
+    const slots = clampEnemyCount(battle?.enemyCount);
+    if (remaining < slots) return battle;
+    remaining -= slots;
+  }
+  return plan.battles[plan.battles.length - 1] || null;
+}
+
 export function buildDailyChallengeRoster<T extends RosterEnemy>(
   baseRoster: T[],
   plan: DailyChallengePlan | null | undefined,

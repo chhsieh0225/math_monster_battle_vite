@@ -23,19 +23,24 @@ type MoveDiffLevelResolver = (move: BattleMove | undefined) => number;
 type GenQuestion = (
   move: BattleMove | undefined,
   diffMod: number,
-  options?: { t?: (key: string, fallback?: string, params?: Record<string, string | number>) => string },
+  options?: {
+    t?: (key: string, fallback?: string, params?: Record<string, string | number>) => string;
+    allowedOps?: string[];
+  },
 ) => BattleQuestion;
 
 type RunSelectMoveFlowArgs = {
   index: number;
   state: SafeState;
   timedMode: boolean;
+  questionTimeLimitSec?: number | null;
+  questionAllowedOps?: string[] | null;
   diffMods: number[];
   t?: (key: string, fallback?: string, params?: Record<string, string | number>) => string;
   getActingStarter: (state: SafeState) => BattleStarter;
   getMoveDiffLevel: MoveDiffLevelResolver;
   genQuestion: GenQuestion;
-  startTimer: () => void;
+  startTimer: (durationSec?: number) => void;
   markQStart: () => void;
   sfx: { play: (name: string) => void };
   setSelIdx: (value: number) => void;
@@ -54,6 +59,8 @@ export function runSelectMoveFlow({
   index,
   state,
   timedMode,
+  questionTimeLimitSec,
+  questionAllowedOps,
   diffMods,
   t,
   getActingStarter,
@@ -92,12 +99,15 @@ export function runSelectMoveFlow({
   const lv = getMoveDiffLevel(move);
   const diffMod = diffMods[lv] ?? diffMods[2];
   setDiffLevel(lv);
-  setQ(genQuestion(move, diffMod, { t }));
+  const allowedOps = Array.isArray(questionAllowedOps) && questionAllowedOps.length > 0
+    ? questionAllowedOps
+    : undefined;
+  setQ(genQuestion(move, diffMod, { t, allowedOps }));
   setFb(null);
   setAnswered(false);
   setPhase('question');
   markQStart();
 
-  if (timedMode || state.battleMode === 'pvp') startTimer();
+  if (timedMode || state.battleMode === 'pvp') startTimer(questionTimeLimitSec ?? undefined);
   return true;
 }

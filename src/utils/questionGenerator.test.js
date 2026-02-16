@@ -47,3 +47,20 @@ test('genQ supports localized step text via translator option', () => {
   assert.equal(q.steps[0].startsWith("THINK "), true);
   assert.equal(q.steps[2].startsWith("THEREFORE "), true);
 });
+
+test('genQ respects allowedOps filter when overlap exists', () => {
+  const move = { range: [2, 10], ops: ["+", "-"] };
+  for (let i = 0; i < 20; i += 1) {
+    const q = genQ(move, 1, { allowedOps: ["-"] });
+    assert.equal(q.op, "-");
+  }
+});
+
+test('genQ falls back to allowedOps when move ops do not overlap', () => {
+  const move = { range: [2, 10], ops: ["+"] };
+  for (let i = 0; i < 20; i += 1) {
+    const q = genQ(move, 1, { allowedOps: ["unknown1"] });
+    assert.equal(q.op, "unknown1");
+    assert.equal(q.display.includes("?"), true);
+  }
+});

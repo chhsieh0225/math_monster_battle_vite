@@ -133,6 +133,7 @@ import {
 import {
   buildDailyChallengeRoster,
   getDailyChallengeSeed,
+  resolveDailyBattleRule,
 } from './battle/challengeRuntime.ts';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
 import { useBattleAsyncGate, useBattleStateRef } from './useBattleRuntime';
@@ -326,6 +327,27 @@ export function useBattle() {
     setTimedMode(true);
     setBattleMode('single');
   }, []);
+
+  const dailyPlan = useMemo(() => {
+    if (activeChallenge?.kind === 'daily' && activeChallenge.plan) return activeChallenge.plan;
+    if (queuedChallenge?.kind === 'daily' && queuedChallenge.plan) return queuedChallenge.plan;
+    return null;
+  }, [activeChallenge, queuedChallenge]);
+
+  const currentDailyBattleRule = useMemo(
+    () => resolveDailyBattleRule(dailyPlan, round),
+    [dailyPlan, round],
+  );
+  const questionTimerSec = useMemo(() => {
+    const raw = Number(currentDailyBattleRule?.timeLimitSec);
+    return Number.isFinite(raw) && raw > 0 ? raw : TIMER_SEC;
+  }, [currentDailyBattleRule]);
+  const questionAllowedOps = useMemo(() => {
+    if (!Array.isArray(currentDailyBattleRule?.questionFocus) || currentDailyBattleRule.questionFocus.length <= 0) {
+      return null;
+    }
+    return [...currentDailyBattleRule.questionFocus];
+  }, [currentDailyBattleRule]);
 
   const genBattleQuestion = useCallback(
     (move, diffMod, options) => withRandomSource(rand, () => genQ(move, diffMod, options)),
@@ -670,6 +692,8 @@ export function useBattle() {
       sr,
       runtime: {
         timedMode,
+        questionTimeLimitSec: questionTimerSec,
+        questionAllowedOps,
         diffMods: DIFF_MODS,
         t,
         getActingStarter,
@@ -863,6 +887,7 @@ export function useBattle() {
     burnStack, frozen, staticStack, specDef, defAnim, cursed,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, diffLevel,
     gamePaused,
+    questionTimerSec,
     expNext, chargeReady,
     achUnlocked, achPopup, encData,
   };

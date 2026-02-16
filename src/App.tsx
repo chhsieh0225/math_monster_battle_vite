@@ -21,7 +21,7 @@ import { useSpriteTargets } from './hooks/useSpriteTargets';
 
 // Data
 import { SCENES } from './data/scenes';
-import { TIMER_SEC, HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from './data/constants';
+import { HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from './data/constants';
 import { PVP_BALANCE } from './data/pvpBalance';
 import { getStageMaxHp, getStarterMaxHp } from './utils/playerHp';
 import { hasSpecialTrait } from './utils/traits';
@@ -809,7 +809,7 @@ function App() {
           <div className="battle-question-card">
             {B.timedMode && !B.answered && (
               <QuestionTimerHud
-                timerSec={TIMER_SEC}
+                timerSec={B.questionTimerSec}
                 subscribe={B.timerSubscribe}
                 getSnapshot={B.getTimerLeft}
               />

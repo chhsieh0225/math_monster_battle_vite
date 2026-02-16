@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildDailyChallengeRoster, getDailyChallengeSeed } from './challengeRuntime.ts';
+import {
+  buildDailyChallengeRoster,
+  getDailyChallengeSeed,
+  resolveDailyBattleRule,
+} from './challengeRuntime.ts';
 
 const plan = {
   dateKey: '2026-02-16',
@@ -40,4 +44,11 @@ test('buildDailyChallengeRoster shapes enemy count and tuning', () => {
   assert.ok(roster[0].lvl > baseRoster[0].lvl);
   assert.ok(roster[1].maxHp >= baseRoster[1].maxHp);
   assert.equal(roster[2].challengeBattleIndex, 2);
+});
+
+test('resolveDailyBattleRule maps round index by enemyCount slices', () => {
+  assert.equal(resolveDailyBattleRule(plan, 0)?.battleSeed, 'daily:2026-02-16:b1');
+  assert.equal(resolveDailyBattleRule(plan, 1)?.battleSeed, 'daily:2026-02-16:b2');
+  assert.equal(resolveDailyBattleRule(plan, 2)?.battleSeed, 'daily:2026-02-16:b2');
+  assert.equal(resolveDailyBattleRule(null, 0), null);
 });

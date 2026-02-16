@@ -15,6 +15,7 @@ function createDeps(overrides = {}) {
     setPhase: [],
     markQStart: 0,
     startTimer: 0,
+    startTimerArgs: [],
   };
   return {
     calls,
@@ -33,7 +34,10 @@ function createDeps(overrides = {}) {
       getActingStarter: () => ({ moves: [{}, { risky: false }, {}] }),
       getMoveDiffLevel: () => 2,
       genQuestion: (_move, mod) => ({ mod }),
-      startTimer: () => { calls.startTimer += 1; },
+      startTimer: (durationSec) => {
+        calls.startTimer += 1;
+        calls.startTimerArgs.push(durationSec);
+      },
       markQStart: () => { calls.markQStart += 1; },
       sfx: { play: (name) => { calls.sfx.push(name); } },
       setSelIdx: (value) => { calls.setSelIdx.push(value); },
@@ -96,6 +100,18 @@ test('runSelectMoveFlow enters question phase and starts timer in timed mode', (
   assert.deepEqual(calls.setPhase, ['question']);
   assert.equal(calls.markQStart, 1);
   assert.equal(calls.startTimer, 1);
+  assert.deepEqual(calls.startTimerArgs, [undefined]);
+});
+
+test('runSelectMoveFlow starts timer with explicit question time limit', () => {
+  const { calls, args } = createDeps({
+    timedMode: true,
+    questionTimeLimitSec: 5,
+  });
+  const out = runSelectMoveFlow(args);
+  assert.equal(out, true);
+  assert.equal(calls.startTimer, 1);
+  assert.deepEqual(calls.startTimerArgs, [5]);
 });
 
 test('runSelectMoveFlow blocks sealed move in non-pvp mode', () => {

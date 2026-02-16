@@ -9,6 +9,7 @@ type Translator = (key: string, fallback: string, params?: TemplateParams) => st
 
 export type QuestionGeneratorOptions = {
   t?: Translator;
+  allowedOps?: string[];
 };
 
 export type QuestionGeneratorMove = {
@@ -426,7 +427,16 @@ export function genQ(
   const maxRange = Math.max(minRange, Math.max(2, Math.round(baseRange[1] * diffMod)));
   const range: [number, number] = [minRange, maxRange];
 
-  const ops = Array.isArray(move.ops) && move.ops.length > 0 ? move.ops : ["+"];
+  const baseOps = Array.isArray(move.ops) && move.ops.length > 0 ? move.ops : ["+"];
+  const allowedOps = Array.isArray(options.allowedOps)
+    ? options.allowedOps.filter((item): item is string => typeof item === 'string' && item.length > 0)
+    : [];
+  const intersectedOps = allowedOps.length > 0
+    ? baseOps.filter((item) => allowedOps.includes(item))
+    : [];
+  const ops = intersectedOps.length > 0
+    ? intersectedOps
+    : (allowedOps.length > 0 ? allowedOps : baseOps);
   const op = pickOne(ops) ?? "+";
 
   // ── Mixed operations (electric starter) ──

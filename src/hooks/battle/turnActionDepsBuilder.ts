@@ -10,6 +10,8 @@ type BuildSelectMoveFlowArgsArgs = {
   runtime: Pick<
     RunSelectMoveFlowArgs,
     | 'timedMode'
+    | 'questionTimeLimitSec'
+    | 'questionAllowedOps'
     | 'diffMods'
     | 't'
     | 'getActingStarter'
@@ -67,6 +69,8 @@ export function buildSelectMoveFlowArgs({
     index,
     state: sr.current,
     timedMode: runtime.timedMode,
+    questionTimeLimitSec: runtime.questionTimeLimitSec,
+    questionAllowedOps: runtime.questionAllowedOps,
     diffMods: runtime.diffMods,
     t: runtime.t,
     getActingStarter: runtime.getActingStarter,

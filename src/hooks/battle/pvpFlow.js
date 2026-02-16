@@ -1,7 +1,7 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.js';
 import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.js';
 import { effectOrchestrator } from './effectOrchestrator.js';
-import { resolvePvpStrike } from './turnResolver.js';
+import { resolvePvpStrike } from './turnResolver.ts';
 
 const TYPE_TO_SCENE = {
   fire: "fire",

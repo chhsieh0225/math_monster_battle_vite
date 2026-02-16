@@ -7,7 +7,7 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `battleReducer.ts`
   - Owns persistent battle state transitions.
   - Pure reducer only. No timers, no side effects.
-- `turnResolver.js`
+- `turnResolver.ts`
   - Pure combat math / turn decision helpers.
   - No React state and no async scheduling.
 - `effectOrchestrator.js`
@@ -34,7 +34,7 @@ This folder holds the battle-domain layering used by `useBattle`.
 
 When adding new combat mechanics:
 
-1. Add pure calculations to `turnResolver.js`.
+1. Add pure calculations to `turnResolver.ts`.
 2. Keep animation timing in `effectOrchestrator.js`.
 3. Keep flow-specific branching in `enemyFlow.js` or `playerFlow.js`.
 4. Only use `battleReducer.ts` for persistent state transitions.

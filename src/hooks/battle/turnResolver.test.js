@@ -8,7 +8,7 @@ import {
   resolvePvpStrike,
   resolvePlayerStrike,
   resolveRiskySelfDamage,
-} from './turnResolver.js';
+} from './turnResolver.ts';
 
 function withMockRandom(value, fn) {
   const prev = Math.random;

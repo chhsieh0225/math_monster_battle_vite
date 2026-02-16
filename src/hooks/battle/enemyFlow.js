@@ -6,7 +6,7 @@ import {
   resolveBossTurnState,
   resolveEnemyAssistStrike,
   resolveEnemyPrimaryStrike,
-} from './turnResolver.js';
+} from './turnResolver.ts';
 
 function formatFallback(template, params) {
   if (!params) return template;

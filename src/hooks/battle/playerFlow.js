@@ -11,7 +11,7 @@ import {
   getAttackEffectNextStepDelay,
 } from '../../utils/effectTiming.js';
 import { effectOrchestrator } from './effectOrchestrator.js';
-import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.js';
+import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
 
 const HIT_ANIMS = {
   fire: "enemyFireHit 0.6s ease",

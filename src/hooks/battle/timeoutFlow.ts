@@ -1,4 +1,4 @@
-import { isCoopBattleMode } from './coopFlow';
+import { isCoopBattleMode } from './coopFlow.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;

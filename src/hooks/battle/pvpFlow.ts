@@ -1,7 +1,7 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.js';
 import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.js';
-import { effectOrchestrator } from './effectOrchestrator.js';
-import { resolvePvpStrike } from './turnResolver';
+import { effectOrchestrator } from './effectOrchestrator.ts';
+import { resolvePvpStrike } from './turnResolver.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;

@@ -10,8 +10,8 @@ import {
   getAttackEffectHitDelay,
   getAttackEffectNextStepDelay,
 } from '../../utils/effectTiming.js';
-import { effectOrchestrator } from './effectOrchestrator.js';
-import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver';
+import { effectOrchestrator } from './effectOrchestrator.ts';
+import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;

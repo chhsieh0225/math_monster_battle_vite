@@ -1,5 +1,5 @@
-import { buildNextEvolvedAlly, isCoopBattleMode } from './coopFlow';
-import { processPvpTurnStart } from './pvpFlow';
+import { buildNextEvolvedAlly, isCoopBattleMode } from './coopFlow.ts';
+import { processPvpTurnStart } from './pvpFlow.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;

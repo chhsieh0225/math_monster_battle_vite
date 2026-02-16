@@ -1,6 +1,6 @@
-import { isCoopBattleMode } from './coopFlow';
-import { handlePvpAnswer } from './pvpFlow';
-import { runPlayerAnswer } from './playerFlow';
+import { isCoopBattleMode } from './coopFlow.ts';
+import { handlePvpAnswer } from './pvpFlow.ts';
+import { runPlayerAnswer } from './playerFlow.ts';
 
 type MoveLite = {
   name?: string;

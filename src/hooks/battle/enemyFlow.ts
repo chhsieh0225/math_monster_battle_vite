@@ -1,12 +1,12 @@
 import { getEff } from '../../data/typeEffectiveness.js';
 import { calcEnemyDamage } from '../../utils/damageCalc.js';
 import { computeBossPhase } from '../../utils/turnFlow.js';
-import { effectOrchestrator } from './effectOrchestrator.js';
+import { effectOrchestrator } from './effectOrchestrator.ts';
 import {
   resolveBossTurnState,
   resolveEnemyAssistStrike,
   resolveEnemyPrimaryStrike,
-} from './turnResolver';
+} from './turnResolver.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;

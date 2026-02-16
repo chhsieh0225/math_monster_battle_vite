@@ -46,6 +46,8 @@ function createTestContext(stateOverrides = {}) {
     burnStack: 0,
     staticStack: 0,
     q: { answer: 10, steps: ['5+5'] },
+    phase: 'question',
+    screen: 'battle',
     ...stateOverrides,
   };
 
@@ -230,4 +232,62 @@ test('runPlayerAnswer wrong path tolerates missing question payload', () => {
   assert.equal(counters.tw.getValue(), 1);
   assert.equal(calls.phase.includes('text'), true);
   assert.equal(calls.doEnemyTurn, 1);
+});
+
+test('runPlayerAnswer wrong path ignores stale delayed callback after battle ended', () => {
+  const queue = [];
+  const { state, calls, deps, counters } = createTestContext({
+    phase: 'question',
+    screen: 'battle',
+  });
+  deps.safeTo = (fn) => { queue.push(fn); };
+
+  runPlayerAnswer({
+    correct: false,
+    move: { name: '炎牙', basePower: 12, growth: 2, type: 'fire', risky: false },
+    starter: { name: '火狐', type: 'fire' },
+    ...deps,
+  });
+
+  assert.equal(counters.tw.getValue(), 1);
+  assert.equal(queue.length > 0, true);
+
+  state.phase = 'ko';
+  state.screen = 'gameover';
+  while (queue.length > 0) {
+    const fn = queue.shift();
+    fn();
+  }
+
+  assert.equal(calls.doEnemyTurn, 0);
+  assert.equal(calls.phase.includes('text'), false);
+  assert.equal(calls.bText.length, 0);
+});
+
+test('runPlayerAnswer correct path ignores stale strike callback after battle ended', () => {
+  const queue = [];
+  const { state, calls, deps, counters } = createTestContext({
+    phase: 'question',
+    screen: 'battle',
+  });
+  deps.safeTo = (fn) => { queue.push(fn); };
+
+  runPlayerAnswer({
+    correct: true,
+    move: { name: '炎牙', basePower: 12, growth: 2, type: 'fire' },
+    starter: { name: '火狐', type: 'fire' },
+    ...deps,
+  });
+
+  assert.equal(queue.length > 0, true);
+  state.phase = 'ko';
+  state.screen = 'gameover';
+  while (queue.length > 0) {
+    const fn = queue.shift();
+    fn();
+  }
+
+  assert.equal(counters.eHp.getValue(), 500);
+  assert.equal(calls.doEnemyTurn, 0);
+  assert.equal(calls.handleVictory.length, 0);
 });

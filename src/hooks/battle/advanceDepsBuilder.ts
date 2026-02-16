@@ -13,7 +13,7 @@ type BattleFieldSetters = ReturnType<typeof createBattleFieldSetters>;
 
 type AdvanceRuntimeDeps = Pick<
   PvpTurnStartHandlers,
-  'safeTo' | 'getOtherPvpTurn' | 'getPvpTurnName' | 'setScreen' | 't'
+  'sr' | 'safeTo' | 'getOtherPvpTurn' | 'getPvpTurnName' | 'setScreen' | 't'
 >;
 
 type BuildAdvancePvpTurnStartDepsArgs = {
@@ -38,8 +38,9 @@ export function buildAdvancePvpTurnStartDeps({
   ui,
   pvp,
   battleFields,
-}: BuildAdvancePvpTurnStartDepsArgs): PvpTurnStartHandlers {
+  }: BuildAdvancePvpTurnStartDepsArgs): PvpTurnStartHandlers {
   return {
+    sr: runtime.sr,
     safeTo: runtime.safeTo,
     getOtherPvpTurn: runtime.getOtherPvpTurn,
     getPvpTurnName: runtime.getPvpTurnName,

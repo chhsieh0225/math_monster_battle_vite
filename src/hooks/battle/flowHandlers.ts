@@ -132,6 +132,7 @@ export function createPlayerAnswerHandlers(deps: PlayerAnswerHandlers): PlayerAn
 
 export function createPvpTurnStartHandlers(deps: PvpTurnStartHandlers): PvpTurnStartHandlers {
   return {
+    sr: deps.sr,
     safeTo: deps.safeTo,
     getOtherPvpTurn: deps.getOtherPvpTurn,
     getPvpTurnName: deps.getPvpTurnName,

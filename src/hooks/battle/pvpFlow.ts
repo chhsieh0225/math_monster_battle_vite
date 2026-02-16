@@ -1,6 +1,7 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
 import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
+import { isBattleActiveState } from './menuResetGuard.ts';
 import { resolvePvpStrike } from './turnResolver.ts';
 
 type TranslatorParams = Record<string, string | number>;
@@ -43,6 +44,8 @@ type BattleQuestion = {
 
 type PvpBattleState = {
   battleMode: string;
+  phase?: string;
+  screen?: string;
   pvpWinner: PvpWinner;
   pvpTurn: PvpTurn;
   starter: StarterLike | null;
@@ -242,6 +245,7 @@ type HandlePvpAnswerArgs = {
 
 type ProcessPvpTurnStartArgs = {
   state: PvpBattleState;
+  sr?: StateRef;
   safeTo: SafeTo;
   getOtherPvpTurn: (turn: PvpTurn) => PvpTurn;
   getPvpTurnName: (state: PvpBattleState, turn: PvpTurn) => string;
@@ -378,6 +382,14 @@ export function handlePvpAnswer({
   t,
 }: HandlePvpAnswerArgs): boolean {
   if (state.battleMode !== 'pvp') return false;
+  if (!isBattleActiveState(state)) return false;
+  const isBattleActive = (): boolean => isBattleActiveState(sr.current);
+  const safeToIfBattleActive = (fn: () => void, ms: number): void => {
+    safeTo(() => {
+      if (!isBattleActive()) return;
+      fn();
+    }, ms);
+  };
   const attacker = state.pvpTurn === 'p1' ? state.starter : state.pvpStarter2;
   const defender = state.pvpTurn === 'p1' ? state.pvpStarter2 : state.starter;
   if (!attacker || !defender || state.selIdx == null) return false;
@@ -451,18 +463,19 @@ export function handlePvpAnswer({
 
   if (strike.isCrit) {
     setEffMsg({ text: tr(t, 'battle.pvp.effect.crit', '💥 Critical!'), color: '#ff6b00' });
-    safeTo(() => setEffMsg(null), 1200);
+    safeToIfBattleActive(() => setEffMsg(null), 1200);
   } else if (strike.eff > 1) {
     setEffMsg({ text: tr(t, 'battle.pvp.effect.super', 'Super effective!'), color: '#22c55e' });
-    safeTo(() => setEffMsg(null), 1200);
+    safeToIfBattleActive(() => setEffMsg(null), 1200);
   } else if (strike.eff < 1) {
     setEffMsg({ text: tr(t, 'battle.pvp.effect.notVery', 'Not very effective'), color: '#94a3b8' });
-    safeTo(() => setEffMsg(null), 1200);
+    safeToIfBattleActive(() => setEffMsg(null), 1200);
   }
 
   const vfxType = move.risky && move.type2 ? move.type2 : move.type;
   const hitAnim = PVP_HIT_ANIMS[vfxType] || 'enemyHit 0.45s ease';
   const runStrike = () => {
+    if (!isBattleActive()) return;
     const s2 = sr.current;
     const sfxKey = move.risky && move.type2 ? move.type2 : move.type;
     sfx.play(sfxKey);
@@ -484,6 +497,7 @@ export function handlePvpAnswer({
       const attackerMainX = currentTurn === 'p1' ? 60 : 140;
       const attackerMainY = currentTurn === 'p1' ? 170 : 55;
       const finishWithTurnSwap = () => {
+        if (!isBattleActive()) return;
         setPvpTurn(nextTurn);
         setPvpActionCount((c) => c + 1);
         setPhase('text');
@@ -493,7 +507,7 @@ export function handlePvpAnswer({
         addD('🛡️BLOCK', defenderMainX, defenderMainY, '#fbbf24');
         sfx.play('specDef');
         setBText(tr(t, 'battle.pvp.specdef.fire', '🛡️ {name} raised a barrier and blocked the hit!', { name: defender.name }));
-        safeTo(() => setAtkEffect(null), 380);
+        safeToIfBattleActive(() => setAtkEffect(null), 380);
         finishWithTurnSwap();
         return;
       }
@@ -504,7 +518,7 @@ export function handlePvpAnswer({
         addD('MISS!', defenderMainX, defenderMainY, '#38bdf8');
         sfx.play('specDef');
         setBText(tr(t, 'battle.pvp.specdef.water', '💨 {name} dodged perfectly!', { name: defender.name }));
-        safeTo(() => {
+        safeToIfBattleActive(() => {
           setEAnim('');
           setPAnim('');
           setAtkEffect(null);
@@ -524,7 +538,7 @@ export function handlePvpAnswer({
           defender: defender.name,
           attacker: attacker.name,
         }));
-        safeTo(() => {
+        safeToIfBattleActive(() => {
           setPAnim('');
           setEAnim('');
           setAtkEffect(null);
@@ -539,7 +553,7 @@ export function handlePvpAnswer({
           setPHp(nh);
           setPAnim('playerHit 0.45s ease');
           addD(`-${dmg}`, attackerMainX, attackerMainY, color);
-          safeTo(() => setPAnim(''), 520);
+          safeToIfBattleActive(() => setPAnim(''), 520);
           return nh <= 0;
         }
         const nh = Math.max(0, s2.pvpHp2 - dmg);
@@ -547,7 +561,7 @@ export function handlePvpAnswer({
         setEHp(nh);
         setEAnim(anim);
         addD(`-${dmg}`, attackerMainX, attackerMainY, color);
-        safeTo(() => setEAnim(''), 520);
+        safeToIfBattleActive(() => setEAnim(''), 520);
         return nh <= 0;
       };
 
@@ -557,7 +571,7 @@ export function handlePvpAnswer({
         const killed = applyCounterToAttacker(counterDmg, '#f59e0b', 'enemyFireHit 0.55s ease');
         sfx.play('light');
         setBText(tr(t, 'battle.pvp.specdef.light', '✨ {name} roared and countered!', { name: defender.name }));
-        safeTo(() => setAtkEffect(null), 420);
+        safeToIfBattleActive(() => setAtkEffect(null), 420);
         if (killed) {
           setPvpWinner(currentTurn === 'p1' ? 'p2' : 'p1');
           setScreen('pvp_result');
@@ -576,7 +590,7 @@ export function handlePvpAnswer({
       const killed = applyCounterToAttacker(reflectDmg, '#22c55e', 'enemyGrassHit 0.55s ease');
       sfx.play('specDef');
       setBText(tr(t, 'battle.pvp.specdef.grass', '🌿 {name} reflected the attack!', { name: defender.name }));
-      safeTo(() => setAtkEffect(null), 420);
+      safeToIfBattleActive(() => setAtkEffect(null), 420);
       if (killed) {
         setPvpWinner(currentTurn === 'p1' ? 'p2' : 'p1');
         setScreen('pvp_result');
@@ -643,7 +657,7 @@ export function handlePvpAnswer({
         passiveNotes.push(tr(t, 'battle.pvp.note.heal', '🌿Heal'));
       }
 
-      safeTo(() => {
+      safeToIfBattleActive(() => {
         setEAnim('');
         setAtkEffect(null);
       }, 520);
@@ -666,7 +680,7 @@ export function handlePvpAnswer({
         passiveNotes.push(tr(t, 'battle.pvp.note.heal', '🌿Heal'));
       }
 
-      safeTo(() => {
+      safeToIfBattleActive(() => {
         setPAnim('');
         setAtkEffect(null);
       }, 520);
@@ -718,6 +732,7 @@ export function handlePvpAnswer({
 
 export function processPvpTurnStart({
   state,
+  sr,
   safeTo,
   getOtherPvpTurn,
   getPvpTurnName,
@@ -741,6 +756,17 @@ export function processPvpTurnStart({
   t,
 }: ProcessPvpTurnStartArgs): boolean {
   if (state.battleMode !== 'pvp' || state.pvpWinner) return false;
+  if (!isBattleActiveState(state)) return false;
+  const isBattleActive = (): boolean => {
+    if (sr?.current) return isBattleActiveState(sr.current);
+    return isBattleActiveState(state);
+  };
+  const safeToIfBattleActive = (fn: () => void, ms: number): void => {
+    safeTo(() => {
+      if (!isBattleActive()) return;
+      fn();
+    }, ms);
+  };
   const currentTurn = state.pvpTurn;
   const currentName = getPvpTurnName(state, currentTurn);
   const isP1 = currentTurn === 'p1';
@@ -755,7 +781,7 @@ export function processPvpTurnStart({
       setPvpBurnP1(Math.max(0, burnStack - 1));
       setPAnim('playerHit 0.45s ease');
       addD(`🔥-${burnDmg}`, 60, 170, '#f97316');
-      safeTo(() => setPAnim(''), 480);
+      safeToIfBattleActive(() => setPAnim(''), 480);
       if (nh <= 0) {
         setPvpWinner('p2');
         setScreen('pvp_result');
@@ -768,7 +794,7 @@ export function processPvpTurnStart({
       setPvpBurnP2(Math.max(0, burnStack - 1));
       setEAnim('enemyFireHit 0.5s ease');
       addD(`🔥-${burnDmg}`, 140, 55, '#f97316');
-      safeTo(() => setEAnim(''), 480);
+      safeToIfBattleActive(() => setEAnim(''), 480);
       if (nh <= 0) {
         setPvpWinner('p1');
         setScreen('pvp_result');

@@ -256,3 +256,55 @@ test('handleTimeoutFlow ignores stale timeout outside question phase', () => {
   assert.equal(phaseCalls, 0);
   assert.equal(safeToCalls, 0);
 });
+
+test('handleTimeoutFlow does not trigger delayed enemy turn after battle ended', () => {
+  const queue = [];
+  const state = {
+    battleMode: 'single',
+    phase: 'question',
+    screen: 'battle',
+    selIdx: 0,
+    q: {
+      answer: 9,
+      steps: ['4+5'],
+      op: '+',
+      display: '4 + 5',
+    },
+  };
+  let enemyTurnCalls = 0;
+
+  handleTimeoutFlow({
+    sr: { current: state },
+    getPvpTurnName: () => '',
+    getOtherPvpTurn: () => 'p1',
+    setAnswered: () => {},
+    setFb: () => {},
+    setTW: () => {},
+    setPvpChargeP1: () => {},
+    setPvpChargeP2: () => {},
+    setPvpComboP1: () => {},
+    setPvpComboP2: () => {},
+    setBText: () => {},
+    setPvpTurn: () => {},
+    setPvpActionCount: () => {},
+    setPhase: (value) => { state.phase = value; },
+    sfx: { play: () => {} },
+    setStreak: () => {},
+    setPassiveCount: () => {},
+    setCharge: () => {},
+    logAns: () => 0,
+    updateAbility: () => {},
+    getActingStarter: () => null,
+    appendSessionEvent: () => {},
+    markCoopRotatePending: () => {},
+    safeTo: (fn) => { queue.push(fn); },
+    doEnemyTurn: () => { enemyTurnCalls += 1; },
+  });
+
+  assert.equal(queue.length, 1);
+  state.phase = 'ko';
+  state.screen = 'gameover';
+  queue[0]();
+
+  assert.equal(enemyTurnCalls, 0);
+});

@@ -19,6 +19,8 @@ function createNumberSetter(initialValue = 0) {
 function createBasePvpState(overrides = {}) {
   return {
     battleMode: 'pvp',
+    phase: 'question',
+    screen: 'battle',
     pvpWinner: null,
     pvpTurn: 'p1',
     starter: {
@@ -443,4 +445,140 @@ test('processPvpTurnStart returns false when no status effect blocks turn', () =
   });
 
   assert.equal(out, false);
+});
+
+test('handlePvpAnswer ignores stale delayed strike callback after battle ended', () => {
+  const queue = [];
+  const state = createBasePvpState({
+    phase: 'question',
+    screen: 'battle',
+    pvpTurn: 'p1',
+    pvpActionCount: 0,
+  });
+  const pvpHp2 = createNumberSetter(state.pvpHp2);
+  let phase = '';
+  let turn = state.pvpTurn;
+  let winner = null;
+  let screen = state.screen;
+
+  const out = handlePvpAnswer({
+    choice: 8,
+    state,
+    sr: { current: state },
+    rand: () => 0.5,
+    chance: () => false,
+    safeTo: (fn) => { queue.push(fn); },
+    sfx: { play: () => {} },
+    getOtherPvpTurn: () => 'p2',
+    setFb: () => {},
+    setTC: () => {},
+    setTW: () => {},
+    setPvpChargeP1: () => {},
+    setPvpChargeP2: () => {},
+    setPvpComboP1: () => {},
+    setPvpComboP2: () => {},
+    setPvpTurn: (value) => {
+      turn = value;
+      state.pvpTurn = value;
+    },
+    setPvpActionCount: () => {},
+    setBText: () => {},
+    setPhase: (value) => {
+      phase = value;
+      state.phase = value;
+    },
+    setPvpSpecDefP1: () => {},
+    setPvpSpecDefP2: () => {},
+    setEffMsg: () => {},
+    setAtkEffect: () => {},
+    addP: () => {},
+    setPvpParalyzeP1: () => {},
+    setPvpParalyzeP2: () => {},
+    setPAnim: () => {},
+    setEAnim: () => {},
+    addD: () => {},
+    setPHp: () => {},
+    setPvpHp2: (value) => {
+      const nextValue = typeof value === 'function' ? value(pvpHp2.getValue()) : value;
+      pvpHp2.setter(nextValue);
+      state.pvpHp2 = nextValue;
+    },
+    setEHp: () => {},
+    setScreen: (value) => {
+      screen = value;
+      state.screen = value;
+    },
+    setPvpWinner: (value) => {
+      winner = value;
+      state.pvpWinner = value;
+    },
+    setPvpBurnP1: () => {},
+    setPvpBurnP2: () => {},
+    setPvpFreezeP1: () => {},
+    setPvpFreezeP2: () => {},
+    setPvpStaticP1: () => {},
+    setPvpStaticP2: () => {},
+  });
+
+  assert.equal(out, true);
+  assert.equal(phase, 'playerAtk');
+  assert.equal(queue.length > 0, true);
+
+  state.phase = 'ko';
+  state.screen = 'pvp_result';
+  while (queue.length > 0) {
+    const fn = queue.shift();
+    fn();
+  }
+
+  assert.equal(pvpHp2.getValue(), 100);
+  assert.equal(turn, 'p1');
+  assert.equal(winner, null);
+  assert.equal(screen, 'battle');
+});
+
+test('processPvpTurnStart ignores stale delayed burn animation reset after battle ended', () => {
+  const queue = [];
+  const state = createBasePvpState({
+    phase: 'text',
+    screen: 'battle',
+    pvpTurn: 'p1',
+    pvpBurnP1: 1,
+  });
+  const animCalls = [];
+
+  const out = processPvpTurnStart({
+    state,
+    sr: { current: state },
+    safeTo: (fn) => { queue.push(fn); },
+    getOtherPvpTurn: () => 'p2',
+    getPvpTurnName: () => '火狐',
+    setPHp: () => {},
+    setPvpBurnP1: () => {},
+    setPAnim: (value) => { animCalls.push(value); },
+    addD: () => {},
+    setPvpWinner: () => {},
+    setScreen: () => {},
+    setPvpHp2: () => {},
+    setEHp: () => {},
+    setPvpBurnP2: () => {},
+    setEAnim: () => {},
+    setBText: () => {},
+    setPhase: () => {},
+    setPvpParalyzeP1: () => {},
+    setPvpParalyzeP2: () => {},
+    setPvpTurn: () => {},
+    setPvpFreezeP1: () => {},
+    setPvpFreezeP2: () => {},
+  });
+
+  assert.equal(out, true);
+  assert.deepEqual(animCalls, ['playerHit 0.45s ease']);
+  assert.equal(queue.length, 1);
+
+  state.phase = 'ko';
+  state.screen = 'pvp_result';
+  queue[0]();
+
+  assert.deepEqual(animCalls, ['playerHit 0.45s ease']);
 });

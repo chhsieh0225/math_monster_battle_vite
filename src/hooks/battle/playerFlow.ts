@@ -11,6 +11,7 @@ import {
   getAttackEffectNextStepDelay,
 } from '../../utils/effectTiming.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
+import { isBattleActiveState } from './menuResetGuard.ts';
 import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
 
 type TranslatorParams = Record<string, string | number>;
@@ -67,6 +68,8 @@ type BattleRuntimeState = {
   burnStack: number;
   staticStack: number;
   q: BattleQuestion;
+  phase?: string;
+  screen?: string;
 };
 
 type StateRef = {
@@ -259,6 +262,15 @@ export function runPlayerAnswer({
 }: RunPlayerAnswerArgs): void {
   const s = sr.current;
   if (!s || !move || !starter) return;
+  if (!isBattleActiveState(s)) return;
+
+  const isBattleActive = (): boolean => isBattleActiveState(sr.current);
+  const safeToIfBattleActive = (fn: () => void, ms: number): void => {
+    safeTo(() => {
+      if (!isBattleActive()) return;
+      fn();
+    }, ms);
+  };
 
   const loseToGameOver = (message = tr(t, 'battle.ally.ko', 'Your partner has fallen...')): void => {
     _endSession(false);
@@ -364,7 +376,7 @@ export function runPlayerAnswer({
         didLvl = true;
         nh[s.selIdx] = 0;
         setMLvlUp(s.selIdx);
-        safeTo(() => setMLvlUp(null), 2000);
+        safeToIfBattleActive(() => setMLvlUp(null), 2000);
         sfx.play('levelUp');
         if (nl[s.selIdx] >= MAX_MOVE_LVL_N) tryUnlock('move_max');
         if (nl.every((v) => v >= MAX_MOVE_LVL_N)) tryUnlock('all_moves_max');
@@ -377,6 +389,7 @@ export function runPlayerAnswer({
       safeTo,
       setPAnim,
       onReady: () => {
+        if (!isBattleActive()) return;
         const s2 = sr.current;
         const dmgType = bestAttackTypeTyped(move, s2.enemy);
         const vfxType = move.risky && move.type2 ? move.type2 : dmgType;
@@ -393,7 +406,7 @@ export function runPlayerAnswer({
         setAtkEffect({ type: vfxType, idx: effectMeta.idx, lvl: effectMeta.lvl });
         sfx.play(vfxType);
 
-        safeTo(() => {
+        safeToIfBattleActive(() => {
           const s3 = sr.current;
           const strike = resolvePlayerStrike({
             move,
@@ -417,13 +430,13 @@ export function runPlayerAnswer({
           if (isPhantom) {
             setEAnim('dodgeSlide 0.9s ease');
             setEffMsg({ text: tr(t, 'battle.effect.phantomDodge', '👻 Phantom Dodge!'), color: '#c084fc' });
-            safeTo(() => setEffMsg(null), 1500);
+            safeToIfBattleActive(() => setEffMsg(null), 1500);
             addD('MISS!', 155, 50, '#c084fc');
-            safeTo(() => {
+            safeToIfBattleActive(() => {
               setEAnim('');
               setAtkEffect(null);
             }, effectTimeline.clearDelay);
-            safeTo(() => doEnemyTurn(), effectTimeline.nextDelay);
+            safeToIfBattleActive(() => doEnemyTurn(), effectTimeline.nextDelay);
             return;
           }
 
@@ -431,24 +444,24 @@ export function runPlayerAnswer({
 
           if (wasCursed) {
             setEffMsg({ text: tr(t, 'battle.effect.curseWeak', '💀 Curse weakened the attack...'), color: '#a855f7' });
-            safeTo(() => setEffMsg(null), 1500);
+            safeToIfBattleActive(() => setEffMsg(null), 1500);
           } else if (isFortress) {
             setEffMsg({ text: tr(t, 'battle.effect.fortressGuard', '🛡️ Fortress reduced damage!'), color: '#94a3b8' });
-            safeTo(() => setEffMsg(null), 1500);
+            safeToIfBattleActive(() => setEffMsg(null), 1500);
           } else if (starter.type === 'light' && getAttackerHp(s3) < getAttackerMaxHp(s3) * 0.5) {
             setEffMsg({ text: tr(t, 'battle.effect.lightCourage', '🦁 Courage Heart! ATK↑'), color: '#f59e0b' });
-            safeTo(() => setEffMsg(null), 1500);
+            safeToIfBattleActive(() => setEffMsg(null), 1500);
           } else if (eff > 1) {
             setEffMsg({ text: tr(t, 'battle.effect.super', 'Super effective!'), color: '#22c55e' });
-            safeTo(() => setEffMsg(null), 1500);
+            safeToIfBattleActive(() => setEffMsg(null), 1500);
           } else if (eff < 1) {
             setEffMsg({ text: tr(t, 'battle.effect.notVery', 'Not very effective...'), color: '#94a3b8' });
-            safeTo(() => setEffMsg(null), 1500);
+            safeToIfBattleActive(() => setEffMsg(null), 1500);
           }
 
           if (s3.bossCharging) {
             setBossCharging(false);
-            safeTo(() => addD(tr(t, 'battle.tag.chargeInterrupted', '💥Charge Interrupted!'), 155, 30, '#fbbf24'), 400);
+            safeToIfBattleActive(() => addD(tr(t, 'battle.tag.chargeInterrupted', '💥Charge Interrupted!'), 155, 30, '#fbbf24'), 400);
           }
 
           let afterHp = Math.max(0, s3.eHp - dmg);
@@ -459,14 +472,14 @@ export function runPlayerAnswer({
             setBurnStack(newBurn);
             const bd = newBurn * 2;
             afterHp = Math.max(0, afterHp - bd);
-            safeTo(() => addD(`🔥-${bd}`, 155, 50, '#f97316'), 500);
+            safeToIfBattleActive(() => addD(`🔥-${bd}`, 155, 50, '#f97316'), 500);
           }
 
           if (starter.type === 'grass') {
             const heal = 2 * s3.mLvls[s3.selIdx];
             healAttacker(heal);
             sfx.play('heal');
-            safeTo(() => addD(`+${heal}`, isSubAttacker ? 112 : 50, isSubAttacker ? 146 : 165, '#22c55e'), 500);
+            safeToIfBattleActive(() => addD(`+${heal}`, isSubAttacker ? 112 : 50, isSubAttacker ? 146 : 165, '#22c55e'), 500);
           }
 
           let willFreeze = false;
@@ -476,7 +489,7 @@ export function runPlayerAnswer({
               setFrozen(true);
               frozenR.current = true;
               sfx.play('freeze');
-              safeTo(() => addD(tr(t, 'battle.tag.freeze', '❄️Frozen'), 155, 50, '#38bdf8'), 600);
+              safeToIfBattleActive(() => addD(tr(t, 'battle.tag.freeze', '❄️Frozen'), 155, 50, '#38bdf8'), 600);
             }
           }
 
@@ -488,7 +501,7 @@ export function runPlayerAnswer({
               afterHp = Math.max(0, afterHp - sd);
               setStaticStack(0);
               sfx.play('staticDischarge');
-              safeTo(() => addD(`⚡-${sd}`, 155, 50, '#fbbf24'), 500);
+              safeToIfBattleActive(() => addD(`⚡-${sd}`, 155, 50, '#fbbf24'), 500);
             }
           }
 
@@ -503,7 +516,7 @@ export function runPlayerAnswer({
             light: '#f59e0b',
           } as Record<string, string>)[vfxType] || '#ef4444';
           addD(`-${dmg}`, 140, 55, dmgColor);
-          safeTo(() => {
+          safeToIfBattleActive(() => {
             setEAnim('');
             setAtkEffect(null);
           }, effectTimeline.clearDelay);
@@ -511,7 +524,7 @@ export function runPlayerAnswer({
           if (s3.enemy.trait === 'counter' && afterHp > 0) {
             const refDmg = Math.round(dmg * 0.2);
             if (refDmg > 0) {
-              safeTo(() => {
+              safeToIfBattleActive(() => {
                 const s4 = sr.current;
                 const nh4 = applyDamageToAttacker({
                   state: s4,
@@ -520,9 +533,9 @@ export function runPlayerAnswer({
                   color: '#60a5fa',
                 });
                 setEffMsg({ text: tr(t, 'battle.effect.counterArmor', '🛡️ Counter Armor!'), color: '#60a5fa' });
-                safeTo(() => setEffMsg(null), 1500);
+                safeToIfBattleActive(() => setEffMsg(null), 1500);
                 if (nh4 <= 0) {
-                  safeTo(() => {
+                  safeToIfBattleActive(() => {
                     sfx.play('ko');
                     resolveActiveKo(tr(t, 'battle.ko.counter', '{name} was knocked out by counter damage...', { name: attackerName }));
                   }, 800);
@@ -533,7 +546,7 @@ export function runPlayerAnswer({
 
           if (afterHp <= 0 && dmg >= s3.enemy.maxHp) tryUnlock('one_hit');
           if (afterHp <= 0) {
-            safeTo(() => handleVictory(), effectTimeline.nextDelay);
+            safeToIfBattleActive(() => handleVictory(), effectTimeline.nextDelay);
           } else {
             const continueAfterTurn = () => {
               if (willFreeze) handleFreeze();
@@ -545,7 +558,7 @@ export function runPlayerAnswer({
             })) {
               return;
             }
-            safeTo(continueAfterTurn, effectTimeline.nextDelay);
+            safeToIfBattleActive(continueAfterTurn, effectTimeline.nextDelay);
           }
         }, effectTimeline.hitDelay);
       },
@@ -560,7 +573,7 @@ export function runPlayerAnswer({
   setPassiveCount(0);
   setCharge(0);
 
-  safeTo(() => {
+  safeToIfBattleActive(() => {
     const s2 = sr.current;
     if (move.risky) {
       const sd = resolveRiskySelfDamage({
@@ -578,7 +591,7 @@ export function runPlayerAnswer({
         damage: sd,
       }));
       setPhase('text');
-      safeTo(() => {
+      safeToIfBattleActive(() => {
         if (nh2 <= 0) resolveActiveKo(tr(t, 'battle.ko.fallen', '{name} has fallen...', { name: attackerName }));
         else if (frozenR.current) handleFreeze();
         else doEnemyTurn();
@@ -594,14 +607,14 @@ export function runPlayerAnswer({
         if (nh3 <= 0) {
           setBText(mt);
           setPhase('text');
-          safeTo(() => handleVictory(tr(t, 'battle.victory.verb.burned', 'was burned down')), 1200);
+          safeToIfBattleActive(() => handleVictory(tr(t, 'battle.victory.verb.burned', 'was burned down')), 1200);
           return;
         }
       }
       setBText(mt);
       setPhase('text');
-      if (frozenR.current) safeTo(() => handleFreeze(), 1200);
-      else safeTo(() => doEnemyTurn(), 1200);
+      if (frozenR.current) safeToIfBattleActive(() => handleFreeze(), 1200);
+      else safeToIfBattleActive(() => doEnemyTurn(), 1200);
     }
   }, 2500);
 }

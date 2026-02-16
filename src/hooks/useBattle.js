@@ -694,6 +694,7 @@ export function useBattle() {
   const advance = () => {
     const pvpTurnStartHandlerDeps = buildAdvancePvpTurnStartDeps({
       runtime: {
+        sr,
         safeTo,
         getOtherPvpTurn,
         getPvpTurnName,

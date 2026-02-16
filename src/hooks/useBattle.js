@@ -92,6 +92,13 @@ import {
   continueFromVictoryFlow,
 } from './battle/advanceFlow';
 import {
+  runEndSessionController,
+  runFinishGameController,
+  runHandleFreezeController,
+  runQuitGameController,
+  runToggleCoopActiveController,
+} from './battle/gameLifecycleController.ts';
+import {
   getActingStarter as resolveActingStarter,
   getOtherPvpTurn,
   getPvpTurnName as resolvePvpTurnName,
@@ -107,7 +114,6 @@ import {
   runPlayerPartyKoController,
 } from './battle/coopActionController.ts';
 import {
-  applyGameCompletionAchievements,
   applyVictoryAchievements,
 } from './battle/achievementFlow';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
@@ -484,14 +490,22 @@ export function useBattle() {
 
   // ── Finalize and persist session log ──
   const _endSession = (isCompleted, reasonOverride = null) => {
-    endSessionOnce(sr.current, isCompleted, reasonOverride);
+    runEndSessionController({
+      sr,
+      endSessionOnce,
+      isCompleted,
+      reasonOverride,
+    });
   };
 
   const quitGame = () => {
-    clearTimer();
-    appendQuitEventIfOpen(sr.current);
-    _endSession(false, "quit");
-    setScreen("gameover");
+    runQuitGameController({
+      clearTimer,
+      appendQuitEventIfOpen,
+      sr,
+      endSession: _endSession,
+      setScreen,
+    });
   };
 
   const handlePlayerPartyKo = ({ target = "main", reason = t("battle.ally.ko", "Your partner has fallen...") }) => {
@@ -569,11 +583,15 @@ export function useBattle() {
 
   // --- Frozen enemy skips turn ---
   const handleFreeze = () => {
-    const s = sr.current;
-    frozenR.current = false; setFrozen(false);
-    setBText(t("battle.freeze.enemySkip", "❄️ {enemy} is frozen and cannot attack!", { enemy: s.enemy.name }));
-    setPhase("text");
-    safeTo(() => { setPhase("menu"); setBText(""); }, 1500);
+    runHandleFreezeController({
+      sr,
+      frozenRef: frozenR,
+      setFrozen,
+      setBText,
+      setPhase,
+      safeTo,
+      t,
+    });
   };
 
   // --- Player selects a move ---
@@ -750,15 +768,14 @@ export function useBattle() {
 
   // --- Shared game-completion logic (achievements + session save) ---
   const _finishGame = () => {
-    const s = sr.current;
-    applyGameCompletionAchievements({
-      state: s,
+    runFinishGameController({
+      sr,
       tryUnlock,
       setEncData,
       encTotal: ENC_TOTAL,
+      endSession: _endSession,
+      setScreen,
     });
-    _endSession(true);
-    setScreen("gameover");
   };
 
   // --- Continue from evolve screen → start next battle ---
@@ -767,9 +784,11 @@ export function useBattle() {
   };
 
   const toggleCoopActive = () => {
-    const s = sr.current;
-    if (!canSwitchCoopActiveSlot(s)) return;
-    setCoopActiveSlot((prev) => (prev === "main" ? "sub" : "main"));
+    runToggleCoopActiveController({
+      sr,
+      canSwitchCoopActiveSlot,
+      setCoopActiveSlot,
+    });
   };
 
   const setStarterLocalized = useCallback((nextStarter) => {

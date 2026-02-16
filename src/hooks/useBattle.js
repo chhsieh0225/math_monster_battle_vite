@@ -51,6 +51,7 @@ import { useSessionLog } from './useSessionLog';
 import { useBattleRng } from './useBattleRng';
 import { useBattleUIState } from './useBattleUIState';
 import { usePvpState } from './usePvpState';
+import { useBattleSessionLifecycle } from './useBattleSessionLifecycle';
 import { ENC_TOTAL } from '../data/encyclopedia';
 import sfx from '../utils/sfx';
 import { buildRoster } from '../utils/rosterBuilder';
@@ -60,8 +61,6 @@ import {
   resolveLevelProgress,
   updateAbilityModel,
 } from '../utils/battleEngine';
-import { appendEvent, createEventSessionId } from '../utils/eventLogger';
-import { nowMs } from '../utils/time';
 import {
   battleReducer,
   createInitialBattleState,
@@ -69,6 +68,12 @@ import {
 import { effectOrchestrator } from './battle/effectOrchestrator';
 import { runEnemyTurn } from './battle/enemyFlow';
 import { runPlayerAnswer } from './battle/playerFlow';
+import { handleTimeoutFlow } from './battle/timeoutFlow';
+import {
+  getActingStarter as resolveActingStarter,
+  getOtherPvpTurn,
+  getPvpTurnName as resolvePvpTurnName,
+} from './battle/turnHelpers';
 import {
   createPvpEnemyFromStarter,
   handlePvpAnswer,
@@ -234,35 +239,15 @@ export function useBattle() {
     getDifficultyLevelForOps(abilityModelRef.current, move?.ops, 2)
   );
 
-  const getActingStarter = (state) => {
-    if (!state) return null;
-    if (state.battleMode === "pvp") {
-      return state.pvpTurn === "p1" ? state.starter : state.pvpStarter2;
-    }
-    const isCoopSubActive = (
-      isCoopBattleMode(state.battleMode)
-      && state.coopActiveSlot === "sub"
-      && state.allySub
-      && (state.pHpSub || 0) > 0
-    );
-    return isCoopSubActive ? state.allySub : state.starter;
-  };
-
-  const getPvpTurnName = (state, turn) => (
-    turn === "p1"
-      ? (state?.starter?.name || t("battle.pvp.player1", "Player 1"))
-      : (state?.pvpStarter2?.name || t("battle.pvp.player2", "Player 2"))
+  const getActingStarter = resolveActingStarter;
+  const getPvpTurnName = useCallback(
+    (state, turn) => resolvePvpTurnName(state, turn, t),
+    [t],
   );
 
-  const getOtherPvpTurn = (turn) => (turn === "p1" ? "p2" : "p1");
-
   // ──── Internal refs ────
-  const runSeedRef = useRef(0);
   const doEnemyTurnRef = useRef(() => {});
   const pendingEvolve = useRef(false);   // ← Bug #2 fix
-  const eventSessionIdRef = useRef(null);
-  const sessionClosedRef = useRef(false);
-  const sessionStartRef = useRef(0);
 
   // ──── State ref — always points at latest committed values ────
   const sr = useBattleStateRef({
@@ -277,6 +262,13 @@ export function useBattle() {
     pvpBurnP1, pvpBurnP2, pvpFreezeP1, pvpFreezeP2, pvpStaticP1, pvpStaticP2,
     pvpParalyzeP1, pvpParalyzeP2, pvpComboP1, pvpComboP2, pvpSpecDefP1, pvpSpecDefP2,
   });
+
+  const {
+    beginRun,
+    appendSessionEvent,
+    endSessionOnce,
+    appendQuitEventIfOpen,
+  } = useBattleSessionLifecycle({ reseed, endSession });
 
   // ──── Computed ────
   const expNext = pLvl * 30;
@@ -309,57 +301,34 @@ export function useBattle() {
   //  TIMER
   // ═══════════════════════════════════════════════════════════════
   const onTimeout = () => {
-    const s = sr.current;
-    if (s.battleMode === "pvp") {
-      setAnswered(true);
-      setFb({ correct: false, answer: s.q?.answer, steps: s.q?.steps || [] });
-      setTW(w => w + 1);
-      const nextTurn = getOtherPvpTurn(s.pvpTurn);
-      if (s.pvpTurn === "p1") {
-        setPvpChargeP1(0);
-        setPvpComboP1(0);
-      } else {
-        setPvpChargeP2(0);
-        setPvpComboP2(0);
-      }
-      setBText(t("battle.pvp.timeoutSwap", "⏰ {name} timed out. Turn swapped!", { name: getPvpTurnName(s, s.pvpTurn) }));
-      setPvpTurn(nextTurn);
-      setPvpActionCount((c) => c + 1);
-      setPhase("text");
-      return;
-    }
-    setAnswered(true);
-    setFb({ correct: false, answer: s.q?.answer, steps: s.q?.steps || [] });
-    sfx.play("timeout");
-    setTW(w => w + 1);
-    setStreak(0); setPassiveCount(0);
-    setCharge(0);
-    // ── Session logging: timeout counts as wrong ──
-    const answerTimeMs = logAns(s.q, false);
-    _updateAbility(s.q?.op, false);
-    const actingStarter = getActingStarter(s);
-    appendEvent("question_answered", {
-      outcome: "timeout",
-      correct: false,
-      selectedAnswer: null,
-      expectedAnswer: s.q?.answer ?? null,
-      answerTimeMs,
-      op: s.q?.op ?? null,
-      display: s.q?.display ?? null,
-      moveIndex: s.selIdx ?? -1,
-      moveName: actingStarter?.moves?.[s.selIdx]?.name || null,
-      moveType: actingStarter?.moves?.[s.selIdx]?.type || null,
-      timedMode: !!s.timedMode,
-      diffLevel: s.diffLevel ?? null,
-      round: s.round ?? 0,
-    }, { sessionId: eventSessionIdRef.current });
-    if (isCoopBattleMode(s.battleMode)) {
-      markCoopRotatePending();
-    }
-    setBText(t("battle.timeoutMiss", "⏰ Time's up! Too late to attack!"));
-    setPhase("text");
-    // Read enemy from stateRef so we never hit a stale closure
-    safeTo(() => doEnemyTurnRef.current(), 1500);
+    handleTimeoutFlow({
+      sr,
+      t,
+      getPvpTurnName,
+      getOtherPvpTurn,
+      setAnswered,
+      setFb,
+      setTW,
+      setPvpChargeP1,
+      setPvpChargeP2,
+      setPvpComboP1,
+      setPvpComboP2,
+      setBText,
+      setPvpTurn,
+      setPvpActionCount,
+      setPhase,
+      sfx,
+      setStreak,
+      setPassiveCount,
+      setCharge,
+      logAns,
+      updateAbility: _updateAbility,
+      getActingStarter,
+      appendSessionEvent,
+      markCoopRotatePending,
+      safeTo,
+      doEnemyTurn: () => doEnemyTurnRef.current(),
+    });
   };
 
   const {
@@ -447,14 +416,20 @@ export function useBattle() {
   };
 
   // --- Full game reset (starterOverride used on first game when setStarter hasn't rendered yet) ---
+  const resetRunRuntimeState = () => {
+    setDmgs([]);
+    setParts([]);
+    setAtkEffect(null);
+    setEffMsg(null);
+    frozenR.current = false;
+    abilityModelRef.current = createAbilityModel(2);
+    pendingEvolve.current = false;
+  };
+
   const startGame = (starterOverride, modeOverride = null, allyOverride = null) => {
     invalidateAsyncWork();
-    runSeedRef.current += 1;
-    reseed(runSeedRef.current * 2654435761);
+    beginRun();
     clearTimer();
-    sessionClosedRef.current = false;
-    sessionStartRef.current = nowMs();
-    eventSessionIdRef.current = createEventSessionId();
     resetCoopRotatePending();
     // Regenerate roster so slime variants are re-randomised each game
     const mode = modeOverride || sr.current.battleMode || battleMode;
@@ -488,16 +463,13 @@ export function useBattle() {
       setPvpHp2(getStarterMaxHp(rival));
       setPvpTurn(firstTurn);
       resetPvpRuntime();
-      setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
-      frozenR.current = false;
-      abilityModelRef.current = createAbilityModel(2);
-      pendingEvolve.current = false;
-      appendEvent("starter_selected", {
+      resetRunRuntimeState();
+      appendSessionEvent("starter_selected", {
         starterId: leader?.id || null,
         starterName: leader?.name || null,
         starterType: leader?.type || null,
         timedMode: true,
-      }, { sessionId: eventSessionIdRef.current });
+      });
       initSession(leader, true);
       const enemyPvp = createPvpEnemyFromStarter(rival, t);
       dispatchBattle({ type: "start_battle", enemy: enemyPvp, enemySub: null, round: 0 });
@@ -531,18 +503,15 @@ export function useBattle() {
         pStg: leaderStageIdx,
       },
     });
-    setDmgs([]); setParts([]); setAtkEffect(null); setEffMsg(null);
-    frozenR.current = false;
-    abilityModelRef.current = createAbilityModel(2);
-    pendingEvolve.current = false;
+    resetRunRuntimeState();
     // Init session log — use override on first game since setStarter is async
     const s = leader;
-    appendEvent("starter_selected", {
+    appendSessionEvent("starter_selected", {
       starterId: s?.id || null,
       starterName: s?.name || null,
       starterType: s?.type || null,
       timedMode: !!sr.current.timedMode,
-    }, { sessionId: eventSessionIdRef.current });
+    });
     initSession(s, sr.current.timedMode);
     setScreen("battle");
     startBattle(0, newRoster);
@@ -550,45 +519,12 @@ export function useBattle() {
 
   // ── Finalize and persist session log ──
   const _endSession = (isCompleted, reasonOverride = null) => {
-    if (sessionClosedRef.current) return;
-    sessionClosedRef.current = true;
-    const s = sr.current;
-    const reason = reasonOverride || (isCompleted ? "clear" : "player_ko");
-    const result = isCompleted ? "win" : reason === "quit" ? "quit" : "lose";
-    appendEvent("battle_result", {
-      result,
-      reason,
-      defeated: s.defeated || 0,
-      finalLevel: s.pLvl || 1,
-      maxStreak: s.maxStreak || 0,
-      pHp: s.pHp || 0,
-      tC: s.tC || 0,
-      tW: s.tW || 0,
-      timedMode: !!s.timedMode,
-      durationMs: sessionStartRef.current > 0 ? nowMs() - sessionStartRef.current : null,
-    }, { sessionId: eventSessionIdRef.current });
-    endSession({
-      defeated: s.defeated || 0,
-      finalLevel: s.pLvl || 1,
-      maxStreak: s.maxStreak || 0,
-      pHp: s.pHp || 0,
-      completed: !!isCompleted,
-    });
+    endSessionOnce(sr.current, isCompleted, reasonOverride);
   };
 
   const quitGame = () => {
     clearTimer();
-    if (!sessionClosedRef.current) {
-      const s = sr.current;
-      appendEvent("game_exit", {
-        reason: "quit_button",
-        screen: s.screen || null,
-        phase: s.phase || null,
-        round: s.round || 0,
-        defeated: s.defeated || 0,
-        pHp: s.pHp || 0,
-      }, { sessionId: eventSessionIdRef.current });
-    }
+    appendQuitEventIfOpen(sr.current);
     _endSession(false, "quit");
     setScreen("gameover");
   };
@@ -804,7 +740,7 @@ export function useBattle() {
 
     // ── Session logging ──
     const answerTimeMs = logAns(s.q, correct);
-    appendEvent("question_answered", {
+    appendSessionEvent("question_answered", {
       outcome: "submitted",
       correct,
       selectedAnswer: choice,
@@ -818,7 +754,7 @@ export function useBattle() {
       timedMode: !!s.timedMode,
       diffLevel: s.diffLevel ?? null,
       round: s.round ?? 0,
-    }, { sessionId: eventSessionIdRef.current });
+    });
     _updateAbility(s.q?.op, correct);
     if (isCoopBattleMode(s.battleMode)) {
       markCoopRotatePending();

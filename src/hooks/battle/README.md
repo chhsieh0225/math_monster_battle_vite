@@ -22,6 +22,12 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `pvpFlow.ts`
   - PvP-only turn flow and status-resolution orchestration.
   - Keeps `useBattle` free of PvP branch details.
+- `timeoutFlow.ts`
+  - Timer timeout resolution (PvP turn swap + PvE timeout handling).
+  - Keeps timer-branch logic out of `useBattle`.
+- `turnHelpers.ts`
+  - Shared turn helpers (`getActingStarter`, PvP turn label/swap).
+  - Reused by flow modules and `useBattle`.
 - `coopFlow.ts`
   - Co-op only helper flows (party KO handling, support turns, evolution sync helpers).
 - `achievementFlow.ts`

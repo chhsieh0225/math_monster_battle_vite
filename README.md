@@ -31,6 +31,7 @@ Current migrated files:
 - `src/hooks/useEncyclopedia.ts`
 - `src/hooks/useSessionLog.ts`
 - `src/hooks/useBattleRuntime.ts`
+- `src/hooks/useBattleSessionLifecycle.ts`
 - `src/hooks/useCoopTurnRotation.ts`
 - `src/hooks/useBattleUIState.ts`
 - `src/hooks/usePvpState.ts`
@@ -42,6 +43,8 @@ Current migrated files:
 - `src/hooks/battle/pvpFlow.ts`
 - `src/hooks/battle/coopFlow.ts`
 - `src/hooks/battle/achievementFlow.ts`
+- `src/hooks/battle/timeoutFlow.ts`
+- `src/hooks/battle/turnHelpers.ts`
 - `src/components/ui/HPBar.tsx`
 - `src/components/ui/XPBar.tsx`
 - `src/components/ui/DamagePopup.tsx`

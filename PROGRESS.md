@@ -11,6 +11,10 @@
 - 已完成 battle 子模組 TS 化：`battleReducer.ts`、`turnResolver.ts`、`effectOrchestrator.ts`、`playerFlow.ts`、`enemyFlow.ts`、`pvpFlow.ts`、`coopFlow.ts`、`achievementFlow.ts`。
 - 已完成 battle 周邊 hooks TS 化：`useAchievements.ts`、`useEncyclopedia.ts`、`useSessionLog.ts`、`useBattleRuntime.ts`、`useCoopTurnRotation.ts`、`useBattleUIState.ts`。
 - 已新增 `usePvpState.ts`，將 `useBattle.js` 的 PvP 狀態/重置邏輯抽離，降低主 hook 重複與複雜度。
+- 已新增 `useBattleSessionLifecycle.ts`，集中管理 run seed、事件 session id、結算與退出事件記錄，移除 `useBattle.js` 內重複 lifecycle 程式碼。
+- `useBattle.js` 已再抽出 `resetRunRuntimeState()`，合併 PvP/一般開局共用的 runtime 重置流程。
+- 已新增 `battle/timeoutFlow.ts`，將 on-timeout 的 PvP/PvE 分支從 `useBattle.js` 抽離。
+- 已新增 `battle/turnHelpers.ts`，抽離「當前出手者判定 / PvP 名稱與回合切換」共用函式。
 - 目前 hooks 層僅剩 `useBattle.js` 為 JS 主協調器（已有 `useBattle.ts` typed wrapper）。
 - 每次遷移批次皆驗證 `npm run typecheck`、`npm run lint`、`npm test`、`npm run build` 全綠。
 

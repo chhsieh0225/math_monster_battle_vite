@@ -27,6 +27,29 @@ test('runAnswerController no-ops when answer already submitted', () => {
   assert.equal(clearTimerCalls, 0);
 });
 
+test('runAnswerController no-ops outside question phase', () => {
+  let setAnsweredCalls = 0;
+  let clearTimerCalls = 0;
+
+  runAnswerController({
+    choice: 1,
+    answered: false,
+    setAnswered: () => { setAnsweredCalls += 1; },
+    clearTimer: () => { clearTimerCalls += 1; },
+    sr: { current: { battleMode: 'single', phase: 'menu' } },
+    pvpHandlerDeps: {},
+    playerHandlerDeps: {},
+    getActingStarter: () => null,
+    logAns: () => 0,
+    appendSessionEvent: () => {},
+    updateAbility: () => {},
+    markCoopRotatePending: () => {},
+  });
+
+  assert.equal(setAnsweredCalls, 0);
+  assert.equal(clearTimerCalls, 0);
+});
+
 test('runAnswerController unlocks answered flag when flow cannot proceed', () => {
   const answeredValues = [];
   let clearTimerCalls = 0;
@@ -181,4 +204,44 @@ test('runTimeoutController executes latest doEnemyTurnRef callback', () => {
   scheduled();
 
   assert.deepEqual(calls, ['second']);
+});
+
+test('runTimeoutController tolerates missing doEnemyTurnRef callback', () => {
+  let answered = false;
+  const doEnemyTurnRef = {
+    current: null,
+  };
+
+  assert.doesNotThrow(() => {
+    runTimeoutController({
+      sr: { current: { battleMode: 'single', q: { answer: 3 }, selIdx: 0 } },
+      t: undefined,
+      getPvpTurnName: () => 'P1',
+      getOtherPvpTurn: () => 'p2',
+      setAnswered: (value) => { answered = value; },
+      setFb: () => {},
+      setTW: () => {},
+      setPvpChargeP1: () => {},
+      setPvpChargeP2: () => {},
+      setPvpComboP1: () => {},
+      setPvpComboP2: () => {},
+      setBText: () => {},
+      setPvpTurn: () => {},
+      setPvpActionCount: () => {},
+      setPhase: () => {},
+      sfx: { play: () => {} },
+      setStreak: () => {},
+      setPassiveCount: () => {},
+      setCharge: () => {},
+      logAns: () => 0,
+      updateAbility: () => {},
+      getActingStarter: () => null,
+      appendSessionEvent: () => {},
+      markCoopRotatePending: () => {},
+      safeTo: (fn) => { fn(); },
+      doEnemyTurnRef,
+    });
+  });
+
+  assert.equal(answered, true);
 });

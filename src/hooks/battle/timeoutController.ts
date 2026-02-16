@@ -18,6 +18,11 @@ export function runTimeoutController({
 }: RunTimeoutControllerArgs): void {
   handleTimeoutFlow({
     ...rest,
-    doEnemyTurn: () => doEnemyTurnRef.current(),
+    doEnemyTurn: () => {
+      const currentTurnRunner = doEnemyTurnRef?.current;
+      if (typeof currentTurnRunner === 'function') {
+        currentTurnRunner();
+      }
+    },
   });
 }

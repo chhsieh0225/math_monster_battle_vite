@@ -30,6 +30,7 @@ test('handleTimeoutFlow swaps turn and resets current pvp resources on timeout',
       current: {
         battleMode: 'pvp',
         pvpTurn: 'p1',
+        selIdx: 0,
         q: { answer: 7, steps: ['3+4'] },
       },
     },
@@ -157,4 +158,101 @@ test('handleTimeoutFlow logs timeout and triggers enemy turn in coop mode', () =
   assert.equal(phase, 'text');
   assert.deepEqual(safeToCalls, [1500]);
   assert.equal(enemyTurnCalls, 1);
+});
+
+test('handleTimeoutFlow ignores stale timeout when no active question', () => {
+  let answeredCalls = 0;
+  let fbCalls = 0;
+  let phaseCalls = 0;
+  let eventCalls = 0;
+  let safeToCalls = 0;
+  const tw = createSetterRecorder(0);
+
+  handleTimeoutFlow({
+    sr: {
+      current: {
+        battleMode: 'single',
+        selIdx: null,
+        q: null,
+      },
+    },
+    getPvpTurnName: () => '',
+    getOtherPvpTurn: () => 'p1',
+    setAnswered: () => { answeredCalls += 1; },
+    setFb: () => { fbCalls += 1; },
+    setTW: tw.setter,
+    setPvpChargeP1: () => {},
+    setPvpChargeP2: () => {},
+    setPvpComboP1: () => {},
+    setPvpComboP2: () => {},
+    setBText: () => {},
+    setPvpTurn: () => {},
+    setPvpActionCount: () => {},
+    setPhase: () => { phaseCalls += 1; },
+    sfx: { play: () => {} },
+    setStreak: () => {},
+    setPassiveCount: () => {},
+    setCharge: () => {},
+    logAns: () => 0,
+    updateAbility: () => {},
+    getActingStarter: () => null,
+    appendSessionEvent: () => { eventCalls += 1; },
+    markCoopRotatePending: () => {},
+    safeTo: () => { safeToCalls += 1; },
+    doEnemyTurn: () => {},
+  });
+
+  assert.equal(answeredCalls, 0);
+  assert.equal(fbCalls, 0);
+  assert.equal(tw.getValue(), 0);
+  assert.equal(phaseCalls, 0);
+  assert.equal(eventCalls, 0);
+  assert.equal(safeToCalls, 0);
+});
+
+test('handleTimeoutFlow ignores stale timeout outside question phase', () => {
+  let answeredCalls = 0;
+  let twCalls = 0;
+  let phaseCalls = 0;
+  let safeToCalls = 0;
+
+  handleTimeoutFlow({
+    sr: {
+      current: {
+        battleMode: 'single',
+        phase: 'menu',
+        selIdx: 0,
+        q: { answer: 5, steps: ['2+3'] },
+      },
+    },
+    getPvpTurnName: () => '',
+    getOtherPvpTurn: () => 'p1',
+    setAnswered: () => { answeredCalls += 1; },
+    setFb: () => {},
+    setTW: () => { twCalls += 1; },
+    setPvpChargeP1: () => {},
+    setPvpChargeP2: () => {},
+    setPvpComboP1: () => {},
+    setPvpComboP2: () => {},
+    setBText: () => {},
+    setPvpTurn: () => {},
+    setPvpActionCount: () => {},
+    setPhase: () => { phaseCalls += 1; },
+    sfx: { play: () => {} },
+    setStreak: () => {},
+    setPassiveCount: () => {},
+    setCharge: () => {},
+    logAns: () => 0,
+    updateAbility: () => {},
+    getActingStarter: () => null,
+    appendSessionEvent: () => {},
+    markCoopRotatePending: () => {},
+    safeTo: () => { safeToCalls += 1; },
+    doEnemyTurn: () => {},
+  });
+
+  assert.equal(answeredCalls, 0);
+  assert.equal(twCalls, 0);
+  assert.equal(phaseCalls, 0);
+  assert.equal(safeToCalls, 0);
 });

@@ -52,12 +52,13 @@ export function runAnswerController({
   updateAbility,
   markCoopRotatePending,
 }: RunAnswerControllerArgs): void {
+  const state = sr.current;
+  const phase = (state as { phase?: unknown }).phase;
+  if (typeof phase === 'string' && phase !== 'question') return;
   if (answered) return;
 
   setAnswered(true);
   clearTimer();
-
-  const state = sr.current;
 
   const pvpHandlers = createPvpAnswerHandlers(pvpHandlerDeps);
   const pvpHandled = tryHandlePvpAnswer({

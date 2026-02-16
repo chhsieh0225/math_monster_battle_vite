@@ -12,6 +12,7 @@ type BattleQuestion = {
 
 type BattleState = {
   battleMode?: string;
+  phase?: string;
   q?: BattleQuestion | null;
   selIdx?: number;
   diffLevel?: number;
@@ -97,6 +98,9 @@ export function handleTimeoutFlow({
   doEnemyTurn,
 }: TimeoutFlowArgs): void {
   const s = sr.current;
+  if (typeof s.phase === 'string' && s.phase !== 'question') return;
+  const hasActiveQuestion = s.selIdx != null && !!s.q && typeof s.q.answer === 'number';
+  if (!hasActiveQuestion) return;
 
   if (s.battleMode === 'pvp') {
     setAnswered(true);

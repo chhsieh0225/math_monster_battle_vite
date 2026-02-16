@@ -17,6 +17,7 @@ import enUS from './i18n/locales/en-US';
 // Hooks
 import { useBattle } from './hooks/useBattle';
 import { useMobileExperience } from './hooks/useMobileExperience';
+import { useSpriteTargets } from './hooks/useSpriteTargets';
 
 // Data
 import { SCENES } from './data/scenes';
@@ -41,7 +42,7 @@ import TitleScreen from './components/screens/TitleScreen';
 import SelectionScreen from './components/screens/SelectionScreen';
 import AchievementPopup from './components/ui/AchievementPopup';
 import { ACH_MAP } from './data/achievements';
-import type { ScreenName, TimerSubscribe } from './types/battle';
+import type { ScreenName, TimerSubscribe, UseBattlePublicApi } from './types/battle';
 
 const LeaderboardScreen = lazy(() => import('./components/screens/LeaderboardScreen'));
 const EvolveScreen = lazy(() => import('./components/screens/EvolveScreen'));
@@ -223,13 +224,6 @@ function GameShell() {
 }
 
 // ─── App: main game component (render only) ───
-type SpriteTarget = {
-  right: string;
-  top: string;
-  flyRight: number;
-  flyTop: number;
-};
-
 type SelectionPayload = Parameters<ComponentProps<typeof SelectionScreen>["onSelect"]>[0];
 type DualSelectionPayload = Extract<SelectionPayload, { p1: unknown; p2: unknown }>;
 
@@ -239,15 +233,27 @@ function isDualSelectionPayload(payload: SelectionPayload): payload is DualSelec
 
 function App() {
   const { t } = useI18n();
-  const B = useBattle();
+  const B: UseBattlePublicApi = useBattle();
   const UX = useMobileExperience();
   const showHeavyFx = !UX.lowPerfMode;
   const [audioMuted, setAudioMuted] = useState<boolean>(() => Boolean(B.sfx.muted));
   const battleRootRef = useRef<HTMLDivElement | null>(null);
   const enemySpriteRef = useRef<HTMLDivElement | null>(null);
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
-  const [measuredEnemyTarget, setMeasuredEnemyTarget] = useState<SpriteTarget | null>(null);
-  const [measuredPlayerTarget, setMeasuredPlayerTarget] = useState<SpriteTarget | null>(null);
+  const { measuredEnemyTarget, measuredPlayerTarget } = useSpriteTargets({
+    screen: B.screen,
+    phase: B.phase,
+    enemyId: B.enemy?.id,
+    enemyIsEvolved: B.enemy?.isEvolved,
+    enemySceneMType: B.enemy?.sceneMType,
+    enemyMType: B.enemy?.mType,
+    playerStageIdx: B.pStg,
+    battleMode: B.battleMode,
+    pvpTurn: B.pvpTurn,
+    battleRootRef,
+    enemySpriteRef,
+    playerSpriteRef,
+  });
   const settingsReturnRef = useRef<ScreenName>("title");
   const resumeBattleAfterSettingsRef = useRef(false);
   const setAudioMute = (next: boolean) => {
@@ -274,73 +280,6 @@ function App() {
     }
     resumeBattleAfterSettingsRef.current = false;
   };
-
-  useEffect(() => {
-    if (B.screen !== "battle") return;
-    let rafId = 0;
-    const syncTargets = () => {
-      const rootEl = battleRootRef.current;
-      const enemyEl = enemySpriteRef.current;
-      const playerEl = playerSpriteRef.current;
-      if (!rootEl) return;
-
-      const rootRect = rootEl.getBoundingClientRect();
-      if (rootRect.width <= 0 || rootRect.height <= 0) return;
-
-      if (enemyEl) {
-        const enemyRect = enemyEl.getBoundingClientRect();
-        if (enemyRect.width > 0 && enemyRect.height > 0) {
-          const cx = enemyRect.left - rootRect.left + enemyRect.width / 2;
-          const cy = enemyRect.top - rootRect.top + enemyRect.height / 2;
-          const rightPx = rootRect.width - cx;
-          const topPx = cy;
-          setMeasuredEnemyTarget({
-            right: `${rightPx}px`,
-            top: `${topPx}px`,
-            flyRight: rightPx / rootRect.width * 100,
-            flyTop: topPx / rootRect.height * 100,
-          });
-        }
-      }
-
-      if (playerEl) {
-        const playerRect = playerEl.getBoundingClientRect();
-        if (playerRect.width > 0 && playerRect.height > 0) {
-          const cx = playerRect.left - rootRect.left + playerRect.width / 2;
-          const cy = playerRect.top - rootRect.top + playerRect.height / 2;
-          const rightPx = rootRect.width - cx;
-          const topPx = cy;
-          setMeasuredPlayerTarget({
-            right: `${rightPx}px`,
-            top: `${topPx}px`,
-            flyRight: rightPx / rootRect.width * 100,
-            flyTop: topPx / rootRect.height * 100,
-          });
-        }
-      }
-    };
-    const scheduleSync = () => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(syncTargets);
-    };
-
-    scheduleSync();
-    window.addEventListener("resize", scheduleSync);
-
-    let observer: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined") {
-      observer = new ResizeObserver(scheduleSync);
-      if (battleRootRef.current) observer.observe(battleRootRef.current);
-      if (enemySpriteRef.current) observer.observe(enemySpriteRef.current);
-      if (playerSpriteRef.current) observer.observe(playerSpriteRef.current);
-    }
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", scheduleSync);
-      if (observer) observer.disconnect();
-    };
-  }, [B.screen, B.phase, B.enemy?.id, B.enemy?.isEvolved, B.enemy?.sceneMType, B.enemy?.mType, B.pStg, B.battleMode, B.pvpTurn]);
 
   const wrapMain = (node: ReactNode) => (
     <div id="main-content" style={{ height: "100%" }}>

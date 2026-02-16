@@ -149,6 +149,7 @@ function pickPartnerStarter(mainStarter, pickIndex, locale) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+/** @returns {import('../types/battle').UseBattlePublicApi} */
 export function useBattle() {
   const { t, locale } = useI18n();
   // ──── Sub-hooks ────

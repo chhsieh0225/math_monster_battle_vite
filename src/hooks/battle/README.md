@@ -51,6 +51,12 @@ This folder holds the battle-domain layering used by `useBattle`.
   - Keeps `selectMove` guard and question-boot logic out of `useBattle`.
 - `coopFlow.ts`
   - Co-op only helper flows (party KO handling, support turns, evolution sync helpers).
+- `coopTurnRotationFlow.ts`
+  - Pure decision helper for co-op active-slot auto-rotation.
+  - Lets `useCoopTurnRotation` stay thin and testable.
+- `sessionLifecycleModel.ts`
+  - Pure payload/stat builders for session result and quit events.
+  - Keeps `useBattleSessionLifecycle` focused on wiring and side effects.
 - `achievementFlow.ts`
   - Achievement unlock checks for victory and full-run completion.
   - Injected via callbacks so it remains UI/framework-agnostic.

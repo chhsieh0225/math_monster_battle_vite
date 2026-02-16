@@ -7,7 +7,7 @@
  */
 import { useMemo, useState } from 'react';
 import type { ChangeEvent, CSSProperties, KeyboardEvent } from 'react';
-import { loadSessions, clearSessions, loadPin, savePin } from '../../utils/sessionLogger';
+import { loadSessions, clearSessions, loadPin, savePin } from '../../utils/sessionLogger.ts';
 import { useI18n } from '../../i18n';
 import { localizeStarterDisplayName } from '../../utils/contentLocalization';
 import {
@@ -145,10 +145,10 @@ type DashboardTranslate = (
 
 const OPS_TYPED = OPS as DashboardOp[];
 const CORE_OPS: DashboardOp[] = ['+', '-', '×', '÷'];
-const loadSessionsTyped = loadSessions as () => DashboardSession[];
-const clearSessionsTyped = clearSessions as () => void;
-const loadPinTyped = loadPin as () => string;
-const savePinTyped = savePin as (pin: string) => void;
+const loadSessionsTyped: () => DashboardSession[] = loadSessions;
+const clearSessionsTyped: () => void = clearSessions;
+const loadPinTyped: () => string = loadPin;
+const savePinTyped: (pin: string) => void = savePin;
 const buildDashboardInsightsTyped = buildDashboardInsights as (
   sessions: DashboardSession[],
   options?: { t?: DashboardTranslate },

@@ -5,7 +5,7 @@
  * Owns: achUnlocked, achPopup, achRef, tryUnlock, dismissAch.
  */
 import { useState, useRef, useCallback } from 'react';
-import { loadAch, saveAch } from '../utils/achievementStore';
+import { loadAch, saveAch } from '../utils/achievementStore.ts';
 import type { AchievementId } from '../types/game';
 
 type UseAchievementsResult = {
@@ -17,10 +17,10 @@ type UseAchievementsResult = {
 
 export function useAchievements(): UseAchievementsResult {
   const [achUnlocked, setAchUnlocked] = useState<AchievementId[]>(
-    () => loadAch() as AchievementId[],
+    () => loadAch(),
   );
   const [achPopup, setAchPopup] = useState<AchievementId | null>(null);
-  const achRef = useRef<Set<AchievementId>>(new Set(loadAch() as AchievementId[]));
+  const achRef = useRef<Set<AchievementId>>(new Set(loadAch()));
 
   const tryUnlock = useCallback((id: AchievementId) => {
     if (achRef.current.has(id)) return;

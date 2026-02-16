@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { canSwitchCoopActiveSlot } from './battle/coopFlow';
+import { resolveCoopTurnRotationDecision } from './battle/coopTurnRotationFlow';
 
 type CoopActiveSlot = 'main' | 'sub';
 
@@ -44,17 +44,22 @@ export function useCoopTurnRotation({
   };
 
   useEffect(() => {
-    if (phase !== 'menu' || !pendingRef.current) return;
+    const decision = resolveCoopTurnRotationDecision({
+      phase,
+      pending: pendingRef.current,
+      state: sr.current,
+    });
+    if (!decision.consumePending) return;
     pendingRef.current = false;
-    const s = sr.current;
-    const canSwitch = canSwitchCoopActiveSlot(s);
 
     safeTo(() => {
-      if (!canSwitch) {
+      if (decision.action === 'set-main') {
         setCoopActiveSlot('main');
         return;
       }
-      setCoopActiveSlot((prev) => (prev === 'main' ? 'sub' : 'main'));
+      if (decision.action === 'toggle') {
+        setCoopActiveSlot((prev) => (prev === 'main' ? 'sub' : 'main'));
+      }
     }, 0);
   }, [phase, safeTo, sr, setCoopActiveSlot]);
 

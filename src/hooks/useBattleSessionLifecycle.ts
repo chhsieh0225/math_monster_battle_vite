@@ -1,6 +1,11 @@
 import { useCallback, useRef } from 'react';
-import { appendEvent, createEventSessionId } from '../utils/eventLogger';
-import { nowMs } from '../utils/time';
+import { appendEvent, createEventSessionId } from '../utils/eventLogger.ts';
+import { nowMs } from '../utils/time.ts';
+import {
+  buildBattleResultPayload,
+  buildQuitPayload,
+  buildSessionFinalizeStats,
+} from './battle/sessionLifecycleModel';
 
 type SessionStateSnapshot = {
   screen?: string;
@@ -79,41 +84,24 @@ export function useBattleSessionLifecycle({
     if (sessionClosedRef.current) return;
     sessionClosedRef.current = true;
 
-    const reason = reasonOverride || (isCompleted ? 'clear' : 'player_ko');
-    const result = isCompleted ? 'win' : reason === 'quit' ? 'quit' : 'lose';
-
-    appendSessionEvent('battle_result', {
-      result,
-      reason,
-      defeated: state.defeated || 0,
-      finalLevel: state.pLvl || 1,
-      maxStreak: state.maxStreak || 0,
-      pHp: state.pHp || 0,
-      tC: state.tC || 0,
-      tW: state.tW || 0,
-      timedMode: !!state.timedMode,
-      durationMs: sessionStartRef.current > 0 ? nowMsTyped() - sessionStartRef.current : null,
+    const durationMs = sessionStartRef.current > 0
+      ? nowMsTyped() - sessionStartRef.current
+      : null;
+    const resultPayload = buildBattleResultPayload({
+      state,
+      isCompleted,
+      reasonOverride,
+      durationMs,
     });
 
-    endSession({
-      defeated: state.defeated || 0,
-      finalLevel: state.pLvl || 1,
-      maxStreak: state.maxStreak || 0,
-      pHp: state.pHp || 0,
-      completed: !!isCompleted,
-    });
+    appendSessionEvent('battle_result', resultPayload);
+
+    endSession(buildSessionFinalizeStats(state, isCompleted));
   }, [appendSessionEvent, endSession]);
 
   const appendQuitEventIfOpen = useCallback((state: SessionStateSnapshot) => {
     if (sessionClosedRef.current) return;
-    appendSessionEvent('game_exit', {
-      reason: 'quit_button',
-      screen: state.screen || null,
-      phase: state.phase || null,
-      round: state.round || 0,
-      defeated: state.defeated || 0,
-      pHp: state.pHp || 0,
-    });
+    appendSessionEvent('game_exit', buildQuitPayload(state));
   }, [appendSessionEvent]);
 
   return {

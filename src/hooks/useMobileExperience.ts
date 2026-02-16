@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { readText, writeText } from '../utils/storage';
+import { readText, writeText } from '../utils/storage.ts';
 import type { PerfMode, UseMobileExperienceApi } from '../types/battle';
 
 const PERF_MODE_KEY = "mathMonsterBattle_perfMode";

@@ -31,6 +31,13 @@ Current migrated files:
 - `src/utils/playerHp.ts`
 - `src/utils/effectTiming.ts`
 - `src/utils/turnFlow.ts`
+- `src/utils/storage.ts`
+- `src/utils/leaderboard.ts`
+- `src/utils/time.ts`
+- `src/utils/achievementStore.ts`
+- `src/utils/sessionLogger.ts`
+- `src/utils/eventLogger.ts`
+- `src/utils/sfx.ts`
 - `src/hooks/useAchievements.ts`
 - `src/hooks/useEncyclopedia.ts`
 - `src/hooks/useSessionLog.ts`

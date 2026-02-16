@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { loadScores } from '../../utils/leaderboard';
+import { loadScores } from '../../utils/leaderboard.ts';
 import type { LeaderboardEntry } from '../../types/game';
 import { useI18n } from '../../i18n';
 
@@ -12,7 +12,7 @@ type LeaderboardScreenProps = {
 
 export default function LeaderboardScreen({ totalEnemies, onBack }: LeaderboardScreenProps) {
   const { t } = useI18n();
-  const scores = loadScores() as LeaderboardEntry[];
+  const scores: LeaderboardEntry[] = loadScores();
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", overflow: "hidden" }}>
       {/* Header */}

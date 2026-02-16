@@ -6,11 +6,15 @@
  */
 import { useRef } from 'react';
 import {
-  initSessionLog,
-  logAnswer as _logAnswer,
   finalizeSession,
+  initSessionLog,
+  logAnswer,
   saveSession,
-} from '../utils/sessionLogger';
+} from '../utils/sessionLogger.ts';
+import type {
+  SessionFinalizeStats,
+  SessionLog,
+} from '../utils/sessionLogger.ts';
 
 type StarterForSession = {
   id?: string;
@@ -25,16 +29,6 @@ type SessionQuestion = {
   [key: string]: unknown;
 };
 
-type SessionFinalizeStats = {
-  defeated: number;
-  finalLevel: number;
-  maxStreak: number;
-  pHp: number;
-  completed: boolean;
-};
-
-type SessionLog = Record<string, unknown>;
-
 type UseSessionLogResult = {
   initSession: (starter: StarterForSession, timedMode?: boolean) => void;
   markQStart: () => void;
@@ -42,32 +36,13 @@ type UseSessionLogResult = {
   endSession: (stats: SessionFinalizeStats) => void;
 };
 
-const initSessionLogTyped = initSessionLog as (
-  starter: StarterForSession,
-  timedMode?: boolean,
-) => SessionLog;
-
-const logAnswerTyped = _logAnswer as (
-  session: SessionLog | null,
-  question: SessionQuestion | null | undefined,
-  isCorrect: boolean,
-  timeMs: number,
-) => void;
-
-const finalizeSessionTyped = finalizeSession as (
-  session: SessionLog | null,
-  stats: SessionFinalizeStats,
-) => SessionLog | null;
-
-const saveSessionTyped = saveSession as (session: SessionLog) => void;
-
 export function useSessionLog(): UseSessionLogResult {
   const sessionRef = useRef<SessionLog | null>(null);
   const qStartRef = useRef(0);
 
   /** Start a new session log. Call at game start. */
   const initSession = (starter: StarterForSession, timedMode?: boolean): void => {
-    sessionRef.current = initSessionLogTyped(starter, timedMode);
+    sessionRef.current = initSessionLog(starter, timedMode);
   };
 
   /** Mark question start time. Call when a question is shown. */
@@ -78,14 +53,14 @@ export function useSessionLog(): UseSessionLogResult {
   /** Log one answer. Returns elapsed ms. */
   const logAns = (question: SessionQuestion | null | undefined, isCorrect: boolean): number => {
     const ansTimeMs = Date.now() - qStartRef.current;
-    logAnswerTyped(sessionRef.current, question, isCorrect, ansTimeMs);
+    logAnswer(sessionRef.current, question, isCorrect, ansTimeMs);
     return ansTimeMs;
   };
 
   /** Finalize and persist session. Call at game end. */
   const endSession = (stats: SessionFinalizeStats): void => {
-    const done = finalizeSessionTyped(sessionRef.current, stats);
-    if (done) saveSessionTyped(done);
+    const done = finalizeSession(sessionRef.current, stats);
+    if (done) saveSession(done);
     sessionRef.current = null;
   };
 

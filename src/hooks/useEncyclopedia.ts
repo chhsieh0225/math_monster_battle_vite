@@ -6,7 +6,7 @@
  */
 import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { loadEnc, saveEnc } from '../utils/achievementStore';
+import { loadEnc, saveEnc } from '../utils/achievementStore.ts';
 import type { EncyclopediaData } from '../types/game';
 
 type EncyclopediaCounts = Record<string, number>;
@@ -41,7 +41,7 @@ function getEncKey(obj: EnemyEncyclopediaEntry): string {
 
 export function useEncyclopedia(): UseEncyclopediaResult {
   const [encData, setEncData] = useState<EncyclopediaState>(
-    () => normalizeEncyclopediaData(loadEnc() as EncyclopediaData),
+    () => normalizeEncyclopediaData(loadEnc()),
   );
 
   const updateEnc = (enemyObj: EnemyEncyclopediaEntry): void => {

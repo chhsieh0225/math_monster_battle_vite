@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
-import { calcScore, saveScore } from '../../utils/leaderboard';
-import { readText, writeText } from '../../utils/storage';
+import { calcScore, saveScore } from '../../utils/leaderboard.ts';
+import { readText, writeText } from '../../utils/storage.ts';
 import type { LeaderboardEntry } from '../../types/game';
 import { useI18n } from '../../i18n';
 

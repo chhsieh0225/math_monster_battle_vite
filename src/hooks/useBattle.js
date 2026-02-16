@@ -53,7 +53,7 @@ import { useBattleUIState } from './useBattleUIState';
 import { usePvpState } from './usePvpState';
 import { useBattleSessionLifecycle } from './useBattleSessionLifecycle';
 import { ENC_TOTAL } from '../data/encyclopedia';
-import sfx from '../utils/sfx';
+import sfx from '../utils/sfx.ts';
 import { buildRoster } from '../utils/rosterBuilder';
 import {
   createAbilityModel,
@@ -67,6 +67,12 @@ import {
 } from './battle/battleReducer';
 import { createBattleFieldSetters } from './battle/battleFieldSetters';
 import { effectOrchestrator } from './battle/effectOrchestrator';
+import {
+  createEnemyTurnHandlers,
+  createPlayerAnswerHandlers,
+  createPvpAnswerHandlers,
+  createPvpTurnStartHandlers,
+} from './battle/flowHandlers';
 import { runEnemyTurn } from './battle/enemyFlow';
 import { handleTimeoutFlow } from './battle/timeoutFlow';
 import { runPvpStartFlow, runStandardStartFlow } from './battle/startGameFlow';
@@ -575,38 +581,6 @@ export function useBattle() {
     safeTo(() => { setPhase("menu"); setBText(""); }, 1500);
   };
 
-  const enemyTurnHandlers = {
-    sr,
-    safeTo,
-    rand,
-    randInt,
-    chance,
-    sfx,
-    setSealedTurns,
-    setSealedMove,
-    setBossPhase,
-    setBossTurn,
-    setBossCharging,
-    setBText,
-    setPhase,
-    setEAnim,
-    setPAnim,
-    setPHp,
-    setPHpSub,
-    setSpecDef,
-    setDefAnim,
-    setEHp,
-    setEffMsg,
-    setCursed,
-    addD,
-    addP,
-    _endSession,
-    setScreen,
-    handleVictory,
-    handlePlayerPartyKo,
-    t,
-  };
-
   // --- Player selects a move ---
   const selectMove = (i) => {
     runSelectMoveFlow({
@@ -632,118 +606,39 @@ export function useBattle() {
 
   // --- Enemy turn logic (reads from stateRef) ---
   function doEnemyTurn() {
-    runEnemyTurn(enemyTurnHandlers);
+    runEnemyTurn(createEnemyTurnHandlers({
+      sr,
+      safeTo,
+      rand,
+      randInt,
+      chance,
+      sfx,
+      setSealedTurns,
+      setSealedMove,
+      setBossPhase,
+      setBossTurn,
+      setBossCharging,
+      setBText,
+      setPhase,
+      setEAnim,
+      setPAnim,
+      setPHp,
+      setPHpSub,
+      setSpecDef,
+      setDefAnim,
+      setEHp,
+      setEffMsg,
+      setCursed,
+      addD,
+      addP,
+      _endSession,
+      setScreen,
+      handleVictory,
+      handlePlayerPartyKo,
+      t,
+    }));
   }
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
-
-  const pvpAnswerHandlers = {
-    sr,
-    rand,
-    chance,
-    safeTo,
-    sfx,
-    getOtherPvpTurn,
-    setFb,
-    setTC,
-    setTW,
-    setPvpChargeP1,
-    setPvpChargeP2,
-    setPvpComboP1,
-    setPvpComboP2,
-    setPvpTurn,
-    setPvpActionCount,
-    setBText,
-    setPhase,
-    setPvpSpecDefP1,
-    setPvpSpecDefP2,
-    setEffMsg,
-    setAtkEffect,
-    addP,
-    setPvpParalyzeP1,
-    setPvpParalyzeP2,
-    setPAnim,
-    setEAnim,
-    addD,
-    setPHp,
-    setPvpHp2,
-    setEHp,
-    setScreen,
-    setPvpWinner,
-    setPvpBurnP1,
-    setPvpBurnP2,
-    setPvpFreezeP1,
-    setPvpFreezeP2,
-    setPvpStaticP1,
-    setPvpStaticP2,
-    t,
-  };
-
-  const playerAnswerHandlers = {
-    sr,
-    safeTo,
-    chance,
-    sfx,
-    setFb,
-    setTC,
-    setTW,
-    setStreak,
-    setPassiveCount,
-    setCharge,
-    setMaxStreak,
-    setSpecDef,
-    tryUnlock,
-    setMLvls,
-    setMLvlUp,
-    setMHits,
-    setPhase,
-    setPAnim,
-    setAtkEffect,
-    setEAnim,
-    setEffMsg,
-    setBossCharging,
-    setBurnStack,
-    setPHp,
-    setPHpSub,
-    setFrozen,
-    frozenR,
-    setStaticStack,
-    setEHp,
-    addD,
-    doEnemyTurn,
-    handleVictory,
-    handleFreeze,
-    setCursed,
-    _endSession,
-    setScreen,
-    setBText,
-    handlePlayerPartyKo,
-    runAllySupportTurn,
-    t,
-  };
-
-  const pvpTurnStartHandlers = {
-    safeTo,
-    getOtherPvpTurn,
-    getPvpTurnName,
-    setPHp,
-    setPvpBurnP1,
-    setPAnim,
-    addD,
-    setPvpWinner,
-    setScreen,
-    setPvpHp2,
-    setEHp,
-    setPvpBurnP2,
-    setEAnim,
-    setBText,
-    setPhase,
-    setPvpParalyzeP1,
-    setPvpParalyzeP2,
-    setPvpTurn,
-    setPvpFreezeP1,
-    setPvpFreezeP2,
-    t,
-  };
 
   // --- Player answers a question ---
   const onAns = (choice) => {
@@ -751,8 +646,91 @@ export function useBattle() {
     setAnswered(true);
     clearTimer();
     const s = sr.current;
+    const pvpAnswerHandlers = createPvpAnswerHandlers({
+      sr,
+      rand,
+      chance,
+      safeTo,
+      sfx,
+      getOtherPvpTurn,
+      setFb,
+      setTC,
+      setTW,
+      setPvpChargeP1,
+      setPvpChargeP2,
+      setPvpComboP1,
+      setPvpComboP2,
+      setPvpTurn,
+      setPvpActionCount,
+      setBText,
+      setPhase,
+      setPvpSpecDefP1,
+      setPvpSpecDefP2,
+      setEffMsg,
+      setAtkEffect,
+      addP,
+      setPvpParalyzeP1,
+      setPvpParalyzeP2,
+      setPAnim,
+      setEAnim,
+      addD,
+      setPHp,
+      setPvpHp2,
+      setEHp,
+      setScreen,
+      setPvpWinner,
+      setPvpBurnP1,
+      setPvpBurnP2,
+      setPvpFreezeP1,
+      setPvpFreezeP2,
+      setPvpStaticP1,
+      setPvpStaticP2,
+      t,
+    });
     if (tryHandlePvpAnswer({ choice, state: s, handlers: pvpAnswerHandlers })) return;
 
+    const playerAnswerHandlers = createPlayerAnswerHandlers({
+      sr,
+      safeTo,
+      chance,
+      sfx,
+      setFb,
+      setTC,
+      setTW,
+      setStreak,
+      setPassiveCount,
+      setCharge,
+      setMaxStreak,
+      setSpecDef,
+      tryUnlock,
+      setMLvls,
+      setMLvlUp,
+      setMHits,
+      setPhase,
+      setPAnim,
+      setAtkEffect,
+      setEAnim,
+      setEffMsg,
+      setBossCharging,
+      setBurnStack,
+      setPHp,
+      setPHpSub,
+      setFrozen,
+      frozenR,
+      setStaticStack,
+      setEHp,
+      addD,
+      doEnemyTurn,
+      handleVictory,
+      handleFreeze,
+      setCursed,
+      _endSession,
+      setScreen,
+      setBText,
+      handlePlayerPartyKo,
+      runAllySupportTurn,
+      t,
+    });
     runStandardAnswerFlow({
       choice,
       state: s,
@@ -788,6 +766,29 @@ export function useBattle() {
 
   const advance = () => {
     if (phase === "text") {
+      const pvpTurnStartHandlers = createPvpTurnStartHandlers({
+        safeTo,
+        getOtherPvpTurn,
+        getPvpTurnName,
+        setPHp,
+        setPvpBurnP1,
+        setPAnim,
+        addD,
+        setPvpWinner,
+        setScreen,
+        setPvpHp2,
+        setEHp,
+        setPvpBurnP2,
+        setEAnim,
+        setBText,
+        setPhase,
+        setPvpParalyzeP1,
+        setPvpParalyzeP2,
+        setPvpTurn,
+        setPvpFreezeP1,
+        setPvpFreezeP2,
+        t,
+      });
       if (tryProcessPvpTextAdvance({ state: sr.current, handlers: pvpTurnStartHandlers })) return;
       setPhase("menu"); setBText("");
     }

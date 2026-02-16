@@ -6,7 +6,7 @@ import {
   createEventSessionId,
   EVENT_LOG_LIMIT,
   loadEvents,
-} from './eventLogger.js';
+} from './eventLogger.ts';
 
 function withMockStorage(fn) {
   const prev = globalThis.localStorage;
@@ -67,4 +67,3 @@ test('clearEvents removes persisted log entries', () => {
     assert.equal(loadEvents().length, 0);
   });
 });
-

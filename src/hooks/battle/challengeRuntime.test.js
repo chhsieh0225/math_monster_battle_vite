@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildDailyChallengeRoster,
+  createDailyChallengeFeedback,
+  getDailyChallengeEnemyTotal,
   getDailyChallengeSeed,
   resolveDailyBattleRule,
 } from './challengeRuntime.ts';
@@ -51,4 +53,86 @@ test('resolveDailyBattleRule maps round index by enemyCount slices', () => {
   assert.equal(resolveDailyBattleRule(plan, 1)?.battleSeed, 'daily:2026-02-16:b2');
   assert.equal(resolveDailyBattleRule(plan, 2)?.battleSeed, 'daily:2026-02-16:b2');
   assert.equal(resolveDailyBattleRule(null, 0), null);
+});
+
+test('getDailyChallengeEnemyTotal sums enemyCount across battles', () => {
+  assert.equal(getDailyChallengeEnemyTotal(plan), 3);
+  assert.equal(getDailyChallengeEnemyTotal(null), 0);
+});
+
+test('createDailyChallengeFeedback includes clear rewards and streak gain', () => {
+  const withRewards = {
+    ...plan,
+    challengeId: 'daily-2026-02-16',
+    streakWindowDays: 7,
+    rewards: {
+      clear: [{ label: 'Daily Clear +60 AP' }],
+      streak: [{ label: '7-day Streak +200 AP' }],
+    },
+  };
+  const before = {
+    streakCount: 2,
+    runs: {},
+  };
+  const after = {
+    streakCount: 3,
+    runs: {
+      '2026-02-16': {
+        status: 'cleared',
+        battlesCleared: 3,
+      },
+    },
+  };
+  const feedback = createDailyChallengeFeedback({
+    plan: withRewards,
+    before,
+    after,
+    outcome: 'cleared',
+    battlesCleared: 3,
+  });
+
+  assert.equal(feedback.outcome, 'cleared');
+  assert.equal(feedback.persistedStatus, 'cleared');
+  assert.equal(feedback.battlesCleared, 3);
+  assert.equal(feedback.battlesTotal, 3);
+  assert.equal(feedback.streakDelta, 1);
+  assert.deepEqual(feedback.rewardLabels, ['Daily Clear +60 AP']);
+});
+
+test('createDailyChallengeFeedback marks preserved clear when replay fails', () => {
+  const withRewards = {
+    ...plan,
+    challengeId: 'daily-2026-02-16',
+    streakWindowDays: 7,
+    rewards: {
+      clear: [{ label: 'Daily Clear +60 AP' }],
+      streak: [{ label: '7-day Streak +200 AP' }],
+    },
+  };
+  const before = {
+    streakCount: 4,
+    runs: {},
+  };
+  const after = {
+    streakCount: 4,
+    runs: {
+      '2026-02-16': {
+        status: 'cleared',
+        battlesCleared: 3,
+      },
+    },
+  };
+  const feedback = createDailyChallengeFeedback({
+    plan: withRewards,
+    before,
+    after,
+    outcome: 'failed',
+    battlesCleared: 1,
+  });
+
+  assert.equal(feedback.outcome, 'failed');
+  assert.equal(feedback.persistedStatus, 'cleared');
+  assert.equal(feedback.preservedClear, true);
+  assert.equal(feedback.streakAfter, 4);
+  assert.deepEqual(feedback.rewardLabels, []);
 });

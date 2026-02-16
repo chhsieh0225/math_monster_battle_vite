@@ -3,6 +3,7 @@ import type { ChangeEvent, KeyboardEvent } from 'react';
 import { calcScore, saveScore } from '../../utils/leaderboard.ts';
 import { readText, writeText } from '../../utils/storage.ts';
 import type { LeaderboardEntry } from '../../types/game';
+import type { DailyChallengeFeedback } from '../../types/challenges';
 import { useI18n } from '../../i18n';
 
 type StarterMoveLite = {
@@ -25,6 +26,7 @@ type GameOverScreenProps = {
   starter: GameOverStarterLite | null;
   mLvls: number[];
   getPow: (moveIdx: number) => number;
+  dailyChallengeFeedback?: DailyChallengeFeedback | null;
   onRestart: () => void;
   onLeaderboard: () => void;
   onHome: () => void;
@@ -41,6 +43,7 @@ export default function GameOverScreen({
   starter,
   mLvls,
   getPow,
+  dailyChallengeFeedback = null,
   onRestart,
   onLeaderboard,
   onHome,
@@ -54,6 +57,9 @@ export default function GameOverScreen({
     return readText("mathMonsterBattle_name", "");
   });
   const scoreSaved = useRef(false);
+  const hasDailyFeedback = Boolean(dailyChallengeFeedback);
+  const dailySuccess = dailyChallengeFeedback?.outcome === 'cleared';
+  const streakDeltaPrefix = (dailyChallengeFeedback?.streakDelta || 0) > 0 ? '+' : '';
 
   const handleSaveScore = () => {
     if (scoreSaved.current) return;
@@ -78,6 +84,57 @@ export default function GameOverScreen({
         {won ? t("gameOver.winTitle", "Stage Cleared!") : t("gameOver.loseTitle", "Challenge Over")}
         {timedMode && <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(239,68,68,0.25)", padding: "2px 8px", borderRadius: 10, marginLeft: 8, verticalAlign: "middle" }}>⏱️ {t("gameOver.timedBadge", "Timed")}</span>}
       </h2>
+
+      {hasDailyFeedback && dailyChallengeFeedback && (
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 320,
+            marginBottom: 10,
+            borderRadius: 14,
+            border: dailySuccess ? "1px solid rgba(34,197,94,0.5)" : "1px solid rgba(239,68,68,0.45)",
+            background: dailySuccess ? "linear-gradient(180deg,rgba(22,163,74,0.28),rgba(15,23,42,0.55))" : "linear-gradient(180deg,rgba(239,68,68,0.2),rgba(15,23,42,0.55))",
+            padding: "10px 12px",
+            textAlign: "left",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.25)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <div style={{ fontSize: 12, fontWeight: 900 }}>{t("daily.result.title", "Daily Challenge Result")}</div>
+            <div style={{ fontSize: 11, fontWeight: 900, color: dailySuccess ? "#4ade80" : "#fca5a5" }}>
+              {dailySuccess ? `✅ ${t("daily.result.cleared", "Cleared")}` : `❌ ${t("daily.result.failed", "Failed")}`}
+            </div>
+          </div>
+          <div style={{ marginTop: 6, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            <div style={{ borderRadius: 10, background: "rgba(15,23,42,0.45)", padding: "6px 8px" }}>
+              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.result.battles", "Battles")}</div>
+              <div style={{ fontSize: 13, fontWeight: 800 }}>{dailyChallengeFeedback.battlesCleared}/{dailyChallengeFeedback.battlesTotal}</div>
+            </div>
+            <div style={{ borderRadius: 10, background: "rgba(15,23,42,0.45)", padding: "6px 8px" }}>
+              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.result.streakNow", "Streak")}</div>
+              <div style={{ fontSize: 13, fontWeight: 800 }}>{dailyChallengeFeedback.streakAfter}</div>
+            </div>
+          </div>
+          <div style={{ marginTop: 6, fontSize: 11, opacity: 0.88 }}>
+            {t("daily.result.streakDelta", "Streak Change")} {streakDeltaPrefix}{dailyChallengeFeedback.streakDelta} ({dailyChallengeFeedback.streakBefore} → {dailyChallengeFeedback.streakAfter})
+          </div>
+          {dailyChallengeFeedback.preservedClear && (
+            <div style={{ marginTop: 4, fontSize: 11, color: "#fde68a", fontWeight: 700 }}>
+              {t("daily.result.preserved", "Today was already cleared. Streak is preserved.")}
+            </div>
+          )}
+          {dailyChallengeFeedback.rewardLabels.length > 0 && (
+            <div style={{ marginTop: 6, display: "grid", gap: 3 }}>
+              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.result.rewards", "Rewards")}</div>
+              {dailyChallengeFeedback.rewardLabels.map((label, idx) => (
+                <div key={`${label}-${idx}`} style={{ fontSize: 11, fontWeight: 700 }}>
+                  • {label}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Score */}
       <div style={{ marginBottom: 10, animation: "popIn 0.4s ease 0.2s both" }}>

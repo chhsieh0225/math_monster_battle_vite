@@ -57,6 +57,7 @@ import { ENC_TOTAL } from '../data/encyclopedia.ts';
 import sfx from '../utils/sfx.ts';
 import { buildRoster } from '../utils/rosterBuilder';
 import {
+  loadDailyChallengeProgress,
   markDailyChallengeCleared,
   markDailyChallengeFailed,
 } from '../utils/challengeProgress.ts';
@@ -132,6 +133,8 @@ import {
 } from './battle/achievementFlow';
 import {
   buildDailyChallengeRoster,
+  createDailyChallengeFeedback,
+  getDailyChallengeEnemyTotal,
   getDailyChallengeSeed,
   resolveDailyBattleRule,
 } from './battle/challengeRuntime.ts';
@@ -181,6 +184,7 @@ export function useBattle() {
   const [battleMode, setBattleMode] = useState("single");
   const [queuedChallenge, setQueuedChallenge] = useState(null);
   const [activeChallenge, setActiveChallenge] = useState(null);
+  const [dailyChallengeFeedback, setDailyChallengeFeedback] = useState(null);
   const [coopActiveSlot, setCoopActiveSlot] = useState("main");
   const pvpState = usePvpState();
   const {
@@ -319,6 +323,7 @@ export function useBattle() {
   const clearChallengeRun = useCallback(() => {
     setQueuedChallenge(null);
     setActiveChallenge(null);
+    setDailyChallengeFeedback(null);
   }, []);
 
   const queueDailyChallenge = useCallback((plan) => {
@@ -438,7 +443,15 @@ export function useBattle() {
   // ── Finalize and persist session log ──
   const _endSession = useCallback((isCompleted, reasonOverride = null) => {
     if (!isCompleted && activeChallenge?.kind === 'daily' && activeChallenge.plan) {
-      markDailyChallengeFailed(activeChallenge.plan, sr.current?.defeated || 0);
+      const progressBefore = loadDailyChallengeProgress();
+      const progressAfter = markDailyChallengeFailed(activeChallenge.plan, sr.current?.defeated || 0);
+      setDailyChallengeFeedback(createDailyChallengeFeedback({
+        plan: activeChallenge.plan,
+        before: progressBefore,
+        after: progressAfter,
+        outcome: 'failed',
+        battlesCleared: sr.current?.defeated || 0,
+      }));
       setActiveChallenge(null);
       setQueuedChallenge(null);
     }
@@ -453,7 +466,16 @@ export function useBattle() {
   // --- Shared game-completion logic (achievements + session save) ---
   const _finishGame = useCallback(() => {
     if (activeChallenge?.kind === 'daily' && activeChallenge.plan) {
-      markDailyChallengeCleared(activeChallenge.plan, activeChallenge.plan.battles?.length || 1);
+      const totalBattles = Math.max(1, getDailyChallengeEnemyTotal(activeChallenge.plan));
+      const progressBefore = loadDailyChallengeProgress();
+      const progressAfter = markDailyChallengeCleared(activeChallenge.plan, totalBattles);
+      setDailyChallengeFeedback(createDailyChallengeFeedback({
+        plan: activeChallenge.plan,
+        before: progressBefore,
+        after: progressAfter,
+        outcome: 'cleared',
+        battlesCleared: totalBattles,
+      }));
       setActiveChallenge(null);
       setQueuedChallenge(null);
     }
@@ -529,6 +551,7 @@ export function useBattle() {
   }, [setDmgs, setParts, setAtkEffect, setEffMsg]);
 
   const startGame = (starterOverride, modeOverride = null, allyOverride = null) => {
+    setDailyChallengeFeedback(null);
     const challengeContext = queuedChallenge || activeChallenge;
     const runSeed = challengeContext?.kind === 'daily'
       ? getDailyChallengeSeed(challengeContext.plan)
@@ -888,6 +911,7 @@ export function useBattle() {
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, diffLevel,
     gamePaused,
     questionTimerSec,
+    dailyChallengeFeedback,
     expNext, chargeReady,
     achUnlocked, achPopup, encData,
   };

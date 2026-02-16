@@ -126,6 +126,22 @@ export type DailyChallengeProgress = {
   runs: Record<string, DailyRunRecord>;
 };
 
+export type DailyChallengeFeedback = {
+  challengeId: string;
+  dateKey: string;
+  outcome: 'cleared' | 'failed';
+  persistedStatus: DailyRunStatus;
+  battlesCleared: number;
+  battlesTotal: number;
+  streakBefore: number;
+  streakAfter: number;
+  streakDelta: number;
+  streakWindowDays: number;
+  rewardLabels: string[];
+  streakRewardUnlocked: boolean;
+  preservedClear: boolean;
+};
+
 export type TowerProgress = {
   version: 1;
   seasonId: string;

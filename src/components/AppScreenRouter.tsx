@@ -244,6 +244,7 @@ export default function AppScreenRouter({
           starter={battle.starter}
           mLvls={battle.mLvls}
           getPow={battle.getPow}
+          dailyChallengeFeedback={battle.dailyChallengeFeedback}
           onRestart={() => battle.starter && battle.startGame()}
           onLeaderboard={() => battle.setScreen('leaderboard')}
           onHome={() => battle.setScreen('title')}

@@ -1,4 +1,10 @@
-import type { DailyChallengeBattlePlan, DailyChallengePlan } from '../../types/challenges.ts';
+import type {
+  DailyChallengeBattlePlan,
+  DailyChallengeFeedback,
+  DailyChallengePlan,
+  DailyChallengeProgress,
+  DailyRunStatus,
+} from '../../types/challenges.ts';
 
 type RosterEnemy = {
   lvl?: number;
@@ -97,4 +103,73 @@ export function buildDailyChallengeRoster<T extends RosterEnemy>(
   }
 
   return tuned.length > 0 ? tuned : [...baseRoster];
+}
+
+export function getDailyChallengeEnemyTotal(plan: DailyChallengePlan | null | undefined): number {
+  if (!plan || !Array.isArray(plan.battles) || plan.battles.length <= 0) return 0;
+  return plan.battles.reduce((total, battle) => total + clampEnemyCount(battle?.enemyCount), 0);
+}
+
+function normalizeDailyRunStatus(status: unknown, fallback: DailyRunStatus): DailyRunStatus {
+  if (status === 'cleared' || status === 'failed' || status === 'in_progress' || status === 'idle') {
+    return status;
+  }
+  return fallback;
+}
+
+function clampBattleCount(value: unknown, fallback = 0): number {
+  if (!Number.isFinite(Number(value))) return Math.max(0, fallback);
+  return Math.max(0, Math.floor(Number(value)));
+}
+
+export function createDailyChallengeFeedback({
+  plan,
+  before,
+  after,
+  outcome,
+  battlesCleared = 0,
+}: {
+  plan: DailyChallengePlan;
+  before: DailyChallengeProgress | null | undefined;
+  after: DailyChallengeProgress | null | undefined;
+  outcome: 'cleared' | 'failed';
+  battlesCleared?: number;
+}): DailyChallengeFeedback {
+  const streakBefore = Math.max(0, Number(before?.streakCount) || 0);
+  const streakAfter = Math.max(0, Number(after?.streakCount) || 0);
+  const streakDelta = streakAfter - streakBefore;
+  const run = after?.runs?.[plan.dateKey];
+  const persistedStatus = normalizeDailyRunStatus(run?.status, outcome);
+  const streakWindowDays = Math.max(1, Math.floor(Number(plan.streakWindowDays) || 1));
+  const battlesTotal = Math.max(1, getDailyChallengeEnemyTotal(plan));
+  const resolvedBattles = clampBattleCount(run?.battlesCleared, battlesCleared);
+  const boundedBattles = Math.max(0, Math.min(battlesTotal, resolvedBattles));
+  const streakRewardUnlocked = outcome === 'cleared'
+    && streakDelta > 0
+    && streakAfter > 0
+    && streakAfter % streakWindowDays === 0;
+  const rewardLabels = outcome === 'cleared'
+    ? [
+      ...(Array.isArray(plan.rewards?.clear) ? plan.rewards.clear : []).map((reward) => reward.label),
+      ...(streakRewardUnlocked
+        ? (Array.isArray(plan.rewards?.streak) ? plan.rewards.streak : []).map((reward) => reward.label)
+        : []),
+    ]
+    : [];
+
+  return {
+    challengeId: plan.challengeId,
+    dateKey: plan.dateKey,
+    outcome,
+    persistedStatus,
+    battlesCleared: boundedBattles,
+    battlesTotal,
+    streakBefore,
+    streakAfter,
+    streakDelta,
+    streakWindowDays,
+    rewardLabels,
+    streakRewardUnlocked,
+    preservedClear: outcome === 'failed' && persistedStatus === 'cleared',
+  };
 }

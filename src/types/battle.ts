@@ -1,5 +1,5 @@
 import type { AchievementId, EncyclopediaData, StarterId } from './game';
-import type { DailyChallengePlan } from './challenges';
+import type { DailyChallengeFeedback, DailyChallengePlan } from './challenges';
 
 export type BattleMode = "single" | "coop" | "pvp" | "double";
 export type ScreenName =
@@ -195,6 +195,7 @@ export type UseBattleState = {
   diffLevel: number;
   gamePaused: boolean;
   questionTimerSec: number;
+  dailyChallengeFeedback: DailyChallengeFeedback | null;
   expNext: number;
   chargeReady: boolean;
   achUnlocked: AchievementId[];

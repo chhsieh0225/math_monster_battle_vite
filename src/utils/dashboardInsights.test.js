@@ -9,6 +9,12 @@ import {
   computeOverviewStats,
 } from './dashboardInsights.js';
 
+const CJK_RE = /[\u3400-\u9fff]/;
+
+function hasCjk(value) {
+  return CJK_RE.test(String(value ?? ''));
+}
+
 function makeOpStats(overrides = {}) {
   const stats = {};
   for (const op of OPS) {
@@ -151,4 +157,37 @@ test('buildDashboardInsights provides bootstrap guidance for empty data', () => 
   assert.equal(insights.overview.totalSessions, 0);
   assert.equal(insights.weakSuggestions[0].groupId, 'warmup');
   assert.equal(insights.practiceTasks.length, 3);
+});
+
+test('buildDashboardInsights fallback text stays English-only without translator', () => {
+  const now = Date.parse('2026-02-15T12:00:00.000Z');
+  const sessions = [
+    makeSession({
+      id: 's-en-1',
+      daysAgo: 1,
+      tC: 6,
+      tW: 6,
+      now,
+      opStats: makeOpStats({
+        '+': { attempted: 12, correct: 6, totalMs: 96000 },
+      }),
+    }),
+  ];
+  const insights = buildDashboardInsights(sessions, { now });
+
+  const textSamples = [
+    insights.weakSuggestions[0]?.label,
+    insights.weakSuggestions[0]?.title,
+    insights.weakSuggestions[0]?.summary,
+    insights.weakSuggestions[0]?.action,
+    insights.weeklyReport?.headline,
+    insights.practiceTasks[0]?.title,
+    insights.practiceTasks[0]?.summary,
+    insights.practiceTasks[0]?.goal,
+    insights.overview?.groupData?.[0]?.label,
+  ].filter(Boolean);
+
+  for (const text of textSamples) {
+    assert.equal(hasCjk(text), false, `fallback output contains CJK text: ${text}`);
+  }
 });

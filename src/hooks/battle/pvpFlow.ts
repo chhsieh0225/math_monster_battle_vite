@@ -456,6 +456,8 @@ export function handlePvpAnswer({
     const sfxKey = move.risky && move.type2 ? move.type2 : move.type;
     sfx.play(sfxKey);
     if (strike.isCrit) sfx.play('crit');
+    else if (strike.eff > 1) sfx.play('effective');
+    else if (strike.eff < 1) sfx.play('resist');
     if (currentTurn === 'p1') {
       setAtkEffect({ type: vfxType, idx: s2.selIdx || 0, lvl: 1, targetSide: 'enemy' });
     } else {

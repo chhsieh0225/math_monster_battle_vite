@@ -449,9 +449,11 @@ export function runPlayerAnswer({
             setEffMsg({ text: tr(t, 'battle.effect.lightCourage', '🦁 Courage Heart! ATK↑'), color: '#f59e0b' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
           } else if (eff > 1) {
+            sfx.play('effective');
             setEffMsg({ text: tr(t, 'battle.effect.super', 'Super effective!'), color: '#22c55e' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
           } else if (eff < 1) {
+            sfx.play('resist');
             setEffMsg({ text: tr(t, 'battle.effect.notVery', 'Not very effective...'), color: '#94a3b8' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
           }

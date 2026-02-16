@@ -22,6 +22,10 @@ export default function AchievementPopup({ achievement, onDone }: AchievementPop
   }, [onDone]);
 
   if (!achievement) return null;
+  const liveLabel = t("achievement.popup.announce", "Achievement unlocked: {name}. {desc}", {
+    name: achievement.name,
+    desc: achievement.desc,
+  });
   return (
     <div style={{
       position:"absolute", top:60, right:12, zIndex:300, width:210,
@@ -30,7 +34,12 @@ export default function AchievementPopup({ achievement, onDone }: AchievementPop
       boxShadow:"0 6px 28px rgba(88,28,135,0.5)",
       animation: out ? "fadeSlide 0.5s ease reverse forwards" : "popIn 0.35s ease",
       backdropFilter:"blur(8px)",
-    }}>
+    }}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      aria-label={liveLabel}
+    >
       <div style={{fontSize:11,opacity:0.7,fontWeight:700,marginBottom:4}}>
         🏅 {t("achievement.popup.unlocked", "Achievement Unlocked!")}
       </div>

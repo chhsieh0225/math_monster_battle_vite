@@ -416,9 +416,11 @@ export function runEnemyTurn({
           setEffMsg({ text: tr(t, 'battle.enemy.effect.blazeAwaken', '🔥 Blaze awakened! ATK↑'), color: '#ef4444' });
           safeToIfBattleActive(() => setEffMsg(null), 1500);
         } else if (defEff > 1) {
+          sfx.play('effective');
           setEffMsg({ text: tr(t, 'battle.enemy.effect.super', 'Enemy move is super effective!'), color: '#ef4444' });
           safeToIfBattleActive(() => setEffMsg(null), 1500);
         } else if (defEff < 1) {
+          sfx.play('resist');
           setEffMsg({ text: tr(t, 'battle.enemy.effect.notVery', 'Enemy move is not very effective'), color: '#64748b' });
           safeToIfBattleActive(() => setEffMsg(null), 1500);
         }

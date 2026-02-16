@@ -412,6 +412,15 @@ function App() {
         : B.starter.type === "light"
           ? t("battle.specDef.light", "✨ Lion Roar")
           : t("battle.specDef.grass", "🌿 Reflect");
+  const specDefToneClass = B.starter.type === "fire"
+    ? "battle-pill-specdef-fire"
+    : B.starter.type === "water"
+      ? "battle-pill-specdef-water"
+      : B.starter.type === "electric"
+        ? "battle-pill-specdef-electric"
+        : B.starter.type === "light"
+          ? "battle-pill-specdef-light"
+          : "battle-pill-specdef-grass";
 
   return (
     <div
@@ -435,6 +444,7 @@ function App() {
       {B.gamePaused && <div
         role="button"
         tabIndex={0}
+        className={`battle-pause-overlay ${UX.lowPerfMode ? "low-perf" : ""}`}
         aria-label={t("a11y.overlay.pauseResume", "Resume game")}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -443,11 +453,10 @@ function App() {
           }
         }}
         onClick={B.togglePause}
-        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "white", zIndex: 9000, cursor: "pointer", backdropFilter: UX.lowPerfMode ? "none" : "blur(4px)" }}
       >
-        <div style={{ fontSize: 48, marginBottom: 16 }}>⏸️</div>
-        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>{t("app.pause.title", "Game Paused")}</div>
-        <div style={{ fontSize: 13, opacity: 0.5 }}>{t("app.pause.hint", "Tap anywhere to resume")}</div>
+        <div className="battle-pause-icon">⏸️</div>
+        <div className="battle-pause-title">{t("app.pause.title", "Game Paused")}</div>
+        <div className="battle-pause-hint">{t("app.pause.hint", "Tap anywhere to resume")}</div>
       </div>}
 
       {/* Popups & particles */}
@@ -456,7 +465,7 @@ function App() {
 
       {/* Move level-up toast */}
       {B.battleMode !== "pvp" && B.mLvlUp !== null && B.starter && (
-        <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, zIndex: 200, animation: "popIn 0.3s ease", boxShadow: "0 4px 16px rgba(245,158,11,0.4)", whiteSpace: "nowrap" }}>
+        <div className="battle-level-toast">
           {B.starter.moves[B.mLvlUp].icon} {B.starter.moves[B.mLvlUp].name}{" "}
           {t("battle.moveLevelUp", "leveled up to Lv.{level}! Power -> {power}", {
             level: B.mLvls[B.mLvlUp],
@@ -541,24 +550,24 @@ function App() {
               />
             </div>
           )}
-          <div style={{ display: "flex", gap: 4, marginTop: 3, flexWrap: "wrap" }}>
+          <div className="battle-status-row">
             {B.battleMode === "pvp" ? (
               <>
-                {pvpEnemyBurn > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥 {t("battle.status.burnStack", "Burn x{count}", { count: pvpEnemyBurn })}</div>}
-                {pvpEnemyFreeze && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️ {t("battle.status.freeze", "Freeze")}</div>}
-                {pvpEnemyParalyze && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡ {t("battle.status.paralyze", "Paralyze")}</div>}
-                {pvpEnemyStatic > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡ {t("battle.status.chargeStack", "Charge x{count}", { count: pvpEnemyStatic })}</div>}
-                {pvpEnemySpecDef && <div style={{ background: "rgba(99,102,241,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️ {t("battle.status.counterReady", "Counter Ready")}</div>}
-                {!pvpEnemySpecDef && pvpEnemyCombo > 0 && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️ {t("battle.status.comboProgress", "Combo {count}/{target}", { count: pvpEnemyCombo, target: pvpComboTrigger })}</div>}
+                {pvpEnemyBurn > 0 && <div className="battle-status-chip is-burn">🔥 {t("battle.status.burnStack", "Burn x{count}", { count: pvpEnemyBurn })}</div>}
+                {pvpEnemyFreeze && <div className="battle-status-chip is-freeze">❄️ {t("battle.status.freeze", "Freeze")}</div>}
+                {pvpEnemyParalyze && <div className="battle-status-chip is-paralyze">⚡ {t("battle.status.paralyze", "Paralyze")}</div>}
+                {pvpEnemyStatic > 0 && <div className="battle-status-chip is-static">⚡ {t("battle.status.chargeStack", "Charge x{count}", { count: pvpEnemyStatic })}</div>}
+                {pvpEnemySpecDef && <div className="battle-status-chip is-counter">🛡️ {t("battle.status.counterReady", "Counter Ready")}</div>}
+                {!pvpEnemySpecDef && pvpEnemyCombo > 0 && <div className="battle-status-chip is-counter-soft">🛡️ {t("battle.status.comboProgress", "Combo {count}/{target}", { count: pvpEnemyCombo, target: pvpComboTrigger })}</div>}
               </>
             ) : (
               <>
-                {hasSpecialTrait(B.enemy.traitName, B.enemy.traitDesc) && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>✦{B.enemy.traitName}</div>}
-                {B.burnStack > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥 {t("battle.status.burnStack", "Burn x{count}", { count: B.burnStack })}</div>}
-                {B.frozen && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️ {t("battle.status.freeze", "Freeze")}</div>}
-                {B.staticStack > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡ {t("battle.status.staticStack", "Static x{count}", { count: B.staticStack })}{B.staticStack >= 2 ? " ⚠️" : ""}</div>}
-                {B.bossPhase >= 2 && <div style={{ background: "rgba(168,85,247,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>{B.bossPhase >= 3 ? t("battle.status.bossAwaken", "💀 Awaken ATKx2") : t("battle.status.bossRage", "💀 Rage ATKx1.5")}</div>}
-                {B.bossCharging && <div style={{ background: "rgba(251,191,36,0.9)", color: "#000", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚠️ {t("battle.status.charging", "Charging!")}</div>}
+                {hasSpecialTrait(B.enemy.traitName, B.enemy.traitDesc) && <div className="battle-status-chip is-counter-soft">✦{B.enemy.traitName}</div>}
+                {B.burnStack > 0 && <div className="battle-status-chip is-burn">🔥 {t("battle.status.burnStack", "Burn x{count}", { count: B.burnStack })}</div>}
+                {B.frozen && <div className="battle-status-chip is-freeze">❄️ {t("battle.status.freeze", "Freeze")}</div>}
+                {B.staticStack > 0 && <div className="battle-status-chip is-static">⚡ {t("battle.status.staticStack", "Static x{count}", { count: B.staticStack })}{B.staticStack >= 2 ? " ⚠️" : ""}</div>}
+                {B.bossPhase >= 2 && <div className="battle-status-chip is-boss">{B.bossPhase >= 3 ? t("battle.status.bossAwaken", "💀 Awaken ATKx2") : t("battle.status.bossRage", "💀 Rage ATKx1.5")}</div>}
+                {B.bossCharging && <div className="battle-status-chip is-charge">⚠️ {t("battle.status.charging", "Charging!")}</div>}
               </>
             )}
           </div>
@@ -598,17 +607,17 @@ function App() {
           )}
           <XPBar exp={B.pExp} max={B.expNext} />
           {B.battleMode === "pvp" ? (
-            <div style={{ display: "flex", gap: 4, marginTop: 3, flexWrap: "wrap" }}>
-              {pvpPlayerBurn > 0 && <div style={{ background: "rgba(239,68,68,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🔥 {t("battle.status.burnStack", "Burn x{count}", { count: pvpPlayerBurn })}</div>}
-              {pvpPlayerFreeze && <div style={{ background: "rgba(56,189,248,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>❄️ {t("battle.status.freeze", "Freeze")}</div>}
-              {pvpPlayerParalyze && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡ {t("battle.status.paralyze", "Paralyze")}</div>}
-              {pvpPlayerStatic > 0 && <div style={{ background: "rgba(234,179,8,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>⚡ {t("battle.status.chargeStack", "Charge x{count}", { count: pvpPlayerStatic })}</div>}
-              {pvpPlayerSpecDef && <div style={{ background: "rgba(99,102,241,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️ {t("battle.status.counterReady", "Counter Ready")}</div>}
-              {!pvpPlayerSpecDef && pvpPlayerCombo > 0 && <div style={{ background: "rgba(99,102,241,0.7)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease" }}>🛡️ {t("battle.status.comboProgress", "Combo {count}/{target}", { count: pvpPlayerCombo, target: pvpComboTrigger })}</div>}
+            <div className="battle-status-row">
+              {pvpPlayerBurn > 0 && <div className="battle-status-chip is-burn">🔥 {t("battle.status.burnStack", "Burn x{count}", { count: pvpPlayerBurn })}</div>}
+              {pvpPlayerFreeze && <div className="battle-status-chip is-freeze">❄️ {t("battle.status.freeze", "Freeze")}</div>}
+              {pvpPlayerParalyze && <div className="battle-status-chip is-paralyze">⚡ {t("battle.status.paralyze", "Paralyze")}</div>}
+              {pvpPlayerStatic > 0 && <div className="battle-status-chip is-static">⚡ {t("battle.status.chargeStack", "Charge x{count}", { count: pvpPlayerStatic })}</div>}
+              {pvpPlayerSpecDef && <div className="battle-status-chip is-counter">🛡️ {t("battle.status.counterReady", "Counter Ready")}</div>}
+              {!pvpPlayerSpecDef && pvpPlayerCombo > 0 && <div className="battle-status-chip is-counter-soft">🛡️ {t("battle.status.comboProgress", "Combo {count}/{target}", { count: pvpPlayerCombo, target: pvpComboTrigger })}</div>}
             </div>
           ) : (
             <>
-              {B.cursed && <div style={{ background: "rgba(168,85,247,0.85)", color: "white", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, marginTop: 3, display: "inline-block", animation: "popIn 0.3s ease" }}>💀 {t("battle.status.curse", "Cursed: next attack weakened")}</div>}
+              {B.cursed && <div className="battle-status-chip is-curse battle-status-chip-inline">💀 {t("battle.status.curse", "Cursed: next attack weakened")}</div>}
             </>
           )}
         </div>
@@ -624,23 +633,29 @@ function App() {
         )}
         {!B.pAnim && !UX.lowPerfMode && <div style={{ position: "absolute", left: `calc(${playerMainLeftPct}% + ${Math.round(mainPlayerSize * 0.14)}px)`, bottom: `${Math.max(8, playerMainBottomPct - 1)}%`, width: Math.round(mainPlayerSize * 0.5), height: 10, background: "radial-gradient(ellipse,rgba(0,0,0,0.55),transparent)", borderRadius: "50%", zIndex: 4, animation: "shadowPulse 3s ease-in-out infinite" }} />}
 
-        {/* Streak badge */}
-        {B.streak >= 2 && <div style={{ position: "absolute", top: 10, right: 10, background: "linear-gradient(135deg,#f59e0b,#ef4444)", color: "white", padding: "3px 10px", borderRadius: 16, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease", zIndex: 20 }}>🔥 {t("battle.streak", "{count} combo!", { count: B.streak })}</div>}
-        {/* Passive counter progress (shows when passiveCount >= 1) */}
-        {B.passiveCount >= 1 && !B.specDef && <div style={{ position: "absolute", top: B.streak >= 2 ? 32 : 10, right: B.timedMode && B.streak < 2 ? 80 : 10, background: "rgba(99,102,241,0.8)", color: "white", padding: "2px 8px", borderRadius: 12, fontSize: 10, fontWeight: 700, zIndex: 20, display: "flex", alignItems: "center", gap: 3 }}>🛡️ {B.passiveCount}/8</div>}
-        {B.timedMode && B.streak < 2 && <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(239,68,68,0.7)", color: "white", padding: "3px 8px", borderRadius: 12, fontSize: 10, fontWeight: 700, zIndex: 20, backdropFilter: UX.lowPerfMode ? "none" : "blur(4px)" }}>⏱️ {t("battle.timed", "Timed")}</div>}
-        {B.diffLevel !== 2 && <div style={{ position: "absolute", top: (B.streak >= 2 || B.timedMode) ? 32 : 10, right: 10, background: B.diffLevel > 2 ? "rgba(239,68,68,0.7)" : "rgba(56,189,248,0.7)", color: "white", padding: "2px 8px", borderRadius: 12, fontSize: 10, fontWeight: 700, zIndex: 20, animation: "popIn 0.3s ease" }}>{B.diffLevel > 2 ? t("battle.diff.up", "📈 Difficulty +{value}", { value: B.diffLevel - 2 }) : t("battle.diff.down", "📉 Difficulty {value}", { value: B.diffLevel - 2 })}</div>}
+        <div className={`battle-top-right-stack ${UX.lowPerfMode ? "low-perf" : ""}`} aria-live="polite" aria-atomic="true">
+          {B.streak >= 2 && <div className="battle-pill is-streak">🔥 {t("battle.streak", "{count} combo!", { count: B.streak })}</div>}
+          {B.passiveCount >= 1 && !B.specDef && <div className="battle-pill is-passive">🛡️ {B.passiveCount}/8</div>}
+          {B.timedMode && B.streak < 2 && <div className="battle-pill is-timed">⏱️ {t("battle.timed", "Timed")}</div>}
+          {B.diffLevel !== 2 && (
+            <div className={`battle-pill ${B.diffLevel > 2 ? "is-diff-up" : "is-diff-down"}`}>
+              {B.diffLevel > 2 ? t("battle.diff.up", "📈 Difficulty +{value}", { value: B.diffLevel - 2 }) : t("battle.diff.down", "📉 Difficulty {value}", { value: B.diffLevel - 2 })}
+            </div>
+          )}
+        </div>
 
         {/* Charge meter */}
-        <div style={{ position: "absolute", bottom: 50, left: 10, display: "flex", gap: 4, zIndex: 20, background: "rgba(0,0,0,0.3)", padding: "3px 8px", borderRadius: 10, backdropFilter: UX.lowPerfMode ? "none" : "blur(4px)" }}>
-          {[0, 1, 2].map(i => <div key={i} style={{ width: 11, height: 11, borderRadius: 6, background: i < chargeDisplay ? "#f59e0b" : "rgba(0,0,0,0.15)", border: "2px solid rgba(255,255,255,0.4)", transition: "all 0.3s", animation: !UX.lowPerfMode && i < chargeDisplay ? "chargeGlow 1.5s ease infinite" : "none" }} />)}
-          {chargeReadyDisplay && <span style={{ fontSize: 9, color: "#b45309", fontWeight: 700, marginLeft: 2, animation: "popIn 0.3s ease" }}>{t("battle.charge.max", "MAX!")}</span>}
+        <div className={`battle-charge-meter ${UX.lowPerfMode ? "low-perf" : ""}`}>
+          {[0, 1, 2].map(i => <div key={i} className={`battle-charge-dot ${i < chargeDisplay ? "is-on" : ""} ${!UX.lowPerfMode && i < chargeDisplay ? "is-glow" : ""}`} />)}
+          {chargeReadyDisplay && <span className="battle-charge-max">{t("battle.charge.max", "MAX!")}</span>}
         </div>
 
         {/* Special defense ready badge */}
-        {B.bossPhase >= 3 && <div style={{ position: "absolute", bottom: 92, left: 10, zIndex: 20, background: "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))", color: "white", padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease, specDefReady 2s ease infinite", boxShadow: "0 2px 12px rgba(251,191,36,0.4)" }}>{t("battle.lastStand", "🔥 Last Stand DMGx1.3")}</div>}
-        {B.bossCharging && <div style={{ position: "absolute", top: "40%", left: "50%", transform: "translateX(-50%)", zIndex: 20, background: "rgba(251,191,36,0.95)", color: "#000", padding: "6px 16px", borderRadius: 12, fontSize: 14, fontWeight: 800, animation: "popIn 0.3s ease", boxShadow: "0 4px 20px rgba(251,191,36,0.6)" }}>⚠️ {t("battle.bossBreakHint", "Answer correctly to interrupt charging!")}</div>}
-        {B.specDef && <div style={{ position: "absolute", bottom: 70, left: 10, zIndex: 20, background: B.starter.type === "fire" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(245,158,11,0.9))" : B.starter.type === "water" ? "linear-gradient(135deg,rgba(56,189,248,0.9),rgba(14,165,233,0.9))" : B.starter.type === "electric" ? "linear-gradient(135deg,rgba(251,191,36,0.9),rgba(234,179,8,0.9))" : B.starter.type === "light" ? "linear-gradient(135deg,rgba(245,158,11,0.9),rgba(217,119,6,0.9))" : "linear-gradient(135deg,rgba(34,197,94,0.9),rgba(22,163,74,0.9))", color: "white", padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, animation: "popIn 0.3s ease, specDefReady 2s ease infinite", boxShadow: B.starter.type === "fire" ? "0 2px 12px rgba(251,191,36,0.4)" : B.starter.type === "water" ? "0 2px 12px rgba(56,189,248,0.4)" : B.starter.type === "electric" ? "0 2px 12px rgba(234,179,8,0.4)" : B.starter.type === "light" ? "0 2px 12px rgba(245,158,11,0.4)" : "0 2px 12px rgba(34,197,94,0.4)" }}>{specDefReadyLabel} {t("battle.ready", "Ready!")}</div>}
+        <div className="battle-left-badge-stack" aria-live="polite" aria-atomic="true">
+          {B.bossPhase >= 3 && <div className="battle-pill is-last-stand">{t("battle.lastStand", "🔥 Last Stand DMGx1.3")}</div>}
+          {B.specDef && <div className={`battle-pill is-specdef ${specDefToneClass}`}>{specDefReadyLabel} {t("battle.ready", "Ready!")}</div>}
+        </div>
+        {B.bossCharging && <div className="battle-boss-hint">⚠️ {t("battle.bossBreakHint", "Answer correctly to interrupt charging!")}</div>}
       </div>
 
       {/* ═══ Bottom panel ═══ */}
@@ -716,8 +731,8 @@ function App() {
 
         {/* Question panel */}
         {B.phase === "question" && question && activeStarter && selectedMove && <div className="battle-question-wrap">
-          <div className="battle-question-head"><span style={{ fontSize: 18 }}>{selectedMove.icon}</span><span className="battle-question-title">{selectedMove.name}！</span><span className="battle-question-sub">{activeStarter.typeIcon} {activeStarter.name}</span><span className="battle-question-note">{B.timedMode ? t("battle.answer.timed", "⏱️ Timed Answer!") : t("battle.answer.hit", "Answer correctly to hit")}</span></div>
-          <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 16px", textAlign: "center", marginBottom: 8, border: "1px solid rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
+          <div className="battle-question-head"><span className="battle-question-icon">{selectedMove.icon}</span><span className="battle-question-title">{selectedMove.name}！</span><span className="battle-question-sub">{activeStarter.typeIcon} {activeStarter.name}</span><span className="battle-question-note">{B.timedMode ? t("battle.answer.timed", "⏱️ Timed Answer!") : t("battle.answer.hit", "Answer correctly to hit")}</span></div>
+          <div className="battle-question-card">
             {B.timedMode && !B.answered && (
               <QuestionTimerHud
                 timerSec={TIMER_SEC}
@@ -725,25 +740,25 @@ function App() {
                 getSnapshot={B.getTimerLeft}
               />
             )}
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>{questionTypeLabel}</div>
-            <div className="question-expression" style={{ fontSize: 36, fontWeight: 900, color: "white", letterSpacing: 2 }}>{question.display}{question.op && question.op.startsWith("unknown") ? "" : " = ?"}</div>
+            <div className="battle-question-type">{questionTypeLabel}</div>
+            <div className="question-expression battle-question-expression">{question.display}{question.op && question.op.startsWith("unknown") ? "" : " = ?"}</div>
           </div>
-          {feedback && <div style={{ textAlign: "center", marginBottom: 4, fontSize: 16, fontWeight: 700, color: feedback.correct ? "#22c55e" : "#ef4444", animation: "popIn 0.2s ease" }}>{feedback.correct ? t("battle.feedback.hit", "✅ Hit!") : t("battle.feedback.answer", "❌ Answer is {answer}", { answer: feedback.answer })}</div>}
+          {feedback && <div className={`battle-feedback ${feedback.correct ? "is-correct" : "is-wrong"}`}>{feedback.correct ? t("battle.feedback.hit", "✅ Hit!") : t("battle.feedback.answer", "❌ Answer is {answer}", { answer: feedback.answer })}</div>}
           {feedback && !feedback.correct && (feedback.steps?.length || 0) > 0 && (
-            <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "8px 12px", marginBottom: 6, animation: "fadeIn 0.4s ease" }}>
-              <div style={{ fontSize: 11, color: "#fca5a5", fontWeight: 700, marginBottom: 4 }}>📝 {t("battle.feedback.steps", "Solution Steps:")}</div>
+            <div className="battle-feedback-steps">
+              <div className="battle-feedback-steps-title">📝 {t("battle.feedback.steps", "Solution Steps:")}</div>
               {(feedback.steps ?? []).map((step: string, i: number) => (
-                <div key={i} style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: 600, lineHeight: 1.8, fontFamily: "monospace" }}>
-                  {(feedback.steps?.length || 0) > 1 && <span style={{ color: "#fca5a5", fontSize: 11, marginRight: 4 }}>{t("battle.feedback.step", "Step {index}.", { index: i + 1 })}</span>}{step}
+                <div key={i} className="battle-feedback-step-row">
+                  {(feedback.steps?.length || 0) > 1 && <span className="battle-feedback-step-index">{t("battle.feedback.step", "Step {index}.", { index: i + 1 })}</span>}{step}
                 </div>
               ))}
             </div>
           )}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
+          <div className="battle-answer-grid">
             {question.choices.map((c: number, i: number) => {
-              let bg = "rgba(255,255,255,0.08)", bd = "rgba(255,255,255,0.15)", co = "white";
-              if (feedback) { if (c === question.answer) { bg = "rgba(34,197,94,0.2)"; bd = "#22c55e"; co = "#22c55e"; } else { bg = "rgba(255,255,255,0.03)"; co = "rgba(255,255,255,0.3)"; } }
-              return <button className="answer-btn" key={i} onClick={() => B.onAns(c)} disabled={B.answered} style={{ background: bg, border: `2px solid ${bd}`, borderRadius: 10, padding: "12px 8px", fontSize: 26, fontWeight: 700, color: co, transition: "all 0.2s" }}>{c}</button>;
+              let answerState = "";
+              if (feedback) answerState = c === question.answer ? "is-correct" : "is-dim";
+              return <button className={`answer-btn battle-answer-btn ${answerState}`} key={i} onClick={() => B.onAns(c)} disabled={B.answered}>{c}</button>;
             })}
           </div>
         </div>}

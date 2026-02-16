@@ -70,6 +70,8 @@ import { runEnemyTurn } from './battle/enemyFlow';
 import { runPlayerAnswer } from './battle/playerFlow';
 import { handleTimeoutFlow } from './battle/timeoutFlow';
 import { runPvpStartFlow, runStandardStartFlow } from './battle/startGameFlow';
+import { runVictoryFlow } from './battle/victoryFlow';
+import { continueFromVictoryFlow, handlePendingEvolution } from './battle/advanceFlow';
 import {
   getActingStarter as resolveActingStarter,
   getOtherPvpTurn,
@@ -81,7 +83,6 @@ import {
   processPvpTurnStart,
 } from './battle/pvpFlow';
 import {
-  buildNextEvolvedAlly,
   handleCoopPartyKo,
   isCoopBattleMode,
   runCoopAllySupportTurn,
@@ -553,38 +554,35 @@ export function useBattle() {
 
   // --- Handle a defeated enemy ---
   const handleVictory = (verb = t("battle.victory.verb.defeated", "was defeated")) => {
-    const s = sr.current;
-    setBurnStack(0); setStaticStack(0); setFrozen(false); frozenR.current = false;
-    setCursed(false);
-    setBossPhase(0); setBossTurn(0); setBossCharging(false);
-    setSealedMove(-1); setSealedTurns(0);
-    const xp = s.enemy.lvl * 15;
-    const progress = resolveLevelProgress({
-      currentExp: s.pExp,
-      currentLevel: s.pLvl,
-      currentStage: s.pStg,
-      gainExp: xp,
-    });
-    if (progress.evolveCount > 0) {
-      pendingEvolve.current = true;
-      sfx.play("evolve");
-    }
-    setPExp(progress.nextExp);
-    if (progress.nextLevel !== s.pLvl) {
-      setPLvl(progress.nextLevel);
-      if (progress.hpBonus > 0) setPHp(h => Math.min(h + progress.hpBonus, getStageMaxHp(s.pStg)));
-    }
-    setDefeated(d => d + 1);
-    updateEncDefeated(s.enemy); // ← encyclopedia: mark defeated
-    applyVictoryAchievements({ state: s, tryUnlock });
-    const drop = s.enemy.drops[randInt(0, s.enemy.drops.length - 1)];
-    setBText(t("battle.victory.gain", "{enemy} {verb}! Gained {xp} EXP {drop}", {
-      enemy: s.enemy.name,
+    runVictoryFlow({
+      sr,
       verb,
-      xp,
-      drop,
-    }));
-    setPhase("victory"); sfx.play("victory");
+      randInt,
+      resolveLevelProgress,
+      getStageMaxHp,
+      tryUnlock,
+      applyVictoryAchievements,
+      updateEncDefeated,
+      setBurnStack,
+      setStaticStack,
+      setFrozen,
+      frozenRef: frozenR,
+      setCursed,
+      setBossPhase,
+      setBossTurn,
+      setBossCharging,
+      setSealedMove,
+      setSealedTurns,
+      setPExp,
+      setPLvl,
+      setPHp,
+      setDefeated,
+      setBText,
+      setPhase,
+      sfx,
+      t,
+      setPendingEvolve: (value) => { pendingEvolve.current = value; },
+    });
   };
 
   // --- Frozen enemy skips turn ---
@@ -791,25 +789,23 @@ export function useBattle() {
 
   // --- Advance from text / victory phase ---
   const continueFromVictory = () => {
-    const s = sr.current;
-    if (isCoopBattleMode(s.battleMode) && s.enemySub) {
-      setScreen("battle");
-      dispatchBattle({ type: "promote_enemy_sub" });
-      const promotedEnemy = localizeEnemy(s.enemySub, locale);
-      setBText(t("battle.enemySub.promote", "💥 {enemy} steps in!", { enemy: promotedEnemy?.name || s.enemySub.name }));
-      setPhase("text");
-      return;
-    }
-    const nx = s.round + 1;
-    if (nx >= enemies.length) {
-      _finishGame();
-    } else {
-      setPHp(h => Math.min(h + 10, getStageMaxHp(s.pStg)));
-      if (isCoopBattleMode(s.battleMode) && s.allySub && (s.pHpSub || 0) > 0) {
-        setPHpSub(h => Math.min(h + 8, getStarterMaxHp(s.allySub)));
-      }
-      startBattle(nx);
-    }
+    continueFromVictoryFlow({
+      state: sr.current,
+      enemiesLength: enemies.length,
+      setScreen,
+      dispatchBattle,
+      localizeEnemy,
+      locale,
+      setBText,
+      setPhase,
+      finishGame: _finishGame,
+      setPHp,
+      setPHpSub,
+      getStageMaxHp,
+      getStarterMaxHp,
+      startBattle,
+      t,
+    });
   };
 
   const advance = () => {
@@ -843,22 +839,20 @@ export function useBattle() {
     else if (phase === "victory") {
       // Bug #2 fix: if an evolution is pending, go to evolve screen
       // instead of starting next battle (eliminates timer-based race).
-      if (pendingEvolve.current) {
-        pendingEvolve.current = false;
-        const nextStage = Math.min((sr.current.pStg || 0) + 1, 2);
-        const sNow = sr.current;
-        const coopSync = isCoopBattleMode(sNow.battleMode) && sNow.allySub;
-        const nextAlly = coopSync ? buildNextEvolvedAlly(sNow.allySub) : null;
-        // Apply evolution state NOW (deferred from win handler so battle
-        // screen kept showing the pre-evolution sprite during victory).
-        setPStg(st => { if (st + 1 >= 2) tryUnlock("evolve_max"); return Math.min(st + 1, 2); });
-        setPHp(getStageMaxHp(nextStage));
-        if (nextAlly) {
-          setAllySub(nextAlly);
-          setPHpSub(getStarterMaxHp(nextAlly));
-        }
-        setMLvls(prev => prev.map(v => Math.min(v + 1, MAX_MOVE_LVL)));
-        setScreen("evolve");
+      if (handlePendingEvolution({
+        pendingEvolveRef: pendingEvolve,
+        state: sr.current,
+        setPStg,
+        tryUnlock,
+        getStageMaxHp,
+        setPHp,
+        setAllySub,
+        setPHpSub,
+        getStarterMaxHp,
+        setMLvls,
+        maxMoveLvl: MAX_MOVE_LVL,
+        setScreen,
+      })) {
         return;
       }
       continueFromVictory();

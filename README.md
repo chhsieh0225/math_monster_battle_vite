@@ -46,6 +46,8 @@ Current migrated files:
 - `src/hooks/battle/timeoutFlow.ts`
 - `src/hooks/battle/startGameFlow.ts`
 - `src/hooks/battle/turnHelpers.ts`
+- `src/hooks/battle/victoryFlow.ts`
+- `src/hooks/battle/advanceFlow.ts`
 - `src/components/ui/HPBar.tsx`
 - `src/components/ui/XPBar.tsx`
 - `src/components/ui/DamagePopup.tsx`

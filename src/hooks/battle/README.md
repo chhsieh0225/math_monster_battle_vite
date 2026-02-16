@@ -31,6 +31,12 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `turnHelpers.ts`
   - Shared turn helpers (`getActingStarter`, PvP turn label/swap).
   - Reused by flow modules and `useBattle`.
+- `victoryFlow.ts`
+  - Victory settlement orchestration (status reset, exp/level progression, drop text).
+  - Keeps post-defeat settlement logic out of `useBattle`.
+- `advanceFlow.ts`
+  - Advance-phase helpers (continue after victory, pending evolution routing).
+  - Keeps `advance` branch logic focused in one module.
 - `coopFlow.ts`
   - Co-op only helper flows (party KO handling, support turns, evolution sync helpers).
 - `achievementFlow.ts`

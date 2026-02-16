@@ -120,7 +120,7 @@ export type SfxApi = {
   setMuted: (next: boolean) => boolean;
 };
 
-export type UseBattlePublicApi = {
+export type UseBattleState = {
   screen: ScreenName;
   timedMode: boolean;
   battleMode: BattleMode;
@@ -192,13 +192,14 @@ export type UseBattlePublicApi = {
   sealedTurns: number;
   diffLevel: number;
   gamePaused: boolean;
-  timerSubscribe: TimerSubscribe;
-  getTimerLeft: () => number;
   expNext: number;
   chargeReady: boolean;
   achUnlocked: AchievementId[];
   achPopup: AchievementId | null;
   encData: EncyclopediaData;
+};
+
+export type UseBattleActions = {
   dismissAch: () => void;
   setTimedMode: (next: boolean) => void;
   setBattleMode: (mode: BattleMode) => void;
@@ -213,11 +214,24 @@ export type UseBattlePublicApi = {
   quitGame: () => void;
   togglePause: () => void;
   toggleCoopActive: () => void;
-  getPow: (idx: number) => number;
-  dualEff: (move: MoveVm) => number;
   rmD: (id: number) => void;
   rmP: (id: number) => void;
+};
+
+export type UseBattleView = {
+  timerSubscribe: TimerSubscribe;
+  getTimerLeft: () => number;
+  getPow: (idx: number) => number;
+  dualEff: (move: MoveVm) => number;
   sfx: SfxApi;
+};
+
+export type UseBattleFlatApi = UseBattleState & UseBattleActions & UseBattleView;
+
+export type UseBattlePublicApi = UseBattleFlatApi & {
+  state: UseBattleState;
+  actions: UseBattleActions;
+  view: UseBattleView;
 };
 
 export type PerfMode = "auto" | "on" | "off";

@@ -791,8 +791,7 @@ export function useBattle() {
   // ═══════════════════════════════════════════════════════════════
   //  PUBLIC API
   // ═══════════════════════════════════════════════════════════════
-  return {
-    // ── State (read by render shell) ──
+  const state = {
     screen, timedMode, battleMode, enemies,
     starter, allySub, pHp, pHpSub, pExp, pLvl, pStg,
     coopActiveSlot,
@@ -806,21 +805,32 @@ export function useBattle() {
     dmgs, parts, eAnim, pAnim, atkEffect, effMsg,
     burnStack, frozen, staticStack, specDef, defAnim, cursed,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, diffLevel,
-    gamePaused, timerSubscribe: subscribeTimerLeft, getTimerLeft,
+    gamePaused,
     expNext, chargeReady,
+    achUnlocked, achPopup, encData,
+  };
 
-    // ── Achievements & Encyclopedia ──
-    achUnlocked, achPopup, encData, dismissAch,
-
-    // ── Actions ──
+  const actions = {
+    dismissAch,
     setTimedMode, setBattleMode, setScreen, setStarter: setStarterLocalized, setPvpStarter2: setPvpStarter2Localized,
     startGame, selectMove, onAns, advance, continueAfterEvolve,
     quitGame, togglePause, toggleCoopActive,
-
-    // ── Helpers exposed for render ──
-    getPow, dualEff,
     rmD, rmP,
-    // ── SFX ──
+  };
+
+  const view = {
+    timerSubscribe: subscribeTimerLeft,
+    getTimerLeft,
+    getPow, dualEff,
     sfx,
+  };
+
+  return {
+    state,
+    actions,
+    view,
+    ...state,
+    ...actions,
+    ...view,
   };
 }

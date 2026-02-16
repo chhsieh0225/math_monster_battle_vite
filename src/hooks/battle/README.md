@@ -13,7 +13,7 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `effectOrchestrator.js`
   - Schedules animation/timing chains through injected `safeTo`.
   - No domain decisions.
-- `enemyFlow.js`
+- `enemyFlow.ts`
   - Enemy-side battle flow orchestration.
   - Uses resolver + orchestrator + injected state/effects.
 - `playerFlow.ts`
@@ -36,7 +36,7 @@ When adding new combat mechanics:
 
 1. Add pure calculations to `turnResolver.ts`.
 2. Keep animation timing in `effectOrchestrator.js`.
-3. Keep flow-specific branching in `enemyFlow.js` or `playerFlow.ts`.
+3. Keep flow-specific branching in `enemyFlow.ts` or `playerFlow.ts`.
 4. Only use `battleReducer.ts` for persistent state transitions.
 5. Do not add direct `setTimeout` chains in `useBattle.js`.
 

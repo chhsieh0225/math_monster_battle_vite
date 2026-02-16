@@ -67,12 +67,17 @@ import {
 } from './battle/battleReducer';
 import { effectOrchestrator } from './battle/effectOrchestrator';
 import { runEnemyTurn } from './battle/enemyFlow';
-import { runPlayerAnswer } from './battle/playerFlow';
 import { handleTimeoutFlow } from './battle/timeoutFlow';
 import { runPvpStartFlow, runStandardStartFlow } from './battle/startGameFlow';
+import { runStartBattleFlow } from './battle/startBattleFlow';
+import { runSelectMoveFlow } from './battle/selectMoveFlow';
 import { runVictoryFlow } from './battle/victoryFlow';
-import { continueFromVictoryFlow, handlePendingEvolution } from './battle/advanceFlow';
-import { buildAnswerContext, logSubmittedAnswer, tryHandlePvpAnswer } from './battle/answerFlow';
+import {
+  continueFromVictoryFlow,
+  handlePendingEvolution,
+  tryProcessPvpTextAdvance,
+} from './battle/advanceFlow';
+import { runStandardAnswerFlow, tryHandlePvpAnswer } from './battle/answerFlow';
 import {
   getActingStarter as resolveActingStarter,
   getOtherPvpTurn,
@@ -80,11 +85,10 @@ import {
 } from './battle/turnHelpers';
 import {
   createPvpEnemyFromStarter,
-  processPvpTurnStart,
 } from './battle/pvpFlow';
 import {
+  canSwitchCoopActiveSlot,
   handleCoopPartyKo,
-  isCoopBattleMode,
   runCoopAllySupportTurn,
 } from './battle/coopFlow';
 import {
@@ -366,55 +370,27 @@ export function useBattle() {
   const startBattle = (idx, roster) => {
     invalidateAsyncWork();
     clearTimer();
-    const list = roster || enemies;
-    const nextEnemy = list[idx];
-    if (!nextEnemy) {
-      _finishGame();
-      return;
-    }
-    const e = localizeEnemy(nextEnemy, locale);
-    const mode = sr.current.battleMode || battleMode;
-    const isTeamMode = mode === "double" || mode === "coop";
-    const sub = isTeamMode ? localizeEnemy(list[idx + 1] || null, locale) : null;
-    dispatchBattle({ type: "start_battle", enemy: e, enemySub: sub, round: idx });
-    frozenR.current = false;
-    updateEnc(e); // ← encyclopedia: mark encountered
-    if (sub) updateEnc(sub);
-    const sn = localizeSceneName(
-      e.sceneMType || e.mType,
-      SCENE_NAMES[e.sceneMType || e.mType] || "",
+    runStartBattleFlow({
+      idx,
+      roster,
+      enemies,
       locale,
-    );
-    setPhase("text");
-    const ally = sr.current.allySub;
-    if (sub) {
-      if (ally) {
-        setBText(t("battle.start.doubleWithAlly", "【{scene}】2v2 battle! Our {leader} and {ally} face {enemy} and {enemySub}!", {
-          scene: sn,
-          leader: starter?.name || t("battle.role.main", "Main"),
-          ally: ally.name,
-          enemy: e.name,
-          enemySub: sub.name,
-        }));
-      } else {
-        setBText(t("battle.start.double", "【{scene}】Double battle! {enemy}({enemyType}) and {enemySub}({enemySubType}) appeared!", {
-          scene: sn,
-          enemy: e.name,
-          enemyType: `${e.typeIcon}${e.typeName}`,
-          enemySub: sub.name,
-          enemySubType: `${sub.typeIcon}${sub.typeName}`,
-        }));
-      }
-    } else {
-      setBText(t("battle.start.single", "【{scene}】A wild {enemy}({enemyType}) Lv.{level} appeared!", {
-        scene: sn,
-        enemy: e.name,
-        enemyType: `${e.typeIcon}${e.typeName}`,
-        level: e.lvl,
-      }));
-    }
-    setScreen("battle");
-    effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim });
+      battleMode: sr.current.battleMode || battleMode,
+      allySub: sr.current.allySub,
+      starter,
+      t,
+      sceneNames: SCENE_NAMES,
+      localizeEnemy,
+      localizeSceneName,
+      dispatchBattle,
+      updateEnc,
+      setPhase,
+      setBText,
+      setScreen,
+      finishGame: _finishGame,
+      resetFrozen: () => { frozenR.current = false; },
+      playBattleIntro: () => effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim }),
+    });
   };
 
   // --- Full game reset (starterOverride used on first game when setStarter hasn't rendered yet) ---
@@ -594,66 +570,64 @@ export function useBattle() {
     safeTo(() => { setPhase("menu"); setBText(""); }, 1500);
   };
 
+  const enemyTurnHandlers = {
+    sr,
+    safeTo,
+    rand,
+    randInt,
+    chance,
+    sfx,
+    setSealedTurns,
+    setSealedMove,
+    setBossPhase,
+    setBossTurn,
+    setBossCharging,
+    setBText,
+    setPhase,
+    setEAnim,
+    setPAnim,
+    setPHp,
+    setPHpSub,
+    setSpecDef,
+    setDefAnim,
+    setEHp,
+    setEffMsg,
+    setCursed,
+    addD,
+    addP,
+    _endSession,
+    setScreen,
+    handleVictory,
+    handlePlayerPartyKo,
+    t,
+  };
+
   // --- Player selects a move ---
   const selectMove = (i) => {
-    if (phase !== "menu") return;
-    const s = sr.current;
-    const activeStarter = getActingStarter(s);
-    if (!activeStarter) return;
-    const move = activeStarter.moves[i];
-    if (s.battleMode === "pvp" && move?.risky) {
-      const chargeNow = s.pvpTurn === "p1" ? (s.pvpChargeP1 || 0) : (s.pvpChargeP2 || 0);
-      if (chargeNow < 3) return;
-    }
-    // Boss: sealed move check
-    if (s.battleMode !== "pvp" && s.sealedMove === i) return; // silently blocked, UI shows lock
-    sfx.play("select");
-    setSelIdx(i);
-    const lv = _getMoveDiffLevel(move);
-    const diffMod = DIFF_MODS[lv] ?? DIFF_MODS[2];
-    setDiffLevel(lv);
-    setQ(genQ(move, diffMod, { t }));
-    setFb(null);
-    setAnswered(false);
-    setPhase("question");
-    markQStart(); // ← log question start time
-    // Timed mode always uses standard question timer.
-    if (timedMode || s.battleMode === "pvp") startTimer();
+    runSelectMoveFlow({
+      index: i,
+      state: sr.current,
+      timedMode,
+      diffMods: DIFF_MODS,
+      t,
+      getActingStarter,
+      getMoveDiffLevel: _getMoveDiffLevel,
+      genQuestion: genQ,
+      startTimer,
+      markQStart,
+      sfx,
+      setSelIdx,
+      setDiffLevel,
+      setQ,
+      setFb,
+      setAnswered,
+      setPhase,
+    });
   };
 
   // --- Enemy turn logic (reads from stateRef) ---
   function doEnemyTurn() {
-    runEnemyTurn({
-      sr,
-      safeTo,
-      rand,
-      randInt,
-      chance,
-      sfx,
-      setSealedTurns,
-      setSealedMove,
-      setBossPhase,
-      setBossTurn,
-      setBossCharging,
-      setBText,
-      setPhase,
-      setEAnim,
-      setPAnim,
-      setPHp,
-      setPHpSub,
-      setSpecDef,
-      setDefAnim,
-      setEHp,
-      setEffMsg,
-      setCursed,
-      addD,
-      addP,
-      _endSession,
-      setScreen,
-      handleVictory,
-      handlePlayerPartyKo,
-      t,
-    });
+    runEnemyTurn(enemyTurnHandlers);
   }
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
 
@@ -742,6 +716,30 @@ export function useBattle() {
     t,
   };
 
+  const pvpTurnStartHandlers = {
+    safeTo,
+    getOtherPvpTurn,
+    getPvpTurnName,
+    setPHp,
+    setPvpBurnP1,
+    setPAnim,
+    addD,
+    setPvpWinner,
+    setScreen,
+    setPvpHp2,
+    setEHp,
+    setPvpBurnP2,
+    setEAnim,
+    setBText,
+    setPhase,
+    setPvpParalyzeP1,
+    setPvpParalyzeP2,
+    setPvpTurn,
+    setPvpFreezeP1,
+    setPvpFreezeP2,
+    t,
+  };
+
   // --- Player answers a question ---
   const onAns = (choice) => {
     if (answered) return;
@@ -750,36 +748,15 @@ export function useBattle() {
     const s = sr.current;
     if (tryHandlePvpAnswer({ choice, state: s, handlers: pvpAnswerHandlers })) return;
 
-    const answerContext = buildAnswerContext({
-      state: s,
+    runStandardAnswerFlow({
       choice,
+      state: s,
       getActingStarter,
-    });
-    if (!answerContext) return;
-
-    const {
-      actingStarter,
-      isCoopSubActive,
-      move,
-      correct,
-    } = answerContext;
-
-    logSubmittedAnswer({
-      state: s,
-      choice,
-      move,
       logAns,
       appendSessionEvent,
       updateAbility: _updateAbility,
       markCoopRotatePending,
-      correct,
-    });
-    runPlayerAnswer({
-      correct,
-      move,
-      starter: actingStarter,
-      attackerSlot: isCoopSubActive ? "sub" : "main",
-      ...playerAnswerHandlers,
+      handlers: playerAnswerHandlers,
     });
   };
 
@@ -806,30 +783,7 @@ export function useBattle() {
 
   const advance = () => {
     if (phase === "text") {
-      if (processPvpTurnStart({
-        state: sr.current,
-        safeTo,
-        getOtherPvpTurn,
-        getPvpTurnName,
-        setPHp,
-        setPvpBurnP1,
-        setPAnim,
-        addD,
-        setPvpWinner,
-        setScreen,
-        setPvpHp2,
-        setEHp,
-        setPvpBurnP2,
-        setEAnim,
-        setBText,
-        setPhase,
-        setPvpParalyzeP1,
-        setPvpParalyzeP2,
-        setPvpTurn,
-        setPvpFreezeP1,
-        setPvpFreezeP2,
-        t,
-      })) return;
+      if (tryProcessPvpTextAdvance({ state: sr.current, handlers: pvpTurnStartHandlers })) return;
       setPhase("menu"); setBText("");
     }
     else if (phase === "victory") {
@@ -875,12 +829,7 @@ export function useBattle() {
 
   const toggleCoopActive = () => {
     const s = sr.current;
-    const canSwitch = (
-      isCoopBattleMode(s.battleMode)
-      && s.allySub
-      && (s.pHpSub || 0) > 0
-    );
-    if (!canSwitch) return;
+    if (!canSwitchCoopActiveSlot(s)) return;
     setCoopActiveSlot((prev) => (prev === "main" ? "sub" : "main"));
   };
 

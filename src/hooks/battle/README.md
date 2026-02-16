@@ -28,6 +28,9 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `startGameFlow.ts`
   - Start-of-run flow orchestration for PvP and standard modes.
   - Keeps `startGame` branch logic out of `useBattle`.
+- `startBattleFlow.ts`
+  - Per-round encounter bootstrap and opening-text orchestration.
+  - Keeps `startBattle` encounter setup out of `useBattle`.
 - `turnHelpers.ts`
   - Shared turn helpers (`getActingStarter`, PvP turn label/swap).
   - Reused by flow modules and `useBattle`.
@@ -40,6 +43,9 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `answerFlow.ts`
   - Answer-phase helpers (acting starter context + answer event logging).
   - Keeps `onAns` pre-processing concise.
+- `selectMoveFlow.ts`
+  - Move-select to question-start orchestration.
+  - Keeps `selectMove` guard and question-boot logic out of `useBattle`.
 - `coopFlow.ts`
   - Co-op only helper flows (party KO handling, support turns, evolution sync helpers).
 - `achievementFlow.ts`

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { canSwitchCoopActiveSlot } from './battle/coopFlow';
 
 type CoopActiveSlot = 'main' | 'sub';
 
@@ -46,10 +47,7 @@ export function useCoopTurnRotation({
     if (phase !== 'menu' || !pendingRef.current) return;
     pendingRef.current = false;
     const s = sr.current;
-    const canSwitch =
-      (s.battleMode === 'coop' || s.battleMode === 'double')
-      && Boolean(s.allySub)
-      && (s.pHpSub || 0) > 0;
+    const canSwitch = canSwitchCoopActiveSlot(s);
 
     safeTo(() => {
       if (!canSwitch) {

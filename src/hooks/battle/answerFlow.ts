@@ -1,5 +1,6 @@
 import { isCoopBattleMode } from './coopFlow';
 import { handlePvpAnswer } from './pvpFlow';
+import { runPlayerAnswer } from './playerFlow';
 
 type MoveLite = {
   name?: string;
@@ -61,6 +62,20 @@ type TryHandlePvpAnswerArgs = {
   choice: number;
   state: PvpAnswerArgs['state'];
   handlers: Omit<PvpAnswerArgs, 'choice' | 'state'>;
+};
+
+type PlayerAnswerArgs = Parameters<typeof runPlayerAnswer>[0];
+type StandardAnswerHandlers = Omit<PlayerAnswerArgs, 'correct' | 'move' | 'starter' | 'attackerSlot'>;
+
+type RunStandardAnswerFlowArgs = {
+  choice: number;
+  state: BattleState;
+  getActingStarter: (state: BattleState) => StarterLite | null;
+  logAns: (question: BattleQuestion | null | undefined, isCorrect: boolean) => number;
+  appendSessionEvent: (name: string, payload: Record<string, unknown>) => void;
+  updateAbility: (op: string | undefined, correct: boolean) => void;
+  markCoopRotatePending: () => void;
+  handlers: StandardAnswerHandlers;
 };
 
 export function buildAnswerContext({
@@ -136,4 +151,50 @@ export function tryHandlePvpAnswer({
     state,
     ...handlers,
   });
+}
+
+export function runStandardAnswerFlow({
+  choice,
+  state,
+  getActingStarter,
+  logAns,
+  appendSessionEvent,
+  updateAbility,
+  markCoopRotatePending,
+  handlers,
+}: RunStandardAnswerFlowArgs): boolean {
+  const answerContext = buildAnswerContext({
+    state,
+    choice,
+    getActingStarter,
+  });
+  if (!answerContext) return false;
+
+  const {
+    actingStarter,
+    isCoopSubActive,
+    move,
+    correct,
+  } = answerContext;
+
+  logSubmittedAnswer({
+    state,
+    choice,
+    move,
+    logAns,
+    appendSessionEvent,
+    updateAbility,
+    markCoopRotatePending,
+    correct,
+  });
+
+  runPlayerAnswer({
+    correct,
+    move: move as PlayerAnswerArgs['move'],
+    starter: actingStarter as PlayerAnswerArgs['starter'],
+    attackerSlot: isCoopSubActive ? 'sub' : 'main',
+    ...handlers,
+  });
+
+  return true;
 }

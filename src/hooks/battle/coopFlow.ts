@@ -21,6 +21,12 @@ type BattleState = {
   eHp?: number;
 };
 
+type CoopSlotSwitchState = {
+  battleMode?: string | null;
+  allySub?: unknown;
+  pHpSub?: number;
+};
+
 type StateRef = {
   current: BattleState;
 };
@@ -89,6 +95,15 @@ function tr(
 
 export function isCoopBattleMode(mode: string | null | undefined): boolean {
   return mode === 'coop' || mode === 'double';
+}
+
+export function canSwitchCoopActiveSlot(state: CoopSlotSwitchState | null | undefined): boolean {
+  return Boolean(
+    state
+    && isCoopBattleMode(state.battleMode)
+    && state.allySub
+    && (state.pHpSub || 0) > 0,
+  );
 }
 
 export function buildNextEvolvedAlly(allySub: StarterLite | null | undefined): StarterLite | null {

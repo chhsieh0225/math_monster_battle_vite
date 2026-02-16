@@ -1,4 +1,5 @@
 import { buildNextEvolvedAlly, isCoopBattleMode } from './coopFlow';
+import { processPvpTurnStart } from './pvpFlow';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -56,6 +57,13 @@ type HandlePendingEvolutionArgs = {
   setMLvls: (value: number[] | ((prev: number[]) => number[])) => void;
   maxMoveLvl: number;
   setScreen: (value: string) => void;
+};
+
+type PvpTurnStartArgs = Parameters<typeof processPvpTurnStart>[0];
+
+type TryProcessPvpTextAdvanceArgs = {
+  state: PvpTurnStartArgs['state'];
+  handlers: Omit<PvpTurnStartArgs, 'state'>;
 };
 
 function formatFallback(template: string, params?: TranslatorParams): string {
@@ -149,4 +157,14 @@ export function handlePendingEvolution({
   setMLvls((prev) => prev.map((value) => Math.min(value + 1, maxMoveLvl)));
   setScreen('evolve');
   return true;
+}
+
+export function tryProcessPvpTextAdvance({
+  state,
+  handlers,
+}: TryProcessPvpTextAdvanceArgs): boolean {
+  return processPvpTurnStart({
+    state,
+    ...handlers,
+  });
 }

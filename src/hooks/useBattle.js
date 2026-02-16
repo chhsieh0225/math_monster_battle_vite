@@ -67,12 +67,9 @@ import {
 } from './battle/battleReducer';
 import { createBattleFieldSetters } from './battle/battleFieldSetters';
 import { effectOrchestrator } from './battle/effectOrchestrator';
-import {
-  createEnemyTurnHandlers,
-} from './battle/flowHandlers';
 import { runAnswerController } from './battle/answerController.ts';
-import { runEnemyTurn } from './battle/enemyFlow';
-import { handleTimeoutFlow } from './battle/timeoutFlow';
+import { runEnemyTurnController } from './battle/enemyTurnController.ts';
+import { runTimeoutController } from './battle/timeoutController.ts';
 import { runStartGameController } from './battle/startGameController.ts';
 import { runStartBattleFlow } from './battle/startBattleFlow';
 import { runSelectMoveFlow } from './battle/selectMoveFlow';
@@ -91,9 +88,11 @@ import {
 } from './battle/pvpFlow';
 import {
   canSwitchCoopActiveSlot,
-  handleCoopPartyKo,
-  runCoopAllySupportTurn,
 } from './battle/coopFlow';
+import {
+  runAllySupportTurnController,
+  runPlayerPartyKoController,
+} from './battle/coopActionController.ts';
 import {
   applyGameCompletionAchievements,
   applyVictoryAchievements,
@@ -314,7 +313,7 @@ export function useBattle() {
   //  TIMER
   // ═══════════════════════════════════════════════════════════════
   const onTimeout = () => {
-    handleTimeoutFlow({
+    runTimeoutController({
       sr,
       t,
       getPvpTurnName,
@@ -340,7 +339,7 @@ export function useBattle() {
       appendSessionEvent,
       markCoopRotatePending,
       safeTo,
-      doEnemyTurn: () => doEnemyTurnRef.current(),
+      doEnemyTurnRef,
     });
   };
 
@@ -478,8 +477,8 @@ export function useBattle() {
   };
 
   const handlePlayerPartyKo = ({ target = "main", reason = t("battle.ally.ko", "Your partner has fallen...") }) => {
-    return handleCoopPartyKo({
-      state: sr.current,
+    return runPlayerPartyKoController({
+      sr,
       target,
       reason,
       setStarter,
@@ -498,7 +497,7 @@ export function useBattle() {
   };
 
   const runAllySupportTurn = ({ delayMs = 850, onDone } = {}) => {
-    return runCoopAllySupportTurn({
+    return runAllySupportTurnController({
       sr,
       safeTo,
       chance,
@@ -584,7 +583,7 @@ export function useBattle() {
 
   // --- Enemy turn logic (reads from stateRef) ---
   function doEnemyTurn() {
-    runEnemyTurn(createEnemyTurnHandlers({
+    runEnemyTurnController({
       sr,
       safeTo,
       rand,
@@ -614,7 +613,7 @@ export function useBattle() {
       handleVictory,
       handlePlayerPartyKo,
       t,
-    }));
+    });
   }
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
 

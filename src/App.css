@@ -122,7 +122,15 @@ textarea:focus-visible,
 button{touch-action:manipulation;min-height:var(--touch-target);min-width:var(--touch-target)}
 input,select,textarea{font-size:max(16px,1rem)}
 
-.battle-root{background:linear-gradient(180deg,#020617 0%,#0b1220 100%)}
+.battle-root{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(180deg,#020617 0%,#0b1220 100%);
+  cursor:default;
+}
 .battle-root-advance{cursor:pointer}
 
 .app-error-wrap{

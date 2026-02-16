@@ -8,7 +8,7 @@
  *   3. Orientation-lock wrapper (GameShell)
  */
 import { useState, useEffect, useRef, useSyncExternalStore, Component } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import './App.css';
 import { useI18n } from './i18n';
 import zhTW from './i18n/locales/zh-TW';
@@ -122,32 +122,19 @@ function QuestionTimerHud({ timerSec, subscribe, getSnapshot }: QuestionTimerHud
   );
   const left = Math.max(0, Math.min(timerSec, timerLeft));
   const tone = left <= 1.5 ? "#ef4444" : left <= 3 ? "#f59e0b" : "#22c55e";
+  const timerBarStyle = {
+    "--battle-timer-width": `${left / timerSec * 100}%`,
+    "--battle-timer-tone": tone,
+    "--battle-timer-pulse": left <= 1.5 ? "timerPulse 0.4s ease infinite" : "none",
+  } as CSSProperties;
+  const timerTextStyle = {
+    "--battle-timer-text-tone": left <= 1.5 ? "#ef4444" : left <= 3 ? "#f59e0b" : "rgba(255,255,255,0.4)",
+  } as CSSProperties;
 
   return (
     <>
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          height: 4,
-          background: tone,
-          width: `${left / timerSec * 100}%`,
-          borderRadius: 2,
-          transition: "width 0.05s linear,background 0.3s",
-          animation: left <= 1.5 ? "timerPulse 0.4s ease infinite" : "none",
-        }}
-      />
-      <div
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          color: left <= 1.5 ? "#ef4444" : left <= 3 ? "#f59e0b" : "rgba(255,255,255,0.4)",
-          marginTop: 2,
-          fontFamily: "'Press Start 2P',monospace",
-          transition: "color 0.3s",
-        }}
-      >
+      <div className="battle-timer-bar" style={timerBarStyle} />
+      <div className="battle-timer-text" style={timerTextStyle}>
         {left.toFixed(1)}s
       </div>
     </>
@@ -335,12 +322,7 @@ function App() {
     ? B.pvpTurn === "p1"
     : (isCoopBattle ? !coopUsingSub : true);
   const subBarActive = isCoopBattle && !!B.allySub && coopUsingSub;
-  const hpBarFocusStyle = (active: boolean) => ({
-    opacity: active ? 1 : 0.62,
-    transform: active ? "scale(1)" : "scale(0.98)",
-    filter: active ? "none" : "saturate(0.72)",
-    transition: "opacity 0.2s ease,transform 0.2s ease,filter 0.2s ease",
-  });
+  const hpFocusClass = (active: boolean) => `battle-hp-focus ${active ? "is-active" : "is-dim"}`;
   const pvpEnemyBurn = B.pvpBurnP2 || 0;
   const pvpEnemyFreeze = !!B.pvpFreezeP2;
   const pvpEnemyParalyze = !!B.pvpParalyzeP2;
@@ -421,6 +403,68 @@ function App() {
         : B.starter.type === "light"
           ? "battle-pill-specdef-light"
           : "battle-pill-specdef-grass";
+  const toastShadowStyle = B.effMsg
+    ? ({ "--battle-eff-shadow": `0 8px 22px ${B.effMsg.color}55` } as CSSProperties)
+    : undefined;
+  const sceneBgStyle = scene.bgImg
+    ? ({ backgroundImage: `url(${scene.bgImg})` } as CSSProperties)
+    : undefined;
+  const sceneSkyStyle = ({ "--scene-sky": scene.sky } as CSSProperties);
+  const sceneGroundStyle = ({ "--scene-ground": scene.ground } as CSSProperties);
+  const sceneTopPlatformStyle = ({ "--scene-platform-top": scene.platform2 } as CSSProperties);
+  const sceneBottomPlatformStyle = ({ "--scene-platform-bottom": scene.platform1 } as CSSProperties);
+  const enemyInfoStyle = ({ "--battle-enemy-info-right": enemyInfoRight } as CSSProperties);
+  const playerInfoStyle = ({ "--battle-player-info-left": playerInfoLeft } as CSSProperties);
+  const enemyMainSpriteStyle = ({
+    "--enemy-main-right": `${enemyMainRightPct}%`,
+    "--enemy-main-top": `${eTopPct}%`,
+    "--enemy-main-anim": B.eAnim || (UX.lowPerfMode ? "none" : (B.enemy && B.enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite")),
+  } as CSSProperties);
+  const enemySubSpriteStyle = ({
+    "--enemy-sub-right": `${enemySubRightPct}%`,
+    "--enemy-sub-top": `${enemySubTopPct}%`,
+    "--enemy-sub-scale": compactDual ? "0.72" : "0.8",
+    "--enemy-sub-anim": UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite",
+  } as CSSProperties);
+  const enemyMainShadowStyle = ({
+    "--enemy-shadow-right": `calc(${enemyMainRightPct}% + ${Math.round(eSize * 0.18)}px)`,
+    "--enemy-shadow-top": `calc(${eTopPct}% + ${Math.round(eHeight * 0.72)}px)`,
+    "--enemy-shadow-width": `${Math.round(eSize * 0.56)}px`,
+    "--enemy-shadow-anim": B.enemy && B.enemy.id === "boss" ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
+  } as CSSProperties);
+  const playerMainSpriteStyle = ({
+    "--player-main-left": `${playerMainLeftPct}%`,
+    "--player-main-bottom": `${playerMainBottomPct}%`,
+    "--player-main-filter": isCoopBattle && !coopUsingSub ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))" : "none",
+    "--player-main-anim": B.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite"),
+  } as CSSProperties);
+  const playerSubSpriteStyle = ({
+    "--player-sub-left": `${playerSubLeftPct}%`,
+    "--player-sub-bottom": `${playerSubBottomPct}%`,
+    "--player-sub-filter": isCoopBattle && coopUsingSub ? "drop-shadow(0 0 12px rgba(34,197,94,0.75))" : "none",
+    "--player-sub-anim": UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite",
+  } as CSSProperties);
+  const playerMainShadowStyle = ({
+    "--player-shadow-left": `calc(${playerMainLeftPct}% + ${Math.round(mainPlayerSize * 0.14)}px)`,
+    "--player-shadow-bottom": `${Math.max(8, playerMainBottomPct - 1)}%`,
+    "--player-shadow-width": `${Math.round(mainPlayerSize * 0.5)}px`,
+  } as CSSProperties);
+  const isUltimateEffect = !!(B.atkEffect && B.atkEffect.idx >= 3);
+  const ultimateToneClass = B.atkEffect?.type === "fire"
+    ? "is-fire"
+    : B.atkEffect?.type === "water"
+      ? "is-water"
+      : B.atkEffect?.type === "electric"
+        ? "is-electric"
+        : B.atkEffect?.type === "grass"
+          ? "is-grass"
+          : B.atkEffect?.type === "light"
+            ? "is-light"
+            : "is-dark";
+  const ultimateSyncStyle = ({
+    "--ult-sync-top": effectTarget.top,
+    "--ult-sync-right": effectTarget.right,
+  } as CSSProperties);
 
   return (
     <div
@@ -476,6 +520,14 @@ function App() {
       {B.achPopup && ACH_MAP[B.achPopup] && <AchievementPopup achievement={ACH_MAP[B.achPopup]} onDone={B.dismissAch} />}
 
       {/* Attack effects */}
+      {showHeavyFx && isUltimateEffect && (
+        <div className={`battle-ult-sync ${ultimateToneClass}`} style={ultimateSyncStyle}>
+          <div className="battle-ult-sync-flash" />
+          <div className="battle-ult-sync-core" />
+          <div className="battle-ult-sync-ring" />
+          <div className="battle-ult-sync-ring battle-ult-sync-ring-alt" />
+        </div>
+      )}
       {showHeavyFx && B.atkEffect && B.atkEffect.type === "fire" && <FireEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
       {showHeavyFx && B.atkEffect && B.atkEffect.type === "electric" && <ElecEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
       {showHeavyFx && B.atkEffect && B.atkEffect.type === "water" && <WaterEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
@@ -527,7 +579,7 @@ function App() {
       {B.effMsg && (
         <div
           className={`battle-eff-toast ${B.effMsg.color === "#22c55e" ? "battle-eff-toast-good" : "battle-eff-toast-bad"}`}
-          style={{ boxShadow: `0 8px 22px ${B.effMsg.color}55` }}
+          style={toastShadowStyle}
         >
           {B.effMsg.text}
         </div>
@@ -535,15 +587,15 @@ function App() {
 
       {/* ═══ Battle arena ═══ */}
       <div className="battle-arena">
-        {scene.bgImg && <div className="scene-bg" style={{ backgroundImage: `url(${scene.bgImg})` }} />}
-        <div style={{ position: "absolute", inset: 0, background: scene.sky, opacity: 0.25, zIndex: 1, transition: "background 1s ease" }} />
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "45%", background: scene.ground, transition: "background 1s ease", zIndex: 2 }} />
-        <div style={{ position: "absolute", right: "5%", top: "8%", width: "55%", height: 12, background: scene.platform2, borderRadius: "50%", filter: "blur(2px)", zIndex: 3 }} />
+        {scene.bgImg && <div className="scene-bg" style={sceneBgStyle} />}
+        <div className="battle-scene-sky" style={sceneSkyStyle} />
+        <div className="battle-scene-ground" style={sceneGroundStyle} />
+        <div className="battle-scene-platform-top" style={sceneTopPlatformStyle} />
         <div className="battle-scene-deco">{showHeavyFx && scene.Deco && <scene.Deco />}</div>
 
         {/* Enemy info */}
-        <div style={{ position: "absolute", top: 10, left: 10, right: enemyInfoRight, zIndex: 10 }}>
-          <div style={hpBarFocusStyle(pvpEnemyBarActive)}>
+        <div className="battle-info-enemy" style={enemyInfoStyle}>
+          <div className={hpFocusClass(pvpEnemyBarActive)}>
             <HPBar
               cur={B.eHp}
               max={B.enemy.maxHp}
@@ -552,7 +604,7 @@ function App() {
             />
           </div>
           {B.enemySub && (
-            <div style={{ marginTop: 4, ...hpBarFocusStyle(false) }}>
+            <div className={`battle-hp-sub-row ${hpFocusClass(false)}`}>
               <HPBar
                 cur={B.eHpSub}
                 max={B.enemySub.maxHp}
@@ -585,20 +637,20 @@ function App() {
         </div>
 
         {/* Enemy sprite */}
-        <div ref={enemySpriteRef} style={{ position: "absolute", right: `${enemyMainRightPct}%`, top: `${eTopPct}%`, zIndex: 6, animation: B.eAnim || (UX.lowPerfMode ? "none" : (B.enemy && B.enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite")) }}>
+        <div ref={enemySpriteRef} className="battle-sprite-enemy-main" style={enemyMainSpriteStyle}>
           <MonsterSprite svgStr={eSvg} size={eSize} />
         </div>
         {B.enemySub && eSubSvg && (
-          <div style={{ position: "absolute", right: `${enemySubRightPct}%`, top: `${enemySubTopPct}%`, zIndex: 4, opacity: 0.78, transform: `scale(${compactDual ? 0.72 : 0.8})`, filter: "saturate(0.9)", animation: UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite" }}>
+          <div className="battle-sprite-enemy-sub" style={enemySubSpriteStyle}>
             <MonsterSprite svgStr={eSubSvg} size={B.enemySub.id === "boss" ? 160 : B.enemySub.isEvolved ? 120 : 96} />
           </div>
         )}
-        {!B.eAnim && !UX.lowPerfMode && <div style={{ position: "absolute", right: `calc(${enemyMainRightPct}% + ${Math.round(eSize * 0.18)}px)`, top: `calc(${eTopPct}% + ${Math.round(eHeight * 0.72)}px)`, width: Math.round(eSize * 0.56), height: 12, background: "radial-gradient(ellipse,rgba(0,0,0,0.6),transparent)", borderRadius: "50%", zIndex: 4, animation: B.enemy && B.enemy.id === "boss" ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite" }} />}
+        {!B.eAnim && !UX.lowPerfMode && <div className="battle-sprite-enemy-shadow" style={enemyMainShadowStyle} />}
 
         {/* Player platform & info */}
-        <div style={{ position: "absolute", left: "2%", bottom: "12%", width: "50%", height: 10, background: scene.platform1, borderRadius: "50%", filter: "blur(2px)", zIndex: 3 }} />
-        <div style={{ position: "absolute", bottom: 10, right: 10, left: playerInfoLeft, zIndex: 10 }}>
-          <div style={hpBarFocusStyle(mainBarActive)}>
+        <div className="battle-scene-platform-bottom" style={sceneBottomPlatformStyle} />
+        <div className="battle-info-player" style={playerInfoStyle}>
+          <div className={hpFocusClass(mainBarActive)}>
             <HPBar
               cur={B.pHp}
               max={mainMaxHp}
@@ -607,7 +659,7 @@ function App() {
             />
           </div>
           {B.allySub && (
-            <div style={{ marginTop: 4, ...hpBarFocusStyle(subBarActive) }}>
+            <div className={`battle-hp-sub-row ${hpFocusClass(subBarActive)}`}>
               <HPBar
                 cur={B.pHpSub}
                 max={subMaxHp}
@@ -634,15 +686,15 @@ function App() {
         </div>
 
         {/* Player sprite */}
-        <div ref={playerSpriteRef} style={{ position: "absolute", left: `${playerMainLeftPct}%`, bottom: `${playerMainBottomPct}%`, transform: "scaleX(-1)", zIndex: 6, filter: isCoopBattle && !coopUsingSub ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))" : "none", transition: "filter 0.2s ease", animation: B.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite") }}>
+        <div ref={playerSpriteRef} className="battle-sprite-player-main" style={playerMainSpriteStyle}>
           <MonsterSprite svgStr={pSvg} size={mainPlayerSize} />
         </div>
         {B.allySub && pSubSvg && (
-          <div style={{ position: "absolute", left: `${playerSubLeftPct}%`, bottom: `${playerSubBottomPct}%`, transform: "scaleX(-1)", zIndex: 4, opacity: 0.84, filter: isCoopBattle && coopUsingSub ? "drop-shadow(0 0 12px rgba(34,197,94,0.75))" : "none", transition: "filter 0.2s ease", animation: UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite" }}>
+          <div className="battle-sprite-player-sub" style={playerSubSpriteStyle}>
             <MonsterSprite svgStr={pSubSvg} size={subPlayerSize} />
           </div>
         )}
-        {!B.pAnim && !UX.lowPerfMode && <div style={{ position: "absolute", left: `calc(${playerMainLeftPct}% + ${Math.round(mainPlayerSize * 0.14)}px)`, bottom: `${Math.max(8, playerMainBottomPct - 1)}%`, width: Math.round(mainPlayerSize * 0.5), height: 10, background: "radial-gradient(ellipse,rgba(0,0,0,0.55),transparent)", borderRadius: "50%", zIndex: 4, animation: "shadowPulse 3s ease-in-out infinite" }} />}
+        {!B.pAnim && !UX.lowPerfMode && <div className="battle-sprite-player-shadow" style={playerMainShadowStyle} />}
 
         <div className={`battle-top-right-stack ${UX.lowPerfMode ? "low-perf" : ""}`} aria-live="polite" aria-atomic="true">
           {B.streak >= 2 && <div className="battle-pill is-streak">🔥 {t("battle.streak", "{count} combo!", { count: B.streak })}</div>}
@@ -692,24 +744,35 @@ function App() {
               const pw = B.battleMode === "pvp" ? m.basePower : B.getPow(i);
               const atCap = lv >= MAX_MOVE_LVL || m.basePower + lv * m.growth > POWER_CAPS[i];
               const eff = B.battleMode === "pvp" ? 1 : B.dualEff(m);
+              const moveBtnStyle = {
+                "--move-bg": locked ? "rgba(255,255,255,0.03)" : eff > 1 ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))` : eff < 1 ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))` : m.bg,
+                "--move-border": sealed ? "rgba(168,85,247,0.4)" : locked ? "rgba(255,255,255,0.08)" : eff > 1 ? "#22c55e66" : `${m.color}44`,
+                "--move-opacity": locked ? "0.4" : "1",
+                "--move-cursor": locked ? "default" : "pointer",
+                "--move-enter-delay": `${i * 0.05}s`,
+                "--move-name-color": locked ? "#94a3b8" : m.color,
+                "--move-desc-color": locked ? "#64748b" : "#94a3b8",
+                "--move-power-color": lv > 1 ? m.color : "inherit",
+              } as CSSProperties;
+              const moveLevelBadgeStyle = atCap
+                ? undefined
+                : ({ "--move-level-bg": m.color } as CSSProperties);
+              const moveProgressStyle = {
+                "--move-progress-width": `${(B.mHits[i] % (HITS_PER_LVL * B.mLvls[i])) / (HITS_PER_LVL * B.mLvls[i]) * 100}%`,
+                "--move-progress-color": m.color,
+              } as CSSProperties;
               return <button
                 className={`battle-menu-btn ${locked ? "is-locked" : ""}`}
                 key={i}
                 onClick={() => !locked && B.selectMove(i)}
-                style={{
-                  background: locked ? "rgba(255,255,255,0.03)" : eff > 1 ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))` : eff < 1 ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))` : m.bg,
-                  border: `2px solid ${sealed ? "rgba(168,85,247,0.4)" : locked ? "rgba(255,255,255,0.08)" : eff > 1 ? "#22c55e66" : m.color + "44"}`,
-                  opacity: locked ? 0.4 : 1,
-                  cursor: locked ? "default" : "pointer",
-                  animation: `fadeSlide 0.3s ease ${i * 0.05}s both`,
-                }}
+                style={moveBtnStyle}
               >
                 {sealed && <div className="move-sealed-mask"><span className="move-sealed-text">{t("battle.sealed", "🔮 Sealed ({turns})", { turns: B.sealedTurns })}</span></div>}
                 <div className="move-badge-stack">
                   {B.battleMode !== "pvp" && lv > 1 && (
                     <div
                       className={`move-badge move-badge-level ${atCap ? "cap" : ""}`}
-                      style={atCap ? undefined : { background: m.color }}
+                      style={moveLevelBadgeStyle}
                     >
                       Lv{lv}
                     </div>
@@ -719,12 +782,12 @@ function App() {
                 </div>
                 <div className="move-name-row">
                   <span className="move-icon">{m.icon}</span>
-                  <span className="move-name" style={{ color: locked ? "#94a3b8" : m.color }}>{m.name}</span>
+                  <span className="move-name">{m.name}</span>
                 </div>
-                <div className="move-desc-row" style={{ color: locked ? "#64748b" : "#94a3b8" }}>
-                  {m.desc} · {t("battle.power", "Power")} <b style={{ color: lv > 1 ? m.color : "inherit" }}>{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && B.battleMode === "pvp" && !chargeReadyDisplay && ` ${t("battle.risky.lockedPvp", "🔒Need 3 correct")}`}{m.risky && B.battleMode === "pvp" && chargeReadyDisplay && ` ${t("battle.risky.readyPvp", "⚡Cast Ready")}`}{m.risky && !B.chargeReady && B.battleMode !== "pvp" && ` ${t("battle.risky.locked", "🔒")}`}{m.risky && B.chargeReady && B.battleMode !== "pvp" && ` ${t("battle.risky.ready", "⚡Charge Ready!")}`}{B.battleMode !== "pvp" && !m.risky && !atCap && lv > 1 && " ↑"}{B.battleMode !== "pvp" && atCap && ` ${t("battle.max", "✦MAX")}`}
+                <div className="move-desc-row">
+                  {m.desc} · {t("battle.power", "Power")} <b className="move-power">{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && B.battleMode === "pvp" && !chargeReadyDisplay && ` ${t("battle.risky.lockedPvp", "🔒Need 3 correct")}`}{m.risky && B.battleMode === "pvp" && chargeReadyDisplay && ` ${t("battle.risky.readyPvp", "⚡Cast Ready")}`}{m.risky && !B.chargeReady && B.battleMode !== "pvp" && ` ${t("battle.risky.locked", "🔒")}`}{m.risky && B.chargeReady && B.battleMode !== "pvp" && ` ${t("battle.risky.ready", "⚡Charge Ready!")}`}{B.battleMode !== "pvp" && !m.risky && !atCap && lv > 1 && " ↑"}{B.battleMode !== "pvp" && atCap && ` ${t("battle.max", "✦MAX")}`}
                 </div>
-                {B.battleMode !== "pvp" && !m.risky && !atCap && <div className="move-progress-track"><div className="move-progress-fill" style={{ width: `${(B.mHits[i] % (HITS_PER_LVL * B.mLvls[i])) / (HITS_PER_LVL * B.mLvls[i]) * 100}%`, background: m.color }} /></div>}
+                {B.battleMode !== "pvp" && !m.risky && !atCap && <div className="move-progress-track"><div className="move-progress-fill" style={moveProgressStyle} /></div>}
               </button>;
             })}
           </div>

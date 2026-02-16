@@ -74,7 +74,7 @@ test('buildWeaknessSuggestions identifies low-accuracy group', () => {
 
   const weak = buildWeaknessSuggestions(overview);
   assert.equal(weak[0].groupId, 'add');
-  assert.match(weak[0].title, /需加強/);
+  assert.match(weak[0].title, /needs practice/i);
 });
 
 test('buildWeeklyReport computes delta against previous week', () => {

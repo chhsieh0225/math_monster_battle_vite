@@ -16,12 +16,12 @@ const OP_GROUPS_BASE = [
 ];
 
 const GROUP_LABEL_FALLBACKS = {
-  add: '加法',
-  sub: '減法',
-  mul: '乘法',
-  div: '除法',
-  unknown: '未知數',
-  mixed: '混合運算',
+  add: 'Addition',
+  sub: 'Subtraction',
+  mul: 'Multiplication',
+  div: 'Division',
+  unknown: 'Unknown',
+  mixed: 'Mixed Ops',
 };
 
 const GROUP_LABEL_KEYS = {
@@ -53,17 +53,17 @@ const OP_ICONS = {
 };
 
 const OP_NAME_FALLBACKS = {
-  '+': '加法',
-  '-': '減法',
-  '×': '乘法',
-  '÷': '除法',
-  mixed2: '加減混合',
-  mixed3: '乘加混合',
-  mixed4: '四則混合',
-  unknown1: '加減求未知',
-  unknown2: '乘除求未知',
-  unknown3: '大數求未知',
-  unknown4: '混合求未知',
+  '+': 'Addition',
+  '-': 'Subtraction',
+  '×': 'Multiplication',
+  '÷': 'Division',
+  mixed2: 'Add/Sub Mix',
+  mixed3: 'Mul/Add Mix',
+  mixed4: 'Four Ops Mix',
+  unknown1: 'Unknown Add/Sub',
+  unknown2: 'Unknown Mul/Div',
+  unknown3: 'Unknown Large Number',
+  unknown4: 'Unknown Mixed',
 };
 
 const OP_NAME_KEYS = {
@@ -81,13 +81,13 @@ const OP_NAME_KEYS = {
 };
 
 const WEAK_ACTIONS = {
-  add: '先做 1 位數與進位題，建議每天 2 場，目標正確率 85%。',
-  sub: '先拆成補數與借位練習，建議每場至少 10 題減法。',
-  mul: '先鞏固九九表，再進入雙位數乘法，避免硬背失誤。',
-  div: '先練整除題型，再練餘數判斷，重點是檢查商與被除數關係。',
-  unknown: '先列式再代入驗算，先練 unknown1/unknown2 再升級到大數。',
-  mixed: '每題先標記運算順序，先乘除後加減，減少步驟跳漏。',
-  default: '建議分段練習，先慢後快，逐步拉高正確率。',
+  add: 'Start with single-digit and carry problems. Aim for 2 runs/day and 85% accuracy.',
+  sub: 'Split into complement and borrowing drills. Do at least 10 subtraction questions per run.',
+  mul: 'Solidify multiplication tables first, then move to two-digit multiplication.',
+  div: 'Practice exact division first, then remainder judgement and quotient checks.',
+  unknown: 'Write equations first, verify by substitution, then scale from unknown1/2 to large numbers.',
+  mixed: 'Mark operation order per question: multiply/divide before add/subtract.',
+  default: 'Use segmented practice and increase pace gradually while keeping accuracy.',
 };
 
 const WEAK_ACTION_KEYS = {
@@ -363,8 +363,8 @@ export function buildWeaknessSuggestions(overview, options = {}) {
         groupId: g.id,
         icon: g.icon,
         label,
-        title: translate('dashboard.weak.title', '{icon} {label}題型需加強', { icon: g.icon, label }),
-        summary: translate('dashboard.weak.summary', '正確率 {acc}% · 平均 {avg} 秒 · {attempted} 題', {
+        title: translate('dashboard.weak.title', '{icon} {label} needs practice', { icon: g.icon, label }),
+        summary: translate('dashboard.weak.summary', 'Accuracy {acc}% · Avg {avg}s · {attempted} questions', {
           acc: g.acc,
           avg: (g.avgTimeSec ?? 0).toFixed(1),
           attempted: g.attempted,
@@ -382,10 +382,10 @@ export function buildWeaknessSuggestions(overview, options = {}) {
       id: 'weak-bootstrap',
       groupId: 'warmup',
       icon: '🧭',
-      label: translate('dashboard.weak.bootstrap.label', '暖身'),
-      title: translate('dashboard.weak.bootstrap.title', '尚無資料，先建立基準線'),
-      summary: translate('dashboard.weak.bootstrap.summary', '先完成 2-3 場遊戲，儀表板就會自動產生弱點建議。'),
-      action: translate('dashboard.weak.bootstrap.action', '建議先從加減與乘除各打一場，讓系統有足夠樣本。'),
+      label: translate('dashboard.weak.bootstrap.label', 'Warmup'),
+      title: translate('dashboard.weak.bootstrap.title', 'No data yet, build a baseline first'),
+      summary: translate('dashboard.weak.bootstrap.summary', 'Complete 2-3 sessions first and the dashboard will generate weakness suggestions.'),
+      action: translate('dashboard.weak.bootstrap.action', 'Start with one add/sub run and one mul/div run for enough sample data.'),
       focusOps: ['+', '-', '×', '÷'],
       score: 0,
     }];
@@ -395,10 +395,10 @@ export function buildWeaknessSuggestions(overview, options = {}) {
     id: 'weak-keep',
     groupId: 'maintain',
     icon: '✅',
-    label: translate('dashboard.weak.maintain.label', '維持'),
-    title: translate('dashboard.weak.maintain.title', '目前無明顯弱點題型'),
-    summary: translate('dashboard.weak.maintain.summary', '整體表現穩定，建議維持練習頻率並提高題量。'),
-    action: translate('dashboard.weak.maintain.action', '每週固定 3-4 場，逐步提升混合與未知數題量。'),
+    label: translate('dashboard.weak.maintain.label', 'Maintain'),
+    title: translate('dashboard.weak.maintain.title', 'No obvious weak area detected'),
+    summary: translate('dashboard.weak.maintain.summary', 'Performance is stable. Keep your schedule and gradually increase volume.'),
+    action: translate('dashboard.weak.maintain.action', 'Play 3-4 sessions weekly and increase mixed/unknown question volume.'),
     focusOps: ['mixed2', 'mixed3', 'mixed4', 'unknown1', 'unknown2'],
     score: 0,
   }];
@@ -435,9 +435,9 @@ export function buildWeeklyReport(sessions, options = {}) {
     endLabel: new Date(now).toLocaleDateString(),
   };
 
-  let headline = translate('dashboard.weekly.headline.bootstrap', '本週先完成 2 場，建立週報基準線。');
+  let headline = translate('dashboard.weekly.headline.bootstrap', 'Finish 2 sessions this week to establish your weekly baseline.');
   if (current.sessions > 0) {
-    headline = translate('dashboard.weekly.headline.summary', '本週共 {sessions} 場、{questions} 題，正確率 {acc}%。', {
+    headline = translate('dashboard.weekly.headline.summary', '{sessions} sessions, {questions} questions this week, {acc}% accuracy.', {
       sessions: current.sessions,
       questions: current.totalQ,
       acc: current.acc,
@@ -445,9 +445,9 @@ export function buildWeeklyReport(sessions, options = {}) {
   }
   if (accDelta != null) {
     if (accDelta >= 5) {
-      headline = `${headline} ${translate('dashboard.weekly.headline.accUp', '正確率較上週明顯提升。')}`;
+      headline = `${headline} ${translate('dashboard.weekly.headline.accUp', 'Accuracy improved clearly versus last week.')}`;
     } else if (accDelta <= -5) {
-      headline = `${headline} ${translate('dashboard.weekly.headline.accDown', '正確率較上週下滑，建議先補弱項。')}`;
+      headline = `${headline} ${translate('dashboard.weekly.headline.accDown', 'Accuracy dropped versus last week. Patch weak areas first.')}`;
     }
   }
 
@@ -469,9 +469,9 @@ function makeConsistencyTask(weeklyReport, translate) {
   if (c.sessions < 4) {
     return {
       id: 'task-consistency',
-      title: translate('dashboard.task.consistency.title', '📅 穩定出勤任務'),
-      summary: translate('dashboard.task.consistency.summary', '本週目前 {sessions} 場，先提升到 4 場以上。', { sessions: c.sessions }),
-      goal: translate('dashboard.task.consistency.goal', '接下來 7 天至少完成 4 場戰鬥。'),
+      title: translate('dashboard.task.consistency.title', '📅 Consistency Task'),
+      summary: translate('dashboard.task.consistency.summary', '{sessions} sessions so far this week. Push to 4+.', { sessions: c.sessions }),
+      goal: translate('dashboard.task.consistency.goal', 'Complete at least 4 battles in the next 7 days.'),
       focusOps: ['+', '-', '×', '÷'],
       level: 'base',
     };
@@ -480,9 +480,9 @@ function makeConsistencyTask(weeklyReport, translate) {
   if (c.totalQ < 100) {
     return {
       id: 'task-volume',
-      title: translate('dashboard.task.volume.title', '🧱 題量補足任務'),
-      summary: translate('dashboard.task.volume.summary', '本週累積 {questions} 題，建議補到 100 題。', { questions: c.totalQ }),
-      goal: translate('dashboard.task.volume.goal', '接下來 7 天再完成 40 題以上。'),
+      title: translate('dashboard.task.volume.title', '🧱 Volume Task'),
+      summary: translate('dashboard.task.volume.summary', '{questions} questions this week. Target 100.', { questions: c.totalQ }),
+      goal: translate('dashboard.task.volume.goal', 'Add 40+ questions in the next 7 days.'),
       focusOps: ['mixed2', 'mixed3', 'mixed4'],
       level: 'base',
     };
@@ -490,9 +490,9 @@ function makeConsistencyTask(weeklyReport, translate) {
 
   return {
     id: 'task-maintain',
-    title: translate('dashboard.task.maintain.title', '🛡️ 維持節奏任務'),
-    summary: translate('dashboard.task.maintain.summary', '本週練習量已足夠，改以穩定品質為主。'),
-    goal: translate('dashboard.task.maintain.goal', '連續 3 天各完成 1 場，且每場正確率至少 75%。'),
+    title: translate('dashboard.task.maintain.title', '🛡️ Rhythm Task'),
+    summary: translate('dashboard.task.maintain.summary', 'Practice volume is enough. Focus on stable quality.'),
+    goal: translate('dashboard.task.maintain.goal', 'Finish 1 session/day for 3 days with at least 75% accuracy each.'),
     focusOps: ['unknown1', 'unknown2', 'mixed4'],
     level: 'base',
   };
@@ -503,9 +503,9 @@ function makeSpeedOrChallengeTask(overview, weeklyReport, translate) {
   if (avg != null && avg > 8.5) {
     return {
       id: 'task-speed',
-      title: translate('dashboard.task.speed.title', '⏱️ 反應速度任務'),
-      summary: translate('dashboard.task.speed.summary', '平均答題 {avg} 秒，略慢。', { avg: avg.toFixed(1) }),
-      goal: translate('dashboard.task.speed.goal', '進行 2 場快答練習，目標平均壓到 8 秒內。'),
+      title: translate('dashboard.task.speed.title', '⏱️ Speed Task'),
+      summary: translate('dashboard.task.speed.summary', 'Average response time is {avg}s and can be faster.', { avg: avg.toFixed(1) }),
+      goal: translate('dashboard.task.speed.goal', 'Do 2 speed runs and reduce average to under 8 seconds.'),
       focusOps: ['+', '-', '×', '÷'],
       level: 'speed',
     };
@@ -515,12 +515,12 @@ function makeSpeedOrChallengeTask(overview, weeklyReport, translate) {
   if (strongest) {
     return {
       id: `task-challenge-${strongest.id}`,
-      title: translate('dashboard.task.challenge.title', '{icon} 強項挑戰任務', { icon: strongest.icon }),
-      summary: translate('dashboard.task.challenge.summary', '{label}是本週強項（{acc}%）。', {
+      title: translate('dashboard.task.challenge.title', '{icon} Strength Challenge', { icon: strongest.icon }),
+      summary: translate('dashboard.task.challenge.summary', '{label} is your current strength ({acc}%).', {
         label: strongest.label,
         acc: strongest.acc,
       }),
-      goal: translate('dashboard.task.challenge.goal', '加入更高難度 {label} 題型 2 場，維持 80% 以上。', { label: strongest.label }),
+      goal: translate('dashboard.task.challenge.goal', 'Run 2 harder {label} sessions while keeping 80%+ accuracy.', { label: strongest.label }),
       focusOps: strongest.ops,
       level: 'challenge',
     };
@@ -528,9 +528,9 @@ function makeSpeedOrChallengeTask(overview, weeklyReport, translate) {
 
   return {
     id: 'task-warmup',
-    title: translate('dashboard.task.warmup.title', '🎯 基礎暖身任務'),
-    summary: translate('dashboard.task.warmup.summary', '資料量尚少，先建立穩定答題節奏。'),
-    goal: translate('dashboard.task.warmup.goal', '完成 2 場基礎加減乘除練習，熟悉出題節奏。'),
+    title: translate('dashboard.task.warmup.title', '🎯 Foundation Warmup'),
+    summary: translate('dashboard.task.warmup.summary', 'Data is still limited. Build a stable answering rhythm first.'),
+    goal: translate('dashboard.task.warmup.goal', 'Complete 2 basic add/sub/mul/div runs to settle timing.'),
     focusOps: ['+', '-', '×', '÷'],
     level: 'warmup',
   };
@@ -540,17 +540,17 @@ function getFoundationTasks(translate) {
   return [
     {
       id: 'task-foundation-addsub',
-      title: translate('dashboard.task.foundation.addsub.title', '🧮 基礎算感任務'),
-      summary: translate('dashboard.task.foundation.addsub.summary', '先建立加減直覺，避免後續複合題卡關。'),
-      goal: translate('dashboard.task.foundation.addsub.goal', '完成 1 場加法 + 1 場減法專注練習。'),
+      title: translate('dashboard.task.foundation.addsub.title', '🧮 Number Sense Task'),
+      summary: translate('dashboard.task.foundation.addsub.summary', 'Build addition/subtraction intuition before complex mixes.'),
+      goal: translate('dashboard.task.foundation.addsub.goal', 'Complete 1 focused addition run + 1 subtraction run.'),
       focusOps: ['+', '-'],
       level: 'foundation',
     },
     {
       id: 'task-foundation-muldiv',
-      title: translate('dashboard.task.foundation.muldiv.title', '🧠 乘除穩定任務'),
-      summary: translate('dashboard.task.foundation.muldiv.summary', '乘除是混合題核心，先把基礎正確率拉高。'),
-      goal: translate('dashboard.task.foundation.muldiv.goal', '完成 2 場乘除練習，至少 70% 正確率。'),
+      title: translate('dashboard.task.foundation.muldiv.title', '🧠 Mul/Div Stability Task'),
+      summary: translate('dashboard.task.foundation.muldiv.summary', 'Mul/div is core to mixed questions. Raise baseline accuracy first.'),
+      goal: translate('dashboard.task.foundation.muldiv.goal', 'Complete 2 mul/div runs at 70%+ accuracy.'),
       focusOps: ['×', '÷'],
       level: 'foundation',
     },
@@ -569,9 +569,9 @@ export function buildPracticeRecommendations(overview, weeklyReport, weakSuggest
   for (const w of weak) {
     tasks.push({
       id: `task-fix-${w.groupId}`,
-      title: translate('dashboard.task.fix.title', '{icon} 修補{label}任務', { icon: w.icon, label: w.label }),
+      title: translate('dashboard.task.fix.title', '{icon} Patch {label} Task', { icon: w.icon, label: w.label }),
       summary: w.summary,
-      goal: translate('dashboard.task.fix.goal', '安排 2 場 {label} 專注練習，先達到 75% 正確率。', { label: w.label }),
+      goal: translate('dashboard.task.fix.goal', 'Schedule 2 focused {label} runs and reach 75% accuracy first.', { label: w.label }),
       focusOps: w.focusOps,
       level: 'focus',
     });

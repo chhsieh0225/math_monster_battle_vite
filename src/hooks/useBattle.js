@@ -18,7 +18,7 @@
  * • Achievements, Encyclopedia, and SessionLog are extracted into sub-hooks
  *   (useAchievements, useEncyclopedia, useSessionLog) to keep this file focused.
  */
-import { useState, useEffect, useRef, useCallback, useReducer } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, useReducer } from 'react';
 import { useI18n } from '../i18n';
 
 import { SCENE_NAMES } from '../data/scenes';
@@ -206,7 +206,10 @@ export function useBattle() {
     setBossCharging,
     setSealedMove,
     setSealedTurns,
-  } = createBattleFieldSetters(dispatchBattle);
+  } = useMemo(
+    () => createBattleFieldSetters(dispatchBattle),
+    [dispatchBattle],
+  );
 
   // ──── Phase & UI ────
   const {

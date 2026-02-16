@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildNextEvolvedAlly,
+  canSwitchCoopActiveSlot,
   handleCoopPartyKo,
   isCoopBattleMode,
   runCoopAllySupportTurn,
@@ -22,6 +23,14 @@ test('buildNextEvolvedAlly advances selected stage and display name', () => {
   const next = buildNextEvolvedAlly(ally);
   assert.equal(next.selectedStageIdx, 1);
   assert.equal(next.name, "水靈王");
+});
+
+test('canSwitchCoopActiveSlot only allows valid alive coop sub', () => {
+  assert.equal(canSwitchCoopActiveSlot(null), false);
+  assert.equal(canSwitchCoopActiveSlot({ battleMode: "single", allySub: { name: "雷喵" }, pHpSub: 20 }), false);
+  assert.equal(canSwitchCoopActiveSlot({ battleMode: "coop", allySub: null, pHpSub: 20 }), false);
+  assert.equal(canSwitchCoopActiveSlot({ battleMode: "coop", allySub: { name: "雷喵" }, pHpSub: 0 }), false);
+  assert.equal(canSwitchCoopActiveSlot({ battleMode: "coop", allySub: { name: "雷喵" }, pHpSub: 20 }), true);
 });
 
 test('handleCoopPartyKo promotes sub ally when main is down', () => {
@@ -60,6 +69,45 @@ test('handleCoopPartyKo promotes sub ally when main is down', () => {
   assert.equal(ally, null);
   assert.equal(allyHp, 0);
   assert.deepEqual(phaseCalls, ["text", "menu"]);
+});
+
+test('handleCoopPartyKo handles sub ally down without ending game if main alive', () => {
+  let ally = { name: "雷喵", selectedStageIdx: 0 };
+  let allyHp = 12;
+  let slot = "sub";
+  let phase = "";
+  let text = "";
+  let ended = false;
+  let screen = "";
+
+  const out = handleCoopPartyKo({
+    state: {
+      pHp: 30,
+      pHpSub: 12,
+      allySub: ally,
+    },
+    target: "sub",
+    setStarter: () => {},
+    setPStg: () => {},
+    setPHp: () => {},
+    setAllySub: (value) => { ally = value; },
+    setPHpSub: (value) => { allyHp = value; },
+    setCoopActiveSlot: (value) => { slot = value; },
+    setPhase: (value) => { phase = value; },
+    setBText: (value) => { text = value; },
+    safeTo: (fn) => fn(),
+    endSession: () => { ended = true; },
+    setScreen: (value) => { screen = value; },
+  });
+
+  assert.equal(out, "sub_down");
+  assert.equal(ally, null);
+  assert.equal(allyHp, 0);
+  assert.equal(slot, "main");
+  assert.equal(phase, "menu");
+  assert.equal(text, "");
+  assert.equal(ended, false);
+  assert.equal(screen, "");
 });
 
 test('runCoopAllySupportTurn can finish the enemy and trigger victory callback', () => {

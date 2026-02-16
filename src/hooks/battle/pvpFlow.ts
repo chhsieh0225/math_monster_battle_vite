@@ -1,7 +1,10 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
 import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
-import { effectOrchestrator } from './effectOrchestrator.ts';
 import { isBattleActiveState } from './menuResetGuard.ts';
+import {
+  runPvpAttackAnimation,
+  showPvpEffectivenessMessage,
+} from './pvpAnimationOrchestrator.ts';
 import {
   applyCorrectTurnProgress,
   createBattleActiveScheduler,
@@ -9,6 +12,7 @@ import {
   resetCurrentTurnResources,
   swapPvpTurnToText,
 } from './pvpTurnPrimitives.ts';
+import { resolvePvpTurnStartStatus } from './pvpStatusResolver.ts';
 import { resolvePvpStrike } from './turnResolver.ts';
 
 type TranslatorParams = Record<string, string | number>;
@@ -133,22 +137,6 @@ type PvpEnemyVm = {
   svgFn: (...colors: string[]) => string;
   isEvolved: boolean;
   selectedStageIdx: number;
-};
-
-type EffectOrchestratorApi = {
-  runPlayerLunge: (args: {
-    safeTo: SafeTo;
-    setPAnim: TextSetter;
-    onReady?: () => void;
-    startDelay?: number;
-    settleDelay?: number;
-  }) => void;
-  runEnemyLunge: (args: {
-    safeTo: SafeTo;
-    setEAnim: TextSetter;
-    onStrike?: () => void;
-    strikeDelay?: number;
-  }) => void;
 };
 
 type PvpCritProfile = {
@@ -280,7 +268,6 @@ const PVP = PVP_BALANCE as unknown as PvpBalanceConfig;
 const getStageMaxHpTyped = getStageMaxHp as (stageIdx: number) => number;
 const getStarterMaxHpTyped = getStarterMaxHp as (starter: StarterLike | null) => number;
 const getStarterStageIdxTyped = getStarterStageIdx as (starter: StarterLike) => number;
-const effectOrchestratorTyped = effectOrchestrator as EffectOrchestratorApi;
 
 const TYPE_TO_SCENE: Record<string, string> = {
   fire: 'fire',
@@ -454,16 +441,12 @@ export function handlePvpAnswer({
     random: rand,
   });
 
-  if (strike.isCrit) {
-    setEffMsg({ text: tr(t, 'battle.pvp.effect.crit', '💥 Critical!'), color: '#ff6b00' });
-    safeToIfBattleActive(() => setEffMsg(null), 1200);
-  } else if (strike.eff > 1) {
-    setEffMsg({ text: tr(t, 'battle.pvp.effect.super', 'Super effective!'), color: '#22c55e' });
-    safeToIfBattleActive(() => setEffMsg(null), 1200);
-  } else if (strike.eff < 1) {
-    setEffMsg({ text: tr(t, 'battle.pvp.effect.notVery', 'Not very effective'), color: '#94a3b8' });
-    safeToIfBattleActive(() => setEffMsg(null), 1200);
-  }
+  showPvpEffectivenessMessage({
+    strike,
+    t,
+    setEffMsg,
+    scheduleClear: safeToIfBattleActive,
+  });
 
   const vfxType = move.risky && move.type2 ? move.type2 : move.type;
   const hitAnim = PVP_HIT_ANIMS[vfxType] || 'enemyHit 0.45s ease';
@@ -721,23 +704,14 @@ export function handlePvpAnswer({
     });
   };
 
-  setPhase('playerAtk');
-  if (currentTurn === 'p1') {
-    effectOrchestratorTyped.runPlayerLunge({
-      safeTo,
-      setPAnim,
-      startDelay: 120,
-      settleDelay: 280,
-      onReady: runStrike,
-    });
-  } else {
-    effectOrchestratorTyped.runEnemyLunge({
-      safeTo,
-      setEAnim,
-      strikeDelay: 320,
-      onStrike: runStrike,
-    });
-  }
+  runPvpAttackAnimation({
+    turn: currentTurn,
+    safeTo,
+    setPhase,
+    setPAnim,
+    setEAnim,
+    onStrike: runStrike,
+  });
   return true;
 }
 
@@ -768,76 +742,29 @@ export function processPvpTurnStart({
 }: ProcessPvpTurnStartArgs): boolean {
   if (state.battleMode !== 'pvp' || state.pvpWinner) return false;
   if (!isBattleActiveState(state)) return false;
-  const safeToIfBattleActive = createBattleActiveScheduler({
+  return resolvePvpTurnStartStatus({
+    state,
+    sr,
     safeTo,
-    getState: () => sr?.current || state,
+    getOtherPvpTurn,
+    getPvpTurnName,
+    setPHp,
+    setPvpBurnP1,
+    setPAnim,
+    addD,
+    setPvpWinner,
+    setScreen,
+    setPvpHp2,
+    setEHp,
+    setPvpBurnP2,
+    setEAnim,
+    setBText,
+    setPhase,
+    setPvpParalyzeP1,
+    setPvpParalyzeP2,
+    setPvpTurn,
+    setPvpFreezeP1,
+    setPvpFreezeP2,
+    t,
   });
-  const currentTurn = state.pvpTurn;
-  const currentName = getPvpTurnName(state, currentTurn);
-  const isP1 = currentTurn === 'p1';
-
-  const burnStack = isP1 ? (state.pvpBurnP1 || 0) : (state.pvpBurnP2 || 0);
-  if (burnStack > 0) {
-    const burnDmg = (PVP.passive.fireBurnTickBase || 0)
-      + burnStack * (PVP.passive.fireBurnTickPerStack || 0);
-    if (isP1) {
-      const nh = Math.max(0, state.pHp - burnDmg);
-      setPHp(nh);
-      setPvpBurnP1(Math.max(0, burnStack - 1));
-      setPAnim('playerHit 0.45s ease');
-      addD(`🔥-${burnDmg}`, 60, 170, '#f97316');
-      safeToIfBattleActive(() => setPAnim(''), 480);
-      if (nh <= 0) {
-        declarePvpWinner({
-          winner: 'p2',
-          setPvpWinner,
-          setScreen,
-        });
-        return true;
-      }
-    } else {
-      const nh = Math.max(0, state.pvpHp2 - burnDmg);
-      setPvpHp2(nh);
-      setEHp(nh);
-      setPvpBurnP2(Math.max(0, burnStack - 1));
-      setEAnim('enemyFireHit 0.5s ease');
-      addD(`🔥-${burnDmg}`, 140, 55, '#f97316');
-      safeToIfBattleActive(() => setEAnim(''), 480);
-      if (nh <= 0) {
-        declarePvpWinner({
-          winner: 'p1',
-          setPvpWinner,
-          setScreen,
-        });
-        return true;
-      }
-    }
-    setBText(tr(t, 'battle.pvp.turnstart.burn', '🔥 {name} took burn damage!', { name: currentName }));
-    setPhase('text');
-    return true;
-  }
-
-  const paralyzed = isP1 ? !!state.pvpParalyzeP1 : !!state.pvpParalyzeP2;
-  if (paralyzed) {
-    if (isP1) setPvpParalyzeP1(false);
-    else setPvpParalyzeP2(false);
-    const nextTurn = getOtherPvpTurn(currentTurn);
-    setPvpTurn(nextTurn);
-    setBText(tr(t, 'battle.pvp.turnstart.paralyze', '⚡ {name} is paralyzed and skips the turn!', { name: currentName }));
-    setPhase('text');
-    return true;
-  }
-
-  const frozen = isP1 ? !!state.pvpFreezeP1 : !!state.pvpFreezeP2;
-  if (frozen) {
-    if (isP1) setPvpFreezeP1(false);
-    else setPvpFreezeP2(false);
-    const nextTurn = getOtherPvpTurn(currentTurn);
-    setPvpTurn(nextTurn);
-    setBText(tr(t, 'battle.pvp.turnstart.freeze', '❄️ {name} is frozen and skips the turn!', { name: currentName }));
-    setPhase('text');
-    return true;
-  }
-
-  return false;
 }

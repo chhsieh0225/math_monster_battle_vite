@@ -1,7 +1,14 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
 import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
-import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
+import { isBattleActiveState } from './menuResetGuard.ts';
+import {
+  applyCorrectTurnProgress,
+  createBattleActiveScheduler,
+  declarePvpWinner,
+  resetCurrentTurnResources,
+  swapPvpTurnToText,
+} from './pvpTurnPrimitives.ts';
 import { resolvePvpStrike } from './turnResolver.ts';
 
 type TranslatorParams = Record<string, string | number>;
@@ -384,9 +391,10 @@ export function handlePvpAnswer({
   if (state.battleMode !== 'pvp') return false;
   if (!isBattleActiveState(state)) return false;
   const isBattleActive = (): boolean => isBattleActiveState(sr.current);
-  const safeToIfBattleActive = (fn: () => void, ms: number): void => (
-    scheduleIfBattleActive(safeTo, () => sr.current, fn, ms)
-  );
+  const safeToIfBattleActive = createBattleActiveScheduler({
+    safeTo,
+    getState: () => sr.current,
+  });
   const attacker = state.pvpTurn === 'p1' ? state.starter : state.pvpStarter2;
   const defender = state.pvpTurn === 'p1' ? state.pvpStarter2 : state.starter;
   if (!attacker || !defender || state.selIdx == null) return false;
@@ -402,46 +410,34 @@ export function handlePvpAnswer({
   const nextTurn = getOtherPvpTurn(currentTurn);
 
   if (!correct) {
-    if (currentTurn === 'p1') {
-      setPvpChargeP1(0);
-      setPvpComboP1(0);
-    } else {
-      setPvpChargeP2(0);
-      setPvpComboP2(0);
-    }
-    setPvpTurn(nextTurn);
-    setPvpActionCount((c) => c + 1);
+    resetCurrentTurnResources({
+      currentTurn,
+      setPvpChargeP1,
+      setPvpComboP1,
+      setPvpChargeP2,
+      setPvpComboP2,
+    });
+    swapPvpTurnToText({
+      nextTurn,
+      setPvpTurn,
+      setPvpActionCount,
+      setPhase,
+    });
     setBText(tr(t, 'battle.pvp.miss', '❌ {name} answered wrong. Attack missed!', { name: attacker.name }));
-    setPhase('text');
     return true;
   }
 
-  let unlockedSpecDef = false;
-  if (currentTurn === 'p1') {
-    setPvpChargeP1((c) => Math.min(c + 1, 3));
-    if (!state.pvpSpecDefP1) {
-      const nextCombo = (state.pvpComboP1 || 0) + 1;
-      if (nextCombo >= pvpSpecDefTrigger) {
-        setPvpComboP1(0);
-        setPvpSpecDefP1(true);
-        unlockedSpecDef = true;
-      } else {
-        setPvpComboP1(nextCombo);
-      }
-    }
-  } else {
-    setPvpChargeP2((c) => Math.min(c + 1, 3));
-    if (!state.pvpSpecDefP2) {
-      const nextCombo = (state.pvpComboP2 || 0) + 1;
-      if (nextCombo >= pvpSpecDefTrigger) {
-        setPvpComboP2(0);
-        setPvpSpecDefP2(true);
-        unlockedSpecDef = true;
-      } else {
-        setPvpComboP2(nextCombo);
-      }
-    }
-  }
+  const unlockedSpecDef = applyCorrectTurnProgress({
+    currentTurn,
+    state,
+    pvpSpecDefTrigger,
+    setPvpChargeP1,
+    setPvpChargeP2,
+    setPvpComboP1,
+    setPvpComboP2,
+    setPvpSpecDefP1,
+    setPvpSpecDefP2,
+  });
 
   const attackerHp = currentTurn === 'p1' ? state.pHp : state.pvpHp2;
   const attackerMaxHp = currentTurn === 'p1'
@@ -495,9 +491,12 @@ export function handlePvpAnswer({
       const attackerMainY = currentTurn === 'p1' ? 170 : 55;
       const finishWithTurnSwap = () => {
         if (!isBattleActive()) return;
-        setPvpTurn(nextTurn);
-        setPvpActionCount((c) => c + 1);
-        setPhase('text');
+        swapPvpTurnToText({
+          nextTurn,
+          setPvpTurn,
+          setPvpActionCount,
+          setPhase,
+        });
       };
 
       if (defender.type === 'fire') {
@@ -570,8 +569,11 @@ export function handlePvpAnswer({
         setBText(tr(t, 'battle.pvp.specdef.light', '✨ {name} roared and countered!', { name: defender.name }));
         safeToIfBattleActive(() => setAtkEffect(null), 420);
         if (killed) {
-          setPvpWinner(currentTurn === 'p1' ? 'p2' : 'p1');
-          setScreen('pvp_result');
+          declarePvpWinner({
+            winner: currentTurn === 'p1' ? 'p2' : 'p1',
+            setPvpWinner,
+            setScreen,
+          });
           return;
         }
         finishWithTurnSwap();
@@ -589,8 +591,11 @@ export function handlePvpAnswer({
       setBText(tr(t, 'battle.pvp.specdef.grass', '🌿 {name} reflected the attack!', { name: defender.name }));
       safeToIfBattleActive(() => setAtkEffect(null), 420);
       if (killed) {
-        setPvpWinner(currentTurn === 'p1' ? 'p2' : 'p1');
-        setScreen('pvp_result');
+        declarePvpWinner({
+          winner: currentTurn === 'p1' ? 'p2' : 'p1',
+          setPvpWinner,
+          setScreen,
+        });
         return;
       }
       finishWithTurnSwap();
@@ -659,8 +664,11 @@ export function handlePvpAnswer({
         setAtkEffect(null);
       }, 520);
       if (nh <= 0) {
-        setPvpWinner('p1');
-        setScreen('pvp_result');
+        declarePvpWinner({
+          winner: 'p1',
+          setPvpWinner,
+          setScreen,
+        });
         return;
       }
     } else {
@@ -682,8 +690,11 @@ export function handlePvpAnswer({
         setAtkEffect(null);
       }, 520);
       if (nh <= 0) {
-        setPvpWinner('p2');
-        setScreen('pvp_result');
+        declarePvpWinner({
+          winner: 'p2',
+          setPvpWinner,
+          setScreen,
+        });
         return;
       }
     }
@@ -702,9 +713,12 @@ export function handlePvpAnswer({
       move: move.name,
       notes: allNotes ? ` ${allNotes}` : '',
     }));
-    setPvpTurn(nextTurn);
-    setPvpActionCount((c) => c + 1);
-    setPhase('text');
+    swapPvpTurnToText({
+      nextTurn,
+      setPvpTurn,
+      setPvpActionCount,
+      setPhase,
+    });
   };
 
   setPhase('playerAtk');
@@ -754,14 +768,10 @@ export function processPvpTurnStart({
 }: ProcessPvpTurnStartArgs): boolean {
   if (state.battleMode !== 'pvp' || state.pvpWinner) return false;
   if (!isBattleActiveState(state)) return false;
-  const safeToIfBattleActive = (fn: () => void, ms: number): void => (
-    scheduleIfBattleActive(
-      safeTo,
-      () => sr?.current || state,
-      fn,
-      ms,
-    )
-  );
+  const safeToIfBattleActive = createBattleActiveScheduler({
+    safeTo,
+    getState: () => sr?.current || state,
+  });
   const currentTurn = state.pvpTurn;
   const currentName = getPvpTurnName(state, currentTurn);
   const isP1 = currentTurn === 'p1';
@@ -778,8 +788,11 @@ export function processPvpTurnStart({
       addD(`🔥-${burnDmg}`, 60, 170, '#f97316');
       safeToIfBattleActive(() => setPAnim(''), 480);
       if (nh <= 0) {
-        setPvpWinner('p2');
-        setScreen('pvp_result');
+        declarePvpWinner({
+          winner: 'p2',
+          setPvpWinner,
+          setScreen,
+        });
         return true;
       }
     } else {
@@ -791,8 +804,11 @@ export function processPvpTurnStart({
       addD(`🔥-${burnDmg}`, 140, 55, '#f97316');
       safeToIfBattleActive(() => setEAnim(''), 480);
       if (nh <= 0) {
-        setPvpWinner('p1');
-        setScreen('pvp_result');
+        declarePvpWinner({
+          winner: 'p1',
+          setPvpWinner,
+          setScreen,
+        });
         return true;
       }
     }

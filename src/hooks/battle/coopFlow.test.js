@@ -141,3 +141,48 @@ test('runCoopAllySupportTurn can finish the enemy and trigger victory callback',
   assert.equal(sr.current.eHp, 0);
   assert.equal(victoryReason, "was defeated by co-op combo");
 });
+
+test('handleCoopPartyKo skips stale delayed menu reset after battle ended', () => {
+  const queue = [];
+  const stateRef = {
+    current: {
+      pHp: 30,
+      pHpSub: 12,
+      allySub: { name: "雷喵", selectedStageIdx: 0 },
+      phase: "text",
+      screen: "battle",
+    },
+  };
+  const phaseCalls = [];
+  const textCalls = [];
+
+  const out = handleCoopPartyKo({
+    state: stateRef.current,
+    stateRef,
+    target: "sub",
+    setStarter: () => {},
+    setPStg: () => {},
+    setPHp: () => {},
+    setAllySub: (value) => { stateRef.current.allySub = value; },
+    setPHpSub: (value) => { stateRef.current.pHpSub = value; },
+    setCoopActiveSlot: () => {},
+    setPhase: (value) => {
+      phaseCalls.push(value);
+      stateRef.current.phase = value;
+    },
+    setBText: (value) => { textCalls.push(value); },
+    safeTo: (fn) => { queue.push(fn); },
+    endSession: () => {},
+    setScreen: (value) => { stateRef.current.screen = value; },
+  });
+
+  assert.equal(out, "sub_down");
+  assert.equal(queue.length, 1);
+
+  stateRef.current.phase = "ko";
+  stateRef.current.screen = "gameover";
+  queue[0]();
+
+  assert.equal(phaseCalls.includes("menu"), false);
+  assert.equal(textCalls.includes(""), false);
+});

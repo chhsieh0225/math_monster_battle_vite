@@ -19,6 +19,8 @@ type BattleState = {
   allySub?: StarterLite | null;
   enemy?: { name?: string } | null;
   eHp?: number;
+  phase?: string;
+  screen?: string;
 };
 
 type CoopSlotSwitchState = {
@@ -42,6 +44,7 @@ type RandomFn = () => number;
 
 type HandleCoopPartyKoArgs = {
   state: BattleState;
+  stateRef?: StateRef;
   target?: 'main' | 'sub';
   reason?: string;
   setStarter: StarterSetter;
@@ -120,6 +123,7 @@ export function buildNextEvolvedAlly(allySub: StarterLite | null | undefined): S
 
 export function handleCoopPartyKo({
   state,
+  stateRef,
   target = 'main',
   reason = 'Your partner has fallen...',
   setStarter,
@@ -135,6 +139,17 @@ export function handleCoopPartyKo({
   setScreen,
   t,
 }: HandleCoopPartyKoArgs): 'gameover' | 'sub_down' | 'promoted' {
+  const getLatestState = (): BattleState => (stateRef?.current || state);
+  const shouldSkipMenuReset = (nextState: BattleState): boolean => {
+    if (nextState.screen && nextState.screen !== 'battle') return true;
+    return nextState.phase === 'ko' || nextState.phase === 'victory';
+  };
+  const tryReturnToMenu = (): void => {
+    if (shouldSkipMenuReset(getLatestState())) return;
+    setPhase('menu');
+    setBText('');
+  };
+
   if (target === 'sub') {
     setAllySub(null);
     setPHpSub(0);
@@ -151,8 +166,7 @@ export function handleCoopPartyKo({
     }));
     setPhase('text');
     safeTo(() => {
-      setPhase('menu');
-      setBText('');
+      tryReturnToMenu();
     }, 1100);
     return 'sub_down';
   }
@@ -168,8 +182,7 @@ export function handleCoopPartyKo({
     setBText(tr(t, 'battle.coop.promoted', '💫 {name} takes the field!', { name: promoted.name }));
     setPhase('text');
     safeTo(() => {
-      setPhase('menu');
-      setBText('');
+      tryReturnToMenu();
     }, 1200);
     return 'promoted';
   }

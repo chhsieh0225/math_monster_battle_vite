@@ -22,6 +22,7 @@ export function runPlayerPartyKoController({
   return handleCoopPartyKo({
     ...rest,
     state: sr.current,
+    stateRef: sr,
   });
 }
 

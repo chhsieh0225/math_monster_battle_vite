@@ -29,6 +29,9 @@
 - 已完成怪獸內容配置 TS 化：`monsterConfigs.ts`（怪獸/史萊姆變體資料具名型別化）。
 - 已完成怪獸資料組裝 TS 化：`monsters.ts`（sprite/drop hydration 流程型別化）。
 - 已完成玩家初始角色資料 TS 化：`starters.ts`（starter + 招式集合以共享型別標註）。
+- 已完成圖鑑資料建構 TS 化：`encyclopedia.ts`（敵方/夥伴圖鑑條目與收集總數計算型別化）。
+- 已完成場景資料 TSX 化：`scenes.tsx`（背景與 Deco 動畫配置保留，補齊 CSS 變數型別）。
+- 已完成特效入口 TS 化：`components/effects/index.ts`（統一模組匯出型別解析）。
 - 已新增 `usePvpState.ts`，將 `useBattle.js` 的 PvP 狀態/重置邏輯抽離，降低主 hook 重複與複雜度。
 - 已新增 `useBattleSessionLifecycle.ts`，集中管理 run seed、事件 session id、結算與退出事件記錄，移除 `useBattle.js` 內重複 lifecycle 程式碼。
 - `useBattle.js` 已再抽出 `resetRunRuntimeState()`，合併 PvP/一般開局共用的 runtime 重置流程。

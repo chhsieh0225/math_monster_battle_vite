@@ -52,7 +52,7 @@ import { useBattleRng } from './useBattleRng';
 import { useBattleUIState } from './useBattleUIState';
 import { usePvpState } from './usePvpState';
 import { useBattleSessionLifecycle } from './useBattleSessionLifecycle';
-import { ENC_TOTAL } from '../data/encyclopedia';
+import { ENC_TOTAL } from '../data/encyclopedia.ts';
 import sfx from '../utils/sfx.ts';
 import { buildRoster } from '../utils/rosterBuilder';
 import {

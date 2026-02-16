@@ -116,6 +116,7 @@ export type EncyclopediaEnemyEntry = {
   habitat?: string;
   rarity?: string;
   drops?: string[];
+  trait?: string | null;
   traitName?: string | null;
   traitDesc?: string | null;
 };

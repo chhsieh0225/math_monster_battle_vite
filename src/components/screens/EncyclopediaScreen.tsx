@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
-import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia';
+import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia.ts';
 import { useI18n } from '../../i18n';
 import { hasSpecialTrait } from '../../utils/traits';
 import {

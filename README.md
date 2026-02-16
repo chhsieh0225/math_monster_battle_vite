@@ -53,6 +53,8 @@ Current migrated files:
 - `src/data/monsterConfigs.ts`
 - `src/data/monsters.ts`
 - `src/data/starters.ts`
+- `src/data/encyclopedia.ts`
+- `src/data/scenes.tsx`
 - `src/hooks/useAchievements.ts`
 - `src/hooks/useEncyclopedia.ts`
 - `src/hooks/useSessionLog.ts`
@@ -92,6 +94,7 @@ Current migrated files:
 - `src/components/screens/SelectionScreen.tsx`
 - `src/components/screens/DashboardScreen.tsx`
 - `src/components/screens/EncyclopediaScreen.tsx`
+- `src/components/effects/index.ts`
 
 ## Next Recommended TS Steps
 

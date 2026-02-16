@@ -1,8 +1,14 @@
-import { memo } from 'react';
-import { BG_IMGS } from './sprites';
+import { memo, type CSSProperties } from 'react';
+import { BG_IMGS } from './sprites.js';
+
+type CssVarStyle = CSSProperties & Record<`--${string}`, string | number>;
+
+function withVars(style: CssVarStyle): CSSProperties {
+  return style;
+}
 
 /* ─── Pre-computed random seeds (avoid Math.random() in render) ─── */
-const LEAF_R = [...Array(10)].map((_,i) => ({
+const LEAF_R = Array.from({ length: 10 }, (_, i) => ({
   left: 3 + i * 9,
   bottom: 3 + (i % 5) * 6,
   w: 5 + (i % 3) * 2,
@@ -14,7 +20,7 @@ const LEAF_R = [...Array(10)].map((_,i) => ({
   del: i * 0.4,
 }));
 
-const FIREFLY_R = [...Array(12)].map((_,i) => ({
+const FIREFLY_R = Array.from({ length: 12 }, (_, i) => ({
   top: 8 + ((i * 7) % 55),
   left: 3 + ((i * 8) % 85),
   w: 3 + (i % 3) * 2,
@@ -27,7 +33,7 @@ const FIREFLY_R = [...Array(12)].map((_,i) => ({
   del: i * 0.35,
 }));
 
-const SPARK_R = [...Array(4)].map((_,i) => ({
+const SPARK_R = Array.from({ length: 4 }, (_, i) => ({
   top: 15 + ((i * 17) % 45),
   left: 10 + ((i * 20) % 70),
   w: 2 + (i % 2),
@@ -36,7 +42,7 @@ const SPARK_R = [...Array(4)].map((_,i) => ({
   del: i * 0.6,
 }));
 
-const SMOKE_R = [...Array(6)].map((_,i) => ({
+const SMOKE_R = Array.from({ length: 6 }, (_, i) => ({
   bottom: 2 + ((i * 9) % 50),
   left: -5 + ((i * 16) % 80),
   w: 80 + (i % 3) * 40,
@@ -49,7 +55,7 @@ const SMOKE_R = [...Array(6)].map((_,i) => ({
   del: i * 0.8,
 }));
 
-const DARK_R = [...Array(8)].map((_,i)=>({
+const DARK_R = Array.from({ length: 8 }, (_, i)=>({
   t:5+((i*11)%60),l:((i*13)%90),w:2+(i%3),h:2+(i%2)+1,
   op:0.1+(i%4)*0.05,dur:2+i*0.4,del:i*0.3
 }));
@@ -63,14 +69,14 @@ export const SCENES = {
     platform1:"rgba(34,197,94,0.25)",platform2:"rgba(34,197,94,0.2)",
     Deco:memo(()=><>
       {/* Drifting leaf particles with glow */}
-      {LEAF_R.map((r,i)=><div key={`lf${i}`} style={{
+      {LEAF_R.map((r,i)=><div key={`lf${i}`} style={withVars({
         position:"absolute",bottom:`${r.bottom}%`,left:`${r.left}%`,
         width:r.w,height:r.h,background:r.color,borderRadius:"50% 0 50% 0",
         boxShadow:`0 0 ${r.w*2}px ${r.color}`,
         opacity:0,
         "--ldx":`${r.ldx}px`,"--ldy":`${r.ldy}px`,
         animation:`leafDrift ${r.dur}s ease-in-out ${r.del}s infinite`
-      }}/>)}
+      })}/>)}
       {/* Soft wind streaks */}
       <div style={{position:"absolute",top:"30%",left:0,width:"100%",height:1.5,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent)",animation:"windSweep 6s ease-in-out infinite"}}/>
       <div style={{position:"absolute",top:"55%",left:0,width:"100%",height:1,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent)",animation:"windSweep 8s ease-in-out 2s infinite"}}/>
@@ -85,7 +91,7 @@ export const SCENES = {
     platform1:"rgba(234,88,12,0.3)",platform2:"rgba(234,88,12,0.2)",
     Deco:memo(()=><>
       {/* Rising ember dots */}
-      {[...Array(8)].map((_,i)=><div key={`e${i}`} style={{
+      {Array.from({ length: 8 }, (_, i) => i).map((i)=><div key={`e${i}`} style={{
         position:"absolute",bottom:`${2+i*3}%`,left:`${6+i*11}%`,
         width:3+i%3*2,height:3+i%3*2,
         background:["#f97316","#ef4444","#fbbf24","#dc2626","#fb923c","#f59e0b","#ea580c","#fcd34d"][i],
@@ -107,13 +113,13 @@ export const SCENES = {
     platform1:"rgba(99,102,241,0.15)",platform2:"rgba(99,102,241,0.1)",
     Deco:memo(()=><>
       {/* Firefly particles */}
-      {FIREFLY_R.map((r,i)=><div key={`ff${i}`} style={{
+      {FIREFLY_R.map((r,i)=><div key={`ff${i}`} style={withVars({
         position:"absolute",top:`${r.top}%`,left:`${r.left}%`,
         width:r.w,height:r.w,background:r.color,borderRadius:"50%",
         boxShadow:`0 0 ${r.w*3}px ${r.w}px ${r.color}`,
         "--fx":`${r.fx}px`,"--fy":`${r.fy}px`,"--ff-op":`${r.op}`,
         animation:`fireflyGlow ${r.dur}s ease ${r.del}s infinite`
-      }}/>)}
+      })}/>)}
       {/* Ambient mist patches */}
       <div style={{position:"absolute",bottom:"18%",left:"5%",width:100,height:35,background:"rgba(139,92,246,0.06)",borderRadius:"50%",filter:"blur(10px)"}}/>
       <div style={{position:"absolute",top:"22%",left:"55%",width:70,height:50,background:"rgba(139,92,246,0.04)",borderRadius:"50%",filter:"blur(14px)"}}/>
@@ -130,7 +136,7 @@ export const SCENES = {
     platform1:"rgba(100,116,139,0.3)",platform2:"rgba(100,116,139,0.2)",
     Deco:memo(()=><>
       {/* Drifting smoke wisps */}
-      {SMOKE_R.map((r,i)=><div key={`sm${i}`} style={{
+      {SMOKE_R.map((r,i)=><div key={`sm${i}`} style={withVars({
         position:"absolute",bottom:`${r.bottom}%`,left:`${r.left}%`,
         width:r.w,height:r.h,
         background:"radial-gradient(ellipse,rgba(203,213,225,0.85),rgba(148,163,184,0.45),transparent)",
@@ -138,18 +144,18 @@ export const SCENES = {
         "--sm-dx":`${r.dx}px`,"--sm-dy":`${r.dy}px`,
         "--sm-s":`${r.sc}`,"--sm-op":`${r.op}`,
         animation:`smokeDrift ${r.dur}s ease-in-out ${r.del}s infinite`
-      }}/>)}
+      })}/>)}
       {/* Overhead industrial light cones */}
-      <div style={{position:"absolute",top:"0%",left:"18%",width:90,height:"50%",
+      <div style={withVars({position:"absolute",top:"0%",left:"18%",width:90,height:"50%",
         background:"linear-gradient(180deg,rgba(251,191,36,0.4),rgba(251,191,36,0.12) 60%,transparent)",
         clipPath:"polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)",
         "--lp-lo":"0.6","--lp-hi":"1",
-        animation:"lightPulse 4s ease-in-out infinite"}}/>
-      <div style={{position:"absolute",top:"0%",right:"22%",width:80,height:"45%",
+        animation:"lightPulse 4s ease-in-out infinite"})}/>
+      <div style={withVars({position:"absolute",top:"0%",right:"22%",width:80,height:"45%",
         background:"linear-gradient(180deg,rgba(248,250,252,0.35),rgba(203,213,225,0.1) 60%,transparent)",
         clipPath:"polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)",
         "--lp-lo":"0.5","--lp-hi":"1",
-        animation:"lightPulse 5s ease-in-out 1.5s infinite"}}/>
+        animation:"lightPulse 5s ease-in-out 1.5s infinite"})}/>
       {/* Light source dots at ceiling */}
       <div style={{position:"absolute",top:"1%",left:"22%",width:14,height:6,background:"rgba(251,191,36,0.6)",borderRadius:"50%",boxShadow:"0 0 20px 6px rgba(251,191,36,0.35)"}}/>
       <div style={{position:"absolute",top:"1%",right:"26%",width:12,height:5,background:"rgba(248,250,252,0.5)",borderRadius:"50%",boxShadow:"0 0 18px 5px rgba(248,250,252,0.3)"}}/>

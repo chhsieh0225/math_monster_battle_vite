@@ -67,9 +67,8 @@ import {
 } from './battle/battleReducer';
 import { createBattleFieldSetters } from './battle/battleFieldSetters';
 import { effectOrchestrator } from './battle/effectOrchestrator';
-import { runAnswerController } from './battle/answerController.ts';
+import { runAnswerOrchestrator } from './battle/answerOrchestrator.ts';
 import {
-  buildPlayerAnswerHandlerDeps,
   buildPvpAnswerHandlerDeps,
 } from './battle/answerDepsBuilder.ts';
 import { runEnemyTurnController } from './battle/enemyTurnController.ts';
@@ -669,42 +668,42 @@ export function useBattle() {
 
   // --- Player answers a question ---
   const onAns = (choice) => {
-    const playerAnswerHandlerDeps = buildPlayerAnswerHandlerDeps({
-      runtime: {
-        sr,
-        safeTo,
-        chance,
-        sfx,
-        t,
-      },
-      ui: UI,
-      battleFields: battleFieldSetters,
-      callbacks: {
-        tryUnlock,
-        frozenR,
-        doEnemyTurn,
-        handleVictory,
-        handleFreeze,
-        _endSession,
-        setScreen,
-        handlePlayerPartyKo,
-        runAllySupportTurn,
-      },
-    });
-
-    runAnswerController({
+    runAnswerOrchestrator({
       choice,
       answered,
       setAnswered,
       clearTimer,
-      sr,
-      pvpHandlerDeps: pvpAnswerHandlerDeps,
-      playerHandlerDeps: playerAnswerHandlerDeps,
-      getActingStarter,
-      logAns,
-      appendSessionEvent,
-      updateAbility: _updateAbility,
-      markCoopRotatePending,
+      playerDepsArgs: {
+        runtime: {
+          sr,
+          safeTo,
+          chance,
+          sfx,
+          t,
+        },
+        ui: UI,
+        battleFields: battleFieldSetters,
+        callbacks: {
+          tryUnlock,
+          frozenR,
+          doEnemyTurn,
+          handleVictory,
+          handleFreeze,
+          _endSession,
+          setScreen,
+          handlePlayerPartyKo,
+          runAllySupportTurn,
+        },
+      },
+      answerControllerArgs: {
+        sr,
+        pvpHandlerDeps: pvpAnswerHandlerDeps,
+        getActingStarter,
+        logAns,
+        appendSessionEvent,
+        updateAbility: _updateAbility,
+        markCoopRotatePending,
+      },
     });
   };
 

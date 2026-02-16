@@ -68,6 +68,10 @@ import {
 import { createBattleFieldSetters } from './battle/battleFieldSetters';
 import { effectOrchestrator } from './battle/effectOrchestrator';
 import { runAnswerController } from './battle/answerController.ts';
+import {
+  buildPlayerAnswerHandlerDeps,
+  buildPvpAnswerHandlerDeps,
+} from './battle/answerDepsBuilder.ts';
 import { runEnemyTurnController } from './battle/enemyTurnController.ts';
 import { runTimeoutController } from './battle/timeoutController.ts';
 import { runStartGameController } from './battle/startGameController.ts';
@@ -75,6 +79,10 @@ import { runStartBattleFlow } from './battle/startBattleFlow';
 import { runSelectMoveFlow } from './battle/selectMoveFlow';
 import { runVictoryFlow } from './battle/victoryFlow';
 import { runAdvanceController } from './battle/advanceController.ts';
+import {
+  buildAdvancePvpTurnStartDeps,
+  buildPendingEvolutionArgs,
+} from './battle/advanceDepsBuilder.ts';
 import {
   continueFromVictoryFlow,
 } from './battle/advanceFlow';
@@ -141,28 +149,29 @@ export function useBattle() {
   const [timedMode, setTimedMode] = useState(false);
   const [battleMode, setBattleMode] = useState("single");
   const [coopActiveSlot, setCoopActiveSlot] = useState("main");
+  const pvpState = usePvpState();
   const {
     pvpStarter2, setPvpStarter2,
     pvpHp2, setPvpHp2,
     pvpTurn, setPvpTurn,
-    pvpWinner, setPvpWinner,
+    pvpWinner,
     pvpChargeP1, setPvpChargeP1,
     pvpChargeP2, setPvpChargeP2,
     pvpActionCount, setPvpActionCount,
-    pvpBurnP1, setPvpBurnP1,
-    pvpBurnP2, setPvpBurnP2,
-    pvpFreezeP1, setPvpFreezeP1,
-    pvpFreezeP2, setPvpFreezeP2,
-    pvpStaticP1, setPvpStaticP1,
-    pvpStaticP2, setPvpStaticP2,
-    pvpParalyzeP1, setPvpParalyzeP1,
-    pvpParalyzeP2, setPvpParalyzeP2,
+    pvpBurnP1,
+    pvpBurnP2,
+    pvpFreezeP1,
+    pvpFreezeP2,
+    pvpStaticP1,
+    pvpStaticP2,
+    pvpParalyzeP1,
+    pvpParalyzeP2,
     pvpComboP1, setPvpComboP1,
     pvpComboP2, setPvpComboP2,
-    pvpSpecDefP1, setPvpSpecDefP1,
-    pvpSpecDefP2, setPvpSpecDefP2,
+    pvpSpecDefP1,
+    pvpSpecDefP2,
     resetPvpRuntime,
-  } = usePvpState();
+  } = pvpState;
 
   // ──── Player ────
   const [starter, setStarter] = useState(null);
@@ -177,6 +186,10 @@ export function useBattle() {
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns,
   } = battle;
 
+  const battleFieldSetters = useMemo(
+    () => createBattleFieldSetters(dispatchBattle),
+    [dispatchBattle],
+  );
   const {
     setPHp,
     setAllySub,
@@ -188,13 +201,8 @@ export function useBattle() {
     setStreak,
     setPassiveCount,
     setCharge,
-    setTC,
     setTW,
     setDefeated,
-    setMaxStreak,
-    setMHits,
-    setMLvls,
-    setMLvlUp,
     setBurnStack,
     setFrozen,
     setStaticStack,
@@ -207,10 +215,7 @@ export function useBattle() {
     setBossCharging,
     setSealedMove,
     setSealedTurns,
-  } = useMemo(
-    () => createBattleFieldSetters(dispatchBattle),
-    [dispatchBattle],
-  );
+  } = battleFieldSetters;
 
   // ──── Phase & UI ────
   const {
@@ -617,97 +622,55 @@ export function useBattle() {
   }
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
 
+  const pvpAnswerHandlerDeps = buildPvpAnswerHandlerDeps({
+    runtime: {
+      sr,
+      rand,
+      chance,
+      safeTo,
+      sfx,
+      getOtherPvpTurn,
+      setScreen,
+      t,
+    },
+    ui: UI,
+    pvp: pvpState,
+    battleFields: battleFieldSetters,
+  });
+
   // --- Player answers a question ---
   const onAns = (choice) => {
+    const playerAnswerHandlerDeps = buildPlayerAnswerHandlerDeps({
+      runtime: {
+        sr,
+        safeTo,
+        chance,
+        sfx,
+        t,
+      },
+      ui: UI,
+      battleFields: battleFieldSetters,
+      callbacks: {
+        tryUnlock,
+        frozenR,
+        doEnemyTurn,
+        handleVictory,
+        handleFreeze,
+        _endSession,
+        setScreen,
+        handlePlayerPartyKo,
+        runAllySupportTurn,
+      },
+    });
+
     runAnswerController({
       choice,
       answered,
       setAnswered,
       clearTimer,
       sr,
-      pvpHandlerDeps: {
-        sr,
-        rand,
-        chance,
-        safeTo,
-        sfx,
-        getOtherPvpTurn,
-        setFb,
-        setTC,
-        setTW,
-        setPvpChargeP1,
-        setPvpChargeP2,
-        setPvpComboP1,
-        setPvpComboP2,
-        setPvpTurn,
-        setPvpActionCount,
-        setBText,
-        setPhase,
-        setPvpSpecDefP1,
-        setPvpSpecDefP2,
-        setEffMsg,
-        setAtkEffect,
-        addP,
-        setPvpParalyzeP1,
-        setPvpParalyzeP2,
-        setPAnim,
-        setEAnim,
-        addD,
-        setPHp,
-        setPvpHp2,
-        setEHp,
-        setScreen,
-        setPvpWinner,
-        setPvpBurnP1,
-        setPvpBurnP2,
-        setPvpFreezeP1,
-        setPvpFreezeP2,
-        setPvpStaticP1,
-        setPvpStaticP2,
-        t,
-      },
-      playerHandlerDeps: {
-        sr,
-        safeTo,
-        chance,
-        sfx,
-        setFb,
-        setTC,
-        setTW,
-        setStreak,
-        setPassiveCount,
-        setCharge,
-        setMaxStreak,
-        setSpecDef,
-        tryUnlock,
-        setMLvls,
-        setMLvlUp,
-        setMHits,
-        setPhase,
-        setPAnim,
-        setAtkEffect,
-        setEAnim,
-        setEffMsg,
-        setBossCharging,
-        setBurnStack,
-        setPHp,
-        setPHpSub,
-        setFrozen,
-        frozenR,
-        setStaticStack,
-        setEHp,
-        addD,
-        doEnemyTurn,
-        handleVictory,
-        handleFreeze,
-        setCursed,
-        _endSession,
-        setScreen,
-        setBText,
-        handlePlayerPartyKo,
-        runAllySupportTurn,
-        t,
-      },
+      pvpHandlerDeps: pvpAnswerHandlerDeps,
+      playerHandlerDeps: playerAnswerHandlerDeps,
       getActingStarter,
       logAns,
       appendSessionEvent,
@@ -738,47 +701,36 @@ export function useBattle() {
   };
 
   const advance = () => {
-    runAdvanceController({
-      phase,
-      sr,
-      pvpTurnStartHandlerDeps: {
+    const pvpTurnStartHandlerDeps = buildAdvancePvpTurnStartDeps({
+      runtime: {
         safeTo,
         getOtherPvpTurn,
         getPvpTurnName,
-        setPHp,
-        setPvpBurnP1,
-        setPAnim,
-        addD,
-        setPvpWinner,
         setScreen,
-        setPvpHp2,
-        setEHp,
-        setPvpBurnP2,
-        setEAnim,
-        setBText,
-        setPhase,
-        setPvpParalyzeP1,
-        setPvpParalyzeP2,
-        setPvpTurn,
-        setPvpFreezeP1,
-        setPvpFreezeP2,
         t,
       },
+      ui: UI,
+      pvp: pvpState,
+      battleFields: battleFieldSetters,
+    });
+
+    const pendingEvolutionArgs = buildPendingEvolutionArgs({
+      pendingEvolveRef: pendingEvolve,
+      battleFields: battleFieldSetters,
+      setScreen,
+      tryUnlock,
+      getStageMaxHp,
+      getStarterMaxHp,
+      maxMoveLvl: MAX_MOVE_LVL,
+    });
+
+    runAdvanceController({
+      phase,
+      sr,
+      pvpTurnStartHandlerDeps,
       setPhase,
       setBText,
-      pendingEvolutionArgs: {
-        pendingEvolveRef: pendingEvolve,
-        setPStg,
-        tryUnlock,
-        getStageMaxHp,
-        setPHp,
-        setAllySub,
-        setPHpSub,
-        getStarterMaxHp,
-        setMLvls,
-        maxMoveLvl: MAX_MOVE_LVL,
-        setScreen,
-      },
+      pendingEvolutionArgs,
       continueFromVictory,
     });
   };

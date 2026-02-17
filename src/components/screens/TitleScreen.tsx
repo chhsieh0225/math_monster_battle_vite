@@ -56,7 +56,7 @@ export default function TitleScreen({
     { icon: '📚', label: t('title.feature.encyclopedia', 'Encyclopedia'), fn: onEncyclopedia, aria: t('a11y.title.openEncyclopedia', 'Open encyclopedia') },
     { icon: '📊', label: t('title.feature.dashboard', 'Parent Dashboard'), fn: onDashboard, aria: t('a11y.title.openDashboard', 'Open parent dashboard') },
     { icon: '🗓️', label: t('title.feature.daily', 'Daily Challenge'), fn: onDailyChallenge, aria: t('a11y.title.openDailyChallenge', 'Open daily challenge') },
-    { icon: '⚙️', label: t('title.feature.settings', 'Settings'), fn: onSettings, aria: t('a11y.title.openSettings', 'Open settings'), full: true },
+    { icon: '⚙️', label: t('title.feature.settings', 'Settings'), fn: onSettings, aria: t('a11y.title.openSettings', 'Open settings') },
   ];
 
   return (
@@ -124,7 +124,7 @@ export default function TitleScreen({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%' }}>
           {featureButtons.map((b) => (
             <button className="title-feature-btn touch-btn" key={b.label} onClick={b.fn} aria-label={b.aria} style={{
-              gridColumn: b.full ? '1 / -1' : 'auto',
+              gridColumn: 'auto',
               background: 'rgba(255,255,255,0.05)',
               border: '1px solid rgba(255,255,255,0.1)',
               color: 'white', fontSize: 13, fontWeight: 600,

@@ -145,6 +145,151 @@ function noiseBurst({
   src.stop(t + dur + 0.1);
 }
 
+let cachedNoise: AudioBuffer | null = null;
+let cachedNoiseRate = 0;
+
+function getCachedNoiseBuffer(): AudioBuffer | null {
+  if (!ctx) return null;
+  if (!cachedNoise || cachedNoiseRate !== ctx.sampleRate) {
+    const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i += 1) data[i] = randomFloat(-1, 1);
+    cachedNoise = buf;
+    cachedNoiseRate = ctx.sampleRate;
+  }
+  return cachedNoise;
+}
+
+type EnvelopeShape = 'flame' | 'wave' | 'whoosh' | 'impact';
+
+const ENVELOPES: Record<EnvelopeShape, Array<[number, number]>> = {
+  flame: [
+    [0, 0.05],
+    [0.12, 0.9],
+    [0.26, 0.7],
+    [0.4, 1],
+    [0.58, 0.64],
+    [0.76, 0.42],
+    [1, 0],
+  ],
+  wave: [
+    [0, 0],
+    [0.25, 0.65],
+    [0.48, 1],
+    [0.66, 0.82],
+    [0.86, 0.35],
+    [1, 0],
+  ],
+  whoosh: [
+    [0, 0],
+    [0.1, 1],
+    [0.26, 0.72],
+    [0.56, 0.4],
+    [1, 0],
+  ],
+  impact: [
+    [0, 0],
+    [0.04, 1],
+    [0.18, 0.6],
+    [0.42, 0.38],
+    [1, 0],
+  ],
+};
+
+function applyEnvelope(
+  gain: GainNode,
+  start: number,
+  dur: number,
+  vol: number,
+  shape: EnvelopeShape,
+): void {
+  const points = ENVELOPES[shape] || ENVELOPES.impact;
+  gain.gain.setValueAtTime(0.0001, start);
+  for (let i = 0; i < points.length; i += 1) {
+    const [pos, amp] = points[i];
+    const at = start + dur * pos;
+    const value = Math.max(0.0001, amp * vol);
+    if (i === 0) {
+      gain.gain.setValueAtTime(value, at);
+    } else {
+      gain.gain.linearRampToValueAtTime(value, at);
+    }
+  }
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + dur + 0.04);
+}
+
+type ShapedNoiseOptions = {
+  dur?: number;
+  vol?: number;
+  hp?: number;
+  lp?: number;
+  bp?: number;
+  q?: number;
+  lpSweepTo?: number;
+  bpSweepTo?: number;
+  shape?: EnvelopeShape;
+  startMs?: number;
+};
+
+function shapedNoise({
+  dur = 0.2,
+  vol = 0.12,
+  hp = 80,
+  lp = 6000,
+  bp = 0,
+  q = 1.2,
+  lpSweepTo = 0,
+  bpSweepTo = 0,
+  shape = 'impact',
+  startMs = 0,
+}: ShapedNoiseOptions = {}): void {
+  if (!ctx) return;
+  const buf = getCachedNoiseBuffer();
+  if (!buf) return;
+  const t = ctx.currentTime + Math.max(0, startMs) / 1000;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.loop = true;
+  let node: AudioNode = src;
+
+  if (hp > 20) {
+    const hpFilter = ctx.createBiquadFilter();
+    hpFilter.type = 'highpass';
+    hpFilter.frequency.setValueAtTime(hp, t);
+    hpFilter.Q.setValueAtTime(0.7, t);
+    node.connect(hpFilter);
+    node = hpFilter;
+  }
+  if (bp > 20) {
+    const bpFilter = ctx.createBiquadFilter();
+    bpFilter.type = 'bandpass';
+    bpFilter.frequency.setValueAtTime(bp, t);
+    bpFilter.Q.setValueAtTime(Math.max(0.3, q), t);
+    if (bpSweepTo > 0 && bpSweepTo !== bp) {
+      bpFilter.frequency.exponentialRampToValueAtTime(Math.max(30, bpSweepTo), t + dur);
+    }
+    node.connect(bpFilter);
+    node = bpFilter;
+  }
+  if (lp > 30) {
+    const lpFilter = ctx.createBiquadFilter();
+    lpFilter.type = 'lowpass';
+    lpFilter.frequency.setValueAtTime(lp, t);
+    lpFilter.Q.setValueAtTime(0.75, t);
+    if (lpSweepTo > 0 && lpSweepTo !== lp) {
+      lpFilter.frequency.exponentialRampToValueAtTime(Math.max(40, lpSweepTo), t + dur);
+    }
+    node.connect(lpFilter);
+    node = lpFilter;
+  }
+  const gain = ctx.createGain();
+  applyEnvelope(gain, t, Math.max(0.05, dur), vol, shape);
+  node.connect(gain);
+  gain.connect(ctx.destination);
+  src.start(t, randomFloat(0, 0.35));
+  src.stop(t + dur + 0.08);
+}
+
 /** Quick pitch sweep tone for crit/effect accents. */
 function sweepTone({
   from,
@@ -221,55 +366,120 @@ function scheduleSeries(
   }
 }
 
+function crackleSeries({
+  count = 5,
+  baseDelayMs = 18,
+  jitterMs = 28,
+  dur = 0.012,
+  vol = 0.028,
+  hp = 1700,
+  lp = 5200,
+  startMs = 0,
+}: {
+  count?: number;
+  baseDelayMs?: number;
+  jitterMs?: number;
+  dur?: number;
+  vol?: number;
+  hp?: number;
+  lp?: number;
+  startMs?: number;
+} = {}): void {
+  const fire = () => {
+    scheduleSeries(count, baseDelayMs, jitterMs, () => {
+      noiseBurst({
+        dur: Math.max(0.008, dur + randomFloat(-0.004, 0.006)),
+        vol: Math.max(0.01, vol * randomFloat(0.85, 1.2)),
+        hp: Math.max(900, hp * randomFloat(0.88, 1.15)),
+        lp: Math.max(2200, lp * randomFloat(0.9, 1.1)),
+        lpSweepTo: Math.max(900, lp * 0.55),
+      });
+    });
+  };
+  if (startMs > 0) setTimeout(fire, startMs);
+  else fire();
+}
+
+function rustleSeries({
+  count = 8,
+  baseDelayMs = 12,
+  jitterMs = 20,
+  startMs = 0,
+}: {
+  count?: number;
+  baseDelayMs?: number;
+  jitterMs?: number;
+  startMs?: number;
+} = {}): void {
+  const fire = () => {
+    scheduleSeries(count, baseDelayMs, jitterMs, () => {
+      noiseBurst({
+        dur: randomFloat(0.01, 0.024),
+        vol: randomFloat(0.03, 0.06),
+        hp: randomFloat(3000, 4600),
+        lp: randomFloat(7800, 12000),
+        lpSweepTo: randomFloat(3400, 6200),
+      });
+    });
+  };
+  if (startMs > 0) setTimeout(fire, startMs);
+  else fire();
+}
+
 function playFire0(): void {
-  noiseBurst({ dur: 0.05, vol: 0.095, hp: 650, lp: 6200, lpSweepTo: 2100 });
-  setTimeout(() => playNote(NOTE_FREQ.G3, DUR['32n'], { type: 'triangle', vol: 0.14, attack: 0.002, decay: 0.04, release: 0.04, filterType: 'bandpass', filterFreq: 780, filterQ: 1.4 }), 18);
+  shapedNoise({ dur: 0.2, vol: 0.11, hp: 180, lp: 880, bp: 420, q: 1.3, bpSweepTo: 560, shape: 'flame' });
+  setTimeout(() => sweepTone({ from: 760, to: 430, dur: 0.12, type: 'triangle', vol: 0.05, filterFrom: 900, filterTo: 460 }), 16);
+  crackleSeries({ count: 5, baseDelayMs: 22, jitterMs: 26, vol: 0.026, hp: 1900, lp: 5200, startMs: 20 });
 }
 
 function playFire1(): void {
-  noiseBurst({ dur: 0.16, vol: 0.125, hp: 220, lp: 820, lpSweepTo: 420 });
-  setTimeout(() => sweepTone({ from: 320, to: 780, dur: 0.14, type: 'sawtooth', vol: 0.085, filterFrom: 520, filterTo: 2100 }), 24);
-  setTimeout(() => noiseBurst({ dur: 0.09, vol: 0.08, hp: 420, lp: 1400, lpSweepTo: 520 }), 86);
+  shapedNoise({ dur: 0.22, vol: 0.13, hp: 200, lp: 980, bp: 560, q: 1.45, bpSweepTo: 820, shape: 'whoosh' });
+  setTimeout(() => shapedNoise({ dur: 0.13, vol: 0.09, hp: 220, lp: 1200, bp: 640, q: 1.6, bpSweepTo: 440, shape: 'flame' }), 72);
+  setTimeout(() => sweepTone({ from: 320, to: 960, dur: 0.1, type: 'sawtooth', vol: 0.075, filterFrom: 560, filterTo: 2200 }), 28);
+  crackleSeries({ count: 6, baseDelayMs: 16, jitterMs: 20, vol: 0.024, hp: 1800, lp: 5000, startMs: 30 });
 }
 
 function playFire2(): void {
-  noiseBurst({ dur: 0.26, vol: 0.165, hp: 140, lp: 3600, lpSweepTo: 820 });
-  playNote(NOTE_FREQ.E2, DUR['4n'], { type: 'sine', vol: 0.32, attack: 0.002, decay: 0.14, release: 0.16, sweepToFreq: NOTE_FREQ.C2, sweepDur: 0.2, filterType: 'lowpass', filterFreq: 900 });
-  setTimeout(() => noiseBurst({ dur: 0.18, vol: 0.105, hp: 260, lp: 2800, lpSweepTo: 740 }), 76);
+  shapedNoise({ dur: 0.32, vol: 0.18, hp: 120, lp: 1700, bp: 360, q: 1.05, bpSweepTo: 260, shape: 'impact' });
+  playNote(NOTE_FREQ.E2, DUR['4n'], { type: 'sine', vol: 0.34, attack: 0.002, decay: 0.14, release: 0.18, sweepToFreq: NOTE_FREQ.C2, sweepDur: 0.22, filterType: 'lowpass', filterFreq: 920 });
+  setTimeout(() => shapedNoise({ dur: 0.26, vol: 0.11, hp: 160, lp: 1200, bp: 440, q: 1.3, bpSweepTo: 560, shape: 'flame' }), 74);
+  crackleSeries({ count: 8, baseDelayMs: 14, jitterMs: 18, vol: 0.028, hp: 2000, lp: 5600, startMs: 54 });
 }
 
 function playFire3(): void {
-  sweepTone({ from: 920, to: 120, dur: 0.24, type: 'triangle', vol: 0.1, filterFrom: 1700, filterTo: 260 });
+  shapedNoise({ dur: 0.24, vol: 0.09, hp: 220, lp: 960, bp: 640, q: 1.55, bpSweepTo: 280, shape: 'whoosh' });
+  sweepTone({ from: 980, to: 110, dur: 0.25, type: 'triangle', vol: 0.09, filterFrom: 1800, filterTo: 260 });
   setTimeout(() => {
     playNote(NOTE_FREQ.C2, DUR['2n'], { type: 'sawtooth', vol: 0.22, attack: 0.002, decay: 0.14, release: 0.2, sweepToFreq: NOTE_FREQ.E2 * 0.8, sweepDur: 0.18, filterType: 'lowpass', filterFreq: 820 });
-    noiseBurst({ dur: 0.32, vol: 0.2, hp: 90, lp: 3000, lpSweepTo: 560 });
+    shapedNoise({ dur: 0.46, vol: 0.24, hp: 90, lp: 1500, bp: 300, q: 1, bpSweepTo: 220, shape: 'impact' });
   }, 140);
+  crackleSeries({ count: 10, baseDelayMs: 12, jitterMs: 18, vol: 0.031, hp: 2100, lp: 5800, startMs: 126 });
 }
 
 function playWater0(): void {
-  playNote(NOTE_FREQ.E5, DUR['32n'], { type: 'sine', vol: 0.18, attack: 0.003, decay: 0.04, release: 0.05, filterType: 'lowpass', filterFreq: 5200 });
-  setTimeout(() => playNote(NOTE_FREQ.A5, DUR['32n'], { type: 'sine', vol: 0.13, attack: 0.002, decay: 0.04, release: 0.04, filterType: 'lowpass', filterFreq: 6000 }), 24);
-  setTimeout(() => noiseBurst({ dur: 0.04, vol: 0.07, hp: 850, lp: 6200, lpSweepTo: 1800 }), 14);
+  shapedNoise({ dur: 0.2, vol: 0.088, hp: 70, lp: 1900, bp: 760, q: 1.2, bpSweepTo: 980, shape: 'wave' });
+  setTimeout(() => playNote(NOTE_FREQ.E5, DUR['32n'], { type: 'sine', vol: 0.14, attack: 0.003, decay: 0.05, release: 0.06, filterType: 'lowpass', filterFreq: 3600 }), 20);
+  setTimeout(() => noiseBurst({ dur: 0.03, vol: 0.052, hp: 1100, lp: 5200, lpSweepTo: 1800 }), 14);
 }
 
 function playWater1(): void {
-  noiseBurst({ dur: 0.1, vol: 0.1, hp: 1300, lp: 9800, lpSweepTo: 2600 });
-  setTimeout(() => sweepTone({ from: 980, to: 420, dur: 0.12, type: 'triangle', vol: 0.07, filterFrom: 1600, filterTo: 700 }), 10);
-  setTimeout(() => noiseBurst({ dur: 0.06, vol: 0.065, hp: 2100, lp: 8600, lpSweepTo: 2400 }), 70);
+  shapedNoise({ dur: 0.24, vol: 0.11, hp: 120, lp: 2200, bp: 900, q: 1.45, bpSweepTo: 580, shape: 'whoosh' });
+  setTimeout(() => sweepTone({ from: 930, to: 360, dur: 0.12, type: 'triangle', vol: 0.065, filterFrom: 1700, filterTo: 620 }), 10);
+  setTimeout(() => noiseBurst({ dur: 0.05, vol: 0.056, hp: 1700, lp: 6200, lpSweepTo: 1900 }), 86);
 }
 
 function playWater2(): void {
-  noiseBurst({ dur: 0.44, vol: 0.16, hp: 80, lp: 1800, lpSweepTo: 520 });
-  setTimeout(() => noiseBurst({ dur: 0.28, vol: 0.09, hp: 140, lp: 2200, lpSweepTo: 700 }), 60);
-  setTimeout(() => playNote(NOTE_FREQ.A3, DUR['8n'], { type: 'triangle', vol: 0.12, attack: 0.003, decay: 0.1, release: 0.12, filterType: 'lowpass', filterFreq: 1200 }), 86);
+  shapedNoise({ dur: 0.5, vol: 0.17, hp: 40, lp: 1500, bp: 420, q: 0.95, bpSweepTo: 300, shape: 'wave' });
+  setTimeout(() => shapedNoise({ dur: 0.32, vol: 0.1, hp: 60, lp: 1900, bp: 520, q: 1.05, bpSweepTo: 360, shape: 'wave' }), 58);
+  setTimeout(() => playNote(NOTE_FREQ.A3, DUR['8n'], { type: 'triangle', vol: 0.12, attack: 0.003, decay: 0.1, release: 0.12, filterType: 'lowpass', filterFreq: 1300 }), 92);
 }
 
 function playWater3(): void {
-  noiseBurst({ dur: 0.24, vol: 0.12, hp: 150, lp: 2100, lpSweepTo: 700 });
-  setTimeout(() => sweepTone({ from: 560, to: 180, dur: 0.18, type: 'sine', vol: 0.06, filterFrom: 1000, filterTo: 260 }), 26);
+  shapedNoise({ dur: 0.28, vol: 0.11, hp: 90, lp: 2100, bp: 620, q: 1.2, bpSweepTo: 330, shape: 'wave' });
+  setTimeout(() => sweepTone({ from: 560, to: 170, dur: 0.18, type: 'sine', vol: 0.06, filterFrom: 980, filterTo: 250 }), 26);
   setTimeout(() => {
     playNote(NOTE_FREQ.E2, DUR['4n'], { type: 'sine', vol: 0.24, attack: 0.002, decay: 0.13, release: 0.18, sweepToFreq: NOTE_FREQ.C2, sweepDur: 0.16, filterType: 'lowpass', filterFreq: 840 });
-    noiseBurst({ dur: 0.34, vol: 0.175, hp: 65, lp: 1400, lpSweepTo: 460 });
+    shapedNoise({ dur: 0.56, vol: 0.2, hp: 30, lp: 1200, bp: 320, q: 0.9, bpSweepTo: 240, shape: 'impact' });
   }, 164);
 }
 
@@ -302,25 +512,26 @@ function playElectric3(): void {
 }
 
 function playGrass0(): void {
-  scheduleSeries(5, 14, 18, () => noiseBurst({ dur: 0.02, vol: 0.05, hp: 3000, lp: 12000, lpSweepTo: 5200 }));
+  rustleSeries({ count: 6, baseDelayMs: 11, jitterMs: 18 });
   setTimeout(() => playNote(NOTE_FREQ.G5, DUR['32n'], { type: 'triangle', vol: 0.09, attack: 0.002, decay: 0.05, release: 0.04, filterType: 'lowpass', filterFreq: 4200 }), 34);
 }
 
 function playGrass1(): void {
-  scheduleSeries(6, 12, 16, () => noiseBurst({ dur: 0.02, vol: 0.055, hp: 2800, lp: 11800, lpSweepTo: 5200 }));
+  rustleSeries({ count: 8, baseDelayMs: 10, jitterMs: 15 });
   sweepTone({ from: 280, to: 900, dur: 0.13, type: 'sawtooth', vol: 0.065, filterFrom: 1200, filterTo: 3200 });
 }
 
 function playGrass2(): void {
-  scheduleSeries(8, 12, 22, (i) => {
-    noiseBurst({ dur: 0.018, vol: 0.045, hp: 3000, lp: 12000, lpSweepTo: 6200 });
+  rustleSeries({ count: 12, baseDelayMs: 8, jitterMs: 18 });
+  scheduleSeries(10, 10, 18, (i) => {
+    noiseBurst({ dur: 0.014, vol: 0.042, hp: 3400, lp: 12000, lpSweepTo: 6400 });
     if (i % 2 === 0) playNote(NOTE_FREQ.E6, DUR['32n'], { type: 'triangle', vol: 0.06, attack: 0.002, decay: 0.04, release: 0.03, filterType: 'lowpass', filterFreq: 5800 });
   });
 }
 
 function playGrass3(): void {
-  noiseBurst({ dur: 0.2, vol: 0.1, hp: 320, lp: 2600, lpSweepTo: 680 });
-  scheduleSeries(9, 11, 19, () => noiseBurst({ dur: 0.02, vol: 0.05, hp: 3000, lp: 11800, lpSweepTo: 5200 }));
+  shapedNoise({ dur: 0.24, vol: 0.1, hp: 260, lp: 1800, bp: 480, q: 1.2, bpSweepTo: 300, shape: 'impact' });
+  rustleSeries({ count: 14, baseDelayMs: 9, jitterMs: 16 });
   setTimeout(() => bass('D2', '8n'), 120);
 }
 

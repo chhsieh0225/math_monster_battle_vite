@@ -78,12 +78,8 @@ import {
 } from './battle/turnActionDepsBuilder.ts';
 import { runVictoryFlow } from './battle/victoryFlow';
 import {
-  buildContinueFromVictoryFlowArgs,
   buildVictoryFlowArgs,
 } from './battle/progressionDepsBuilder.ts';
-import {
-  continueFromVictoryFlow,
-} from './battle/advanceFlow';
 import { runResetRuntimeState } from './battle/runtimeReset.ts';
 import { runScreenTransition } from './battle/screenTransition.ts';
 import {
@@ -124,6 +120,9 @@ import {
   runBattleAdvance,
   runBattleAnswer,
 } from './battle/interactionFlowAdapter.ts';
+import {
+  runBattleContinueFromVictory,
+} from './battle/progressionFlowAdapter.ts';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
 import { useBattleAsyncGate, useBattleStateRef } from './useBattleRuntime';
 
@@ -733,25 +732,27 @@ export function useBattle() {
 
   // --- Advance from text / victory phase ---
   const continueFromVictory = () => {
-    continueFromVictoryFlow(buildContinueFromVictoryFlowArgs({
-      sr,
-      enemiesLength: enemies.length,
-      runtime: {
-        setScreen,
-        dispatchBattle,
-        localizeEnemy,
-        locale,
-        getStageMaxHp,
-        getStarterMaxHp,
-        t,
+    runBattleContinueFromVictory({
+      continueFromVictoryInput: {
+        sr,
+        enemiesLength: enemies.length,
+        runtime: {
+          setScreen,
+          dispatchBattle,
+          localizeEnemy,
+          locale,
+          getStageMaxHp,
+          getStarterMaxHp,
+          t,
+        },
+        battleFields: battleFieldSetters,
+        ui: UI,
+        callbacks: {
+          finishGame: _finishGame,
+          startBattle,
+        },
       },
-      battleFields: battleFieldSetters,
-      ui: UI,
-      callbacks: {
-        finishGame: _finishGame,
-        startBattle,
-      },
-    }));
+    });
   };
 
   const advance = () => {

@@ -154,6 +154,7 @@ function App() {
   const V = B.view;
   const UX = useMobileExperience();
   const [bgmMuted, setBgmMuted] = useState<boolean>(() => Boolean(V.sfx.bgmMuted));
+  const [bgmVolume, setBgmVolume] = useState<number>(() => Number(V.sfx.bgmVolume ?? 0.24));
   const [sfxMuted, setSfxMuted] = useState<boolean>(() => Boolean(V.sfx.sfxMuted));
   const settingsReturnRef = useRef<ScreenName>("title");
   const resumeBattleAfterSettingsRef = useRef(false);
@@ -164,6 +165,10 @@ function App() {
   const handleSetSfxMuted = (next: boolean) => {
     const m = V.sfx.setSfxMuted(next);
     setSfxMuted(m);
+  };
+  const handleSetBgmVolume = (next: number) => {
+    const v = V.sfx.setBgmVolume(next);
+    setBgmVolume(v);
   };
   const openSettings = (fromScreen: ScreenName) => {
     settingsReturnRef.current = fromScreen;
@@ -194,7 +199,7 @@ function App() {
     const initOnce = () => {
       if (sfxInitRef.current) return;
       sfxInitRef.current = true;
-      V.sfx.init().then(() => setSfxReady(true));
+      void V.sfx.init().then(() => setSfxReady(true)).catch(() => {});
       document.removeEventListener('click', initOnce, true);
       document.removeEventListener('touchstart', initOnce, true);
       document.removeEventListener('keydown', initOnce, true);
@@ -220,7 +225,6 @@ function App() {
     } else {
       V.sfx.stopBgm();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [S.screen, S.enemy?.id, bgmMuted, V.sfx, sfxReady]);
 
   if (S.screen !== "battle") {
@@ -229,8 +233,10 @@ function App() {
         battle={B}
         mobile={UX}
         bgmMuted={bgmMuted}
+        bgmVolume={bgmVolume}
         sfxMuted={sfxMuted}
         onSetBgmMuted={handleSetBgmMuted}
+        onSetBgmVolume={handleSetBgmVolume}
         onSetSfxMuted={handleSetSfxMuted}
         onOpenSettings={openSettings}
         onCloseSettings={closeSettings}

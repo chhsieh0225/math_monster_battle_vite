@@ -17,8 +17,10 @@ type SettingsScreenProps = {
   autoLowEnd: boolean;
   onSetPerfMode: (nextMode: PerfMode) => void;
   bgmMuted: boolean;
+  bgmVolume: number;
   sfxMuted: boolean;
   onSetBgmMuted: (muted: boolean) => void;
+  onSetBgmVolume: (nextVolume: number) => void;
   onSetSfxMuted: (muted: boolean) => void;
 };
 
@@ -38,13 +40,16 @@ export default function SettingsScreen({
   autoLowEnd,
   onSetPerfMode,
   bgmMuted,
+  bgmVolume,
   sfxMuted,
   onSetBgmMuted,
+  onSetBgmVolume,
   onSetSfxMuted,
 }: SettingsScreenProps) {
   const { locale, setLocale, t } = useI18n();
   const bgmOn = !bgmMuted;
   const sfxOn = !sfxMuted;
+  const bgmPercent = Math.round(Math.max(0, Math.min(100, bgmVolume * 100)));
   const perfResolved = lowPerfMode
     ? t('settings.perf.resolved.low', 'Battery mode')
     : t('settings.perf.resolved.std', 'Standard mode');
@@ -85,6 +90,23 @@ export default function SettingsScreen({
 
         <div style={{ marginTop: 10, fontSize: 11, color: bgmOn ? '#86efac' : '#cbd5e1', fontWeight: 700 }}>
           {bgmOn ? t('settings.bgm.statusOn', 'Status: BGM enabled') : t('settings.bgm.statusOff', 'Status: BGM muted')}
+        </div>
+
+        <div style={{ marginTop: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, fontSize: 11, opacity: 0.85 }}>
+            <span>{t('settings.bgm.volume', 'Volume')}</span>
+            <span style={{ fontWeight: 800 }}>{bgmPercent}%</span>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={bgmPercent}
+            onChange={(e) => onSetBgmVolume(Number(e.currentTarget.value) / 100)}
+            aria-label={t('a11y.settings.bgmVolume', 'Adjust background music volume')}
+            style={{ width: '100%' }}
+          />
         </div>
       </section>
 

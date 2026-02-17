@@ -13,8 +13,17 @@ let ctx: AudioContext | null = null;
 let ready = false;
 const SFX_MUTED_KEY = 'mathMonsterBattle_sfxMuted';
 const BGM_MUTED_KEY = 'mathMonsterBattle_bgmMuted';
+const BGM_VOLUME_KEY = 'mathMonsterBattle_bgmVolume';
+const DEFAULT_BGM_VOLUME = 0.24;
+const MIN_BGM_VOLUME = 0;
+const MAX_BGM_VOLUME = 0.55;
 let sfxMuted = readText(SFX_MUTED_KEY, '0') === '1';
 let bgmMuted = readText(BGM_MUTED_KEY, '0') === '1';
+function clampBgmVolume(next: number): number {
+  if (!Number.isFinite(next)) return DEFAULT_BGM_VOLUME;
+  return Math.max(MIN_BGM_VOLUME, Math.min(MAX_BGM_VOLUME, next));
+}
+let bgmVolume = clampBgmVolume(Number.parseFloat(readText(BGM_VOLUME_KEY, String(DEFAULT_BGM_VOLUME))));
 
 // ── Note → frequency lookup (pre-computed, avoids runtime Math) ──
 const NOTE_FREQ: Record<string, number> = {
@@ -856,7 +865,6 @@ let bgmInterval: ReturnType<typeof setInterval> | null = null;
 let bgmCurrent: BgmTrack | null = null;
 let pendingBgmTrack: BgmTrack | null = null;
 let resumePromise: Promise<void> | null = null;
-const BGM_VOL = 0.18;
 
 type BgmNote = [string, string, number, number?]; // [noteName, durKey, offsetMs, velocity]
 type BgmLane = {
@@ -1103,7 +1111,7 @@ function startBgmLoop(track: BgmTrack): void {
   stopBgmLoop();
   bgmGain = ctx.createGain();
   bgmGain.gain.setValueAtTime(0.0001, ctx.currentTime);
-  bgmGain.gain.linearRampToValueAtTime(BGM_VOL, ctx.currentTime + 0.5);
+  bgmGain.gain.linearRampToValueAtTime(bgmVolume, ctx.currentTime + 0.5);
   bgmGain.connect(ctx.destination);
 
   const pattern = BGM_PATTERNS[track];
@@ -1205,6 +1213,21 @@ const sfx = {
     }
     return bgmMuted;
   },
+  /** Set BGM master volume (0..0.55). */
+  setBgmVolume(next: number): number {
+    bgmVolume = clampBgmVolume(next);
+    writeText(BGM_VOLUME_KEY, bgmVolume.toFixed(3));
+    if (bgmGain && ctx && !bgmMuted) {
+      try {
+        bgmGain.gain.cancelScheduledValues(ctx.currentTime);
+        bgmGain.gain.setValueAtTime(Math.max(0.0001, bgmGain.gain.value), ctx.currentTime);
+        bgmGain.gain.linearRampToValueAtTime(Math.max(0.0001, bgmVolume), ctx.currentTime + 0.12);
+      } catch {
+        // best-effort gain update
+      }
+    }
+    return bgmVolume;
+  },
   /** Legacy: mute both SFX + BGM together. */
   setMuted(next: boolean): boolean {
     sfx.setSfxMuted(next);
@@ -1220,6 +1243,9 @@ const sfx = {
   },
   get bgmMuted(): boolean {
     return bgmMuted;
+  },
+  get bgmVolume(): number {
+    return bgmVolume;
   },
   /** Legacy alias — true if BOTH are muted. */
   get muted(): boolean {

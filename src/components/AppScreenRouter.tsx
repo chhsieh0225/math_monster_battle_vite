@@ -25,8 +25,10 @@ type AppScreenRouterProps = {
   battle: BattleSlices;
   mobile: UseMobileExperienceApi;
   bgmMuted: boolean;
+  bgmVolume: number;
   sfxMuted: boolean;
   onSetBgmMuted: (nextMuted: boolean) => void;
+  onSetBgmVolume: (nextVolume: number) => void;
   onSetSfxMuted: (nextMuted: boolean) => void;
   onOpenSettings: (fromScreen: ScreenName) => void;
   onCloseSettings: () => void;
@@ -41,8 +43,10 @@ export default function AppScreenRouter({
   battle,
   mobile,
   bgmMuted,
+  bgmVolume,
   sfxMuted,
   onSetBgmMuted,
+  onSetBgmVolume,
   onSetSfxMuted,
   onOpenSettings,
   onCloseSettings,
@@ -179,8 +183,10 @@ export default function AppScreenRouter({
           autoLowEnd={mobile.autoLowEnd}
           onSetPerfMode={mobile.setPerfMode}
           bgmMuted={bgmMuted}
+          bgmVolume={bgmVolume}
           sfxMuted={sfxMuted}
           onSetBgmMuted={onSetBgmMuted}
+          onSetBgmVolume={onSetBgmVolume}
           onSetSfxMuted={onSetSfxMuted}
         />,
       ),
@@ -200,7 +206,7 @@ export default function AppScreenRouter({
       <SelectionScreen
         mode={B.battleMode}
         onSelect={(payload: SelectionPayload) => {
-          B.sfx.init();
+          void B.sfx.init().catch(() => {});
           if (B.battleMode === 'coop' && isDualSelectionPayload(payload)) {
             B.setStarter(payload.p1);
             B.startGame(payload.p1, 'coop', payload.p2);

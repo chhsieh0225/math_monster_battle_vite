@@ -421,9 +421,15 @@ export function runPlayerAnswer({
             playerHp: getAttackerHp(s3),
             attackerMaxHp: getAttackerMaxHp(s3),
             bossPhase: s3.bossPhase,
+            chance,
           });
-          const { eff, isFortress, wasCursed } = strike;
-          const { dmg } = strike;
+          const {
+            eff,
+            isFortress,
+            wasCursed,
+            isCrit,
+            dmg,
+          } = strike;
 
           const isPhantom = s3.enemy.trait === 'phantom' && chance(TRAIT_BALANCE.player.phantomDodgeChance);
           if (isPhantom) {
@@ -441,7 +447,11 @@ export function runPlayerAnswer({
 
           if (wasCursed) setCursed(false);
 
-          if (wasCursed) {
+          if (isCrit) {
+            sfx.play('crit');
+            setEffMsg({ text: tr(t, 'battle.effect.crit', '💥 Critical!'), color: '#ff6b00' });
+            safeToIfBattleActive(() => setEffMsg(null), 1500);
+          } else if (wasCursed) {
             setEffMsg({ text: tr(t, 'battle.effect.curseWeak', '💀 Curse weakened the attack...'), color: '#a855f7' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
           } else if (isFortress) {
@@ -516,7 +526,7 @@ export function runPlayerAnswer({
             dark: '#a855f7',
             light: '#f59e0b',
           } as Record<string, string>)[vfxType] || '#ef4444';
-          addD(`-${dmg}`, 140, 55, dmgColor);
+          addD(isCrit ? `💥-${dmg}` : `-${dmg}`, 140, 55, isCrit ? '#ff6b00' : dmgColor);
           safeToIfBattleActive(() => {
             setEAnim('');
             setAtkEffect(null);

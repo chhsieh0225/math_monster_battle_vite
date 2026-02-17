@@ -2,6 +2,15 @@
  * Single source of truth for gameplay tuning knobs.
  * Keep numeric balance values centralized here to simplify future tuning.
  */
+const CRIT_BY_TYPE = {
+  fire: { critChanceBonus: 0.01, critDamageBonus: 0.06, antiCritRate: 0.01, antiCritDamage: 0.03 },
+  water: { critChanceBonus: 0.0, critDamageBonus: 0.02, antiCritRate: 0.03, antiCritDamage: 0.1 },
+  grass: { critChanceBonus: 0.0, critDamageBonus: 0.03, antiCritRate: 0.02, antiCritDamage: 0.14 },
+  electric: { critChanceBonus: 0.03, critDamageBonus: 0.04, antiCritRate: 0.0, antiCritDamage: 0.04 },
+  light: { critChanceBonus: 0.02, critDamageBonus: 0.05, antiCritRate: 0.01, antiCritDamage: 0.06 },
+  dark: { critChanceBonus: 0.03, critDamageBonus: 0.08, antiCritRate: 0.0, antiCritDamage: 0.0 },
+} as const;
+
 export const BALANCE_CONFIG = {
   damage: {
     playerAttackVariance: {
@@ -32,6 +41,36 @@ export const BALANCE_CONFIG = {
   stage: {
     scaleBase: 1,
     scaleStep: 0.12,
+    waves: {
+      single: [
+        { monsterId: 'slime' },
+        { monsterId: 'fire' },
+        { monsterId: 'slime' },
+        { monsterId: 'ghost' },
+        { monsterId: 'slime' },
+        { monsterId: 'fire' },
+        { monsterId: 'dragon' },
+        { monsterId: 'ghost' },
+        { monsterId: 'dragon' },
+        { monsterId: 'boss' },
+      ],
+      double: [
+        { monsterId: 'slime', slimeType: 'grass', sceneType: 'grass' },
+        { monsterId: 'slime', slimeType: 'water', sceneType: 'grass' },
+
+        { monsterId: 'fire', sceneType: 'fire' },
+        { monsterId: 'ghost', sceneType: 'fire' },
+
+        { monsterId: 'slime', slimeType: 'steel', sceneType: 'steel' },
+        { monsterId: 'dragon', sceneType: 'steel' },
+
+        { monsterId: 'slime', slimeType: 'dark', sceneType: 'dark' },
+        { monsterId: 'fire', sceneType: 'dark' },
+
+        { monsterId: 'ghost', sceneType: 'dark' },
+        { monsterId: 'boss', sceneType: 'dark' },
+      ],
+    },
   },
 
   monsters: {
@@ -41,6 +80,12 @@ export const BALANCE_CONFIG = {
       ghost: { hp: 50, atk: 8 },
       dragon: { hp: 80, atk: 12 },
       boss: { hp: 120, atk: 15 },
+    },
+    evolveLevelById: {
+      slime: 5,
+      fire: 5,
+      ghost: 5,
+      dragon: 9,
     },
     slimeVariantMultipliersById: {
       slime: { hpMult: 1.0, atkMult: 1.0 },
@@ -57,6 +102,28 @@ export const BALANCE_CONFIG = {
       slimeWaterEvolved: { hpMult: 1.3, atkMult: 0.8 },
       slimeSteelEvolved: { hpMult: 1.5, atkMult: 0.7 },
       slimeDarkEvolved: { hpMult: 1.0, atkMult: 1.0 },
+    },
+  },
+
+  crit: {
+    byType: CRIT_BY_TYPE,
+    pve: {
+      player: {
+        chance: 0.06,
+        riskyBonus: 0.03,
+        minChance: 0.02,
+        maxChance: 0.2,
+        multiplier: 1.35,
+        maxAntiCritDamage: 0.4,
+      },
+      enemy: {
+        chance: 0.05,
+        riskyBonus: 0.0,
+        minChance: 0.02,
+        maxChance: 0.2,
+        multiplier: 1.3,
+        maxAntiCritDamage: 0.4,
+      },
     },
   },
 
@@ -105,14 +172,8 @@ export const BALANCE_CONFIG = {
       minChance: 0.02,
       maxChance: 0.24,
       multiplier: 1.4,
-      byType: {
-        fire: { critChanceBonus: 0.01, critDamageBonus: 0.06, antiCritRate: 0.01, antiCritDamage: 0.03 },
-        water: { critChanceBonus: 0.0, critDamageBonus: 0.02, antiCritRate: 0.03, antiCritDamage: 0.1 },
-        grass: { critChanceBonus: 0.0, critDamageBonus: 0.03, antiCritRate: 0.02, antiCritDamage: 0.14 },
-        electric: { critChanceBonus: 0.03, critDamageBonus: 0.04, antiCritRate: 0.0, antiCritDamage: 0.04 },
-        light: { critChanceBonus: 0.02, critDamageBonus: 0.05, antiCritRate: 0.01, antiCritDamage: 0.06 },
-        dark: { critChanceBonus: 0.03, critDamageBonus: 0.08, antiCritRate: 0.0, antiCritDamage: 0.0 },
-      },
+      maxAntiCritDamage: 0.95,
+      byType: CRIT_BY_TYPE,
     },
     passive: {
       fireBurnCap: 2,
@@ -140,8 +201,8 @@ export const BALANCE_CONFIG = {
     enemy: {
       blazeHpThreshold: 0.5,
       blazeAttackMultiplier: 1.5,
-      berserkCritChance: 0.3,
-      berserkCritMultiplier: 1.5,
+      berserkCritChanceFloor: 0.3,
+      berserkCritMultiplierFloor: 1.5,
       tenacityHealRatio: 0.15,
       curseApplyChance: 0.35,
       swiftExtraAttackChance: 0.25,
@@ -173,8 +234,10 @@ export const BALANCE_CONFIG = {
       phase3AttackMultiplier: 2.0,
       releaseAttackScale: 2.2,
       sealDurationTurns: 2,
-      sealMoveIndexMax: 2,
+      sealMovePool: [0, 1, 2],
+      chargeEveryTurns: 4,
+      sealEveryTurns: 3,
+      sealStartsAtPhase: 2,
     },
   },
 } as const;
-

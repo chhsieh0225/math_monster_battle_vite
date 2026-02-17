@@ -36,6 +36,24 @@ type CritProfile = {
   antiCritDamage?: number;
 };
 
+type CritTuningConfig = {
+  chance?: number;
+  riskyBonus?: number;
+  minChance?: number;
+  maxChance?: number;
+  multiplier?: number;
+  maxAntiCritDamage?: number;
+  byType?: Record<string, CritProfile>;
+};
+
+type GlobalCritConfig = {
+  byType?: Record<string, CritProfile>;
+  pve?: {
+    player?: CritTuningConfig;
+    enemy?: CritTuningConfig;
+  };
+};
+
 type PvpBalanceConfig = {
   baseScale: number;
   varianceMin: number;
@@ -57,6 +75,7 @@ type PvpBalanceConfig = {
     minChance?: number;
     maxChance?: number;
     multiplier?: number;
+    maxAntiCritDamage?: number;
     byType?: Record<string, CritProfile>;
   };
 };
@@ -89,6 +108,10 @@ type EnemyPrimaryStrikeResult = {
   scaledAtk: number;
   isBlaze: boolean;
   isCrit: boolean;
+  critChance: number;
+  critMultiplier: number;
+  antiCritRate: number;
+  antiCritDamage: number;
   defEff: number;
   dmg: number;
 };
@@ -120,6 +143,7 @@ type PlayerStrikeParams = {
   playerHp: number;
   attackerMaxHp?: number;
   bossPhase: number;
+  chance?: ChanceFn | null;
 };
 
 type PlayerStrikeResult = {
@@ -129,6 +153,11 @@ type PlayerStrikeResult = {
   isFortress: boolean;
   wasCursed: boolean;
   braveActive: boolean;
+  isCrit: boolean;
+  critChance: number;
+  critMultiplier: number;
+  antiCritRate: number;
+  antiCritDamage: number;
 };
 
 type RiskySelfDamageParams = {
@@ -165,8 +194,32 @@ type PvpStrikeResult = {
   passiveLabelFallback: string;
 };
 
+type ResolveCritOutcomeParams = {
+  attackerType?: string | null;
+  defenderType?: string | null;
+  isRisky?: boolean;
+  baseConfig?: CritTuningConfig | null;
+  byType?: Record<string, CritProfile> | null;
+  random?: RandomFn | null;
+  chanceFn?: ChanceFn | null;
+  chanceFloor?: number;
+  multiplierFloor?: number;
+  chanceBonus?: number;
+  damageBonus?: number;
+};
+
+type CritOutcome = {
+  isCrit: boolean;
+  critChance: number;
+  critMultiplier: number;
+  antiCritRate: number;
+  antiCritDamage: number;
+  critScale: number;
+};
+
 const PVP = PVP_BALANCE as unknown as PvpBalanceConfig;
 const TRAIT_BALANCE = BALANCE_CONFIG.traits;
+const GLOBAL_CRIT = BALANCE_CONFIG.crit as unknown as GlobalCritConfig;
 const getEffTyped = getEff as (moveType?: string, monType?: string) => number;
 const calcEnemyDamageTyped = calcEnemyDamage as (atkStat: number, defEff: number) => number;
 const movePowerTyped = movePower as (move: MoveLike, lvl: number, idx: number) => number;
@@ -180,6 +233,66 @@ const calcAttackDamageTyped = calcAttackDamage as (params: {
   stageBonus: number;
   effMult: number;
 }) => number;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getBestMoveType(move: MoveLike, defenderType?: string): string {
+  if (!move.type2 || !defenderType) return move.type;
+  return getEffTyped(move.type2, defenderType) > getEffTyped(move.type, defenderType)
+    ? move.type2
+    : move.type;
+}
+
+function resolveCritOutcome({
+  attackerType,
+  defenderType,
+  isRisky = false,
+  baseConfig,
+  byType,
+  random = Math.random,
+  chanceFn = null,
+  chanceFloor = 0,
+  multiplierFloor = 1,
+  chanceBonus = 0,
+  damageBonus = 0,
+}: ResolveCritOutcomeParams): CritOutcome {
+  const attackerTypeKey = attackerType ?? '';
+  const defenderTypeKey = defenderType ?? '';
+  const attackerCritProfile = byType?.[attackerTypeKey] || {};
+  const defenderCritProfile = byType?.[defenderTypeKey] || {};
+
+  const baseCritChance = baseConfig?.chance ?? 0;
+  const riskyCritBonus = isRisky ? (baseConfig?.riskyBonus ?? 0) : 0;
+  const typeCritChanceBonus = attackerCritProfile.critChanceBonus ?? 0;
+  const antiCritRate = defenderCritProfile.antiCritRate ?? 0;
+  const minCritChance = baseConfig?.minChance ?? 0;
+  const maxCritChance = baseConfig?.maxChance ?? 1;
+  const cappedCritChance = Math.min(
+    maxCritChance,
+    Math.max(minCritChance, baseCritChance + riskyCritBonus + typeCritChanceBonus + chanceBonus - antiCritRate),
+  );
+  const critChance = clamp(Math.max(cappedCritChance, chanceFloor), 0, 1);
+  const isCrit = typeof chanceFn === 'function'
+    ? chanceFn(critChance)
+    : clamp(random?.() ?? Math.random(), 0, 1) < critChance;
+
+  const maxAntiCritDamage = clamp(baseConfig?.maxAntiCritDamage ?? 0.95, 0, 0.95);
+  const antiCritDamage = clamp(defenderCritProfile.antiCritDamage ?? 0, 0, maxAntiCritDamage);
+  const typeCritDamageBonus = attackerCritProfile.critDamageBonus ?? 0;
+  const rawCritMultiplier = (baseConfig?.multiplier ?? 1) + typeCritDamageBonus + damageBonus;
+  const critMultiplier = Math.max(multiplierFloor, rawCritMultiplier * (1 - antiCritDamage));
+
+  return {
+    isCrit,
+    critChance,
+    critMultiplier,
+    antiCritRate,
+    antiCritDamage,
+    critScale: isCrit ? critMultiplier : 1,
+  };
+}
 
 export function resolveBossTurnState({
   enemy,
@@ -235,16 +348,34 @@ export function resolveEnemyPrimaryStrike({
     && enemyHp <= (enemy?.maxHp || 0) * TRAIT_BALANCE.enemy.blazeHpThreshold;
   if (isBlaze) scaledAtk = Math.round(scaledAtk * TRAIT_BALANCE.enemy.blazeAttackMultiplier);
 
-  const isCrit = trait === 'berserk' && chance(TRAIT_BALANCE.enemy.berserkCritChance);
+  const berserkChanceFloor = trait === 'berserk'
+    ? TRAIT_BALANCE.enemy.berserkCritChanceFloor
+    : 0;
+  const berserkMultiplierFloor = trait === 'berserk'
+    ? TRAIT_BALANCE.enemy.berserkCritMultiplierFloor
+    : 1;
+  const crit = resolveCritOutcome({
+    attackerType: enemy?.mType,
+    defenderType: starterType,
+    baseConfig: GLOBAL_CRIT.pve?.enemy,
+    byType: GLOBAL_CRIT.byType,
+    chanceFn: chance,
+    chanceFloor: berserkChanceFloor,
+    multiplierFloor: berserkMultiplierFloor,
+  });
   const defEff = getEffTyped(enemy?.mType, starterType);
   const base = calcEnemyDamageTyped(scaledAtk, defEff);
-  const dmg = isCrit ? Math.round(base * TRAIT_BALANCE.enemy.berserkCritMultiplier) : base;
+  const dmg = Math.max(0, Math.round(base * crit.critScale));
 
   return {
     trait,
     scaledAtk,
     isBlaze,
-    isCrit,
+    isCrit: crit.isCrit,
+    critChance: crit.critChance,
+    critMultiplier: crit.critMultiplier,
+    antiCritRate: crit.antiCritRate,
+    antiCritDamage: crit.antiCritDamage,
     defEff,
     dmg,
   };
@@ -282,6 +413,7 @@ export function resolvePlayerStrike({
   playerHp,
   attackerMaxHp = PLAYER_MAX_HP,
   bossPhase,
+  chance = null,
 }: PlayerStrikeParams): PlayerStrikeResult {
   const leveledPower = move.basePower + moveLvl * move.growth;
   const cap = Number.isFinite(maxPower) ? (maxPower as number) : null;
@@ -311,6 +443,16 @@ export function resolvePlayerStrike({
   }
 
   if (bossPhase >= 3) dmg = Math.round(dmg * TRAIT_BALANCE.player.bossPhase3DamageScale);
+  const attackerCritType = getBestMoveType(move, enemy?.mType);
+  const crit = resolveCritOutcome({
+    attackerType: attackerCritType,
+    defenderType: enemy?.mType,
+    isRisky: !!move.risky,
+    baseConfig: GLOBAL_CRIT.pve?.player,
+    byType: GLOBAL_CRIT.byType,
+    chanceFn: chance,
+  });
+  dmg = Math.max(0, Math.round(dmg * crit.critScale));
 
   return {
     pow,
@@ -319,6 +461,11 @@ export function resolvePlayerStrike({
     isFortress,
     wasCursed,
     braveActive,
+    isCrit: crit.isCrit,
+    critChance: crit.critChance,
+    critMultiplier: crit.critMultiplier,
+    antiCritRate: crit.antiCritRate,
+    antiCritDamage: crit.antiCritDamage,
   };
 }
 
@@ -383,27 +530,15 @@ export function resolvePvpStrike({
     : 0;
   const comebackScale = 1 + lightComebackBonus;
   const firstStrikeScale = firstStrike ? (PVP.firstStrikeScale ?? 1) : 1;
-  const attackerCritProfile = PVP.crit?.byType?.[attackerTypeKey] || {};
-  const defenderCritProfile = PVP.crit?.byType?.[defenderTypeKey] || {};
   const critRoller = typeof critRandom === 'function' ? critRandom : random;
-  const baseCritChance = PVP.crit?.chance ?? 0;
-  const riskyCritBonus = move.risky ? (PVP.crit?.riskyBonus ?? 0) : 0;
-  const typeCritChanceBonus = attackerCritProfile.critChanceBonus ?? 0;
-  const antiCritRate = defenderCritProfile.antiCritRate ?? 0;
-  const minCritChance = PVP.crit?.minChance ?? 0;
-  const maxCritChance = PVP.crit?.maxChance ?? 1;
-  const cappedCritChance = Math.min(
-    maxCritChance,
-    Math.max(minCritChance, baseCritChance + riskyCritBonus + typeCritChanceBonus - antiCritRate),
-  );
-  const critChance = Math.max(0, Math.min(1, cappedCritChance));
-  const critRoll = Math.max(0, Math.min(1, critRoller()));
-  const isCrit = critRoll < critChance;
-  const typeCritDamageBonus = attackerCritProfile.critDamageBonus ?? 0;
-  const antiCritDamage = Math.max(0, Math.min(0.95, defenderCritProfile.antiCritDamage ?? 0));
-  const rawCritMultiplier = (PVP.crit?.multiplier ?? 1) + typeCritDamageBonus;
-  const critMultiplier = Math.max(1, rawCritMultiplier * (1 - antiCritDamage));
-  const critScale = isCrit ? critMultiplier : 1;
+  const crit = resolveCritOutcome({
+    attackerType: attackerTypeKey,
+    defenderType: defenderTypeKey,
+    isRisky: !!move.risky,
+    baseConfig: PVP.crit,
+    byType: PVP.crit?.byType || GLOBAL_CRIT.byType,
+    random: critRoller,
+  });
 
   const rawDamage = basePow
     * PVP.baseScale
@@ -416,7 +551,7 @@ export function resolvePvpStrike({
     * firstStrikeScale
     * effectScale
     * riskyScale
-    * critScale;
+    * crit.critScale;
   const dmg = Math.max(
     PVP.minDamage,
     Math.min(PVP.maxDamage, Math.round(rawDamage)),
@@ -445,11 +580,11 @@ export function resolvePvpStrike({
     dmg,
     variance,
     heal,
-    isCrit,
-    critChance,
-    critMultiplier,
-    antiCritRate,
-    antiCritDamage,
+    isCrit: crit.isCrit,
+    critChance: crit.critChance,
+    critMultiplier: crit.critMultiplier,
+    antiCritRate: crit.antiCritRate,
+    antiCritDamage: crit.antiCritDamage,
     passiveLabel: passiveLabelFallback,
     passiveLabelKey,
     passiveLabelFallback,

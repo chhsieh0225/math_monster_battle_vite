@@ -77,6 +77,7 @@ test('resolvePlayerStrike reflects fortress and curse modifiers', () => {
       starterType: "fire",
       playerHp: 100,
       bossPhase: 0,
+      chance: () => false,
     });
 
     const nerfed = resolvePlayerStrike({
@@ -92,11 +93,84 @@ test('resolvePlayerStrike reflects fortress and curse modifiers', () => {
       starterType: "fire",
       playerHp: 100,
       bossPhase: 0,
+      chance: () => false,
     });
 
     assert.ok(base.dmg > nerfed.dmg);
     assert.equal(nerfed.isFortress, true);
     assert.equal(nerfed.wasCursed, true);
+  });
+});
+
+test('resolvePlayerStrike applies non-PvP crit chance and anti-crit mitigation', () => {
+  withMockRandom(0.5, () => {
+    const base = resolvePlayerStrike({
+      move: { basePower: 40, growth: 5, type: "fire" },
+      enemy: { trait: "normal", mType: "fire" },
+      moveIdx: 0,
+      moveLvl: 2,
+      didLevel: false,
+      maxPower: 80,
+      streak: 1,
+      stageBonus: 0,
+      cursed: false,
+      starterType: "fire",
+      playerHp: 100,
+      bossPhase: 0,
+      chance: () => false,
+    });
+
+    const crit = resolvePlayerStrike({
+      move: { basePower: 40, growth: 5, type: "fire" },
+      enemy: { trait: "normal", mType: "fire" },
+      moveIdx: 0,
+      moveLvl: 2,
+      didLevel: false,
+      maxPower: 80,
+      streak: 1,
+      stageBonus: 0,
+      cursed: false,
+      starterType: "fire",
+      playerHp: 100,
+      bossPhase: 0,
+      chance: () => true,
+    });
+    assert.equal(base.isCrit, false);
+    assert.equal(crit.isCrit, true);
+    assert.ok(crit.dmg > base.dmg);
+
+    const vsFire = resolvePlayerStrike({
+      move: { basePower: 40, growth: 5, type: "fire" },
+      enemy: { trait: "normal", mType: "fire" },
+      moveIdx: 0,
+      moveLvl: 2,
+      didLevel: false,
+      maxPower: 80,
+      streak: 1,
+      stageBonus: 0,
+      cursed: false,
+      starterType: "fire",
+      playerHp: 100,
+      bossPhase: 0,
+      chance: () => true,
+    });
+    const vsGrass = resolvePlayerStrike({
+      move: { basePower: 40, growth: 5, type: "fire" },
+      enemy: { trait: "normal", mType: "grass" },
+      moveIdx: 0,
+      moveLvl: 2,
+      didLevel: false,
+      maxPower: 80,
+      streak: 1,
+      stageBonus: 0,
+      cursed: false,
+      starterType: "fire",
+      playerHp: 100,
+      bossPhase: 0,
+      chance: () => true,
+    });
+    assert.ok(vsFire.antiCritDamage < vsGrass.antiCritDamage);
+    assert.ok(vsFire.critMultiplier > vsGrass.critMultiplier);
   });
 });
 
@@ -120,6 +194,47 @@ test('resolveEnemyAssistStrike applies cap and effectiveness', () => {
     assert.equal(out.scaledAtk, 70);
     assert.equal(out.defEff, 1.5);
     assert.equal(out.dmg, 24);
+  });
+});
+
+test('resolveEnemyPrimaryStrike applies shared crit model for non-berserk and berserk floor', () => {
+  withMockRandom(0, () => {
+    const normalNoCrit = resolveEnemyPrimaryStrike({
+      enemy: { atk: 20, maxHp: 100, mType: "fire", trait: "normal" },
+      enemyHp: 90,
+      starterType: "grass",
+      bossPhase: 1,
+      chance: () => false,
+    });
+    const normalCrit = resolveEnemyPrimaryStrike({
+      enemy: { atk: 20, maxHp: 100, mType: "fire", trait: "normal" },
+      enemyHp: 90,
+      starterType: "grass",
+      bossPhase: 1,
+      chance: () => true,
+    });
+    assert.equal(normalNoCrit.isCrit, false);
+    assert.equal(normalCrit.isCrit, true);
+    assert.ok(normalCrit.dmg > normalNoCrit.dmg);
+
+    const thresholdRoll = (probability) => probability >= 0.3;
+    const normalAtThreshold = resolveEnemyPrimaryStrike({
+      enemy: { atk: 20, maxHp: 100, mType: "fire", trait: "normal" },
+      enemyHp: 90,
+      starterType: "grass",
+      bossPhase: 1,
+      chance: thresholdRoll,
+    });
+    const berserkAtThreshold = resolveEnemyPrimaryStrike({
+      enemy: { atk: 20, maxHp: 100, mType: "fire", trait: "berserk" },
+      enemyHp: 90,
+      starterType: "grass",
+      bossPhase: 1,
+      chance: thresholdRoll,
+    });
+    assert.equal(normalAtThreshold.isCrit, false);
+    assert.equal(berserkAtThreshold.isCrit, true);
+    assert.ok(berserkAtThreshold.critChance >= 0.3);
   });
 });
 

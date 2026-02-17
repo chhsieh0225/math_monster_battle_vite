@@ -315,6 +315,7 @@ const zhTW = {
   "battle.pvp.turnstart.freeze": "❄️ {name} 被凍結，回合跳過！",
   "battle.role.sub": "副將",
   "battle.effect.phantomDodge": "👻 幻影閃避！",
+  "battle.effect.crit": "💥 暴擊！",
   "battle.effect.curseWeak": "💀 詛咒弱化了攻擊...",
   "battle.effect.fortressGuard": "🛡️ 鐵壁減傷！",
   "battle.effect.lightCourage": "🦁 勇氣之心！ATK↑",

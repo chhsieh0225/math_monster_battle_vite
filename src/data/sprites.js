@@ -40,6 +40,7 @@ export const SPRITE_IMGS = {
   player_lion2: `${BASE}sprites/player_lion2.png`,
   boss_hydra: `${BASE}sprites/boss_hydra.png`,
   boss_crazy_dragon: `${BASE}sprites/boss_crazy_dragon.png`,
+  golumn: `${BASE}sprites/golumn.png`,
 };
 
 export const BG_IMGS = {
@@ -48,6 +49,7 @@ export const BG_IMGS = {
   ghost: `${BASE}backgrounds/ghost.jpg`,
   steel: `${BASE}backgrounds/steel.jpg`,
   dark: `${BASE}backgrounds/dark.jpg`,
+  rock: `${BASE}backgrounds/rock.jpg`,
 };
 
 // SVG wrapper functions — return inner SVG markup using image paths
@@ -103,3 +105,4 @@ export const playerlion1SVG = makeSvgFnFill('player_lion1', 677, 369);
 export const playerlion2SVG = makeSvgFnFill('player_lion2', 677, 369);
 export const bossHydraSVG = makeSvgFnFill('boss_hydra', 677, 369);
 export const bossCrazyDragonSVG = makeSvgFnFill('boss_crazy_dragon', 677, 369);
+export const golumnSVG = makeSvgFnFill('golumn', 409, 610);

@@ -150,7 +150,8 @@ export type MonsterType =
   | "ghost"
   | "steel"
   | "dark"
-  | "poison";
+  | "poison"
+  | "rock";
 
 export type MonsterTraitFields = {
   trait?: string;

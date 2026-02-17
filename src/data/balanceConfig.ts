@@ -10,6 +10,7 @@ const CRIT_BY_TYPE = {
   light: { critChanceBonus: 0.02, critDamageBonus: 0.05, antiCritRate: 0.01, antiCritDamage: 0.06 },
   dark: { critChanceBonus: 0.03, critDamageBonus: 0.08, antiCritRate: 0.0, antiCritDamage: 0.0 },
   poison: { critChanceBonus: 0.02, critDamageBonus: 0.04, antiCritRate: 0.01, antiCritDamage: 0.02 },
+  rock: { critChanceBonus: 0.0, critDamageBonus: 0.02, antiCritRate: 0.03, antiCritDamage: 0.12 },
 } as const;
 
 export const BALANCE_CONFIG = {
@@ -80,6 +81,7 @@ export const BALANCE_CONFIG = {
       fire: { hp: 55, atk: 9 },
       ghost: { hp: 50, atk: 8 },
       dragon: { hp: 80, atk: 12 },
+      golumn: { hp: 65, atk: 10 },
       boss: { hp: 120, atk: 15 },
       boss_hydra: { hp: 140, atk: 13 },
       boss_crazy_dragon: { hp: 110, atk: 17 },
@@ -248,6 +250,7 @@ export const BALANCE_CONFIG = {
     },
     player: {
       fortressDamageScale: 0.7,
+      fortifyDamageScale: 0.75,
       cursedDamageScale: 0.6,
       braveMaxBonus: 0.5,
       bossPhase3DamageScale: 1.3,

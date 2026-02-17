@@ -42,6 +42,7 @@ const TYPE_LABEL: Record<string, string> = {
   steel: '鋼',
   light: '光',
   poison: '毒',
+  rock: '岩',
 };
 
 // ── Monster descriptions ──
@@ -67,6 +68,7 @@ const DESCS: Record<string, string> = {
   boss: '傳說中的暗黑龍王。統治著暗黑深淵的最終BOSS。擁有壓倒性的力量，只有最強的訓練師才能擊敗它。',
   boss_hydra: '棲息於毒沼深淵的三頭毒蛇。全身散發致命毒霧，被牠纏上的獵物會在不知不覺中被毒素侵蝕。每顆頭都能噴出不同劇毒，是最令冒險者恐懼的存在。',
   boss_crazy_dragon: '傳說中失去一翼的古龍。斷翼之痛讓牠陷入永恆的狂怒，全身燃燒著暗黑火焰。雖然無法飛行，但地面上的爆發力遠超一般龍族，是三大Boss中攻擊力最強的存在。',
+  golumn: '棲息在荒涼峽谷深處的岩石巨人。全身由千年沉積的花崗岩構成，移動時地面都會震動。雖然行動遲緩，但防禦力驚人，普通攻擊幾乎無法穿透牠的岩石外殼。',
 };
 
 const HABITATS: Record<string, string> = {
@@ -91,6 +93,7 @@ const HABITATS: Record<string, string> = {
   boss: '💀 暗黑深淵',
   boss_hydra: '☠️ 毒沼深淵',
   boss_crazy_dragon: '🔥 焦灼荒原',
+  golumn: '🪨 岩石峽谷',
 };
 
 const RARITY: Record<string, string> = {
@@ -115,6 +118,7 @@ const RARITY: Record<string, string> = {
   boss: '★★★★★',
   boss_hydra: '★★★★★',
   boss_crazy_dragon: '★★★★★',
+  golumn: '★★',
 };
 
 export const ENC_ENTRIES: EncyclopediaEnemyEntry[] = [];

@@ -171,6 +171,38 @@ export const SCENES = {
     </>)
   },
 
+  /* ═══ Rock — dust particles + falling pebbles + canyon haze ═══ */
+  rock:{
+    bgImg:BG_IMGS.rock,
+    sky:"linear-gradient(180deg,#d4a574 0%,#c2956a 20%,#b8860b 45%,#a0522d 70%,#6b3a2a 100%)",
+    ground:"linear-gradient(180deg,transparent,rgba(139,90,43,0.1) 40%,rgba(101,67,33,0.22))",
+    platform1:"rgba(139,90,43,0.3)",platform2:"rgba(139,90,43,0.22)",
+    Deco:memo(()=><>
+      {/* Dust particles drifting */}
+      {Array.from({length:8},(_,i)=>i).map(i=><div key={`dust${i}`} style={{
+        position:"absolute",
+        top:`${10+((i*11)%60)}%`,left:`${((i*13)%85)}%`,
+        width:3+(i%3),height:3+(i%3),
+        background:["#d4a574","#c2956a","#deb887","#cdaa7d","#c4a882","#b8860b","#d2b48c","#deb887"][i],
+        borderRadius:"50%",opacity:0.3+(i%3)*0.1,
+        animation:`smokeDrift ${5+i*0.8}s ease-in-out ${i*0.5}s infinite`
+      }}/>)}
+      {/* Falling pebbles */}
+      {Array.from({length:4},(_,i)=>i).map(i=><div key={`peb${i}`} style={{
+        position:"absolute",top:`${5+i*8}%`,left:`${15+i*20}%`,
+        width:4+(i%2)*2,height:4+(i%2)*2,
+        background:["#8B7355","#A0522D","#6B4226","#8B6914"][i],
+        borderRadius:"30%",
+        animation:`emberRise ${3+i*0.7}s ease-in ${i*0.4}s infinite reverse`
+      }}/>)}
+      {/* Canyon haze */}
+      <div style={{position:"absolute",bottom:"0%",left:"5%",width:130,height:40,background:"radial-gradient(ellipse,rgba(210,180,140,0.2),transparent)",borderRadius:"50%"}}/>
+      <div style={{position:"absolute",bottom:"5%",right:"10%",width:100,height:35,background:"radial-gradient(ellipse,rgba(184,134,11,0.15),transparent)",borderRadius:"50%"}}/>
+      {/* Heat shimmer */}
+      <div style={{position:"absolute",top:"0%",left:"0%",width:"100%",height:"20%",background:"linear-gradient(180deg,rgba(210,180,140,0.08),transparent)",animation:"float 6s ease-in-out infinite"}}/>
+    </>)
+  },
+
   /* ═══ Dark — white sparkle dots + purple glows (already clean) ═══ */
   dark:{
     bgImg:BG_IMGS.dark,
@@ -197,5 +229,6 @@ export const SCENE_NAMES = {
   electric:"⚡ 雷電荒原",
   ghost:"🌙 幽暗墓地",
   steel:"⚙️ 鋼鐵要塞",
-  dark:"💀 暗黑深淵"
+  dark:"💀 暗黑深淵",
+  rock:"🪨 岩石峽谷"
 };

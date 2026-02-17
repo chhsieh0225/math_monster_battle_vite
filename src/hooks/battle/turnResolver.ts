@@ -438,6 +438,9 @@ export function resolvePlayerStrike({
   const isFortress = enemy?.trait === 'fortress';
   if (isFortress) dmg = Math.round(dmg * TRAIT_BALANCE.player.fortressDamageScale);
 
+  const isFortify = enemy?.trait === 'fortify';
+  if (isFortify) dmg = Math.round(dmg * TRAIT_BALANCE.player.fortifyDamageScale);
+
   const wasCursed = !!cursed;
   if (wasCursed) dmg = Math.round(dmg * TRAIT_BALANCE.player.cursedDamageScale);
 

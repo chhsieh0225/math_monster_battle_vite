@@ -37,9 +37,34 @@ function pickSlimeVariant({
   return pick(typedPool.length > 0 ? typedPool : pool);
 }
 
+/**
+ * Candidate waves that can randomly replace one mid-game wave.
+ * Each run, one of the swappable waves (indices 1–8, non-boss) is randomly
+ * replaced by one of these candidates.
+ */
+const RANDOM_SWAP_CANDIDATES: StageWave[] = [
+  { monsterId: 'golumn', sceneType: 'rock' },
+];
+
 export function buildRoster(pickIndex: PickIndex, mode: 'single' | 'double' = 'single'): BattleRosterMonster[] {
   const pick = (arr: SlimeVariant[]): SlimeVariant => arr[pickIndex(arr.length)];
-  const waves: StageWave[] = mode === 'double' ? DOUBLE_STAGE_WAVES : STAGE_WAVES;
+  const baseWaves: StageWave[] = mode === 'double' ? DOUBLE_STAGE_WAVES : STAGE_WAVES;
+
+  // Deep-copy waves so we can mutate safely
+  const waves: StageWave[] = baseWaves.map(w => ({ ...w }));
+
+  // Randomly inject one swap candidate into a mid-game slot (indices 1..8)
+  if (RANDOM_SWAP_CANDIDATES.length > 0) {
+    const candidate = RANDOM_SWAP_CANDIDATES[pickIndex(RANDOM_SWAP_CANDIDATES.length)];
+    // Swappable = not first wave (0) and not boss wave (last)
+    const swappable = waves
+      .map((w, idx) => ({ w, idx }))
+      .filter(({ idx }) => idx > 0 && idx < waves.length - 1);
+    if (swappable.length > 0) {
+      const chosen = swappable[pickIndex(swappable.length)];
+      waves[chosen.idx] = { ...candidate };
+    }
+  }
 
   return waves.map((wave, i) => {
     // If wave requests a boss, randomly pick from the boss pool

@@ -17,6 +17,7 @@ export const DROP_TABLES: Record<string, string[]> = {
   slimeSteelEvolved: ['🛡️', '🧪'],
   slimeDarkEvolved: ['💀', '🧪'],
 
+  golumn: ['🪨', '💎'],
   fire: ['🔥', '💎'],
   ghost: ['👻', '⭐'],
   dragon: ['🐉', '👑'],

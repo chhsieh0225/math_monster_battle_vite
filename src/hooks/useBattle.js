@@ -68,10 +68,6 @@ import {
 } from './battle/battleReducer';
 import { createBattleFieldSetters } from './battle/battleFieldSetters';
 import { effectOrchestrator } from './battle/effectOrchestrator';
-import { runAnswerOrchestrator } from './battle/answerOrchestrator.ts';
-import {
-  buildPvpAnswerHandlerDeps,
-} from './battle/answerDepsBuilder.ts';
 import { runEnemyTurnController } from './battle/enemyTurnController.ts';
 import { runTimeoutController } from './battle/timeoutController.ts';
 import { buildTimeoutControllerArgs } from './battle/timeoutDepsBuilder.ts';
@@ -85,11 +81,6 @@ import {
   buildContinueFromVictoryFlowArgs,
   buildVictoryFlowArgs,
 } from './battle/progressionDepsBuilder.ts';
-import { runAdvanceController } from './battle/advanceController.ts';
-import {
-  buildAdvancePvpTurnStartDeps,
-  buildPendingEvolutionArgs,
-} from './battle/advanceDepsBuilder.ts';
 import {
   continueFromVictoryFlow,
 } from './battle/advanceFlow';
@@ -129,6 +120,10 @@ import {
   runBattleStart,
   runBattleStartGame,
 } from './battle/startFlowAdapter.ts';
+import {
+  runBattleAdvance,
+  runBattleAnswer,
+} from './battle/interactionFlowAdapter.ts';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
 import { useBattleAsyncGate, useBattleStateRef } from './useBattleRuntime';
 
@@ -681,29 +676,28 @@ export function useBattle() {
   }
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
 
-  const pvpAnswerHandlerDeps = buildPvpAnswerHandlerDeps({
-    runtime: {
-      sr,
-      rand,
-      chance,
-      safeTo,
-      sfx,
-      getOtherPvpTurn,
-      setScreen,
-      t,
-    },
-    ui: UI,
-    pvp: pvpState,
-    battleFields: battleFieldSetters,
-  });
-
   // --- Player answers a question ---
   const onAns = (choice) => {
-    runAnswerOrchestrator({
+    runBattleAnswer({
       choice,
       answered,
       setAnswered,
       clearTimer,
+      pvpAnswerDepsInput: {
+        runtime: {
+          sr,
+          rand,
+          chance,
+          safeTo,
+          sfx,
+          getOtherPvpTurn,
+          setScreen,
+          t,
+        },
+        ui: UI,
+        pvp: pvpState,
+        battleFields: battleFieldSetters,
+      },
       playerDepsArgs: {
         runtime: {
           sr,
@@ -726,9 +720,8 @@ export function useBattle() {
           runAllySupportTurn,
         },
       },
-      answerControllerArgs: {
+      answerControllerArgsInput: {
         sr,
-        pvpHandlerDeps: pvpAnswerHandlerDeps,
         getActingStarter,
         logAns,
         appendSessionEvent,
@@ -762,38 +755,34 @@ export function useBattle() {
   };
 
   const advance = () => {
-    const pvpTurnStartHandlerDeps = buildAdvancePvpTurnStartDeps({
-      runtime: {
-        sr,
-        safeTo,
-        getOtherPvpTurn,
-        getPvpTurnName,
-        setScreen,
-        t,
-      },
-      ui: UI,
-      pvp: pvpState,
-      battleFields: battleFieldSetters,
-    });
-
-    const pendingEvolutionArgs = buildPendingEvolutionArgs({
-      pendingEvolveRef: pendingEvolve,
-      battleFields: battleFieldSetters,
-      setScreen,
-      tryUnlock,
-      getStageMaxHp,
-      getStarterMaxHp,
-      maxMoveLvl: MAX_MOVE_LVL,
-    });
-
-    runAdvanceController({
+    runBattleAdvance({
       phase,
       sr,
-      pvpTurnStartHandlerDeps,
       setPhase,
       setBText,
-      pendingEvolutionArgs,
       continueFromVictory,
+      advancePvpDepsInput: {
+        runtime: {
+          sr,
+          safeTo,
+          getOtherPvpTurn,
+          getPvpTurnName,
+          setScreen,
+          t,
+        },
+        ui: UI,
+        pvp: pvpState,
+        battleFields: battleFieldSetters,
+      },
+      pendingEvolutionInput: {
+        pendingEvolveRef: pendingEvolve,
+        battleFields: battleFieldSetters,
+        setScreen,
+        tryUnlock,
+        getStageMaxHp,
+        getStarterMaxHp,
+        maxMoveLvl: MAX_MOVE_LVL,
+      },
     });
   };
 

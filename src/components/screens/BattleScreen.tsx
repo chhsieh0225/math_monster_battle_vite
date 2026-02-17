@@ -1,4 +1,4 @@
-import { useMemo, useRef, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { CSSProperties } from 'react';
 import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { SCENES } from '../../data/scenes';
@@ -57,6 +57,40 @@ function QuestionTimerHud({ timerSec, subscribe, getSnapshot }: QuestionTimerHud
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 type BattleSlices = Pick<UseBattlePublicApi, 'state' | 'actions' | 'view'>;
+type ImpactPhase = 'idle' | 'charge' | 'freeze' | 'shake' | 'settle';
+
+type ImpactProfile = {
+  chargeMs: number;
+  freezeMs: number;
+  shakeMs: number;
+  settleMs: number;
+};
+
+function resolveImpactProfile(idx = 0, lvl = 1): ImpactProfile {
+  const levelBoost = Math.min(36, Math.max(0, (lvl - 1) * 6));
+  if (idx >= 3) {
+    return {
+      chargeMs: 95 + levelBoost,
+      freezeMs: 100,
+      shakeMs: 230,
+      settleMs: 190,
+    };
+  }
+  if (idx === 2) {
+    return {
+      chargeMs: 75 + levelBoost,
+      freezeMs: 86,
+      shakeMs: 175,
+      settleMs: 150,
+    };
+  }
+  return {
+    chargeMs: 44 + Math.floor(levelBoost * 0.4),
+    freezeMs: 68,
+    shakeMs: 130,
+    settleMs: 116,
+  };
+}
 
 type BattleScreenProps = {
   battle: BattleSlices;
@@ -77,6 +111,43 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
   const battleRootRef = useRef<HTMLDivElement | null>(null);
   const enemySpriteRef = useRef<HTMLDivElement | null>(null);
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
+  const [impactPhase, setImpactPhase] = useState<ImpactPhase>('idle');
+  const impactTimersRef = useRef<number[]>([]);
+  const lastAtkEffectKeyRef = useRef('');
+
+  const clearImpactTimers = useCallback(() => {
+    if (impactTimersRef.current.length === 0) return;
+    impactTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+    impactTimersRef.current = [];
+  }, []);
+
+  useEffect(() => () => clearImpactTimers(), [clearImpactTimers]);
+
+  useEffect(() => {
+    if (!showHeavyFx || !B.atkEffect) {
+      clearImpactTimers();
+      lastAtkEffectKeyRef.current = '';
+      const toIdle = window.setTimeout(() => setImpactPhase('idle'), 0);
+      impactTimersRef.current = [toIdle];
+      return clearImpactTimers;
+    }
+
+    const atkKey = `${B.atkEffect.type}-${B.atkEffect.idx}-${B.atkEffect.lvl}-${B.atkEffect.targetSide || "enemy"}`;
+    if (lastAtkEffectKeyRef.current === atkKey) return;
+    lastAtkEffectKeyRef.current = atkKey;
+
+    clearImpactTimers();
+    const profile = resolveImpactProfile(B.atkEffect.idx, B.atkEffect.lvl);
+
+    const toCharge = window.setTimeout(() => setImpactPhase('charge'), 0);
+    const toFreeze = window.setTimeout(() => setImpactPhase('freeze'), profile.chargeMs);
+    const toShake = window.setTimeout(() => setImpactPhase('shake'), profile.chargeMs + profile.freezeMs);
+    const toSettle = window.setTimeout(() => setImpactPhase('settle'), profile.chargeMs + profile.freezeMs + profile.shakeMs);
+    const toIdle = window.setTimeout(() => setImpactPhase('idle'), profile.chargeMs + profile.freezeMs + profile.shakeMs + profile.settleMs);
+
+    impactTimersRef.current = [toCharge, toFreeze, toShake, toSettle, toIdle];
+    return clearImpactTimers;
+  }, [B.atkEffect, clearImpactTimers, showHeavyFx]);
   const { measuredEnemyTarget, measuredPlayerTarget } = useSpriteTargets({
     screen: B.screen,
     phase: B.phase,
@@ -460,12 +531,13 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     "--ult-sync-top": effectTarget.top,
     "--ult-sync-right": effectTarget.right,
   } as CSSProperties);
+  const impactPhaseClass = showHeavyFx ? `battle-impact-${impactPhase}` : "battle-impact-idle";
 
   return (
     <div
       id="main-content"
       ref={battleRootRef}
-      className={`battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""} ${canTapAdvance ? "battle-root-advance" : ""}`}
+      className={`battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""} ${canTapAdvance ? "battle-root-advance" : ""} ${impactPhaseClass}`}
       role={canTapAdvance ? "button" : undefined}
       tabIndex={canTapAdvance ? 0 : -1}
       aria-label={canTapAdvance ? t("a11y.battle.advance", "Advance to next step") : undefined}
@@ -496,6 +568,11 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
         <div className="battle-pause-title">{t("app.pause.title", "Game Paused")}</div>
         <div className="battle-pause-hint">{t("app.pause.hint", "Tap anywhere to resume")}</div>
       </div>}
+
+      {/* Hit reaction layer */}
+      {showHeavyFx && impactPhase !== "idle" && (
+        <div className={`battle-hit-react-layer is-${impactPhase} ${isUltimateEffect ? "is-ult" : ""}`} aria-hidden="true" />
+      )}
 
       {/* Popups & particles */}
       {B.dmgs.map((d) => <DamagePopup key={d.id} value={d.value} x={d.x} y={d.y} color={d.color} onDone={() => B.rmD(d.id)} />)}

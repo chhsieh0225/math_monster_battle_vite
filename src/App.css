@@ -106,6 +106,11 @@ textarea:focus-visible,
 @keyframes ultSyncFlash{0%{opacity:0}20%{opacity:.82}60%{opacity:.36}100%{opacity:0}}
 @keyframes ultSyncCore{0%{transform:translate(50%,-32%) scale(.25);opacity:0}18%{opacity:.95}58%{transform:translate(50%,-32%) scale(1.05);opacity:.7}100%{transform:translate(50%,-32%) scale(1.34);opacity:0}}
 @keyframes ultSyncRing{0%{transform:scale(.2);opacity:0}28%{opacity:.95}100%{transform:scale(1.2);opacity:0}}
+@keyframes battleImpactCharge{0%{transform:translateY(0) scale(1);filter:brightness(1) saturate(1)}100%{transform:translateY(-3px) scale(1.018);filter:brightness(1.08) saturate(1.11)}}
+@keyframes battleImpactShake{0%{transform:translate(0,0) scale(1.02)}16%{transform:translate(-5px,2px) scale(1.018)}32%{transform:translate(5px,-2px) scale(1.02)}48%{transform:translate(-4px,2px) scale(1.018)}64%{transform:translate(4px,-1px) scale(1.015)}100%{transform:translate(0,0) scale(1.01)}}
+@keyframes battleImpactSettle{0%{transform:translate(0,0) scale(1.01);filter:brightness(1.06)}100%{transform:translate(0,0) scale(1);filter:brightness(1)}}
+@keyframes battleHitPulse{0%{opacity:0;transform:scale(1.22)}35%{opacity:.82;transform:scale(1)}100%{opacity:0;transform:scale(.94)}}
+@keyframes battleHitPulseShake{0%{opacity:0}22%{opacity:.88}68%{opacity:.34}100%{opacity:0}}
 
 /* ─── Scene ambient particle keyframes ─── */
 @keyframes leafDrift{0%{transform:translate(0,0) rotate(0deg) scale(0.5);opacity:0}10%{opacity:0.7}50%{transform:translate(var(--ldx),var(--ldy)) rotate(180deg) scale(1);opacity:0.6}100%{transform:translate(calc(var(--ldx)*1.8),calc(var(--ldy)*2.2)) rotate(360deg) scale(0.3);opacity:0}}
@@ -135,6 +140,51 @@ input,select,textarea{font-size:max(16px,1rem)}
   cursor:default;
 }
 .battle-root-advance{cursor:pointer}
+.battle-hit-react-layer{
+  position:absolute;
+  inset:0;
+  z-index:66;
+  pointer-events:none;
+  opacity:0;
+  mix-blend-mode:screen;
+  background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.18),rgba(251,113,133,.12) 26%,rgba(30,41,59,0) 72%);
+}
+.battle-hit-react-layer.is-ult{
+  mix-blend-mode:hard-light;
+  background:radial-gradient(circle at 50% 45%,rgba(255,228,164,.24),rgba(251,146,60,.2) 24%,rgba(127,29,29,.16) 42%,rgba(2,6,23,0) 74%);
+}
+.battle-hit-react-layer.is-charge{animation:battleHitPulse .16s ease-out both}
+.battle-hit-react-layer.is-freeze{opacity:.42}
+.battle-hit-react-layer.is-shake{animation:battleHitPulseShake .22s ease both}
+.battle-hit-react-layer.is-settle{animation:battleHitPulse .2s ease-out reverse both}
+
+.battle-root .battle-arena{
+  will-change:transform,filter;
+  transform-origin:center 48%;
+}
+.battle-root.battle-impact-charge .battle-arena{animation:battleImpactCharge .14s cubic-bezier(.19,.74,.22,1) both}
+.battle-root.battle-impact-freeze .battle-arena{
+  transform:translateY(-3px) scale(1.018);
+  filter:brightness(1.12) saturate(1.14);
+}
+.battle-root.battle-impact-freeze .battle-sprite-enemy-main,
+.battle-root.battle-impact-freeze .battle-sprite-player-main,
+.battle-root.battle-impact-freeze .battle-sprite-enemy-sub,
+.battle-root.battle-impact-freeze .battle-sprite-player-sub,
+.battle-root.battle-impact-freeze .battle-sprite-enemy-shadow,
+.battle-root.battle-impact-freeze .battle-sprite-player-shadow{animation-play-state:paused!important}
+.battle-root.battle-impact-shake .battle-arena{animation:battleImpactShake .24s steps(2,end) both}
+.battle-root.battle-impact-shake .battle-info-enemy,
+.battle-root.battle-impact-shake .battle-info-player{transform:translateY(-2px)}
+.battle-root.battle-impact-settle .battle-arena{animation:battleImpactSettle .2s ease-out both}
+.battle-root.low-perf .battle-hit-react-layer{display:none}
+.battle-root.low-perf.battle-impact-charge .battle-arena,
+.battle-root.low-perf.battle-impact-shake .battle-arena,
+.battle-root.low-perf.battle-impact-settle .battle-arena{
+  animation:none!important;
+  transform:none!important;
+  filter:none!important;
+}
 
 .app-error-wrap{
   min-height:100vh;

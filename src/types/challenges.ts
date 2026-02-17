@@ -81,6 +81,7 @@ export type TowerFloorDef = {
   floor: number;
   ruleId: string;
   levelScale: number;
+  atkScale?: number;
   checkpoint?: boolean;
   rewards: ChallengeReward[];
 };

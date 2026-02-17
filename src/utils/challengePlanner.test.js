@@ -42,3 +42,26 @@ test('buildStreakTowerPlan slices floors and keeps deterministic output', () => 
   assert.equal(planA.floors[0]?.floor, 3);
   assert.equal(planA.floors[3]?.floor, 6);
 });
+
+test('buildStreakTowerPlan ramps pressure across floors', () => {
+  const plan = buildStreakTowerPlan({ runId: 'curve', startFloor: 1, floorCount: 15 });
+  const floor1 = plan.floors.find((f) => f.floor === 1);
+  const floor9 = plan.floors.find((f) => f.floor === 9);
+  const floor13 = plan.floors.find((f) => f.floor === 13);
+  const floor15 = plan.floors.find((f) => f.floor === 15);
+  assert.ok(floor1);
+  assert.ok(floor9);
+  assert.ok(floor13);
+  assert.ok(floor15);
+
+  assert.ok(floor9.levelScale > floor1.levelScale);
+  assert.ok((floor9.atkScale || 1) > (floor1.atkScale || 1));
+  assert.ok(floor9.battle.enemyLevelOffset >= floor1.battle.enemyLevelOffset);
+  assert.ok(floor9.battle.timeLimitSec <= floor1.battle.timeLimitSec);
+  assert.ok(floor9.battle.enemyCount >= floor1.battle.enemyCount);
+  assert.ok(floor9.battle.rewardMultiplier > floor1.battle.rewardMultiplier);
+
+  assert.equal(floor15.battle.enemyCount, 1);
+  assert.equal(floor15.battle.difficulty, 'master');
+  assert.ok(floor13.battle.questionFocus.includes('unknown4'));
+});

@@ -218,7 +218,14 @@ export default function DailyChallengeScreen({
                 fontSize: 11,
               }}
             >
-              <b>F{floor.floor}</b> · {floor.battle.label} · ⏱️{floor.battle.timeLimitSec}s
+              <div>
+                <b>F{floor.floor}</b> · {floor.battle.label}
+              </div>
+              <div style={{ marginTop: 2, opacity: 0.82 }}>
+                ⏱️{floor.battle.timeLimitSec}s · 👾x{floor.battle.enemyCount} · 🧠{floor.battle.difficulty.toUpperCase()}
+                {' · '}HP×{floor.levelScale.toFixed(2)}
+                {typeof floor.atkScale === 'number' ? ` · ATK×${floor.atkScale.toFixed(2)}` : ''}
+              </div>
             </div>
           ))}
         </div>

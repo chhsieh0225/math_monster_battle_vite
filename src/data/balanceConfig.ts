@@ -127,6 +127,36 @@ export const BALANCE_CONFIG = {
     },
   },
 
+  challenges: {
+    tower: {
+      hpScalePerFloor: 0.08,
+      atkScalePerFloor: 0.065,
+      levelOffsetPerFloor: 0.55,
+      timeTightenEveryFloors: 3,
+      minTimeLimitSec: 3,
+      enemyCountStepFloor: 4,
+      maxEnemyCount: 3,
+      expertStartsAtFloor: 6,
+      masterStartsAtFloor: 11,
+      rewardMultiplierPerFloor: 0.03,
+      focusUnlockFloor: {
+        mixed4: 5,
+        unknown1: 6,
+        unknown2: 8,
+        unknown3: 10,
+        unknown4: 13,
+      },
+      boss: {
+        extraLevelOffset: 2,
+        hpBonusScale: 0.16,
+        atkBonusScale: 0.14,
+        extraTimePressure: 1,
+        rewardMultiplierBonus: 0.22,
+        enemyCount: 1,
+      },
+    },
+  },
+
   pvp: {
     baseScale: 0.84,
     varianceMin: 0.92,

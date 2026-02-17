@@ -2,10 +2,13 @@ import {
   DAILY_CHALLENGE_BLUEPRINTS,
   STREAK_TOWER_BLUEPRINT,
 } from '../data/challengeCatalog.ts';
+import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
 import type {
+  ChallengeDifficulty,
   ChallengeBattleRule,
   DailyChallengeBlueprint,
   DailyChallengePlan,
+  QuestionFocusTag,
   StreakTowerBlueprint,
   StreakTowerPlan,
 } from '../types/challenges.ts';
@@ -16,6 +19,152 @@ import {
   shuffled,
   withRandomSource,
 } from './prng.ts';
+
+type TowerBalanceConfig = {
+  hpScalePerFloor: number;
+  atkScalePerFloor: number;
+  levelOffsetPerFloor: number;
+  timeTightenEveryFloors: number;
+  minTimeLimitSec: number;
+  enemyCountStepFloor: number;
+  maxEnemyCount: number;
+  expertStartsAtFloor: number;
+  masterStartsAtFloor: number;
+  rewardMultiplierPerFloor: number;
+  focusUnlockFloor: Partial<Record<QuestionFocusTag, number>>;
+  boss: {
+    extraLevelOffset: number;
+    hpBonusScale: number;
+    atkBonusScale: number;
+    extraTimePressure: number;
+    rewardMultiplierBonus: number;
+    enemyCount: number;
+  };
+};
+
+const DEFAULT_TOWER_BALANCE: TowerBalanceConfig = {
+  hpScalePerFloor: 0.08,
+  atkScalePerFloor: 0.065,
+  levelOffsetPerFloor: 0.55,
+  timeTightenEveryFloors: 3,
+  minTimeLimitSec: 3,
+  enemyCountStepFloor: 4,
+  maxEnemyCount: 3,
+  expertStartsAtFloor: 6,
+  masterStartsAtFloor: 11,
+  rewardMultiplierPerFloor: 0.03,
+  focusUnlockFloor: {
+    mixed4: 5,
+    unknown1: 6,
+    unknown2: 8,
+    unknown3: 10,
+    unknown4: 13,
+  },
+  boss: {
+    extraLevelOffset: 2,
+    hpBonusScale: 0.16,
+    atkBonusScale: 0.14,
+    extraTimePressure: 1,
+    rewardMultiplierBonus: 0.22,
+    enemyCount: 1,
+  },
+};
+
+const towerBalanceRaw = BALANCE_CONFIG?.challenges?.tower || {};
+const TOWER_BALANCE: TowerBalanceConfig = {
+  ...DEFAULT_TOWER_BALANCE,
+  ...towerBalanceRaw,
+  focusUnlockFloor: {
+    ...DEFAULT_TOWER_BALANCE.focusUnlockFloor,
+    ...(towerBalanceRaw?.focusUnlockFloor || {}),
+  },
+  boss: {
+    ...DEFAULT_TOWER_BALANCE.boss,
+    ...(towerBalanceRaw?.boss || {}),
+  },
+};
+
+const TOWER_FOCUS_UNLOCK_ORDER: QuestionFocusTag[] = [
+  'mixed4',
+  'unknown1',
+  'unknown2',
+  'unknown3',
+  'unknown4',
+];
+
+function clampInt(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, Math.floor(value)));
+}
+
+function round2(value: number): number {
+  return Number(value.toFixed(2));
+}
+
+function resolveTowerDifficulty(floor: number, isBossFloor: boolean): ChallengeDifficulty {
+  if (floor >= TOWER_BALANCE.masterStartsAtFloor || (isBossFloor && floor >= TOWER_BALANCE.expertStartsAtFloor)) {
+    return 'master';
+  }
+  if (floor >= TOWER_BALANCE.expertStartsAtFloor || isBossFloor) return 'expert';
+  return 'hard';
+}
+
+function resolveTowerEnemyCount(baseEnemyCount: number, floor: number, isBossFloor: boolean): number {
+  if (isBossFloor) return Math.max(1, TOWER_BALANCE.boss.enemyCount);
+  const stepFloor = Math.max(1, TOWER_BALANCE.enemyCountStepFloor);
+  const extra = Math.floor(Math.max(0, floor - 1) / stepFloor);
+  return clampInt(baseEnemyCount + extra, 1, Math.max(1, TOWER_BALANCE.maxEnemyCount));
+}
+
+function resolveTowerQuestionFocus(
+  baseFocus: QuestionFocusTag[],
+  floor: number,
+  isBossFloor: boolean,
+): QuestionFocusTag[] {
+  const focusSet = new Set<QuestionFocusTag>(baseFocus);
+  for (const tag of TOWER_FOCUS_UNLOCK_ORDER) {
+    const unlockFloor = Number(TOWER_BALANCE.focusUnlockFloor[tag] || 999);
+    if (floor >= unlockFloor) focusSet.add(tag);
+  }
+  if (isBossFloor) {
+    focusSet.add('mixed4');
+    if (floor >= TOWER_BALANCE.expertStartsAtFloor) focusSet.add('unknown2');
+    if (floor >= TOWER_BALANCE.masterStartsAtFloor) focusSet.add('unknown4');
+  }
+  return [...focusSet];
+}
+
+function resolveTowerScales(floor: number, isBossFloor: boolean): { hpScale: number; atkScale: number } {
+  const floorOffset = Math.max(0, floor - 1);
+  const hpScale = 1 + floorOffset * TOWER_BALANCE.hpScalePerFloor + (isBossFloor ? TOWER_BALANCE.boss.hpBonusScale : 0);
+  const atkScale = 1 + floorOffset * TOWER_BALANCE.atkScalePerFloor + (isBossFloor ? TOWER_BALANCE.boss.atkBonusScale : 0);
+  return {
+    hpScale: round2(hpScale),
+    atkScale: round2(atkScale),
+  };
+}
+
+function resolveTowerTimeLimit(baseTimeLimitSec: number, floor: number, isBossFloor: boolean): number {
+  const tightenStep = Math.max(1, TOWER_BALANCE.timeTightenEveryFloors);
+  const floorPressure = Math.floor(Math.max(0, floor - 1) / tightenStep);
+  const bossPressure = isBossFloor ? TOWER_BALANCE.boss.extraTimePressure : 0;
+  return clampInt(
+    baseTimeLimitSec - floorPressure - bossPressure,
+    Math.max(1, TOWER_BALANCE.minTimeLimitSec),
+    Math.max(baseTimeLimitSec, 60),
+  );
+}
+
+function resolveTowerLevelOffset(baseLevelOffset: number, floor: number, isBossFloor: boolean): number {
+  const floorRamp = Math.floor(Math.max(0, floor - 1) * TOWER_BALANCE.levelOffsetPerFloor);
+  const bossBonus = isBossFloor ? TOWER_BALANCE.boss.extraLevelOffset : 0;
+  return Math.max(0, baseLevelOffset + floorRamp + bossBonus);
+}
+
+function resolveTowerRewardMultiplier(baseRewardMultiplier: number, floor: number, isBossFloor: boolean): number {
+  const floorBonus = Math.max(0, floor - 1) * TOWER_BALANCE.rewardMultiplierPerFloor;
+  const bossBonus = isBossFloor ? TOWER_BALANCE.boss.rewardMultiplierBonus : 0;
+  return round2(baseRewardMultiplier + floorBonus + bossBonus);
+}
 
 function pad2(value: number): string {
   return String(value).padStart(2, '0');
@@ -126,17 +275,39 @@ export function buildStreakTowerPlan({
   return withRandomSource(rng, () => {
     const floors = pickedFloors.map((floor) => {
       const baseRule = ruleMap.get(floor.ruleId) || cloneRule(season.rules[0]);
-      const bossExtra = floor.floor % 5 === 0 ? randomInt(0, 1) : 0;
-      const floorRamp = Math.floor((floor.floor - 1) / 5);
+      const floorIndex = floor.floor;
+      const isBossFloor = floorIndex % 5 === 0;
+      const difficulty = resolveTowerDifficulty(floorIndex, isBossFloor);
+      const enemyCount = resolveTowerEnemyCount(baseRule.enemyCount, floorIndex, isBossFloor);
+      const questionFocus = resolveTowerQuestionFocus(baseRule.questionFocus, floorIndex, isBossFloor);
+      const { hpScale, atkScale } = resolveTowerScales(floorIndex, isBossFloor);
+      const levelJitter = floorIndex >= 8 ? randomInt(0, 1) : 0;
+      const timeJitter = floorIndex >= 12 ? randomInt(0, 1) : 0;
       const battle = {
         ...baseRule,
-        enemyLevelOffset: baseRule.enemyLevelOffset + floorRamp + bossExtra,
-        timeLimitSec: Math.max(3, baseRule.timeLimitSec - (floor.floor >= 10 ? 1 : 0)),
-        questionFocus: shuffled(baseRule.questionFocus),
-        modifierTags: shuffled(baseRule.modifierTags),
+        enemyCount,
+        enemyLevelOffset: resolveTowerLevelOffset(baseRule.enemyLevelOffset, floorIndex, isBossFloor) + levelJitter,
+        timeLimitSec: Math.max(
+          TOWER_BALANCE.minTimeLimitSec,
+          resolveTowerTimeLimit(baseRule.timeLimitSec, floorIndex, isBossFloor) - timeJitter,
+        ),
+        difficulty,
+        rewardMultiplier: resolveTowerRewardMultiplier(baseRule.rewardMultiplier, floorIndex, isBossFloor),
+        questionFocus: shuffled(questionFocus),
+        modifierTags: shuffled([
+          ...new Set([
+            ...baseRule.modifierTags,
+            `tower-floor-${floorIndex}`,
+            `tower-difficulty-${difficulty}`,
+            floorIndex >= 10 ? 'tower-high-pressure' : '',
+            isBossFloor ? 'tower-boss-gate' : '',
+          ].filter(Boolean)),
+        ]),
       };
       return {
         ...floor,
+        levelScale: hpScale,
+        atkScale,
         battle,
         floorSeed: `${seedKey}:${floor.floor}`,
       };

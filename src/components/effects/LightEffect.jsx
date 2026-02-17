@@ -147,11 +147,17 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
   }
 
   // --- idx 3: 日蝕獅吼 — eclipse lion roar ---
-  const D = 0.34;
-  const ringN = 2 + Math.floor(lvl / 2);
-  const roarN = 2 + lvl;
-  const shardN = 4 + lvl;
-  const moteN = 6 + lvl * 2;
+  const fxLvl = Math.max(1, Math.min(12, lvl));
+  const uid = `l-${idx}-${fxLvl}-${Math.round((T.flyRight || 0) * 10)}-${Math.round((T.flyTop || 0) * 10)}`;
+  const D = 0.3;
+  const ringN = Math.min(6, 2 + Math.floor(fxLvl / 2));
+  const roarN = Math.min(9, 2 + fxLvl);
+  const shardN = Math.min(10, 4 + fxLvl);
+  const moteN = Math.min(16, 6 + fxLvl * 2);
+  const orbId = `lOrb-${uid}`;
+  const coreId = `lCore-${uid}`;
+  const coreFilterId = `lCoreFilter-${uid}`;
+  const coreSeed = Math.max(1, Math.floor(rr("ult-core-seed", 0, 2, 90)));
   return (
     <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
       {/* Phase 1: Eclipse crest rush */}
@@ -163,15 +169,15 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
           "--fly-x":`${100-T.flyRight-10}vw`,
           "--fly-y":`${T.flyTop-65}vh`,
           filter:`drop-shadow(0 0 ${glow}px #fbbf24) drop-shadow(0 0 ${glow+4}px #6b5f86)`,
-          animation:"ultApproach 0.58s ease forwards",
+          animation:"ultApproach 0.58s cubic-bezier(.16,.82,.22,1) forwards",
         }}>
-        <defs><radialGradient id="lOrb" cx="42%" cy="40%">
+        <defs><radialGradient id={orbId} cx="42%" cy="40%">
           <stop offset="0%" stopColor="#fff7c2" stopOpacity="0.84"/>
           <stop offset="36%" stopColor="#fbbf24" stopOpacity="0.72"/>
           <stop offset="72%" stopColor="#d97706" stopOpacity="0.52"/>
           <stop offset="100%" stopColor="#5b4f72" stopOpacity="0"/>
         </radialGradient></defs>
-        <path d={ORB} fill="url(#lOrb)"/>
+        <path d={ORB} fill={`url(#${orbId})`}/>
       </svg>
 
       {/* Phase 2: Eclipse core */}
@@ -183,61 +189,83 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
           transform:"translate(50%,-30%)",
           filter:`drop-shadow(0 0 ${glow+7}px #f59e0b) drop-shadow(0 0 ${glow+11}px #6b5f86)`,
         }}>
-        <defs><radialGradient id="lCore" cx="50%" cy="50%">
-          <stop offset="0%" stopColor="#fff9db" stopOpacity="0.94"/>
-          <stop offset="20%" stopColor="#fbbf24" stopOpacity="0.82"/>
-          <stop offset="48%" stopColor="#f59e0b" stopOpacity="0.66"/>
-          <stop offset="76%" stopColor="#6b5f86" stopOpacity="0.32"/>
-          <stop offset="100%" stopColor="#0f172a" stopOpacity="0"/>
-        </radialGradient></defs>
-        <circle cx="95" cy="95" r={24 + lvl * 4} fill="url(#lCore)"
+        <defs>
+          <radialGradient id={coreId} cx="50%" cy="50%">
+            <stop offset="0%" stopColor="#fff9db" stopOpacity="0.94"/>
+            <stop offset="20%" stopColor="#fbbf24" stopOpacity="0.82"/>
+            <stop offset="48%" stopColor="#f59e0b" stopOpacity="0.66"/>
+            <stop offset="76%" stopColor="#6b5f86" stopOpacity="0.32"/>
+            <stop offset="100%" stopColor="#0f172a" stopOpacity="0"/>
+          </radialGradient>
+          <filter id={coreFilterId} x="-70%" y="-70%" width="240%" height="240%" colorInterpolationFilters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="0.78" numOctaves="2" seed={coreSeed} result="noise">
+              <animate attributeName="baseFrequency" values="0.78;0.42;0.16" dur={`${dur / 1000}s`} fill="freeze"/>
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" result="warp">
+              <animate attributeName="scale" values={`0;${9 + fxLvl * 1.6};${2 + fxLvl * 0.5}`} dur={`${dur / 1000}s`} fill="freeze"/>
+            </feDisplacementMap>
+            <feGaussianBlur in="warp" stdDeviation="0" result="soft">
+              <animate attributeName="stdDeviation" values="0;0.58;0.22" dur={`${dur / 1000}s`} fill="freeze"/>
+            </feGaussianBlur>
+            <feColorMatrix in="soft" type="matrix" values="1.1 0 0 0 0 0 0.94 0 0 0 0.12 0.08 0.86 0 0 0 0 0 1 0"/>
+          </filter>
+        </defs>
+        <circle cx="95" cy="95" r={24 + fxLvl * 4} fill={`url(#${coreId})`} filter={`url(#${coreFilterId})`}
           style={{ animation:`fireExpand ${dur/1000}s ease ${D}s forwards` }}/>
       </svg>
 
       {/* Phase 3: Crown pressure rings */}
-      {Array.from({ length: ringN }, (_, i) => (
-        <svg key={`r${i}`} width="228" height="120" viewBox="0 0 228 120"
-          style={{
-            position:"absolute",
-            right:`calc(${T.right} - 32px)`,
-            top:`calc(${T.top} - 20px)`,
-            opacity:0,
-            animation:`darkRingExpand ${0.78 + i * 0.12}s ease ${D + 0.08 + i * 0.1}s forwards`,
-          }}>
-          <ellipse cx="114" cy="60" rx={58 + i * 24} ry={18 + i * 5}
-            fill="none"
-            stroke={i % 2 === 0 ? "rgba(251,191,36,0.76)" : "rgba(176,158,207,0.46)"}
-            strokeWidth={3.8 - i * 0.6}
-            style={{ filter:`drop-shadow(0 0 ${glow}px rgba(251,191,36,0.64))` }}/>
-        </svg>
-      ))}
+      {Array.from({ length: ringN }, (_, i) => {
+        const ringDelay = D + 0.08 + (i % 2) * 0.04 + Math.floor(i / 2) * 0.08;
+        return (
+          <svg key={`r${i}`} width="228" height="120" viewBox="0 0 228 120"
+            style={{
+              position:"absolute",
+              right:`calc(${T.right} - 32px)`,
+              top:`calc(${T.top} - 20px)`,
+              opacity:0,
+              animation:`darkRingExpand ${0.72 + i * 0.11}s ease ${ringDelay}s forwards`,
+            }}>
+            <ellipse cx="114" cy="60" rx={58 + i * 24} ry={18 + i * 5}
+              fill="none"
+              stroke={i % 2 === 0 ? "rgba(251,191,36,0.76)" : "rgba(176,158,207,0.46)"}
+              strokeWidth={3.8 - i * 0.6}
+              style={{ filter:`drop-shadow(0 0 ${glow}px rgba(251,191,36,0.64))` }}/>
+          </svg>
+        );
+      })}
 
       {/* Phase 4: Roar shockwaves */}
-      {Array.from({ length: roarN }, (_, i) => (
-        <svg key={`rw${i}`} width="100%" height="52" viewBox="0 0 220 44" preserveAspectRatio="none"
-          style={{
-            position:"absolute",
-            right:`calc(${T.right} - ${14 + i * 8}px)`,
-            top:`calc(${T.top} + ${rr("ult-roar-top", i, -10, 14)}px)`,
-            opacity:0,
-            filter:`drop-shadow(0 0 ${glow}px rgba(251,191,36,0.52))`,
-            animation:`waveSweep ${0.6 + rr("ult-roar-anim", i, 0, 0.24)}s ease ${D + 0.1 + i * 0.05}s forwards`,
-          }}>
-          <defs><linearGradient id={`lRoar${i}`} x1="0%" y1="50%" x2="100%" y2="50%">
-            <stop offset="0%" stopColor="rgba(15,23,42,0)"/>
-            <stop offset="36%" stopColor="rgba(245,158,11,0.62)"/>
-            <stop offset="70%" stopColor="rgba(251,191,36,0.82)"/>
-            <stop offset="100%" stopColor="rgba(15,23,42,0)"/>
-          </linearGradient></defs>
-          <path
-            d={`M0,22 L24,${9+i} L52,25 L82,${11+i*2} L114,24 L146,${10+i} L182,26 L220,20`}
-            fill="none"
-            stroke={`url(#lRoar${i})`}
-            strokeWidth={2.6 + lvl * 0.24}
-            strokeLinecap="round"
-          />
-        </svg>
-      ))}
+      {Array.from({ length: roarN }, (_, i) => {
+        const lane = i % 3;
+        const wave = Math.floor(i / 3);
+        const roarDelay = D + 0.1 + lane * 0.04 + wave * 0.06;
+        return (
+          <svg key={`rw${i}`} width="100%" height="52" viewBox="0 0 220 44" preserveAspectRatio="none"
+            style={{
+              position:"absolute",
+              right:`calc(${T.right} - ${14 + i * 8}px)`,
+              top:`calc(${T.top} + ${rr("ult-roar-top", i, -10, 14)}px)`,
+              opacity:0,
+              filter:`drop-shadow(0 0 ${glow}px rgba(251,191,36,0.52))`,
+              animation:`waveSweep ${0.54 + rr("ult-roar-anim", i, 0, 0.2)}s ease ${roarDelay}s forwards`,
+            }}>
+            <defs><linearGradient id={`lRoar-${uid}-${i}`} x1="0%" y1="50%" x2="100%" y2="50%">
+              <stop offset="0%" stopColor="rgba(15,23,42,0)"/>
+              <stop offset="36%" stopColor="rgba(245,158,11,0.62)"/>
+              <stop offset="70%" stopColor="rgba(251,191,36,0.82)"/>
+              <stop offset="100%" stopColor="rgba(15,23,42,0)"/>
+            </linearGradient></defs>
+            <path
+              d={`M0,22 L24,${9+i} L52,25 L82,${11+i*2} L114,24 L146,${10+i} L182,26 L220,20`}
+              fill="none"
+              stroke={`url(#lRoar-${uid}-${i})`}
+              strokeWidth={2.6 + fxLvl * 0.24}
+              strokeLinecap="round"
+            />
+          </svg>
+        );
+      })}
 
       {/* Phase 5: Fang shards */}
       {Array.from({ length: shardN }, (_, i) => (
@@ -247,13 +275,13 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
             right:`calc(${T.right} + ${rr("ult-shard-right", i, -10, 10)}%)`,
             top:`calc(${T.top} + ${rr("ult-shard-top", i, -10, 8)}%)`,
             width:`${6 + rr("ult-shard-width", i, 0, 2.5)}px`,
-            height:`${20 + lvl * 4 + rr("ult-shard-height", i, 0, 12)}px`,
+            height:`${20 + fxLvl * 4 + rr("ult-shard-height", i, 0, 12)}px`,
             borderRadius:999,
             background:"linear-gradient(180deg, rgba(255,248,220,0.82), rgba(251,191,36,0.78) 45%, rgba(107,95,134,0))",
             opacity:0,
             transform:`rotate(${rr("ult-shard-rot", i, -22, 22)}deg)`,
             filter:`drop-shadow(0 0 ${glow}px rgba(251,191,36,0.6))`,
-            animation:`sparkle ${0.42 + rr("ult-shard-anim", i, 0, 0.2)}s ease ${D + 0.14 + i * 0.05}s both`,
+            animation:`sparkle ${0.38 + rr("ult-shard-anim", i, 0, 0.2)}s ease ${D + 0.14 + (i % 3) * 0.03 + Math.floor(i / 3) * 0.05}s both`,
           }}
         />
       ))}
@@ -262,6 +290,7 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
       {Array.from({ length: moteN }, (_, i) => {
         const angle = (i / moteN) * 360;
         const dist = 30 + rr("ult-mote-dist", i, 0, 50);
+        const delay = D + 0.12 + (i % 4) * 0.02 + Math.floor(i / 4) * 0.03;
         return (
           <svg key={`m${i}`} width="20" height="20" viewBox="0 0 20 20"
             style={{
@@ -272,7 +301,7 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
               filter:`drop-shadow(0 0 ${glow}px #fbbf24)`,
               "--lx":`${Math.cos(angle*Math.PI/180)*dist}px`,
               "--ly":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`leafSpin ${0.52 + rr("ult-mote-anim", i, 0, 0.28)}s ease ${D + 0.12 + i * 0.03}s forwards`,
+              animation:`leafSpin ${0.48 + rr("ult-mote-anim", i, 0, 0.26)}s ease ${delay}s forwards`,
             }}>
             <circle cx="10" cy="10" r={3.8 + rr("ult-mote-r", i, 0, 1.6)}
               fill={i % 3 === 0 ? "#fde68a" : i % 3 === 1 ? "#fbbf24" : "#f59e0b"} opacity="0.74"/>
@@ -281,7 +310,7 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
       })}
 
       {/* Phase 7: Eclipse glow */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(251,191,36,${0.1+lvl*0.024}), rgba(107,95,134,${0.034+lvl*0.009}) 36%, rgba(15,23,42,${0.06+lvl*0.014}) 58%, transparent 74%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(251,191,36,${0.1+fxLvl*0.024}), rgba(107,95,134,${0.034+fxLvl*0.009}) 36%, rgba(15,23,42,${0.06+fxLvl*0.014}) 58%, transparent 74%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
     </div>
   );
 }

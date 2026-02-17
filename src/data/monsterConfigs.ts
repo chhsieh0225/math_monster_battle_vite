@@ -10,6 +10,12 @@ const MONSTER_EVOLVE_LEVEL = BALANCE_CONFIG.monsters.evolveLevelById;
 const SLIME_VARIANT_MULTIPLIERS = BALANCE_CONFIG.monsters.slimeVariantMultipliersById;
 const EVOLVED_SLIME_VARIANT_MULTIPLIERS = BALANCE_CONFIG.monsters.evolvedSlimeVariantMultipliersById;
 
+/** Set of monster IDs that are bosses (use boss battle mechanics). */
+export const BOSS_IDS: ReadonlySet<string> = new Set(['boss', 'boss_hydra']);
+
+/** All boss monster IDs as an array (for random selection). */
+export const BOSS_ID_LIST: readonly string[] = [...BOSS_IDS];
+
 export const MONSTER_CONFIGS: MonsterConfig[] = [
   {
     id: "slime",
@@ -99,6 +105,25 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "tyrant",
     traitName: "霸王",
     traitDesc: "擁有多階段戰鬥形態，能蓄力釋放毀滅大招，還能封印對手技能。",
+  },
+  {
+    id: "boss_hydra",
+    name: "深淵九頭蛇",
+    hp: MONSTER_STATS.boss_hydra.hp,
+    atk: MONSTER_STATS.boss_hydra.atk,
+    c1: "#7c3aed",
+    c2: "#312e81",
+    spriteKey: "bossHydraSVG",
+    dropTable: "boss_hydra",
+    mType: "poison",
+    typeIcon: "☠️",
+    typeName: "毒",
+    mType2: "dark",
+    typeIcon2: "💀",
+    typeName2: "暗",
+    trait: "venom",
+    traitName: "毒霧",
+    traitDesc: "散發致命毒霧，每回合持續侵蝕對手生命。擁有多階段戰鬥形態，能蓄力釋放劇毒吐息，還能封印對手技能。",
   },
 ];
 

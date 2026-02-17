@@ -1,5 +1,6 @@
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
-import { getEff } from '../../data/typeEffectiveness.ts';
+import { BOSS_IDS } from '../../data/monsterConfigs.ts';
+import { getEff, getDualEff } from '../../data/typeEffectiveness.ts';
 import { calcEnemyDamage } from '../../utils/damageCalc.ts';
 import { computeBossPhase } from '../../utils/turnFlow.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
@@ -36,6 +37,7 @@ type BattleEnemy = {
   atk?: number;
   maxHp?: number;
   mType?: string;
+  mType2?: string;
   trait?: string;
 };
 
@@ -475,7 +477,9 @@ export function runEnemyTurn({
                 const target2 = resolvePlayerTarget(s3);
                 const target2Name = target2 === 'sub' ? (s3.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s3.starter?.name || tr(t, 'battle.role.main', 'Main'));
                 const defenderType2 = target2 === 'sub' ? (s3.allySub?.type || s3.starter?.type) : s3.starter?.type;
-                const dmg2 = calcEnemyDamageTyped(scaledAtk, getEffTyped(s3.enemy?.mType, defenderType2));
+                const swiftEff1 = getEffTyped(s3.enemy?.mType, defenderType2);
+                const swiftEff2 = s3.enemy?.mType2 ? getEffTyped(s3.enemy.mType2, defenderType2) : 0;
+                const dmg2 = calcEnemyDamageTyped(scaledAtk, Math.max(swiftEff1, swiftEff2 || swiftEff1));
                 const nh2 = applyDamageToTarget({
                   s: s3,
                   target: target2,
@@ -512,6 +516,41 @@ export function runEnemyTurn({
         }, 800);
       },
     });
+  }
+
+  function applyVenomDot(bossPhaseVal: number): void {
+    const s = sr.current;
+    if (!s.enemy || s.enemy.trait !== 'venom') return;
+    const dotBase = TRAIT_BALANCE.enemy.venomDotDamage;
+    const dotDmg = bossPhaseVal >= 3
+      ? TRAIT_BALANCE.enemy.venomDotPhase3Damage
+      : bossPhaseVal >= 2
+        ? TRAIT_BALANCE.enemy.venomDotPhase2Damage
+        : dotBase;
+    const target = resolvePlayerTarget(s);
+    const prevHp = target === 'sub' ? (s.pHpSub || 0) : (s.pHp || 0);
+    const nextHp = Math.max(0, prevHp - dotDmg);
+    if (target === 'sub') {
+      setPHpSub(nextHp);
+    } else {
+      setPHp(nextHp);
+    }
+    addD(`☠️-${dotDmg}`, target === 'sub' ? 112 : 60, target === 'sub' ? 146 : 170, '#7c3aed');
+    addP('enemy', target === 'sub' ? 112 : 60, target === 'sub' ? 146 : 170, 3);
+    setBText(tr(t, 'battle.enemy.venomDot', '☠️ Toxic fog corrodes {name}!', {
+      name: target === 'sub' ? (s.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s.starter?.name || tr(t, 'battle.role.main', 'Main')),
+    }));
+    if (nextHp <= 0) {
+      safeToIfBattleActive(() => {
+        sfx.play('ko');
+        const targetName = target === 'sub' ? (sr.current.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (sr.current.starter?.name || tr(t, 'battle.role.main', 'Main'));
+        if (handlePlayerPartyKo) {
+          handlePlayerPartyKo({ target, reason: tr(t, 'battle.ko.venomDot', '{name} succumbed to the toxic fog...', { name: targetName }) });
+        } else {
+          loseToGameOver(tr(t, 'battle.ko.venomDot.generic', 'Succumbed to the toxic fog...'));
+        }
+      }, 800);
+    }
   }
 
   function doEnemyTurnInner(): void {
@@ -607,7 +646,7 @@ export function runEnemyTurn({
   const s = sr.current;
   if (!s.enemy || !s.starter) return;
   if (!isBattleActive()) return;
-  const isBoss = s.enemy.id === 'boss';
+  const isBoss = BOSS_IDS.has(s.enemy.id ?? '');
 
   if (isBoss && s.sealedTurns > 0) {
     const nt = s.sealedTurns - 1;
@@ -634,6 +673,23 @@ export function runEnemyTurn({
         return;
       }
     }
+  }
+
+  // Venom DOT: apply poison damage at the start of the enemy turn
+  if (s.enemy.trait === 'venom') {
+    const currentBossPhase = isBoss ? computeBossPhaseTyped(s.eHp, s.enemy.maxHp || 1) : 0;
+    applyVenomDot(currentBossPhase);
+    // Check if DOT killed the player — if so, the KO handler will take over
+    const sAfterDot = sr.current;
+    const mainAlive = (sAfterDot.pHp || 0) > 0;
+    const subAlive = sAfterDot.allySub ? (sAfterDot.pHpSub || 0) > 0 : false;
+    if (!mainAlive && !subAlive) return; // KO handler already triggered
+    setPhase('text');
+    safeToIfBattleActive(() => {
+      if (!isBattleActive()) return;
+      doEnemyTurnInner();
+    }, 1000);
+    return;
   }
 
   doEnemyTurnInner();

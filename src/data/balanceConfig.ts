@@ -9,6 +9,7 @@ const CRIT_BY_TYPE = {
   electric: { critChanceBonus: 0.03, critDamageBonus: 0.04, antiCritRate: 0.0, antiCritDamage: 0.04 },
   light: { critChanceBonus: 0.02, critDamageBonus: 0.05, antiCritRate: 0.01, antiCritDamage: 0.06 },
   dark: { critChanceBonus: 0.03, critDamageBonus: 0.08, antiCritRate: 0.0, antiCritDamage: 0.0 },
+  poison: { critChanceBonus: 0.02, critDamageBonus: 0.04, antiCritRate: 0.01, antiCritDamage: 0.02 },
 } as const;
 
 export const BALANCE_CONFIG = {
@@ -80,6 +81,7 @@ export const BALANCE_CONFIG = {
       ghost: { hp: 50, atk: 8 },
       dragon: { hp: 80, atk: 12 },
       boss: { hp: 120, atk: 15 },
+      boss_hydra: { hp: 140, atk: 13 },
     },
     evolveLevelById: {
       slime: 5,
@@ -236,6 +238,9 @@ export const BALANCE_CONFIG = {
       tenacityHealRatio: 0.15,
       curseApplyChance: 0.35,
       swiftExtraAttackChance: 0.25,
+      venomDotDamage: 4,
+      venomDotPhase2Damage: 6,
+      venomDotPhase3Damage: 9,
       assistAttackChance: 0.35,
       assistAttackScale: 0.55,
       assistAttackCap: 24,

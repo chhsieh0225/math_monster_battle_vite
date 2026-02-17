@@ -64,8 +64,12 @@ export type EnemyVm = {
   lvl: number;
   maxHp: number;
   mType: string;
+  mType2?: string;
   sceneMType?: string;
   typeIcon: string;
+  typeIcon2?: string;
+  typeName?: string;
+  typeName2?: string;
   c1: string;
   c2: string;
   isEvolved?: boolean;

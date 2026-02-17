@@ -195,7 +195,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                     </div>
                     <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{seen ? e.name : t("encyclopedia.unknownName", "???")}</div>
                     <div style={{ fontSize: 10, opacity: 0.5 }}>
-                      {seen ? `${e.typeIcon} ${e.typeName}` : t("encyclopedia.unknownType", "??")}
+                      {seen ? `${e.typeIcon}${e.typeIcon2 ? e.typeIcon2 : ''} ${e.typeName}${e.typeName2 ? ' / ' + e.typeName2 : ''}` : t("encyclopedia.unknownType", "??")}
                       {e.isEvolved && seen && <span style={{ marginLeft: 4, fontSize: 9, background: 'rgba(168,85,247,0.25)', padding: '1px 5px', borderRadius: 6 }}>{t("encyclopedia.tag.evolved", "Evolved")}</span>}
                     </div>
                     {seen && <div style={{ fontSize: 9, opacity: 0.25, marginTop: 3 }}>
@@ -408,7 +408,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
                   color: tc,
                 }}
               >
-                {entry.typeIcon} {t("encyclopedia.typeTag", "{type} type", { type: entry.typeName })}
+                {entry.typeIcon}{entry.typeIcon2 || ''} {t("encyclopedia.typeTag", "{type} type", { type: entry.typeName + (entry.typeName2 ? ' / ' + entry.typeName2 : '') })}
               </span>
               {entry.isEvolved && (
                 <span

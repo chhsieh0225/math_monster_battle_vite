@@ -1,4 +1,5 @@
 import { PLAYER_MAX_HP } from '../../data/constants.ts';
+import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -199,7 +200,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         frozen: false,
         specDef: false,
         defAnim: null,
-        bossPhase: enemy?.id === 'boss' ? 1 : 0,
+        bossPhase: BOSS_IDS.has(enemy?.id ?? '') ? 1 : 0,
         bossTurn: 0,
         bossCharging: false,
         sealedMove: -1,
@@ -222,7 +223,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         frozen: false,
         specDef: false,
         defAnim: null,
-        bossPhase: promoted?.id === 'boss' ? 1 : 0,
+        bossPhase: BOSS_IDS.has(promoted?.id ?? '') ? 1 : 0,
         bossTurn: 0,
         bossCharging: false,
         sealedMove: -1,

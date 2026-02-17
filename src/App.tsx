@@ -17,6 +17,7 @@ import enUS from './i18n/locales/en-US';
 // Hooks
 import { useBattle } from './hooks/useBattle';
 import { useMobileExperience } from './hooks/useMobileExperience';
+import { BOSS_IDS } from './data/monsterConfigs.ts';
 
 // Screens
 import AppScreenRouter from './components/AppScreenRouter';
@@ -220,7 +221,7 @@ function App() {
     if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge') {
       V.sfx.startBgm('menu');
     } else if (S.screen === 'battle') {
-      const isBoss = S.enemy?.id === 'boss';
+      const isBoss = BOSS_IDS.has(S.enemy?.id ?? '');
       V.sfx.startBgm(isBoss ? 'boss' : 'battle');
     } else {
       V.sfx.stopBgm();

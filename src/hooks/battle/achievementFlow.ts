@@ -1,4 +1,5 @@
 import { getStageMaxHp } from '../../utils/playerHp.ts';
+import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import type { AchievementId } from '../../types/game';
 
 type TryUnlock = (id: AchievementId) => void;
@@ -53,7 +54,7 @@ export function applyVictoryAchievements({
   tryUnlock,
 }: ApplyVictoryAchievementsArgs): void {
   tryUnlock('first_win');
-  if (state.enemy?.id === 'boss') tryUnlock('boss_kill');
+  if (BOSS_IDS.has(state.enemy?.id ?? '')) tryUnlock('boss_kill');
   if ((state.pHp || 0) <= 5) tryUnlock('low_hp');
 }
 

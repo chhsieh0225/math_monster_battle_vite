@@ -21,4 +21,5 @@ export const DROP_TABLES: Record<string, string[]> = {
   ghost: ['👻', '⭐'],
   dragon: ['🐉', '👑'],
   boss: ['👑', '🏆'],
+  boss_hydra: ['☠️', '💎'],
 };

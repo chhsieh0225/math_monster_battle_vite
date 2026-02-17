@@ -4,7 +4,7 @@
  */
 import { POWER_CAPS } from '../data/constants.ts';
 import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
-import { getEff } from '../data/typeEffectiveness.ts';
+import { getEff, getDualEff } from '../data/typeEffectiveness.ts';
 import { randomFloat } from './prng.ts';
 
 type MoveLite = {
@@ -16,9 +16,11 @@ type MoveLite = {
 
 type EnemyLite = {
   mType: string;
+  mType2?: string;
 };
 
 const getEffTyped = getEff as (moveType?: string, monType?: string) => number;
+const getDualEffTyped = getDualEff as (moveType?: string, monType?: string, monType2?: string) => number;
 const DAMAGE_BALANCE = BALANCE_CONFIG.damage;
 
 /**
@@ -30,21 +32,23 @@ export function movePower(move: MoveLite, lvl: number, idx: number): number {
 
 /**
  * For a dual-type move, pick the type with better effectiveness.
+ * Also considers dual-type defenders (mType + mType2).
  */
 export function bestAttackType(move: MoveLite, enemy: EnemyLite | null): string {
   if (!move.type2 || !enemy) return move.type;
-  return getEffTyped(move.type2, enemy.mType) > getEffTyped(move.type, enemy.mType)
-    ? move.type2
-    : move.type;
+  const eff1 = getDualEffTyped(move.type, enemy.mType, enemy.mType2);
+  const eff2 = getDualEffTyped(move.type2, enemy.mType, enemy.mType2);
+  return eff2 > eff1 ? move.type2 : move.type;
 }
 
 /**
- * For a dual-type move, get the better effectiveness multiplier.
+ * For a dual-type move vs potentially dual-type defender,
+ * get the better effectiveness multiplier.
  */
 export function bestEffectiveness(move: MoveLite, enemy: EnemyLite | null): number {
-  const e1 = enemy ? getEffTyped(move.type, enemy.mType) : 1;
+  const e1 = enemy ? getDualEffTyped(move.type, enemy.mType, enemy.mType2) : 1;
   if (!move.type2 || !enemy) return e1;
-  return Math.max(e1, getEffTyped(move.type2, enemy.mType));
+  return Math.max(e1, getDualEffTyped(move.type2, enemy.mType, enemy.mType2));
 }
 
 type AttackDamageParams = {

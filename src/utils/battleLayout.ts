@@ -1,3 +1,5 @@
+import { BOSS_IDS } from '../data/monsterConfigs.ts';
+
 type BattleMode = string;
 
 type ResolveBattleLayoutInput = {
@@ -54,7 +56,7 @@ export function resolveBattleLayout({
   const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale);
   const subPlayerSize = Math.round((compactDual ? 104 : 112) * (dualUnits ? (compactDual ? 0.9 : 0.95) : 1));
 
-  const isBoss = enemyId === "boss";
+  const isBoss = BOSS_IDS.has(enemyId ?? '');
   const isDragonOrFire = enemyId === "fire" || enemyId === "dragon";
   const isEvolvedSlime = Boolean(enemyId?.startsWith("slime") && enemyIsEvolved);
   const enemyBaseSize = isBoss ? 230

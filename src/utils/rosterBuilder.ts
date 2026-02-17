@@ -1,4 +1,5 @@
 import { EVOLVED_SLIME_VARIANTS, MONSTERS, SLIME_VARIANTS } from '../data/monsters.ts';
+import { BOSS_IDS, BOSS_ID_LIST } from '../data/monsterConfigs.ts';
 import {
   DOUBLE_STAGE_WAVES,
   STAGE_SCALE_BASE,
@@ -41,8 +42,12 @@ export function buildRoster(pickIndex: PickIndex, mode: 'single' | 'double' = 's
   const waves: StageWave[] = mode === 'double' ? DOUBLE_STAGE_WAVES : STAGE_WAVES;
 
   return waves.map((wave, i) => {
-    const b = MONSTER_BY_ID.get(wave.monsterId);
-    if (!b) throw new Error(`[rosterBuilder] unknown monsterId: ${wave.monsterId}`);
+    // If wave requests a boss, randomly pick from the boss pool
+    const resolvedId = BOSS_IDS.has(wave.monsterId)
+      ? BOSS_ID_LIST[pickIndex(BOSS_ID_LIST.length)]
+      : wave.monsterId;
+    const b = MONSTER_BY_ID.get(resolvedId);
+    if (!b) throw new Error(`[rosterBuilder] unknown monsterId: ${resolvedId}`);
     const sc = STAGE_SCALE_BASE + i * STAGE_SCALE_STEP;
     const isEvolved = Boolean(b.evolveLvl && (i + 1) >= b.evolveLvl);
 

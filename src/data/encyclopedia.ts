@@ -8,23 +8,26 @@
  *   STARTER_ENTRIES   — player starters × 3 stages (always visible, no unlock)
  */
 import { MONSTERS, SLIME_VARIANTS, EVOLVED_SLIME_VARIANTS, TYPE_EFF } from './monsters.ts';
+import { getDualEff } from './typeEffectiveness.ts';
 import { STARTERS } from './starters.ts';
 import type { EncyclopediaEnemyEntry, EncyclopediaStarterEntry } from '../types/game';
 
 type TypeEffectMap = Record<string, number>;
 
-function weaknesses(mType: string): string[] {
+function weaknesses(mType: string, mType2?: string): string[] {
   const weak: string[] = [];
-  for (const [atkType, map] of Object.entries(TYPE_EFF) as Array<[string, TypeEffectMap]>) {
-    if ((map[mType] ?? 1) > 1) weak.push(atkType);
+  for (const atkType of Object.keys(TYPE_EFF)) {
+    const eff = getDualEff(atkType, mType, mType2);
+    if (eff > 1) weak.push(atkType);
   }
   return weak;
 }
 
-function resistances(mType: string): string[] {
+function resistances(mType: string, mType2?: string): string[] {
   const res: string[] = [];
-  for (const [atkType, map] of Object.entries(TYPE_EFF) as Array<[string, TypeEffectMap]>) {
-    if ((map[mType] ?? 1) < 1) res.push(atkType);
+  for (const atkType of Object.keys(TYPE_EFF)) {
+    const eff = getDualEff(atkType, mType, mType2);
+    if (eff < 1) res.push(atkType);
   }
   return res;
 }
@@ -38,6 +41,7 @@ const TYPE_LABEL: Record<string, string> = {
   ghost: '靈',
   steel: '鋼',
   light: '光',
+  poison: '毒',
 };
 
 // ── Monster descriptions ──
@@ -61,6 +65,7 @@ const DESCS: Record<string, string> = {
   dragon: '由古代機械文明創造的龍型機甲。全身覆蓋鈦合金裝甲，防禦力極高，但行動略顯笨重。',
   dragonEvolved: '鋼鐵龍裝載了傳說中的天空引擎後的形態。速度與防禦兼備，被稱為空中要塞。',
   boss: '傳說中的暗黑龍王。統治著暗黑深淵的最終BOSS。擁有壓倒性的力量，只有最強的訓練師才能擊敗它。',
+  boss_hydra: '棲息於毒沼深淵的三頭毒蛇。全身散發致命毒霧，被牠纏上的獵物會在不知不覺中被毒素侵蝕。每顆頭都能噴出不同劇毒，是最令冒險者恐懼的存在。',
 };
 
 const HABITATS: Record<string, string> = {
@@ -83,6 +88,7 @@ const HABITATS: Record<string, string> = {
   dragon: '⚙️ 鋼鐵要塞',
   dragonEvolved: '⚙️ 鋼鐵要塞',
   boss: '💀 暗黑深淵',
+  boss_hydra: '☠️ 毒沼深淵',
 };
 
 const RARITY: Record<string, string> = {
@@ -105,6 +111,7 @@ const RARITY: Record<string, string> = {
   dragon: '★★★',
   dragonEvolved: '★★★★',
   boss: '★★★★★',
+  boss_hydra: '★★★★★',
 };
 
 export const ENC_ENTRIES: EncyclopediaEnemyEntry[] = [];
@@ -170,15 +177,18 @@ for (const m of MONSTERS) {
     key: m.id,
     name: m.name,
     mType: m.mType,
+    mType2: m.mType2,
     typeIcon: m.typeIcon,
+    typeIcon2: m.typeIcon2,
     typeName: m.typeName,
+    typeName2: m.typeName2,
     hp: m.hp,
     atk: m.atk,
     svgFn: m.svgFn,
     c1: m.c1,
     c2: m.c2,
-    weakAgainst: weaknesses(m.mType).map((t) => TYPE_LABEL[t] || t),
-    resistAgainst: resistances(m.mType).map((t) => TYPE_LABEL[t] || t),
+    weakAgainst: weaknesses(m.mType, m.mType2).map((t) => TYPE_LABEL[t] || t),
+    resistAgainst: resistances(m.mType, m.mType2).map((t) => TYPE_LABEL[t] || t),
     isEvolved: false,
     desc: DESCS[m.id] || '',
     habitat: HABITATS[m.id] || '',
@@ -196,15 +206,18 @@ for (const m of MONSTERS) {
       key: ek,
       name: m.evolvedName || m.name,
       mType: m.mType,
+      mType2: m.mType2,
       typeIcon: m.typeIcon,
+      typeIcon2: m.typeIcon2,
       typeName: m.typeName,
+      typeName2: m.typeName2,
       hp: m.hp,
       atk: m.atk,
       svgFn: m.evolvedSvgFn,
       c1: m.c1,
       c2: m.c2,
-      weakAgainst: weaknesses(m.mType).map((t) => TYPE_LABEL[t] || t),
-      resistAgainst: resistances(m.mType).map((t) => TYPE_LABEL[t] || t),
+      weakAgainst: weaknesses(m.mType, m.mType2).map((t) => TYPE_LABEL[t] || t),
+      resistAgainst: resistances(m.mType, m.mType2).map((t) => TYPE_LABEL[t] || t),
       isEvolved: true,
       desc: DESCS[ek] || '',
       habitat: HABITATS[ek] || '',

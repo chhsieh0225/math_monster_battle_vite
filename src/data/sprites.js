@@ -38,6 +38,7 @@ export const SPRITE_IMGS = {
   player_lion0: `${BASE}sprites/player_lion0.png`,
   player_lion1: `${BASE}sprites/player_lion1.png`,
   player_lion2: `${BASE}sprites/player_lion2.png`,
+  boss_hydra: `${BASE}sprites/boss_hydra.png`,
 };
 
 export const BG_IMGS = {
@@ -99,3 +100,4 @@ export const playerelectric2SVG = makeSvgFn('player_electric2');
 export const playerlion0SVG = makeSvgFnFill('player_lion0', 677, 369);
 export const playerlion1SVG = makeSvgFnFill('player_lion1', 677, 369);
 export const playerlion2SVG = makeSvgFnFill('player_lion2', 677, 369);
+export const bossHydraSVG = makeSvgFnFill('boss_hydra', 677, 369);

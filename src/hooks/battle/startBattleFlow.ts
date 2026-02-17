@@ -12,9 +12,12 @@ type AllyLite = {
 type EnemyLite = {
   name?: string;
   typeIcon?: string;
+  typeIcon2?: string;
   typeName?: string;
+  typeName2?: string;
   lvl?: number;
   mType?: string;
+  mType2?: string;
   sceneMType?: string;
 } | null;
 
@@ -133,9 +136,9 @@ export function runStartBattleFlow({
         {
           scene: localizedScene,
           enemy: enemy.name || '',
-          enemyType: `${enemy.typeIcon || ''}${enemy.typeName || ''}`,
+          enemyType: `${enemy.typeIcon || ''}${enemy.typeIcon2 || ''}${enemy.typeName || ''}${enemy.typeName2 ? '/' + enemy.typeName2 : ''}`,
           enemySub: enemySub.name || '',
-          enemySubType: `${enemySub.typeIcon || ''}${enemySub.typeName || ''}`,
+          enemySubType: `${enemySub.typeIcon || ''}${enemySub.typeIcon2 || ''}${enemySub.typeName || ''}${enemySub.typeName2 ? '/' + enemySub.typeName2 : ''}`,
         },
       ));
     }
@@ -147,7 +150,7 @@ export function runStartBattleFlow({
       {
         scene: localizedScene,
         enemy: enemy.name || '',
-        enemyType: `${enemy.typeIcon || ''}${enemy.typeName || ''}`,
+        enemyType: `${enemy.typeIcon || ''}${enemy.typeIcon2 || ''}${enemy.typeName || ''}${enemy.typeName2 ? '/' + enemy.typeName2 : ''}`,
         level: enemy.lvl ?? 1,
       },
     ));

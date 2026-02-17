@@ -1,7 +1,8 @@
 import { PLAYER_MAX_HP } from '../../data/constants.ts';
+import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
-import { getEff } from '../../data/typeEffectiveness.ts';
+import { getEff, getDualEff } from '../../data/typeEffectiveness.ts';
 import {
   bestEffectiveness,
   calcAttackDamage,
@@ -18,6 +19,7 @@ type EntityLike = {
   maxHp?: number;
   atk?: number;
   mType?: string;
+  mType2?: string;
   trait?: string;
 };
 
@@ -225,7 +227,7 @@ const calcEnemyDamageTyped = calcEnemyDamage as (atkStat: number, defEff: number
 const movePowerTyped = movePower as (move: MoveLike, lvl: number, idx: number) => number;
 const bestEffectivenessTyped = bestEffectiveness as (
   move: MoveLike,
-  enemy: { mType?: string } | null,
+  enemy: { mType?: string; mType2?: string } | null,
 ) => number;
 const calcAttackDamageTyped = calcAttackDamage as (params: {
   basePow: number;
@@ -238,11 +240,12 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function getBestMoveType(move: MoveLike, defenderType?: string): string {
+function getBestMoveType(move: MoveLike, defenderType?: string, defenderType2?: string): string {
   if (!move.type2 || !defenderType) return move.type;
-  return getEffTyped(move.type2, defenderType) > getEffTyped(move.type, defenderType)
-    ? move.type2
-    : move.type;
+  const getDualEffLocal = getDualEff as (mt?: string, dt?: string, dt2?: string) => number;
+  const eff1 = getDualEffLocal(move.type, defenderType, defenderType2);
+  const eff2 = getDualEffLocal(move.type2, defenderType, defenderType2);
+  return eff2 > eff1 ? move.type2 : move.type;
 }
 
 function resolveCritOutcome({
@@ -301,8 +304,8 @@ export function resolveBossTurnState({
   bossCharging,
   sealedMove,
 }: BossTurnParams): BossTurnState {
-  const isBoss = enemy?.id === 'boss';
-  if (!isBoss) {
+  const isBoss = enemy != null && BOSS_IDS.has(enemy.id ?? '');
+  if (!isBoss || !enemy) {
     return {
       isBoss: false,
       phase: 0,
@@ -363,7 +366,10 @@ export function resolveEnemyPrimaryStrike({
     chanceFloor: berserkChanceFloor,
     multiplierFloor: berserkMultiplierFloor,
   });
-  const defEff = getEffTyped(enemy?.mType, starterType);
+  // For dual-type attackers, use the type with better effectiveness
+  const eff1 = getEffTyped(enemy?.mType, starterType);
+  const eff2 = enemy?.mType2 ? getEffTyped(enemy.mType2, starterType) : 0;
+  const defEff = Math.max(eff1, eff2 || eff1);
   const base = calcEnemyDamageTyped(scaledAtk, defEff);
   const dmg = Math.max(0, Math.round(base * crit.critScale));
 
@@ -443,7 +449,7 @@ export function resolvePlayerStrike({
   }
 
   if (bossPhase >= 3) dmg = Math.round(dmg * TRAIT_BALANCE.player.bossPhase3DamageScale);
-  const attackerCritType = getBestMoveType(move, enemy?.mType);
+  const attackerCritType = getBestMoveType(move, enemy?.mType, enemy?.mType2);
   const crit = resolveCritOutcome({
     attackerType: attackerCritType,
     defenderType: enemy?.mType,

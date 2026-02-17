@@ -102,8 +102,11 @@ export type EncyclopediaEnemyEntry = {
   key: string;
   name: string;
   mType: string;
+  mType2?: string;
   typeIcon: string;
+  typeIcon2?: string;
   typeName: string;
+  typeName2?: string;
   hp: number;
   atk: number;
   svgFn: (c1: string, c2: string) => string;
@@ -146,7 +149,8 @@ export type MonsterType =
   | "electric"
   | "ghost"
   | "steel"
-  | "dark";
+  | "dark"
+  | "poison";
 
 export type MonsterTraitFields = {
   trait?: string;
@@ -169,6 +173,9 @@ export type MonsterConfig = MonsterTraitFields & {
   mType: MonsterType;
   typeIcon: string;
   typeName: string;
+  mType2?: MonsterType;
+  typeIcon2?: string;
+  typeName2?: string;
 };
 
 export type SlimeVariantConfig = MonsterTraitFields & {

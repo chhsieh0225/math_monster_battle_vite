@@ -7,6 +7,7 @@ import { PVP_BALANCE } from '../../data/pvpBalance';
 import { getStageMaxHp, getStarterMaxHp } from '../../utils/playerHp';
 import { resolveBattleLayout } from '../../utils/battleLayout';
 import { hasSpecialTrait } from '../../utils/traits';
+import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import MonsterSprite from '../ui/MonsterSprite';
 import HPBar from '../ui/HPBar';
 import XPBar from '../ui/XPBar';
@@ -492,7 +493,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
   const enemyInfoStyle = ({ "--battle-enemy-info-right": enemyInfoRight } as CSSProperties);
   const playerInfoStyle = ({ "--battle-player-info-left": playerInfoLeft } as CSSProperties);
   const enemyLowHp = enemy.maxHp > 0 && B.eHp > 0 && B.eHp / enemy.maxHp < 0.25;
-  const enemyIdleAnim = enemy.id === "boss"
+  const enemyIdleAnim = BOSS_IDS.has(enemy.id)
     ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
     : enemyLowHp
       ? "float 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite"
@@ -514,7 +515,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     "--enemy-shadow-right": `calc(${enemyMainRightPct}% + ${Math.round(eSize * 0.18)}px)`,
     "--enemy-shadow-top": `calc(${eTopPct}% + ${Math.round(eHeight * 0.72)}px)`,
     "--enemy-shadow-width": `${Math.round(eSize * 0.56)}px`,
-    "--enemy-shadow-anim": enemy.id === "boss" ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
+    "--enemy-shadow-anim": BOSS_IDS.has(enemy.id) ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
   } as CSSProperties);
   const playerMainSpriteStyle = ({
     "--player-main-left": `${playerMainLeftPct}%`,
@@ -698,7 +699,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
               cur={B.eHp}
               max={enemy.maxHp}
               color={enemy.c1}
-              label={`${enemy.typeIcon}${enemy.name} ${t("battle.level", "Lv.{level}", { level: enemy.lvl })}`}
+              label={`${enemy.typeIcon}${enemy.typeIcon2 || ''}${enemy.name} ${t("battle.level", "Lv.{level}", { level: enemy.lvl })}`}
             />
           </div>
           {showEnemySub && B.enemySub && (
@@ -740,7 +741,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
         </div>
         {showEnemySub && B.enemySub && eSubSvg && (
           <div className="battle-sprite-enemy-sub" style={enemySubSpriteStyle}>
-            <MonsterSprite svgStr={eSubSvg} size={B.enemySub.id === "boss" ? 160 : B.enemySub.isEvolved ? 120 : 96} />
+            <MonsterSprite svgStr={eSubSvg} size={BOSS_IDS.has(B.enemySub.id) ? 160 : B.enemySub.isEvolved ? 120 : 96} />
           </div>
         )}
         {!B.eAnim && !UX.lowPerfMode && <div className="battle-sprite-enemy-shadow" style={enemyMainShadowStyle} />}

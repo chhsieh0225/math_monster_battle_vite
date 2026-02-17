@@ -76,10 +76,6 @@ import {
   buildEnemyTurnArgs,
   buildSelectMoveFlowArgs,
 } from './battle/turnActionDepsBuilder.ts';
-import { runVictoryFlow } from './battle/victoryFlow';
-import {
-  buildVictoryFlowArgs,
-} from './battle/progressionDepsBuilder.ts';
 import { runResetRuntimeState } from './battle/runtimeReset.ts';
 import { runScreenTransition } from './battle/screenTransition.ts';
 import {
@@ -121,6 +117,7 @@ import {
   runBattleAnswer,
 } from './battle/interactionFlowAdapter.ts';
 import {
+  runBattleVictory,
   runBattleContinueFromVictory,
 } from './battle/progressionFlowAdapter.ts';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
@@ -595,24 +592,26 @@ export function useBattle() {
 
   // --- Handle a defeated enemy ---
   const handleVictory = (verb = t("battle.victory.verb.defeated", "was defeated")) => {
-    runVictoryFlow(buildVictoryFlowArgs({
-      verb,
-      sr,
-      runtime: {
-        randInt,
-        resolveLevelProgress,
-        getStageMaxHp,
-        tryUnlock,
-        applyVictoryAchievements,
-        updateEncDefeated,
-        sfx,
-        t,
+    runBattleVictory({
+      victoryInput: {
+        verb,
+        sr,
+        runtime: {
+          randInt,
+          resolveLevelProgress,
+          getStageMaxHp,
+          tryUnlock,
+          applyVictoryAchievements,
+          updateEncDefeated,
+          sfx,
+          t,
+        },
+        battleFields: battleFieldSetters,
+        ui: UI,
+        frozenRef: frozenR,
+        pendingEvolveRef: pendingEvolve,
       },
-      battleFields: battleFieldSetters,
-      ui: UI,
-      frozenRef: frozenR,
-      pendingEvolveRef: pendingEvolve,
-    }));
+    });
   };
 
   // --- Frozen enemy skips turn ---

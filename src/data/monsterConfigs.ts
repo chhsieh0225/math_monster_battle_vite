@@ -3,13 +3,18 @@
  * Runtime adapters map sprite keys and drop table keys to concrete values.
  */
 import type { MonsterConfig, SlimeVariantConfig } from '../types/game';
+import { BALANCE_CONFIG } from './balanceConfig.ts';
+
+const MONSTER_STATS = BALANCE_CONFIG.monsters.baseStatsById;
+const SLIME_VARIANT_MULTIPLIERS = BALANCE_CONFIG.monsters.slimeVariantMultipliersById;
+const EVOLVED_SLIME_VARIANT_MULTIPLIERS = BALANCE_CONFIG.monsters.evolvedSlimeVariantMultipliersById;
 
 export const MONSTER_CONFIGS: MonsterConfig[] = [
   {
     id: "slime",
     name: "史萊姆",
-    hp: 40,
-    atk: 6,
+    hp: MONSTER_STATS.slime.hp,
+    atk: MONSTER_STATS.slime.atk,
     c1: "#4ade80",
     c2: "#16a34a",
     spriteKey: "slimeSVG",
@@ -24,8 +29,8 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
   {
     id: "fire",
     name: "火焰蜥",
-    hp: 55,
-    atk: 9,
+    hp: MONSTER_STATS.fire.hp,
+    atk: MONSTER_STATS.fire.atk,
     c1: "#f87171",
     c2: "#b91c1c",
     spriteKey: "fireLizardSVG",
@@ -43,8 +48,8 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
   {
     id: "ghost",
     name: "幽靈魔",
-    hp: 50,
-    atk: 8,
+    hp: MONSTER_STATS.ghost.hp,
+    atk: MONSTER_STATS.ghost.atk,
     c1: "#c084fc",
     c2: "#7e22ce",
     spriteKey: "ghostSVG",
@@ -62,8 +67,8 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
   {
     id: "dragon",
     name: "鋼鐵龍",
-    hp: 80,
-    atk: 12,
+    hp: MONSTER_STATS.dragon.hp,
+    atk: MONSTER_STATS.dragon.atk,
     c1: "#60a5fa",
     c2: "#1d4ed8",
     spriteKey: "dragonSVG",
@@ -81,8 +86,8 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
   {
     id: "boss",
     name: "暗黑龍王",
-    hp: 120,
-    atk: 15,
+    hp: MONSTER_STATS.boss.hp,
+    atk: MONSTER_STATS.boss.atk,
     c1: "#fbbf24",
     c2: "#b45309",
     spriteKey: "darkLordSVG",
@@ -110,8 +115,8 @@ export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     trait: "normal",
     traitName: "普通",
     traitDesc: "最基本的史萊姆，沒有特殊能力。",
-    hpMult: 1.0,
-    atkMult: 1.0,
+    hpMult: SLIME_VARIANT_MULTIPLIERS.slime.hpMult,
+    atkMult: SLIME_VARIANT_MULTIPLIERS.slime.atkMult,
   },
   {
     id: "slime_red",
@@ -126,8 +131,8 @@ export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     trait: "berserk",
     traitName: "狂暴",
     traitDesc: "血量較低但攻擊兇猛，有機率發動暴擊造成1.5倍傷害！",
-    hpMult: 0.8,
-    atkMult: 1.4,
+    hpMult: SLIME_VARIANT_MULTIPLIERS.slime_red.hpMult,
+    atkMult: SLIME_VARIANT_MULTIPLIERS.slime_red.atkMult,
   },
   {
     id: "slime_blue",
@@ -142,8 +147,8 @@ export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     trait: "tenacity",
     traitName: "堅韌",
     traitDesc: "攻擊力較低但非常耐打，攻擊時還能回復自身生命值。",
-    hpMult: 1.3,
-    atkMult: 0.8,
+    hpMult: SLIME_VARIANT_MULTIPLIERS.slime_blue.hpMult,
+    atkMult: SLIME_VARIANT_MULTIPLIERS.slime_blue.atkMult,
   },
   {
     id: "slime_yellow",
@@ -158,8 +163,8 @@ export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     trait: "swift",
     traitName: "迅捷",
     traitDesc: "行動速度極快，有機率在一回合內連續攻擊兩次！",
-    hpMult: 0.9,
-    atkMult: 1.1,
+    hpMult: SLIME_VARIANT_MULTIPLIERS.slime_yellow.hpMult,
+    atkMult: SLIME_VARIANT_MULTIPLIERS.slime_yellow.atkMult,
   },
   {
     id: "slime_dark",
@@ -174,8 +179,8 @@ export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     trait: "curse",
     traitName: "詛咒",
     traitDesc: "散發不祥氣息，攻擊時有機率弱化對手的下一次攻擊。",
-    hpMult: 1.0,
-    atkMult: 1.0,
+    hpMult: SLIME_VARIANT_MULTIPLIERS.slime_dark.hpMult,
+    atkMult: SLIME_VARIANT_MULTIPLIERS.slime_dark.atkMult,
   },
   {
     id: "slime_steel",
@@ -190,8 +195,8 @@ export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     trait: "fortress",
     traitName: "鐵壁",
     traitDesc: "全身覆蓋金屬外殼，攻擊力低但受到的傷害減少30%。",
-    hpMult: 1.5,
-    atkMult: 0.7,
+    hpMult: SLIME_VARIANT_MULTIPLIERS.slime_steel.hpMult,
+    atkMult: SLIME_VARIANT_MULTIPLIERS.slime_steel.atkMult,
   },
 ];
 
@@ -209,8 +214,8 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     trait: "normal",
     traitName: "普通",
     traitDesc: "最基本的史萊姆，沒有特殊能力。",
-    hpMult: 1.0,
-    atkMult: 1.0,
+    hpMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeEvolved.hpMult,
+    atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeEvolved.atkMult,
   },
   {
     id: "slimeElectricEvolved",
@@ -225,8 +230,8 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     trait: "swift",
     traitName: "迅捷",
     traitDesc: "行動速度極快，有機率在一回合內連續攻擊兩次！",
-    hpMult: 0.9,
-    atkMult: 1.1,
+    hpMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeElectricEvolved.hpMult,
+    atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeElectricEvolved.atkMult,
   },
   {
     id: "slimeFireEvolved",
@@ -241,8 +246,8 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     trait: "berserk",
     traitName: "狂暴",
     traitDesc: "血量較低但攻擊兇猛，有機率發動暴擊造成1.5倍傷害！",
-    hpMult: 0.8,
-    atkMult: 1.4,
+    hpMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeFireEvolved.hpMult,
+    atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeFireEvolved.atkMult,
   },
   {
     id: "slimeWaterEvolved",
@@ -257,8 +262,8 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     trait: "tenacity",
     traitName: "堅韌",
     traitDesc: "攻擊力較低但非常耐打，攻擊時還能回復自身生命值。",
-    hpMult: 1.3,
-    atkMult: 0.8,
+    hpMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeWaterEvolved.hpMult,
+    atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeWaterEvolved.atkMult,
   },
   {
     id: "slimeSteelEvolved",
@@ -273,8 +278,8 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     trait: "fortress",
     traitName: "鐵壁",
     traitDesc: "全身覆蓋金屬外殼，攻擊力低但受到的傷害減少30%。",
-    hpMult: 1.5,
-    atkMult: 0.7,
+    hpMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeSteelEvolved.hpMult,
+    atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeSteelEvolved.atkMult,
   },
   {
     id: "slimeDarkEvolved",
@@ -289,7 +294,7 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     trait: "curse",
     traitName: "詛咒",
     traitDesc: "散發不祥氣息，攻擊時有機率弱化對手的下一次攻擊。",
-    hpMult: 1.0,
-    atkMult: 1.0,
+    hpMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeDarkEvolved.hpMult,
+    atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeDarkEvolved.atkMult,
   },
 ];

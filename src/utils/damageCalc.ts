@@ -3,6 +3,7 @@
  * Extracted from App.jsx for testability and clarity.
  */
 import { POWER_CAPS } from '../data/constants.ts';
+import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
 import { getEff } from '../data/typeEffectiveness.ts';
 import { randomFloat } from './prng.ts';
 
@@ -18,6 +19,7 @@ type EnemyLite = {
 };
 
 const getEffTyped = getEff as (moveType?: string, monType?: string) => number;
+const DAMAGE_BALANCE = BALANCE_CONFIG.damage;
 
 /**
  * Compute effective power of a move at its current level.
@@ -56,12 +58,15 @@ type AttackDamageParams = {
  * Calculate raw damage for a correct-answer attack.
  */
 export function calcAttackDamage({ basePow, streak, stageBonus, effMult }: AttackDamageParams): number {
-  let dmg = Math.round(basePow * randomFloat(0.85, 1));
+  let dmg = Math.round(basePow * randomFloat(
+    DAMAGE_BALANCE.playerAttackVariance.min,
+    DAMAGE_BALANCE.playerAttackVariance.max,
+  ));
   // Streak bonus
-  if (streak >= 5) dmg = Math.round(dmg * 1.8);
-  else if (streak >= 3) dmg = Math.round(dmg * 1.5);
+  if (streak >= DAMAGE_BALANCE.streak.high.threshold) dmg = Math.round(dmg * DAMAGE_BALANCE.streak.high.multiplier);
+  else if (streak >= DAMAGE_BALANCE.streak.medium.threshold) dmg = Math.round(dmg * DAMAGE_BALANCE.streak.medium.multiplier);
   // Evolution stage bonus
-  dmg = Math.round(dmg * (1 + stageBonus * 0.15));
+  dmg = Math.round(dmg * (1 + stageBonus * DAMAGE_BALANCE.stageBonusPerStage));
   // Type effectiveness
   dmg = Math.round(dmg * effMult);
   return dmg;
@@ -71,7 +76,10 @@ export function calcAttackDamage({ basePow, streak, stageBonus, effMult }: Attac
  * Calculate enemy attack damage against the player.
  */
 export function calcEnemyDamage(atkStat: number, defEff: number): number {
-  const raw = Math.round(atkStat * randomFloat(0.8, 1.2));
+  const raw = Math.round(atkStat * randomFloat(
+    DAMAGE_BALANCE.enemyAttackVariance.min,
+    DAMAGE_BALANCE.enemyAttackVariance.max,
+  ));
   return Math.round(raw * defEff);
 }
 
@@ -79,5 +87,5 @@ export function calcEnemyDamage(atkStat: number, defEff: number): number {
  * Calculate freeze chance for water-type player.
  */
 export function freezeChance(moveLvl: number): number {
-  return 0.25 + moveLvl * 0.03;
+  return DAMAGE_BALANCE.freezeChance.base + moveLvl * DAMAGE_BALANCE.freezeChance.perMoveLevel;
 }

@@ -1,4 +1,5 @@
 import { PLAYER_MAX_HP } from '../../data/constants.ts';
+import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
 import { getEff } from '../../data/typeEffectiveness.ts';
 import {
@@ -165,6 +166,7 @@ type PvpStrikeResult = {
 };
 
 const PVP = PVP_BALANCE as unknown as PvpBalanceConfig;
+const TRAIT_BALANCE = BALANCE_CONFIG.traits;
 const getEffTyped = getEff as (moveType?: string, monType?: string) => number;
 const calcEnemyDamageTyped = calcEnemyDamage as (atkStat: number, defEff: number) => number;
 const movePowerTyped = movePower as (move: MoveLike, lvl: number, idx: number) => number;
@@ -222,16 +224,21 @@ export function resolveEnemyPrimaryStrike({
   chance,
 }: EnemyPrimaryStrikeParams): EnemyPrimaryStrikeResult {
   const trait = enemy?.trait || null;
-  const atkMult = bossPhase >= 3 ? 2.0 : bossPhase >= 2 ? 1.5 : 1.0;
+  const atkMult = bossPhase >= 3
+    ? TRAIT_BALANCE.boss.phase3AttackMultiplier
+    : bossPhase >= 2
+      ? TRAIT_BALANCE.boss.phase2AttackMultiplier
+      : 1.0;
   let scaledAtk = Math.round((enemy?.atk || 0) * atkMult);
 
-  const isBlaze = trait === 'blaze' && enemyHp <= (enemy?.maxHp || 0) * 0.5;
-  if (isBlaze) scaledAtk = Math.round(scaledAtk * 1.5);
+  const isBlaze = trait === 'blaze'
+    && enemyHp <= (enemy?.maxHp || 0) * TRAIT_BALANCE.enemy.blazeHpThreshold;
+  if (isBlaze) scaledAtk = Math.round(scaledAtk * TRAIT_BALANCE.enemy.blazeAttackMultiplier);
 
-  const isCrit = trait === 'berserk' && chance(0.3);
+  const isCrit = trait === 'berserk' && chance(TRAIT_BALANCE.enemy.berserkCritChance);
   const defEff = getEffTyped(enemy?.mType, starterType);
   const base = calcEnemyDamageTyped(scaledAtk, defEff);
-  const dmg = isCrit ? Math.round(base * 1.5) : base;
+  const dmg = isCrit ? Math.round(base * TRAIT_BALANCE.enemy.berserkCritMultiplier) : base;
 
   return {
     trait,
@@ -246,8 +253,8 @@ export function resolveEnemyPrimaryStrike({
 export function resolveEnemyAssistStrike({
   enemySub,
   starterType,
-  atkScale = 0.55,
-  damageCap = 24,
+  atkScale = TRAIT_BALANCE.enemy.assistAttackScale,
+  damageCap = TRAIT_BALANCE.enemy.assistAttackCap,
 }: EnemyAssistStrikeParams): EnemyAssistStrikeResult {
   const scaledAtk = Math.max(1, Math.round((enemySub?.atk || 0) * atkScale));
   const defEff = getEffTyped(enemySub?.mType, starterType);
@@ -291,19 +298,19 @@ export function resolvePlayerStrike({
   });
 
   const isFortress = enemy?.trait === 'fortress';
-  if (isFortress) dmg = Math.round(dmg * 0.7);
+  if (isFortress) dmg = Math.round(dmg * TRAIT_BALANCE.player.fortressDamageScale);
 
   const wasCursed = !!cursed;
-  if (wasCursed) dmg = Math.round(dmg * 0.6);
+  if (wasCursed) dmg = Math.round(dmg * TRAIT_BALANCE.player.cursedDamageScale);
 
   const maxHpForBrave = Math.max(1, attackerMaxHp);
   const braveActive = starterType === 'light' && playerHp < maxHpForBrave;
   if (braveActive) {
-    const braveMult = 1 + ((maxHpForBrave - playerHp) / maxHpForBrave) * 0.5;
+    const braveMult = 1 + ((maxHpForBrave - playerHp) / maxHpForBrave) * TRAIT_BALANCE.player.braveMaxBonus;
     dmg = Math.round(dmg * braveMult);
   }
 
-  if (bossPhase >= 3) dmg = Math.round(dmg * 1.3);
+  if (bossPhase >= 3) dmg = Math.round(dmg * TRAIT_BALANCE.player.bossPhase3DamageScale);
 
   return {
     pow,
@@ -316,7 +323,7 @@ export function resolvePlayerStrike({
 }
 
 export function resolveRiskySelfDamage({ move, moveLvl, moveIdx }: RiskySelfDamageParams): number {
-  return Math.round(movePowerTyped(move, moveLvl, moveIdx) * 0.4);
+  return Math.round(movePowerTyped(move, moveLvl, moveIdx) * TRAIT_BALANCE.player.riskySelfDamageScale);
 }
 
 export function resolvePvpStrike({

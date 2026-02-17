@@ -1,3 +1,4 @@
+import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { getEff } from '../../data/typeEffectiveness.ts';
 import { calcEnemyDamage } from '../../utils/damageCalc.ts';
 import { computeBossPhase } from '../../utils/turnFlow.ts';
@@ -142,6 +143,8 @@ const getEffTyped = getEff as (moveType?: string, monType?: string) => number;
 const calcEnemyDamageTyped = calcEnemyDamage as (atkStat: number, defEff: number) => number;
 const computeBossPhaseTyped = computeBossPhase as (currentHp: number, maxHp: number) => number;
 const effectOrchestratorTyped = effectOrchestrator as EffectOrchestratorApi;
+const TRAIT_BALANCE = BALANCE_CONFIG.traits;
+const DAMAGE_BALANCE = BALANCE_CONFIG.damage;
 
 function formatFallback(template: string, params?: TranslatorParams): string {
   if (!params) return template;
@@ -230,7 +233,7 @@ export function runEnemyTurn({
   const maybeEnemyAssistAttack = (delayMs = 850): boolean => {
     const s = sr.current;
     if (!s.enemySub || !s.starter) return false;
-    if (!chance(0.35)) return false;
+    if (!chance(TRAIT_BALANCE.enemy.assistAttackChance)) return false;
 
     safeToIfBattleActive(() => {
       if (!isBattleActive()) return;
@@ -363,8 +366,11 @@ export function runEnemyTurn({
               }
             }, 1800);
           } else {
-            const rawDmg = Math.round((s2.enemy?.atk || 0) * (0.8 + rand() * 0.4));
-            const refDmg = Math.round(rawDmg * 1.2);
+            const rawDmg = Math.round((s2.enemy?.atk || 0) * (
+              DAMAGE_BALANCE.enemyAttackVariance.min
+              + rand() * (DAMAGE_BALANCE.enemyAttackVariance.max - DAMAGE_BALANCE.enemyAttackVariance.min)
+            ));
+            const refDmg = Math.round(rawDmg * TRAIT_BALANCE.specDef.grassReflectScale);
             const nh = Math.max(0, sr.current.eHp - refDmg);
             setEHp(nh);
             setBText(tr(t, 'battle.specdef.grass.reflect', '🌿 Reflected attack!'));
@@ -438,7 +444,7 @@ export function runEnemyTurn({
         }
 
         if (trait === 'tenacity') {
-          const heal = Math.round((s2.enemy?.maxHp || 0) * 0.15);
+          const heal = Math.round((s2.enemy?.maxHp || 0) * TRAIT_BALANCE.enemy.tenacityHealRatio);
           const newEHp = Math.min(sr.current.eHp + heal, s2.enemy?.maxHp || sr.current.eHp + heal);
           safeToIfBattleActive(() => {
             setEHp(newEHp);
@@ -447,7 +453,7 @@ export function runEnemyTurn({
           }, 600);
         }
 
-        if (trait === 'curse' && chance(0.35)) {
+        if (trait === 'curse' && chance(TRAIT_BALANCE.enemy.curseApplyChance)) {
           setCursed(true);
           safeToIfBattleActive(() => {
             addD(tr(t, 'battle.tag.curse', '💀Curse'), 60, 140, '#a855f7');
@@ -455,7 +461,7 @@ export function runEnemyTurn({
           }, 600);
         }
 
-        if (trait === 'swift' && chance(0.25)) {
+        if (trait === 'swift' && chance(TRAIT_BALANCE.enemy.swiftExtraAttackChance)) {
           safeToIfBattleActive(() => {
             if (!isBattleActive()) return;
             setBText(tr(t, 'battle.enemy.swiftExtra', '⚡ {enemy} attacks again!', { enemy: s2.enemy?.name || 'Enemy' }));
@@ -534,7 +540,7 @@ export function runEnemyTurn({
           const s2 = sr.current;
           const target = resolvePlayerTarget(s2);
           const targetName = target === 'sub' ? (s2.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s2.starter?.name || tr(t, 'battle.role.main', 'Main'));
-          const bigDmg = Math.round((s2.enemy?.atk || 0) * 2.2);
+          const bigDmg = Math.round((s2.enemy?.atk || 0) * TRAIT_BALANCE.boss.releaseAttackScale);
           const nh = applyDamageToTarget({
             s: s2,
             target,
@@ -576,12 +582,13 @@ export function runEnemyTurn({
     }
 
     if (bossEvent === 'seal_move') {
-      const sealIdx = randInt(0, 2);
+      const sealIdx = randInt(0, TRAIT_BALANCE.boss.sealMoveIndexMax);
       setSealedMove(sealIdx);
       sfx.play('seal');
-      setSealedTurns(2);
+      const sealTurns = TRAIT_BALANCE.boss.sealDurationTurns;
+      setSealedTurns(sealTurns);
       const moveName = s.starter.moves?.[sealIdx]?.name || '???';
-      setBText(tr(t, 'battle.boss.sealMove', '💀 Dark Dragon King sealed your "{move}"! (2 turns)', { move: moveName }));
+      setBText(tr(t, 'battle.boss.sealMove', '💀 Dark Dragon King sealed your "{move}"! ({turns} turns)', { move: moveName, turns: sealTurns }));
       setPhase('text');
       safeToIfBattleActive(() => {
         if (!isBattleActive()) return;

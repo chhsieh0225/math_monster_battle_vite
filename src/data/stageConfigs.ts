@@ -2,8 +2,10 @@
  * Stage progression is data-driven so stage order and enemy scaling can be
  * adjusted without changing roster builder logic.
  */
-export const STAGE_SCALE_BASE = 1;
-export const STAGE_SCALE_STEP = 0.12;
+import { BALANCE_CONFIG } from './balanceConfig.ts';
+
+export const STAGE_SCALE_BASE = BALANCE_CONFIG.stage.scaleBase;
+export const STAGE_SCALE_STEP = BALANCE_CONFIG.stage.scaleStep;
 
 export type StageWave = {
   monsterId: string;

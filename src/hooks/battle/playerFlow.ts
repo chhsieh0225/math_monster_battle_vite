@@ -3,6 +3,7 @@ import {
   MAX_MOVE_LVL,
   POWER_CAPS,
 } from '../../data/constants.ts';
+import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { bestAttackType, freezeChance } from '../../utils/damageCalc.ts';
 import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import {
@@ -189,6 +190,7 @@ const getAttackEffectHitDelayTyped = getAttackEffectHitDelay as (type: string) =
 const getAttackEffectClearDelayTyped = getAttackEffectClearDelay as (effect?: { idx?: number; lvl?: number }) => number;
 const getAttackEffectNextStepDelayTyped = getAttackEffectNextStepDelay as (effect?: { idx?: number; lvl?: number }) => number;
 const effectOrchestratorTyped = effectOrchestrator as EffectOrchestratorApi;
+const TRAIT_BALANCE = BALANCE_CONFIG.traits;
 
 const HIT_ANIMS: Record<string, string> = {
   fire: 'enemyFireHit 0.6s ease',
@@ -346,7 +348,7 @@ export function runPlayerAnswer({
     if (ns > s.maxStreak) setMaxStreak(ns);
 
     const np = s.passiveCount + 1;
-    if (np >= 8) {
+    if (np >= TRAIT_BALANCE.player.specDefComboTrigger) {
       setPassiveCount(0);
       if (!s.specDef) {
         setSpecDef(true);
@@ -423,7 +425,7 @@ export function runPlayerAnswer({
           const { eff, isFortress, wasCursed } = strike;
           const { dmg } = strike;
 
-          const isPhantom = s3.enemy.trait === 'phantom' && chance(0.25);
+          const isPhantom = s3.enemy.trait === 'phantom' && chance(TRAIT_BALANCE.player.phantomDodgeChance);
           if (isPhantom) {
             setEAnim('dodgeSlide 0.9s ease');
             setEffMsg({ text: tr(t, 'battle.effect.phantomDodge', '👻 Phantom Dodge!'), color: '#c084fc' });
@@ -467,15 +469,15 @@ export function runPlayerAnswer({
 
           let newBurn = s3.burnStack;
           if (starter.type === 'fire' && afterHp > 0) {
-            newBurn = Math.min(s3.burnStack + 1, 5);
+            newBurn = Math.min(s3.burnStack + 1, TRAIT_BALANCE.player.burnMaxStacks);
             setBurnStack(newBurn);
-            const bd = newBurn * 2;
+            const bd = newBurn * TRAIT_BALANCE.player.burnPerStackDamage;
             afterHp = Math.max(0, afterHp - bd);
             safeToIfBattleActive(() => addD(`🔥-${bd}`, 155, 50, '#f97316'), 500);
           }
 
           if (starter.type === 'grass') {
-            const heal = 2 * s3.mLvls[s3.selIdx];
+            const heal = TRAIT_BALANCE.player.grassHealPerMoveLevel * s3.mLvls[s3.selIdx];
             healAttacker(heal);
             sfx.play('heal');
             safeToIfBattleActive(() => addD(`+${heal}`, isSubAttacker ? 112 : 50, isSubAttacker ? 146 : 165, '#22c55e'), 500);
@@ -493,10 +495,10 @@ export function runPlayerAnswer({
           }
 
           if (starter.type === 'electric' && afterHp > 0) {
-            const newStatic = Math.min(s3.staticStack + 1, 3);
+            const newStatic = Math.min(s3.staticStack + 1, TRAIT_BALANCE.player.staticMaxStacks);
             setStaticStack(newStatic);
-            if (newStatic >= 3) {
-              const sd = 12;
+            if (newStatic >= TRAIT_BALANCE.player.staticMaxStacks) {
+              const sd = TRAIT_BALANCE.player.staticDischargeDamage;
               afterHp = Math.max(0, afterHp - sd);
               setStaticStack(0);
               sfx.play('staticDischarge');
@@ -521,7 +523,7 @@ export function runPlayerAnswer({
           }, effectTimeline.clearDelay);
 
           if (s3.enemy.trait === 'counter' && afterHp > 0) {
-            const refDmg = Math.round(dmg * 0.2);
+            const refDmg = Math.round(dmg * TRAIT_BALANCE.player.counterReflectRatio);
             if (refDmg > 0) {
               safeToIfBattleActive(() => {
                 const s4 = sr.current;
@@ -598,7 +600,7 @@ export function runPlayerAnswer({
     } else {
       let mt = tr(t, 'battle.attack.miss', 'Attack missed!');
       if (s2.burnStack > 0) {
-        const bd = s2.burnStack * 2;
+        const bd = s2.burnStack * TRAIT_BALANCE.player.burnPerStackDamage;
         const nh3 = Math.max(0, s2.eHp - bd);
         setEHp(nh3);
         addD(`🔥-${bd}`, 155, 50, '#f97316');

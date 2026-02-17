@@ -1,4 +1,8 @@
-const DEFAULT_TRAIT_NAMES = new Set(['普通', 'normal', 'none']);
+import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
+
+const DEFAULT_TRAIT_NAMES = new Set(
+  BALANCE_CONFIG.traits.defaultNames.map((name) => name.trim().toLowerCase()),
+);
 
 export function isDefaultTraitName(name: string | null | undefined): boolean {
   if (!name) return true;

@@ -148,36 +148,39 @@ function GameShell() {
 function App() {
   const { t } = useI18n();
   const B: UseBattlePublicApi = useBattle();
+  const S = B.state;
+  const A = B.actions;
+  const V = B.view;
   const UX = useMobileExperience();
-  const [audioMuted, setAudioMuted] = useState<boolean>(() => Boolean(B.sfx.muted));
+  const [audioMuted, setAudioMuted] = useState<boolean>(() => Boolean(V.sfx.muted));
   const settingsReturnRef = useRef<ScreenName>("title");
   const resumeBattleAfterSettingsRef = useRef(false);
   const setAudioMute = (next: boolean) => {
-    const muted = B.sfx.setMuted(next);
+    const muted = V.sfx.setMuted(next);
     setAudioMuted(muted);
   };
   const openSettings = (fromScreen: ScreenName) => {
     settingsReturnRef.current = fromScreen;
-    if (fromScreen === "battle" && !B.gamePaused) {
+    if (fromScreen === "battle" && !S.gamePaused) {
       resumeBattleAfterSettingsRef.current = true;
-      B.togglePause();
+      A.togglePause();
     } else {
       resumeBattleAfterSettingsRef.current = false;
     }
-    B.setScreen("settings");
+    A.setScreen("settings");
   };
   const closeSettings = () => {
     const backTo = settingsReturnRef.current || "title";
-    B.setScreen(backTo);
+    A.setScreen(backTo);
     if (backTo === "battle" && resumeBattleAfterSettingsRef.current) {
       setTimeout(() => {
-        B.togglePause();
+        A.togglePause();
       }, 0);
     }
     resumeBattleAfterSettingsRef.current = false;
   };
 
-  if (B.screen !== "battle") {
+  if (S.screen !== "battle") {
     return (
       <AppScreenRouter
         battle={B}

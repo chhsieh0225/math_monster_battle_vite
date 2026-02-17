@@ -56,15 +56,23 @@ function QuestionTimerHud({ timerSec, subscribe, getSnapshot }: QuestionTimerHud
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
+type BattleSlices = Pick<UseBattlePublicApi, 'state' | 'actions' | 'view'>;
 
 type BattleScreenProps = {
-  battle: UseBattlePublicApi;
+  battle: BattleSlices;
   mobile: UseMobileExperienceApi;
   onOpenSettings: (fromScreen: ScreenName) => void;
   t: Translator;
 };
 
-export default function BattleScreen({ battle: B, mobile: UX, onOpenSettings, t }: BattleScreenProps) {
+export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: BattleScreenProps) {
+  // Consume battle slices only; do not depend on hook-level flattened fields.
+  const B = {
+    ...battle.state,
+    ...battle.actions,
+    ...battle.view,
+  };
+
   const showHeavyFx = !UX.lowPerfMode;
   const battleRootRef = useRef<HTMLDivElement | null>(null);
   const enemySpriteRef = useRef<HTMLDivElement | null>(null);

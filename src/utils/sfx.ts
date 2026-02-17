@@ -20,10 +20,10 @@ let bgmMuted = readText(BGM_MUTED_KEY, '0') === '1';
 const NOTE_FREQ: Record<string, number> = {
   C2: 65.41, D2: 73.42, E2: 82.41, F2: 87.31, G2: 98,
   A2: 110, Bb2: 116.54, B2: 123.47,
-  C3: 130.81, Eb3: 155.56, E3: 164.81, F3: 174.61, G3: 196,
+  C3: 130.81, D3: 146.83, Eb3: 155.56, E3: 164.81, F3: 174.61, G3: 196,
   A3: 220, Bb3: 233.08, B3: 246.94,
-  C4: 261.63, D4: 293.66, E4: 329.63, G4: 392,
-  A4: 440,
+  C4: 261.63, D4: 293.66, Eb4: 311.13, E4: 329.63, F4: 349.23, G4: 392,
+  A4: 440, B4: 493.88,
   C5: 523.25, D5: 587.33, E5: 659.26, 'F#5': 739.99, G5: 783.99,
   A5: 880, B5: 987.77,
   C6: 1046.5, E6: 1318.51,
@@ -858,40 +858,245 @@ let pendingBgmTrack: BgmTrack | null = null;
 let resumePromise: Promise<void> | null = null;
 const BGM_VOL = 0.18;
 
-// Simple 4-bar arpeggio patterns (note name, duration key, delay offset ms)
-type BgmNote = [string, string, number]; // [noteName, durKey, offsetMs]
-const BGM_PATTERNS: Record<BgmTrack, { notes: BgmNote[]; loopMs: number; tempo: number }> = {
+type BgmNote = [string, string, number, number?]; // [noteName, durKey, offsetMs, velocity]
+type BgmLane = {
+  wave: OscillatorType;
+  vol: number;
+  attack: number;
+  release: number;
+  filterType?: BiquadFilterType;
+  filterFreq?: number;
+  filterQ?: number;
+  pan?: number;
+  detune?: number;
+  jitterMs?: number;
+  swingMs?: number;
+  notes: BgmNote[];
+};
+
+const BGM_PATTERNS: Record<BgmTrack, { loopMs: number; lanes: BgmLane[] }> = {
   menu: {
-    tempo: 110,
-    loopMs: 4800,
-    notes: [
-      ['C4', '8n', 0], ['E4', '8n', 300], ['G4', '8n', 600], ['E4', '8n', 900],
-      ['C4', '8n', 1200], ['G4', '8n', 1500], ['E5', '8n', 1800], ['C5', '8n', 2100],
-      ['A3', '8n', 2400], ['C4', '8n', 2700], ['E4', '8n', 3000], ['A4', '8n', 3300],
-      ['G3', '8n', 3600], ['B3', '8n', 3900], ['D4', '8n', 4200], ['G4', '8n', 4500],
+    loopMs: 6400,
+    lanes: [
+      {
+        wave: 'triangle',
+        vol: 0.2,
+        attack: 0.01,
+        release: 0.12,
+        filterType: 'lowpass',
+        filterFreq: 3600,
+        filterQ: 0.8,
+        pan: 0.12,
+        jitterMs: 5,
+        swingMs: 10,
+        notes: [
+          ['C4', '8n', 0], ['E4', '8n', 320], ['G4', '8n', 640], ['E4', '8n', 960],
+          ['A3', '8n', 1280], ['C4', '8n', 1600], ['E4', '8n', 1920], ['G4', '8n', 2240],
+          ['F3', '8n', 2560], ['A3', '8n', 2880], ['C4', '8n', 3200], ['E4', '8n', 3520],
+          ['G3', '8n', 3840], ['B3', '8n', 4160], ['D4', '8n', 4480], ['G4', '8n', 4800],
+          ['C5', '8n', 5120], ['G4', '8n', 5440], ['E4', '8n', 5760], ['D4', '8n', 6080],
+        ],
+      },
+      {
+        wave: 'sine',
+        vol: 0.11,
+        attack: 0.03,
+        release: 0.3,
+        filterType: 'lowpass',
+        filterFreq: 1700,
+        filterQ: 0.7,
+        pan: -0.22,
+        notes: [
+          ['C3', '4n', 0, 0.95], ['A2', '4n', 1600, 0.9], ['F2', '4n', 3200, 0.95], ['G2', '4n', 4800, 1],
+        ],
+      },
+      {
+        wave: 'square',
+        vol: 0.085,
+        attack: 0.004,
+        release: 0.11,
+        filterType: 'lowpass',
+        filterFreq: 840,
+        filterQ: 0.9,
+        pan: -0.05,
+        jitterMs: 4,
+        notes: [
+          ['C2', '8n', 0], ['C2', '8n', 320], ['G2', '8n', 640], ['C2', '8n', 960],
+          ['A2', '8n', 1280], ['A2', '8n', 1600], ['E2', '8n', 1920], ['A2', '8n', 2240],
+          ['F2', '8n', 2560], ['F2', '8n', 2880], ['C2', '8n', 3200], ['F2', '8n', 3520],
+          ['G2', '8n', 3840], ['G2', '8n', 4160], ['D2', '8n', 4480], ['G2', '8n', 4800],
+          ['C2', '8n', 5120], ['G2', '8n', 5440], ['E2', '8n', 5760], ['D2', '8n', 6080],
+        ],
+      },
     ],
   },
   battle: {
-    tempo: 140,
-    loopMs: 3400,
-    notes: [
-      ['E4', '16n', 0], ['E4', '16n', 200], ['E5', '16n', 400], ['E4', '16n', 600],
-      ['D5', '16n', 850], ['C5', '16n', 1050], ['A4', '16n', 1250], ['C5', '16n', 1450],
-      ['E4', '16n', 1700], ['G4', '16n', 1900], ['A4', '16n', 2100], ['G4', '16n', 2300],
-      ['E4', '16n', 2550], ['C4', '16n', 2750], ['D4', '16n', 2950], ['E4', '16n', 3150],
+    loopMs: 3840,
+    lanes: [
+      {
+        wave: 'sawtooth',
+        vol: 0.165,
+        attack: 0.005,
+        release: 0.1,
+        filterType: 'bandpass',
+        filterFreq: 2000,
+        filterQ: 1.25,
+        pan: 0.1,
+        jitterMs: 4,
+        swingMs: 8,
+        notes: [
+          ['E4', '16n', 0], ['G4', '16n', 240], ['A4', '16n', 480], ['E5', '16n', 720],
+          ['D5', '16n', 960], ['C5', '16n', 1200], ['A4', '16n', 1440], ['G4', '16n', 1680],
+          ['E4', '16n', 1920], ['G4', '16n', 2160], ['A4', '16n', 2400], ['C5', '16n', 2640],
+          ['B4', '16n', 2880], ['A4', '16n', 3120], ['G4', '16n', 3360], ['E4', '16n', 3600],
+        ],
+      },
+      {
+        wave: 'square',
+        vol: 0.12,
+        attack: 0.003,
+        release: 0.1,
+        filterType: 'lowpass',
+        filterFreq: 760,
+        filterQ: 0.9,
+        pan: -0.18,
+        notes: [
+          ['E2', '8n', 0], ['E2', '8n', 480], ['D2', '8n', 960], ['C2', '8n', 1440],
+          ['A2', '8n', 1920], ['A2', '8n', 2400], ['G2', '8n', 2880], ['B2', '8n', 3360],
+        ],
+      },
+      {
+        wave: 'triangle',
+        vol: 0.082,
+        attack: 0.004,
+        release: 0.085,
+        filterType: 'highpass',
+        filterFreq: 980,
+        filterQ: 0.8,
+        pan: 0.24,
+        jitterMs: 3,
+        notes: [
+          ['E5', '32n', 120], ['G5', '32n', 360], ['A5', '32n', 600], ['G5', '32n', 840],
+          ['E5', '32n', 1080], ['G5', '32n', 1320], ['A5', '32n', 1560], ['G5', '32n', 1800],
+          ['E5', '32n', 2040], ['G5', '32n', 2280], ['A5', '32n', 2520], ['C6', '32n', 2760],
+          ['B5', '32n', 3000], ['A5', '32n', 3240], ['G5', '32n', 3480], ['E5', '32n', 3720],
+        ],
+      },
     ],
   },
   boss: {
-    tempo: 155,
-    loopMs: 3100,
-    notes: [
-      ['C3', '16n', 0], ['C3', '16n', 200], ['Eb3', '16n', 400], ['C3', '16n', 600],
-      ['C3', '16n', 800], ['F3', '16n', 1000], ['Eb3', '16n', 1200], ['C3', '16n', 1400],
-      ['Bb2', '16n', 1550], ['C3', '16n', 1750], ['Eb3', '16n', 1950], ['F3', '16n', 2150],
-      ['E3', '16n', 2325], ['C3', '16n', 2525], ['Bb2', '16n', 2725], ['C3', '16n', 2900],
+    loopMs: 4000,
+    lanes: [
+      {
+        wave: 'sawtooth',
+        vol: 0.18,
+        attack: 0.004,
+        release: 0.11,
+        filterType: 'lowpass',
+        filterFreq: 2350,
+        filterQ: 1.05,
+        pan: 0.06,
+        jitterMs: 5,
+        notes: [
+          ['C4', '16n', 0], ['Eb4', '16n', 250], ['G4', '16n', 500], ['F4', '16n', 750],
+          ['Eb4', '16n', 1000], ['C4', '16n', 1250], ['Bb3', '16n', 1500], ['G3', '16n', 1750],
+          ['C4', '16n', 2000], ['Eb4', '16n', 2250], ['G4', '16n', 2500], ['Bb3', '16n', 2750],
+          ['F4', '16n', 3000], ['Eb4', '16n', 3250], ['C4', '16n', 3500], ['Bb3', '16n', 3750],
+        ],
+      },
+      {
+        wave: 'sine',
+        vol: 0.14,
+        attack: 0.005,
+        release: 0.22,
+        filterType: 'lowpass',
+        filterFreq: 250,
+        filterQ: 0.7,
+        pan: -0.12,
+        notes: [
+          ['C2', '8n', 0], ['C2', '8n', 500], ['Bb2', '8n', 1000], ['G2', '8n', 1500],
+          ['F2', '8n', 2000], ['F2', '8n', 2500], ['E2', '8n', 3000], ['G2', '8n', 3500],
+        ],
+      },
+      {
+        wave: 'triangle',
+        vol: 0.075,
+        attack: 0.025,
+        release: 0.32,
+        filterType: 'lowpass',
+        filterFreq: 1250,
+        filterQ: 0.9,
+        pan: -0.24,
+        detune: -8,
+        notes: [
+          ['C3', '4n', 0], ['Eb3', '4n', 1000], ['F3', '4n', 2000], ['G3', '4n', 3000],
+        ],
+      },
     ],
   },
 };
+
+function playBgmLaneNote(
+  freq: number,
+  t0: number,
+  dur: number,
+  lane: BgmLane,
+  velocity = 1,
+): void {
+  if (!ctx || !bgmGain) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = lane.wave;
+  osc.frequency.setValueAtTime(freq, t0);
+  if (lane.detune) osc.detune.setValueAtTime(lane.detune, t0);
+
+  let inNode: AudioNode = osc;
+  if (lane.filterFreq && lane.filterFreq > 0) {
+    const filter = ctx.createBiquadFilter();
+    filter.type = lane.filterType || 'lowpass';
+    filter.frequency.setValueAtTime(lane.filterFreq, t0);
+    filter.Q.setValueAtTime(lane.filterQ ?? 0.8, t0);
+    inNode.connect(filter);
+    inNode = filter;
+  }
+
+  const attack = Math.max(0.002, lane.attack);
+  const release = Math.max(0.04, lane.release);
+  const peak = Math.max(0.001, lane.vol * velocity);
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.linearRampToValueAtTime(peak, t0 + attack);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur + release);
+
+  inNode.connect(gain);
+  if (lane.pan && Math.abs(lane.pan) > 0.001 && typeof ctx.createStereoPanner === 'function') {
+    const pan = ctx.createStereoPanner();
+    pan.pan.setValueAtTime(Math.max(-1, Math.min(1, lane.pan)), t0);
+    gain.connect(pan);
+    pan.connect(bgmGain);
+  } else {
+    gain.connect(bgmGain);
+  }
+
+  osc.start(t0);
+  osc.stop(t0 + dur + release + 0.03);
+}
+
+function scheduleBgmLanes(now: number, lanes: BgmLane[]): void {
+  for (const lane of lanes) {
+    const jitter = Math.max(0, lane.jitterMs ?? 0);
+    const swing = lane.swingMs ?? 0;
+    for (let i = 0; i < lane.notes.length; i += 1) {
+      const [noteName, durKey, offsetMs, velocity = 1] = lane.notes[i];
+      const freq = NOTE_FREQ[noteName];
+      if (!freq) continue;
+      const dur = DUR[durKey] || 0.13;
+      const jitterOffset = jitter > 0 ? randomFloat(-jitter, jitter) : 0;
+      const swingOffset = swing > 0 && i % 2 === 1 ? swing : 0;
+      const t0 = now + Math.max(0, offsetMs + jitterOffset + swingOffset) / 1000;
+      playBgmLaneNote(freq, t0, dur, lane, velocity);
+    }
+  }
+}
 
 function startBgmLoop(track: BgmTrack): void {
   if (!ctx || bgmMuted) return;
@@ -904,24 +1109,7 @@ function startBgmLoop(track: BgmTrack): void {
   const pattern = BGM_PATTERNS[track];
   const playLoop = () => {
     if (!ctx || !bgmGain) return;
-    const now = ctx.currentTime;
-    for (const [noteName, durKey, offsetMs] of pattern.notes) {
-      const freq = NOTE_FREQ[noteName];
-      if (!freq) continue;
-      const t0 = now + offsetMs / 1000;
-      const dur = DUR[durKey] || 0.13;
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, t0);
-      g.gain.setValueAtTime(0.0001, t0);
-      g.gain.linearRampToValueAtTime(0.7, t0 + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur + 0.04);
-      osc.connect(g);
-      g.connect(bgmGain);
-      osc.start(t0);
-      osc.stop(t0 + dur + 0.06);
-    }
+    scheduleBgmLanes(ctx.currentTime, pattern.lanes);
   };
   playLoop();
   bgmInterval = setInterval(playLoop, pattern.loopMs);

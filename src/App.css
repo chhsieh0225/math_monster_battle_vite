@@ -391,7 +391,7 @@ input,select,textarea{font-size:max(16px,1rem)}
   left:var(--player-main-left,6%);
   bottom:var(--player-main-bottom,14%);
   transform:scaleX(-1) scale(var(--battle-player-main-scale,1));
-  transform-origin:left bottom;
+  transform-origin:center bottom;
   z-index:6;
   filter:var(--player-main-filter,none);
   transition:filter .2s ease;
@@ -402,7 +402,7 @@ input,select,textarea{font-size:max(16px,1rem)}
   left:var(--player-sub-left,23%);
   bottom:var(--player-sub-bottom,15%);
   transform:scaleX(-1) scale(var(--battle-player-sub-scale,1));
-  transform-origin:left bottom;
+  transform-origin:center bottom;
   z-index:4;
   opacity:.84;
   filter:var(--player-sub-filter,none);

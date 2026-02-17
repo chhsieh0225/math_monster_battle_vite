@@ -264,7 +264,7 @@ export default function BattleScreen({ battle: B, mobile: UX, onOpenSettings, t 
     "--player-sub-anim": UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite",
   } as CSSProperties);
   const playerMainShadowStyle = ({
-    "--player-shadow-left": `calc(${playerMainLeftPct}% + ${Math.round(mainPlayerSize * 0.14)}px)`,
+    "--player-shadow-left": `calc(${playerMainLeftPct}% + ${Math.round(mainPlayerSize * 0.48)}px)`,
     "--player-shadow-bottom": `${Math.max(8, playerMainBottomPct - 1)}%`,
     "--player-shadow-width": `${Math.round(mainPlayerSize * 0.5)}px`,
   } as CSSProperties);

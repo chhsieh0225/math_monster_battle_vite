@@ -12,7 +12,9 @@ import { randomFloat } from './prng.ts';
 let ctx: AudioContext | null = null;
 let ready = false;
 const SFX_MUTED_KEY = 'mathMonsterBattle_sfxMuted';
-let muted = readText(SFX_MUTED_KEY, '0') === '1';
+const BGM_MUTED_KEY = 'mathMonsterBattle_bgmMuted';
+let sfxMuted = readText(SFX_MUTED_KEY, '0') === '1';
+let bgmMuted = readText(BGM_MUTED_KEY, '0') === '1';
 
 // ── Note → frequency lookup (pre-computed, avoids runtime Math) ──
 const NOTE_FREQ: Record<string, number> = {
@@ -852,7 +854,7 @@ type BgmTrack = 'menu' | 'battle' | 'boss';
 let bgmGain: GainNode | null = null;
 let bgmInterval: ReturnType<typeof setInterval> | null = null;
 let bgmCurrent: BgmTrack | null = null;
-const BGM_VOL = 0.09;
+const BGM_VOL = 0.18;
 
 // Simple 4-bar arpeggio patterns (note name, duration key, delay offset ms)
 type BgmNote = [string, string, number]; // [noteName, durKey, offsetMs]
@@ -890,7 +892,7 @@ const BGM_PATTERNS: Record<BgmTrack, { notes: BgmNote[]; loopMs: number; tempo: 
 };
 
 function startBgmLoop(track: BgmTrack): void {
-  if (!ctx || muted) return;
+  if (!ctx || bgmMuted) return;
   stopBgmLoop();
   bgmGain = ctx.createGain();
   bgmGain.gain.setValueAtTime(0.0001, ctx.currentTime);
@@ -911,7 +913,7 @@ function startBgmLoop(track: BgmTrack): void {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, t0);
       g.gain.setValueAtTime(0.0001, t0);
-      g.gain.linearRampToValueAtTime(BGM_VOL * 0.7, t0 + 0.01);
+      g.gain.linearRampToValueAtTime(0.7, t0 + 0.01);
       g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur + 0.04);
       osc.connect(g);
       g.connect(bgmGain);
@@ -955,7 +957,7 @@ const sfx = {
     }
   },
   play(name: string): void {
-    if (!ready || muted) return;
+    if (!ready || sfxMuted) return;
     try {
       const fn = SOUNDS[name as SoundName];
       if (fn) fn();
@@ -967,24 +969,45 @@ const sfx = {
     const resolved = resolveMoveSoundName(type, idx);
     sfx.play(resolved);
   },
+  /** Set SFX mute (does NOT affect BGM). */
+  setSfxMuted(next: boolean): boolean {
+    sfxMuted = !!next;
+    writeText(SFX_MUTED_KEY, sfxMuted ? '1' : '0');
+    return sfxMuted;
+  },
+  /** Set BGM mute (does NOT affect SFX). */
+  setBgmMuted(next: boolean): boolean {
+    bgmMuted = !!next;
+    writeText(BGM_MUTED_KEY, bgmMuted ? '1' : '0');
+    if (bgmMuted) stopBgmLoop();
+    return bgmMuted;
+  },
+  /** Legacy: mute both SFX + BGM together. */
   setMuted(next: boolean): boolean {
-    muted = !!next;
-    writeText(SFX_MUTED_KEY, muted ? '1' : '0');
-    if (muted) stopBgmLoop();
-    return muted;
+    sfx.setSfxMuted(next);
+    sfx.setBgmMuted(next);
+    return next;
   },
   toggleMute(): boolean {
-    return sfx.setMuted(!muted);
+    const next = !sfxMuted;
+    return sfx.setMuted(next);
   },
+  get sfxMuted(): boolean {
+    return sfxMuted;
+  },
+  get bgmMuted(): boolean {
+    return bgmMuted;
+  },
+  /** Legacy alias — true if BOTH are muted. */
   get muted(): boolean {
-    return muted;
+    return sfxMuted && bgmMuted;
   },
   get ready(): boolean {
     return ready;
   },
   startBgm(track: BgmTrack): void {
-    if (!ready || muted) return;
-    if (bgmCurrent === track) return; // already playing
+    if (!ready || bgmMuted) return;
+    if (bgmCurrent === track) return;
     try { startBgmLoop(track); } catch { /* best-effort */ }
   },
   stopBgm(): void {

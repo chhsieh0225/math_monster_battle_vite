@@ -118,9 +118,15 @@ export type EffectMsgVm = {
 };
 
 export type SfxApi = {
+  sfxMuted: boolean;
+  bgmMuted: boolean;
+  /** Legacy: true when both sfx AND bgm are muted. */
   muted: boolean;
   ready: boolean;
   init: () => Promise<void>;
+  setSfxMuted: (next: boolean) => boolean;
+  setBgmMuted: (next: boolean) => boolean;
+  /** Legacy: mute both SFX + BGM. */
   setMuted: (next: boolean) => boolean;
   startBgm: (track: 'menu' | 'battle' | 'boss') => void;
   stopBgm: () => void;

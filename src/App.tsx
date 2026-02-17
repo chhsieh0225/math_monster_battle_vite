@@ -153,12 +153,17 @@ function App() {
   const A = B.actions;
   const V = B.view;
   const UX = useMobileExperience();
-  const [audioMuted, setAudioMuted] = useState<boolean>(() => Boolean(V.sfx.muted));
+  const [bgmMuted, setBgmMuted] = useState<boolean>(() => Boolean(V.sfx.bgmMuted));
+  const [sfxMuted, setSfxMuted] = useState<boolean>(() => Boolean(V.sfx.sfxMuted));
   const settingsReturnRef = useRef<ScreenName>("title");
   const resumeBattleAfterSettingsRef = useRef(false);
-  const setAudioMute = (next: boolean) => {
-    const muted = V.sfx.setMuted(next);
-    setAudioMuted(muted);
+  const handleSetBgmMuted = (next: boolean) => {
+    const m = V.sfx.setBgmMuted(next);
+    setBgmMuted(m);
+  };
+  const handleSetSfxMuted = (next: boolean) => {
+    const m = V.sfx.setSfxMuted(next);
+    setSfxMuted(m);
   };
   const openSettings = (fromScreen: ScreenName) => {
     settingsReturnRef.current = fromScreen;
@@ -206,7 +211,7 @@ function App() {
 
   // ── BGM driver ──
   useEffect(() => {
-    if (audioMuted) { V.sfx.stopBgm(); return; }
+    if (bgmMuted) { V.sfx.stopBgm(); return; }
     if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge') {
       V.sfx.startBgm('menu');
     } else if (S.screen === 'battle') {
@@ -216,15 +221,17 @@ function App() {
       V.sfx.stopBgm();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [S.screen, S.enemy?.id, audioMuted, V.sfx, sfxReady]);
+  }, [S.screen, S.enemy?.id, bgmMuted, V.sfx, sfxReady]);
 
   if (S.screen !== "battle") {
     return (
       <AppScreenRouter
         battle={B}
         mobile={UX}
-        audioMuted={audioMuted}
-        onSetAudioMuted={setAudioMute}
+        bgmMuted={bgmMuted}
+        sfxMuted={sfxMuted}
+        onSetBgmMuted={handleSetBgmMuted}
+        onSetSfxMuted={handleSetSfxMuted}
         onOpenSettings={openSettings}
         onCloseSettings={closeSettings}
         t={t}

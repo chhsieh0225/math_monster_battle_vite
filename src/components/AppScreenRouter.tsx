@@ -24,8 +24,10 @@ type BattleSlices = Pick<UseBattlePublicApi, 'state' | 'actions' | 'view'>;
 type AppScreenRouterProps = {
   battle: BattleSlices;
   mobile: UseMobileExperienceApi;
-  audioMuted: boolean;
-  onSetAudioMuted: (nextMuted: boolean) => void;
+  bgmMuted: boolean;
+  sfxMuted: boolean;
+  onSetBgmMuted: (nextMuted: boolean) => void;
+  onSetSfxMuted: (nextMuted: boolean) => void;
   onOpenSettings: (fromScreen: ScreenName) => void;
   onCloseSettings: () => void;
   t: TranslateFn;
@@ -38,8 +40,10 @@ function isDualSelectionPayload(payload: SelectionPayload): payload is DualSelec
 export default function AppScreenRouter({
   battle,
   mobile,
-  audioMuted,
-  onSetAudioMuted,
+  bgmMuted,
+  sfxMuted,
+  onSetBgmMuted,
+  onSetSfxMuted,
   onOpenSettings,
   onCloseSettings,
   t,
@@ -174,8 +178,10 @@ export default function AppScreenRouter({
           lowPerfMode={mobile.lowPerfMode}
           autoLowEnd={mobile.autoLowEnd}
           onSetPerfMode={mobile.setPerfMode}
-          audioMuted={audioMuted}
-          onSetAudioMuted={onSetAudioMuted}
+          bgmMuted={bgmMuted}
+          sfxMuted={sfxMuted}
+          onSetBgmMuted={onSetBgmMuted}
+          onSetSfxMuted={onSetSfxMuted}
         />,
       ),
     );

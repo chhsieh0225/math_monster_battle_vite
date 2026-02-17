@@ -65,6 +65,15 @@ function handleKeyboardActivate(ev: KeyboardEvent<HTMLElement>, action: () => vo
   }
 }
 
+type TabId = 'monsters' | 'starters' | 'drops';
+
+const RARITY_DESC: Record<string, string> = {
+  common: 'Common drop from any battle',
+  rare: 'Uncommon drop from specific types',
+  epic: 'Rare drop from tough foes',
+  legendary: 'Extremely rare treasure',
+};
+
 export default function EncyclopediaScreen({ encData = {}, onBack }: EncyclopediaScreenProps) {
   const { t, locale } = useI18n();
   const enemyEntries = useMemo(
@@ -82,155 +91,206 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
   const pct = ENC_TOTAL > 0 ? Math.round((encCount / ENC_TOTAL) * 100) : 0;
 
   const [selected, setSelected] = useState<SelectedEntry | null>(null);
+  const [tab, setTab] = useState<TabId>('monsters');
+
+  const tabs: { id: TabId; icon: string; label: string }[] = [
+    { id: 'monsters', icon: '🐾', label: t('encyclopedia.tab.monsters', 'Monsters') },
+    { id: 'starters', icon: '⚔️', label: t('encyclopedia.tab.starters', 'Partners') },
+    { id: 'drops', icon: '🎒', label: t('encyclopedia.tab.drops', 'Drops') },
+  ];
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: PAGE_BG, color: 'white', overflow: 'hidden' }}>
-      <div style={{ padding: '16px 16px 10px' }}>
+      {/* Header */}
+      <div style={{ padding: '16px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
           <button className="back-touch-btn" onClick={onBack} aria-label={t("a11y.common.backToTitle", "Back to title")} style={backBtn}>←</button>
           <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>📚 {t("encyclopedia.title", "Encyclopedia")}</div>
           <div style={{ flex: 1 }} />
           <div style={{ fontSize: 12, opacity: 0.5 }}>{encCount}/{ENC_TOTAL}</div>
         </div>
-        <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 3 }}>
+        <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 3, marginBottom: 10 }}>
           <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg,#22c55e,#3b82f6)', borderRadius: 3, transition: 'width 0.5s ease' }} />
+        </div>
+
+        {/* Tab bar */}
+        <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 3 }}>
+          {tabs.map((tb) => {
+            const active = tab === tb.id;
+            return (
+              <button
+                key={tb.id}
+                className="touch-btn"
+                onClick={() => setTab(tb.id)}
+                aria-pressed={active}
+                style={{
+                  flex: 1,
+                  padding: '8px 0',
+                  borderRadius: 10,
+                  border: 'none',
+                  background: active ? 'rgba(99,102,241,0.35)' : 'transparent',
+                  color: active ? '#e0e7ff' : 'rgba(255,255,255,0.45)',
+                  fontSize: 12,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s, color 0.2s',
+                  boxShadow: active ? '0 2px 8px rgba(99,102,241,0.25)' : 'none',
+                }}
+              >
+                {tb.icon} {tb.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '6px 10px 16px', WebkitOverflowScrolling: 'touch' }}>
-        <SectionDivider
-          icon="🐾"
-          label={t("encyclopedia.section.enemies", "Wild Monsters")}
-          sub={t("encyclopedia.section.enemiesSub", "{count}/{total} discovered", { count: encCount, total: ENC_TOTAL })}
-        />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 18 }}>
-          {enemyEntries.map((e) => {
-            const seen = Boolean(enc[e.key]);
-            const killed = Boolean(def[e.key]);
-            return (
-              <div
-                key={e.key}
-                role={seen ? "button" : undefined}
-                tabIndex={seen ? 0 : -1}
-                aria-label={seen
-                  ? t("encyclopedia.a11y.viewEnemy", "View encyclopedia: {name}", { name: e.name })
-                  : t("encyclopedia.a11y.lockedEnemy", "Locked monster")}
-                onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => {
-                  if (!seen) return;
-                  handleKeyboardActivate(ev, () => setSelected({ entry: e, kind: 'enemy' }));
-                }}
-                onClick={() => seen && setSelected({ entry: e, kind: 'enemy' })}
-                style={{
-                  background: seen ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
-                  border: killed ? '1px solid rgba(34,197,94,0.25)' : '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: 12,
-                  padding: '10px 6px 8px',
-                  textAlign: 'center',
-                  cursor: seen ? 'pointer' : 'default',
-                  transition: 'transform 0.15s, box-shadow 0.15s',
-                }}
-              >
+      {/* Tab content */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 10px 16px', WebkitOverflowScrolling: 'touch' }}>
+        {tab === 'monsters' && (
+          <>
+            <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8, padding: '0 2px' }}>
+              {t("encyclopedia.section.enemiesSub", "{count}/{total} discovered", { count: encCount, total: ENC_TOTAL })}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+              {enemyEntries.map((e) => {
+                const seen = Boolean(enc[e.key]);
+                const killed = Boolean(def[e.key]);
+                return (
+                  <div
+                    key={e.key}
+                    role={seen ? "button" : undefined}
+                    tabIndex={seen ? 0 : -1}
+                    aria-label={seen
+                      ? t("encyclopedia.a11y.viewEnemy", "View encyclopedia: {name}", { name: e.name })
+                      : t("encyclopedia.a11y.lockedEnemy", "Locked monster")}
+                    onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => {
+                      if (!seen) return;
+                      handleKeyboardActivate(ev, () => setSelected({ entry: e, kind: 'enemy' }));
+                    }}
+                    onClick={() => seen && setSelected({ entry: e, kind: 'enemy' })}
+                    style={{
+                      background: seen ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
+                      border: killed ? '1px solid rgba(34,197,94,0.25)' : '1px solid rgba(255,255,255,0.06)',
+                      borderRadius: 12,
+                      padding: '10px 6px 8px',
+                      textAlign: 'center',
+                      cursor: seen ? 'pointer' : 'default',
+                      transition: 'transform 0.15s, box-shadow 0.15s',
+                    }}
+                  >
+                    <div
+                      style={{
+                        margin: '0 auto 6px',
+                        width: 56,
+                        height: 48,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        filter: seen ? 'none' : 'brightness(0) opacity(0.15)',
+                      }}
+                    >
+                      <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={seen
+                        ? t("encyclopedia.a11y.enemySprite", "{name} sprite", { name: e.name })
+                        : t("encyclopedia.a11y.unknownEnemySprite", "Unknown monster sprite")} />
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{seen ? e.name : t("encyclopedia.unknownName", "???")}</div>
+                    <div style={{ fontSize: 10, opacity: 0.5 }}>
+                      {seen ? `${e.typeIcon} ${e.typeName}` : t("encyclopedia.unknownType", "??")}
+                      {e.isEvolved && seen && <span style={{ marginLeft: 4, fontSize: 9, background: 'rgba(168,85,247,0.25)', padding: '1px 5px', borderRadius: 6 }}>{t("encyclopedia.tag.evolved", "Evolved")}</span>}
+                    </div>
+                    {seen && <div style={{ fontSize: 9, opacity: 0.25, marginTop: 3 }}>
+                      {t("encyclopedia.countLine", "Encounter {enc} / Defeat {def}", { enc: enc[e.key] || 0, def: def[e.key] || 0 })}
+                    </div>}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {tab === 'starters' && (
+          <>
+            <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8, padding: '0 2px' }}>
+              {t("encyclopedia.section.startersSub", "{count} forms", { count: starterEntries.length })}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+              {starterEntries.map((e) => (
                 <div
+                  key={e.key}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t("encyclopedia.a11y.viewStarter", "View partner encyclopedia: {name}", { name: e.name })}
+                  onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, () => setSelected({ entry: e, kind: 'starter' }))}
+                  onClick={() => setSelected({ entry: e, kind: 'starter' })}
                   style={{
-                    margin: '0 auto 6px',
-                    width: 56,
-                    height: 48,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    filter: seen ? 'none' : 'brightness(0) opacity(0.15)',
+                    background: 'rgba(255,255,255,0.06)',
+                    border: `1px solid ${(TYPE_COLORS[e.mType] || '#6366f1')}22`,
+                    borderRadius: 12,
+                    padding: '10px 6px 8px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'transform 0.15s, box-shadow 0.15s',
                   }}
                 >
-                  <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={seen
-                    ? t("encyclopedia.a11y.enemySprite", "{name} sprite", { name: e.name })
-                    : t("encyclopedia.a11y.unknownEnemySprite", "Unknown monster sprite")} />
+                  <div
+                    style={{
+                      margin: '0 auto 6px',
+                      width: 56,
+                      height: 48,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={t("encyclopedia.a11y.starterSprite", "{name} sprite", { name: e.name })} />
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{e.name}</div>
+                  <div style={{ fontSize: 10, opacity: 0.5 }}>{e.typeIcon} {e.typeName}</div>
+                  <div style={{ fontSize: 9, opacity: 0.3, marginTop: 3 }}>{e.stageLabel}</div>
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{seen ? e.name : t("encyclopedia.unknownName", "???")}</div>
-                <div style={{ fontSize: 10, opacity: 0.5 }}>
-                  {seen ? `${e.typeIcon} ${e.typeName}` : t("encyclopedia.unknownType", "??")}
-                  {e.isEvolved && seen && <span style={{ marginLeft: 4, fontSize: 9, background: 'rgba(168,85,247,0.25)', padding: '1px 5px', borderRadius: 6 }}>{t("encyclopedia.tag.evolved", "Evolved")}</span>}
-                </div>
-                {seen && <div style={{ fontSize: 9, opacity: 0.25, marginTop: 3 }}>
-                  {t("encyclopedia.countLine", "Encounter {enc} / Defeat {def}", { enc: enc[e.key] || 0, def: def[e.key] || 0 })}
-                </div>}
-              </div>
-            );
-          })}
-        </div>
-
-        <SectionDivider
-          icon="⚔️"
-          label={t("encyclopedia.section.starters", "Partner Roles")}
-          sub={t("encyclopedia.section.startersSub", "{count} forms", { count: starterEntries.length })}
-        />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-          {starterEntries.map((e) => (
-            <div
-              key={e.key}
-              role="button"
-              tabIndex={0}
-              aria-label={t("encyclopedia.a11y.viewStarter", "View partner encyclopedia: {name}", { name: e.name })}
-              onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, () => setSelected({ entry: e, kind: 'starter' }))}
-              onClick={() => setSelected({ entry: e, kind: 'starter' })}
-              style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: `1px solid ${(TYPE_COLORS[e.mType] || '#6366f1')}22`,
-                borderRadius: 12,
-                padding: '10px 6px 8px',
-                textAlign: 'center',
-                cursor: 'pointer',
-                transition: 'transform 0.15s, box-shadow 0.15s',
-              }}
-            >
-              <div
-                style={{
-                  margin: '0 auto 6px',
-                  width: 56,
-                  height: 48,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={t("encyclopedia.a11y.starterSprite", "{name} sprite", { name: e.name })} />
-              </div>
-              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{e.name}</div>
-              <div style={{ fontSize: 10, opacity: 0.5 }}>{e.typeIcon} {e.typeName}</div>
-              <div style={{ fontSize: 9, opacity: 0.3, marginTop: 3 }}>{e.stageLabel}</div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
 
-        {/* ── Collection ── */}
-        <SectionDivider
-          icon="🎒"
-          label={t("encyclopedia.section.collection", "Collection")}
-          sub={t("encyclopedia.section.collectionSub", "{count}/{total} items", {
-            count: Object.keys(collection).length,
-            total: DROP_CATALOG.length,
-          })}
-        />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 8, marginBottom: 16 }}>
-          {DROP_CATALOG.map(({ emoji, name, rarity }) => {
-            const count = collection[emoji] || 0;
-            const owned = count > 0;
-            const rc = RARITY_COLORS[rarity];
-            return (
-              <div key={emoji} style={{
-                background: owned ? `${rc}12` : 'rgba(255,255,255,0.02)',
-                border: `1px solid ${owned ? `${rc}44` : 'rgba(255,255,255,0.06)'}`,
-                borderRadius: 10, padding: '8px 4px', textAlign: 'center',
-                opacity: owned ? 1 : 0.3,
-              }}>
-                <div style={{ fontSize: 26, marginBottom: 2, filter: owned ? 'none' : 'grayscale(1)' }}>{emoji}</div>
-                <div style={{ fontSize: 9, fontWeight: 700, color: owned ? rc : '#64748b' }}>{name}</div>
-                <div style={{ fontSize: 9, color: owned ? 'rgba(255,255,255,0.6)' : '#475569' }}>
-                  {owned ? `×${count}` : '???'}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {tab === 'drops' && (
+          <>
+            <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8, padding: '0 2px' }}>
+              {t("encyclopedia.section.collectionSub", "{count}/{total} items", {
+                count: Object.keys(collection).length,
+                total: DROP_CATALOG.length,
+              })}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8 }}>
+              {DROP_CATALOG.map(({ emoji, name, rarity }) => {
+                const count = collection[emoji] || 0;
+                const owned = count > 0;
+                const rc = RARITY_COLORS[rarity];
+                return (
+                  <div key={emoji} style={{
+                    background: owned ? `${rc}12` : 'rgba(255,255,255,0.02)',
+                    border: `1px solid ${owned ? `${rc}44` : 'rgba(255,255,255,0.06)'}`,
+                    borderRadius: 12, padding: '10px 6px 8px', textAlign: 'center',
+                    opacity: owned ? 1 : 0.35,
+                    transition: 'opacity 0.2s',
+                  }}>
+                    <div style={{ fontSize: 30, marginBottom: 4, filter: owned ? 'none' : 'grayscale(1)' }}>{emoji}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: owned ? rc : '#64748b', marginBottom: 2 }}>{name}</div>
+                    <div style={{ fontSize: 10, color: owned ? 'rgba(255,255,255,0.6)' : '#475569', marginBottom: 3 }}>
+                      {owned ? `×${count}` : '???'}
+                    </div>
+                    <div style={{ fontSize: 8, fontWeight: 700, color: rc, opacity: owned ? 0.7 : 0.3, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
+                      {rarity}
+                    </div>
+                    <div style={{ fontSize: 8, opacity: 0.35, lineHeight: 1.3 }}>
+                      {RARITY_DESC[rarity] || ''}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       {selected?.kind === 'enemy' && <DetailModal entry={selected.entry} enc={enc} def={def} onClose={() => setSelected(null)} />}

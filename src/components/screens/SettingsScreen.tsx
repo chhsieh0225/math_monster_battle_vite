@@ -16,8 +16,10 @@ type SettingsScreenProps = {
   lowPerfMode: boolean;
   autoLowEnd: boolean;
   onSetPerfMode: (nextMode: PerfMode) => void;
-  audioMuted: boolean;
-  onSetAudioMuted: (muted: boolean) => void;
+  bgmMuted: boolean;
+  sfxMuted: boolean;
+  onSetBgmMuted: (muted: boolean) => void;
+  onSetSfxMuted: (muted: boolean) => void;
 };
 
 const cardStyle: CSSProperties = {
@@ -35,11 +37,14 @@ export default function SettingsScreen({
   lowPerfMode,
   autoLowEnd,
   onSetPerfMode,
-  audioMuted,
-  onSetAudioMuted,
+  bgmMuted,
+  sfxMuted,
+  onSetBgmMuted,
+  onSetSfxMuted,
 }: SettingsScreenProps) {
   const { locale, setLocale, t } = useI18n();
-  const soundOn = !audioMuted;
+  const bgmOn = !bgmMuted;
+  const sfxOn = !sfxMuted;
   const perfResolved = lowPerfMode
     ? t('settings.perf.resolved.low', 'Battery mode')
     : t('settings.perf.resolved.std', 'Standard mode');
@@ -57,29 +62,55 @@ export default function SettingsScreen({
         </div>
       </header>
 
-      <section style={{ ...cardStyle, marginBottom: 10 }} aria-label={t('settings.audio.title', 'Audio')}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>🔊 {t('settings.audio.title', 'Audio')}</div>
-        <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 10 }}>{t('settings.audio.subtitle', 'Toggle battle sound effects (saved locally)')}</div>
+      <section style={{ ...cardStyle, marginBottom: 10 }} aria-label={t('settings.bgm.title', 'Background Music')}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>🎵 {t('settings.bgm.title', 'Background Music')}</div>
+        <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 10 }}>{t('settings.bgm.subtitle', 'Toggle background music (saved locally)')}</div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <OptionButton
             label={t('common.on', 'On')}
-            active={soundOn}
+            active={bgmOn}
             tone="green"
-            ariaLabel={t('a11y.settings.audioOn', 'Enable audio')}
-            onClick={() => onSetAudioMuted(false)}
+            ariaLabel={t('a11y.settings.bgmOn', 'Enable background music')}
+            onClick={() => onSetBgmMuted(false)}
           />
           <OptionButton
             label={t('common.off', 'Off')}
-            active={!soundOn}
+            active={!bgmOn}
             tone="gray"
-            ariaLabel={t('a11y.settings.audioOff', 'Mute audio')}
-            onClick={() => onSetAudioMuted(true)}
+            ariaLabel={t('a11y.settings.bgmOff', 'Mute background music')}
+            onClick={() => onSetBgmMuted(true)}
           />
         </div>
 
-        <div style={{ marginTop: 10, fontSize: 11, color: soundOn ? '#86efac' : '#cbd5e1', fontWeight: 700 }}>
-          {soundOn ? t('settings.audio.statusOn', 'Status: audio enabled') : t('settings.audio.statusOff', 'Status: muted')}
+        <div style={{ marginTop: 10, fontSize: 11, color: bgmOn ? '#86efac' : '#cbd5e1', fontWeight: 700 }}>
+          {bgmOn ? t('settings.bgm.statusOn', 'Status: BGM enabled') : t('settings.bgm.statusOff', 'Status: BGM muted')}
+        </div>
+      </section>
+
+      <section style={{ ...cardStyle, marginBottom: 10 }} aria-label={t('settings.sfx.title', 'Sound Effects')}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>🔊 {t('settings.sfx.title', 'Sound Effects')}</div>
+        <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 10 }}>{t('settings.sfx.subtitle', 'Toggle battle sound effects (saved locally)')}</div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <OptionButton
+            label={t('common.on', 'On')}
+            active={sfxOn}
+            tone="green"
+            ariaLabel={t('a11y.settings.sfxOn', 'Enable sound effects')}
+            onClick={() => onSetSfxMuted(false)}
+          />
+          <OptionButton
+            label={t('common.off', 'Off')}
+            active={!sfxOn}
+            tone="gray"
+            ariaLabel={t('a11y.settings.sfxOff', 'Mute sound effects')}
+            onClick={() => onSetSfxMuted(true)}
+          />
+        </div>
+
+        <div style={{ marginTop: 10, fontSize: 11, color: sfxOn ? '#86efac' : '#cbd5e1', fontWeight: 700 }}>
+          {sfxOn ? t('settings.sfx.statusOn', 'Status: SFX enabled') : t('settings.sfx.statusOff', 'Status: SFX muted')}
         </div>
       </section>
 

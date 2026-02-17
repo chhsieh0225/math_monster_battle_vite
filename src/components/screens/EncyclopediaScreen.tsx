@@ -4,6 +4,7 @@ import MonsterSprite from '../ui/MonsterSprite';
 import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia.ts';
 import { useI18n } from '../../i18n';
 import { hasSpecialTrait } from '../../utils/traits';
+import { loadCollection, type CollectionData } from '../../utils/collectionStore.ts';
 import {
   localizeEncyclopediaEnemyEntries,
   localizeEncyclopediaStarterEntries,
@@ -16,6 +17,27 @@ import type {
 } from '../../types/game';
 
 const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
+
+const DROP_CATALOG: { emoji: string; name: string; rarity: 'common' | 'rare' | 'epic' | 'legendary' }[] = [
+  { emoji: '🍬', name: 'Candy', rarity: 'common' },
+  { emoji: '🧪', name: 'Potion', rarity: 'common' },
+  { emoji: '🔥', name: 'Flame Shard', rarity: 'rare' },
+  { emoji: '💧', name: 'Water Drop', rarity: 'rare' },
+  { emoji: '⚡', name: 'Thunder Gem', rarity: 'rare' },
+  { emoji: '💀', name: 'Dark Fragment', rarity: 'rare' },
+  { emoji: '🛡️', name: 'Steel Plate', rarity: 'rare' },
+  { emoji: '👻', name: 'Ghost Wisp', rarity: 'epic' },
+  { emoji: '💎', name: 'Diamond', rarity: 'epic' },
+  { emoji: '⭐', name: 'Star Crystal', rarity: 'epic' },
+  { emoji: '🐉', name: 'Dragon Scale', rarity: 'legendary' },
+  { emoji: '👑', name: 'Crown', rarity: 'legendary' },
+  { emoji: '🏆', name: 'Trophy', rarity: 'legendary' },
+  { emoji: '🏁', name: 'PvP Flag', rarity: 'epic' },
+];
+
+const RARITY_COLORS: Record<string, string> = {
+  common: '#94a3b8', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b',
+};
 
 const TYPE_COLORS: Record<string, string> = {
   grass: '#22c55e',
@@ -55,6 +77,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
   );
   const enc: EncyclopediaCounts = encData.encountered || {};
   const def: EncyclopediaCounts = encData.defeated || {};
+  const collection: CollectionData = useMemo(() => loadCollection(), []);
   const encCount = Object.keys(enc).length;
   const pct = ENC_TOTAL > 0 ? Math.round((encCount / ENC_TOTAL) * 100) : 0;
 
@@ -176,6 +199,37 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
               <div style={{ fontSize: 9, opacity: 0.3, marginTop: 3 }}>{e.stageLabel}</div>
             </div>
           ))}
+        </div>
+
+        {/* ── Collection ── */}
+        <SectionDivider
+          icon="🎒"
+          label={t("encyclopedia.section.collection", "Collection")}
+          sub={t("encyclopedia.section.collectionSub", "{count}/{total} items", {
+            count: Object.keys(collection).length,
+            total: DROP_CATALOG.length,
+          })}
+        />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 8, marginBottom: 16 }}>
+          {DROP_CATALOG.map(({ emoji, name, rarity }) => {
+            const count = collection[emoji] || 0;
+            const owned = count > 0;
+            const rc = RARITY_COLORS[rarity];
+            return (
+              <div key={emoji} style={{
+                background: owned ? `${rc}12` : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${owned ? `${rc}44` : 'rgba(255,255,255,0.06)'}`,
+                borderRadius: 10, padding: '8px 4px', textAlign: 'center',
+                opacity: owned ? 1 : 0.3,
+              }}>
+                <div style={{ fontSize: 26, marginBottom: 2, filter: owned ? 'none' : 'grayscale(1)' }}>{emoji}</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: owned ? rc : '#64748b' }}>{name}</div>
+                <div style={{ fontSize: 9, color: owned ? 'rgba(255,255,255,0.6)' : '#475569' }}>
+                  {owned ? `×${count}` : '???'}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

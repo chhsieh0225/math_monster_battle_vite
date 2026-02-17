@@ -13,7 +13,6 @@ const EncyclopediaScreen = lazy(() => import('./screens/EncyclopediaScreen'));
 const DashboardScreen = lazy(() => import('./screens/DashboardScreen'));
 const SettingsScreen = lazy(() => import('./screens/SettingsScreen'));
 const PvpResultScreen = lazy(() => import('./screens/PvpResultScreen'));
-const CollectionScreen = lazy(() => import('./screens/CollectionScreen'));
 const DailyChallengeScreen = lazy(() => import('./screens/DailyChallengeScreen'));
 
 type SelectionPayload = Parameters<ComponentProps<typeof SelectionScreen>['onSelect']>[0];
@@ -114,7 +113,6 @@ export default function AppScreenRouter({
         onLeaderboard={() => B.setScreen('leaderboard')}
         onAchievements={() => B.setScreen('achievements')}
         onEncyclopedia={() => B.setScreen('encyclopedia')}
-        onCollection={() => B.setScreen('collection')}
         onDashboard={() => B.setScreen('dashboard')}
         onDailyChallenge={() => B.setScreen('daily_challenge')}
         onSettings={() => onOpenSettings('title')}
@@ -155,14 +153,6 @@ export default function AppScreenRouter({
     return wrapMain(
       withScreenSuspense(
         <EncyclopediaScreen encData={B.encData} onBack={() => B.setScreen('title')} />,
-      ),
-    );
-  }
-
-  if (B.screen === 'collection') {
-    return wrapMain(
-      withScreenSuspense(
-        <CollectionScreen onBack={() => B.setScreen('title')} />,
       ),
     );
   }

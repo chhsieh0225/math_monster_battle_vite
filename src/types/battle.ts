@@ -12,7 +12,6 @@ export type ScreenName =
   | "dashboard"
   | "settings"
   | "leaderboard"
-  | "collection"
   | "pvp_result"
   | "evolve"
   | "gameover";
@@ -120,7 +119,8 @@ export type EffectMsgVm = {
 
 export type SfxApi = {
   muted: boolean;
-  init: () => void;
+  ready: boolean;
+  init: () => Promise<void>;
   setMuted: (next: boolean) => boolean;
   startBgm: (track: 'menu' | 'battle' | 'boss') => void;
   stopBgm: () => void;

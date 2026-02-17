@@ -181,6 +181,29 @@ function App() {
     resumeBattleAfterSettingsRef.current = false;
   };
 
+  // ── Init audio on first user gesture (required for AudioContext) ──
+  const sfxInitRef = useRef(false);
+  const [sfxReady, setSfxReady] = useState(false);
+  useEffect(() => {
+    if (sfxInitRef.current) return;
+    const initOnce = () => {
+      if (sfxInitRef.current) return;
+      sfxInitRef.current = true;
+      V.sfx.init().then(() => setSfxReady(true));
+      document.removeEventListener('click', initOnce, true);
+      document.removeEventListener('touchstart', initOnce, true);
+      document.removeEventListener('keydown', initOnce, true);
+    };
+    document.addEventListener('click', initOnce, true);
+    document.addEventListener('touchstart', initOnce, true);
+    document.addEventListener('keydown', initOnce, true);
+    return () => {
+      document.removeEventListener('click', initOnce, true);
+      document.removeEventListener('touchstart', initOnce, true);
+      document.removeEventListener('keydown', initOnce, true);
+    };
+  }, [V.sfx]);
+
   // ── BGM driver ──
   useEffect(() => {
     if (audioMuted) { V.sfx.stopBgm(); return; }
@@ -192,7 +215,8 @@ function App() {
     } else {
       V.sfx.stopBgm();
     }
-  }, [S.screen, S.enemy?.id, audioMuted, V.sfx]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [S.screen, S.enemy?.id, audioMuted, V.sfx, sfxReady]);
 
   if (S.screen !== "battle") {
     return (

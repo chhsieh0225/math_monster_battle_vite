@@ -626,26 +626,11 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
         <AttackEffect type={B.atkEffect.type} idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />
       )}
 
-      {/* Victory confetti + drop toast */}
-      {B.phase === "victory" && !UX.lowPerfMode && (
-        <>
-          <div className="battle-confetti-layer" aria-hidden="true">
-            {Array.from({ length: 18 }, (_, i) => (
-              <div key={i} className={`battle-confetti-piece confetti-${i % 6}`} style={{
-                "--confetti-x": `${10 + Math.random() * 80}%`,
-                "--confetti-delay": `${(i * 0.08).toFixed(2)}s`,
-                "--confetti-dur": `${1.1 + Math.random() * 0.6}s`,
-                "--confetti-rot": `${Math.floor(Math.random() * 360)}deg`,
-                "--confetti-drift": `${-30 + Math.random() * 60}px`,
-              } as CSSProperties} />
-            ))}
-          </div>
-          {Array.isArray(enemy.drops) && enemy.drops.length > 0 && (
-            <div className="battle-drop-toast" aria-hidden="true">
-              {enemy.drops[0]}
-            </div>
-          )}
-        </>
+      {/* Victory drop toast */}
+      {B.phase === "victory" && !UX.lowPerfMode && Array.isArray(enemy.drops) && enemy.drops.length > 0 && (
+        <div className="battle-drop-toast" aria-hidden="true">
+          {enemy.drops[0]}
+        </div>
       )}
 
       {/* Special Defense animations */}

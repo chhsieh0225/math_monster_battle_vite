@@ -92,7 +92,10 @@ export default function BattleScreen({ battle: B, mobile: UX, onOpenSettings, t 
   // ─── Battle screen locals ───
   const st = B.starter.stages[B.pStg];
   const isCoopBattle = B.battleMode === "coop" || B.battleMode === "double";
-  const coopCanSwitch = isCoopBattle && Boolean(B.allySub) && B.pHpSub > 0;
+  const showEnemySub = isCoopBattle && Boolean(B.enemySub);
+  const showAllySub = isCoopBattle && Boolean(B.allySub);
+  const hasDualUnits = showEnemySub || showAllySub;
+  const coopCanSwitch = showAllySub && B.pHpSub > 0;
   const coopUsingSub = coopCanSwitch && B.coopActiveSlot === "sub";
   const activeStarter = B.battleMode === "pvp"
     ? (B.pvpTurn === "p1" ? B.starter : B.pvpStarter2)
@@ -110,16 +113,15 @@ export default function BattleScreen({ battle: B, mobile: UX, onOpenSettings, t 
   const chargeDisplay = B.battleMode === "pvp" ? pvpActiveCharge : B.charge;
   const chargeReadyDisplay = B.battleMode === "pvp" ? pvpActiveCharge >= 3 : B.chargeReady;
   const eSvg = B.enemy.svgFn();
-  const eSubSvg = B.enemySub ? B.enemySub.svgFn() : null;
-  const allyStage = B.allySub ? (B.allySub.stages[B.allySub.selectedStageIdx || 0] || B.allySub.stages[0]) : null;
+  const eSubSvg = showEnemySub && B.enemySub ? B.enemySub.svgFn() : null;
+  const allyStage = showAllySub && B.allySub ? (B.allySub.stages[B.allySub.selectedStageIdx || 0] || B.allySub.stages[0]) : null;
   const pSubSvg = allyStage ? allyStage.svgFn() : null;
   const pSvg = st.svgFn();
   const mainMaxHp = getStageMaxHp(B.pStg);
-  const subMaxHp = B.allySub ? getStarterMaxHp(B.allySub) : getStageMaxHp(0);
+  const subMaxHp = showAllySub && B.allySub ? getStarterMaxHp(B.allySub) : getStageMaxHp(0);
   const sceneKey = (B.enemy.sceneMType || B.enemy.mType) as keyof typeof SCENES;
   const scene = SCENES[sceneKey] || SCENES.grass;
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
-  const hasDualUnits = !!(B.enemySub || B.allySub);
   const compactDual = hasDualUnits && UX.compactUI;
   const enemyInfoRight = hasDualUnits ? "44%" : "42%";
   const playerInfoLeft = hasDualUnits ? "44%" : "42%";
@@ -131,14 +133,14 @@ export default function BattleScreen({ battle: B, mobile: UX, onOpenSettings, t 
   const playerSubLeftPct = hasDualUnits ? (compactDual ? 21 : 23) : 24;
   const playerSubBottomPct = hasDualUnits ? (compactDual ? 13 : 15) : 17;
   const mainPlayerBaseSize = B.pStg >= 2 ? 200 : B.pStg >= 1 ? 170 : 120;
-  const mainPlayerScale = hasDualUnits ? (compactDual ? 0.82 : 0.9) : 1;
+  const mainPlayerScale = hasDualUnits ? (compactDual ? 0.9 : 0.96) : 1;
   const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale);
-  const subPlayerSize = Math.round((compactDual ? 96 : 104) * (hasDualUnits ? (compactDual ? 0.82 : 0.88) : 1));
+  const subPlayerSize = Math.round((compactDual ? 104 : 112) * (hasDualUnits ? (compactDual ? 0.9 : 0.95) : 1));
   const pvpEnemyBarActive = B.battleMode !== "pvp" || B.pvpTurn === "p2";
   const mainBarActive = B.battleMode === "pvp"
     ? B.pvpTurn === "p1"
     : (isCoopBattle ? !coopUsingSub : true);
-  const subBarActive = isCoopBattle && !!B.allySub && coopUsingSub;
+  const subBarActive = showAllySub && coopUsingSub;
   const hpFocusClass = (active: boolean) => `battle-hp-focus ${active ? "is-active" : "is-dim"}`;
   const pvpEnemyBurn = B.pvpBurnP2 || 0;
   const pvpEnemyFreeze = !!B.pvpFreezeP2;
@@ -158,7 +160,7 @@ export default function BattleScreen({ battle: B, mobile: UX, onOpenSettings, t 
   const eBaseSize = B.enemy.id === "boss" ? 230
     : (B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id.startsWith("slime") && B.enemy.isEvolved)) ? 190
     : B.enemy.isEvolved ? 155 : 120;
-  const enemyMainScale = hasDualUnits ? (compactDual ? 0.86 : 0.92) : 1;
+  const enemyMainScale = hasDualUnits ? (compactDual ? 0.92 : 0.98) : 1;
   const eSize = Math.round(eBaseSize * enemyMainScale);
   const eHeight = eSize * 100 / 120;
   const eSceneType = B.enemy.sceneMType || B.enemy.mType;
@@ -420,7 +422,7 @@ export default function BattleScreen({ battle: B, mobile: UX, onOpenSettings, t 
               label={`${B.enemy.typeIcon}${B.enemy.name} ${t("battle.level", "Lv.{level}", { level: B.enemy.lvl })}`}
             />
           </div>
-          {B.enemySub && (
+          {showEnemySub && B.enemySub && (
             <div className={`battle-hp-sub-row ${hpFocusClass(false)}`}>
               <HPBar
                 cur={B.eHpSub}
@@ -457,7 +459,7 @@ export default function BattleScreen({ battle: B, mobile: UX, onOpenSettings, t 
         <div ref={enemySpriteRef} className="battle-sprite-enemy-main" style={enemyMainSpriteStyle}>
           <MonsterSprite svgStr={eSvg} size={eSize} />
         </div>
-        {B.enemySub && eSubSvg && (
+        {showEnemySub && B.enemySub && eSubSvg && (
           <div className="battle-sprite-enemy-sub" style={enemySubSpriteStyle}>
             <MonsterSprite svgStr={eSubSvg} size={B.enemySub.id === "boss" ? 160 : B.enemySub.isEvolved ? 120 : 96} />
           </div>
@@ -475,7 +477,7 @@ export default function BattleScreen({ battle: B, mobile: UX, onOpenSettings, t 
               label={`${isCoopBattle && !coopUsingSub ? "▶ " : ""}${st.name} ${t("battle.level", "Lv.{level}", { level: B.pLvl })}`}
             />
           </div>
-          {B.allySub && (
+          {showAllySub && B.allySub && (
             <div className={`battle-hp-sub-row ${hpFocusClass(subBarActive)}`}>
               <HPBar
                 cur={B.pHpSub}
@@ -506,7 +508,7 @@ export default function BattleScreen({ battle: B, mobile: UX, onOpenSettings, t 
         <div ref={playerSpriteRef} className="battle-sprite-player-main" style={playerMainSpriteStyle}>
           <MonsterSprite svgStr={pSvg} size={mainPlayerSize} />
         </div>
-        {B.allySub && pSubSvg && (
+        {showAllySub && pSubSvg && (
           <div className="battle-sprite-player-sub" style={playerSubSpriteStyle}>
             <MonsterSprite svgStr={pSubSvg} size={subPlayerSize} />
           </div>

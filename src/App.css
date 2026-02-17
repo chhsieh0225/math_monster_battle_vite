@@ -921,11 +921,11 @@ input,select,textarea{font-size:max(16px,1rem)}
   background:rgba(148,163,184,.08);
   border:1px solid rgba(148,163,184,.28);
   color:rgba(226,232,240,.92);
-  font-size:12px;
+  font-size:11px;
   font-weight:700;
-  padding:6px 12px;
+  padding:5px 10px;
   border-radius:999px;
-  min-height:32px;
+  min-height:30px;
   line-height:1.2;
   transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease,opacity .15s ease;
 }
@@ -1084,17 +1084,17 @@ input,select,textarea{font-size:max(16px,1rem)}
   .move-name{font-size:14px}
   .move-desc-row{font-size:11px;line-height:1.2}
   .battle-util-row{gap:6px;margin-top:7px}
-  .battle-util-btn{font-size:12px;padding:7px 12px}
+  .battle-util-btn{font-size:11px;padding:5px 10px;min-height:30px}
 
   .battle-info-enemy{
     top:8px;
     left:8px;
-    right:calc(var(--battle-enemy-info-right,42%) - 3%);
+    right:calc(var(--battle-enemy-info-right,42%) + 2%);
   }
   .battle-info-player{
     bottom:8px;
     right:8px;
-    left:calc(var(--battle-player-info-left,42%) - 3%);
+    left:calc(var(--battle-player-info-left,42%) + 2%);
   }
   .battle-hp-card{padding:7px 10px;border-radius:11px}
   .battle-hp-label{font-size:13px}
@@ -1108,24 +1108,16 @@ input,select,textarea{font-size:max(16px,1rem)}
   .battle-charge-meter{left:8px;bottom:44px;padding:3px 7px}
 
   .battle-sprite-enemy-main{
-    right:calc(var(--enemy-main-right,10%) - 1.2%);
-    top:calc(var(--enemy-main-top,26%) + 1.5%);
-    --battle-enemy-main-scale:.9;
+    --battle-enemy-main-scale:.97;
   }
   .battle-sprite-enemy-sub{
-    right:calc(var(--enemy-sub-right,24%) - .8%);
-    top:calc(var(--enemy-sub-top,23%) + 2.2%);
-    --battle-enemy-sub-scale:.88;
+    --battle-enemy-sub-scale:.95;
   }
   .battle-sprite-player-main{
-    left:calc(var(--player-main-left,6%) - 1%);
-    bottom:calc(var(--player-main-bottom,14%) + 2.5%);
-    --battle-player-main-scale:.9;
+    --battle-player-main-scale:.97;
   }
   .battle-sprite-player-sub{
-    left:calc(var(--player-sub-left,23%) - 1%);
-    bottom:calc(var(--player-sub-bottom,15%) + 2.8%);
-    --battle-player-sub-scale:.88;
+    --battle-player-sub-scale:.94;
   }
 }
 
@@ -1148,12 +1140,12 @@ input,select,textarea{font-size:max(16px,1rem)}
   .battle-info-enemy{
     top:6px;
     left:6px;
-    right:calc(var(--battle-enemy-info-right,42%) - 5%);
+    right:calc(var(--battle-enemy-info-right,42%) + 4%);
   }
   .battle-info-player{
     bottom:6px;
     right:6px;
-    left:calc(var(--battle-player-info-left,42%) - 5%);
+    left:calc(var(--battle-player-info-left,42%) + 4%);
   }
   .battle-hp-card{padding:6px 8px;border-radius:10px}
   .battle-hp-row{margin-bottom:3px}
@@ -1170,34 +1162,26 @@ input,select,textarea{font-size:max(16px,1rem)}
   .battle-charge-dot{width:10px;height:10px}
   .battle-charge-max{font-size:8px}
 
-  .battle-util-row{justify-content:space-between;gap:6px;margin-top:7px}
+  .battle-util-row{justify-content:flex-end;gap:5px;margin-top:7px}
   .battle-util-btn{
-    flex:1 1 calc(50% - 4px);
-    font-size:11px;
-    padding:8px 9px;
-    min-height:36px;
+    flex:0 0 auto;
+    font-size:10.5px;
+    padding:4px 8px;
+    min-height:28px;
     text-align:center;
   }
 
   .battle-sprite-enemy-main{
-    right:calc(var(--enemy-main-right,10%) - 2.2%);
-    top:calc(var(--enemy-main-top,26%) + 2.6%);
-    --battle-enemy-main-scale:.8;
+    --battle-enemy-main-scale:.94;
   }
   .battle-sprite-enemy-sub{
-    right:calc(var(--enemy-sub-right,24%) - 1.4%);
-    top:calc(var(--enemy-sub-top,23%) + 3.2%);
-    --battle-enemy-sub-scale:.76;
+    --battle-enemy-sub-scale:.9;
   }
   .battle-sprite-player-main{
-    left:calc(var(--player-main-left,6%) - 1.6%);
-    bottom:calc(var(--player-main-bottom,14%) + 3.6%);
-    --battle-player-main-scale:.8;
+    --battle-player-main-scale:.94;
   }
   .battle-sprite-player-sub{
-    left:calc(var(--player-sub-left,23%) - 1.4%);
-    bottom:calc(var(--player-sub-bottom,15%) + 4.2%);
-    --battle-player-sub-scale:.76;
+    --battle-player-sub-scale:.9;
   }
 
   .battle-question-wrap{padding:8px 10px}
@@ -1217,7 +1201,7 @@ input,select,textarea{font-size:max(16px,1rem)}
   .selection-confirm-btn{font-size:18px!important;padding:15px 0!important}
   .move-name-row{padding-right:58px}
   .move-name{font-size:12px}
-  .battle-util-btn{font-size:11px!important;padding:8px 9px!important}
+  .battle-util-btn{font-size:10.5px!important;padding:4px 8px!important}
   .battle-pill{font-size:9px}
   .battle-boss-hint{font-size:12px;padding:5px 12px;max-width:90vw;text-align:center}
   .battle-question-expression{font-size:28px}

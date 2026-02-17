@@ -1823,11 +1823,11 @@ input,select,textarea{font-size:max(16px,1rem)}
 .enc-section-line{flex:1;height:1px;background:rgba(255,255,255,.1);margin-left:4px}
 
 @media (max-width: 768px){
-  .enc-grid-three{grid-template-columns:1fr 1fr}
+  .enc-grid-three{grid-template-columns:1fr 1fr 1fr}
 }
 @media (max-width: 480px){
   .enc-header{padding:14px 12px 0}
-  .enc-grid-three{grid-template-columns:1fr 1fr;gap:6px}
+  .enc-grid-three{grid-template-columns:1fr 1fr 1fr;gap:6px}
   .enc-grid-drops{grid-template-columns:1fr 1fr;gap:6px}
   .enc-content{padding:10px 8px 14px}
   .enc-dual-grid{grid-template-columns:1fr}

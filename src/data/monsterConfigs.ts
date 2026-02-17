@@ -11,7 +11,7 @@ const SLIME_VARIANT_MULTIPLIERS = BALANCE_CONFIG.monsters.slimeVariantMultiplier
 const EVOLVED_SLIME_VARIANT_MULTIPLIERS = BALANCE_CONFIG.monsters.evolvedSlimeVariantMultipliersById;
 
 /** Set of monster IDs that are bosses (use boss battle mechanics). */
-export const BOSS_IDS: ReadonlySet<string> = new Set(['boss', 'boss_hydra']);
+export const BOSS_IDS: ReadonlySet<string> = new Set(['boss', 'boss_hydra', 'boss_crazy_dragon']);
 
 /** All boss monster IDs as an array (for random selection). */
 export const BOSS_ID_LIST: readonly string[] = [...BOSS_IDS];
@@ -124,6 +124,25 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "venom",
     traitName: "毒霧",
     traitDesc: "散發致命毒霧，每回合持續侵蝕對手生命。擁有多階段戰鬥形態，能蓄力釋放劇毒吐息，還能封印對手技能。",
+  },
+  {
+    id: "boss_crazy_dragon",
+    name: "單翼狂龍",
+    hp: MONSTER_STATS.boss_crazy_dragon.hp,
+    atk: MONSTER_STATS.boss_crazy_dragon.atk,
+    c1: "#dc2626",
+    c2: "#450a0a",
+    spriteKey: "bossCrazyDragonSVG",
+    dropTable: "boss_crazy_dragon",
+    mType: "dark",
+    typeIcon: "💀",
+    typeName: "暗",
+    mType2: "fire",
+    typeIcon2: "🔥",
+    typeName2: "火",
+    trait: "tyrant",
+    traitName: "狂怒",
+    traitDesc: "失去一翼後陷入永恆狂怒。擁有多階段戰鬥形態，能蓄力釋放暗焰吐息，還能封印對手技能。攻擊力冠絕三大Boss。",
   },
 ];
 

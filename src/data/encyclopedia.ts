@@ -66,6 +66,7 @@ const DESCS: Record<string, string> = {
   dragonEvolved: '鋼鐵龍裝載了傳說中的天空引擎後的形態。速度與防禦兼備，被稱為空中要塞。',
   boss: '傳說中的暗黑龍王。統治著暗黑深淵的最終BOSS。擁有壓倒性的力量，只有最強的訓練師才能擊敗它。',
   boss_hydra: '棲息於毒沼深淵的三頭毒蛇。全身散發致命毒霧，被牠纏上的獵物會在不知不覺中被毒素侵蝕。每顆頭都能噴出不同劇毒，是最令冒險者恐懼的存在。',
+  boss_crazy_dragon: '傳說中失去一翼的古龍。斷翼之痛讓牠陷入永恆的狂怒，全身燃燒著暗黑火焰。雖然無法飛行，但地面上的爆發力遠超一般龍族，是三大Boss中攻擊力最強的存在。',
 };
 
 const HABITATS: Record<string, string> = {
@@ -89,6 +90,7 @@ const HABITATS: Record<string, string> = {
   dragonEvolved: '⚙️ 鋼鐵要塞',
   boss: '💀 暗黑深淵',
   boss_hydra: '☠️ 毒沼深淵',
+  boss_crazy_dragon: '🔥 焦灼荒原',
 };
 
 const RARITY: Record<string, string> = {
@@ -112,6 +114,7 @@ const RARITY: Record<string, string> = {
   dragonEvolved: '★★★★',
   boss: '★★★★★',
   boss_hydra: '★★★★★',
+  boss_crazy_dragon: '★★★★★',
 };
 
 export const ENC_ENTRIES: EncyclopediaEnemyEntry[] = [];

@@ -68,14 +68,12 @@ import {
 } from './battle/battleReducer';
 import { createBattleFieldSetters } from './battle/battleFieldSetters';
 import { effectOrchestrator } from './battle/effectOrchestrator';
-import { runEnemyTurnController } from './battle/enemyTurnController.ts';
 import { runTimeoutController } from './battle/timeoutController.ts';
 import { buildTimeoutControllerArgs } from './battle/timeoutDepsBuilder.ts';
-import { runSelectMoveFlow } from './battle/selectMoveFlow';
 import {
-  buildEnemyTurnArgs,
-  buildSelectMoveFlowArgs,
-} from './battle/turnActionDepsBuilder.ts';
+  runBattleEnemyTurn,
+  runBattleSelectMove,
+} from './battle/turnFlowAdapter.ts';
 import { runResetRuntimeState } from './battle/runtimeReset.ts';
 import { runScreenTransition } from './battle/screenTransition.ts';
 import {
@@ -629,48 +627,52 @@ export function useBattle() {
 
   // --- Player selects a move ---
   const selectMove = (i) => {
-    runSelectMoveFlow(buildSelectMoveFlowArgs({
-      index: i,
-      sr,
-      runtime: {
-        timedMode,
-        questionTimeLimitSec: questionTimerSec,
-        questionAllowedOps,
-        diffMods: DIFF_MODS,
-        t,
-        getActingStarter,
-        getMoveDiffLevel: _getMoveDiffLevel,
-        genQuestion: genBattleQuestion,
-        startTimer,
-        markQStart,
-        sfx,
+    runBattleSelectMove({
+      selectMoveInput: {
+        index: i,
+        sr,
+        runtime: {
+          timedMode,
+          questionTimeLimitSec: questionTimerSec,
+          questionAllowedOps,
+          diffMods: DIFF_MODS,
+          t,
+          getActingStarter,
+          getMoveDiffLevel: _getMoveDiffLevel,
+          genQuestion: genBattleQuestion,
+          startTimer,
+          markQStart,
+          sfx,
+        },
+        ui: UI,
+        battleFields: battleFieldSetters,
       },
-      ui: UI,
-      battleFields: battleFieldSetters,
-    }));
+    });
   };
 
   // --- Enemy turn logic (reads from stateRef) ---
   function doEnemyTurn() {
-    runEnemyTurnController(buildEnemyTurnArgs({
-      sr,
-      runtime: {
-        safeTo,
-        rand,
-        randInt,
-        chance,
-        sfx,
-        setScreen,
-        t,
+    runBattleEnemyTurn({
+      enemyTurnInput: {
+        sr,
+        runtime: {
+          safeTo,
+          rand,
+          randInt,
+          chance,
+          sfx,
+          setScreen,
+          t,
+        },
+        battleFields: battleFieldSetters,
+        ui: UI,
+        callbacks: {
+          _endSession,
+          handleVictory,
+          handlePlayerPartyKo,
+        },
       },
-      battleFields: battleFieldSetters,
-      ui: UI,
-      callbacks: {
-        _endSession,
-        handleVictory,
-        handlePlayerPartyKo,
-      },
-    }));
+    });
   }
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
 

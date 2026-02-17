@@ -60,10 +60,12 @@ export function resolveBattleLayout({
   const isDragonOrFire = enemyId === "fire" || enemyId === "dragon";
   const isEvolvedSlime = Boolean(enemyId?.startsWith("slime") && enemyIsEvolved);
   const isLargeMonster = enemyId === "golumn";
-  const enemyBaseSize = isBoss ? 230
-    : isLargeMonster ? 230
-      : (isDragonOrFire || isEvolvedSlime) ? 190
-        : enemyIsEvolved ? 155 : 120;
+  const isCrazyDragon = enemyId === "boss_crazy_dragon";
+  const enemyBaseSize = isCrazyDragon ? 260
+    : isBoss ? 230
+      : isLargeMonster ? 230
+        : (isDragonOrFire || isEvolvedSlime) ? 190
+          : enemyIsEvolved ? 155 : 120;
   const enemyScale = dualUnits ? (compactDual ? 0.92 : 0.98) : 1;
   const enemySize = Math.round(enemyBaseSize * enemyScale);
 

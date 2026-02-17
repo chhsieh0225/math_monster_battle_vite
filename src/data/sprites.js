@@ -76,6 +76,16 @@ function makeSvgFnFit(key, natW, natH, rendering = 'auto') {
   const y = Math.round((vbH - h) / 2);
   return () => `<image href="${SPRITE_IMGS[key]}" x="${x}" y="${y}" width="${w}" height="${h}" style="image-rendering:${rendering}"/>`;
 }
+// Like makeSvgFnFit but horizontally flipped (faces left → faces right).
+function makeSvgFnFitFlip(key, natW, natH, rendering = 'auto') {
+  const vbW = 120, vbH = 100;
+  const scale = Math.min(vbW / natW, vbH / natH);
+  const w = Math.round(natW * scale);
+  const h = Math.round(natH * scale);
+  const x = Math.round((vbW - w) / 2);
+  const y = Math.round((vbH - h) / 2);
+  return () => `<g transform="translate(${vbW},0) scale(-1,1)"><image href="${SPRITE_IMGS[key]}" x="${x}" y="${y}" width="${w}" height="${h}" style="image-rendering:${rendering}"/></g>`;
+}
 
 export const slimeSVG = makeSvgFn('slime', 'pixelated');
 
@@ -115,5 +125,5 @@ export const playerlion0SVG = makeSvgFnFill('player_lion0', 677, 369);
 export const playerlion1SVG = makeSvgFnFill('player_lion1', 677, 369);
 export const playerlion2SVG = makeSvgFnFill('player_lion2', 677, 369);
 export const bossHydraSVG = makeSvgFnFit('boss_hydra', 677, 369);
-export const bossCrazyDragonSVG = makeSvgFnFit('boss_crazy_dragon', 677, 369);
+export const bossCrazyDragonSVG = makeSvgFnFitFlip('boss_crazy_dragon', 677, 369);
 export const golumnSVG = makeSvgFn('golumn');

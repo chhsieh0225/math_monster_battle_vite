@@ -16,7 +16,7 @@ import type {
   EncyclopediaStarterEntry,
 } from '../../types/game';
 
-const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
+const PAGE_BG = 'linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)';
 
 const DROP_CATALOG: { emoji: string; name: string; rarity: 'common' | 'rare' | 'epic' | 'legendary' }[] = [
   { emoji: '🍬', name: 'Candy', rarity: 'common' },
@@ -59,7 +59,7 @@ type EncyclopediaScreenProps = {
 };
 
 function handleKeyboardActivate(ev: KeyboardEvent<HTMLElement>, action: () => void) {
-  if (ev.key === "Enter" || ev.key === " ") {
+  if (ev.key === 'Enter' || ev.key === ' ') {
     ev.preventDefault();
     action();
   }
@@ -100,42 +100,29 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
   ];
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: PAGE_BG, color: 'white', overflow: 'hidden' }}>
+    <div className="enc-root" style={{ background: PAGE_BG }}>
       {/* Header */}
-      <div style={{ padding: '16px 16px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <button className="back-touch-btn" onClick={onBack} aria-label={t("a11y.common.backToTitle", "Back to title")} style={backBtn}>←</button>
-          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>📚 {t("encyclopedia.title", "Encyclopedia")}</div>
-          <div style={{ flex: 1 }} />
-          <div style={{ fontSize: 12, opacity: 0.5 }}>{encCount}/{ENC_TOTAL}</div>
+      <div className="enc-header">
+        <div className="enc-title-row">
+          <button className="back-touch-btn enc-back-btn" onClick={onBack} aria-label={t('a11y.common.backToTitle', 'Back to title')}>←</button>
+          <div className="enc-title">📚 {t('encyclopedia.title', 'Encyclopedia')}</div>
+          <div className="enc-spacer" />
+          <div className="enc-count">{encCount}/{ENC_TOTAL}</div>
         </div>
-        <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 3, marginBottom: 10 }}>
-          <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg,#22c55e,#3b82f6)', borderRadius: 3, transition: 'width 0.5s ease' }} />
+        <div className="enc-progress-track">
+          <div className="enc-progress-fill" style={{ width: `${pct}%` }} />
         </div>
 
         {/* Tab bar */}
-        <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 3 }}>
+        <div className="enc-tabbar">
           {tabs.map((tb) => {
             const active = tab === tb.id;
             return (
               <button
                 key={tb.id}
-                className="touch-btn"
+                className={`touch-btn enc-tab-btn ${active ? 'is-active' : ''}`}
                 onClick={() => setTab(tb.id)}
                 aria-pressed={active}
-                style={{
-                  flex: 1,
-                  padding: '8px 0',
-                  borderRadius: 10,
-                  border: 'none',
-                  background: active ? 'rgba(99,102,241,0.35)' : 'transparent',
-                  color: active ? '#e0e7ff' : 'rgba(255,255,255,0.45)',
-                  fontSize: 12,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  transition: 'background 0.2s, color 0.2s',
-                  boxShadow: active ? '0 2px 8px rgba(99,102,241,0.25)' : 'none',
-                }}
               >
                 {tb.icon} {tb.label}
               </button>
@@ -145,61 +132,43 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
       </div>
 
       {/* Tab content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 10px 16px', WebkitOverflowScrolling: 'touch' }}>
+      <div className="enc-content">
         {tab === 'monsters' && (
           <>
-            <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8, padding: '0 2px' }}>
-              {t("encyclopedia.section.enemiesSub", "{count}/{total} discovered", { count: encCount, total: ENC_TOTAL })}
+            <div className="enc-subtitle">
+              {t('encyclopedia.section.enemiesSub', '{count}/{total} discovered', { count: encCount, total: ENC_TOTAL })}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+            <div className="enc-grid-three">
               {enemyEntries.map((e) => {
                 const seen = Boolean(enc[e.key]);
                 const killed = Boolean(def[e.key]);
                 return (
                   <div
                     key={e.key}
-                    role={seen ? "button" : undefined}
+                    role={seen ? 'button' : undefined}
                     tabIndex={seen ? 0 : -1}
                     aria-label={seen
-                      ? t("encyclopedia.a11y.viewEnemy", "View encyclopedia: {name}", { name: e.name })
-                      : t("encyclopedia.a11y.lockedEnemy", "Locked monster")}
+                      ? t('encyclopedia.a11y.viewEnemy', 'View encyclopedia: {name}', { name: e.name })
+                      : t('encyclopedia.a11y.lockedEnemy', 'Locked monster')}
                     onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => {
                       if (!seen) return;
                       handleKeyboardActivate(ev, () => setSelected({ entry: e, kind: 'enemy' }));
                     }}
                     onClick={() => seen && setSelected({ entry: e, kind: 'enemy' })}
-                    style={{
-                      background: seen ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
-                      border: killed ? '1px solid rgba(34,197,94,0.25)' : '1px solid rgba(255,255,255,0.06)',
-                      borderRadius: 12,
-                      padding: '10px 6px 8px',
-                      textAlign: 'center',
-                      cursor: seen ? 'pointer' : 'default',
-                      transition: 'transform 0.15s, box-shadow 0.15s',
-                    }}
+                    className={`enc-card ${seen ? 'is-seen' : 'is-hidden'} ${killed ? 'is-killed' : ''}`}
                   >
-                    <div
-                      style={{
-                        margin: '0 auto 6px',
-                        width: 56,
-                        height: 48,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        filter: seen ? 'none' : 'brightness(0) opacity(0.15)',
-                      }}
-                    >
+                    <div className={`enc-card-sprite-wrap ${seen ? '' : 'is-hidden'}`}>
                       <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={seen
-                        ? t("encyclopedia.a11y.enemySprite", "{name} sprite", { name: e.name })
-                        : t("encyclopedia.a11y.unknownEnemySprite", "Unknown monster sprite")} />
+                        ? t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: e.name })
+                        : t('encyclopedia.a11y.unknownEnemySprite', 'Unknown monster sprite')} />
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{seen ? e.name : t("encyclopedia.unknownName", "???")}</div>
-                    <div style={{ fontSize: 10, opacity: 0.5 }}>
-                      {seen ? `${e.typeIcon}${e.typeIcon2 ? e.typeIcon2 : ''} ${e.typeName}${e.typeName2 ? ' / ' + e.typeName2 : ''}` : t("encyclopedia.unknownType", "??")}
-                      {e.isEvolved && seen && <span style={{ marginLeft: 4, fontSize: 9, background: 'rgba(168,85,247,0.25)', padding: '1px 5px', borderRadius: 6 }}>{t("encyclopedia.tag.evolved", "Evolved")}</span>}
+                    <div className="enc-card-name">{seen ? e.name : t('encyclopedia.unknownName', '???')}</div>
+                    <div className="enc-card-meta">
+                      {seen ? `${e.typeIcon}${e.typeIcon2 ? e.typeIcon2 : ''} ${e.typeName}${e.typeName2 ? ' / ' + e.typeName2 : ''}` : t('encyclopedia.unknownType', '??')}
+                      {e.isEvolved && seen && <span className="enc-tag-evolved">{t('encyclopedia.tag.evolved', 'Evolved')}</span>}
                     </div>
-                    {seen && <div style={{ fontSize: 9, opacity: 0.25, marginTop: 3 }}>
-                      {t("encyclopedia.countLine", "Encounter {enc} / Defeat {def}", { enc: enc[e.key] || 0, def: def[e.key] || 0 })}
+                    {seen && <div className="enc-card-count-line">
+                      {t('encyclopedia.countLine', 'Encounter {enc} / Defeat {def}', { enc: enc[e.key] || 0, def: def[e.key] || 0 })}
                     </div>}
                   </div>
                 );
@@ -210,43 +179,27 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
 
         {tab === 'starters' && (
           <>
-            <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8, padding: '0 2px' }}>
-              {t("encyclopedia.section.startersSub", "{count} forms", { count: starterEntries.length })}
+            <div className="enc-subtitle">
+              {t('encyclopedia.section.startersSub', '{count} forms', { count: starterEntries.length })}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+            <div className="enc-grid-three">
               {starterEntries.map((e) => (
                 <div
                   key={e.key}
                   role="button"
                   tabIndex={0}
-                  aria-label={t("encyclopedia.a11y.viewStarter", "View partner encyclopedia: {name}", { name: e.name })}
+                  aria-label={t('encyclopedia.a11y.viewStarter', 'View partner encyclopedia: {name}', { name: e.name })}
                   onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, () => setSelected({ entry: e, kind: 'starter' }))}
                   onClick={() => setSelected({ entry: e, kind: 'starter' })}
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    border: `1px solid ${(TYPE_COLORS[e.mType] || '#6366f1')}22`,
-                    borderRadius: 12,
-                    padding: '10px 6px 8px',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    transition: 'transform 0.15s, box-shadow 0.15s',
-                  }}
+                  className="enc-card is-seen"
+                  style={{ borderColor: `${TYPE_COLORS[e.mType] || '#6366f1'}22` }}
                 >
-                  <div
-                    style={{
-                      margin: '0 auto 6px',
-                      width: 56,
-                      height: 48,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={t("encyclopedia.a11y.starterSprite", "{name} sprite", { name: e.name })} />
+                  <div className="enc-card-sprite-wrap">
+                    <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: e.name })} />
                   </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{e.name}</div>
-                  <div style={{ fontSize: 10, opacity: 0.5 }}>{e.typeIcon} {e.typeName}</div>
-                  <div style={{ fontSize: 9, opacity: 0.3, marginTop: 3 }}>{e.stageLabel}</div>
+                  <div className="enc-card-name">{e.name}</div>
+                  <div className="enc-card-meta">{e.typeIcon} {e.typeName}</div>
+                  <div className="enc-card-stage">{e.stageLabel}</div>
                 </div>
               ))}
             </div>
@@ -255,36 +208,31 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
 
         {tab === 'drops' && (
           <>
-            <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8, padding: '0 2px' }}>
-              {t("encyclopedia.section.collectionSub", "{count}/{total} items", {
+            <div className="enc-subtitle">
+              {t('encyclopedia.section.collectionSub', '{count}/{total} items', {
                 count: Object.keys(collection).length,
                 total: DROP_CATALOG.length,
               })}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8 }}>
+            <div className="enc-grid-drops">
               {DROP_CATALOG.map(({ emoji, name, rarity }) => {
                 const count = collection[emoji] || 0;
                 const owned = count > 0;
                 const rc = RARITY_COLORS[rarity];
+                const dropStyle: CSSProperties = {
+                  '--enc-rarity': rc,
+                  '--enc-rarity-bg': `${rc}12`,
+                  '--enc-rarity-border': `${rc}44`,
+                } as CSSProperties;
                 return (
-                  <div key={emoji} style={{
-                    background: owned ? `${rc}12` : 'rgba(255,255,255,0.02)',
-                    border: `1px solid ${owned ? `${rc}44` : 'rgba(255,255,255,0.06)'}`,
-                    borderRadius: 12, padding: '10px 6px 8px', textAlign: 'center',
-                    opacity: owned ? 1 : 0.35,
-                    transition: 'opacity 0.2s',
-                  }}>
-                    <div style={{ fontSize: 30, marginBottom: 4, filter: owned ? 'none' : 'grayscale(1)' }}>{emoji}</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: owned ? rc : '#64748b', marginBottom: 2 }}>{name}</div>
-                    <div style={{ fontSize: 10, color: owned ? 'rgba(255,255,255,0.6)' : '#475569', marginBottom: 3 }}>
+                  <div key={emoji} className={`enc-drop-card ${owned ? 'is-owned' : 'is-locked'}`} style={dropStyle}>
+                    <div className={`enc-drop-emoji ${owned ? '' : 'is-locked'}`}>{emoji}</div>
+                    <div className={`enc-drop-name ${owned ? '' : 'is-locked'}`}>{name}</div>
+                    <div className={`enc-drop-count ${owned ? '' : 'is-locked'}`}>
                       {owned ? `×${count}` : '???'}
                     </div>
-                    <div style={{ fontSize: 8, fontWeight: 700, color: rc, opacity: owned ? 0.7 : 0.3, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
-                      {rarity}
-                    </div>
-                    <div style={{ fontSize: 8, opacity: 0.35, lineHeight: 1.3 }}>
-                      {RARITY_DESC[rarity] || ''}
-                    </div>
+                    <div className="enc-drop-rarity">{rarity}</div>
+                    <div className="enc-drop-desc">{RARITY_DESC[rarity] || ''}</div>
                   </div>
                 );
               })}
@@ -312,131 +260,61 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
   const encounterCount = enc[entry.key] || 0;
   const defeatCount = def[entry.key] || 0;
   const defeatRate = encounterCount > 0 ? Math.round((defeatCount / encounterCount) * 100) : 0;
+  const modalToneStyle: CSSProperties = {
+    '--enc-type-color': tc,
+    '--enc-type-light': `${tc}55`,
+    '--enc-type-border': `${tc}33`,
+    '--enc-type-shadow': `${tc}22`,
+    '--enc-type-shadow-wide': `${tc}11`,
+    '--enc-type-soft-bg': `${tc}25`,
+    '--enc-type-soft-border': `${tc}44`,
+  } as CSSProperties;
 
   return (
     <div
       role="button"
       tabIndex={0}
-      aria-label={t("encyclopedia.a11y.closeEnemyDetail", "Close monster details")}
+      aria-label={t('encyclopedia.a11y.closeEnemyDetail', 'Close monster details')}
       onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, onClose)}
       onClick={onClose}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        zIndex: 200,
-        background: 'rgba(0,0,0,0.75)',
-        backdropFilter: 'blur(6px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        animation: 'fadeIn 0.2s ease',
-      }}
+      className="enc-modal-overlay"
     >
       <div
         onClick={(ev: MouseEvent<HTMLDivElement>) => ev.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: 380,
-          maxHeight: '90%',
-          background: 'linear-gradient(180deg,#1e1b4b,#0f172a)',
-          borderRadius: 20,
-          border: `2px solid ${tc}33`,
-          boxShadow: `0 8px 40px ${tc}22, 0 0 80px ${tc}11`,
-          overflowY: 'auto',
-          WebkitOverflowScrolling: 'touch',
-          animation: 'popIn 0.3s ease',
-        }}
+        className="enc-modal-card"
+        style={modalToneStyle}
       >
         <div
-          style={{
-            position: 'relative',
-            padding: '28px 20px 16px',
-            textAlign: 'center',
-            background: `radial-gradient(ellipse at 50% 80%, ${tc}18, transparent 70%)`,
-          }}
+          className="enc-modal-hero"
+          style={{ background: `radial-gradient(ellipse at 50% 80%, ${tc}18, transparent 70%)` }}
         >
           <button
-            className="touch-btn"
+            className="touch-btn enc-modal-close"
             onClick={onClose}
-            aria-label={t("common.cancel", "Close")}
-            style={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              color: 'white',
-              fontSize: 16,
-              fontWeight: 700,
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            aria-label={t('common.cancel', 'Close')}
           >
             ✕
           </button>
 
-          <div style={{ fontSize: 14, color: '#fbbf24', letterSpacing: 3, marginBottom: 8, opacity: 0.7 }}>{entry.rarity}</div>
+          <div className="enc-modal-rarity">{entry.rarity}</div>
 
-          <div
-            style={{
-              display: 'inline-block',
-              position: 'relative',
-              filter: `drop-shadow(0 0 20px ${tc}55)`,
-              animation: 'float 3s ease-in-out infinite',
-            }}
-          >
-            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} ariaLabel={t("encyclopedia.a11y.enemySprite", "{name} sprite", { name: entry.name })} />
+          <div className="enc-modal-sprite-wrap">
+            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} ariaLabel={t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: entry.name })} />
           </div>
 
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: 2, textShadow: `0 0 20px ${tc}55` }}>{entry.name}</div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-              <span
-                style={{
-                  background: `${tc}25`,
-                  border: `1px solid ${tc}44`,
-                  padding: '3px 12px',
-                  borderRadius: 20,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: tc,
-                }}
-              >
-                {entry.typeIcon}{entry.typeIcon2 || ''} {t("encyclopedia.typeTag", "{type} type", { type: entry.typeName + (entry.typeName2 ? ' / ' + entry.typeName2 : '') })}
+          <div className="enc-modal-name-wrap">
+            <div className="enc-modal-name" style={{ textShadow: `0 0 20px ${tc}55` }}>{entry.name}</div>
+            <div className="enc-modal-tag-row">
+              <span className="enc-modal-pill enc-modal-pill-type">
+                {entry.typeIcon}{entry.typeIcon2 || ''} {t('encyclopedia.typeTag', '{type} type', { type: entry.typeName + (entry.typeName2 ? ' / ' + entry.typeName2 : '') })}
               </span>
               {entry.isEvolved && (
-                <span
-                  style={{
-                    background: 'rgba(168,85,247,0.2)',
-                    border: '1px solid rgba(168,85,247,0.3)',
-                    padding: '3px 10px',
-                    borderRadius: 20,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: '#c084fc',
-                  }}
-                >
-                  ✨ {t("encyclopedia.tag.evolved", "Evolved")}
+                <span className="enc-modal-pill enc-modal-pill-evolved">
+                  ✨ {t('encyclopedia.tag.evolved', 'Evolved')}
                 </span>
               )}
               {hasSpecialTrait(entry.traitName, entry.traitDesc) && (
-                <span
-                  style={{
-                    background: 'rgba(99,102,241,0.2)',
-                    border: '1px solid rgba(99,102,241,0.3)',
-                    padding: '3px 10px',
-                    borderRadius: 20,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: '#a5b4fc',
-                  }}
-                >
+                <span className="enc-modal-pill enc-modal-pill-trait">
                   ✦ {entry.traitName}
                 </span>
               )}
@@ -444,118 +322,67 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
           </div>
         </div>
 
-        <div style={{ padding: '0 18px 20px' }}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-            <StatBox icon="❤️" label={t("encyclopedia.stat.hp", "HP")} value={entry.hp} color="#ef4444" />
-            <StatBox icon="⚔️" label={t("encyclopedia.stat.atk", "ATK")} value={entry.atk} color="#f59e0b" />
-            <StatBox icon="📍" label={t("encyclopedia.stat.habitat", "Habitat")} color="#6366f1" sub={entry.habitat} />
+        <div className="enc-modal-body">
+          <div className="enc-stat-row">
+            <StatBox icon="❤️" label={t('encyclopedia.stat.hp', 'HP')} value={entry.hp} color="#ef4444" />
+            <StatBox icon="⚔️" label={t('encyclopedia.stat.atk', 'ATK')} value={entry.atk} color="#f59e0b" />
+            <StatBox icon="📍" label={t('encyclopedia.stat.habitat', 'Habitat')} color="#6366f1" sub={entry.habitat} />
           </div>
 
           {entry.desc && (
-            <div
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                borderRadius: 12,
-                padding: '12px 14px',
-                marginBottom: 12,
-                border: '1px solid rgba(255,255,255,0.06)',
-              }}
-            >
-              <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 4 }}>📖 {t("encyclopedia.section.desc", "Description")}</div>
-              <div style={{ fontSize: 13, lineHeight: 1.7, opacity: 0.8 }}>{entry.desc}</div>
+            <div className="enc-info-panel">
+              <div className="enc-info-title">📖 {t('encyclopedia.section.desc', 'Description')}</div>
+              <div className="enc-info-body">{entry.desc}</div>
             </div>
           )}
 
           {hasSpecialTrait(entry.traitName, entry.traitDesc) && (
-            <div
-              style={{
-                background: 'rgba(99,102,241,0.08)',
-                borderRadius: 12,
-                padding: '10px 14px',
-                marginBottom: 12,
-                border: '1px solid rgba(99,102,241,0.15)',
-              }}
-            >
-              <div style={{ fontSize: 11, color: '#818cf8', fontWeight: 700, marginBottom: 4 }}>
-                ✦ {t("encyclopedia.section.trait", "Trait")}: {entry.traitName}
+            <div className="enc-trait-panel">
+              <div className="enc-trait-title">
+                ✦ {t('encyclopedia.section.trait', 'Trait')}: {entry.traitName}
               </div>
-              <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.8 }}>{entry.traitDesc}</div>
+              <div className="enc-info-body">{entry.traitDesc}</div>
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+          <div className="enc-dual-grid">
             {entry.weakAgainst.length > 0 && (
-              <div
-                style={{
-                  background: 'rgba(239,68,68,0.08)',
-                  borderRadius: 10,
-                  padding: '10px 12px',
-                  border: '1px solid rgba(239,68,68,0.15)',
-                }}
-              >
-                <div style={{ fontSize: 10, color: '#ef4444', fontWeight: 700, marginBottom: 4 }}>⚠️ {t("encyclopedia.section.weakness", "Weakness")}</div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{entry.weakAgainst.map((typeName) => t("encyclopedia.typeTag", "{type} type", { type: typeName })).join('、')}</div>
+              <div className="enc-weak-panel">
+                <div className="enc-weak-title">⚠️ {t('encyclopedia.section.weakness', 'Weakness')}</div>
+                <div className="enc-type-list">{entry.weakAgainst.map((typeName) => t('encyclopedia.typeTag', '{type} type', { type: typeName })).join('、')}</div>
               </div>
             )}
             {entry.resistAgainst.length > 0 && (
-              <div
-                style={{
-                  background: 'rgba(34,197,94,0.08)',
-                  borderRadius: 10,
-                  padding: '10px 12px',
-                  border: '1px solid rgba(34,197,94,0.15)',
-                }}
-              >
-                <div style={{ fontSize: 10, color: '#22c55e', fontWeight: 700, marginBottom: 4 }}>🛡️ {t("encyclopedia.section.resistance", "Resistance")}</div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{entry.resistAgainst.map((typeName) => t("encyclopedia.typeTag", "{type} type", { type: typeName })).join('、')}</div>
+              <div className="enc-resist-panel">
+                <div className="enc-resist-title">🛡️ {t('encyclopedia.section.resistance', 'Resistance')}</div>
+                <div className="enc-type-list">{entry.resistAgainst.map((typeName) => t('encyclopedia.typeTag', '{type} type', { type: typeName })).join('、')}</div>
               </div>
             )}
           </div>
 
           {entry.drops && entry.drops.length > 0 && (
-            <div
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                borderRadius: 10,
-                padding: '10px 12px',
-                marginBottom: 12,
-                border: '1px solid rgba(255,255,255,0.06)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              <div style={{ fontSize: 10, opacity: 0.4 }}>🎁 {t("encyclopedia.section.drops", "Drops")}</div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {entry.drops.map((drop, index) => <span key={`${entry.key}_drop_${index}`} style={{ fontSize: 20 }}>{drop}</span>)}
+            <div className="enc-drop-panel">
+              <div className="enc-drop-panel-title">🎁 {t('encyclopedia.section.drops', 'Drops')}</div>
+              <div className="enc-drop-icon-row">
+                {entry.drops.map((drop, index) => <span key={`${entry.key}_drop_${index}`} className="enc-drop-icon">{drop}</span>)}
               </div>
             </div>
           )}
 
-          <div
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              borderRadius: 10,
-              padding: '10px 12px',
-              border: '1px solid rgba(255,255,255,0.06)',
-              display: 'flex',
-              gap: 16,
-              justifyContent: 'center',
-            }}
-          >
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: '#6366f1' }}>{encounterCount}</div>
-              <div style={{ fontSize: 10, opacity: 0.4 }}>{t("encyclopedia.stat.encounters", "Encounters")}</div>
+          <div className="enc-counter-panel">
+            <div className="enc-counter-item">
+              <div className="enc-counter-value is-encounter">{encounterCount}</div>
+              <div className="enc-counter-label">{t('encyclopedia.stat.encounters', 'Encounters')}</div>
             </div>
-            <div style={{ width: 1, background: 'rgba(255,255,255,0.08)' }} />
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: '#22c55e' }}>{defeatCount}</div>
-              <div style={{ fontSize: 10, opacity: 0.4 }}>{t("encyclopedia.stat.defeats", "Defeats")}</div>
+            <div className="enc-counter-sep" />
+            <div className="enc-counter-item">
+              <div className="enc-counter-value is-defeat">{defeatCount}</div>
+              <div className="enc-counter-label">{t('encyclopedia.stat.defeats', 'Defeats')}</div>
             </div>
-            <div style={{ width: 1, background: 'rgba(255,255,255,0.08)' }} />
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: '#f59e0b' }}>{defeatRate}%</div>
-              <div style={{ fontSize: 10, opacity: 0.4 }}>{t("encyclopedia.stat.defeatRate", "Defeat Rate")}</div>
+            <div className="enc-counter-sep" />
+            <div className="enc-counter-item">
+              <div className="enc-counter-value is-rate">{defeatRate}%</div>
+              <div className="enc-counter-label">{t('encyclopedia.stat.defeatRate', 'Defeat Rate')}</div>
             </div>
           </div>
         </div>
@@ -574,37 +401,11 @@ type StatBoxProps = {
 
 function StatBox({ icon, label, value, color, sub }: StatBoxProps) {
   return (
-    <div
-      style={{
-        flex: 1,
-        background: 'rgba(255,255,255,0.04)',
-        borderRadius: 10,
-        padding: '8px 6px',
-        textAlign: 'center',
-        border: '1px solid rgba(255,255,255,0.06)',
-      }}
-    >
-      <div style={{ fontSize: 14, marginBottom: 2 }}>{icon}</div>
-      {value !== undefined && value !== '' && <div style={{ fontSize: 18, fontWeight: 900, color }}>{value}</div>}
-      {sub && <div style={{ fontSize: 10, fontWeight: 600, color, lineHeight: 1.3 }}>{sub}</div>}
-      <div style={{ fontSize: 9, opacity: 0.4, marginTop: 1 }}>{label}</div>
-    </div>
-  );
-}
-
-type SectionDividerProps = {
-  icon: string;
-  label: string;
-  sub?: string;
-};
-
-function SectionDivider({ icon, label, sub }: SectionDividerProps) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '10px 0 8px', padding: '0 2px' }}>
-      <div style={{ fontSize: 16 }}>{icon}</div>
-      <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: 1 }}>{label}</div>
-      {sub && <div style={{ fontSize: 10, opacity: 0.35 }}>{sub}</div>}
-      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)', marginLeft: 4 }} />
+    <div className="enc-stat-box">
+      <div className="enc-stat-icon">{icon}</div>
+      {value !== undefined && value !== '' && <div className="enc-stat-value" style={{ color }}>{value}</div>}
+      {sub && <div className="enc-stat-sub" style={{ color }}>{sub}</div>}
+      <div className="enc-stat-label">{label}</div>
     </div>
   );
 }
@@ -618,118 +419,58 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
   const { t } = useI18n();
   const tc = TYPE_COLORS[entry.mType] || '#6366f1';
   const stageStars = ['⭐', '⭐⭐', '⭐⭐⭐'][entry.stageIdx] || '⭐';
+  const modalToneStyle: CSSProperties = {
+    '--enc-type-color': tc,
+    '--enc-type-light': `${tc}55`,
+    '--enc-type-border': `${tc}33`,
+    '--enc-type-shadow': `${tc}22`,
+    '--enc-type-shadow-wide': `${tc}11`,
+    '--enc-type-soft-bg': `${tc}25`,
+    '--enc-type-soft-border': `${tc}44`,
+  } as CSSProperties;
 
   return (
     <div
       role="button"
       tabIndex={0}
-      aria-label={t("encyclopedia.a11y.closeStarterDetail", "Close partner details")}
+      aria-label={t('encyclopedia.a11y.closeStarterDetail', 'Close partner details')}
       onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, onClose)}
       onClick={onClose}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        zIndex: 200,
-        background: 'rgba(0,0,0,0.75)',
-        backdropFilter: 'blur(6px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        animation: 'fadeIn 0.2s ease',
-      }}
+      className="enc-modal-overlay"
     >
       <div
         onClick={(ev: MouseEvent<HTMLDivElement>) => ev.stopPropagation()}
-        style={{
-          width: '100%',
-          maxWidth: 380,
-          maxHeight: '90%',
-          background: 'linear-gradient(180deg,#1e1b4b,#0f172a)',
-          borderRadius: 20,
-          border: `2px solid ${tc}33`,
-          boxShadow: `0 8px 40px ${tc}22, 0 0 80px ${tc}11`,
-          overflowY: 'auto',
-          WebkitOverflowScrolling: 'touch',
-          animation: 'popIn 0.3s ease',
-        }}
+        className="enc-modal-card"
+        style={modalToneStyle}
       >
         <div
-          style={{
-            position: 'relative',
-            padding: '28px 20px 16px',
-            textAlign: 'center',
-            background: `radial-gradient(ellipse at 50% 80%, ${tc}18, transparent 70%)`,
-          }}
+          className="enc-modal-hero"
+          style={{ background: `radial-gradient(ellipse at 50% 80%, ${tc}18, transparent 70%)` }}
         >
           <button
-            className="touch-btn"
+            className="touch-btn enc-modal-close"
             onClick={onClose}
-            aria-label={t("common.cancel", "Close")}
-            style={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              color: 'white',
-              fontSize: 16,
-              fontWeight: 700,
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            aria-label={t('common.cancel', 'Close')}
           >
             ✕
           </button>
 
-          <div style={{ fontSize: 12, color: tc, fontWeight: 700, letterSpacing: 2, marginBottom: 8, opacity: 0.8 }}>
+          <div className="enc-stage-label" style={{ color: tc }}>
             {stageStars} {entry.stageLabel}
           </div>
 
-          <div
-            style={{
-              display: 'inline-block',
-              position: 'relative',
-              filter: `drop-shadow(0 0 20px ${tc}55)`,
-              animation: 'float 3s ease-in-out infinite',
-            }}
-          >
-            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} ariaLabel={t("encyclopedia.a11y.starterSprite", "{name} sprite", { name: entry.name })} />
+          <div className="enc-modal-sprite-wrap">
+            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: entry.name })} />
           </div>
 
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: 2, textShadow: `0 0 20px ${tc}55` }}>{entry.name}</div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-              <span
-                style={{
-                  background: `${tc}25`,
-                  border: `1px solid ${tc}44`,
-                  padding: '3px 12px',
-                  borderRadius: 20,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: tc,
-                }}
-              >
-                {entry.typeIcon} {t("encyclopedia.typeTag", "{type} type", { type: entry.typeName })}
+          <div className="enc-modal-name-wrap">
+            <div className="enc-modal-name" style={{ textShadow: `0 0 20px ${tc}55` }}>{entry.name}</div>
+            <div className="enc-modal-tag-row is-wrap-center">
+              <span className="enc-modal-pill enc-modal-pill-type">
+                {entry.typeIcon} {t('encyclopedia.typeTag', '{type} type', { type: entry.typeName })}
               </span>
               {entry.skill && (
-                <span
-                  style={{
-                    background: 'rgba(99,102,241,0.15)',
-                    border: '1px solid rgba(99,102,241,0.25)',
-                    padding: '3px 10px',
-                    borderRadius: 20,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: '#a5b4fc',
-                  }}
-                >
+                <span className="enc-modal-pill enc-modal-pill-skill">
                   {entry.skill}
                 </span>
               )}
@@ -737,51 +478,28 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
           </div>
         </div>
 
-        <div style={{ padding: '0 18px 20px' }}>
+        <div className="enc-modal-body">
           {entry.desc && (
-            <div
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                borderRadius: 12,
-                padding: '12px 14px',
-                marginBottom: 12,
-                border: '1px solid rgba(255,255,255,0.06)',
-              }}
-            >
-              <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 4 }}>📖 {t("encyclopedia.section.desc", "Description")}</div>
-              <div style={{ fontSize: 13, lineHeight: 1.7, opacity: 0.8 }}>{entry.desc}</div>
+            <div className="enc-info-panel">
+              <div className="enc-info-title">📖 {t('encyclopedia.section.desc', 'Description')}</div>
+              <div className="enc-info-body">{entry.desc}</div>
             </div>
           )}
 
           {entry.moves.length > 0 && (
-            <div
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                borderRadius: 12,
-                padding: '12px 14px',
-                marginBottom: 12,
-                border: '1px solid rgba(255,255,255,0.06)',
-              }}
-            >
-              <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 8 }}>🎯 {t("encyclopedia.section.moves", "Signature Moves")}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div className="enc-info-panel">
+              <div className="enc-info-title enc-info-title-spaced">🎯 {t('encyclopedia.section.moves', 'Signature Moves')}</div>
+              <div className="enc-move-grid">
                 {entry.moves.map((move, index) => (
                   <div
                     key={`${entry.key}_move_${index}`}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      background: 'rgba(255,255,255,0.03)',
-                      borderRadius: 10,
-                      padding: '8px 10px',
-                      border: `1px solid ${(move.color || tc)}22`,
-                    }}
+                    className="enc-move-item"
+                    style={{ borderColor: `${move.color || tc}22` }}
                   >
-                    <div style={{ fontSize: 20 }}>{move.icon}</div>
+                    <div className="enc-move-icon">{move.icon}</div>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: move.color || tc }}>{move.name}</div>
-                      <div style={{ fontSize: 9, opacity: 0.4 }}>{move.desc}</div>
+                      <div className="enc-move-name" style={{ color: move.color || tc }}>{move.name}</div>
+                      <div className="enc-move-desc">{move.desc}</div>
                     </div>
                   </div>
                 ))}
@@ -793,19 +511,3 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
     </div>
   );
 }
-
-const backBtn: CSSProperties = {
-  background: 'rgba(255,255,255,0.08)',
-  border: '1px solid rgba(255,255,255,0.12)',
-  color: 'white',
-  fontSize: 16,
-  fontWeight: 700,
-  width: 36,
-  height: 36,
-  borderRadius: 10,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-  flexShrink: 0,
-};

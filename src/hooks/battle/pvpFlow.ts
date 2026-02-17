@@ -116,6 +116,7 @@ type ChanceFn = (probability: number) => boolean;
 
 type SfxApi = {
   play: (name: string) => void;
+  playMove?: (type: string, idx?: number) => void;
 };
 
 type PvpEnemyVm = {
@@ -454,7 +455,8 @@ export function handlePvpAnswer({
     if (!isBattleActive()) return;
     const s2 = sr.current;
     const sfxKey = move.risky && move.type2 ? move.type2 : move.type;
-    sfx.play(sfxKey);
+    if (typeof sfx.playMove === 'function') sfx.playMove(sfxKey, s2.selIdx || 0);
+    else sfx.play(sfxKey);
     if (strike.isCrit) sfx.play('crit');
     else if (strike.eff > 1) sfx.play('effective');
     else if (strike.eff < 1) sfx.play('resist');

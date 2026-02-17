@@ -128,7 +128,10 @@ type RunPlayerAnswerArgs = {
   sr: StateRef;
   safeTo: SafeTo;
   chance: ChanceFn;
-  sfx: { play: (name: string) => void };
+  sfx: {
+    play: (name: string) => void;
+    playMove?: (type: string, idx?: number) => void;
+  };
   setFb: (value: FeedbackValue) => void;
   setTC: NumberSetter;
   setTW: NumberSetter;
@@ -403,7 +406,8 @@ export function runPlayerAnswer({
           nextDelay: getAttackEffectNextStepDelayTyped(effectMeta),
         };
         setAtkEffect({ type: vfxType, idx: effectMeta.idx, lvl: effectMeta.lvl });
-        sfx.play(vfxType);
+        if (typeof sfx.playMove === 'function') sfx.playMove(vfxType, effectMeta.idx);
+        else sfx.play(vfxType);
 
         safeToIfBattleActive(() => {
           const s3 = sr.current;

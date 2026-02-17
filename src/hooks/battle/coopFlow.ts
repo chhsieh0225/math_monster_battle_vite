@@ -73,7 +73,10 @@ type RunCoopAllySupportTurnArgs = {
   setEHp: NumberSetter;
   addD: (value: string, x: number, y: number, color: string) => void;
   addP: (emoji: string, x: number, y: number, count?: number) => void;
-  sfx: { play: (name: string) => void };
+  sfx: {
+    play: (name: string) => void;
+    playMove?: (type: string, idx?: number) => void;
+  };
   handleVictory: (verb?: string) => void;
   delayMs?: number;
   onDone?: () => void;
@@ -237,7 +240,8 @@ export function runCoopAllySupportTurn({
     setEHp(nh);
     addD(`-${dmg}`, 140, 55, '#60a5fa');
     addP('starter', 120, 130, 3);
-    sfx.play('water');
+    if (typeof sfx.playMove === 'function') sfx.playMove('water', 1);
+    else sfx.play('water');
 
     safeToIfBattleActive(() => setEAnim(''), 450);
     if (nh <= 0) {

@@ -20,9 +20,9 @@ let bgmMuted = readText(BGM_MUTED_KEY, '0') === '1';
 const NOTE_FREQ: Record<string, number> = {
   C2: 65.41, D2: 73.42, E2: 82.41, F2: 87.31, G2: 98,
   A2: 110, Bb2: 116.54, B2: 123.47,
-  C3: 130.81, Eb3: 155.56, E3: 164.81, F3: 174.61,
+  C3: 130.81, Eb3: 155.56, E3: 164.81, F3: 174.61, G3: 196,
   A3: 220, Bb3: 233.08, B3: 246.94,
-  C4: 261.63, E4: 329.63, G4: 392,
+  C4: 261.63, D4: 293.66, E4: 329.63, G4: 392,
   A4: 440,
   C5: 523.25, D5: 587.33, E5: 659.26, 'F#5': 739.99, G5: 783.99,
   A5: 880, B5: 987.77,
@@ -854,6 +854,8 @@ type BgmTrack = 'menu' | 'battle' | 'boss';
 let bgmGain: GainNode | null = null;
 let bgmInterval: ReturnType<typeof setInterval> | null = null;
 let bgmCurrent: BgmTrack | null = null;
+let pendingBgmTrack: BgmTrack | null = null;
+let resumePromise: Promise<void> | null = null;
 const BGM_VOL = 0.18;
 
 // Simple 4-bar arpeggio patterns (note name, duration key, delay offset ms)
@@ -942,6 +944,32 @@ function stopBgmLoop(): void {
   bgmCurrent = null;
 }
 
+function resumeAudioIfNeeded(onReady?: () => void): void {
+  if (!ctx) return;
+  const runReady = () => {
+    if (onReady) {
+      try { onReady(); } catch { /* best-effort */ }
+    }
+  };
+  if (ctx.state === 'running') {
+    runReady();
+    return;
+  }
+  if (resumePromise) {
+    if (onReady) resumePromise.then(runReady).catch(() => {});
+    return;
+  }
+  resumePromise = ctx
+    .resume()
+    .then(() => {
+      resumePromise = null;
+    })
+    .catch(() => {
+      resumePromise = null;
+    });
+  if (onReady) resumePromise.then(runReady).catch(() => {});
+}
+
 const sfx = {
   async init(): Promise<void> {
     if (ready || typeof window === 'undefined') return;
@@ -958,6 +986,10 @@ const sfx = {
   },
   play(name: string): void {
     if (!ready || sfxMuted) return;
+    if (ctx && ctx.state !== 'running') {
+      resumeAudioIfNeeded(() => sfx.play(name));
+      return;
+    }
     try {
       const fn = SOUNDS[name as SoundName];
       if (fn) fn();
@@ -979,7 +1011,10 @@ const sfx = {
   setBgmMuted(next: boolean): boolean {
     bgmMuted = !!next;
     writeText(BGM_MUTED_KEY, bgmMuted ? '1' : '0');
-    if (bgmMuted) stopBgmLoop();
+    if (bgmMuted) {
+      pendingBgmTrack = null;
+      stopBgmLoop();
+    }
     return bgmMuted;
   },
   /** Legacy: mute both SFX + BGM together. */
@@ -1008,9 +1043,20 @@ const sfx = {
   startBgm(track: BgmTrack): void {
     if (!ready || bgmMuted) return;
     if (bgmCurrent === track) return;
-    try { startBgmLoop(track); } catch { /* best-effort */ }
+    pendingBgmTrack = track;
+    const boot = () => {
+      if (!ready || bgmMuted || pendingBgmTrack !== track) return;
+      try { startBgmLoop(track); } catch { /* best-effort */ }
+      if (bgmCurrent === track) pendingBgmTrack = null;
+    };
+    if (ctx && ctx.state !== 'running') {
+      resumeAudioIfNeeded(boot);
+      return;
+    }
+    boot();
   },
   stopBgm(): void {
+    pendingBgmTrack = null;
     try { stopBgmLoop(); } catch { /* ok */ }
   },
   get bgmTrack(): string | null {

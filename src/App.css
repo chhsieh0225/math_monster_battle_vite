@@ -39,6 +39,7 @@ textarea:focus-visible,
 @keyframes dmgPop{0%{transform:translateY(0) scale(0.5);opacity:0}20%{transform:translateY(-10px) scale(1.2);opacity:1}40%{transform:translateY(-20px) scale(1);opacity:1}100%{transform:translateY(-50px);opacity:0}}
 @keyframes flashWhite{0%{filter:brightness(1)}15%{filter:brightness(3)}30%{filter:brightness(1)}45%{filter:brightness(2.5)}60%{filter:brightness(1)}}
 @keyframes popIn{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes effToastFadeOut{0%{opacity:1}100%{opacity:0}}
 @keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
 @keyframes spinSelect{0%{transform:rotateY(0deg)}100%{transform:rotateY(360deg)}}
 @keyframes fadeSlide{0%{transform:translateY(12px);opacity:0}100%{transform:translateY(0);opacity:1}}
@@ -442,9 +443,10 @@ input,select,textarea{font-size:max(16px,1rem)}
   bottom:var(--player-main-bottom,14%);
   transform:scaleX(-1) scale(var(--battle-player-main-scale,1));
   transform-origin:center bottom;
-  z-index:6;
+  z-index:var(--player-main-z,6);
+  opacity:var(--player-main-opacity,1);
   filter:var(--player-main-filter,none);
-  transition:filter .2s ease;
+  transition:left .35s ease, bottom .35s ease, filter .2s ease, opacity .3s ease, z-index 0s;
   animation:var(--player-main-anim,none);
 }
 .battle-sprite-player-sub{
@@ -453,10 +455,10 @@ input,select,textarea{font-size:max(16px,1rem)}
   bottom:var(--player-sub-bottom,15%);
   transform:scaleX(-1) scale(var(--battle-player-sub-scale,1));
   transform-origin:center bottom;
-  z-index:4;
-  opacity:.84;
+  z-index:var(--player-sub-z,4);
+  opacity:var(--player-sub-opacity,.84);
   filter:var(--player-sub-filter,none);
-  transition:filter .2s ease;
+  transition:left .35s ease, bottom .35s ease, filter .2s ease, opacity .3s ease, z-index 0s;
   animation:var(--player-sub-anim,none);
 }
 .battle-sprite-player-shadow{
@@ -469,6 +471,7 @@ input,select,textarea{font-size:max(16px,1rem)}
   border-radius:50%;
   z-index:4;
   animation:shadowPulse 3s ease-in-out infinite;
+  transition:left .35s ease, bottom .35s ease;
 }
 
 .battle-def-fx{
@@ -578,7 +581,7 @@ input,select,textarea{font-size:max(16px,1rem)}
   font-weight:800;
   z-index:220;
   pointer-events:none;
-  animation:popIn .24s ease;
+  animation:popIn .24s ease, effToastFadeOut .3s ease 1.2s forwards;
   letter-spacing:.4px;
   border:1px solid rgba(255,255,255,.24);
   backdrop-filter:blur(6px);

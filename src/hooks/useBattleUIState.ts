@@ -92,7 +92,20 @@ export function useBattleUIState({ rand, randInt }: RngDeps): UseBattleUIStateRe
   const [eAnim, setEAnim] = useState('');
   const [pAnim, setPAnim] = useState('');
   const [atkEffect, setAtkEffect] = useState<AttackEffectState>(null);
-  const [effMsg, setEffMsg] = useState<EffectMessage>(null);
+  const [effMsg, setEffMsgRaw] = useState<EffectMessage>(null);
+  const effMsgTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-clear wrapper: every non-null setEffMsg schedules an unconditional
+  // clear after 1.6s (slightly after the CSS fade-out at 1.2s + 0.3s).
+  // This guarantees cleanup even if safeToIfBattleActive skips its callback.
+  const setEffMsg: Dispatch<SetStateAction<EffectMessage>> = useCallback((action) => {
+    setEffMsgRaw(action);
+    if (effMsgTimerRef.current) clearTimeout(effMsgTimerRef.current);
+    // Only schedule auto-clear when setting a non-null value
+    if (action !== null && typeof action !== 'function') {
+      effMsgTimerRef.current = setTimeout(() => setEffMsgRaw(null), 1600);
+    }
+  }, []);
 
   const did = useRef(0);
   const pid = useRef(0);

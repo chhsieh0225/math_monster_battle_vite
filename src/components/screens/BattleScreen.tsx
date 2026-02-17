@@ -400,15 +400,21 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     enemyMainRightPct,
     enemySubRightPct,
     enemySubTopPct,
-    playerMainLeftPct,
-    playerMainBottomPct,
-    playerSubLeftPct,
-    playerSubBottomPct,
+    playerMainLeftPct: rawMainLeftPct,
+    playerMainBottomPct: rawMainBottomPct,
+    playerSubLeftPct: rawSubLeftPct,
+    playerSubBottomPct: rawSubBottomPct,
     mainPlayerSize,
     subPlayerSize,
     enemySize: eSize,
     enemyTopPct: eTopPct,
   } = layout;
+
+  // Co-op: swap main/sub positions so active character is always in front
+  const playerMainLeftPct = coopUsingSub ? rawSubLeftPct : rawMainLeftPct;
+  const playerMainBottomPct = coopUsingSub ? rawSubBottomPct : rawMainBottomPct;
+  const playerSubLeftPct = coopUsingSub ? rawMainLeftPct : rawSubLeftPct;
+  const playerSubBottomPct = coopUsingSub ? rawMainBottomPct : rawSubBottomPct;
   const hpFocusClass = (active: boolean) => `battle-hp-focus ${active ? "is-active" : "is-dim"}`;
 
   // Enemy visual center fallback (used before first DOM measurement)
@@ -502,12 +508,16 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     "--player-main-left": `${playerMainLeftPct}%`,
     "--player-main-bottom": `${playerMainBottomPct}%`,
     "--player-main-filter": isCoopBattle && !coopUsingSub ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))" : "none",
+    "--player-main-z": coopUsingSub ? "4" : "6",
+    "--player-main-opacity": coopUsingSub ? ".84" : "1",
     "--player-main-anim": B.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite"),
   } as CSSProperties);
   const playerSubSpriteStyle = ({
     "--player-sub-left": `${playerSubLeftPct}%`,
     "--player-sub-bottom": `${playerSubBottomPct}%`,
     "--player-sub-filter": isCoopBattle && coopUsingSub ? "drop-shadow(0 0 12px rgba(34,197,94,0.75))" : "none",
+    "--player-sub-z": coopUsingSub ? "6" : "4",
+    "--player-sub-opacity": coopUsingSub ? "1" : ".84",
     "--player-sub-anim": UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite",
   } as CSSProperties);
   const playerMainShadowStyle = ({

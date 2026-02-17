@@ -1605,6 +1605,10 @@ input,select,textarea{font-size:max(16px,1rem)}
   align-items:center;
   justify-content:center;
 }
+.enc-card-sprite-wrap.is-large{
+  width:72px;
+  height:60px;
+}
 .enc-card-sprite-wrap.is-hidden{filter:brightness(0) opacity(.15)}
 .enc-card-name{font-size:12px;font-weight:700;margin-bottom:2px}
 .enc-card-meta{font-size:10px;opacity:.5}

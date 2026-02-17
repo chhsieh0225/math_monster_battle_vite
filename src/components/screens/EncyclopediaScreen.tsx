@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia.ts';
+import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { useI18n } from '../../i18n';
 import { hasSpecialTrait } from '../../utils/traits';
 import { loadCollection, type CollectionData } from '../../utils/collectionStore.ts';
@@ -17,6 +18,10 @@ import type {
 } from '../../types/game';
 
 const PAGE_BG = 'linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)';
+
+const LARGE_MONSTER_IDS: ReadonlySet<string> = new Set([...BOSS_IDS, 'golumn']);
+function encCardSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 64 : 48; }
+function encModalSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 200 : 160; }
 
 const DROP_CATALOG: { emoji: string; name: string; rarity: 'common' | 'rare' | 'epic' | 'legendary' }[] = [
   { emoji: '🍬', name: 'Candy', rarity: 'common' },
@@ -157,8 +162,8 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                     onClick={() => seen && setSelected({ entry: e, kind: 'enemy' })}
                     className={`enc-card ${seen ? 'is-seen' : 'is-hidden'} ${killed ? 'is-killed' : ''}`}
                   >
-                    <div className={`enc-card-sprite-wrap ${seen ? '' : 'is-hidden'}`}>
-                      <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={seen
+                    <div className={`enc-card-sprite-wrap ${seen ? '' : 'is-hidden'} ${LARGE_MONSTER_IDS.has(e.key) ? 'is-large' : ''}`}>
+                      <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={encCardSpriteSize(e.key)} ariaLabel={seen
                         ? t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: e.name })
                         : t('encyclopedia.a11y.unknownEnemySprite', 'Unknown monster sprite')} />
                     </div>
@@ -299,7 +304,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
           <div className="enc-modal-rarity">{entry.rarity}</div>
 
           <div className="enc-modal-sprite-wrap">
-            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} ariaLabel={t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: entry.name })} />
+            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={encModalSpriteSize(entry.key)} ariaLabel={t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: entry.name })} />
           </div>
 
           <div className="enc-modal-name-wrap">

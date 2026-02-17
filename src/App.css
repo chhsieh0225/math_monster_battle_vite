@@ -305,11 +305,63 @@ input,select,textarea{font-size:max(16px,1rem)}
   filter:none;
 }
 .battle-hp-sub-row{margin-top:4px}
+.battle-hp-card{
+  background:rgba(0,0,0,.65);
+  border-radius:12px;
+  padding:8px 12px;
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.1);
+}
+.battle-hp-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:4px;
+}
+.battle-hp-label{
+  font-size:14px;
+  font-weight:800;
+  color:#fff;
+}
+.battle-hp-value{
+  font-size:12px;
+  color:rgba(255,255,255,.5);
+  font-family:'Press Start 2P',monospace;
+}
+.battle-hp-track{
+  height:8px;
+  background:rgba(255,255,255,.15);
+  border-radius:4px;
+  overflow:hidden;
+}
+.battle-hp-fill{
+  width:var(--battle-hp-width,0%);
+  height:100%;
+  background:var(--battle-hp-color,#22c55e);
+  border-radius:4px;
+  transition:width .6s ease;
+}
+.battle-xp-track{
+  height:4px;
+  background:rgba(255,255,255,.1);
+  border-radius:2px;
+  overflow:hidden;
+  margin-top:4px;
+}
+.battle-xp-fill{
+  width:var(--battle-xp-width,0%);
+  height:100%;
+  background:linear-gradient(90deg,#6366f1,#a855f7);
+  border-radius:2px;
+  transition:width .8s ease;
+}
 .battle-sprite-enemy-main{
   position:absolute;
   right:var(--enemy-main-right,10%);
   top:var(--enemy-main-top,26%);
   z-index:6;
+  transform:scale(var(--battle-enemy-main-scale,1));
+  transform-origin:top right;
   animation:var(--enemy-main-anim,none);
 }
 .battle-sprite-enemy-sub{
@@ -318,7 +370,8 @@ input,select,textarea{font-size:max(16px,1rem)}
   top:var(--enemy-sub-top,23%);
   z-index:4;
   opacity:.78;
-  transform:scale(var(--enemy-sub-scale,.8));
+  transform:scale(calc(var(--enemy-sub-scale,.8) * var(--battle-enemy-sub-scale,1)));
+  transform-origin:top right;
   filter:saturate(.9);
   animation:var(--enemy-sub-anim,none);
 }
@@ -337,7 +390,8 @@ input,select,textarea{font-size:max(16px,1rem)}
   position:absolute;
   left:var(--player-main-left,6%);
   bottom:var(--player-main-bottom,14%);
-  transform:scaleX(-1);
+  transform:scaleX(-1) scale(var(--battle-player-main-scale,1));
+  transform-origin:left bottom;
   z-index:6;
   filter:var(--player-main-filter,none);
   transition:filter .2s ease;
@@ -347,7 +401,8 @@ input,select,textarea{font-size:max(16px,1rem)}
   position:absolute;
   left:var(--player-sub-left,23%);
   bottom:var(--player-sub-bottom,15%);
-  transform:scaleX(-1);
+  transform:scaleX(-1) scale(var(--battle-player-sub-scale,1));
+  transform-origin:left bottom;
   z-index:4;
   opacity:.84;
   filter:var(--player-sub-filter,none);
@@ -1015,6 +1070,143 @@ input,select,textarea{font-size:max(16px,1rem)}
 /* 低階機降級：保留核心戰鬥動作，僅關閉昂貴視覺效果 */
 .low-perf-mode .scene-bg{transition:none!important}
 .low-perf-mode .battle-root{backdrop-filter:none!important}
+.low-perf-mode .battle-hp-card{backdrop-filter:none}
+
+@media (max-width:768px){
+  .battle-arena{min-height:250px}
+  .battle-panel.is-question{min-height:228px}
+  .battle-panel.is-normal{min-height:184px}
+  .battle-menu-wrap{padding:9px 9px 10px}
+  .battle-menu-grid{gap:7px}
+  .battle-menu-btn{min-height:86px;padding:10px 9px}
+  .move-name-row{padding-right:68px}
+  .move-icon{font-size:18px}
+  .move-name{font-size:14px}
+  .move-desc-row{font-size:11px;line-height:1.2}
+  .battle-util-row{gap:6px;margin-top:7px}
+  .battle-util-btn{font-size:12px;padding:7px 12px}
+
+  .battle-info-enemy{
+    top:8px;
+    left:8px;
+    right:calc(var(--battle-enemy-info-right,42%) - 3%);
+  }
+  .battle-info-player{
+    bottom:8px;
+    right:8px;
+    left:calc(var(--battle-player-info-left,42%) - 3%);
+  }
+  .battle-hp-card{padding:7px 10px;border-radius:11px}
+  .battle-hp-label{font-size:13px}
+  .battle-hp-value{font-size:10px}
+  .battle-hp-track{height:7px}
+  .battle-xp-track{height:3px}
+  .battle-status-chip{font-size:10px;padding:2px 7px}
+
+  .battle-top-right-stack{top:8px;right:8px}
+  .battle-left-badge-stack{left:8px;bottom:64px}
+  .battle-charge-meter{left:8px;bottom:44px;padding:3px 7px}
+
+  .battle-sprite-enemy-main{
+    right:calc(var(--enemy-main-right,10%) - 1.2%);
+    top:calc(var(--enemy-main-top,26%) + 1.5%);
+    --battle-enemy-main-scale:.9;
+  }
+  .battle-sprite-enemy-sub{
+    right:calc(var(--enemy-sub-right,24%) - .8%);
+    top:calc(var(--enemy-sub-top,23%) + 2.2%);
+    --battle-enemy-sub-scale:.88;
+  }
+  .battle-sprite-player-main{
+    left:calc(var(--player-main-left,6%) - 1%);
+    bottom:calc(var(--player-main-bottom,14%) + 2.5%);
+    --battle-player-main-scale:.9;
+  }
+  .battle-sprite-player-sub{
+    left:calc(var(--player-sub-left,23%) - 1%);
+    bottom:calc(var(--player-sub-bottom,15%) + 2.8%);
+    --battle-player-sub-scale:.88;
+  }
+}
+
+@media (max-width:480px){
+  :root{--touch-target:46px}
+  .battle-arena{min-height:220px}
+  .battle-panel.is-question{min-height:248px}
+  .battle-panel.is-normal{min-height:196px}
+  .battle-menu-wrap{padding:8px}
+  .battle-menu-hint{font-size:11px;margin-bottom:7px}
+  .battle-menu-grid{gap:6px}
+  .battle-menu-btn{min-height:90px;padding:9px 8px;border-radius:11px}
+  .move-name-row{padding-right:62px;min-height:20px}
+  .move-icon{font-size:17px}
+  .move-name{font-size:13px}
+  .move-desc-row{font-size:10px;padding-right:2px}
+  .move-badge{font-size:8px;padding:2px 5px}
+  .move-badge-level{font-size:8px}
+
+  .battle-info-enemy{
+    top:6px;
+    left:6px;
+    right:calc(var(--battle-enemy-info-right,42%) - 5%);
+  }
+  .battle-info-player{
+    bottom:6px;
+    right:6px;
+    left:calc(var(--battle-player-info-left,42%) - 5%);
+  }
+  .battle-hp-card{padding:6px 8px;border-radius:10px}
+  .battle-hp-row{margin-bottom:3px}
+  .battle-hp-label{font-size:12px}
+  .battle-hp-value{font-size:9px}
+  .battle-hp-track{height:6px}
+  .battle-status-row{gap:3px}
+  .battle-status-chip{font-size:9px;padding:1px 6px}
+
+  .battle-top-right-stack{top:6px;right:6px;gap:3px}
+  .battle-pill{font-size:9px;padding:3px 7px}
+  .battle-left-badge-stack{left:6px;bottom:58px}
+  .battle-charge-meter{left:6px;bottom:38px;padding:2px 6px}
+  .battle-charge-dot{width:10px;height:10px}
+  .battle-charge-max{font-size:8px}
+
+  .battle-util-row{justify-content:space-between;gap:6px;margin-top:7px}
+  .battle-util-btn{
+    flex:1 1 calc(50% - 4px);
+    font-size:11px;
+    padding:8px 9px;
+    min-height:36px;
+    text-align:center;
+  }
+
+  .battle-sprite-enemy-main{
+    right:calc(var(--enemy-main-right,10%) - 2.2%);
+    top:calc(var(--enemy-main-top,26%) + 2.6%);
+    --battle-enemy-main-scale:.8;
+  }
+  .battle-sprite-enemy-sub{
+    right:calc(var(--enemy-sub-right,24%) - 1.4%);
+    top:calc(var(--enemy-sub-top,23%) + 3.2%);
+    --battle-enemy-sub-scale:.76;
+  }
+  .battle-sprite-player-main{
+    left:calc(var(--player-main-left,6%) - 1.6%);
+    bottom:calc(var(--player-main-bottom,14%) + 3.6%);
+    --battle-player-main-scale:.8;
+  }
+  .battle-sprite-player-sub{
+    left:calc(var(--player-sub-left,23%) - 1.4%);
+    bottom:calc(var(--player-sub-bottom,15%) + 4.2%);
+    --battle-player-sub-scale:.76;
+  }
+
+  .battle-question-wrap{padding:8px 10px}
+  .battle-question-title{font-size:14px}
+  .battle-question-sub,.battle-question-note{font-size:11px}
+  .battle-question-expression{font-size:30px}
+  .battle-answer-grid{gap:6px}
+  .battle-answer-btn{font-size:24px;padding:10px 7px}
+}
 
 @media (max-width:420px){
   .battle-eff-toast{top:14%;font-size:12px;padding:6px 12px}
@@ -1023,15 +1215,13 @@ input,select,textarea{font-size:max(16px,1rem)}
   .title-feature-btn{font-size:14px!important;padding:12px 0!important}
   .title-perf-btn{font-size:13px!important;padding:11px 12px!important}
   .selection-confirm-btn{font-size:18px!important;padding:15px 0!important}
-  .battle-panel{min-height:190px!important}
-  .battle-menu-btn{min-height:82px;padding:12px 10px!important}
-  .move-name-row{padding-right:70px}
-  .move-name{font-size:14px}
-  .battle-util-btn{font-size:13px!important;padding:8px 12px!important}
-  .battle-pill{font-size:10px}
+  .move-name-row{padding-right:58px}
+  .move-name{font-size:12px}
+  .battle-util-btn{font-size:11px!important;padding:8px 9px!important}
+  .battle-pill{font-size:9px}
   .battle-boss-hint{font-size:12px;padding:5px 12px;max-width:90vw;text-align:center}
-  .battle-question-expression{font-size:34px}
-  .answer-btn{min-height:56px;font-size:30px!important;padding:14px 8px!important}
-  .question-expression{font-size:40px!important}
+  .battle-question-expression{font-size:28px}
+  .answer-btn{min-height:54px;font-size:28px!important;padding:12px 8px!important}
+  .question-expression{font-size:36px!important}
   .end-action-btn{font-size:14px!important;padding:12px 16px!important}
 }

@@ -582,7 +582,10 @@ export function runEnemyTurn({
     }
 
     if (bossEvent === 'seal_move') {
-      const sealIdx = randInt(0, TRAIT_BALANCE.boss.sealMoveIndexMax);
+      const sealPool: readonly number[] = TRAIT_BALANCE.boss.sealMovePool;
+      const fallbackPool: readonly number[] = [0, 1, 2];
+      const effectivePool: readonly number[] = sealPool.length > 0 ? sealPool : fallbackPool;
+      const sealIdx = effectivePool[randInt(0, effectivePool.length - 1)] ?? 0;
       setSealedMove(sealIdx);
       sfx.play('seal');
       const sealTurns = TRAIT_BALANCE.boss.sealDurationTurns;

@@ -1,3 +1,7 @@
+import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
+
+const BOSS_BALANCE = BALANCE_CONFIG.traits.boss;
+
 export function computeBossPhase(
   hp: number | null | undefined,
   maxHp: number | null | undefined,
@@ -29,7 +33,12 @@ export function decideBossTurnEvent({
 }: DecideBossTurnEventArgs): BossTurnEvent {
   if (!isBoss) return 'attack';
   if (bossCharging) return 'release';
-  if (turnCount > 0 && turnCount % 4 === 0) return 'start_charge';
-  if (bossPhase >= 2 && sealedMove < 0 && turnCount > 0 && turnCount % 3 === 0) return 'seal_move';
+  if (turnCount > 0 && turnCount % BOSS_BALANCE.chargeEveryTurns === 0) return 'start_charge';
+  if (
+    bossPhase >= BOSS_BALANCE.sealStartsAtPhase
+    && sealedMove < 0
+    && turnCount > 0
+    && turnCount % BOSS_BALANCE.sealEveryTurns === 0
+  ) return 'seal_move';
   return 'attack';
 }

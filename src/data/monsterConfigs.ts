@@ -6,6 +6,7 @@ import type { MonsterConfig, SlimeVariantConfig } from '../types/game';
 import { BALANCE_CONFIG } from './balanceConfig.ts';
 
 const MONSTER_STATS = BALANCE_CONFIG.monsters.baseStatsById;
+const MONSTER_EVOLVE_LEVEL = BALANCE_CONFIG.monsters.evolveLevelById;
 const SLIME_VARIANT_MULTIPLIERS = BALANCE_CONFIG.monsters.slimeVariantMultipliersById;
 const EVOLVED_SLIME_VARIANT_MULTIPLIERS = BALANCE_CONFIG.monsters.evolvedSlimeVariantMultipliersById;
 
@@ -20,7 +21,7 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     spriteKey: "slimeSVG",
     evolvedSpriteKey: "slimeEvolvedSVG",
     evolvedName: "叢林巨魔",
-    evolveLvl: 5,
+    evolveLvl: MONSTER_EVOLVE_LEVEL.slime,
     dropTable: "slime",
     mType: "grass",
     typeIcon: "🌿",
@@ -36,7 +37,7 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     spriteKey: "fireLizardSVG",
     evolvedSpriteKey: "fireEvolvedSVG",
     evolvedName: "烈焰巨龍",
-    evolveLvl: 5,
+    evolveLvl: MONSTER_EVOLVE_LEVEL.fire,
     dropTable: "fire",
     mType: "fire",
     typeIcon: "🔥",
@@ -55,7 +56,7 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     spriteKey: "ghostSVG",
     evolvedSpriteKey: "ghostEvolvedSVG",
     evolvedName: "冥界死神",
-    evolveLvl: 5,
+    evolveLvl: MONSTER_EVOLVE_LEVEL.ghost,
     dropTable: "ghost",
     mType: "ghost",
     typeIcon: "👻",
@@ -74,7 +75,7 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     spriteKey: "dragonSVG",
     evolvedSpriteKey: "dragonEvolvedSVG",
     evolvedName: "鐵甲天龍",
-    evolveLvl: 9,
+    evolveLvl: MONSTER_EVOLVE_LEVEL.dragon,
     dropTable: "dragon",
     mType: "steel",
     typeIcon: "🛡️",

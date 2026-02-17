@@ -13,18 +13,7 @@ export type StageWave = {
   sceneType?: string;
 };
 
-export const STAGE_WAVES: StageWave[] = [
-  { monsterId: 'slime' },
-  { monsterId: 'fire' },
-  { monsterId: 'slime' },
-  { monsterId: 'ghost' },
-  { monsterId: 'slime' },
-  { monsterId: 'fire' },
-  { monsterId: 'dragon' },
-  { monsterId: 'ghost' },
-  { monsterId: 'dragon' },
-  { monsterId: 'boss' },
-];
+export const STAGE_WAVES: StageWave[] = [...BALANCE_CONFIG.stage.waves.single];
 
 /**
  * Double-battle lineup (1v2):
@@ -32,19 +21,4 @@ export const STAGE_WAVES: StageWave[] = [
  * - `slimeType` can force slime variants to match intended attributes.
  * - `sceneType` forces battle background theme for stronger identity.
  */
-export const DOUBLE_STAGE_WAVES: StageWave[] = [
-  { monsterId: 'slime', slimeType: 'grass', sceneType: 'grass' },
-  { monsterId: 'slime', slimeType: 'water', sceneType: 'grass' },
-
-  { monsterId: 'fire', sceneType: 'fire' },
-  { monsterId: 'ghost', sceneType: 'fire' },
-
-  { monsterId: 'slime', slimeType: 'steel', sceneType: 'steel' },
-  { monsterId: 'dragon', sceneType: 'steel' },
-
-  { monsterId: 'slime', slimeType: 'dark', sceneType: 'dark' },
-  { monsterId: 'fire', sceneType: 'dark' },
-
-  { monsterId: 'ghost', sceneType: 'dark' },
-  { monsterId: 'boss', sceneType: 'dark' },
-];
+export const DOUBLE_STAGE_WAVES: StageWave[] = [...BALANCE_CONFIG.stage.waves.double];

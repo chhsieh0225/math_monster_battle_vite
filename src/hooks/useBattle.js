@@ -51,16 +51,12 @@ import { useEncyclopedia } from './useEncyclopedia';
 import { useSessionLog } from './useSessionLog';
 import { useBattleRng } from './useBattleRng';
 import { useBattleUIState } from './useBattleUIState';
+import { useDailyChallengeRun } from './useDailyChallengeRun';
 import { usePvpState } from './usePvpState';
 import { useBattleSessionLifecycle } from './useBattleSessionLifecycle';
 import { ENC_TOTAL } from '../data/encyclopedia.ts';
 import sfx from '../utils/sfx.ts';
 import { buildRoster } from '../utils/rosterBuilder';
-import {
-  loadDailyChallengeProgress,
-  markDailyChallengeCleared,
-  markDailyChallengeFailed,
-} from '../utils/challengeProgress.ts';
 import {
   createAbilityModel,
   getDifficultyLevelForOps,
@@ -133,8 +129,6 @@ import {
 } from './battle/achievementFlow';
 import {
   buildDailyChallengeRoster,
-  createDailyChallengeFeedback,
-  getDailyChallengeEnemyTotal,
   getDailyChallengeSeed,
   resolveDailyBattleRule,
 } from './battle/challengeRuntime.ts';
@@ -182,9 +176,18 @@ export function useBattle() {
   const [screen, setScreenState] = useState("title");
   const [timedMode, setTimedMode] = useState(false);
   const [battleMode, setBattleMode] = useState("single");
-  const [queuedChallenge, setQueuedChallenge] = useState(null);
-  const [activeChallenge, setActiveChallenge] = useState(null);
-  const [dailyChallengeFeedback, setDailyChallengeFeedback] = useState(null);
+  const {
+    queuedChallenge,
+    activeChallenge,
+    dailyChallengeFeedback,
+    setDailyChallengeFeedback,
+    clearChallengeRun,
+    queueChallengePlan,
+    activateQueuedChallenge,
+    dailyPlan,
+    settleRunAsFailed,
+    settleRunAsCleared,
+  } = useDailyChallengeRun();
   const [coopActiveSlot, setCoopActiveSlot] = useState("main");
   const pvpState = usePvpState();
   const {
@@ -320,24 +323,11 @@ export function useBattle() {
     [enemy],
   );
 
-  const clearChallengeRun = useCallback(() => {
-    setQueuedChallenge(null);
-    setActiveChallenge(null);
-    setDailyChallengeFeedback(null);
-  }, []);
-
   const queueDailyChallenge = useCallback((plan) => {
-    if (!plan) return;
-    setQueuedChallenge({ kind: 'daily', plan });
+    queueChallengePlan(plan);
     setTimedMode(true);
     setBattleMode('single');
-  }, []);
-
-  const dailyPlan = useMemo(() => {
-    if (activeChallenge?.kind === 'daily' && activeChallenge.plan) return activeChallenge.plan;
-    if (queuedChallenge?.kind === 'daily' && queuedChallenge.plan) return queuedChallenge.plan;
-    return null;
-  }, [activeChallenge, queuedChallenge]);
+  }, [queueChallengePlan]);
 
   const currentDailyBattleRule = useMemo(
     () => resolveDailyBattleRule(dailyPlan, round),
@@ -442,18 +432,8 @@ export function useBattle() {
 
   // ── Finalize and persist session log ──
   const _endSession = useCallback((isCompleted, reasonOverride = null) => {
-    if (!isCompleted && activeChallenge?.kind === 'daily' && activeChallenge.plan) {
-      const progressBefore = loadDailyChallengeProgress();
-      const progressAfter = markDailyChallengeFailed(activeChallenge.plan, sr.current?.defeated || 0);
-      setDailyChallengeFeedback(createDailyChallengeFeedback({
-        plan: activeChallenge.plan,
-        before: progressBefore,
-        after: progressAfter,
-        outcome: 'failed',
-        battlesCleared: sr.current?.defeated || 0,
-      }));
-      setActiveChallenge(null);
-      setQueuedChallenge(null);
+    if (!isCompleted) {
+      settleRunAsFailed(sr.current?.defeated || 0);
     }
     runEndSessionController({
       sr,
@@ -461,24 +441,11 @@ export function useBattle() {
       isCompleted,
       reasonOverride,
     });
-  }, [activeChallenge, sr, endSessionOnce]);
+  }, [sr, endSessionOnce, settleRunAsFailed]);
 
   // --- Shared game-completion logic (achievements + session save) ---
   const _finishGame = useCallback(() => {
-    if (activeChallenge?.kind === 'daily' && activeChallenge.plan) {
-      const totalBattles = Math.max(1, getDailyChallengeEnemyTotal(activeChallenge.plan));
-      const progressBefore = loadDailyChallengeProgress();
-      const progressAfter = markDailyChallengeCleared(activeChallenge.plan, totalBattles);
-      setDailyChallengeFeedback(createDailyChallengeFeedback({
-        plan: activeChallenge.plan,
-        before: progressBefore,
-        after: progressAfter,
-        outcome: 'cleared',
-        battlesCleared: totalBattles,
-      }));
-      setActiveChallenge(null);
-      setQueuedChallenge(null);
-    }
+    settleRunAsCleared();
     runFinishGameController({
       sr,
       tryUnlock,
@@ -487,7 +454,7 @@ export function useBattle() {
       endSession: _endSession,
       setScreen,
     });
-  }, [activeChallenge, sr, tryUnlock, setEncData, _endSession, setScreen]);
+  }, [settleRunAsCleared, sr, tryUnlock, setEncData, _endSession, setScreen]);
 
   // --- Start a battle against enemies[idx], optionally from a fresh roster ---
   const startBattle = useCallback((idx, roster) => {
@@ -617,10 +584,7 @@ export function useBattle() {
       },
     });
 
-    if (queuedChallenge) {
-      setActiveChallenge(queuedChallenge);
-      setQueuedChallenge(null);
-    }
+    activateQueuedChallenge();
   };
 
   const quitGame = () => {

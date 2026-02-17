@@ -863,8 +863,11 @@ type BgmTrack = 'menu' | 'battle' | 'boss';
 let bgmGain: GainNode | null = null;
 let bgmInterval: ReturnType<typeof setInterval> | null = null;
 let bgmCurrent: BgmTrack | null = null;
+let bgmNextLoopTime = 0;
 let pendingBgmTrack: BgmTrack | null = null;
 let resumePromise: Promise<void> | null = null;
+const BGM_SCHEDULE_INTERVAL_MS = 50;
+const BGM_LOOKAHEAD_SEC = 0.12;
 
 type BgmNote = [string, string, number, number?]; // [noteName, durKey, offsetMs, velocity]
 type BgmLane = {
@@ -1106,6 +1109,23 @@ function scheduleBgmLanes(now: number, lanes: BgmLane[]): void {
   }
 }
 
+function scheduleBgmLookAhead(track: BgmTrack, pattern: { loopMs: number; lanes: BgmLane[] }): void {
+  if (!ctx || !bgmGain || bgmCurrent !== track) return;
+  const loopSec = pattern.loopMs / 1000;
+  if (loopSec <= 0) return;
+
+  // If timers stalled for too long, resync to "now" instead of backfilling many old loops.
+  if (bgmNextLoopTime < ctx.currentTime - loopSec * 2) {
+    bgmNextLoopTime = ctx.currentTime + 0.01;
+  }
+
+  const horizon = ctx.currentTime + BGM_LOOKAHEAD_SEC;
+  while (bgmNextLoopTime <= horizon) {
+    scheduleBgmLanes(bgmNextLoopTime, pattern.lanes);
+    bgmNextLoopTime += loopSec;
+  }
+}
+
 function startBgmLoop(track: BgmTrack): void {
   if (!ctx || bgmMuted) return;
   stopBgmLoop();
@@ -1115,13 +1135,12 @@ function startBgmLoop(track: BgmTrack): void {
   bgmGain.connect(ctx.destination);
 
   const pattern = BGM_PATTERNS[track];
-  const playLoop = () => {
-    if (!ctx || !bgmGain) return;
-    scheduleBgmLanes(ctx.currentTime, pattern.lanes);
-  };
-  playLoop();
-  bgmInterval = setInterval(playLoop, pattern.loopMs);
   bgmCurrent = track;
+  bgmNextLoopTime = ctx.currentTime + 0.01;
+  scheduleBgmLookAhead(track, pattern);
+  bgmInterval = setInterval(() => {
+    scheduleBgmLookAhead(track, pattern);
+  }, BGM_SCHEDULE_INTERVAL_MS);
 }
 
 function stopBgmLoop(): void {
@@ -1138,6 +1157,7 @@ function stopBgmLoop(): void {
   }
   bgmGain = null;
   bgmCurrent = null;
+  bgmNextLoopTime = 0;
 }
 
 function resumeAudioIfNeeded(onReady?: () => void): void {

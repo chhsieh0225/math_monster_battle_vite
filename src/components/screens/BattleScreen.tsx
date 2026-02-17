@@ -404,17 +404,19 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     playerMainBottomPct: rawMainBottomPct,
     playerSubLeftPct: rawSubLeftPct,
     playerSubBottomPct: rawSubBottomPct,
-    mainPlayerSize,
-    subPlayerSize,
+    mainPlayerSize: rawMainSize,
+    subPlayerSize: rawSubSize,
     enemySize: eSize,
     enemyTopPct: eTopPct,
   } = layout;
 
-  // Co-op: swap main/sub positions so active character is always in front
+  // Co-op: swap main/sub positions AND sizes so active character is always in front
   const playerMainLeftPct = coopUsingSub ? rawSubLeftPct : rawMainLeftPct;
   const playerMainBottomPct = coopUsingSub ? rawSubBottomPct : rawMainBottomPct;
   const playerSubLeftPct = coopUsingSub ? rawMainLeftPct : rawSubLeftPct;
   const playerSubBottomPct = coopUsingSub ? rawMainBottomPct : rawSubBottomPct;
+  const mainPlayerSize = coopUsingSub ? rawSubSize : rawMainSize;
+  const subPlayerSize = coopUsingSub ? rawMainSize : rawSubSize;
   const hpFocusClass = (active: boolean) => `battle-hp-focus ${active ? "is-active" : "is-dim"}`;
 
   // Enemy visual center fallback (used before first DOM measurement)

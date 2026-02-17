@@ -265,6 +265,7 @@ export function runPlayerAnswer({
   runAllySupportTurn,
   t,
 }: RunPlayerAnswerArgs): void {
+  try {
   const s = sr.current;
   if (!s || !move || !starter) return;
   if (!isBattleActiveState(s)) return;
@@ -632,4 +633,8 @@ export function runPlayerAnswer({
       else safeToIfBattleActive(() => doEnemyTurn(), 1200);
     }
   }, 2500);
+  } catch (err) {
+    console.error('[playerFlow] runPlayerAnswer crashed:', err);
+    try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch (_) { /* last resort */ }
+  }
 }

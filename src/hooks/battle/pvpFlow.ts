@@ -376,6 +376,7 @@ export function handlePvpAnswer({
   setPvpStaticP2,
   t,
 }: HandlePvpAnswerArgs): boolean {
+  try {
   if (state.battleMode !== 'pvp') return false;
   if (!isBattleActiveState(state)) return false;
   const isBattleActive = (): boolean => isBattleActiveState(sr.current);
@@ -717,6 +718,11 @@ export function handlePvpAnswer({
     onStrike: runStrike,
   });
   return true;
+  } catch (err) {
+    console.error('[pvpFlow] handlePvpAnswer crashed:', err);
+    try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch (_) { /* last resort */ }
+    return false;
+  }
 }
 
 export function processPvpTurnStart({
@@ -744,6 +750,7 @@ export function processPvpTurnStart({
   setPvpFreezeP2,
   t,
 }: ProcessPvpTurnStartArgs): boolean {
+  try {
   if (state.battleMode !== 'pvp' || state.pvpWinner) return false;
   if (!isBattleActiveState(state)) return false;
   return resolvePvpTurnStartStatus({
@@ -771,4 +778,9 @@ export function processPvpTurnStart({
     setPvpFreezeP2,
     t,
   });
+  } catch (err) {
+    console.error('[pvpFlow] processPvpTurnStart crashed:', err);
+    try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch (_) { /* last resort */ }
+    return false;
+  }
 }

@@ -192,6 +192,7 @@ export function runEnemyTurn({
   handlePlayerPartyKo,
   t,
 }: RunEnemyTurnArgs): void {
+  try {
   const loseToGameOver = (message = tr(t, 'battle.ally.ko', 'Your partner has fallen...')): void => {
     _endSession(false);
     setPhase('ko');
@@ -636,4 +637,8 @@ export function runEnemyTurn({
   }
 
   doEnemyTurnInner();
+  } catch (err) {
+    console.error('[enemyFlow] runEnemyTurn crashed:', err);
+    try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch (_) { /* last resort */ }
+  }
 }

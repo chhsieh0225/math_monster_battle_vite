@@ -13,7 +13,7 @@ import XPBar from '../ui/XPBar';
 import DamagePopup from '../ui/DamagePopup';
 import Particle from '../ui/Particle';
 import TextBox from '../ui/TextBox';
-import { FireEffect, ElecEffect, WaterEffect, GrassEffect, DarkEffect, LightEffect } from '../effects';
+import AttackEffect from '../effects/AttackEffect';
 import AchievementPopup from '../ui/AchievementPopup';
 import { ACH_MAP } from '../../data/achievements';
 import type { ScreenName, TimerSubscribe, UseBattlePublicApi, UseMobileExperienceApi } from '../../types/battle';
@@ -600,12 +600,9 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
           <div className="battle-ult-sync-ring battle-ult-sync-ring-alt" />
         </div>
       )}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "fire" && <FireEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "electric" && <ElecEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "water" && <WaterEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "grass" && <GrassEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "dark" && <DarkEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
-      {showHeavyFx && B.atkEffect && B.atkEffect.type === "light" && <LightEffect idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />}
+      {showHeavyFx && B.atkEffect && (
+        <AttackEffect type={B.atkEffect.type} idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />
+      )}
 
       {/* Special Defense animations */}
       {showHeavyFx && B.defAnim === "fire" && (

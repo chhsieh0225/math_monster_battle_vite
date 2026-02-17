@@ -1,4 +1,4 @@
-import { useRef, useSyncExternalStore } from 'react';
+import { useMemo, useRef, useSyncExternalStore } from 'react';
 import type { CSSProperties } from 'react';
 import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { SCENES } from '../../data/scenes';
@@ -91,7 +91,187 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     enemySpriteRef,
     playerSpriteRef,
   });
-  if (!B.enemy || !B.starter) return (
+  const {
+    starter: stateStarter,
+    enemy: stateEnemy,
+    pStg,
+    battleMode,
+    enemySub,
+    allySub,
+    pHpSub,
+    coopActiveSlot,
+    pvpTurn,
+    pvpStarter2,
+    pvpChargeP1,
+    pvpChargeP2,
+    pvpComboP1,
+    pvpComboP2,
+    pvpSpecDefP1,
+    pvpSpecDefP2,
+    pvpBurnP1,
+    pvpBurnP2,
+    pvpFreezeP1,
+    pvpFreezeP2,
+    pvpParalyzeP1,
+    pvpParalyzeP2,
+    pvpStaticP1,
+    pvpStaticP2,
+    charge,
+    chargeReady,
+    sealedMove,
+    mLvls,
+    mHits,
+  } = battle.state;
+  const { getPow, dualEff } = battle.view;
+
+  const core = useMemo(() => {
+    const starter = stateStarter;
+    const enemy = stateEnemy;
+    if (!starter || !enemy) return null;
+
+    const st = starter.stages[pStg] || starter.stages[0];
+    if (!st) return null;
+
+    const isCoopBattle = battleMode === "coop" || battleMode === "double";
+    const showEnemySub = isCoopBattle && Boolean(enemySub);
+    const showAllySub = isCoopBattle && Boolean(allySub);
+    const hasDualUnits = showEnemySub || showAllySub;
+    const coopCanSwitch = showAllySub && pHpSub > 0;
+    const coopUsingSub = coopCanSwitch && coopActiveSlot === "sub";
+    const activeStarter = battleMode === "pvp"
+      ? (pvpTurn === "p1" ? starter : pvpStarter2)
+      : (coopUsingSub ? allySub : starter);
+
+    const pvpActiveCharge = battleMode === "pvp"
+      ? (pvpTurn === "p1" ? (pvpChargeP1 || 0) : (pvpChargeP2 || 0))
+      : 0;
+    const pvpActiveCombo = battleMode === "pvp"
+      ? (pvpTurn === "p1" ? (pvpComboP1 || 0) : (pvpComboP2 || 0))
+      : 0;
+    const pvpActiveSpecDefReady = battleMode === "pvp"
+      ? (pvpTurn === "p1" ? !!pvpSpecDefP1 : !!pvpSpecDefP2)
+      : false;
+    const chargeDisplay = battleMode === "pvp" ? pvpActiveCharge : charge;
+    const chargeReadyDisplay = battleMode === "pvp" ? pvpActiveCharge >= 3 : chargeReady;
+
+    const eSvg = enemy.svgFn();
+    const eSubSvg = showEnemySub && enemySub ? enemySub.svgFn() : null;
+    const allyStage = showAllySub && allySub
+      ? (allySub.stages[allySub.selectedStageIdx || 0] || allySub.stages[0])
+      : null;
+    const pSubSvg = allyStage ? allyStage.svgFn() : null;
+    const pSvg = st.svgFn();
+
+    const mainMaxHp = getStageMaxHp(pStg);
+    const subMaxHp = showAllySub && allySub ? getStarterMaxHp(allySub) : getStageMaxHp(0);
+    const sceneKey = (enemy.sceneMType || enemy.mType) as keyof typeof SCENES;
+    const scene = SCENES[sceneKey] || SCENES.grass;
+
+    const layout = resolveBattleLayout({
+      battleMode,
+      hasDualUnits,
+      compactUI: UX.compactUI,
+      playerStageIdx: pStg,
+      enemyId: enemy.id,
+      enemySceneType: enemy.sceneMType || enemy.mType,
+      enemyIsEvolved: enemy.isEvolved,
+    });
+
+    const pvpEnemyBarActive = battleMode !== "pvp" || pvpTurn === "p2";
+    const mainBarActive = battleMode === "pvp"
+      ? pvpTurn === "p1"
+      : (isCoopBattle ? !coopUsingSub : true);
+    const subBarActive = showAllySub && coopUsingSub;
+    const moveRuntime = (activeStarter?.moves || []).map((m, i) => {
+      const sealed = battleMode === "pvp" ? false : sealedMove === i;
+      const pvpLocked = battleMode === "pvp" ? (m.risky && !chargeReadyDisplay) : false;
+      const locked = battleMode === "pvp" ? pvpLocked : ((m.risky && !chargeReady) || sealed);
+      const lv = mLvls[i];
+      const pw = battleMode === "pvp" ? m.basePower : getPow(i);
+      const atCap = lv >= MAX_MOVE_LVL || m.basePower + lv * m.growth > POWER_CAPS[i];
+      const eff = battleMode === "pvp" ? 1 : dualEff(m);
+      const progressBase = HITS_PER_LVL * mLvls[i];
+      const moveProgressPct = progressBase > 0 ? (mHits[i] % progressBase) / progressBase * 100 : 0;
+      return { m, i, sealed, locked, lv, pw, atCap, eff, moveProgressPct };
+    });
+
+    return {
+      starter,
+      enemy,
+      st,
+      isCoopBattle,
+      showEnemySub,
+      showAllySub,
+      hasDualUnits,
+      coopCanSwitch,
+      coopUsingSub,
+      activeStarter,
+      pvpActiveCharge,
+      pvpActiveCombo,
+      pvpActiveSpecDefReady,
+      chargeDisplay,
+      chargeReadyDisplay,
+      eSvg,
+      eSubSvg,
+      pSubSvg,
+      pSvg,
+      mainMaxHp,
+      subMaxHp,
+      scene,
+      layout,
+      pvpEnemyBarActive,
+      mainBarActive,
+      subBarActive,
+      moveRuntime,
+      pvpEnemyBurn: pvpBurnP2 || 0,
+      pvpEnemyFreeze: !!pvpFreezeP2,
+      pvpEnemyParalyze: !!pvpParalyzeP2,
+      pvpEnemyStatic: pvpStaticP2 || 0,
+      pvpEnemyCombo: pvpComboP2 || 0,
+      pvpEnemySpecDef: !!pvpSpecDefP2,
+      pvpPlayerBurn: pvpBurnP1 || 0,
+      pvpPlayerFreeze: !!pvpFreezeP1,
+      pvpPlayerParalyze: !!pvpParalyzeP1,
+      pvpPlayerStatic: pvpStaticP1 || 0,
+      pvpPlayerCombo: pvpComboP1 || 0,
+      pvpPlayerSpecDef: !!pvpSpecDefP1,
+    };
+  }, [
+    stateStarter,
+    stateEnemy,
+    pStg,
+    battleMode,
+    enemySub,
+    allySub,
+    pHpSub,
+    coopActiveSlot,
+    pvpTurn,
+    pvpStarter2,
+    pvpChargeP1,
+    pvpChargeP2,
+    pvpComboP1,
+    pvpComboP2,
+    pvpSpecDefP1,
+    pvpSpecDefP2,
+    pvpBurnP1,
+    pvpBurnP2,
+    pvpFreezeP1,
+    pvpFreezeP2,
+    pvpParalyzeP1,
+    pvpParalyzeP2,
+    pvpStaticP1,
+    pvpStaticP2,
+    charge,
+    chargeReady,
+    sealedMove,
+    mLvls,
+    mHits,
+    getPow,
+    dualEff,
+    UX.compactUI,
+  ]);
+
+  if (!core) return (
     <div className="battle-loading-wrap">
       <div className="battle-loading-icon">⚔️</div>
       <div className="battle-loading-text">{t("app.loading.battle", "Preparing battle...")}</div>
@@ -99,47 +279,49 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
   );
 
   // ─── Battle screen locals ───
-  const st = B.starter.stages[B.pStg];
-  const isCoopBattle = B.battleMode === "coop" || B.battleMode === "double";
-  const showEnemySub = isCoopBattle && Boolean(B.enemySub);
-  const showAllySub = isCoopBattle && Boolean(B.allySub);
-  const hasDualUnits = showEnemySub || showAllySub;
-  const coopCanSwitch = showAllySub && B.pHpSub > 0;
-  const coopUsingSub = coopCanSwitch && B.coopActiveSlot === "sub";
-  const activeStarter = B.battleMode === "pvp"
-    ? (B.pvpTurn === "p1" ? B.starter : B.pvpStarter2)
-    : (coopUsingSub ? B.allySub : B.starter);
-  const pvpComboTrigger = PVP_BALANCE.passive.specDefComboTrigger || 4;
-  const pvpActiveCharge = B.battleMode === "pvp"
-    ? (B.pvpTurn === "p1" ? (B.pvpChargeP1 || 0) : (B.pvpChargeP2 || 0))
-    : 0;
-  const pvpActiveCombo = B.battleMode === "pvp"
-    ? (B.pvpTurn === "p1" ? (B.pvpComboP1 || 0) : (B.pvpComboP2 || 0))
-    : 0;
-  const pvpActiveSpecDefReady = B.battleMode === "pvp"
-    ? (B.pvpTurn === "p1" ? !!B.pvpSpecDefP1 : !!B.pvpSpecDefP2)
-    : false;
-  const chargeDisplay = B.battleMode === "pvp" ? pvpActiveCharge : B.charge;
-  const chargeReadyDisplay = B.battleMode === "pvp" ? pvpActiveCharge >= 3 : B.chargeReady;
-  const eSvg = B.enemy.svgFn();
-  const eSubSvg = showEnemySub && B.enemySub ? B.enemySub.svgFn() : null;
-  const allyStage = showAllySub && B.allySub ? (B.allySub.stages[B.allySub.selectedStageIdx || 0] || B.allySub.stages[0]) : null;
-  const pSubSvg = allyStage ? allyStage.svgFn() : null;
-  const pSvg = st.svgFn();
-  const mainMaxHp = getStageMaxHp(B.pStg);
-  const subMaxHp = showAllySub && B.allySub ? getStarterMaxHp(B.allySub) : getStageMaxHp(0);
-  const sceneKey = (B.enemy.sceneMType || B.enemy.mType) as keyof typeof SCENES;
-  const scene = SCENES[sceneKey] || SCENES.grass;
+  const {
+    starter,
+    enemy,
+    st,
+    isCoopBattle,
+    showEnemySub,
+    showAllySub,
+    coopCanSwitch,
+    coopUsingSub,
+    activeStarter,
+    pvpActiveCharge,
+    pvpActiveCombo,
+    pvpActiveSpecDefReady,
+    chargeDisplay,
+    chargeReadyDisplay,
+    eSvg,
+    eSubSvg,
+    pSubSvg,
+    pSvg,
+    mainMaxHp,
+    subMaxHp,
+    scene,
+    layout,
+    pvpEnemyBarActive,
+    mainBarActive,
+    subBarActive,
+    moveRuntime,
+    pvpEnemyBurn,
+    pvpEnemyFreeze,
+    pvpEnemyParalyze,
+    pvpEnemyStatic,
+    pvpEnemyCombo,
+    pvpEnemySpecDef,
+    pvpPlayerBurn,
+    pvpPlayerFreeze,
+    pvpPlayerParalyze,
+    pvpPlayerStatic,
+    pvpPlayerCombo,
+    pvpPlayerSpecDef,
+  } = core;
+
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
-  const layout = resolveBattleLayout({
-    battleMode: B.battleMode,
-    hasDualUnits,
-    compactUI: UX.compactUI,
-    playerStageIdx: B.pStg,
-    enemyId: B.enemy.id,
-    enemySceneType: B.enemy.sceneMType || B.enemy.mType,
-    enemyIsEvolved: B.enemy.isEvolved,
-  });
+  const pvpComboTrigger = PVP_BALANCE.passive.specDefComboTrigger || 4;
   const {
     compactDual,
     enemyInfoRight,
@@ -156,24 +338,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     enemySize: eSize,
     enemyTopPct: eTopPct,
   } = layout;
-  const pvpEnemyBarActive = B.battleMode !== "pvp" || B.pvpTurn === "p2";
-  const mainBarActive = B.battleMode === "pvp"
-    ? B.pvpTurn === "p1"
-    : (isCoopBattle ? !coopUsingSub : true);
-  const subBarActive = showAllySub && coopUsingSub;
   const hpFocusClass = (active: boolean) => `battle-hp-focus ${active ? "is-active" : "is-dim"}`;
-  const pvpEnemyBurn = B.pvpBurnP2 || 0;
-  const pvpEnemyFreeze = !!B.pvpFreezeP2;
-  const pvpEnemyParalyze = !!B.pvpParalyzeP2;
-  const pvpEnemyStatic = B.pvpStaticP2 || 0;
-  const pvpEnemyCombo = B.pvpComboP2 || 0;
-  const pvpEnemySpecDef = !!B.pvpSpecDefP2;
-  const pvpPlayerBurn = B.pvpBurnP1 || 0;
-  const pvpPlayerFreeze = !!B.pvpFreezeP1;
-  const pvpPlayerParalyze = !!B.pvpParalyzeP1;
-  const pvpPlayerStatic = B.pvpStaticP1 || 0;
-  const pvpPlayerCombo = B.pvpComboP1 || 0;
-  const pvpPlayerSpecDef = !!B.pvpSpecDefP1;
 
   // Enemy visual center fallback (used before first DOM measurement)
   // Note: MonsterSprite height = size * 100 / 120, so center Y uses sprite height / 2.
@@ -215,22 +380,22 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     : question.op === "unknown3" ? t("battle.qtype.unknown3", "Unknown Large Number")
     : question.op === "unknown4" ? t("battle.qtype.unknown4", "Unknown Mixed")
     : t("battle.qtype.mixed", "Mixed");
-  const specDefReadyLabel = B.starter.type === "fire"
+  const specDefReadyLabel = starter.type === "fire"
     ? t("battle.specDef.fire", "🛡️ Shield")
-    : B.starter.type === "water"
+    : starter.type === "water"
       ? t("battle.specDef.water", "💨 Perfect Dodge")
-      : B.starter.type === "electric"
+      : starter.type === "electric"
         ? t("battle.specDef.electric", "⚡ Paralysis")
-        : B.starter.type === "light"
+        : starter.type === "light"
           ? t("battle.specDef.light", "✨ Lion Roar")
           : t("battle.specDef.grass", "🌿 Reflect");
-  const specDefToneClass = B.starter.type === "fire"
+  const specDefToneClass = starter.type === "fire"
     ? "battle-pill-specdef-fire"
-    : B.starter.type === "water"
+    : starter.type === "water"
       ? "battle-pill-specdef-water"
-      : B.starter.type === "electric"
+      : starter.type === "electric"
         ? "battle-pill-specdef-electric"
-        : B.starter.type === "light"
+        : starter.type === "light"
           ? "battle-pill-specdef-light"
           : "battle-pill-specdef-grass";
   const toastShadowStyle = B.effMsg
@@ -248,7 +413,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
   const enemyMainSpriteStyle = ({
     "--enemy-main-right": `${enemyMainRightPct}%`,
     "--enemy-main-top": `${eTopPct}%`,
-    "--enemy-main-anim": B.eAnim || (UX.lowPerfMode ? "none" : (B.enemy && B.enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite")),
+    "--enemy-main-anim": B.eAnim || (UX.lowPerfMode ? "none" : (enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite")),
   } as CSSProperties);
   const enemySubSpriteStyle = ({
     "--enemy-sub-right": `${enemySubRightPct}%`,
@@ -260,7 +425,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     "--enemy-shadow-right": `calc(${enemyMainRightPct}% + ${Math.round(eSize * 0.18)}px)`,
     "--enemy-shadow-top": `calc(${eTopPct}% + ${Math.round(eHeight * 0.72)}px)`,
     "--enemy-shadow-width": `${Math.round(eSize * 0.56)}px`,
-    "--enemy-shadow-anim": B.enemy && B.enemy.id === "boss" ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
+    "--enemy-shadow-anim": enemy.id === "boss" ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
   } as CSSProperties);
   const playerMainSpriteStyle = ({
     "--player-main-left": `${playerMainLeftPct}%`,
@@ -337,9 +502,9 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
       {showHeavyFx && B.parts.map((p) => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} seed={p.id} onDone={() => B.rmP(p.id)} />)}
 
       {/* Move level-up toast */}
-      {B.battleMode !== "pvp" && B.mLvlUp !== null && B.starter && (
+      {B.battleMode !== "pvp" && B.mLvlUp !== null && (
         <div className="battle-level-toast">
-          {B.starter.moves[B.mLvlUp].icon} {B.starter.moves[B.mLvlUp].name}{" "}
+          {starter.moves[B.mLvlUp].icon} {starter.moves[B.mLvlUp].name}{" "}
           {t("battle.moveLevelUp", "leveled up to Lv.{level}! Power -> {power}", {
             level: B.mLvls[B.mLvlUp],
             power: B.getPow(B.mLvlUp),
@@ -428,9 +593,9 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
           <div className={hpFocusClass(pvpEnemyBarActive)}>
             <HPBar
               cur={B.eHp}
-              max={B.enemy.maxHp}
-              color={B.enemy.c1}
-              label={`${B.enemy.typeIcon}${B.enemy.name} ${t("battle.level", "Lv.{level}", { level: B.enemy.lvl })}`}
+              max={enemy.maxHp}
+              color={enemy.c1}
+              label={`${enemy.typeIcon}${enemy.name} ${t("battle.level", "Lv.{level}", { level: enemy.lvl })}`}
             />
           </div>
           {showEnemySub && B.enemySub && (
@@ -455,7 +620,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
               </>
             ) : (
               <>
-                {hasSpecialTrait(B.enemy.traitName, B.enemy.traitDesc) && <div className="battle-status-chip is-counter-soft">✦{B.enemy.traitName}</div>}
+                {hasSpecialTrait(enemy.traitName, enemy.traitDesc) && <div className="battle-status-chip is-counter-soft">✦{enemy.traitName}</div>}
                 {B.burnStack > 0 && <div className="battle-status-chip is-burn">🔥 {t("battle.status.burnStack", "Burn x{count}", { count: B.burnStack })}</div>}
                 {B.frozen && <div className="battle-status-chip is-freeze">❄️ {t("battle.status.freeze", "Freeze")}</div>}
                 {B.staticStack > 0 && <div className="battle-status-chip is-static">⚡ {t("battle.status.staticStack", "Static x{count}", { count: B.staticStack })}{B.staticStack >= 2 ? " ⚠️" : ""}</div>}
@@ -566,14 +731,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
             </div>
           )}
           <div className="battle-menu-grid">
-            {activeStarter.moves.map((m, i: number) => {
-              const sealed = B.battleMode === "pvp" ? false : B.sealedMove === i;
-              const pvpLocked = B.battleMode === "pvp" ? (m.risky && !chargeReadyDisplay) : false;
-              const locked = B.battleMode === "pvp" ? pvpLocked : ((m.risky && !B.chargeReady) || sealed);
-              const lv = B.mLvls[i];
-              const pw = B.battleMode === "pvp" ? m.basePower : B.getPow(i);
-              const atCap = lv >= MAX_MOVE_LVL || m.basePower + lv * m.growth > POWER_CAPS[i];
-              const eff = B.battleMode === "pvp" ? 1 : B.dualEff(m);
+            {moveRuntime.map(({ m, i, sealed, locked, lv, pw, atCap, eff, moveProgressPct }) => {
               const moveBtnStyle = {
                 "--move-bg": locked ? "rgba(255,255,255,0.03)" : eff > 1 ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))` : eff < 1 ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))` : m.bg,
                 "--move-border": sealed ? "rgba(168,85,247,0.4)" : locked ? "rgba(255,255,255,0.08)" : eff > 1 ? "#22c55e66" : `${m.color}44`,
@@ -588,7 +746,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
                 ? undefined
                 : ({ "--move-level-bg": m.color } as CSSProperties);
               const moveProgressStyle = {
-                "--move-progress-width": `${(B.mHits[i] % (HITS_PER_LVL * B.mLvls[i])) / (HITS_PER_LVL * B.mLvls[i]) * 100}%`,
+                "--move-progress-width": `${moveProgressPct}%`,
                 "--move-progress-color": m.color,
               } as CSSProperties;
               return <button

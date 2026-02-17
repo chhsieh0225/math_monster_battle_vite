@@ -7,7 +7,7 @@
  *   2. Cross-screen settings entry / return flow
  *   3. Orientation-lock wrapper (GameShell)
  */
-import { useState, useEffect, useRef, Component } from 'react';
+import { Suspense, lazy, useState, useEffect, useRef, Component } from 'react';
 import type { ReactNode } from 'react';
 import './App.css';
 import { useI18n } from './i18n';
@@ -20,8 +20,9 @@ import { useMobileExperience } from './hooks/useMobileExperience';
 
 // Screens
 import AppScreenRouter from './components/AppScreenRouter';
-import BattleScreen from './components/screens/BattleScreen';
 import type { ScreenName, UseBattlePublicApi } from './types/battle';
+
+const BattleScreen = lazy(() => import('./components/screens/BattleScreen'));
 
 type StaticLocaleCode = "zh-TW" | "en-US";
 
@@ -195,12 +196,21 @@ function App() {
   }
 
   return (
-    <BattleScreen
-      battle={B}
-      mobile={UX}
-      onOpenSettings={openSettings}
-      t={t}
-    />
+    <Suspense
+      fallback={(
+        <div className="battle-loading-wrap">
+          <div className="battle-loading-icon">⚔️</div>
+          <div className="battle-loading-text">{t("app.loading.battle", "Preparing battle...")}</div>
+        </div>
+      )}
+    >
+      <BattleScreen
+        battle={B}
+        mobile={UX}
+        onOpenSettings={openSettings}
+        t={t}
+      />
+    </Suspense>
   );
 }
 

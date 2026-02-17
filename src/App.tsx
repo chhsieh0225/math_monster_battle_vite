@@ -181,6 +181,19 @@ function App() {
     resumeBattleAfterSettingsRef.current = false;
   };
 
+  // ── BGM driver ──
+  useEffect(() => {
+    if (audioMuted) { V.sfx.stopBgm(); return; }
+    if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge') {
+      V.sfx.startBgm('menu');
+    } else if (S.screen === 'battle') {
+      const isBoss = S.enemy?.id === 'boss';
+      V.sfx.startBgm(isBoss ? 'boss' : 'battle');
+    } else {
+      V.sfx.stopBgm();
+    }
+  }, [S.screen, S.enemy?.id, audioMuted, V.sfx]);
+
   if (S.screen !== "battle") {
     return (
       <AppScreenRouter

@@ -22,6 +22,7 @@ type TitleScreenProps = {
   onLeaderboard: TitleAction;
   onAchievements: TitleAction;
   onEncyclopedia: TitleAction;
+  onCollection: TitleAction;
   onDashboard: TitleAction;
   onDailyChallenge: TitleAction;
   onSettings: TitleAction;
@@ -36,6 +37,7 @@ export default function TitleScreen({
   onLeaderboard,
   onAchievements,
   onEncyclopedia,
+  onCollection,
   onDashboard,
   onDailyChallenge,
   onSettings,
@@ -54,6 +56,7 @@ export default function TitleScreen({
     { icon: '🏆', label: t('title.feature.leaderboard', 'Leaderboard'), fn: onLeaderboard, aria: t('a11y.title.openLeaderboard', 'Open leaderboard') },
     { icon: '⭐', label: t('title.feature.achievements', 'Achievements'), fn: onAchievements, aria: t('a11y.title.openAchievements', 'Open achievements') },
     { icon: '📚', label: t('title.feature.encyclopedia', 'Encyclopedia'), fn: onEncyclopedia, aria: t('a11y.title.openEncyclopedia', 'Open encyclopedia') },
+    { icon: '🎒', label: t('title.feature.collection', 'Collection'), fn: onCollection, aria: t('a11y.title.openCollection', 'Open collection') },
     { icon: '📊', label: t('title.feature.dashboard', 'Parent Dashboard'), fn: onDashboard, aria: t('a11y.title.openDashboard', 'Open parent dashboard') },
     { icon: '🗓️', label: t('title.feature.daily', 'Daily Challenge'), fn: onDailyChallenge, aria: t('a11y.title.openDailyChallenge', 'Open daily challenge') },
     { icon: '⚙️', label: t('title.feature.settings', 'Settings'), fn: onSettings, aria: t('a11y.title.openSettings', 'Open settings') },

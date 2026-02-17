@@ -152,6 +152,13 @@ export function runVictoryFlow({
   const dropPool = Array.isArray(enemy.drops) && enemy.drops.length > 0 ? enemy.drops : [''];
   const drop = dropPool[randInt(0, dropPool.length - 1)] || '';
 
+  // Persist the drop to the collection store (best-effort fire-and-forget).
+  if (drop) {
+    import('../../utils/collectionStore.ts')
+      .then(({ addToCollection }) => addToCollection([drop]))
+      .catch(() => { /* non-critical */ });
+  }
+
   setBText(tr(
     t,
     'battle.victory.gain',

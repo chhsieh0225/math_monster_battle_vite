@@ -392,6 +392,8 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
   } = core;
 
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
+  const isKoPhase = B.phase === "ko" || B.phase === "victory";
+  const enemyDefeated = isKoPhase && B.eHp === 0;
   const pvpComboTrigger = PVP_BALANCE.passive.specDefComboTrigger || 4;
   const {
     compactDual,
@@ -489,10 +491,18 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
   const sceneBottomPlatformStyle = ({ "--scene-platform-bottom": scene.platform1 } as CSSProperties);
   const enemyInfoStyle = ({ "--battle-enemy-info-right": enemyInfoRight } as CSSProperties);
   const playerInfoStyle = ({ "--battle-player-info-left": playerInfoLeft } as CSSProperties);
+  const enemyLowHp = enemy.maxHp > 0 && B.eHp > 0 && B.eHp / enemy.maxHp < 0.25;
+  const enemyIdleAnim = enemy.id === "boss"
+    ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
+    : enemyLowHp
+      ? "float 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite"
+      : "float 3s ease-in-out infinite";
   const enemyMainSpriteStyle = ({
     "--enemy-main-right": `${enemyMainRightPct}%`,
     "--enemy-main-top": `${eTopPct}%`,
-    "--enemy-main-anim": B.eAnim || (UX.lowPerfMode ? "none" : (enemy.id === "boss" ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite" : "float 3s ease-in-out infinite")),
+    "--enemy-main-anim": enemyDefeated
+      ? "enemyDissolve .9s ease-out forwards"
+      : B.eAnim || (UX.lowPerfMode ? "none" : enemyIdleAnim),
   } as CSSProperties);
   const enemySubSpriteStyle = ({
     "--enemy-sub-right": `${enemySubRightPct}%`,
@@ -614,6 +624,28 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
       )}
       {showHeavyFx && B.atkEffect && (
         <AttackEffect type={B.atkEffect.type} idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />
+      )}
+
+      {/* Victory confetti + drop toast */}
+      {B.phase === "victory" && !UX.lowPerfMode && (
+        <>
+          <div className="battle-confetti-layer" aria-hidden="true">
+            {Array.from({ length: 18 }, (_, i) => (
+              <div key={i} className={`battle-confetti-piece confetti-${i % 6}`} style={{
+                "--confetti-x": `${10 + Math.random() * 80}%`,
+                "--confetti-delay": `${(i * 0.08).toFixed(2)}s`,
+                "--confetti-dur": `${1.1 + Math.random() * 0.6}s`,
+                "--confetti-rot": `${Math.floor(Math.random() * 360)}deg`,
+                "--confetti-drift": `${-30 + Math.random() * 60}px`,
+              } as CSSProperties} />
+            ))}
+          </div>
+          {Array.isArray(enemy.drops) && enemy.drops.length > 0 && (
+            <div className="battle-drop-toast" aria-hidden="true">
+              {enemy.drops[0]}
+            </div>
+          )}
+        </>
       )}
 
       {/* Special Defense animations */}

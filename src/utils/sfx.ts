@@ -847,6 +847,99 @@ type WindowWithWebkitAudio = Window & {
   webkitAudioContext?: AudioCtor;
 };
 
+// ── BGM (procedural chiptune loops) ──────────────────────────────
+type BgmTrack = 'menu' | 'battle' | 'boss';
+let bgmGain: GainNode | null = null;
+let bgmInterval: ReturnType<typeof setInterval> | null = null;
+let bgmCurrent: BgmTrack | null = null;
+const BGM_VOL = 0.09;
+
+// Simple 4-bar arpeggio patterns (note name, duration key, delay offset ms)
+type BgmNote = [string, string, number]; // [noteName, durKey, offsetMs]
+const BGM_PATTERNS: Record<BgmTrack, { notes: BgmNote[]; loopMs: number; tempo: number }> = {
+  menu: {
+    tempo: 110,
+    loopMs: 4800,
+    notes: [
+      ['C4', '8n', 0], ['E4', '8n', 300], ['G4', '8n', 600], ['E4', '8n', 900],
+      ['C4', '8n', 1200], ['G4', '8n', 1500], ['E5', '8n', 1800], ['C5', '8n', 2100],
+      ['A3', '8n', 2400], ['C4', '8n', 2700], ['E4', '8n', 3000], ['A4', '8n', 3300],
+      ['G3', '8n', 3600], ['B3', '8n', 3900], ['D4', '8n', 4200], ['G4', '8n', 4500],
+    ],
+  },
+  battle: {
+    tempo: 140,
+    loopMs: 3400,
+    notes: [
+      ['E4', '16n', 0], ['E4', '16n', 200], ['E5', '16n', 400], ['E4', '16n', 600],
+      ['D5', '16n', 850], ['C5', '16n', 1050], ['A4', '16n', 1250], ['C5', '16n', 1450],
+      ['E4', '16n', 1700], ['G4', '16n', 1900], ['A4', '16n', 2100], ['G4', '16n', 2300],
+      ['E4', '16n', 2550], ['C4', '16n', 2750], ['D4', '16n', 2950], ['E4', '16n', 3150],
+    ],
+  },
+  boss: {
+    tempo: 155,
+    loopMs: 3100,
+    notes: [
+      ['C3', '16n', 0], ['C3', '16n', 200], ['Eb3', '16n', 400], ['C3', '16n', 600],
+      ['C3', '16n', 800], ['F3', '16n', 1000], ['Eb3', '16n', 1200], ['C3', '16n', 1400],
+      ['Bb2', '16n', 1550], ['C3', '16n', 1750], ['Eb3', '16n', 1950], ['F3', '16n', 2150],
+      ['E3', '16n', 2325], ['C3', '16n', 2525], ['Bb2', '16n', 2725], ['C3', '16n', 2900],
+    ],
+  },
+};
+
+function startBgmLoop(track: BgmTrack): void {
+  if (!ctx || muted) return;
+  stopBgmLoop();
+  bgmGain = ctx.createGain();
+  bgmGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+  bgmGain.gain.linearRampToValueAtTime(BGM_VOL, ctx.currentTime + 0.5);
+  bgmGain.connect(ctx.destination);
+
+  const pattern = BGM_PATTERNS[track];
+  const playLoop = () => {
+    if (!ctx || !bgmGain) return;
+    const now = ctx.currentTime;
+    for (const [noteName, durKey, offsetMs] of pattern.notes) {
+      const freq = NOTE_FREQ[noteName];
+      if (!freq) continue;
+      const t0 = now + offsetMs / 1000;
+      const dur = DUR[durKey] || 0.13;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t0);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(BGM_VOL * 0.7, t0 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur + 0.04);
+      osc.connect(g);
+      g.connect(bgmGain);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.06);
+    }
+  };
+  playLoop();
+  bgmInterval = setInterval(playLoop, pattern.loopMs);
+  bgmCurrent = track;
+}
+
+function stopBgmLoop(): void {
+  if (bgmInterval) {
+    clearInterval(bgmInterval);
+    bgmInterval = null;
+  }
+  if (bgmGain && ctx) {
+    try {
+      bgmGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.3);
+      const g = bgmGain;
+      setTimeout(() => { try { g.disconnect(); } catch { /* ok */ } }, 400);
+    } catch { /* ok */ }
+  }
+  bgmGain = null;
+  bgmCurrent = null;
+}
+
 const sfx = {
   async init(): Promise<void> {
     if (ready || typeof window === 'undefined') return;
@@ -877,6 +970,7 @@ const sfx = {
   setMuted(next: boolean): boolean {
     muted = !!next;
     writeText(SFX_MUTED_KEY, muted ? '1' : '0');
+    if (muted) stopBgmLoop();
     return muted;
   },
   toggleMute(): boolean {
@@ -887,6 +981,17 @@ const sfx = {
   },
   get ready(): boolean {
     return ready;
+  },
+  startBgm(track: BgmTrack): void {
+    if (!ready || muted) return;
+    if (bgmCurrent === track) return; // already playing
+    try { startBgmLoop(track); } catch { /* best-effort */ }
+  },
+  stopBgm(): void {
+    try { stopBgmLoop(); } catch { /* ok */ }
+  },
+  get bgmTrack(): string | null {
+    return bgmCurrent;
   },
 };
 

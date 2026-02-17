@@ -12,6 +12,7 @@ export type ScreenName =
   | "dashboard"
   | "settings"
   | "leaderboard"
+  | "collection"
   | "pvp_result"
   | "evolve"
   | "gameover";
@@ -72,6 +73,7 @@ export type EnemyVm = {
   trait?: string;
   traitName?: string;
   traitDesc?: string;
+  drops?: string[];
   svgFn: (...args: string[]) => string;
 };
 
@@ -120,6 +122,9 @@ export type SfxApi = {
   muted: boolean;
   init: () => void;
   setMuted: (next: boolean) => boolean;
+  startBgm: (track: 'menu' | 'battle' | 'boss') => void;
+  stopBgm: () => void;
+  bgmTrack: string | null;
 };
 
 export type UseBattleState = {

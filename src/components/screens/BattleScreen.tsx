@@ -5,6 +5,7 @@ import { SCENES } from '../../data/scenes';
 import { HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from '../../data/constants';
 import { PVP_BALANCE } from '../../data/pvpBalance';
 import { getStageMaxHp, getStarterMaxHp } from '../../utils/playerHp';
+import { resolveBattleLayout } from '../../utils/battleLayout';
 import { hasSpecialTrait } from '../../utils/traits';
 import MonsterSprite from '../ui/MonsterSprite';
 import HPBar from '../ui/HPBar';
@@ -122,20 +123,31 @@ export default function BattleScreen({ battle: B, mobile: UX, onOpenSettings, t 
   const sceneKey = (B.enemy.sceneMType || B.enemy.mType) as keyof typeof SCENES;
   const scene = SCENES[sceneKey] || SCENES.grass;
   const canTapAdvance = B.phase === "text" || B.phase === "victory";
-  const compactDual = hasDualUnits && UX.compactUI;
-  const enemyInfoRight = hasDualUnits ? "44%" : "42%";
-  const playerInfoLeft = hasDualUnits ? "44%" : "42%";
-  const enemyMainRightPct = hasDualUnits ? (compactDual ? 5 : 8) : 10;
-  const enemySubRightPct = hasDualUnits ? (compactDual ? 25 : 24) : 24;
-  const enemySubTopPct = hasDualUnits ? (compactDual ? 27 : 23) : 14;
-  const playerMainLeftPct = hasDualUnits ? (compactDual ? 4 : 6) : 6;
-  const playerMainBottomPct = hasDualUnits ? (compactDual ? 9 : 11) : 14;
-  const playerSubLeftPct = hasDualUnits ? (compactDual ? 21 : 23) : 24;
-  const playerSubBottomPct = hasDualUnits ? (compactDual ? 13 : 15) : 17;
-  const mainPlayerBaseSize = B.pStg >= 2 ? 200 : B.pStg >= 1 ? 170 : 120;
-  const mainPlayerScale = hasDualUnits ? (compactDual ? 0.9 : 0.96) : 1;
-  const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale);
-  const subPlayerSize = Math.round((compactDual ? 104 : 112) * (hasDualUnits ? (compactDual ? 0.9 : 0.95) : 1));
+  const layout = resolveBattleLayout({
+    battleMode: B.battleMode,
+    hasDualUnits,
+    compactUI: UX.compactUI,
+    playerStageIdx: B.pStg,
+    enemyId: B.enemy.id,
+    enemySceneType: B.enemy.sceneMType || B.enemy.mType,
+    enemyIsEvolved: B.enemy.isEvolved,
+  });
+  const {
+    compactDual,
+    enemyInfoRight,
+    playerInfoLeft,
+    enemyMainRightPct,
+    enemySubRightPct,
+    enemySubTopPct,
+    playerMainLeftPct,
+    playerMainBottomPct,
+    playerSubLeftPct,
+    playerSubBottomPct,
+    mainPlayerSize,
+    subPlayerSize,
+    enemySize: eSize,
+    enemyTopPct: eTopPct,
+  } = layout;
   const pvpEnemyBarActive = B.battleMode !== "pvp" || B.pvpTurn === "p2";
   const mainBarActive = B.battleMode === "pvp"
     ? B.pvpTurn === "p1"
@@ -157,16 +169,7 @@ export default function BattleScreen({ battle: B, mobile: UX, onOpenSettings, t 
 
   // Enemy visual center fallback (used before first DOM measurement)
   // Note: MonsterSprite height = size * 100 / 120, so center Y uses sprite height / 2.
-  const eBaseSize = B.enemy.id === "boss" ? 230
-    : (B.enemy.id === "fire" || B.enemy.id === "dragon" || (B.enemy.id.startsWith("slime") && B.enemy.isEvolved)) ? 190
-    : B.enemy.isEvolved ? 155 : 120;
-  const enemyMainScale = hasDualUnits ? (compactDual ? 0.92 : 0.98) : 1;
-  const eSize = Math.round(eBaseSize * enemyMainScale);
   const eHeight = eSize * 100 / 120;
-  const eSceneType = B.enemy.sceneMType || B.enemy.mType;
-  const eBaseTopPct = (eSceneType === "ghost" || B.enemy.id === "boss") ? 12
-    : eSceneType === "steel" ? 16 : 26;
-  const eTopPct = eBaseTopPct + (hasDualUnits ? (compactDual ? 8 : 6) : 0);
   const enemyFallbackTarget = {
     top: `calc(${eTopPct}% + ${eHeight / 2}px)`,
     right: `calc(${enemyMainRightPct}% + ${eSize / 2}px)`,

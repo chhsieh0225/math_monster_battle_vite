@@ -75,12 +75,6 @@ import {
 import { runEnemyTurnController } from './battle/enemyTurnController.ts';
 import { runTimeoutController } from './battle/timeoutController.ts';
 import { buildTimeoutControllerArgs } from './battle/timeoutDepsBuilder.ts';
-import { runStartGameOrchestrator } from './battle/startGameOrchestrator.ts';
-import { runStartBattleFlow } from './battle/startBattleFlow';
-import { runStartBattleController } from './battle/startBattleController.ts';
-import {
-  buildStartBattleSharedArgs,
-} from './battle/startDepsBuilder.ts';
 import { runSelectMoveFlow } from './battle/selectMoveFlow';
 import {
   buildEnemyTurnArgs,
@@ -127,12 +121,14 @@ import {
   applyVictoryAchievements,
 } from './battle/achievementFlow';
 import {
-  buildDailyChallengeRoster,
-  getDailyChallengeSeed,
   resolveDailyBattleRule,
 } from './battle/challengeRuntime.ts';
 import { DIFF_MODS, pickPartnerStarter } from './battle/partnerStarter.ts';
 import { resolveBattleQuestionConfig } from './battle/questionConfig.ts';
+import {
+  runBattleStart,
+  runBattleStartGame,
+} from './battle/startFlowAdapter.ts';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
 import { useBattleAsyncGate, useBattleStateRef } from './useBattleRuntime';
 
@@ -433,12 +429,12 @@ export function useBattle() {
 
   // --- Start a battle against enemies[idx], optionally from a fresh roster ---
   const startBattle = useCallback((idx, roster) => {
-    runStartBattleController({
+    runBattleStart({
       idx,
       roster,
       invalidateAsyncWork,
       clearTimer,
-      startBattleSharedArgs: buildStartBattleSharedArgs({
+      startBattleSharedArgsInput: {
         sr,
         enemies,
         locale,
@@ -456,8 +452,7 @@ export function useBattle() {
         finishGame: _finishGame,
         resetFrozen: () => { frozenR.current = false; },
         playBattleIntro,
-      }),
-      runStartBattleFlow,
+      },
     });
   }, [
     invalidateAsyncWork,
@@ -493,73 +488,65 @@ export function useBattle() {
   }, [setDmgs, setParts, setAtkEffect, setEffMsg]);
 
   const startGame = (starterOverride, modeOverride = null, allyOverride = null) => {
-    setDailyChallengeFeedback(null);
-    const challengeContext = queuedChallenge || activeChallenge;
-    const runSeed = challengeContext?.kind === 'daily'
-      ? getDailyChallengeSeed(challengeContext.plan)
-      : null;
-    const buildRosterForRun = (mode) => {
-      const baseRoster = buildNewRoster(mode);
-      if (challengeContext?.kind !== 'daily') return baseRoster;
-      return buildDailyChallengeRoster(baseRoster, challengeContext.plan);
-    };
-
-    runStartGameOrchestrator({
+    runBattleStartGame({
       starterOverride,
       modeOverride,
       allyOverride,
-      runSeed,
-      invalidateAsyncWork,
-      beginRun,
-      clearTimer,
-      resetCoopRotatePending,
-      pvpStartDepsArgs: {
-        runtime: {
-          chance,
-          getStarterMaxHp,
-          t,
-          setEnemies,
-          setTimedMode,
-          setCoopActiveSlot,
-          dispatchBattle,
-          appendSessionEvent,
-          initSession,
-          createPvpEnemyFromStarter,
-          setScreen,
-          playBattleIntro,
+      setDailyChallengeFeedback,
+      queuedChallenge,
+      activeChallenge,
+      buildNewRoster,
+      startGameOrchestratorArgs: {
+        invalidateAsyncWork,
+        beginRun,
+        clearTimer,
+        resetCoopRotatePending,
+        pvpStartDepsArgs: {
+          runtime: {
+            chance,
+            getStarterMaxHp,
+            t,
+            setEnemies,
+            setTimedMode,
+            setCoopActiveSlot,
+            dispatchBattle,
+            appendSessionEvent,
+            initSession,
+            createPvpEnemyFromStarter,
+            setScreen,
+            playBattleIntro,
+          },
+          pvp: pvpState,
+          ui: UI,
+          resetRunRuntimeState,
         },
-        pvp: pvpState,
-        ui: UI,
-        resetRunRuntimeState,
-      },
-      standardStartDepsArgs: {
-        runtime: {
-          buildNewRoster: buildRosterForRun,
-          getStarterMaxHp,
-          setEnemies,
-          setCoopActiveSlot,
-          dispatchBattle,
-          appendSessionEvent,
-          initSession,
-          setScreen,
-          startBattle,
+        standardStartDepsArgs: {
+          runtime: {
+            getStarterMaxHp,
+            setEnemies,
+            setCoopActiveSlot,
+            dispatchBattle,
+            appendSessionEvent,
+            initSession,
+            setScreen,
+            startBattle,
+          },
+          pvp: pvpState,
+          resetRunRuntimeState,
         },
-        pvp: pvpState,
-        resetRunRuntimeState,
+        startGameControllerArgs: {
+          sr,
+          battleMode,
+          pvpStarter2,
+          locale,
+          localizeStarter,
+          pickPartnerStarter: (mainStarter) => pickPartnerStarter(mainStarter, pickIndex, locale),
+          getStarterStageIdx,
+          getStageMaxHp,
+        },
       },
-      startGameControllerArgs: {
-        sr,
-        battleMode,
-        pvpStarter2,
-        locale,
-        localizeStarter,
-        pickPartnerStarter: (mainStarter) => pickPartnerStarter(mainStarter, pickIndex, locale),
-        getStarterStageIdx,
-        getStageMaxHp,
-      },
+      activateQueuedChallenge,
     });
-
-    activateQueuedChallenge();
   };
 
   const quitGame = () => {

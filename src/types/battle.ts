@@ -232,9 +232,7 @@ export type UseBattleView = {
   sfx: SfxApi;
 };
 
-export type UseBattleFlatApi = UseBattleState & UseBattleActions & UseBattleView;
-
-export type UseBattlePublicApi = UseBattleFlatApi & {
+export type UseBattlePublicApi = {
   state: UseBattleState;
   actions: UseBattleActions;
   view: UseBattleView;

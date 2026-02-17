@@ -900,8 +900,5 @@ export function useBattle() {
     state,
     actions,
     view,
-    ...state,
-    ...actions,
-    ...view,
   };
 }

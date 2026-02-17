@@ -864,14 +864,17 @@ let bgmGain: GainNode | null = null;
 let bgmInterval: ReturnType<typeof setInterval> | null = null;
 let bgmCurrent: BgmTrack | null = null;
 let bgmNextLoopTime = 0;
+let bgmFormIndex = 0;
 let pendingBgmTrack: BgmTrack | null = null;
 let resumePromise: Promise<void> | null = null;
 const BGM_SCHEDULE_INTERVAL_MS = 50;
 const BGM_LOOKAHEAD_SEC = 0.12;
 
 type BgmNote = [string, string, number, number?]; // [noteName, durKey, offsetMs, velocity]
+type BgmDrumKind = 'kick' | 'snare' | 'hat' | 'rim';
+type BgmSectionKey = 'A' | 'B' | 'C';
 type BgmLane = {
-  wave: OscillatorType;
+  wave: OscillatorType | 'noise';
   vol: number;
   attack: number;
   release: number;
@@ -885,167 +888,539 @@ type BgmLane = {
   notes: BgmNote[];
 };
 
-const BGM_PATTERNS: Record<BgmTrack, { loopMs: number; lanes: BgmLane[] }> = {
+type BgmSection = {
+  lengthMs: number;
+  lanes: BgmLane[];
+};
+
+type BgmPattern = {
+  form: BgmSectionKey[];
+  sections: Record<BgmSectionKey, BgmSection | undefined>;
+};
+
+const BGM_PATTERNS: Record<BgmTrack, BgmPattern> = {
   menu: {
-    loopMs: 6400,
-    lanes: [
-      {
-        wave: 'triangle',
-        vol: 0.2,
-        attack: 0.01,
-        release: 0.12,
-        filterType: 'lowpass',
-        filterFreq: 3600,
-        filterQ: 0.8,
-        pan: 0.12,
-        jitterMs: 5,
-        swingMs: 10,
-        notes: [
-          ['C4', '8n', 0], ['E4', '8n', 320], ['G4', '8n', 640], ['E4', '8n', 960],
-          ['A3', '8n', 1280], ['C4', '8n', 1600], ['E4', '8n', 1920], ['G4', '8n', 2240],
-          ['F3', '8n', 2560], ['A3', '8n', 2880], ['C4', '8n', 3200], ['E4', '8n', 3520],
-          ['G3', '8n', 3840], ['B3', '8n', 4160], ['D4', '8n', 4480], ['G4', '8n', 4800],
-          ['C5', '8n', 5120], ['G4', '8n', 5440], ['E4', '8n', 5760], ['D4', '8n', 6080],
+    form: ['A', 'A', 'B', 'A'],
+    sections: {
+      A: {
+        lengthMs: 3200,
+        lanes: [
+          {
+            wave: 'triangle',
+            vol: 0.2,
+            attack: 0.01,
+            release: 0.12,
+            filterType: 'lowpass',
+            filterFreq: 3600,
+            filterQ: 0.8,
+            pan: 0.12,
+            jitterMs: 5,
+            swingMs: 10,
+            notes: [
+              ['C4', '8n', 0], ['E4', '8n', 320], ['G4', '8n', 640], ['E4', '8n', 960],
+              ['A3', '8n', 1280], ['C4', '8n', 1600], ['E4', '8n', 1920], ['G4', '8n', 2240],
+              ['F4', '8n', 2560], ['E4', '8n', 2880],
+            ],
+          },
+          {
+            wave: 'sine',
+            vol: 0.11,
+            attack: 0.03,
+            release: 0.3,
+            filterType: 'lowpass',
+            filterFreq: 1700,
+            filterQ: 0.7,
+            pan: -0.22,
+            notes: [['C3', '4n', 0, 0.95], ['A2', '4n', 800, 0.9], ['F2', '4n', 1600, 0.95], ['G2', '4n', 2400, 1]],
+          },
+          {
+            wave: 'square',
+            vol: 0.085,
+            attack: 0.004,
+            release: 0.11,
+            filterType: 'lowpass',
+            filterFreq: 840,
+            filterQ: 0.9,
+            pan: -0.05,
+            jitterMs: 4,
+            notes: [
+              ['C2', '8n', 0], ['C2', '8n', 320], ['G2', '8n', 640], ['C2', '8n', 960],
+              ['A2', '8n', 1280], ['A2', '8n', 1600], ['E2', '8n', 1920], ['A2', '8n', 2240],
+              ['F2', '8n', 2560], ['G2', '8n', 2880],
+            ],
+          },
+          {
+            wave: 'noise',
+            vol: 0.072,
+            attack: 0.001,
+            release: 0.055,
+            pan: 0,
+            jitterMs: 6,
+            notes: [
+              ['kick', '16n', 0, 0.72], ['hat', '32n', 160, 0.44], ['hat', '32n', 320, 0.48], ['snare', '16n', 640, 0.58],
+              ['hat', '32n', 960, 0.42], ['kick', '16n', 1280, 0.68], ['hat', '32n', 1440, 0.46], ['hat', '32n', 1600, 0.5],
+              ['snare', '16n', 1920, 0.56], ['rim', '32n', 2240, 0.45], ['kick', '16n', 2560, 0.72], ['hat', '32n', 2880, 0.5],
+            ],
+          },
         ],
       },
-      {
-        wave: 'sine',
-        vol: 0.11,
-        attack: 0.03,
-        release: 0.3,
-        filterType: 'lowpass',
-        filterFreq: 1700,
-        filterQ: 0.7,
-        pan: -0.22,
-        notes: [
-          ['C3', '4n', 0, 0.95], ['A2', '4n', 1600, 0.9], ['F2', '4n', 3200, 0.95], ['G2', '4n', 4800, 1],
+      B: {
+        lengthMs: 3200,
+        lanes: [
+          {
+            wave: 'triangle',
+            vol: 0.2,
+            attack: 0.01,
+            release: 0.12,
+            filterType: 'lowpass',
+            filterFreq: 3600,
+            filterQ: 0.8,
+            pan: 0.14,
+            jitterMs: 5,
+            swingMs: 12,
+            notes: [
+              ['E4', '8n', 0], ['G4', '8n', 320], ['B4', '8n', 640], ['G4', '8n', 960],
+              ['A4', '8n', 1280], ['C5', '8n', 1600], ['B4', '8n', 1920], ['A4', '8n', 2240],
+              ['G4', '8n', 2560], ['D5', '8n', 2880],
+            ],
+          },
+          {
+            wave: 'sine',
+            vol: 0.12,
+            attack: 0.03,
+            release: 0.32,
+            filterType: 'lowpass',
+            filterFreq: 1800,
+            filterQ: 0.7,
+            pan: -0.2,
+            notes: [['A2', '4n', 0, 0.92], ['F2', '4n', 800, 0.88], ['D2', '4n', 1600, 0.94], ['G2', '4n', 2400, 1]],
+          },
+          {
+            wave: 'square',
+            vol: 0.082,
+            attack: 0.004,
+            release: 0.11,
+            filterType: 'lowpass',
+            filterFreq: 900,
+            filterQ: 0.9,
+            pan: -0.02,
+            jitterMs: 4,
+            notes: [
+              ['A2', '8n', 0], ['A2', '8n', 320], ['E2', '8n', 640], ['A2', '8n', 960],
+              ['F2', '8n', 1280], ['F2', '8n', 1600], ['C2', '8n', 1920], ['F2', '8n', 2240],
+              ['D2', '8n', 2560], ['G2', '8n', 2880],
+            ],
+          },
+          {
+            wave: 'noise',
+            vol: 0.075,
+            attack: 0.001,
+            release: 0.058,
+            pan: 0.02,
+            jitterMs: 6,
+            notes: [
+              ['kick', '16n', 0, 0.74], ['hat', '32n', 160, 0.46], ['snare', '16n', 480, 0.6], ['hat', '32n', 800, 0.44],
+              ['kick', '16n', 1120, 0.7], ['hat', '32n', 1440, 0.5], ['snare', '16n', 1760, 0.58], ['hat', '32n', 2080, 0.42],
+              ['rim', '32n', 2240, 0.46], ['kick', '16n', 2560, 0.76], ['snare', '16n', 2880, 0.62], ['hat', '32n', 3040, 0.44],
+            ],
+          },
         ],
       },
-      {
-        wave: 'square',
-        vol: 0.085,
-        attack: 0.004,
-        release: 0.11,
-        filterType: 'lowpass',
-        filterFreq: 840,
-        filterQ: 0.9,
-        pan: -0.05,
-        jitterMs: 4,
-        notes: [
-          ['C2', '8n', 0], ['C2', '8n', 320], ['G2', '8n', 640], ['C2', '8n', 960],
-          ['A2', '8n', 1280], ['A2', '8n', 1600], ['E2', '8n', 1920], ['A2', '8n', 2240],
-          ['F2', '8n', 2560], ['F2', '8n', 2880], ['C2', '8n', 3200], ['F2', '8n', 3520],
-          ['G2', '8n', 3840], ['G2', '8n', 4160], ['D2', '8n', 4480], ['G2', '8n', 4800],
-          ['C2', '8n', 5120], ['G2', '8n', 5440], ['E2', '8n', 5760], ['D2', '8n', 6080],
-        ],
-      },
-    ],
+      C: undefined,
+    },
   },
   battle: {
-    loopMs: 3840,
-    lanes: [
-      {
-        wave: 'sawtooth',
-        vol: 0.165,
-        attack: 0.005,
-        release: 0.1,
-        filterType: 'bandpass',
-        filterFreq: 2000,
-        filterQ: 1.25,
-        pan: 0.1,
-        jitterMs: 4,
-        swingMs: 8,
-        notes: [
-          ['E4', '16n', 0], ['G4', '16n', 240], ['A4', '16n', 480], ['E5', '16n', 720],
-          ['D5', '16n', 960], ['C5', '16n', 1200], ['A4', '16n', 1440], ['G4', '16n', 1680],
-          ['E4', '16n', 1920], ['G4', '16n', 2160], ['A4', '16n', 2400], ['C5', '16n', 2640],
-          ['B4', '16n', 2880], ['A4', '16n', 3120], ['G4', '16n', 3360], ['E4', '16n', 3600],
+    form: ['A', 'B'],
+    sections: {
+      A: {
+        lengthMs: 3840,
+        lanes: [
+          {
+            wave: 'sawtooth',
+            vol: 0.165,
+            attack: 0.005,
+            release: 0.1,
+            filterType: 'bandpass',
+            filterFreq: 2000,
+            filterQ: 1.25,
+            pan: 0.1,
+            jitterMs: 4,
+            swingMs: 8,
+            notes: [
+              ['E4', '16n', 0], ['G4', '16n', 240], ['A4', '16n', 480], ['E5', '16n', 720],
+              ['D5', '16n', 960], ['C5', '16n', 1200], ['A4', '16n', 1440], ['G4', '16n', 1680],
+              ['E4', '16n', 1920], ['G4', '16n', 2160], ['A4', '16n', 2400], ['C5', '16n', 2640],
+              ['B4', '16n', 2880], ['A4', '16n', 3120], ['G4', '16n', 3360], ['E4', '16n', 3600],
+            ],
+          },
+          {
+            wave: 'square',
+            vol: 0.12,
+            attack: 0.003,
+            release: 0.1,
+            filterType: 'lowpass',
+            filterFreq: 760,
+            filterQ: 0.9,
+            pan: -0.18,
+            notes: [
+              ['E2', '8n', 0], ['E2', '8n', 480], ['D2', '8n', 960], ['C2', '8n', 1440],
+              ['A2', '8n', 1920], ['A2', '8n', 2400], ['G2', '8n', 2880], ['B2', '8n', 3360],
+            ],
+          },
+          {
+            wave: 'triangle',
+            vol: 0.082,
+            attack: 0.004,
+            release: 0.085,
+            filterType: 'highpass',
+            filterFreq: 980,
+            filterQ: 0.8,
+            pan: 0.24,
+            jitterMs: 3,
+            notes: [
+              ['E5', '32n', 120], ['G5', '32n', 360], ['A5', '32n', 600], ['G5', '32n', 840],
+              ['E5', '32n', 1080], ['G5', '32n', 1320], ['A5', '32n', 1560], ['G5', '32n', 1800],
+              ['E5', '32n', 2040], ['G5', '32n', 2280], ['A5', '32n', 2520], ['C6', '32n', 2760],
+              ['B5', '32n', 3000], ['A5', '32n', 3240], ['G5', '32n', 3480], ['E5', '32n', 3720],
+            ],
+          },
+          {
+            wave: 'noise',
+            vol: 0.105,
+            attack: 0.001,
+            release: 0.07,
+            pan: 0.02,
+            jitterMs: 4,
+            notes: [
+              ['kick', '16n', 0, 1], ['hat', '32n', 240, 0.45], ['hat', '32n', 480, 0.62], ['snare', '16n', 720, 0.88],
+              ['kick', '16n', 960, 0.93], ['hat', '32n', 1200, 0.44], ['hat', '32n', 1440, 0.62], ['snare', '16n', 1680, 0.84],
+              ['kick', '16n', 1920, 1], ['hat', '32n', 2160, 0.45], ['kick', '16n', 2400, 0.76], ['hat', '32n', 2640, 0.56],
+              ['rim', '32n', 2760, 0.6], ['snare', '16n', 2880, 0.9], ['hat', '32n', 3120, 0.44], ['kick', '16n', 3360, 0.94],
+              ['hat', '32n', 3600, 0.52], ['rim', '32n', 3720, 0.58],
+            ],
+          },
         ],
       },
-      {
-        wave: 'square',
-        vol: 0.12,
-        attack: 0.003,
-        release: 0.1,
-        filterType: 'lowpass',
-        filterFreq: 760,
-        filterQ: 0.9,
-        pan: -0.18,
-        notes: [
-          ['E2', '8n', 0], ['E2', '8n', 480], ['D2', '8n', 960], ['C2', '8n', 1440],
-          ['A2', '8n', 1920], ['A2', '8n', 2400], ['G2', '8n', 2880], ['B2', '8n', 3360],
+      B: {
+        lengthMs: 3840,
+        lanes: [
+          {
+            wave: 'sawtooth',
+            vol: 0.17,
+            attack: 0.005,
+            release: 0.1,
+            filterType: 'bandpass',
+            filterFreq: 2100,
+            filterQ: 1.3,
+            pan: 0.12,
+            jitterMs: 4,
+            swingMs: 10,
+            notes: [
+              ['E4', '16n', 0], ['F4', '16n', 240], ['G4', '16n', 480], ['B4', '16n', 720],
+              ['A4', '16n', 960], ['G4', '16n', 1200], ['F4', '16n', 1440], ['E4', '16n', 1680],
+              ['D4', '16n', 1920], ['F4', '16n', 2160], ['A4', '16n', 2400], ['B4', '16n', 2640],
+              ['A4', '16n', 2880], ['G4', '16n', 3120], ['F4', '16n', 3360], ['E4', '16n', 3600],
+            ],
+          },
+          {
+            wave: 'square',
+            vol: 0.124,
+            attack: 0.003,
+            release: 0.1,
+            filterType: 'lowpass',
+            filterFreq: 790,
+            filterQ: 0.9,
+            pan: -0.2,
+            notes: [
+              ['E2', '8n', 0], ['D2', '8n', 480], ['C2', '8n', 960], ['B2', '8n', 1440],
+              ['A2', '8n', 1920], ['G2', '8n', 2400], ['F2', '8n', 2880], ['E2', '8n', 3360],
+            ],
+          },
+          {
+            wave: 'triangle',
+            vol: 0.086,
+            attack: 0.003,
+            release: 0.08,
+            filterType: 'highpass',
+            filterFreq: 1100,
+            filterQ: 0.9,
+            pan: 0.26,
+            jitterMs: 3,
+            notes: [
+              ['G5', '32n', 120], ['A5', '32n', 360], ['B5', '32n', 600], ['A5', '32n', 840],
+              ['G5', '32n', 1080], ['A5', '32n', 1320], ['C6', '32n', 1560], ['A5', '32n', 1800],
+              ['G5', '32n', 2040], ['A5', '32n', 2280], ['B5', '32n', 2520], ['A5', '32n', 2760],
+              ['G5', '32n', 3000], ['F#5', '32n', 3240], ['E5', '32n', 3480], ['D5', '32n', 3720],
+            ],
+          },
+          {
+            wave: 'noise',
+            vol: 0.11,
+            attack: 0.001,
+            release: 0.072,
+            pan: 0.02,
+            jitterMs: 4,
+            notes: [
+              ['kick', '16n', 0, 1], ['hat', '32n', 120, 0.46], ['hat', '32n', 240, 0.64], ['snare', '16n', 600, 0.9],
+              ['kick', '16n', 960, 0.95], ['hat', '32n', 1080, 0.48], ['hat', '32n', 1200, 0.62], ['snare', '16n', 1560, 0.88],
+              ['kick', '16n', 1920, 1], ['hat', '32n', 2040, 0.48], ['kick', '16n', 2400, 0.82], ['hat', '32n', 2520, 0.58],
+              ['rim', '32n', 2640, 0.64], ['snare', '16n', 3000, 0.92], ['hat', '32n', 3120, 0.46], ['kick', '16n', 3360, 0.95],
+              ['hat', '32n', 3480, 0.56], ['rim', '32n', 3720, 0.62],
+            ],
+          },
         ],
       },
-      {
-        wave: 'triangle',
-        vol: 0.082,
-        attack: 0.004,
-        release: 0.085,
-        filterType: 'highpass',
-        filterFreq: 980,
-        filterQ: 0.8,
-        pan: 0.24,
-        jitterMs: 3,
-        notes: [
-          ['E5', '32n', 120], ['G5', '32n', 360], ['A5', '32n', 600], ['G5', '32n', 840],
-          ['E5', '32n', 1080], ['G5', '32n', 1320], ['A5', '32n', 1560], ['G5', '32n', 1800],
-          ['E5', '32n', 2040], ['G5', '32n', 2280], ['A5', '32n', 2520], ['C6', '32n', 2760],
-          ['B5', '32n', 3000], ['A5', '32n', 3240], ['G5', '32n', 3480], ['E5', '32n', 3720],
-        ],
-      },
-    ],
+      C: undefined,
+    },
   },
   boss: {
-    loopMs: 4000,
-    lanes: [
-      {
-        wave: 'sawtooth',
-        vol: 0.18,
-        attack: 0.004,
-        release: 0.11,
-        filterType: 'lowpass',
-        filterFreq: 2350,
-        filterQ: 1.05,
-        pan: 0.06,
-        jitterMs: 5,
-        notes: [
-          ['C4', '16n', 0], ['Eb4', '16n', 250], ['G4', '16n', 500], ['F4', '16n', 750],
-          ['Eb4', '16n', 1000], ['C4', '16n', 1250], ['Bb3', '16n', 1500], ['G3', '16n', 1750],
-          ['C4', '16n', 2000], ['Eb4', '16n', 2250], ['G4', '16n', 2500], ['Bb3', '16n', 2750],
-          ['F4', '16n', 3000], ['Eb4', '16n', 3250], ['C4', '16n', 3500], ['Bb3', '16n', 3750],
+    form: ['A', 'B', 'A'],
+    sections: {
+      A: {
+        lengthMs: 4000,
+        lanes: [
+          {
+            wave: 'sawtooth',
+            vol: 0.18,
+            attack: 0.004,
+            release: 0.11,
+            filterType: 'lowpass',
+            filterFreq: 2350,
+            filterQ: 1.05,
+            pan: 0.06,
+            jitterMs: 5,
+            notes: [
+              ['C4', '16n', 0], ['Eb4', '16n', 250], ['G4', '16n', 500], ['F4', '16n', 750],
+              ['Eb4', '16n', 1000], ['C4', '16n', 1250], ['Bb3', '16n', 1500], ['G3', '16n', 1750],
+              ['C4', '16n', 2000], ['Eb4', '16n', 2250], ['G4', '16n', 2500], ['Bb3', '16n', 2750],
+              ['F4', '16n', 3000], ['Eb4', '16n', 3250], ['C4', '16n', 3500], ['Bb3', '16n', 3750],
+            ],
+          },
+          {
+            wave: 'sine',
+            vol: 0.14,
+            attack: 0.005,
+            release: 0.22,
+            filterType: 'lowpass',
+            filterFreq: 250,
+            filterQ: 0.7,
+            pan: -0.12,
+            notes: [
+              ['C2', '8n', 0], ['C2', '8n', 500], ['Bb2', '8n', 1000], ['G2', '8n', 1500],
+              ['F2', '8n', 2000], ['F2', '8n', 2500], ['E2', '8n', 3000], ['G2', '8n', 3500],
+            ],
+          },
+          {
+            wave: 'triangle',
+            vol: 0.075,
+            attack: 0.025,
+            release: 0.32,
+            filterType: 'lowpass',
+            filterFreq: 1250,
+            filterQ: 0.9,
+            pan: -0.24,
+            detune: -8,
+            notes: [['C3', '4n', 0], ['Eb3', '4n', 1000], ['F3', '4n', 2000], ['G3', '4n', 3000]],
+          },
+          {
+            wave: 'noise',
+            vol: 0.118,
+            attack: 0.001,
+            release: 0.08,
+            pan: -0.01,
+            jitterMs: 5,
+            notes: [
+              ['kick', '16n', 0, 1], ['hat', '32n', 250, 0.42], ['rim', '32n', 500, 0.54], ['hat', '32n', 750, 0.36],
+              ['kick', '16n', 1000, 0.95], ['hat', '32n', 1250, 0.4], ['snare', '16n', 1500, 0.9], ['hat', '32n', 1750, 0.38],
+              ['kick', '16n', 2000, 1], ['hat', '32n', 2250, 0.42], ['rim', '32n', 2500, 0.56], ['hat', '32n', 2750, 0.38],
+              ['kick', '16n', 3000, 0.98], ['hat', '32n', 3250, 0.42], ['snare', '16n', 3500, 0.92], ['hat', '32n', 3750, 0.36],
+            ],
+          },
         ],
       },
-      {
-        wave: 'sine',
-        vol: 0.14,
-        attack: 0.005,
-        release: 0.22,
-        filterType: 'lowpass',
-        filterFreq: 250,
-        filterQ: 0.7,
-        pan: -0.12,
-        notes: [
-          ['C2', '8n', 0], ['C2', '8n', 500], ['Bb2', '8n', 1000], ['G2', '8n', 1500],
-          ['F2', '8n', 2000], ['F2', '8n', 2500], ['E2', '8n', 3000], ['G2', '8n', 3500],
+      B: {
+        lengthMs: 4000,
+        lanes: [
+          {
+            wave: 'sawtooth',
+            vol: 0.19,
+            attack: 0.004,
+            release: 0.11,
+            filterType: 'lowpass',
+            filterFreq: 2250,
+            filterQ: 1.1,
+            pan: 0.08,
+            jitterMs: 5,
+            notes: [
+              ['C4', '16n', 0], ['Eb4', '16n', 250], ['G4', '16n', 500], ['Bb3', '16n', 750],
+              ['C5', '16n', 1000], ['G4', '16n', 1250], ['F4', '16n', 1500], ['Eb4', '16n', 1750],
+              ['D4', '16n', 2000], ['F4', '16n', 2250], ['Bb3', '16n', 2500], ['G3', '16n', 2750],
+              ['F4', '16n', 3000], ['Eb4', '16n', 3250], ['C4', '16n', 3500], ['G3', '16n', 3750],
+            ],
+          },
+          {
+            wave: 'sine',
+            vol: 0.145,
+            attack: 0.004,
+            release: 0.24,
+            filterType: 'lowpass',
+            filterFreq: 260,
+            filterQ: 0.75,
+            pan: -0.14,
+            notes: [
+              ['C2', '8n', 0], ['Bb2', '8n', 500], ['A2', '8n', 1000], ['G2', '8n', 1500],
+              ['F2', '8n', 2000], ['E2', '8n', 2500], ['D2', '8n', 3000], ['G2', '8n', 3500],
+            ],
+          },
+          {
+            wave: 'triangle',
+            vol: 0.078,
+            attack: 0.02,
+            release: 0.34,
+            filterType: 'lowpass',
+            filterFreq: 1300,
+            filterQ: 0.95,
+            pan: -0.2,
+            detune: -10,
+            notes: [['C3', '4n', 0], ['F3', '4n', 1000], ['G3', '4n', 2000], ['Bb3', '4n', 3000]],
+          },
+          {
+            wave: 'noise',
+            vol: 0.122,
+            attack: 0.001,
+            release: 0.082,
+            pan: -0.01,
+            jitterMs: 5,
+            notes: [
+              ['kick', '16n', 0, 1], ['hat', '32n', 250, 0.44], ['rim', '32n', 500, 0.58], ['hat', '32n', 750, 0.38],
+              ['kick', '16n', 1000, 0.96], ['hat', '32n', 1250, 0.42], ['snare', '16n', 1500, 0.94], ['hat', '32n', 1750, 0.4],
+              ['kick', '16n', 2000, 1], ['hat', '32n', 2250, 0.44], ['rim', '32n', 2500, 0.6], ['hat', '32n', 2750, 0.4],
+              ['kick', '16n', 3000, 1], ['hat', '32n', 3250, 0.44], ['snare', '16n', 3500, 0.96], ['hat', '32n', 3750, 0.38],
+            ],
+          },
         ],
       },
-      {
-        wave: 'triangle',
-        vol: 0.075,
-        attack: 0.025,
-        release: 0.32,
-        filterType: 'lowpass',
-        filterFreq: 1250,
-        filterQ: 0.9,
-        pan: -0.24,
-        detune: -8,
-        notes: [
-          ['C3', '4n', 0], ['Eb3', '4n', 1000], ['F3', '4n', 2000], ['G3', '4n', 3000],
-        ],
-      },
-    ],
+      C: undefined,
+    },
   },
 };
+
+function connectBgmLaneOutput(node: AudioNode, lane: BgmLane, at: number): void {
+  if (!ctx || !bgmGain) return;
+  if (lane.pan && Math.abs(lane.pan) > 0.001 && typeof ctx.createStereoPanner === 'function') {
+    const pan = ctx.createStereoPanner();
+    pan.pan.setValueAtTime(Math.max(-1, Math.min(1, lane.pan)), at);
+    node.connect(pan);
+    pan.connect(bgmGain);
+    return;
+  }
+  node.connect(bgmGain);
+}
+
+function isBgmDrumKind(noteName: string): noteName is BgmDrumKind {
+  return noteName === 'kick' || noteName === 'snare' || noteName === 'hat' || noteName === 'rim';
+}
+
+function playBgmNoiseLaneNote(
+  drum: BgmDrumKind,
+  t0: number,
+  dur: number,
+  lane: BgmLane,
+  velocity = 1,
+): void {
+  if (!ctx || !bgmGain) return;
+  const noise = getCachedNoiseBuffer();
+  if (!noise) return;
+
+  const src = ctx.createBufferSource();
+  src.buffer = noise;
+  src.loop = true;
+  const gain = ctx.createGain();
+
+  const peak = Math.max(0.001, lane.vol * velocity);
+  const attack = Math.max(0.001, lane.attack);
+  const release = Math.max(0.03, lane.release);
+  const hitDur = drum === 'hat'
+    ? Math.max(0.03, Math.min(0.06, dur * 0.45))
+    : drum === 'kick'
+      ? Math.max(0.09, dur * 0.9)
+      : Math.max(0.07, dur * 0.72);
+
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.linearRampToValueAtTime(peak, t0 + attack);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + hitDur + release);
+
+  let node: AudioNode = src;
+  if (drum === 'kick') {
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.setValueAtTime(24, t0);
+    hp.Q.setValueAtTime(0.8, t0);
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(170, t0);
+    lp.Q.setValueAtTime(0.9, t0);
+    node.connect(hp);
+    hp.connect(lp);
+    node = lp;
+  } else if (drum === 'snare') {
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.setValueAtTime(160, t0);
+    hp.Q.setValueAtTime(0.8, t0);
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(1450, t0);
+    bp.Q.setValueAtTime(1.35, t0);
+    node.connect(hp);
+    hp.connect(bp);
+    node = bp;
+  } else if (drum === 'hat') {
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.setValueAtTime(4800, t0);
+    hp.Q.setValueAtTime(0.7, t0);
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(9000, t0);
+    bp.Q.setValueAtTime(0.95, t0);
+    node.connect(hp);
+    hp.connect(bp);
+    node = bp;
+  } else {
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.setValueAtTime(2200, t0);
+    hp.Q.setValueAtTime(1.1, t0);
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(2800, t0);
+    bp.Q.setValueAtTime(2.4, t0);
+    node.connect(hp);
+    hp.connect(bp);
+    node = bp;
+  }
+  node.connect(gain);
+  connectBgmLaneOutput(gain, lane, t0);
+
+  // Kick needs a tonal body for low-end weight.
+  if (drum === 'kick') {
+    const body = ctx.createOscillator();
+    const bodyGain = ctx.createGain();
+    body.type = 'sine';
+    body.frequency.setValueAtTime(132, t0);
+    body.frequency.exponentialRampToValueAtTime(48, t0 + 0.12);
+    bodyGain.gain.setValueAtTime(Math.max(0.0001, peak * 0.95), t0);
+    bodyGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.15);
+    body.connect(bodyGain);
+    connectBgmLaneOutput(bodyGain, lane, t0);
+    body.start(t0);
+    body.stop(t0 + 0.18);
+  }
+
+  src.start(t0, randomFloat(0, 0.25));
+  src.stop(t0 + hitDur + release + 0.05);
+}
 
 function playBgmLaneNote(
   freq: number,
@@ -1054,7 +1429,7 @@ function playBgmLaneNote(
   lane: BgmLane,
   velocity = 1,
 ): void {
-  if (!ctx || !bgmGain) return;
+  if (!ctx || !bgmGain || lane.wave === 'noise') return;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = lane.wave;
@@ -1079,14 +1454,7 @@ function playBgmLaneNote(
   gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur + release);
 
   inNode.connect(gain);
-  if (lane.pan && Math.abs(lane.pan) > 0.001 && typeof ctx.createStereoPanner === 'function') {
-    const pan = ctx.createStereoPanner();
-    pan.pan.setValueAtTime(Math.max(-1, Math.min(1, lane.pan)), t0);
-    gain.connect(pan);
-    pan.connect(bgmGain);
-  } else {
-    gain.connect(bgmGain);
-  }
+  connectBgmLaneOutput(gain, lane, t0);
 
   osc.start(t0);
   osc.stop(t0 + dur + release + 0.03);
@@ -1098,31 +1466,48 @@ function scheduleBgmLanes(now: number, lanes: BgmLane[]): void {
     const swing = lane.swingMs ?? 0;
     for (let i = 0; i < lane.notes.length; i += 1) {
       const [noteName, durKey, offsetMs, velocity = 1] = lane.notes[i];
-      const freq = NOTE_FREQ[noteName];
-      if (!freq) continue;
       const dur = DUR[durKey] || 0.13;
       const jitterOffset = jitter > 0 ? randomFloat(-jitter, jitter) : 0;
       const swingOffset = swing > 0 && i % 2 === 1 ? swing : 0;
       const t0 = now + Math.max(0, offsetMs + jitterOffset + swingOffset) / 1000;
+
+      if (lane.wave === 'noise') {
+        if (!isBgmDrumKind(noteName)) continue;
+        playBgmNoiseLaneNote(noteName, t0, dur, lane, velocity);
+        continue;
+      }
+
+      const freq = NOTE_FREQ[noteName];
+      if (!freq) continue;
       playBgmLaneNote(freq, t0, dur, lane, velocity);
     }
   }
 }
 
-function scheduleBgmLookAhead(track: BgmTrack, pattern: { loopMs: number; lanes: BgmLane[] }): void {
+function resolveBgmSection(pattern: BgmPattern, formIndex: number): BgmSection | null {
+  if (!pattern.form.length) return pattern.sections.A || pattern.sections.B || pattern.sections.C || null;
+  const key = pattern.form[formIndex % pattern.form.length];
+  return pattern.sections[key] || pattern.sections.A || pattern.sections.B || pattern.sections.C || null;
+}
+
+function scheduleBgmLookAhead(track: BgmTrack, pattern: BgmPattern): void {
   if (!ctx || !bgmGain || bgmCurrent !== track) return;
-  const loopSec = pattern.loopMs / 1000;
-  if (loopSec <= 0) return;
+  const firstSection = resolveBgmSection(pattern, bgmFormIndex);
+  if (!firstSection || firstSection.lengthMs <= 0) return;
+  const fallbackSectionSec = firstSection.lengthMs / 1000;
 
   // If timers stalled for too long, resync to "now" instead of backfilling many old loops.
-  if (bgmNextLoopTime < ctx.currentTime - loopSec * 2) {
+  if (bgmNextLoopTime < ctx.currentTime - fallbackSectionSec * 2) {
     bgmNextLoopTime = ctx.currentTime + 0.01;
   }
 
   const horizon = ctx.currentTime + BGM_LOOKAHEAD_SEC;
   while (bgmNextLoopTime <= horizon) {
-    scheduleBgmLanes(bgmNextLoopTime, pattern.lanes);
-    bgmNextLoopTime += loopSec;
+    const section = resolveBgmSection(pattern, bgmFormIndex);
+    if (!section || section.lengthMs <= 0) break;
+    scheduleBgmLanes(bgmNextLoopTime, section.lanes);
+    bgmNextLoopTime += section.lengthMs / 1000;
+    bgmFormIndex += 1;
   }
 }
 
@@ -1137,6 +1522,7 @@ function startBgmLoop(track: BgmTrack): void {
   const pattern = BGM_PATTERNS[track];
   bgmCurrent = track;
   bgmNextLoopTime = ctx.currentTime + 0.01;
+  bgmFormIndex = 0;
   scheduleBgmLookAhead(track, pattern);
   bgmInterval = setInterval(() => {
     scheduleBgmLookAhead(track, pattern);
@@ -1158,6 +1544,7 @@ function stopBgmLoop(): void {
   bgmGain = null;
   bgmCurrent = null;
   bgmNextLoopTime = 0;
+  bgmFormIndex = 0;
 }
 
 function resumeAudioIfNeeded(onReady?: () => void): void {

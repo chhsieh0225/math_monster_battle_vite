@@ -68,7 +68,9 @@ export function useBattleSessionLifecycle({
 
   const beginRun = useCallback((seed: BeginRunSeed = null) => {
     runSeedRef.current += 1;
-    const fallbackSeed = runSeedRef.current * 2654435761;
+    // Non-challenge runs should feel fresh across app reloads.
+    // Keep explicit seed behavior unchanged for deterministic modes (daily challenge).
+    const fallbackSeed = hashSeed(`${runSeedRef.current}:${nowMsTyped()}`) || (runSeedRef.current * 2654435761);
     const seeded = seed == null ? 0 : hashSeed(seed);
     reseed((seeded || fallbackSeed) >>> 0);
     sessionClosedRef.current = false;

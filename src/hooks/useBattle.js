@@ -26,7 +26,6 @@ import {
   MAX_MOVE_LVL,
   TIMER_SEC,
 } from '../data/constants';
-import { STARTERS } from '../data/starters.ts';
 import {
   localizeEnemy,
   localizeEnemyRoster,
@@ -132,28 +131,10 @@ import {
   getDailyChallengeSeed,
   resolveDailyBattleRule,
 } from './battle/challengeRuntime.ts';
+import { DIFF_MODS, pickPartnerStarter } from './battle/partnerStarter.ts';
+import { resolveBattleQuestionConfig } from './battle/questionConfig.ts';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
 import { useBattleAsyncGate, useBattleStateRef } from './useBattleRuntime';
-
-// ── Constants (module-level to avoid re-allocation per render) ──
-const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3]; // diffLevel 0..4
-const PARTNER_BY_STARTER = {
-  fire: "water",
-  water: "electric",
-  grass: "fire",
-  electric: "grass",
-  lion: "water",
-};
-
-function pickPartnerStarter(mainStarter, pickIndex, locale) {
-  if (!mainStarter) return null;
-  const preferId = PARTNER_BY_STARTER[mainStarter.id];
-  const preferred = STARTERS.find((s) => s.id === preferId);
-  if (preferred) return localizeStarter(preferred, locale);
-  const pool = STARTERS.filter((s) => s.id !== mainStarter.id);
-  if (pool.length <= 0) return null;
-  return localizeStarter(pool[pickIndex(pool.length)], locale);
-}
 
 // ═══════════════════════════════════════════════════════════════════
 /** @returns {import('../types/battle').UseBattlePublicApi} */
@@ -333,16 +314,10 @@ export function useBattle() {
     () => resolveDailyBattleRule(dailyPlan, round),
     [dailyPlan, round],
   );
-  const questionTimerSec = useMemo(() => {
-    const raw = Number(currentDailyBattleRule?.timeLimitSec);
-    return Number.isFinite(raw) && raw > 0 ? raw : TIMER_SEC;
-  }, [currentDailyBattleRule]);
-  const questionAllowedOps = useMemo(() => {
-    if (!Array.isArray(currentDailyBattleRule?.questionFocus) || currentDailyBattleRule.questionFocus.length <= 0) {
-      return null;
-    }
-    return [...currentDailyBattleRule.questionFocus];
-  }, [currentDailyBattleRule]);
+  const { questionTimerSec, questionAllowedOps } = useMemo(
+    () => resolveBattleQuestionConfig(currentDailyBattleRule, TIMER_SEC),
+    [currentDailyBattleRule],
+  );
 
   const genBattleQuestion = useCallback(
     (move, diffMod, options) => withRandomSource(rand, () => genQ(move, diffMod, options)),

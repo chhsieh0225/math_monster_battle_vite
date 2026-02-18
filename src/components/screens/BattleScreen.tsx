@@ -15,6 +15,7 @@ import DamagePopup from '../ui/DamagePopup';
 import Particle from '../ui/Particle';
 import TextBox from '../ui/TextBox';
 import AttackEffect from '../effects/AttackEffect';
+import AmbientParticles from '../effects/AmbientParticles';
 import AchievementPopup from '../ui/AchievementPopup';
 import { ACH_MAP } from '../../data/achievements';
 import type {
@@ -771,6 +772,7 @@ export default function BattleScreen({
         {/* Enemy sprite */}
         <div ref={enemySpriteRef} className="battle-sprite-enemy-main" style={enemyMainSpriteStyle}>
           <MonsterSprite svgStr={eSvg} size={eSize} />
+          {showHeavyFx && <AmbientParticles type={enemy.mType || 'grass'} type2={enemy.mType2} size={eSize} seed={`e-${enemy.id}`} />}
         </div>
         {showEnemySub && S.enemySub && eSubSvg && (
           <div className="battle-sprite-enemy-sub" style={enemySubSpriteStyle}>
@@ -820,6 +822,7 @@ export default function BattleScreen({
         {/* Player sprite */}
         <div ref={playerSpriteRef} className="battle-sprite-player-main" style={playerMainSpriteStyle}>
           <MonsterSprite svgStr={pSvg} size={mainPlayerSize} />
+          {showHeavyFx && <AmbientParticles type={starter.type || 'grass'} size={mainPlayerSize} seed={`p-${starter.type}`} count={5} />}
         </div>
         {showAllySub && pSubSvg && (
           <div className="battle-sprite-player-sub" style={playerSubSpriteStyle}>

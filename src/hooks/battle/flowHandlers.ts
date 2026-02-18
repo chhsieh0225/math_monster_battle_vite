@@ -91,6 +91,7 @@ export function createPlayerAnswerHandlers(deps: PlayerAnswerHandlers): PlayerAn
     safeTo: deps.safeTo,
     chance: deps.chance,
     sfx: deps.sfx,
+    getCollectionDamageScale: deps.getCollectionDamageScale,
     setFb: deps.setFb,
     setTC: deps.setTC,
     setTW: deps.setTW,

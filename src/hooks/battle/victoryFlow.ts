@@ -1,4 +1,5 @@
 import type { AchievementId } from '../../types/game';
+import type { CollectionAddResult } from '../../utils/collectionStore.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -66,6 +67,7 @@ type RunVictoryFlowArgs = {
   sfx: { play: (name: string) => void };
   t?: Translator;
   setPendingEvolve: (value: boolean) => void;
+  onCollectionUpdated?: (result: CollectionAddResult) => void;
 };
 
 function formatFallback(template: string, params?: TranslatorParams): string {
@@ -111,6 +113,7 @@ export function runVictoryFlow({
   sfx,
   t,
   setPendingEvolve,
+  onCollectionUpdated,
 }: RunVictoryFlowArgs): void {
   const s = sr.current;
   const enemy = s.enemy;
@@ -158,7 +161,12 @@ export function runVictoryFlow({
   // Persist the drop to the collection store (best-effort fire-and-forget).
   if (drop) {
     import('../../utils/collectionStore.ts')
-      .then(({ addToCollection }) => addToCollection([drop]))
+      .then(({ addToCollection }) => {
+        const result = addToCollection([drop]);
+        if (typeof onCollectionUpdated === 'function') {
+          onCollectionUpdated(result);
+        }
+      })
       .catch(() => { /* non-critical */ });
   }
 

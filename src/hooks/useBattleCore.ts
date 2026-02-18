@@ -61,6 +61,7 @@ import { useTimer } from './useTimer';
 import { useAchievements } from './useAchievements';
 import { useEncyclopedia } from './useEncyclopedia';
 import { useSessionLog } from './useSessionLog';
+import { getCollectionPerks, loadCollection, type CollectionPerks } from '../utils/collectionStore.ts';
 import { useBattleRng } from './useBattleRng';
 import { useBattleUIState } from './useBattleUIState';
 import { useDailyChallengeRun } from './useDailyChallengeRun';
@@ -151,6 +152,7 @@ export function useBattle() {
   const { rand, randInt, chance, pickIndex, reseed } = useBattleRng();
   const UI = useBattleUIState({ rand, randInt });
   const campaignPlanRef = useRef<ReturnType<typeof buildCampaignRunPlan> | null>(null);
+  const [collectionPerks, setCollectionPerks] = useState<CollectionPerks>(() => getCollectionPerks(loadCollection()));
 
   // ──── Screen & mode ────
   const [screen, setScreenState] = useState<ScreenName>('title');
@@ -338,6 +340,12 @@ export function useBattle() {
     (move: MoveVm) => bestEffectiveness(move, enemy),
     [enemy],
   );
+  const getCollectionDamageScale = useCallback((attackType: string) => {
+    const normalizedType = String(attackType || '');
+    const allBonus = Number(collectionPerks.allDamageBonus || 0);
+    const typeBonus = Number(collectionPerks.damageBonusByType[normalizedType] || 0);
+    return 1 + allBonus + typeBonus;
+  }, [collectionPerks]);
 
   const queueDailyChallenge = useCallback((plan: DailyChallengePlan) => {
     queueDailyChallengePlan(plan);
@@ -690,6 +698,9 @@ export function useBattle() {
           tryUnlock,
           applyVictoryAchievements,
           updateEncDefeated,
+          onCollectionUpdated: (result) => {
+            if (result && result.perks) setCollectionPerks(result.perks);
+          },
           sfx,
           t,
         },
@@ -789,6 +800,7 @@ export function useBattle() {
           safeTo,
           chance,
           sfx,
+          getCollectionDamageScale,
           t,
         },
         ui: UI,

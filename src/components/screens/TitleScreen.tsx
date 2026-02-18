@@ -5,6 +5,7 @@ import { VERSION } from '../../data/constants';
 import type { StarterLite, StarterStage } from '../../types/game';
 import { useI18n } from '../../i18n';
 import { localizeStarterList } from '../../utils/contentLocalization.ts';
+import { getCollectionPerks, loadCollection } from '../../utils/collectionStore.ts';
 import './TitleScreen.css';
 
 type TitleStarter = StarterLite & {
@@ -76,6 +77,13 @@ export default function TitleScreen({
   );
   const row1 = starters.slice(0, 3);
   const row2 = starters.slice(3);
+  const collectionPerks = useMemo(() => getCollectionPerks(loadCollection()), []);
+  const activeTitle = collectionPerks.unlockedTitles.length > 0
+    ? collectionPerks.unlockedTitles[collectionPerks.unlockedTitles.length - 1]
+    : null;
+  const activeTitleText = activeTitle
+    ? t(activeTitle.nameKey, activeTitle.nameFallback)
+    : t('title.playerTitle.none', 'No title yet');
   const versionText = String(VERSION);
 
   const featureButtons = [
@@ -110,6 +118,7 @@ export default function TitleScreen({
         </div>
         <h1 className="title-game-name">{t('title.gameName', 'Math Monster')}</h1>
         <div className="title-tagline">{t('title.tagline', 'Math Monster Battle')}</div>
+        <div className="title-player-title">🏷️ {t('title.playerTitle.label', 'Title')}: {activeTitleText}</div>
       </div>
 
       <section className="title-actions" aria-label="Game start actions">

@@ -8,6 +8,11 @@ const enUS = {
 
   "title.gameName": "Math Monster",
   "title.tagline": "Math Monster Battle",
+  "title.playerTitle.label": "Title",
+  "title.playerTitle.none": "No title yet",
+  "title.reward.crownApprentice": "Crown Apprentice",
+  "title.reward.arenaRising": "Arena Rising",
+  "title.reward.dragonBane": "Dragon Bane",
   "title.mode.normal": "Normal",
   "title.mode.timed": "Timed",
   "title.mode.coop": "Co-op",

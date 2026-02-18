@@ -8,6 +8,11 @@ const zhTW = {
 
   "title.gameName": "數學寶可夢",
   "title.tagline": "Math Monster Battle",
+  "title.playerTitle.label": "稱號",
+  "title.playerTitle.none": "尚未解鎖",
+  "title.reward.crownApprentice": "王冠學徒",
+  "title.reward.arenaRising": "競技新星",
+  "title.reward.dragonBane": "屠龍者",
   "title.mode.normal": "一般模式",
   "title.mode.timed": "計時模式",
   "title.mode.coop": "雙人合作",

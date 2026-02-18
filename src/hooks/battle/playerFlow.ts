@@ -164,6 +164,7 @@ type RunPlayerAnswerArgs = {
   setBText: TextSetter;
   handlePlayerPartyKo?: PlayerPartyKoHandler;
   runAllySupportTurn?: AllySupportTurnRunner;
+  getCollectionDamageScale?: (attackType: string) => number;
   t?: Translator;
 };
 
@@ -258,6 +259,7 @@ export function runPlayerAnswer({
   setBText,
   handlePlayerPartyKo,
   runAllySupportTurn,
+  getCollectionDamageScale,
   t,
 }: RunPlayerAnswerArgs): void {
   try {
@@ -393,6 +395,7 @@ export function runPlayerAnswer({
         const s2 = sr.current;
         const dmgType = bestAttackType(move, s2.enemy);
         const vfxType = move.risky && move.type2 ? move.type2 : dmgType;
+        const collectionDamageScale = Math.max(1, getCollectionDamageScale?.(dmgType) ?? 1);
 
         const effectMeta = {
           idx: moveIdx,
@@ -427,6 +430,7 @@ export function runPlayerAnswer({
             playerHp: getAttackerHp(s3),
             attackerMaxHp: getAttackerMaxHp(s3),
             bossPhase: s3.bossPhase,
+            collectionDamageScale,
             chance,
           });
           const {

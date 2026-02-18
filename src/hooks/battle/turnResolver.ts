@@ -112,6 +112,7 @@ type PlayerStrikeParams = {
   playerHp: number;
   attackerMaxHp?: number;
   bossPhase: number;
+  collectionDamageScale?: number;
   chance?: ChanceFn | null;
 };
 
@@ -390,6 +391,7 @@ export function resolvePlayerStrike({
   playerHp,
   attackerMaxHp = PLAYER_MAX_HP,
   bossPhase,
+  collectionDamageScale = 1,
   chance = null,
 }: PlayerStrikeParams): PlayerStrikeResult {
   const leveledPower = move.basePower + moveLvl * move.growth;
@@ -420,6 +422,12 @@ export function resolvePlayerStrike({
   if (braveActive) {
     const braveMult = 1 + ((maxHpForBrave - playerHp) / maxHpForBrave) * TRAIT_BALANCE.player.braveMaxBonus;
     dmg = Math.round(dmg * braveMult);
+  }
+  const clampedCollectionScale = Number.isFinite(collectionDamageScale) && collectionDamageScale > 0
+    ? collectionDamageScale
+    : 1;
+  if (clampedCollectionScale !== 1) {
+    dmg = Math.round(dmg * clampedCollectionScale);
   }
 
   if (bossPhase >= 3) dmg = Math.round(dmg * TRAIT_BALANCE.player.bossPhase3DamageScale);

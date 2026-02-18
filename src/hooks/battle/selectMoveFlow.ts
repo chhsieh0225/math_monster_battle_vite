@@ -1,11 +1,11 @@
-import type { BattleMode, BattlePhase, MoveVm, QuestionVm, StarterVm } from '../../types/battle';
+import type { MoveVm, QuestionVm, StarterVm } from '../../types/battle';
 
 type BattleStarter = StarterVm | null;
 type BattleQuestion = QuestionVm;
 
 type BattleState = {
-  phase: BattlePhase;
-  battleMode: BattleMode;
+  phase: string;
+  battleMode: string;
   pvpTurn: 'p1' | 'p2';
   pvpChargeP1: number;
   pvpChargeP2: number;
@@ -20,16 +20,16 @@ type GenQuestion = (
   diffMod: number,
   options?: {
     t?: (key: string, fallback?: string, params?: Record<string, string | number>) => string;
-    allowedOps?: readonly string[];
+    allowedOps?: string[];
   },
-) => BattleQuestion;
+) => BattleQuestion | null;
 
 type RunSelectMoveFlowArgs = {
   index: number;
   state: SafeState;
   timedMode: boolean;
   questionTimeLimitSec?: number | null;
-  questionAllowedOps?: readonly string[] | null;
+  questionAllowedOps?: string[] | null;
   diffMods: readonly number[];
   t?: (key: string, fallback?: string, params?: Record<string, string | number>) => string;
   getActingStarter: (state: SafeState) => BattleStarter;
@@ -41,9 +41,9 @@ type RunSelectMoveFlowArgs = {
   setSelIdx: (value: number) => void;
   setDiffLevel: (value: number) => void;
   setQ: (value: BattleQuestion | null) => void;
-  setFb: (value: unknown) => void;
+  setFb: (value: null) => void;
   setAnswered: (value: boolean) => void;
-  setPhase: (value: BattlePhase) => void;
+  setPhase: (value: string) => void;
 };
 
 function isFn(value: unknown): value is (...args: unknown[]) => unknown {

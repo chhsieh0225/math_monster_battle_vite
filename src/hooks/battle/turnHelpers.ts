@@ -4,7 +4,17 @@ import type { StarterVm } from '../../types/battle';
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 
-type StarterLike = StarterVm;
+type StarterLike = {
+  id?: string;
+  name?: string;
+  type?: string;
+  moves?: Array<{
+    name?: string;
+    type?: string;
+    [key: string]: unknown;
+  }>;
+  [key: string]: unknown;
+};
 
 type TurnState = {
   battleMode?: string;
@@ -42,10 +52,12 @@ export function getPvpTurnName(
   return state?.pvpStarter2?.name || tr(t, 'battle.pvp.player2', 'Player 2');
 }
 
-export function getActingStarter(state: TurnState | null | undefined): StarterLike | null {
+export function getActingStarter(state: TurnState | null | undefined): StarterVm | null {
   if (!state) return null;
   if (state.battleMode === 'pvp') {
-    return state.pvpTurn === 'p1' ? state.starter || null : state.pvpStarter2 || null;
+    return state.pvpTurn === 'p1'
+      ? (state.starter as StarterVm | null)
+      : (state.pvpStarter2 as StarterVm | null);
   }
 
   const isCoopSubActive = (
@@ -54,5 +66,7 @@ export function getActingStarter(state: TurnState | null | undefined): StarterLi
     && state.allySub
     && (state.pHpSub || 0) > 0
   );
-  return isCoopSubActive ? (state.allySub || null) : (state.starter || null);
+  return isCoopSubActive
+    ? (state.allySub as StarterVm | null)
+    : (state.starter as StarterVm | null);
 }

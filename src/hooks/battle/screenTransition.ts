@@ -1,10 +1,12 @@
+import type { ScreenName } from '../../types/battle';
+
 type ClearTimer = () => void;
 type InvalidateAsyncWork = () => void;
-type SetScreenState = (nextScreen: string) => void;
+type SetScreenState = (nextScreen: ScreenName) => void;
 
 type RunScreenTransitionArgs = {
-  prevScreen: string | undefined;
-  nextScreen: string;
+  prevScreen: ScreenName | undefined;
+  nextScreen: ScreenName;
   clearTimer: ClearTimer;
   invalidateAsyncWork: InvalidateAsyncWork;
   setScreenState: SetScreenState;

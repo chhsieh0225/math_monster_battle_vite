@@ -11,6 +11,7 @@ type ProgressResult = {
 };
 
 type EnemyLite = {
+  id: string;
   lvl?: number;
   name?: string;
   drops?: string[];

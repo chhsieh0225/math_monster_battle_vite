@@ -1,5 +1,6 @@
 import { applyGameCompletionAchievements } from './achievementFlow.ts';
 import { tryReturnToMenu } from './menuResetGuard.ts';
+import type { ScreenName } from '../../types/battle';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -9,6 +10,9 @@ type SessionBattleState = {
     id?: string;
     name?: string;
   } | null;
+  battleMode?: string;
+  allySub?: unknown;
+  pHpSub?: number;
   pHp?: number;
   tW?: number;
   timedMode?: boolean;
@@ -37,7 +41,7 @@ type RunQuitGameControllerArgs = {
   appendQuitEventIfOpen: (state: SessionStateRef['current']) => void;
   sr: SessionStateRef;
   endSession: (isCompleted: boolean, reasonOverride?: EndSessionReason) => void;
-  setScreen: (screen: string) => void;
+  setScreen: (screen: ScreenName) => void;
 };
 
 type RunFinishGameControllerArgs = {
@@ -46,7 +50,7 @@ type RunFinishGameControllerArgs = {
   setEncData: Parameters<typeof applyGameCompletionAchievements>[0]['setEncData'];
   encTotal: Parameters<typeof applyGameCompletionAchievements>[0]['encTotal'];
   endSession: (isCompleted: boolean, reasonOverride?: EndSessionReason) => void;
-  setScreen: (screen: string) => void;
+  setScreen: (screen: ScreenName) => void;
 };
 
 type RunHandleFreezeControllerArgs = {

@@ -39,6 +39,7 @@ export type MoveVm = {
   color: string;
   basePower: number;
   growth: number;
+  range?: [number, number];
   type: string;
   ops?: string[];
   bg?: string;
@@ -96,7 +97,7 @@ export type QuestionVm = {
 
 export type FeedbackVm = {
   correct: boolean;
-  answer: number;
+  answer?: number;
   steps?: string[];
 };
 
@@ -116,7 +117,7 @@ export type ParticleVm = {
 };
 
 export type AttackEffectVm = {
-  type: "fire" | "electric" | "water" | "grass" | "dark" | "light";
+  type: string;
   idx: number;
   lvl: number;
   targetSide?: "enemy" | "player";
@@ -192,7 +193,7 @@ export type UseBattleState = {
   mHits: number[];
   mLvls: number[];
   mLvlUp: number | null;
-  phase: BattlePhase;
+  phase: string;
   selIdx: number | null;
   q: QuestionVm | null;
   fb: FeedbackVm | null;

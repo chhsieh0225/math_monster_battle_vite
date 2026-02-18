@@ -50,7 +50,7 @@ type StarterLike = {
 };
 
 type BattleQuestion = {
-  answer: number;
+  answer?: number;
   steps?: string[];
 };
 

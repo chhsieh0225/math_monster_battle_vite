@@ -1,4 +1,4 @@
-import type { UseBattleActions, BattleMode, ScreenName } from '../../types/battle';
+import type { UseBattleActions, BattleMode, ScreenName, StarterVm } from '../../types/battle';
 import type { DailyChallengePlan, StreakTowerPlan } from '../../types/challenges';
 
 export type BuildUseBattleActionsArgs = {
@@ -9,9 +9,13 @@ export type BuildUseBattleActionsArgs = {
   queueDailyChallenge: (plan: DailyChallengePlan) => void;
   queueTowerChallenge: (plan: StreakTowerPlan) => void;
   clearChallengeRun: () => void;
-  setStarterLocalized: (starter: unknown) => void;
-  setPvpStarter2Localized: (starter: unknown) => void;
-  startGame: (starter?: unknown, mode?: BattleMode, starter2?: unknown) => void;
+  setStarterLocalized: (starter: StarterVm | null) => void;
+  setPvpStarter2Localized: (starter: StarterVm | null) => void;
+  startGame: (
+    starter?: StarterVm | null,
+    mode?: BattleMode | null,
+    starter2?: StarterVm | null,
+  ) => void;
   selectMove: (idx: number) => void;
   onAns: (choice: number) => void;
   advance: () => void;

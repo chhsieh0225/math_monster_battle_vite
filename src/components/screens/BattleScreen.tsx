@@ -466,7 +466,7 @@ export default function BattleScreen({
   const effectTarget = S.atkEffect?.targetSide === "player" ? pTarget : eTarget;
   const question = S.q;
   const feedback = S.fb;
-  const selectedMove = activeStarter && S.selIdx !== null
+  const selectedMove = activeStarter && S.selIdx != null
     ? activeStarter.moves[S.selIdx]
     : null;
   const questionTypeLabel = !question
@@ -945,7 +945,7 @@ export default function BattleScreen({
             <div className="battle-question-type">{questionTypeLabel}</div>
             <div className="question-expression battle-question-expression">{question.display}{question.op && question.op.startsWith("unknown") ? "" : " = ?"}</div>
           </div>
-          {feedback && <div className={`battle-feedback ${feedback.correct ? "is-correct" : "is-wrong"}`}>{feedback.correct ? t("battle.feedback.hit", "✅ Hit!") : t("battle.feedback.answer", "❌ Answer is {answer}", { answer: feedback.answer })}</div>}
+          {feedback && <div className={`battle-feedback ${feedback.correct ? "is-correct" : "is-wrong"}`}>{feedback.correct ? t("battle.feedback.hit", "✅ Hit!") : t("battle.feedback.answer", "❌ Answer is {answer}", { answer: feedback.answer ?? '?' })}</div>}
           {feedback && !feedback.correct && (feedback.steps?.length || 0) > 0 && (
             <div className="battle-feedback-steps">
               <div className="battle-feedback-steps-title">📝 {t("battle.feedback.steps", "Solution Steps:")}</div>

@@ -16,7 +16,7 @@ type BattleState = {
   phase?: string;
   screen?: string;
   q?: BattleQuestion | null;
-  selIdx?: number;
+  selIdx?: number | null;
   diffLevel?: number;
   round?: number;
   timedMode?: boolean;

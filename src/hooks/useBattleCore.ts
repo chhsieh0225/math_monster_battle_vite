@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 /**
  * useBattle — Core game-state hook.
  *
@@ -354,12 +352,16 @@ export function useBattle() {
 
   const genBattleQuestion = useCallback(
     (
-      move: QuestionGeneratorMove | undefined,
+      move: MoveVm | undefined,
       diffMod: number,
       options?: QuestionGeneratorOptions,
     ) => {
       if (!move) return null;
-      return withRandomSource(rand, () => genQ(move, diffMod, options));
+      const moveConfig: QuestionGeneratorMove = {
+        range: move.range || [1, 10],
+        ops: move.ops || ['+', '-'],
+      };
+      return withRandomSource(rand, () => genQ(moveConfig, diffMod, options));
     },
     [rand],
   );

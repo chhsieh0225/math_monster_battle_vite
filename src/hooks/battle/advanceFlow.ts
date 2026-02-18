@@ -1,6 +1,7 @@
 import { buildNextEvolvedAlly, isCoopBattleMode } from './coopFlow.ts';
 import { processPvpTurnStart } from './pvpFlow.ts';
-import type { StarterVm } from '../../types/battle';
+import type { ScreenName, StarterVm } from '../../types/battle';
+import type { AchievementId } from '../../types/game';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -27,8 +28,8 @@ type TextSetter = (value: string) => void;
 type ContinueFromVictoryFlowArgs = {
   state: BattleState;
   enemiesLength: number;
-  setScreen: (value: string) => void;
-  dispatchBattle: (action: { type: string }) => void;
+  setScreen: (value: ScreenName) => void;
+  dispatchBattle: (action: { type: 'promote_enemy_sub' }) => void;
   localizeEnemy: (enemy: EnemyLite | null, locale?: string) => EnemyLite | null;
   locale?: string;
   setBText: TextSetter;
@@ -46,7 +47,7 @@ type HandlePendingEvolutionArgs = {
   pendingEvolveRef: { current: boolean };
   state: BattleState;
   setPStg: NumberSetter;
-  tryUnlock: (id: string) => void;
+  tryUnlock: (id: AchievementId) => void;
   getStageMaxHp: (stageIdx?: number) => number;
   setPHp: NumberSetter;
   setAllySub: (value: StarterLite | null) => void;
@@ -54,7 +55,7 @@ type HandlePendingEvolutionArgs = {
   getStarterMaxHp: (starter: StarterLite | null | undefined) => number;
   setMLvls: (value: number[] | ((prev: number[]) => number[])) => void;
   maxMoveLvl: number;
-  setScreen: (value: string) => void;
+  setScreen: (value: ScreenName) => void;
 };
 
 type PvpTurnStartArgs = Parameters<typeof processPvpTurnStart>[0];

@@ -1,24 +1,19 @@
 import { useCallback, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { EFX } from '../data/constants';
+import type {
+  AttackEffectVm,
+  FeedbackVm,
+  QuestionVm,
+} from '../types/battle';
 
 type RngDeps = {
   rand: () => number;
   randInt: (min: number, max: number) => number;
 };
 
-type BattleQuestion = {
-  op?: string;
-  answer?: number | string;
-  steps?: string[];
-  [key: string]: unknown;
-};
-
-type FeedbackState = {
-  correct: boolean;
-  answer?: unknown;
-  steps?: string[];
-} | null;
+type BattleQuestion = QuestionVm;
+type FeedbackState = FeedbackVm | null;
 
 type DamageIndicator = {
   id: number;
@@ -35,12 +30,7 @@ type ParticleEffect = {
   y: number;
 };
 
-type AttackEffectState = {
-  type: string;
-  idx: number;
-  lvl: number;
-  targetSide?: 'player' | 'enemy';
-} | null;
+type AttackEffectState = AttackEffectVm | null;
 
 type EffectMessage = {
   text: string;

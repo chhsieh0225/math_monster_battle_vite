@@ -11,6 +11,7 @@ import {
   getAttackEffectHitDelay,
   getAttackEffectNextStepDelay,
 } from '../../utils/effectTiming.ts';
+import type { AchievementId } from '../../types/game';
 import { effectOrchestrator } from './effectOrchestrator.ts';
 import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
 import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
@@ -44,7 +45,7 @@ type BattleEnemy = {
 };
 
 type BattleQuestion = {
-  answer: number;
+  answer?: number;
   steps?: string[];
 };
 
@@ -59,17 +60,17 @@ type BattleRuntimeState = {
   specDef: boolean;
   mHits: number[];
   mLvls: number[];
-  selIdx: number;
+  selIdx: number | null;
   pStg: number;
   pLvl?: number;
-  enemy: BattleEnemy;
+  enemy: BattleEnemy | null;
   cursed: boolean;
   bossPhase: number;
   bossCharging: boolean;
   eHp: number;
   burnStack: number;
   staticStack: number;
-  q: BattleQuestion;
+  q: BattleQuestion | null;
   phase?: string;
   screen?: string;
 };
@@ -131,7 +132,7 @@ type RunPlayerAnswerArgs = {
   setCharge: NumberSetter;
   setMaxStreak: NumberSetter;
   setSpecDef: BoolSetter;
-  tryUnlock: (id: string) => void;
+  tryUnlock: (id: AchievementId) => void;
   setMLvls: NumberArraySetter;
   setMLvlUp: NullableNumberSetter;
   setMHits: NumberArraySetter;
@@ -256,6 +257,8 @@ export function runPlayerAnswer({
   const s = sr.current;
   if (!s || !move || !starter) return;
   if (!isBattleActiveState(s)) return;
+  if (s.selIdx == null || !s.enemy) return;
+  const moveIdx = s.selIdx;
 
   const isBattleActive = (): boolean => isBattleActiveState(sr.current);
   const safeToIfBattleActive = (fn: () => void, ms: number): void => (
@@ -354,21 +357,21 @@ export function runPlayerAnswer({
     if (ns >= 10) tryUnlock('streak_10');
 
     const nh = [...s.mHits];
-    nh[s.selIdx] += 1;
-    const cl = s.mLvls[s.selIdx];
+    nh[moveIdx] += 1;
+    const cl = s.mLvls[moveIdx];
     let didLvl = false;
-    if (nh[s.selIdx] >= HITS_PER_LVL_N * cl && cl < MAX_MOVE_LVL_N) {
+    if (nh[moveIdx] >= HITS_PER_LVL_N * cl && cl < MAX_MOVE_LVL_N) {
       const np2 = move.basePower + cl * move.growth;
-      if (np2 <= POWER_CAPS_N[s.selIdx]) {
+      if (np2 <= POWER_CAPS_N[moveIdx]) {
         const nl = [...s.mLvls];
-        nl[s.selIdx] += 1;
+        nl[moveIdx] += 1;
         setMLvls(nl);
         didLvl = true;
-        nh[s.selIdx] = 0;
-        setMLvlUp(s.selIdx);
+        nh[moveIdx] = 0;
+        setMLvlUp(moveIdx);
         safeToIfBattleActive(() => setMLvlUp(null), 2000);
         sfx.play('levelUp');
-        if (nl[s.selIdx] >= MAX_MOVE_LVL_N) tryUnlock('move_max');
+        if (nl[moveIdx] >= MAX_MOVE_LVL_N) tryUnlock('move_max');
         if (nl.every((v) => v >= MAX_MOVE_LVL_N)) tryUnlock('all_moves_max');
       }
     }
@@ -385,8 +388,8 @@ export function runPlayerAnswer({
         const vfxType = move.risky && move.type2 ? move.type2 : dmgType;
 
         const effectMeta = {
-          idx: s2.selIdx,
-          lvl: s2.mLvls[s2.selIdx],
+          idx: moveIdx,
+          lvl: s2.mLvls[moveIdx],
         };
         const effectTimeline = {
           hitDelay: getAttackEffectHitDelay(vfxType),
@@ -399,13 +402,17 @@ export function runPlayerAnswer({
 
         safeToIfBattleActive(() => {
           const s3 = sr.current;
+          if (!s3.enemy) {
+            setAtkEffect(null);
+            return;
+          }
           const strike = resolvePlayerStrike({
             move,
             enemy: s3.enemy,
-            moveIdx: s3.selIdx,
-            moveLvl: s3.mLvls[s3.selIdx],
+            moveIdx,
+            moveLvl: s3.mLvls[moveIdx],
             didLevel: didLvl,
-            maxPower: POWER_CAPS_N[s3.selIdx],
+            maxPower: POWER_CAPS_N[moveIdx],
             streak: ns,
             stageBonus: isSubAttacker ? getStarterStageIdx(s3.allySub) : s3.pStg,
             cursed: s3.cursed,
@@ -479,7 +486,7 @@ export function runPlayerAnswer({
           }
 
           if (starter.type === 'grass') {
-            const heal = TRAIT_BALANCE.player.grassHealPerMoveLevel * s3.mLvls[s3.selIdx];
+            const heal = TRAIT_BALANCE.player.grassHealPerMoveLevel * s3.mLvls[moveIdx];
             healAttacker(heal);
             sfx.play('heal');
             safeToIfBattleActive(() => addD(`+${heal}`, isSubAttacker ? 112 : 50, isSubAttacker ? 146 : 165, '#22c55e'), 500);
@@ -487,7 +494,7 @@ export function runPlayerAnswer({
 
           let willFreeze = false;
           if (starter.type === 'water' && afterHp > 0) {
-            if (chance(freezeChance(s3.mLvls[s3.selIdx]))) {
+            if (chance(freezeChance(s3.mLvls[moveIdx]))) {
               willFreeze = true;
               setFrozen(true);
               frozenR.current = true;
@@ -574,8 +581,8 @@ export function runPlayerAnswer({
     if (move.risky) {
       const sd = resolveRiskySelfDamage({
         move,
-        moveLvl: s2.mLvls[s2.selIdx],
-        moveIdx: s2.selIdx,
+        moveLvl: s2.mLvls[moveIdx],
+        moveIdx,
       });
       const nh2 = applyDamageToAttacker({
         state: s2,

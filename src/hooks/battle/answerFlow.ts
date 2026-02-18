@@ -29,7 +29,7 @@ type BattleQuestion = {
 type BattleState = {
   battleMode?: string;
   allySub?: StarterLite | null;
-  selIdx?: number;
+  selIdx?: number | null;
   q?: BattleQuestion | null;
   timedMode?: boolean;
   diffLevel?: number;

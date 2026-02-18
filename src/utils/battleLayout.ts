@@ -67,7 +67,7 @@ export function resolveBattleLayout({
     : isCrazyDragon ? 260
     : isBoss ? 230
       : isLargeMonster ? 290
-      : isGolumn ? 250
+      : isGolumn ? 230
         : (isDragonOrFire || isEvolvedSlime) ? 190
           : enemyIsEvolved ? 155 : 120;
   const enemyScale = dualUnits ? (compactDual ? 0.92 : 0.98) : 1;

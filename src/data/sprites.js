@@ -131,6 +131,6 @@ export const playerlion1SVG = makeSvgFnFill('player_lion1', 677, 369);
 export const playerlion2SVG = makeSvgFnFill('player_lion2', 677, 369);
 export const bossHydraSVG = makeSvgFnFit('boss_hydra', 677, 369);
 export const bossCrazyDragonSVG = makeSvgFnFitFlip('boss_crazy_dragon', 677, 369);
-export const bossSwordGodSVG = makeSvgFnFit('boss_sword_god', 409, 610);
+export const bossSwordGodSVG = makeSvgFnFill('boss_sword_god', 409, 610);
 export const golumnSVG = makeSvgFn('golumn');
 export const golumnMudSVG = makeSvgFn('golumn_mud');

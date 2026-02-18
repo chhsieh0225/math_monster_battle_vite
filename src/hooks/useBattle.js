@@ -2,8 +2,9 @@
  * useBattle — Core game-state hook.
  *
  * Owns every piece of mutable state that was previously crammed into App.jsx.
- * Returns a flat object of state values + action callbacks that the render
- * shell (App.jsx) can destructure.
+ * Returns an explicit API contract:
+ *   { state, actions, view }
+ * so render layers can consume stable slices without flat-field coupling.
  *
  * Design notes
  * ────────────

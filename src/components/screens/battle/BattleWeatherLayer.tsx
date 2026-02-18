@@ -8,6 +8,7 @@ type BattleWeatherLayerProps = {
   sceneType: string;
   seed: string;
   enabled: boolean;
+  reduced?: boolean;
 };
 
 type WeatherCssVars = CSSProperties & Record<`--${string}`, string | number>;
@@ -51,8 +52,10 @@ type DustVm = {
   style: WeatherCssVars;
 };
 
-function buildRain(seed: string, dense: boolean): RainDropVm[] {
-  const count = dense ? 68 : 46;
+function buildRain(seed: string, dense: boolean, reduced: boolean): RainDropVm[] {
+  const count = dense
+    ? (reduced ? 34 : 56)
+    : (reduced ? 30 : 46);
   return Array.from({ length: count }, (_, i) => {
     const x = seedRange(`weather-rain-x-${seed}-${i}`, 1, 98);
     const h = seedRange(`weather-rain-h-${seed}-${i}`, 24, dense ? 42 : 34);
@@ -72,8 +75,8 @@ function buildRain(seed: string, dense: boolean): RainDropVm[] {
   });
 }
 
-function buildSnow(seed: string): SnowFlakeVm[] {
-  const count = 36;
+function buildSnow(seed: string, reduced: boolean): SnowFlakeVm[] {
+  const count = reduced ? 24 : 36;
   return Array.from({ length: count }, (_, i) => {
     const x = seedRange(`weather-snow-x-${seed}-${i}`, 2, 98);
     const size = seedRange(`weather-snow-s-${seed}-${i}`, 3, 9);
@@ -95,8 +98,9 @@ function buildSnow(seed: string): SnowFlakeVm[] {
   });
 }
 
-function buildFog(seed: string): FogBandVm[] {
-  return Array.from({ length: 5 }, (_, i) => {
+function buildFog(seed: string, reduced: boolean): FogBandVm[] {
+  const count = reduced ? 3 : 5;
+  return Array.from({ length: count }, (_, i) => {
     const top = seedRange(`weather-fog-top-${seed}-${i}`, 6 + i * 10, 22 + i * 12);
     const left = seedRange(`weather-fog-left-${seed}-${i}`, -26, 72);
     const width = seedRange(`weather-fog-w-${seed}-${i}`, 42, 72);
@@ -119,8 +123,8 @@ function buildFog(seed: string): FogBandVm[] {
   });
 }
 
-function buildDust(seed: string): DustVm[] {
-  const count = 32;
+function buildDust(seed: string, reduced: boolean): DustVm[] {
+  const count = reduced ? 22 : 32;
   return Array.from({ length: count }, (_, i) => {
     const top = seedRange(`weather-dust-top-${seed}-${i}`, 10, 85);
     const size = seedRange(`weather-dust-s-${seed}-${i}`, 2.4, 6.5);
@@ -146,20 +150,28 @@ export const BattleWeatherLayer = memo(function BattleWeatherLayer({
   sceneType,
   seed,
   enabled,
+  reduced = false,
 }: BattleWeatherLayerProps) {
   const weather = resolveWeather(sceneType);
   const weatherActive = enabled && weather !== 'none';
+  const reducedWeather = reduced;
 
   const rainDrops = useMemo(
-    () => (!weatherActive || (weather !== 'rain' && weather !== 'storm') ? [] : buildRain(seed, weather === 'storm')),
-    [weatherActive, weather, seed],
+    () => (!weatherActive || (weather !== 'rain' && weather !== 'storm') ? [] : buildRain(seed, weather === 'storm', reducedWeather)),
+    [weatherActive, weather, seed, reducedWeather],
   );
-  const snowFlakes = useMemo(() => (!weatherActive || weather !== 'snow' ? [] : buildSnow(seed)), [weatherActive, weather, seed]);
+  const snowFlakes = useMemo(
+    () => (!weatherActive || weather !== 'snow' ? [] : buildSnow(seed, reducedWeather)),
+    [weatherActive, weather, seed, reducedWeather],
+  );
   const fogBands = useMemo(
-    () => (!weatherActive || (weather !== 'fog' && weather !== 'storm') ? [] : buildFog(seed)),
-    [weatherActive, weather, seed],
+    () => (!weatherActive || (weather !== 'fog' && weather !== 'storm') ? [] : buildFog(seed, reducedWeather)),
+    [weatherActive, weather, seed, reducedWeather],
   );
-  const dustParticles = useMemo(() => (!weatherActive || weather !== 'dust' ? [] : buildDust(seed)), [weatherActive, weather, seed]);
+  const dustParticles = useMemo(
+    () => (!weatherActive || weather !== 'dust' ? [] : buildDust(seed, reducedWeather)),
+    [weatherActive, weather, seed, reducedWeather],
+  );
   const lightningDelay1 = useMemo(() => seedRange(`weather-storm-lightning-a-${seed}`, 3.2, 6.8), [seed]);
   const lightningDelay2 = useMemo(() => seedRange(`weather-storm-lightning-b-${seed}`, 6.4, 11.8), [seed]);
   const lightningStyle1: WeatherCssVars = { '--wdelay': `${lightningDelay1.toFixed(3)}s` };
@@ -193,7 +205,7 @@ export const BattleWeatherLayer = memo(function BattleWeatherLayer({
       {weather === 'storm' && (
         <>
           <div className="battle-weather-lightning" style={lightningStyle1} />
-          <div className="battle-weather-lightning battle-weather-lightning-secondary" style={lightningStyle2} />
+          {!reducedWeather && <div className="battle-weather-lightning battle-weather-lightning-secondary" style={lightningStyle2} />}
         </>
       )}
 

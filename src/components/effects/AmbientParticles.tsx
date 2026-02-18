@@ -212,7 +212,7 @@ export default function AmbientParticles({ type, type2, size = 160, seed = 'defa
       });
     }
     return result;
-  }, [type, type2, seed, count, totalCount, primaryCount, theme, theme2]);
+  }, [seed, totalCount, primaryCount, theme, theme2]);
 
   return (
     <div

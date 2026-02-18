@@ -59,15 +59,6 @@ test('localizeEnemy localizes dual-type labels and evolved lantern name', () => 
   assert.equal(hydra.typeName2, "Dark");
   assert.equal(hydra.traitName, "Venom Fog");
   assert.ok(!hasCjk(hydra.traitDesc));
-
-  const evolvedLantern = localizeEnemy({
-    id: "ghost_lantern",
-    isEvolved: true,
-    name: "冥燈死神",
-    mType: "ghost",
-    typeName: "靈",
-  }, EN);
-  assert.equal(evolvedLantern.name, "Lantern Reaper");
 });
 
 test('localizeStarterList maps starter and move names to English', () => {

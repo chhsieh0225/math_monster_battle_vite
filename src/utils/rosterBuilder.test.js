@@ -42,7 +42,7 @@ test('buildRoster uses config-driven random swap candidates', () => {
   assert.equal(swapped.id, forcedCandidate.monsterId);
 });
 
-test('buildRoster uses double-stage waves and keeps scene type override', () => {
+test('buildRoster scene follows the spawned monster type', () => {
   const roster = buildRoster(pickFirst, 'double');
 
   assert.equal(roster.length, DOUBLE_STAGE_WAVES.length);
@@ -57,7 +57,7 @@ test('buildRoster uses double-stage waves and keeps scene type override', () => 
       ? !currentIsSlime
       : wave.monsterId !== mon.id;
     if (replaced) return;
-    const expectedScene = wave.sceneType || mon.mType;
+    const expectedScene = BALANCE_CONFIG.monsters.bossSceneById[mon.id] || mon.mType;
     assert.equal(mon.sceneMType, expectedScene);
   });
 });

@@ -133,8 +133,10 @@ export function buildRoster(
     const svgFn = evolvedVariant
       ? evolvedVariant.svgFn
       : (isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn));
+    const resolvedMonsterType = evolvedVariant?.mType || variant?.mType || b.mType;
     const bossSceneType = BOSS_SCENE_BY_ID[resolvedId];
-    const resolvedSceneType = bossSceneType || wave.sceneType || b.mType;
+    // Scene should follow the actual spawned monster type after random replacement.
+    const resolvedSceneType = bossSceneType || resolvedMonsterType;
 
     return {
       ...b,

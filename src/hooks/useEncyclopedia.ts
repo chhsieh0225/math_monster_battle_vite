@@ -29,8 +29,8 @@ type UseEncyclopediaResult = {
 
 function normalizeEncyclopediaData(data: EncyclopediaData | null | undefined): EncyclopediaState {
   return {
-    encountered: { ...(data?.encountered ?? {}) } as EncyclopediaCounts,
-    defeated: { ...(data?.defeated ?? {}) } as EncyclopediaCounts,
+    encountered: { ...(data?.encountered ?? {}) },
+    defeated: { ...(data?.defeated ?? {}) },
   };
 }
 

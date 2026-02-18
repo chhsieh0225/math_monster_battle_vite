@@ -53,13 +53,9 @@ type UseBattleSessionLifecycleResult = {
   appendQuitEventIfOpen: (state: SessionStateSnapshot) => void;
 };
 
-type CryptoLike = {
-  getRandomValues?: (values: Uint32Array) => Uint32Array;
-};
-
 function getEntropySeed(runCount: number): number {
   const entropyBase = hashSeed(`${runCount}:${nowMs()}`) || (runCount * 2654435761);
-  const cryptoLike = (globalThis as { crypto?: CryptoLike }).crypto;
+  const cryptoLike = globalThis.crypto;
   if (cryptoLike?.getRandomValues) {
     const buffer = new Uint32Array(1);
     cryptoLike.getRandomValues(buffer);

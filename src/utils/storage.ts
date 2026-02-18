@@ -1,14 +1,21 @@
 const DEV = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
 const CHALLENGE_PREFIX = 'mathMonsterBattle_challenge_';
 
+function isUnknownArray(value: unknown): value is unknown[] {
+  return Array.isArray(value);
+}
+
 function warn(action: string, key: string, error: unknown): void {
   if (!DEV) return;
   console.warn(`[storage] ${action} failed for "${key}"`, error);
 }
 
-function cloneFallback<T>(fallback: T): T {
-  if (Array.isArray(fallback)) return [...fallback] as T;
-  if (fallback && typeof fallback === 'object') return { ...(fallback as Record<string, unknown>) } as T;
+function cloneFallback<T extends unknown[]>(fallback: T): T;
+function cloneFallback<T extends Record<string, unknown>>(fallback: T): T;
+function cloneFallback<T>(fallback: T): T;
+function cloneFallback(fallback: unknown): unknown {
+  if (isUnknownArray(fallback)) return [...fallback];
+  if (fallback && typeof fallback === 'object') return { ...fallback };
   return fallback;
 }
 

@@ -39,9 +39,9 @@ function resolveStaticLocale(): StaticLocaleCode {
   return "zh-TW";
 }
 
-const STATIC_DICTS: Record<StaticLocaleCode, Record<string, string>> = {
-  "zh-TW": zhTW as Record<string, string>,
-  "en-US": enUS as Record<string, string>,
+const STATIC_DICTS: Readonly<Record<StaticLocaleCode, Record<string, string>>> = {
+  "zh-TW": { ...zhTW },
+  "en-US": { ...enUS },
 };
 
 function staticT(key: string, fallback: string): string {

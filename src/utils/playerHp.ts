@@ -27,7 +27,7 @@ export function getStarterStageIdx(starter: StarterWithStage, fallbackStageIdx =
  * useBattle passes pLvl through.
  */
 export function getStageMaxHp(stageIdx = 0): number {
-  return (PLAYER_MAX_HP as number) + clampStageIdx(stageIdx) * STAGE_HP_BONUS;
+  return PLAYER_MAX_HP + clampStageIdx(stageIdx) * STAGE_HP_BONUS;
 }
 
 /**
@@ -52,9 +52,9 @@ export function getStageMaxHp(stageIdx = 0): number {
 export function getLevelMaxHp(pLvl = 1, pStg = 0): number {
   const safeLvl = Math.max(1, Math.floor(pLvl));
   const safeStg = clampStageIdx(pStg);
-  return (PLAYER_MAX_HP as number)
-    + safeLvl * (BALANCE_CONFIG.hpPerLevel as number)
-    + safeStg * (BALANCE_CONFIG.evolutionHpBonus as number);
+  return PLAYER_MAX_HP
+    + safeLvl * BALANCE_CONFIG.hpPerLevel
+    + safeStg * BALANCE_CONFIG.evolutionHpBonus;
 }
 
 export function getStarterMaxHp(starter: StarterWithStage, fallbackStageIdx = 0): number {

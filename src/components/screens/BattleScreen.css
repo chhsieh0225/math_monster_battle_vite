@@ -220,6 +220,9 @@
 .battle-weather-layer.weather-fog{
   mix-blend-mode:normal;
 }
+.battle-weather-layer.weather-sun{
+  mix-blend-mode:screen;
+}
 .battle-weather-rain-drop{
   position:absolute;
   top:-20%;
@@ -287,6 +290,39 @@
 }
 .battle-weather-lightning-secondary{
   animation-duration:9.5s;
+}
+.battle-weather-sun-glow{
+  position:absolute;
+  top:-22%;
+  right:-8%;
+  width:56%;
+  height:64%;
+  opacity:.62;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 42% 52%,rgba(254,243,199,.92),rgba(251,191,36,.38) 32%,rgba(250,204,21,.14) 58%,rgba(255,255,255,0) 78%);
+  filter:blur(1.5px);
+  animation:weatherSunPulse 8.6s ease-in-out infinite;
+}
+.battle-weather-sun-ray{
+  position:absolute;
+  top:-26%;
+  right:14%;
+  width:34%;
+  height:152%;
+  opacity:.2;
+  transform-origin:top right;
+  background:linear-gradient(180deg,rgba(254,249,195,.68),rgba(253,224,71,.22) 38%,rgba(253,224,71,0) 80%);
+  filter:blur(.8px);
+}
+.battle-weather-sun-ray-a{
+  transform:rotate(19deg);
+}
+.battle-weather-sun-ray-b{
+  right:20%;
+  width:26%;
+  opacity:.16;
+  transform:rotate(25deg);
 }
 .battle-info-enemy{
   position:absolute;
@@ -1318,6 +1354,11 @@
   61%{opacity:.2}
   62%{opacity:0}
   100%{opacity:0}
+}
+@keyframes weatherSunPulse{
+  0%{opacity:.5;transform:scale(.98)}
+  50%{opacity:.68;transform:scale(1.04)}
+  100%{opacity:.5;transform:scale(.98)}
 }
 @media (prefers-reduced-motion: reduce) {
   .scene-bg,

@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import { seedRange } from '../../../utils/prng.ts';
 
-export type BattleWeatherType = 'none' | 'rain' | 'storm' | 'snow' | 'fog' | 'dust';
+export type BattleWeatherType = 'none' | 'sun' | 'rain' | 'storm' | 'snow' | 'fog' | 'dust';
 
 type BattleWeatherLayerProps = {
   sceneType: string;
@@ -13,7 +13,7 @@ type BattleWeatherLayerProps = {
 type WeatherCssVars = CSSProperties & Record<`--${string}`, string | number>;
 
 const WEATHER_BY_SCENE: Record<string, BattleWeatherType> = {
-  grass: 'none',
+  grass: 'sun',
   water: 'rain',
   steel: 'none',
   electric: 'storm',
@@ -194,6 +194,14 @@ export const BattleWeatherLayer = memo(function BattleWeatherLayer({
         <>
           <div className="battle-weather-lightning" style={lightningStyle1} />
           <div className="battle-weather-lightning battle-weather-lightning-secondary" style={lightningStyle2} />
+        </>
+      )}
+
+      {weather === 'sun' && (
+        <>
+          <div className="battle-weather-sun-glow" />
+          <div className="battle-weather-sun-ray battle-weather-sun-ray-a" />
+          <div className="battle-weather-sun-ray battle-weather-sun-ray-b" />
         </>
       )}
     </div>

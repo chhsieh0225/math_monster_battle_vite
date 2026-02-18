@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 /**
  * useBattle — Core game-state hook.
@@ -23,6 +23,14 @@
  */
 import { useState, useEffect, useRef, useCallback, useMemo, useReducer } from 'react';
 import { useI18n } from '../i18n';
+import type {
+  BattleMode,
+  EnemyVm,
+  MoveVm,
+  ScreenName,
+  StarterVm,
+} from '../types/battle';
+import type { DailyChallengePlan, StreakTowerPlan } from '../types/challenges';
 
 import { SCENE_NAMES } from '../data/scenes';
 import {
@@ -36,7 +44,11 @@ import {
   localizeStarter,
 } from '../utils/contentLocalization';
 
-import { genQ } from '../utils/questionGenerator.ts';
+import {
+  genQ,
+  type QuestionGeneratorMove,
+  type QuestionGeneratorOptions,
+} from '../utils/questionGenerator.ts';
 import { withRandomSource } from '../utils/prng.ts';
 import {
   movePower,
@@ -58,7 +70,7 @@ import { usePvpState } from './usePvpState';
 import { useBattleSessionLifecycle } from './useBattleSessionLifecycle';
 import { ENC_TOTAL } from '../data/encyclopedia.ts';
 import sfx from '../utils/sfx.ts';
-import { buildRoster } from '../utils/rosterBuilder';
+import { buildRoster, type BattleRosterMonster } from '../utils/rosterBuilder';
 import {
   createAbilityModel,
   getDifficultyLevelForOps,
@@ -141,15 +153,18 @@ export function useBattle() {
   const UI = useBattleUIState({ rand, randInt });
 
   const buildNewRoster = useCallback(
-    (mode = "single") => localizeEnemyRoster(buildRoster(pickIndex, mode), locale),
+    (mode: BattleMode = 'single'): EnemyVm[] => {
+      const rosterMode = mode === 'coop' || mode === 'double' ? 'double' : 'single';
+      return localizeEnemyRoster(buildRoster(pickIndex, rosterMode), locale);
+    },
     [pickIndex, locale],
   );
-  const [enemies, setEnemies] = useState(() => buildNewRoster("single"));
+  const [enemies, setEnemies] = useState<EnemyVm[]>(() => buildNewRoster('single'));
 
   // ──── Screen & mode ────
-  const [screen, setScreenState] = useState("title");
+  const [screen, setScreenState] = useState<ScreenName>('title');
   const [timedMode, setTimedMode] = useState(false);
-  const [battleMode, setBattleMode] = useState("single");
+  const [battleMode, setBattleMode] = useState<BattleMode>('single');
   const {
     queuedChallenge,
     activeChallenge,
@@ -166,7 +181,7 @@ export function useBattle() {
     settleRunAsFailed,
     settleRunAsCleared,
   } = useDailyChallengeRun();
-  const [coopActiveSlot, setCoopActiveSlot] = useState("main");
+  const [coopActiveSlot, setCoopActiveSlot] = useState<'main' | 'sub'>('main');
   const pvpState = usePvpState();
   const {
     pvpStarter2, setPvpStarter2,
@@ -191,7 +206,7 @@ export function useBattle() {
   } = pvpState;
 
   // ──── Player ────
-  const [starter, setStarter] = useState(null);
+  const [starter, setStarter] = useState<StarterVm | null>(null);
   const [battle, dispatchBattle] = useReducer(battleReducer, undefined, createInitialBattleState);
   const {
     pHp, allySub, pHpSub, pExp, pLvl, pStg,
@@ -241,7 +256,7 @@ export function useBattle() {
   // ──── Learning model 2.0: per-question-type adaptive difficulty ────
   const abilityModelRef = useRef(createAbilityModel(2));
 
-  const _updateAbility = (op, correct) => {
+  const _updateAbility = (op: string | undefined, correct: boolean): void => {
     if (!op) return;
     const { nextModel, nextLevel } = updateAbilityModel({
       model: abilityModelRef.current,
@@ -252,13 +267,16 @@ export function useBattle() {
     setDiffLevel(nextLevel);
   };
 
-  const _getMoveDiffLevel = (move) => (
+  const _getMoveDiffLevel = (move: MoveVm | undefined): number => (
     getDifficultyLevelForOps(abilityModelRef.current, move?.ops, 2)
   );
 
   const getActingStarter = resolveActingStarter;
   const getPvpTurnName = useCallback(
-    (state, turn) => resolvePvpTurnName(state, turn, t),
+    (
+      state: Parameters<typeof resolvePvpTurnName>[0],
+      turn: Parameters<typeof resolvePvpTurnName>[1],
+    ) => resolvePvpTurnName(state, turn, t),
     [t],
   );
 
@@ -287,7 +305,7 @@ export function useBattle() {
     appendQuitEventIfOpen,
   } = useBattleSessionLifecycle({ reseed, endSession });
 
-  const getPlayerMaxHp = useCallback((stageIdx = 0, levelOverride = null) => {
+  const getPlayerMaxHp = useCallback((stageIdx = 0, levelOverride?: number) => {
     const resolvedLevel = Number.isFinite(levelOverride)
       ? Number(levelOverride)
       : Number(sr.current?.pLvl || 1);
@@ -299,22 +317,22 @@ export function useBattle() {
   const chargeReady = charge >= 3;
 
   const getPow = useCallback(
-    (i) => starter ? movePower(starter.moves[i], mLvls[i], i) : 0,
+    (i: number) => starter ? movePower(starter.moves[i], mLvls[i], i) : 0,
     [starter, mLvls],
   );
 
   const dualEff = useCallback(
-    (move) => bestEffectiveness(move, enemy),
+    (move: MoveVm) => bestEffectiveness(move, enemy),
     [enemy],
   );
 
-  const queueDailyChallenge = useCallback((plan) => {
+  const queueDailyChallenge = useCallback((plan: DailyChallengePlan) => {
     queueDailyChallengePlan(plan);
     setTimedMode(true);
     setBattleMode('single');
   }, [queueDailyChallengePlan]);
 
-  const queueTowerChallenge = useCallback((plan) => {
+  const queueTowerChallenge = useCallback((plan: StreakTowerPlan) => {
     queueTowerChallengePlan(plan);
     setTimedMode(true);
     setBattleMode('single');
@@ -335,7 +353,14 @@ export function useBattle() {
   );
 
   const genBattleQuestion = useCallback(
-    (move, diffMod, options) => withRandomSource(rand, () => genQ(move, diffMod, options)),
+    (
+      move: QuestionGeneratorMove | undefined,
+      diffMod: number,
+      options?: QuestionGeneratorOptions,
+    ) => {
+      if (!move) return null;
+      return withRandomSource(rand, () => genQ(move, diffMod, options));
+    },
     [rand],
   );
 
@@ -383,7 +408,7 @@ export function useBattle() {
     subscribeTimerLeft, getTimerLeft,
   } = useTimer(TIMER_SEC, onTimeout);
 
-  const setScreen = useCallback((nextScreen) => {
+  const setScreen = useCallback((nextScreen: ScreenName) => {
     if (nextScreen === 'title') {
       clearChallengeRun();
     }
@@ -395,6 +420,9 @@ export function useBattle() {
       setScreenState,
     });
   }, [clearChallengeRun, clearTimer, invalidateAsyncWork, sr]);
+  const setScreenFromString = useCallback((nextScreen: string) => {
+    setScreen(nextScreen as ScreenName);
+  }, [setScreen]);
 
   const [gamePaused, setGamePaused] = useState(false);
 
@@ -421,7 +449,7 @@ export function useBattle() {
   }, [safeTo, setEAnim, setPAnim]);
 
   // ── Finalize and persist session log ──
-  const _endSession = useCallback((isCompleted, reasonOverride = null) => {
+  const _endSession = useCallback((isCompleted: boolean, reasonOverride: string | null = null) => {
     if (!isCompleted) {
       settleRunAsFailed(sr.current?.defeated || 0);
     }
@@ -447,7 +475,7 @@ export function useBattle() {
   }, [settleRunAsCleared, sr, tryUnlock, setEncData, _endSession, setScreen]);
 
   // --- Start a battle against enemies[idx], optionally from a fresh roster ---
-  const startBattle = useCallback((idx, roster) => {
+  const startBattle = useCallback((idx: number, roster?: EnemyVm[]) => {
     runBattleStart({
       idx,
       roster,
@@ -506,7 +534,11 @@ export function useBattle() {
     });
   }, [setDmgs, setParts, setAtkEffect, setEffMsg]);
 
-  const startGame = (starterOverride, modeOverride = null, allyOverride = null) => {
+  const startGame = (
+    starterOverride?: StarterVm | null,
+    modeOverride: BattleMode | null = null,
+    allyOverride: StarterVm | null = null,
+  ) => {
     runStartGameWithContext({
       setDailyChallengeFeedback,
       setTowerChallengeFeedback,
@@ -530,7 +562,7 @@ export function useBattle() {
             appendSessionEvent,
             initSession,
             createPvpEnemyFromStarter,
-            setScreen,
+            setScreen: setScreenFromString,
             playBattleIntro,
           },
           pvp: pvpState,
@@ -545,7 +577,7 @@ export function useBattle() {
             dispatchBattle,
             appendSessionEvent,
             initSession,
-            setScreen,
+            setScreen: setScreenFromString,
             startBattle,
           },
           pvp: pvpState,
@@ -572,11 +604,14 @@ export function useBattle() {
       appendQuitEventIfOpen,
       sr,
       endSession: _endSession,
-      setScreen,
+      setScreen: setScreenFromString,
     });
   };
 
-  const handlePlayerPartyKo = ({ target = "main", reason = t("battle.ally.ko", "Your partner has fallen...") }) => {
+  const handlePlayerPartyKo = ({
+    target = 'main',
+    reason = t('battle.ally.ko', 'Your partner has fallen...'),
+  }: { target?: 'main' | 'sub'; reason?: string } = {}) => {
     return runPlayerPartyKoWithContext({
       sr,
       setStarter,
@@ -589,12 +624,12 @@ export function useBattle() {
       setBText,
       safeTo,
       endSession: _endSession,
-      setScreen,
+      setScreen: setScreenFromString,
       t,
     }, { target, reason });
   };
 
-  const runAllySupportTurn = ({ delayMs = 850, onDone } = {}) => {
+  const runAllySupportTurn = ({ delayMs = 850, onDone }: { delayMs?: number; onDone?: () => void } = {}) => {
     return runAllySupportTurnWithContext({
       sr,
       safeTo,
@@ -650,7 +685,7 @@ export function useBattle() {
   };
 
   // --- Player selects a move ---
-  const selectMove = (i) => {
+  const selectMove = (i: number) => {
     runSelectMoveWithContext({
       sr,
       runtime: {
@@ -682,7 +717,7 @@ export function useBattle() {
           randInt,
           chance,
           sfx,
-          setScreen,
+      setScreen: setScreenFromString,
           t,
         },
         battleFields: battleFieldSetters,
@@ -698,7 +733,7 @@ export function useBattle() {
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
 
   // --- Player answers a question ---
-  const onAns = (choice) => {
+  const onAns = (choice: number) => {
     runAnswerWithContext({
       answered,
       setAnswered,
@@ -711,7 +746,7 @@ export function useBattle() {
           safeTo,
           sfx,
           getOtherPvpTurn,
-          setScreen,
+          setScreen: setScreenFromString,
           t,
         },
         ui: UI,
@@ -735,7 +770,7 @@ export function useBattle() {
           handleVictory,
           handleFreeze,
           _endSession,
-          setScreen,
+          setScreen: setScreenFromString,
           handlePlayerPartyKo,
           runAllySupportTurn,
         },
@@ -758,7 +793,7 @@ export function useBattle() {
         sr,
         enemiesLength: enemies.length,
         runtime: {
-          setScreen,
+          setScreen: setScreenFromString,
           dispatchBattle,
           localizeEnemy,
           locale,
@@ -789,7 +824,7 @@ export function useBattle() {
           safeTo,
           getOtherPvpTurn,
           getPvpTurnName,
-          setScreen,
+          setScreen: setScreenFromString,
           t,
         },
         ui: UI,
@@ -821,11 +856,11 @@ export function useBattle() {
     });
   };
 
-  const setStarterLocalized = useCallback((nextStarter) => {
+  const setStarterLocalized = useCallback((nextStarter: StarterVm | null) => {
     setStarter(localizeStarter(nextStarter, locale));
   }, [locale]);
 
-  const setPvpStarter2Localized = useCallback((nextStarter) => {
+  const setPvpStarter2Localized = useCallback((nextStarter: StarterVm | null) => {
     setPvpStarter2(localizeStarter(nextStarter, locale));
   }, [locale, setPvpStarter2]);
 

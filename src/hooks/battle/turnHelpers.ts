@@ -1,13 +1,10 @@
 import { isCoopBattleMode } from './coopFlow.ts';
+import type { StarterVm } from '../../types/battle';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 
-type StarterLike = {
-  id?: string;
-  name?: string;
-  moves?: Array<{ name?: string; type?: string }>;
-};
+type StarterLike = StarterVm;
 
 type TurnState = {
   battleMode?: string;

@@ -1,6 +1,7 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
 import { getLevelMaxHp, getStarterLevelMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import { isBattleActiveState } from './menuResetGuard.ts';
+import type { EnemyVm } from '../../types/battle';
 import {
   runPvpAttackAnimation,
   showPvpEffectivenessMessage,
@@ -62,7 +63,7 @@ type PvpBattleState = {
   starter: StarterLike | null;
   pvpStarter2: StarterLike | null;
   selIdx: number | null;
-  q: BattleQuestion;
+  q: BattleQuestion | null;
   pvpSpecDefP1: boolean;
   pvpSpecDefP2: boolean;
   pvpComboP1: number;
@@ -120,24 +121,9 @@ type SfxApi = {
   playMove?: (type: string, idx?: number) => void;
 };
 
-type PvpEnemyVm = {
-  id: string;
-  name: string;
-  maxHp: number;
+type PvpEnemyVm = EnemyVm & {
   hp: number;
   atk: number;
-  lvl: number;
-  mType: string;
-  sceneMType: string;
-  typeIcon?: string;
-  typeName?: string;
-  c1?: string;
-  c2?: string;
-  trait: string;
-  traitName: string;
-  drops: string[];
-  svgFn: (...colors: string[]) => string;
-  isEvolved: boolean;
   selectedStageIdx: number;
 };
 
@@ -254,10 +240,10 @@ export function createPvpEnemyFromStarter(starter: StarterLike | null | undefine
     lvl: 1,
     mType: starter.type,
     sceneMType: TYPE_TO_SCENE[starter.type] || 'grass',
-    typeIcon: starter.typeIcon,
-    typeName: starter.typeName,
-    c1: starter.c1,
-    c2: starter.c2,
+    typeIcon: starter.typeIcon || '',
+    typeName: starter.typeName || '',
+    c1: starter.c1 || '#ffffff',
+    c2: starter.c2 || '#cccccc',
     trait: 'normal',
     traitName: tr(t, 'battle.pvp.playerTrait', 'Player'),
     drops: ['🏁'],

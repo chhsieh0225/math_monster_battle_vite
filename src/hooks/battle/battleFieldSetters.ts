@@ -1,4 +1,4 @@
-import type { BattleState } from './battleReducer.ts';
+import type { BattleAction, BattleState } from './battleReducer.ts';
 
 type FieldKey =
   | 'pHp'
@@ -39,7 +39,7 @@ type SetFieldAction<K extends FieldKey = FieldKey> = {
   value: FieldValue<K>;
 };
 
-type DispatchBattle = <K extends FieldKey>(action: SetFieldAction<K>) => void;
+type DispatchBattle = (action: BattleAction) => void;
 
 type FieldSetter<K extends FieldKey> = (value: FieldValue<K>) => void;
 
@@ -85,7 +85,8 @@ function createFieldSetter<K extends FieldKey>(
 
 export function createBattleFieldSetters(dispatchBattle: DispatchBattle): BattleFieldSetters {
   const setBattleField = <K extends FieldKey>(key: K, value: FieldValue<K>): void => {
-    dispatchBattle({ type: 'set_field', key, value });
+    const action: SetFieldAction<K> = { type: 'set_field', key, value };
+    dispatchBattle(action as unknown as BattleAction);
   };
 
   return {

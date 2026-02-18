@@ -6,6 +6,7 @@ type Translator = (key: string, fallback?: string, params?: TranslatorParams) =>
 type StarterLite = StarterVm | null;
 type AllyLite = StarterVm | null;
 type EnemyLite = EnemyVm | null;
+type ExistingEnemy = NonNullable<EnemyLite>;
 
 type RunStartBattleFlowArgs = {
   idx: number;
@@ -25,7 +26,7 @@ type RunStartBattleFlowArgs = {
     enemySub: EnemyLite;
     round: number;
   }) => void;
-  updateEnc: (enemy: EnemyLite) => void;
+  updateEnc: (enemy: ExistingEnemy) => void;
   setPhase: (phase: BattlePhase) => void;
   setBText: (text: string) => void;
   setScreen: (screen: ScreenName) => void;

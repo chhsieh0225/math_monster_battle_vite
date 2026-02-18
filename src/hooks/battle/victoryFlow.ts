@@ -1,3 +1,5 @@
+import type { AchievementId } from '../../types/game';
+
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 
@@ -41,8 +43,8 @@ type RunVictoryFlowArgs = {
     gainExp: number;
   }) => ProgressResult;
   getStageMaxHp: (stageIdx?: number, levelOverride?: number) => number;
-  tryUnlock: (id: string) => void;
-  applyVictoryAchievements: (args: { state: BattleState; tryUnlock: (id: string) => void }) => void;
+  tryUnlock: (id: AchievementId) => void;
+  applyVictoryAchievements: (args: { state: BattleState; tryUnlock: (id: AchievementId) => void }) => void;
   updateEncDefeated: (enemy: EnemyLite) => void;
   setBurnStack: NumberSetter;
   setStaticStack: NumberSetter;

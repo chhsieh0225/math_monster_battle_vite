@@ -40,6 +40,7 @@ export type MoveVm = {
   basePower: number;
   growth: number;
   type: string;
+  ops?: string[];
   bg?: string;
   risky?: boolean;
 };

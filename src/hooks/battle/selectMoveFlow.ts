@@ -1,16 +1,11 @@
-type BattleMove = {
-  risky?: boolean;
-};
+import type { BattleMode, BattlePhase, MoveVm, QuestionVm, StarterVm } from '../../types/battle';
 
-type BattleStarter = {
-  moves: BattleMove[];
-} | null;
-
-type BattleQuestion = unknown;
+type BattleStarter = StarterVm | null;
+type BattleQuestion = QuestionVm;
 
 type BattleState = {
-  phase: string;
-  battleMode: string;
+  phase: BattlePhase;
+  battleMode: BattleMode;
   pvpTurn: 'p1' | 'p2';
   pvpChargeP1: number;
   pvpChargeP2: number;
@@ -19,13 +14,13 @@ type BattleState = {
 
 type SafeState = BattleState & Record<string, unknown>;
 
-type MoveDiffLevelResolver = (move: BattleMove | undefined) => number;
+type MoveDiffLevelResolver = (move: MoveVm | undefined) => number;
 type GenQuestion = (
-  move: BattleMove | undefined,
+  move: MoveVm | undefined,
   diffMod: number,
   options?: {
     t?: (key: string, fallback?: string, params?: Record<string, string | number>) => string;
-    allowedOps?: string[];
+    allowedOps?: readonly string[];
   },
 ) => BattleQuestion;
 
@@ -34,8 +29,8 @@ type RunSelectMoveFlowArgs = {
   state: SafeState;
   timedMode: boolean;
   questionTimeLimitSec?: number | null;
-  questionAllowedOps?: string[] | null;
-  diffMods: number[];
+  questionAllowedOps?: readonly string[] | null;
+  diffMods: readonly number[];
   t?: (key: string, fallback?: string, params?: Record<string, string | number>) => string;
   getActingStarter: (state: SafeState) => BattleStarter;
   getMoveDiffLevel: MoveDiffLevelResolver;
@@ -45,10 +40,10 @@ type RunSelectMoveFlowArgs = {
   sfx: { play: (name: string) => void };
   setSelIdx: (value: number) => void;
   setDiffLevel: (value: number) => void;
-  setQ: (value: BattleQuestion) => void;
+  setQ: (value: BattleQuestion | null) => void;
   setFb: (value: unknown) => void;
   setAnswered: (value: boolean) => void;
-  setPhase: (value: string) => void;
+  setPhase: (value: BattlePhase) => void;
 };
 
 function isFn(value: unknown): value is (...args: unknown[]) => unknown {

@@ -3,13 +3,18 @@ import { handlePvpAnswer } from './pvpFlow.ts';
 import { runPlayerAnswer } from './playerFlow.ts';
 
 type MoveLite = {
-  name?: string;
-  type?: string;
+  name: string;
+  type: string;
+  basePower: number;
+  growth: number;
+  type2?: string;
+  risky?: boolean;
   [key: string]: unknown;
 };
 
 type StarterLite = {
   id?: string;
+  type: string;
   moves?: MoveLite[];
   [key: string]: unknown;
 };
@@ -192,8 +197,8 @@ export function runStandardAnswerFlow({
 
   runPlayerAnswer({
     correct,
-    move: move as PlayerAnswerArgs['move'],
-    starter: actingStarter as PlayerAnswerArgs['starter'],
+    move,
+    starter: actingStarter,
     attackerSlot: isCoopSubActive ? 'sub' : 'main',
     ...handlers,
   });

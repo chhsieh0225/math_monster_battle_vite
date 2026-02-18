@@ -50,7 +50,8 @@ export type BattleState = {
   sealedTurns: number;
 };
 
-export type BattlePatch = Record<string, unknown>;
+export type BattlePatch = Partial<BattleState>;
+type BattleStateValue = BattleState[keyof BattleState];
 
 type SetFieldAction = {
   type: "set_field";
@@ -133,20 +134,31 @@ const BASE_STATE: BattleState = {
   sealedTurns: 0,
 };
 
-function resolveValue<T>(current: T, next: T | ((prev: T) => T)): T {
-  return typeof next === 'function' ? (next as (prev: T) => T)(current) : next;
+function resolveValue(
+  current: BattleStateValue,
+  next: BattleStateValue | ((prev: BattleStateValue) => BattleStateValue),
+): BattleStateValue {
+  return typeof next === 'function'
+    ? next(current)
+    : next;
+}
+
+function isBattleStateKey(key: string): key is keyof BattleState {
+  return key in BASE_STATE;
 }
 
 function applyPatch(state: BattleState, patch?: BattlePatch | null): BattleState {
   if (!patch || typeof patch !== 'object') return state;
-  const next = { ...state } as BattleState;
+  const next = { ...state };
   let changed = false;
 
   for (const key of Object.keys(patch)) {
-    const prevValue = (next as Record<string, unknown>)[key];
+    if (!isBattleStateKey(key)) continue;
+    const prevValue = next[key];
     const value = patch[key];
+    if (typeof value === 'undefined') continue;
     if (Object.is(prevValue, value)) continue;
-    (next as Record<string, unknown>)[key] = value;
+    Object.assign(next, { [key]: value });
     changed = true;
   }
 
@@ -172,18 +184,22 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
       const prevValue = state[key];
       const nextValue = resolveValue(prevValue, value);
       if (Object.is(nextValue, prevValue)) return state;
-      return { ...state, [key]: nextValue } as BattleState;
+      const next = { ...state };
+      Object.assign(next, { [key]: nextValue });
+      return next;
     }
 
     case 'patch':
       return applyPatch(state, action.patch);
 
-    case 'reset_run':
-      return {
+    case 'reset_run': {
+      const reset = {
         ...state,
         ...createInitialBattleState(),
         ...action.patch,
-      } as BattleState;
+      };
+      return reset;
+    }
 
     case 'start_battle': {
       const enemy = action.enemy || null;

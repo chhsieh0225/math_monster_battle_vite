@@ -32,6 +32,7 @@ type StarterMove = {
 type StarterLike = {
   name: string;
   type: string;
+  selectedStageIdx?: number | null;
 };
 
 type PvpStateRef = {
@@ -62,19 +63,6 @@ type StrikeSummary = {
 type SfxApi = {
   play: (name: string) => void;
   playMove?: (type: string, idx?: number) => void;
-};
-
-type PvpBalanceConfig = {
-  passive: {
-    fireBurnCap: number;
-    waterFreezeChance: number;
-    electricDischargeAt: number;
-    electricDischargeDamage: number;
-    lightCounterDamage: number;
-    grassReflectRatio: number;
-    grassReflectMin: number;
-    grassReflectCap: number;
-  };
 };
 
 type ExecutePvpStrikeTurnArgs = {
@@ -118,13 +106,7 @@ type ExecutePvpStrikeTurnArgs = {
   setPvpStaticP2: NumberSetter;
 };
 
-const PVP = PVP_BALANCE as unknown as PvpBalanceConfig;
-const getLevelMaxHpTyped = getLevelMaxHp as (pLvl: number, pStg: number) => number;
-const getStarterLevelMaxHpTyped = getStarterLevelMaxHp as (
-  starter: StarterLike | null,
-  pLvl: number,
-  fallbackStageIdx?: number,
-) => number;
+const PVP = PVP_BALANCE;
 
 const PVP_HIT_ANIMS: Record<string, string> = {
   fire: 'enemyFireHit 0.55s ease',
@@ -382,7 +364,7 @@ export function executePvpStrikeTurn({
     addD(strike.isCrit ? `💥-${totalDmg}` : `-${totalDmg}`, 140, 55, '#ef4444');
 
     if (strike.heal > 0) {
-      setPHp((hp) => Math.min(getLevelMaxHpTyped(s2.pLvl || 1, s2.pStg), hp + strike.heal));
+      setPHp((hp) => Math.min(getLevelMaxHp(s2.pLvl || 1, s2.pStg), hp + strike.heal));
       addD(`+${strike.heal}`, 52, 164, '#22c55e');
       passiveNotes.push(tr(t, 'battle.pvp.note.heal', '🌿Heal'));
     }
@@ -407,7 +389,7 @@ export function executePvpStrikeTurn({
 
     if (strike.heal > 0) {
       const healed = Math.min(
-        getStarterLevelMaxHpTyped(s2.pvpStarter2, s2.pLvl || 1, s2.pStg),
+        getStarterLevelMaxHp(s2.pvpStarter2, s2.pLvl || 1, s2.pStg),
         s2.pvpHp2 + strike.heal,
       );
       setPvpHp2(healed);

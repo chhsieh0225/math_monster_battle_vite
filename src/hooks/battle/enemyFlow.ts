@@ -92,15 +92,6 @@ type SfxApi = {
   play: (name: string) => void;
 };
 
-type EffectOrchestratorApi = {
-  runEnemyLunge: (args: {
-    safeTo: SafeTo;
-    setEAnim: TextSetter;
-    onStrike?: () => void;
-    strikeDelay?: number;
-  }) => void;
-};
-
 type RunEnemyTurnArgs = {
   sr: StateRef;
   safeTo: SafeTo;
@@ -141,10 +132,6 @@ type ApplyDamageArgs = {
   color?: string;
 };
 
-const getEffTyped = getEff as (moveType?: string, monType?: string) => number;
-const calcEnemyDamageTyped = calcEnemyDamage as (atkStat: number, defEff: number) => number;
-const computeBossPhaseTyped = computeBossPhase as (currentHp: number, maxHp: number) => number;
-const effectOrchestratorTyped = effectOrchestrator as EffectOrchestratorApi;
 const TRAIT_BALANCE = BALANCE_CONFIG.traits;
 const DAMAGE_BALANCE = BALANCE_CONFIG.damage;
 
@@ -247,7 +234,7 @@ export function runEnemyTurn({
       }
       setBText(tr(t, 'battle.enemy.assistAttack', '⚔️ {enemy} launched an assist attack!', { enemy: s2.enemySub.name || 'Enemy' }));
       setPhase('enemyAtk');
-      effectOrchestratorTyped.runEnemyLunge({
+      effectOrchestrator.runEnemyLunge({
         safeTo,
         setEAnim,
         strikeDelay: 380,
@@ -303,7 +290,7 @@ export function runEnemyTurn({
     if (!s.enemy || !s.starter) return;
     setBText(tr(t, 'battle.enemy.attackStart', '{enemy} attacks!', { enemy: s.enemy.name || 'Enemy' }));
     setPhase('enemyAtk');
-    effectOrchestratorTyped.runEnemyLunge({
+    effectOrchestrator.runEnemyLunge({
       safeTo,
       setEAnim,
       onStrike: () => {
@@ -468,7 +455,7 @@ export function runEnemyTurn({
           safeToIfBattleActive(() => {
             if (!isBattleActive()) return;
             setBText(tr(t, 'battle.enemy.swiftExtra', '⚡ {enemy} attacks again!', { enemy: s2.enemy?.name || 'Enemy' }));
-            effectOrchestratorTyped.runEnemyLunge({
+            effectOrchestrator.runEnemyLunge({
               safeTo,
               setEAnim,
               onStrike: () => {
@@ -477,9 +464,9 @@ export function runEnemyTurn({
                 const target2 = resolvePlayerTarget(s3);
                 const target2Name = target2 === 'sub' ? (s3.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s3.starter?.name || tr(t, 'battle.role.main', 'Main'));
                 const defenderType2 = target2 === 'sub' ? (s3.allySub?.type || s3.starter?.type) : s3.starter?.type;
-                const swiftEff1 = getEffTyped(s3.enemy?.mType, defenderType2);
-                const swiftEff2 = s3.enemy?.mType2 ? getEffTyped(s3.enemy.mType2, defenderType2) : 0;
-                const dmg2 = calcEnemyDamageTyped(scaledAtk, Math.max(swiftEff1, swiftEff2 || swiftEff1));
+                const swiftEff1 = getEff(s3.enemy?.mType, defenderType2);
+                const swiftEff2 = s3.enemy?.mType2 ? getEff(s3.enemy.mType2, defenderType2) : 0;
+                const dmg2 = calcEnemyDamage(scaledAtk, Math.max(swiftEff1, swiftEff2 || swiftEff1));
                 const nh2 = applyDamageToTarget({
                   s: s3,
                   target: target2,
@@ -573,7 +560,7 @@ export function runEnemyTurn({
       setBText(tr(t, 'battle.boss.release', '💀 {name} unleashes dark breath!', { name: bossName }));
       sfx.play('bossBoom');
       setPhase('enemyAtk');
-      effectOrchestratorTyped.runEnemyLunge({
+      effectOrchestrator.runEnemyLunge({
         safeTo,
         setEAnim,
         onStrike: () => {
@@ -662,7 +649,7 @@ export function runEnemyTurn({
   }
 
   if (isBoss) {
-    const newPhase = computeBossPhaseTyped(s.eHp, s.enemy.maxHp || 1);
+    const newPhase = computeBossPhase(s.eHp, s.enemy.maxHp || 1);
     if (newPhase !== s.bossPhase) {
       setBossPhase(newPhase);
       const bossName = s.enemy?.name || tr(t, 'battle.word.boss', 'Boss');
@@ -685,7 +672,7 @@ export function runEnemyTurn({
 
   // Venom DOT: apply poison damage at the start of the enemy turn
   if (s.enemy.trait === 'venom') {
-    const currentBossPhase = isBoss ? computeBossPhaseTyped(s.eHp, s.enemy.maxHp || 1) : 0;
+    const currentBossPhase = isBoss ? computeBossPhase(s.eHp, s.enemy.maxHp || 1) : 0;
     applyVenomDot(currentBossPhase);
     // Check if DOT killed the player — if so, the KO handler will take over
     const sAfterDot = sr.current;

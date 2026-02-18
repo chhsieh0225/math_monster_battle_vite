@@ -45,41 +45,7 @@ type CritTuningConfig = {
   maxChance?: number;
   multiplier?: number;
   maxAntiCritDamage?: number;
-  byType?: Record<string, CritProfile>;
-};
-
-type GlobalCritConfig = {
-  byType?: Record<string, CritProfile>;
-  pve?: {
-    player?: CritTuningConfig;
-    enemy?: CritTuningConfig;
-  };
-};
-
-type PvpBalanceConfig = {
-  baseScale: number;
-  varianceMin: number;
-  varianceMax: number;
-  minDamage: number;
-  maxDamage: number;
-  riskyScale: number;
-  moveSlotScale: number[];
-  typeScale: Record<string, number>;
-  skillScaleByType: Record<string, number[]>;
-  passiveScaleByType: Record<string, number>;
-  grassSustain: { healRatio: number; healCap: number };
-  lightComeback?: { maxBonus?: number };
-  firstStrikeScale?: number;
-  effectScale: { strong: number; weak: number; neutral: number };
-  crit?: {
-    chance?: number;
-    riskyBonus?: number;
-    minChance?: number;
-    maxChance?: number;
-    multiplier?: number;
-    maxAntiCritDamage?: number;
-    byType?: Record<string, CritProfile>;
-  };
+  byType?: Readonly<Record<string, CritProfile>>;
 };
 
 type BossTurnParams = {
@@ -201,7 +167,7 @@ type ResolveCritOutcomeParams = {
   defenderType?: string | null;
   isRisky?: boolean;
   baseConfig?: CritTuningConfig | null;
-  byType?: Record<string, CritProfile> | null;
+  byType?: Readonly<Record<string, CritProfile>> | null;
   random?: RandomFn | null;
   chanceFn?: ChanceFn | null;
   chanceFloor?: number;
@@ -219,33 +185,36 @@ type CritOutcome = {
   critScale: number;
 };
 
-const PVP = PVP_BALANCE as unknown as PvpBalanceConfig;
+const PVP = PVP_BALANCE;
 const TRAIT_BALANCE = BALANCE_CONFIG.traits;
-const GLOBAL_CRIT = BALANCE_CONFIG.crit as unknown as GlobalCritConfig;
-const getEffTyped = getEff as (moveType?: string, monType?: string) => number;
-const calcEnemyDamageTyped = calcEnemyDamage as (atkStat: number, defEff: number) => number;
-const movePowerTyped = movePower as (move: MoveLike, lvl: number, idx: number) => number;
-const bestEffectivenessTyped = bestEffectiveness as (
-  move: MoveLike,
-  enemy: { mType?: string; mType2?: string } | null,
-) => number;
-const calcAttackDamageTyped = calcAttackDamage as (params: {
-  basePow: number;
-  streak: number;
-  stageBonus: number;
-  effMult: number;
-}) => number;
+const GLOBAL_CRIT = BALANCE_CONFIG.crit;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+function hasOwnKey<T extends object>(obj: T, key: string): key is Extract<keyof T, string> {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
 function getBestMoveType(move: MoveLike, defenderType?: string, defenderType2?: string): string {
   if (!move.type2 || !defenderType) return move.type;
-  const getDualEffLocal = getDualEff as (mt?: string, dt?: string, dt2?: string) => number;
-  const eff1 = getDualEffLocal(move.type, defenderType, defenderType2);
-  const eff2 = getDualEffLocal(move.type2, defenderType, defenderType2);
+  const eff1 = getDualEff(move.type, defenderType, defenderType2);
+  const eff2 = getDualEff(move.type2, defenderType, defenderType2);
   return eff2 > eff1 ? move.type2 : move.type;
+}
+
+function getPvpTypeScale(typeKey: string): number {
+  return hasOwnKey(PVP.typeScale, typeKey) ? PVP.typeScale[typeKey] : 1;
+}
+
+function getPvpSkillScale(typeKey: string, moveSlot: number): number {
+  if (!hasOwnKey(PVP.skillScaleByType, typeKey)) return 1;
+  return PVP.skillScaleByType[typeKey][moveSlot] ?? 1;
+}
+
+function getPvpPassiveScale(typeKey: string): number {
+  return hasOwnKey(PVP.passiveScaleByType, typeKey) ? PVP.passiveScaleByType[typeKey] : 1;
 }
 
 function resolveCritOutcome({
@@ -367,10 +336,10 @@ export function resolveEnemyPrimaryStrike({
     multiplierFloor: berserkMultiplierFloor,
   });
   // For dual-type attackers, use the type with better effectiveness
-  const eff1 = getEffTyped(enemy?.mType, starterType);
-  const eff2 = enemy?.mType2 ? getEffTyped(enemy.mType2, starterType) : 0;
+  const eff1 = getEff(enemy?.mType, starterType);
+  const eff2 = enemy?.mType2 ? getEff(enemy.mType2, starterType) : 0;
   const defEff = Math.max(eff1, eff2 || eff1);
-  const base = calcEnemyDamageTyped(scaledAtk, defEff);
+  const base = calcEnemyDamage(scaledAtk, defEff);
   const dmg = Math.max(0, Math.round(base * crit.critScale));
 
   return {
@@ -394,8 +363,8 @@ export function resolveEnemyAssistStrike({
   damageCap = TRAIT_BALANCE.enemy.assistAttackCap,
 }: EnemyAssistStrikeParams): EnemyAssistStrikeResult {
   const scaledAtk = Math.max(1, Math.round((enemySub?.atk || 0) * atkScale));
-  const defEff = getEffTyped(enemySub?.mType, starterType);
-  let dmg = calcEnemyDamageTyped(scaledAtk, defEff);
+  const defEff = getEff(enemySub?.mType, starterType);
+  let dmg = calcEnemyDamage(scaledAtk, defEff);
   if (Number.isFinite(damageCap)) dmg = Math.min(dmg, damageCap);
 
   return {
@@ -422,13 +391,13 @@ export function resolvePlayerStrike({
   chance = null,
 }: PlayerStrikeParams): PlayerStrikeResult {
   const leveledPower = move.basePower + moveLvl * move.growth;
-  const cap = Number.isFinite(maxPower) ? (maxPower as number) : null;
+  const cap = typeof maxPower === 'number' && Number.isFinite(maxPower) ? maxPower : null;
   const pow = didLevel
     ? (cap == null ? leveledPower : Math.min(leveledPower, cap))
-    : movePowerTyped(move, moveLvl, moveIdx);
-  const eff = bestEffectivenessTyped(move, enemy ?? null);
+    : movePower(move, moveLvl, moveIdx);
+  const eff = bestEffectiveness(move, enemy ?? null);
 
-  let dmg = calcAttackDamageTyped({
+  let dmg = calcAttackDamage({
     basePow: pow,
     streak,
     stageBonus,
@@ -479,7 +448,7 @@ export function resolvePlayerStrike({
 }
 
 export function resolveRiskySelfDamage({ move, moveLvl, moveIdx }: RiskySelfDamageParams): number {
-  return Math.round(movePowerTyped(move, moveLvl, moveIdx) * TRAIT_BALANCE.player.riskySelfDamageScale);
+  return Math.round(movePower(move, moveLvl, moveIdx) * TRAIT_BALANCE.player.riskySelfDamageScale);
 }
 
 export function resolvePvpStrike({
@@ -515,8 +484,8 @@ export function resolvePvpStrike({
   const attackerTypeKey = attackerType ?? '';
   const defenderTypeKey = defenderType ?? '';
 
-  const basePow = movePowerTyped(move, 1, moveSlot);
-  const eff = bestEffectivenessTyped(move, defenderType ? { mType: defenderType } : null);
+  const basePow = movePower(move, 1, moveSlot);
+  const eff = bestEffectiveness(move, defenderType ? { mType: defenderType } : null);
   const effectScale = eff > 1
     ? PVP.effectScale.strong
     : eff < 1
@@ -527,9 +496,9 @@ export function resolvePvpStrike({
   const variance = PVP.varianceMin
     + rand01 * (PVP.varianceMax - PVP.varianceMin);
   const slotScale = PVP.moveSlotScale[moveSlot] ?? 1;
-  const typeScale = PVP.typeScale[attackerTypeKey] ?? 1;
-  const skillScale = PVP.skillScaleByType[attackerTypeKey]?.[moveSlot] ?? 1;
-  const passiveScale = PVP.passiveScaleByType[attackerTypeKey] ?? 1;
+  const typeScale = getPvpTypeScale(attackerTypeKey);
+  const skillScale = getPvpSkillScale(attackerTypeKey, moveSlot);
+  const passiveScale = getPvpPassiveScale(attackerTypeKey);
   const riskyScale = move.risky ? PVP.riskyScale : 1;
   const hpRatio = attackerMaxHp > 0
     ? Math.max(0, Math.min(1, attackerHp / attackerMaxHp))

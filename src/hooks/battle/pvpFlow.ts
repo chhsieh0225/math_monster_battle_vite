@@ -141,60 +141,6 @@ type PvpEnemyVm = {
   selectedStageIdx: number;
 };
 
-type PvpCritProfile = {
-  critChanceBonus?: number;
-  critDamageBonus?: number;
-  antiCritRate?: number;
-  antiCritDamage?: number;
-};
-
-type PvpBalanceConfig = {
-  baseScale: number;
-  varianceMin: number;
-  varianceMax: number;
-  minDamage: number;
-  maxDamage: number;
-  riskyScale: number;
-  moveSlotScale: number[];
-  typeScale: Record<string, number>;
-  skillScaleByType: Record<string, number[]>;
-  passiveScaleByType: Record<string, number>;
-  grassSustain: {
-    healRatio: number;
-    healCap: number;
-  };
-  lightComeback?: {
-    maxBonus?: number;
-  };
-  crit?: {
-    chance?: number;
-    riskyBonus?: number;
-    minChance?: number;
-    maxChance?: number;
-    multiplier?: number;
-    byType?: Record<string, PvpCritProfile>;
-  };
-  passive: {
-    fireBurnCap: number;
-    fireBurnTickBase: number;
-    fireBurnTickPerStack: number;
-    waterFreezeChance: number;
-    electricDischargeAt: number;
-    electricDischargeDamage: number;
-    specDefComboTrigger: number;
-    lightCounterDamage: number;
-    grassReflectRatio: number;
-    grassReflectMin: number;
-    grassReflectCap: number;
-  };
-  firstStrikeScale?: number;
-  effectScale: {
-    strong: number;
-    weak: number;
-    neutral: number;
-  };
-};
-
 type HandlePvpAnswerArgs = {
   choice: number;
   state: PvpBattleState;
@@ -266,14 +212,7 @@ type ProcessPvpTurnStartArgs = {
   t?: Translator;
 };
 
-const PVP = PVP_BALANCE as unknown as PvpBalanceConfig;
-const getLevelMaxHpTyped = getLevelMaxHp as (pLvl: number, pStg: number) => number;
-const getStarterLevelMaxHpTyped = getStarterLevelMaxHp as (
-  starter: StarterLike | null,
-  pLvl: number,
-  fallbackStageIdx?: number,
-) => number;
-const getStarterStageIdxTyped = getStarterStageIdx as (starter: StarterLike) => number;
+const PVP = PVP_BALANCE;
 
 const TYPE_TO_SCENE: Record<string, string> = {
   fire: 'fire',
@@ -303,9 +242,9 @@ function tr(
 
 export function createPvpEnemyFromStarter(starter: StarterLike | null | undefined, t?: Translator): PvpEnemyVm | null {
   if (!starter) return null;
-  const stageIdx = getStarterStageIdxTyped(starter);
+  const stageIdx = getStarterStageIdx(starter);
   const stage = starter.stages?.[stageIdx] || starter.stages?.[0];
-  const maxHp = getStarterLevelMaxHpTyped(starter, 1, stageIdx);
+  const maxHp = getStarterLevelMaxHp(starter, 1, stageIdx);
   return {
     id: `pvp_${starter.id || 'starter'}`,
     name: stage?.name || starter.name,
@@ -426,8 +365,8 @@ export function handlePvpAnswer({
 
   const attackerHp = currentTurn === 'p1' ? state.pHp : state.pvpHp2;
   const attackerMaxHp = currentTurn === 'p1'
-    ? getLevelMaxHpTyped(state.pLvl || 1, state.pStg)
-    : getStarterLevelMaxHpTyped(state.pvpStarter2, state.pLvl || 1, state.pStg);
+    ? getLevelMaxHp(state.pLvl || 1, state.pStg)
+    : getStarterLevelMaxHp(state.pvpStarter2, state.pLvl || 1, state.pStg);
   const strike = resolvePvpStrike({
     move,
     moveIdx: state.selIdx,

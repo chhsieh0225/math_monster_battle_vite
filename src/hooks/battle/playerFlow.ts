@@ -111,16 +111,6 @@ type PlayerPartyKoHandler = (args: { target: KoTarget; reason: string }) => unkn
 
 type AllySupportTurnRunner = (args: { delayMs: number; onDone: () => void }) => boolean;
 
-type EffectOrchestratorApi = {
-  runPlayerLunge: (args: {
-    safeTo: SafeTo;
-    setPAnim: TextSetter;
-    onReady?: () => void;
-    startDelay?: number;
-    settleDelay?: number;
-  }) => void;
-};
-
 type RunPlayerAnswerArgs = {
   correct: boolean;
   move: BattleMove | null;
@@ -178,26 +168,9 @@ type ApplyDamageArgs = {
   color?: string;
 };
 
-const HITS_PER_LVL_N = HITS_PER_LVL as number;
-const MAX_MOVE_LVL_N = MAX_MOVE_LVL as number;
+const HITS_PER_LVL_N = HITS_PER_LVL;
+const MAX_MOVE_LVL_N = MAX_MOVE_LVL;
 const POWER_CAPS_N = POWER_CAPS;
-
-const bestAttackTypeTyped = bestAttackType as (
-  move: BattleMove,
-  enemy: BattleEnemy,
-) => string;
-const freezeChanceTyped = freezeChance as (moveLvl: number) => number;
-const getLevelMaxHpTyped = getLevelMaxHp as (pLvl: number, pStg: number) => number;
-const getStarterLevelMaxHpTyped = getStarterLevelMaxHp as (
-  starter: BattleAlly | null,
-  pLvl: number,
-  fallbackStageIdx?: number,
-) => number;
-const getStarterStageIdxTyped = getStarterStageIdx as (starter: BattleAlly | null) => number;
-const getAttackEffectHitDelayTyped = getAttackEffectHitDelay as (type: string) => number;
-const getAttackEffectClearDelayTyped = getAttackEffectClearDelay as (effect?: { idx?: number; lvl?: number }) => number;
-const getAttackEffectNextStepDelayTyped = getAttackEffectNextStepDelay as (effect?: { idx?: number; lvl?: number }) => number;
-const effectOrchestratorTyped = effectOrchestrator as EffectOrchestratorApi;
 const TRAIT_BALANCE = BALANCE_CONFIG.traits;
 
 const HIT_ANIMS: Record<string, string> = {
@@ -207,6 +180,15 @@ const HIT_ANIMS: Record<string, string> = {
   grass: 'enemyGrassHit 0.6s ease',
   dark: 'enemyDarkHit 0.8s ease',
   light: 'enemyFireHit 0.6s ease',
+};
+
+const HIT_COLORS: Record<string, string> = {
+  fire: '#ef4444',
+  electric: '#fbbf24',
+  water: '#3b82f6',
+  grass: '#22c55e',
+  dark: '#a855f7',
+  light: '#f59e0b',
 };
 
 function formatFallback(template: string, params?: TranslatorParams): string {
@@ -306,8 +288,8 @@ export function runPlayerAnswer({
 
   const getAttackerMaxHp = (state: BattleRuntimeState): number => (
     isSubAttacker
-      ? getStarterLevelMaxHpTyped(state.allySub, state.pLvl || 1, state.pStg || 0)
-      : getLevelMaxHpTyped(state.pLvl || 1, state.pStg || 0)
+      ? getStarterLevelMaxHp(state.allySub, state.pLvl || 1, state.pStg || 0)
+      : getLevelMaxHp(state.pLvl || 1, state.pStg || 0)
   );
 
   const healAttacker = (heal: number): void => {
@@ -393,13 +375,13 @@ export function runPlayerAnswer({
     setMHits(nh);
 
     setPhase('playerAtk');
-    effectOrchestratorTyped.runPlayerLunge({
+    effectOrchestrator.runPlayerLunge({
       safeTo,
       setPAnim,
       onReady: () => {
         if (!isBattleActive()) return;
         const s2 = sr.current;
-        const dmgType = bestAttackTypeTyped(move, s2.enemy);
+        const dmgType = bestAttackType(move, s2.enemy);
         const vfxType = move.risky && move.type2 ? move.type2 : dmgType;
 
         const effectMeta = {
@@ -407,9 +389,9 @@ export function runPlayerAnswer({
           lvl: s2.mLvls[s2.selIdx],
         };
         const effectTimeline = {
-          hitDelay: getAttackEffectHitDelayTyped(vfxType),
-          clearDelay: getAttackEffectClearDelayTyped(effectMeta),
-          nextDelay: getAttackEffectNextStepDelayTyped(effectMeta),
+          hitDelay: getAttackEffectHitDelay(vfxType),
+          clearDelay: getAttackEffectClearDelay(effectMeta),
+          nextDelay: getAttackEffectNextStepDelay(effectMeta),
         };
         setAtkEffect({ type: vfxType, idx: effectMeta.idx, lvl: effectMeta.lvl });
         if (typeof sfx.playMove === 'function') sfx.playMove(vfxType, effectMeta.idx);
@@ -425,7 +407,7 @@ export function runPlayerAnswer({
             didLevel: didLvl,
             maxPower: POWER_CAPS_N[s3.selIdx],
             streak: ns,
-            stageBonus: isSubAttacker ? getStarterStageIdxTyped(s3.allySub) : s3.pStg,
+            stageBonus: isSubAttacker ? getStarterStageIdx(s3.allySub) : s3.pStg,
             cursed: s3.cursed,
             starterType: starter.type,
             playerHp: getAttackerHp(s3),
@@ -505,7 +487,7 @@ export function runPlayerAnswer({
 
           let willFreeze = false;
           if (starter.type === 'water' && afterHp > 0) {
-            if (chance(freezeChanceTyped(s3.mLvls[s3.selIdx]))) {
+            if (chance(freezeChance(s3.mLvls[s3.selIdx]))) {
               willFreeze = true;
               setFrozen(true);
               frozenR.current = true;
@@ -528,14 +510,7 @@ export function runPlayerAnswer({
 
           setEHp(afterHp);
           setEAnim(HIT_ANIMS[vfxType] || 'enemyHit 0.5s ease');
-          const dmgColor = ({
-            fire: '#ef4444',
-            electric: '#fbbf24',
-            water: '#3b82f6',
-            grass: '#22c55e',
-            dark: '#a855f7',
-            light: '#f59e0b',
-          } as Record<string, string>)[vfxType] || '#ef4444';
+          const dmgColor = HIT_COLORS[vfxType] || '#ef4444';
           addD(isCrit ? `💥-${dmg}` : `-${dmg}`, 140, 55, isCrit ? '#ff6b00' : dmgColor);
           safeToIfBattleActive(() => {
             setEAnim('');

@@ -533,7 +533,7 @@ export default function BattleScreen({
           pvpPlayerCombo={pvpPlayerCombo}
           pvpPlayerSpecDef={pvpPlayerSpecDef}
           cursed={S.cursed}
-          poisoned={S.enemy?.trait === 'venom'}
+          poisoned={S.effMsg?.color === '#7c3aed'}
         />
 
         <BattleStatusOverlay

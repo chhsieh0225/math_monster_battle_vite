@@ -334,6 +334,7 @@ const enUS = {
   "battle.effect.phantomDodge": "👻 Phantom Dodge!",
   "battle.effect.shadowShield": "🛡️ Shadow Shield absorbed the attack!",
   "battle.tag.shielded": "🛡️BLOCKED",
+  "battle.effect.venomDot": "☠️ Venom corrodes!",
   "battle.effect.furyRegen": "🐉 Fury Regen! The dragon recovers!",
   "battle.effect.swordParry": "⚔️ Sword Parry! Damage halved!",
   "battle.tag.parry": "⚔️PARRY",

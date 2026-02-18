@@ -525,11 +525,16 @@ export function runEnemyTurn({
     const tx = target === 'sub' ? 112 : 60;
     const ty = target === 'sub' ? 146 : 170;
     addD(`☠️-${dotDmg}`, tx, ty, '#7c3aed');
-    // Enhanced venom VFX: toxic cloud particles around player
-    addP('enemy', tx, ty, 5);
-    addP('enemy', tx - 20, ty - 10, 3);
-    addP('enemy', tx + 20, ty + 10, 3);
+    // Enhanced venom VFX: toxic cloud particles — three waves for dramatic effect
+    addP('enemy', tx, ty, 6);
+    addP('enemy', tx - 25, ty - 15, 4);
+    addP('enemy', tx + 25, ty + 15, 4);
+    addP('enemy', tx - 10, ty + 20, 3);
+    addP('enemy', tx + 10, ty - 20, 3);
     sfx.play('dark');
+    // Signal HP bar venom flicker (auto-clears after 1.5s)
+    setEffMsg({ text: tr(t, 'battle.effect.venomDot', '☠️ Venom corrodes!'), color: '#7c3aed' });
+    safeToIfBattleActive(() => setEffMsg(null), 1500);
     setBText(tr(t, 'battle.enemy.venomDot', '☠️ Toxic fog corrodes {name}!', {
       name: target === 'sub' ? (s.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s.starter?.name || tr(t, 'battle.role.main', 'Main')),
     }));

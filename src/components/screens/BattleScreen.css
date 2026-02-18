@@ -235,23 +235,32 @@
   border-radius:4px;
   transition:width .6s ease;
 }
-/* Venom poison HP bar flicker */
+/* Venom poison HP bar flicker — only active during DOT tick */
+.battle-hp-card.is-poisoned{
+  animation:venomCardShake 0.3s ease-in-out 3;
+}
 .battle-hp-card.is-poisoned .battle-hp-fill{
-  animation:venomFlicker 1.2s ease-in-out infinite;
+  animation:venomFlicker 0.4s ease-in-out 3;
 }
 @keyframes venomFlicker{
-  0%,100%{filter:brightness(1) hue-rotate(0deg);}
-  25%{filter:brightness(0.7) hue-rotate(60deg);}
-  50%{filter:brightness(1.1) hue-rotate(0deg);}
-  75%{filter:brightness(0.8) hue-rotate(40deg);}
+  0%{filter:brightness(1) hue-rotate(0deg);}
+  30%{filter:brightness(0.4) hue-rotate(90deg) saturate(3);}
+  60%{filter:brightness(1.4) hue-rotate(0deg) saturate(1);}
+  100%{filter:brightness(0.6) hue-rotate(60deg) saturate(2);}
+}
+@keyframes venomCardShake{
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-3px);}
+  75%{transform:translateX(3px);}
 }
 .battle-hp-card.is-poisoned .battle-hp-label,
 .battle-hp-card.is-poisoned .battle-hp-value{
-  animation:venomTextPulse 2s ease-in-out infinite;
+  animation:venomTextPulse 0.4s ease-in-out 3;
 }
 @keyframes venomTextPulse{
-  0%,100%{color:inherit;}
-  50%{color:#a855f7;}
+  0%{color:inherit;text-shadow:none;}
+  50%{color:#a855f7;text-shadow:0 0 6px rgba(168,85,247,0.8);}
+  100%{color:inherit;text-shadow:none;}
 }
 .battle-xp-track{
   height:4px;

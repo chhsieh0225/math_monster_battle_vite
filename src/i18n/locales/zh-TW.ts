@@ -334,6 +334,7 @@ const zhTW = {
   "battle.effect.phantomDodge": "👻 幻影閃避！",
   "battle.effect.shadowShield": "🛡️ 暗影護盾吸收了攻擊！",
   "battle.tag.shielded": "🛡️格擋",
+  "battle.effect.venomDot": "☠️ 劇毒侵蝕！",
   "battle.effect.furyRegen": "🐉 狂怒再生！狂龍恢復了生命力！",
   "battle.effect.swordParry": "⚔️ 劍意格擋！傷害減半！",
   "battle.tag.parry": "⚔️格擋",

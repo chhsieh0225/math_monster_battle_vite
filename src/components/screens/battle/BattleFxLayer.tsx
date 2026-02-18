@@ -117,16 +117,20 @@ export const BattleFxLayer = memo(function BattleFxLayer({
       )}
 
       {/* Attack effects */}
-      {showHeavyFx && isUltimateEffect && (
-        <div className={`battle-ult-sync ${ultimateToneClass}`} style={ultimateSyncStyle}>
-          <div className="battle-ult-sync-flash" />
-          <div className="battle-ult-sync-core" />
-          <div className="battle-ult-sync-ring" />
-          <div className="battle-ult-sync-ring battle-ult-sync-ring-alt" />
+      {showHeavyFx && (isUltimateEffect || atkEffect) && (
+        <div className="battle-attack-fx-layer" aria-hidden="true">
+          {isUltimateEffect && (
+            <div className={`battle-ult-sync ${ultimateToneClass}`} style={ultimateSyncStyle}>
+              <div className="battle-ult-sync-flash" />
+              <div className="battle-ult-sync-core" />
+              <div className="battle-ult-sync-ring" />
+              <div className="battle-ult-sync-ring battle-ult-sync-ring-alt" />
+            </div>
+          )}
+          {atkEffect && (
+            <AttackEffect type={atkEffect.type} idx={atkEffect.idx} lvl={atkEffect.lvl} target={effectTarget} />
+          )}
         </div>
-      )}
-      {showHeavyFx && atkEffect && (
-        <AttackEffect type={atkEffect.type} idx={atkEffect.idx} lvl={atkEffect.lvl} target={effectTarget} />
       )}
 
       {/* Victory drop toast */}

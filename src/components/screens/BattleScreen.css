@@ -57,6 +57,7 @@
   --battle-face-tilt-main:-1.6deg;
   --battle-face-shift-sub:-1px;
   --battle-face-tilt-sub:-1deg;
+  isolation:isolate;
   height:100%;
   display:flex;
   flex-direction:column;
@@ -624,6 +625,13 @@
   inset:0;
   pointer-events:none;
   z-index:79;
+}
+.battle-attack-fx-layer{
+  position:absolute;
+  inset:0;
+  z-index:140;
+  pointer-events:none;
+  isolation:isolate;
 }
 .battle-ult-sync.is-fire{
   --ult-sync-core-1:rgba(251,146,60,.7);

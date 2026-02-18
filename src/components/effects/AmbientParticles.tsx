@@ -34,72 +34,72 @@ const TYPE_THEMES: Record<string, {
   fire: {
     colors: ['#fbbf24', '#f97316', '#ef4444', '#fef08a'],
     shape: 'diamond',
-    glow: 'rgba(251,146,60,0.6)',
+    glow: 'rgba(251,146,60,0.7)',
     drift: 'rise',
-    sizeRange: [3, 6],
+    sizeRange: [6, 11],
   },
   water: {
     colors: ['#60a5fa', '#38bdf8', '#93c5fd', '#e0f2fe'],
     shape: 'circle',
-    glow: 'rgba(59,130,246,0.5)',
+    glow: 'rgba(59,130,246,0.6)',
     drift: 'float',
-    sizeRange: [3, 5],
+    sizeRange: [6, 10],
   },
   electric: {
     colors: ['#facc15', '#fde047', '#fef9c3', '#eab308'],
     shape: 'spark',
-    glow: 'rgba(250,204,21,0.6)',
+    glow: 'rgba(250,204,21,0.7)',
     drift: 'flicker',
-    sizeRange: [2, 5],
+    sizeRange: [5, 10],
   },
   grass: {
     colors: ['#4ade80', '#22c55e', '#86efac', '#a3e635'],
     shape: 'leaf',
-    glow: 'rgba(74,222,128,0.4)',
+    glow: 'rgba(74,222,128,0.5)',
     drift: 'fall',
-    sizeRange: [3, 6],
+    sizeRange: [6, 11],
   },
   dark: {
     colors: ['#a78bfa', '#7c3aed', '#6d28d9', '#c4b5fd'],
     shape: 'diamond',
-    glow: 'rgba(124,58,237,0.5)',
+    glow: 'rgba(124,58,237,0.6)',
     drift: 'orbit',
-    sizeRange: [3, 5],
+    sizeRange: [6, 10],
   },
   light: {
     colors: ['#fef08a', '#fde68a', '#fffbeb', '#fcd34d'],
     shape: 'star',
-    glow: 'rgba(253,224,71,0.5)',
+    glow: 'rgba(253,224,71,0.6)',
     drift: 'float',
-    sizeRange: [2, 5],
+    sizeRange: [5, 10],
   },
   ghost: {
     colors: ['#c084fc', '#a855f7', '#e9d5ff', '#d8b4fe'],
     shape: 'circle',
-    glow: 'rgba(168,85,247,0.4)',
+    glow: 'rgba(168,85,247,0.5)',
     drift: 'orbit',
-    sizeRange: [3, 5],
+    sizeRange: [6, 10],
   },
   steel: {
     colors: ['#94a3b8', '#cbd5e1', '#e2e8f0', '#64748b'],
     shape: 'spark',
-    glow: 'rgba(148,163,184,0.4)',
+    glow: 'rgba(148,163,184,0.5)',
     drift: 'flicker',
-    sizeRange: [2, 4],
+    sizeRange: [5, 9],
   },
   rock: {
     colors: ['#a8a29e', '#78716c', '#d6d3d1', '#57534e'],
     shape: 'diamond',
-    glow: 'rgba(120,113,108,0.3)',
+    glow: 'rgba(120,113,108,0.4)',
     drift: 'fall',
-    sizeRange: [3, 6],
+    sizeRange: [6, 11],
   },
   poison: {
     colors: ['#a855f7', '#c026d3', '#e879f9', '#d946ef'],
     shape: 'circle',
-    glow: 'rgba(192,38,211,0.5)',
+    glow: 'rgba(192,38,211,0.6)',
     drift: 'rise',
-    sizeRange: [3, 5],
+    sizeRange: [6, 10],
   },
 };
 
@@ -124,38 +124,38 @@ function renderShape(
     case 'diamond':
       return (
         <svg width={size} height={size} viewBox="0 0 10 10">
-          <polygon points="5,0 10,5 5,10 0,5" fill={color} opacity="0.8" />
+          <polygon points="5,0 10,5 5,10 0,5" fill={color} opacity="0.9" />
         </svg>
       );
     case 'star':
       return (
         <svg width={size} height={size} viewBox="0 0 10 10">
-          <polygon points="5,0 6.2,3.8 10,3.8 7,6.2 8.1,10 5,7.6 1.9,10 3,6.2 0,3.8 3.8,3.8" fill={color} opacity="0.85" />
+          <polygon points="5,0 6.2,3.8 10,3.8 7,6.2 8.1,10 5,7.6 1.9,10 3,6.2 0,3.8 3.8,3.8" fill={color} opacity="0.9" />
         </svg>
       );
     case 'leaf':
       return (
         <svg width={size} height={size} viewBox="0 0 10 12">
-          <ellipse cx="5" cy="6" rx="3" ry="5" fill={color} opacity="0.75" transform="rotate(-15 5 6)" />
+          <ellipse cx="5" cy="6" rx="3" ry="5" fill={color} opacity="0.85" transform="rotate(-15 5 6)" />
         </svg>
       );
     case 'spark':
       return (
         <svg width={size} height={size} viewBox="0 0 10 10">
-          <line x1="5" y1="0" x2="5" y2="10" stroke={color} strokeWidth="1.5" opacity="0.8" />
-          <line x1="0" y1="5" x2="10" y2="5" stroke={color} strokeWidth="1.5" opacity="0.8" />
+          <line x1="5" y1="0" x2="5" y2="10" stroke={color} strokeWidth="2" opacity="0.9" />
+          <line x1="0" y1="5" x2="10" y2="5" stroke={color} strokeWidth="2" opacity="0.9" />
         </svg>
       );
     case 'drop':
       return (
         <svg width={size} height={size} viewBox="0 0 10 12">
-          <path d="M5,0 C5,0 9,5 9,7.5 C9,10 7,12 5,12 C3,12 1,10 1,7.5 C1,5 5,0 5,0Z" fill={color} opacity="0.7" />
+          <path d="M5,0 C5,0 9,5 9,7.5 C9,10 7,12 5,12 C3,12 1,10 1,7.5 C1,5 5,0 5,0Z" fill={color} opacity="0.85" />
         </svg>
       );
     default: // circle
       return (
         <svg width={size} height={size} viewBox="0 0 10 10">
-          <circle cx="5" cy="5" r="4" fill={color} opacity="0.7" />
+          <circle cx="5" cy="5" r="4" fill={color} opacity="0.85" />
         </svg>
       );
   }
@@ -218,7 +218,10 @@ export default function AmbientParticles({ type, type2, size = 160, seed = 'defa
     <div
       style={{
         position: 'absolute',
-        inset: 0,
+        top: 0,
+        left: 0,
+        width: `${size}px`,
+        height: `${size}px`,
         pointerEvents: 'none',
         zIndex: 1,
         overflow: 'visible',
@@ -233,9 +236,9 @@ export default function AmbientParticles({ type, type2, size = 160, seed = 'defa
             left: `${p.x}%`,
             top: `${p.y}%`,
             transform: `translate(-50%, -50%) rotate(${p.rotation}deg)`,
-            filter: `drop-shadow(0 0 ${Math.round(p.sz * 0.8)}px ${p.glow})`,
+            filter: `drop-shadow(0 0 ${Math.round(p.sz * 1.2)}px ${p.glow})`,
             animation: `${p.drift} ${p.dur.toFixed(2)}s ease-in-out ${p.delay.toFixed(2)}s infinite`,
-            opacity: 0.7,
+            opacity: 0.85,
           }}
         >
           {renderShape(p.shape, Math.round(p.sz * (size / 160)), p.color)}

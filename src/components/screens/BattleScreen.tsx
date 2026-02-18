@@ -5,13 +5,8 @@ import { SCENES } from '../../data/scenes';
 import { PVP_BALANCE } from '../../data/pvpBalance';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import MonsterSprite from '../ui/MonsterSprite';
-import DamagePopup from '../ui/DamagePopup';
-import Particle from '../ui/Particle';
 import TextBox from '../ui/TextBox';
-import AttackEffect from '../effects/AttackEffect';
 import AmbientParticles from '../effects/AmbientParticles';
-import AchievementPopup from '../ui/AchievementPopup';
-import { ACH_MAP } from '../../data/achievements';
 import type {
   ScreenName,
   UseBattleActions,
@@ -25,6 +20,7 @@ import { BattleMoveMenu } from './battle/BattleMoveMenu.tsx';
 import { BattleQuestionPanel } from './battle/BattleQuestionPanel.tsx';
 import { BattleEnemyInfoPanel, BattlePlayerInfoPanel } from './battle/BattleInfoPanels.tsx';
 import { BattleStatusOverlay } from './battle/BattleStatusOverlay.tsx';
+import { BattleFxLayer } from './battle/BattleFxLayer.tsx';
 import './BattleScreen.css';
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
 
@@ -317,9 +313,6 @@ export default function BattleScreen({
         : starter.type === "light"
           ? "battle-pill-specdef-light"
           : "battle-pill-specdef-grass";
-  const toastShadowStyle: BattleCssVars | undefined = S.effMsg
-    ? { "--battle-eff-shadow": `0 8px 22px ${S.effMsg.color}55` }
-    : undefined;
   const sceneBgStyle: CSSProperties | undefined = scene.bgImg
     ? { backgroundImage: `url(${scene.bgImg})` }
     : undefined;
@@ -388,22 +381,6 @@ export default function BattleScreen({
     "--player-shadow-bottom": `${Math.max(8, playerMainBottomPct - 1)}%`,
     "--player-shadow-width": `${Math.round(mainPlayerSize * 0.5)}px`,
   });
-  const isUltimateEffect = !!(S.atkEffect && S.atkEffect.idx >= 3);
-  const ultimateToneClass = S.atkEffect?.type === "fire"
-    ? "is-fire"
-    : S.atkEffect?.type === "water"
-      ? "is-water"
-      : S.atkEffect?.type === "electric"
-        ? "is-electric"
-        : S.atkEffect?.type === "grass"
-          ? "is-grass"
-          : S.atkEffect?.type === "light"
-            ? "is-light"
-            : "is-dark";
-  const ultimateSyncStyle: BattleCssVars = ({
-    "--ult-sync-top": effectTarget.top,
-    "--ult-sync-right": effectTarget.right,
-  });
   const impactPhaseClass = showHeavyFx ? `battle-impact-${impactPhase}` : "battle-impact-idle";
 
   return (
@@ -442,97 +419,29 @@ export default function BattleScreen({
         <div className="battle-pause-hint">{t("app.pause.hint", "Tap anywhere to resume")}</div>
       </div>}
 
-      {/* Hit reaction layer */}
-      {showHeavyFx && impactPhase !== "idle" && (
-        <div className={`battle-hit-react-layer is-${impactPhase} ${isUltimateEffect ? "is-ult" : ""}`} aria-hidden="true" />
-      )}
-
-      {/* Popups & particles */}
-      {S.dmgs.map((d) => <DamagePopup key={d.id} value={d.value} x={d.x} y={d.y} color={d.color} onDone={() => A.rmD(d.id)} />)}
-      {showHeavyFx && S.parts.map((p) => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} seed={p.id} onDone={() => A.rmP(p.id)} />)}
-
-      {/* Move level-up toast */}
-      {S.battleMode !== "pvp" && S.mLvlUp !== null && (
-        <div className="battle-level-toast">
-          {starter.moves[S.mLvlUp].icon} {starter.moves[S.mLvlUp].name}{" "}
-          {t("battle.moveLevelUp", "leveled up to Lv.{level}! Power -> {power}", {
-            level: S.mLvls[S.mLvlUp],
-            power: V.getPow(S.mLvlUp),
-          })}
-        </div>
-      )}
-      {/* Achievement popup */}
-      {S.achPopup && ACH_MAP[S.achPopup] && <AchievementPopup achievement={ACH_MAP[S.achPopup]} onDone={A.dismissAch} />}
-
-      {/* Attack effects */}
-      {showHeavyFx && isUltimateEffect && (
-        <div className={`battle-ult-sync ${ultimateToneClass}`} style={ultimateSyncStyle}>
-          <div className="battle-ult-sync-flash" />
-          <div className="battle-ult-sync-core" />
-          <div className="battle-ult-sync-ring" />
-          <div className="battle-ult-sync-ring battle-ult-sync-ring-alt" />
-        </div>
-      )}
-      {showHeavyFx && S.atkEffect && (
-        <AttackEffect type={S.atkEffect.type} idx={S.atkEffect.idx} lvl={S.atkEffect.lvl} target={effectTarget} />
-      )}
-
-      {/* Victory drop toast */}
-      {S.phase === "victory" && !UX.lowPerfMode && Array.isArray(enemy.drops) && enemy.drops.length > 0 && (
-        <div className="battle-drop-toast" aria-hidden="true">
-          {enemy.drops[0]}
-        </div>
-      )}
-
-      {/* Special Defense animations */}
-      {showHeavyFx && S.defAnim === "fire" && (
-        <div className="battle-def-fx battle-def-fx-fire">
-          <div className="battle-def-layer battle-def-layer-fire-core" />
-          <div className="battle-def-layer battle-def-layer-fire-ring" />
-          <div className="battle-def-icon battle-def-icon-fire">🛡️</div>
-        </div>
-      )}
-      {showHeavyFx && S.defAnim === "water" && (
-        <div className="battle-def-fx battle-def-fx-water">
-          <div className="battle-def-layer battle-def-layer-water-ripple-1" />
-          <div className="battle-def-layer battle-def-layer-water-ripple-2" />
-          <div className="battle-def-layer battle-def-layer-water-ripple-3" />
-          <div className="battle-def-icon battle-def-icon-water">💨</div>
-        </div>
-      )}
-      {showHeavyFx && S.defAnim === "grass" && (
-        <div className="battle-def-fx battle-def-fx-grass">
-          <div className="battle-def-layer battle-def-layer-grass-core" />
-          <div className="battle-def-layer battle-def-layer-grass-ring" />
-          <div className="battle-def-icon battle-def-icon-grass">🌿</div>
-        </div>
-      )}
-      {showHeavyFx && S.defAnim === "electric" && (
-        <div className="battle-def-fx battle-def-fx-electric">
-          <div className="battle-def-layer battle-def-layer-electric-core" />
-          <div className="battle-def-layer battle-def-layer-electric-ring" />
-          <div className="battle-def-icon battle-def-icon-electric">⚡</div>
-        </div>
-      )}
-      {showHeavyFx && S.defAnim === "light" && (
-        <div className="battle-def-fx battle-def-fx-light">
-          <div className="battle-def-layer battle-def-layer-light-core" />
-          <div className="battle-def-layer battle-def-layer-light-ring" />
-          <div className="battle-def-layer battle-def-layer-light-ring-outer" />
-          <div className="battle-def-icon battle-def-icon-light">✨</div>
-        </div>
-      )}
-      {showHeavyFx && S.defAnim && <div className={`battle-def-screen battle-def-screen-${S.defAnim}`} />}
-
-      {/* Type effectiveness popup */}
-      {S.effMsg && (
-        <div
-          className={`battle-eff-toast ${S.effMsg.color === "#22c55e" ? "battle-eff-toast-good" : "battle-eff-toast-bad"}`}
-          style={toastShadowStyle}
-        >
-          {S.effMsg.text}
-        </div>
-      )}
+      <BattleFxLayer
+        t={t}
+        showHeavyFx={showHeavyFx}
+        lowPerfMode={UX.lowPerfMode}
+        impactPhase={impactPhase}
+        atkEffect={S.atkEffect}
+        effectTarget={effectTarget}
+        dmgs={S.dmgs}
+        parts={S.parts}
+        battleMode={S.battleMode}
+        moveLevelUpIdx={S.mLvlUp}
+        starter={starter}
+        moveLvls={S.mLvls}
+        getPow={V.getPow}
+        achPopup={S.achPopup}
+        phase={S.phase}
+        enemyDrops={enemy.drops}
+        defAnim={S.defAnim}
+        effMsg={S.effMsg}
+        onRemoveDamage={A.rmD}
+        onRemoveParticle={A.rmP}
+        onDismissAchievement={A.dismissAch}
+      />
 
       {/* ═══ Battle arena ═══ */}
       <div className="battle-arena">

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { CSSProperties } from 'react';
 import type { StarterVm } from '../../../types/battle';
 import type { MoveRuntime } from './buildBattleCore';
@@ -29,7 +30,7 @@ type BattleMoveMenuProps = {
   onQuitGame: () => void;
 };
 
-export function BattleMoveMenu({
+export const BattleMoveMenu = memo(function BattleMoveMenu({
   t,
   activeStarter,
   isCoopBattle,
@@ -171,4 +172,4 @@ export function BattleMoveMenu({
       </div>
     </div>
   );
-}
+});

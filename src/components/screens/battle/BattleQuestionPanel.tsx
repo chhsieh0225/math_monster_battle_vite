@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { memo, useSyncExternalStore } from 'react';
 import type { CSSProperties } from 'react';
 import type {
   FeedbackVm,
@@ -63,7 +63,7 @@ type BattleQuestionPanelProps = {
   onAnswer: (choice: number) => void;
 };
 
-export function BattleQuestionPanel({
+export const BattleQuestionPanel = memo(function BattleQuestionPanel({
   t,
   question,
   feedback,
@@ -147,4 +147,4 @@ export function BattleQuestionPanel({
       </div>
     </div>
   );
-}
+});

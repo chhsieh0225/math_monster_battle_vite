@@ -71,12 +71,22 @@ function makeState(overrides = {}) {
   };
 }
 
+const TEST_SCENES = {
+  grass: {
+    sky: 'sky',
+    ground: 'ground',
+    platform1: 'p1',
+    platform2: 'p2',
+  },
+};
+
 test('buildBattleCore applies sealed/risky lock rules in single battle', () => {
   const core = buildBattleCore({
     state: makeState({ sealedMove: 0, chargeReady: false }),
     compactUI: false,
     getPow: (idx) => 10 + idx,
     dualEff: () => 1,
+    scenes: TEST_SCENES,
   });
 
   assert.ok(core);
@@ -96,6 +106,7 @@ test('buildBattleCore uses pvp charge gate and ignores sealed move in pvp', () =
     compactUI: false,
     getPow: (idx) => 10 + idx,
     dualEff: () => 1,
+    scenes: TEST_SCENES,
   });
   const readyCore = buildBattleCore({
     state: makeState({
@@ -107,6 +118,7 @@ test('buildBattleCore uses pvp charge gate and ignores sealed move in pvp', () =
     compactUI: false,
     getPow: (idx) => 10 + idx,
     dualEff: () => 1,
+    scenes: TEST_SCENES,
   });
 
   assert.ok(lowChargeCore);

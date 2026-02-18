@@ -295,6 +295,12 @@ export const BALANCE_CONFIG = {
       chargeEveryTurns: 4,
       sealEveryTurns: 3,
       sealStartsAtPhase: 2,
+      /** Crazy Dragon: one-time heal when HP falls below this threshold */
+      furyRegenThreshold: 0.3,
+      furyRegenHealRatio: 0.15,
+      /** Sword God: chance to halve incoming damage */
+      swordParryChance: 0.2,
+      swordParryScale: 0.5,
     },
   },
 } as const;

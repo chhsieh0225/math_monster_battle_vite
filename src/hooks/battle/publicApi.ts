@@ -108,6 +108,7 @@ const REQUIRED_STATE_KEYS = [
   'sealedMove',
   'sealedTurns',
   'shadowShieldCD',
+  'furyRegenUsed',
   'diffLevel',
   'gamePaused',
   'questionTimerSec',

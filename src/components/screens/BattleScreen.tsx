@@ -1,6 +1,7 @@
-import { useMemo, useRef, useSyncExternalStore } from 'react';
+import { useMemo, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import { useSpriteTargets } from '../../hooks/useSpriteTargets';
+import { SCENES } from '../../data/scenes';
 import { PVP_BALANCE } from '../../data/pvpBalance';
 import { hasSpecialTrait } from '../../utils/traits';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
@@ -16,7 +17,6 @@ import AchievementPopup from '../ui/AchievementPopup';
 import { ACH_MAP } from '../../data/achievements';
 import type {
   ScreenName,
-  TimerSubscribe,
   UseBattleActions,
   UseBattleState,
   UseBattleView,
@@ -24,44 +24,10 @@ import type {
 } from '../../types/battle';
 import { buildBattleCore } from './battle/buildBattleCore.ts';
 import { useAttackImpactPhase } from './battle/useAttackImpactPhase.ts';
+import { BattleMoveMenu } from './battle/BattleMoveMenu.tsx';
+import { BattleQuestionPanel } from './battle/BattleQuestionPanel.tsx';
 import './BattleScreen.css';
-
-const NOOP_SUBSCRIBE: TimerSubscribe = () => () => {};
-const ZERO_SNAPSHOT = (): number => 0;
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
-
-type QuestionTimerHudProps = {
-  timerSec: number;
-  subscribe?: TimerSubscribe;
-  getSnapshot?: () => number;
-};
-
-function QuestionTimerHud({ timerSec, subscribe, getSnapshot }: QuestionTimerHudProps) {
-  const timerLeft = useSyncExternalStore(
-    subscribe || NOOP_SUBSCRIBE,
-    getSnapshot || ZERO_SNAPSHOT,
-    getSnapshot || ZERO_SNAPSHOT,
-  );
-  const left = Math.max(0, Math.min(timerSec, timerLeft));
-  const tone = left <= 1.5 ? "#ef4444" : left <= 3 ? "#f59e0b" : "#22c55e";
-  const timerBarStyle: BattleCssVars = {
-    "--battle-timer-width": `${left / timerSec * 100}%`,
-    "--battle-timer-tone": tone,
-    "--battle-timer-pulse": left <= 1.5 ? "timerPulse 0.4s ease infinite" : "none",
-  };
-  const timerTextStyle: BattleCssVars = {
-    "--battle-timer-text-tone": left <= 1.5 ? "#ef4444" : left <= 3 ? "#f59e0b" : "rgba(255,255,255,0.4)",
-  };
-
-  return (
-    <>
-      <div className="battle-timer-bar" style={timerBarStyle} />
-      <div className="battle-timer-text" style={timerTextStyle}>
-        {left.toFixed(1)}s
-      </div>
-    </>
-  );
-}
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -179,6 +145,7 @@ export default function BattleScreen({
     compactUI: UX.compactUI,
     getPow,
     dualEff,
+    scenes: SCENES,
   }), [
     stateStarter,
     stateEnemy,
@@ -710,111 +677,48 @@ export default function BattleScreen({
       {/* ═══ Bottom panel ═══ */}
       <div className={`battle-panel ${S.phase === "question" ? "is-question" : "is-normal"}`}>
         {/* Move menu */}
-        {S.phase === "menu" && activeStarter && <div className="battle-menu-wrap">
-          {isCoopBattle && (
-            <div className="battle-menu-hint">
-              🤝 {t("battle.coopTurn", "Co-op · Active:")} {activeStarter.typeIcon} {activeStarter.name}
-            </div>
-          )}
-          {S.battleMode === "pvp" && (
-            <div className="battle-menu-hint">
-              {S.pvpTurn === "p1" ? t("battle.pvpTurn.p1", "🔵 Player 1 Turn") : t("battle.pvpTurn.p2", "🔴 Player 2 Turn")} · {activeStarter.typeIcon} {activeStarter.name} · ⚡{pvpActiveCharge}/3 · {pvpActiveSpecDefReady ? `🛡️${t("battle.status.counterReady", "Counter Ready")}` : `🛡️${pvpActiveCombo}/${pvpComboTrigger}`}
-            </div>
-          )}
-          <div className="battle-menu-grid">
-            {moveRuntime.map(({ m, i, sealed, locked, lv, pw, atCap, eff, moveProgressPct }) => {
-              const moveBtnStyle: BattleCssVars = {
-                "--move-bg": locked ? "rgba(255,255,255,0.03)" : eff > 1 ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))` : eff < 1 ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))` : m.bg,
-                "--move-border": sealed ? "rgba(168,85,247,0.4)" : locked ? "rgba(255,255,255,0.08)" : eff > 1 ? "#22c55e66" : `${m.color}44`,
-                "--move-opacity": locked ? "0.4" : "1",
-                "--move-cursor": locked ? "default" : "pointer",
-                "--move-enter-delay": `${i * 0.05}s`,
-                "--move-name-color": locked ? "#94a3b8" : m.color,
-                "--move-desc-color": locked ? "#64748b" : "#94a3b8",
-                "--move-power-color": lv > 1 ? m.color : "inherit",
-              };
-              const moveLevelBadgeStyle: BattleCssVars | undefined = atCap
-                ? undefined
-                : { "--move-level-bg": m.color };
-              const moveProgressStyle: BattleCssVars = {
-                "--move-progress-width": `${moveProgressPct}%`,
-                "--move-progress-color": m.color,
-              };
-              return <button
-                className={`battle-menu-btn ${locked ? "is-locked" : ""}`}
-                key={i}
-                onClick={() => !locked && A.selectMove(i)}
-                style={moveBtnStyle}
-              >
-                {sealed && <div className="move-sealed-mask"><span className="move-sealed-text">{t("battle.sealed", "🔮 Sealed ({turns})", { turns: S.sealedTurns })}</span></div>}
-                <div className="move-badge-stack">
-                  {S.battleMode !== "pvp" && lv > 1 && (
-                    <div
-                      className={`move-badge move-badge-level ${atCap ? "cap" : ""}`}
-                      style={moveLevelBadgeStyle}
-                    >
-                      Lv{lv}
-                    </div>
-                  )}
-                  {eff > 1 && <div className="move-badge move-badge-up">{t("battle.effect.up", "Effect Up")}</div>}
-                  {eff < 1 && <div className="move-badge move-badge-down">{t("battle.effect.down", "Effect Down")}</div>}
-                </div>
-                <div className="move-name-row">
-                  <span className="move-icon">{m.icon}</span>
-                  <span className="move-name">{m.name}</span>
-                </div>
-                <div className="move-desc-row">
-                  {m.desc} · {t("battle.power", "Power")} <b className="move-power">{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && S.battleMode === "pvp" && !chargeReadyDisplay && ` ${t("battle.risky.lockedPvp", "🔒Need 3 correct")}`}{m.risky && S.battleMode === "pvp" && chargeReadyDisplay && ` ${t("battle.risky.readyPvp", "⚡Cast Ready")}`}{m.risky && !S.chargeReady && S.battleMode !== "pvp" && ` ${t("battle.risky.locked", "🔒")}`}{m.risky && S.chargeReady && S.battleMode !== "pvp" && ` ${t("battle.risky.ready", "⚡Charge Ready!")}`}{S.battleMode !== "pvp" && !m.risky && !atCap && lv > 1 && " ↑"}{S.battleMode !== "pvp" && atCap && ` ${t("battle.max", "✦MAX")}`}
-                </div>
-                {S.battleMode !== "pvp" && !m.risky && !atCap && <div className="move-progress-track"><div className="move-progress-fill" style={moveProgressStyle} /></div>}
-              </button>;
-            })}
-          </div>
-          <div className="battle-util-row">
-            {isCoopBattle && (
-              <button className="battle-util-btn" onClick={A.toggleCoopActive} disabled={!coopCanSwitch}>
-                🔁 {coopUsingSub ? t("battle.coop.mainTurn", "Main Turn") : t("battle.coop.subTurn", "Sub Turn")}
-              </button>
-            )}
-            <button className="battle-util-btn" aria-label={t("a11y.battle.pause", "Pause game")} onClick={A.togglePause}>⏸️ {t("battle.pause", "Pause")}</button>
-            <button className="battle-util-btn" aria-label={t("a11y.battle.settings", "Open battle settings")} onClick={() => onOpenSettings("battle")}>⚙️ {t("battle.settings", "Settings")}</button>
-            <button className="battle-util-btn battle-util-btn-danger" aria-label={t("a11y.battle.run", "Run from battle")} onClick={A.quitGame}>🏳️ {t("battle.run", "Run")}</button>
-          </div>
-        </div>}
+        {S.phase === 'menu' && activeStarter && (
+          <BattleMoveMenu
+            t={t}
+            activeStarter={activeStarter}
+            isCoopBattle={isCoopBattle}
+            coopUsingSub={coopUsingSub}
+            coopCanSwitch={coopCanSwitch}
+            battleMode={S.battleMode}
+            pvpTurn={S.pvpTurn}
+            pvpActiveCharge={pvpActiveCharge}
+            pvpActiveCombo={pvpActiveCombo}
+            pvpActiveSpecDefReady={pvpActiveSpecDefReady}
+            pvpComboTrigger={pvpComboTrigger}
+            chargeReadyDisplay={chargeReadyDisplay}
+            chargeReady={S.chargeReady}
+            sealedTurns={S.sealedTurns}
+            moveRuntime={moveRuntime}
+            onSelectMove={A.selectMove}
+            onToggleCoopActive={A.toggleCoopActive}
+            onTogglePause={A.togglePause}
+            onOpenSettings={() => onOpenSettings('battle')}
+            onQuitGame={A.quitGame}
+          />
+        )}
 
         {/* Question panel */}
-        {S.phase === "question" && question && activeStarter && selectedMove && <div className="battle-question-wrap">
-          <div className="battle-question-head"><span className="battle-question-icon">{selectedMove.icon}</span><span className="battle-question-title">{selectedMove.name}！</span><span className="battle-question-sub">{activeStarter.typeIcon} {activeStarter.name}</span><span className="battle-question-note">{S.timedMode ? t("battle.answer.timed", "⏱️ Timed Answer!") : t("battle.answer.hit", "Answer correctly to hit")}</span></div>
-          <div className="battle-question-card">
-            {S.timedMode && !S.answered && (
-              <QuestionTimerHud
-                timerSec={S.questionTimerSec}
-                subscribe={V.timerSubscribe}
-                getSnapshot={V.getTimerLeft}
-              />
-            )}
-            <div className="battle-question-type">{questionTypeLabel}</div>
-            <div className="question-expression battle-question-expression">{question.display}{question.op && question.op.startsWith("unknown") ? "" : " = ?"}</div>
-          </div>
-          {feedback && <div className={`battle-feedback ${feedback.correct ? "is-correct" : "is-wrong"}`}>{feedback.correct ? t("battle.feedback.hit", "✅ Hit!") : t("battle.feedback.answer", "❌ Answer is {answer}", { answer: feedback.answer ?? '?' })}</div>}
-          {feedback && !feedback.correct && (feedback.steps?.length || 0) > 0 && (
-            <div className="battle-feedback-steps">
-              <div className="battle-feedback-steps-title">📝 {t("battle.feedback.steps", "Solution Steps:")}</div>
-              {(feedback.steps ?? []).map((step: string, i: number) => (
-                <div key={i} className="battle-feedback-step-row">
-                  {(feedback.steps?.length || 0) > 1 && <span className="battle-feedback-step-index">{t("battle.feedback.step", "Step {index}.", { index: i + 1 })}</span>}{step}
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="battle-answer-grid">
-            {question.choices.map((c: number, i: number) => {
-              let answerState = "";
-              if (feedback) answerState = c === question.answer ? "is-correct" : "is-dim";
-              return <button className={`answer-btn battle-answer-btn ${answerState}`} key={i} onClick={() => A.onAns(c)} disabled={S.answered}>{c}</button>;
-            })}
-          </div>
-        </div>}
+        {S.phase === 'question' && question && activeStarter && selectedMove && (
+          <BattleQuestionPanel
+            t={t}
+            question={question}
+            feedback={feedback}
+            activeStarter={activeStarter}
+            selectedMove={selectedMove}
+            questionTypeLabel={questionTypeLabel}
+            timedMode={S.timedMode}
+            answered={S.answered}
+            questionTimerSec={S.questionTimerSec}
+            timerSubscribe={V.timerSubscribe}
+            getTimerSnapshot={V.getTimerLeft}
+            onAnswer={A.onAns}
+          />
+        )}
 
         {/* Text box */}
         {(S.phase === "text" || S.phase === "playerAtk" || S.phase === "enemyAtk" || S.phase === "victory" || S.phase === "ko") && <TextBox text={S.bText} onClick={A.advance} />}

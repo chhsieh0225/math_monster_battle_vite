@@ -49,6 +49,8 @@ export type BattleState = {
   sealedTurns: number;
   /** Dark Lord shadow-shield cooldown: counts down each player attack, triggers at 0 */
   shadowShieldCD: number;
+  /** Crazy Dragon fury regen: true once the one-time heal has fired */
+  furyRegenUsed: boolean;
 };
 
 export type BattlePatch = Partial<BattleState>;
@@ -138,6 +140,7 @@ const BASE_STATE: BattleState = {
   sealedMove: -1,
   sealedTurns: 0,
   shadowShieldCD: -1,
+  furyRegenUsed: false,
 };
 
 function resolveValue(
@@ -228,6 +231,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         sealedMove: action.sealedMove ?? -1,
         sealedTurns: action.sealedTurns ?? 0,
         shadowShieldCD: enemy?.id === 'boss' ? 3 : -1,
+        furyRegenUsed: false,
       };
     }
 
@@ -252,6 +256,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         sealedMove: -1,
         shadowShieldCD: promoted?.id === 'boss' ? 3 : -1,
         sealedTurns: 0,
+        furyRegenUsed: false,
       };
     }
 

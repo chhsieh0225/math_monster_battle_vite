@@ -217,6 +217,7 @@ export type UseBattleState = {
   sealedMove: number;
   sealedTurns: number;
   shadowShieldCD: number;
+  furyRegenUsed: boolean;
   diffLevel: number;
   gamePaused: boolean;
   questionTimerSec: number;

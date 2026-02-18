@@ -213,7 +213,7 @@ export function useBattle() {
     mHits, mLvls, mLvlUp,
     burnStack, frozen, staticStack, specDef, defAnim, cursed,
     diffLevel,
-    bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, shadowShieldCD,
+    bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, shadowShieldCD, furyRegenUsed,
   } = battle;
 
   const battleFieldSetters = useMemo(
@@ -288,7 +288,7 @@ export function useBattle() {
     streak, passiveCount, charge, burnStack, frozen, staticStack, specDef, cursed,
     mHits, mLvls, selIdx, phase, round, q,
     screen, timedMode, battleMode, diffLevel,
-    bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, shadowShieldCD,
+    bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, shadowShieldCD, furyRegenUsed,
     tC, tW, maxStreak, defeated,
     coopActiveSlot,
     pvpStarter2, pvpHp2, pvpTurn, pvpWinner, pvpChargeP1, pvpChargeP2, pvpActionCount,
@@ -884,7 +884,7 @@ export function useBattle() {
     phase, selIdx, q, fb, bText, answered,
     dmgs, parts, eAnim, pAnim, atkEffect, effMsg,
     burnStack, frozen, staticStack, specDef, defAnim, cursed,
-    bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, shadowShieldCD, diffLevel,
+    bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, shadowShieldCD, furyRegenUsed, diffLevel,
     gamePaused,
     questionTimerSec,
     dailyChallengeFeedback,

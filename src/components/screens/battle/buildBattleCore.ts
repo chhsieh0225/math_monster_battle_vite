@@ -1,7 +1,7 @@
-import { SCENES } from '../../../data/scenes';
-import { HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from '../../../data/constants';
-import { getLevelMaxHp, getStarterLevelMaxHp } from '../../../utils/playerHp';
-import { resolveBattleLayout, type BattleLayoutConfig } from '../../../utils/battleLayout';
+import { HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from '../../../data/constants.ts';
+import { getLevelMaxHp, getStarterLevelMaxHp } from '../../../utils/playerHp.ts';
+import { resolveBattleLayout, type BattleLayoutConfig } from '../../../utils/battleLayout.ts';
+import type { ComponentType } from 'react';
 import type {
   MoveVm,
   StarterVm,
@@ -47,9 +47,10 @@ type BuildBattleCoreArgs = {
   compactUI: boolean;
   getPow: (idx: number) => number;
   dualEff: (move: MoveVm) => number;
+  scenes: Record<string, SceneLike>;
 };
 
-type MoveRuntime = {
+export type MoveRuntime = {
   m: MoveVm;
   i: number;
   sealed: boolean;
@@ -61,7 +62,15 @@ type MoveRuntime = {
   moveProgressPct: number;
 };
 
-type SceneConfig = (typeof SCENES)[keyof typeof SCENES];
+export type SceneLike = {
+  bgImg?: string;
+  sky: string;
+  ground: string;
+  platform1: string;
+  platform2: string;
+  Deco?: ComponentType;
+};
+type SceneConfig = SceneLike;
 type StarterStage = StarterVm['stages'][number];
 
 export type BattleCore = {
@@ -106,15 +115,12 @@ export type BattleCore = {
   pvpPlayerSpecDef: boolean;
 };
 
-function hasSceneKey(value: string): value is keyof typeof SCENES {
-  return value in SCENES;
-}
-
 export function buildBattleCore({
   state,
   compactUI,
   getPow,
   dualEff,
+  scenes,
 }: BuildBattleCoreArgs): BattleCore | null {
   const {
     starter,
@@ -186,7 +192,8 @@ export function buildBattleCore({
   const mainMaxHp = getLevelMaxHp(pLvl, pStg);
   const subMaxHp = showAllySub && allySub ? getStarterLevelMaxHp(allySub, pLvl, pStg) : getLevelMaxHp(1, 0);
   const sceneKey = enemy.sceneMType || enemy.mType || 'grass';
-  const scene = hasSceneKey(sceneKey) ? SCENES[sceneKey] : SCENES.grass;
+  const scene = scenes[sceneKey] || scenes.grass || Object.values(scenes)[0];
+  if (!scene) return null;
 
   const layout = resolveBattleLayout({
     battleMode,

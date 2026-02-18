@@ -30,7 +30,8 @@ type FieldKey =
   | 'bossCharging'
   | 'sealedMove'
   | 'sealedTurns'
-  | 'shadowShieldCD';
+  | 'shadowShieldCD'
+  | 'furyRegenUsed';
 
 type FieldValue<K extends FieldKey> = BattleState[K] | ((prev: BattleState[K]) => BattleState[K]);
 
@@ -76,6 +77,7 @@ type BattleFieldSetters = {
   setSealedMove: FieldSetter<'sealedMove'>;
   setSealedTurns: FieldSetter<'sealedTurns'>;
   setShadowShieldCD: FieldSetter<'shadowShieldCD'>;
+  setFuryRegenUsed: FieldSetter<'furyRegenUsed'>;
 };
 
 function createFieldSetter<K extends FieldKey>(
@@ -123,5 +125,6 @@ export function createBattleFieldSetters(dispatchBattle: DispatchBattle): Battle
     setSealedMove: createFieldSetter(setBattleField, 'sealedMove'),
     setSealedTurns: createFieldSetter(setBattleField, 'sealedTurns'),
     setShadowShieldCD: createFieldSetter(setBattleField, 'shadowShieldCD'),
+    setFuryRegenUsed: createFieldSetter(setBattleField, 'furyRegenUsed'),
   };
 }

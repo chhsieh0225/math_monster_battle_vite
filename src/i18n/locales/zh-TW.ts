@@ -374,6 +374,7 @@ const zhTW = {
   "battle.ko.bossBreath": "{name} 被暗黑吐息擊倒了...",
   "battle.boss.charge": "⚠️ {name} 正在蓄力！下回合將釋放大招！",
   "battle.boss.sealMove": "💀 {name} 封印了你的「{move}」！（{turns}回合）",
+  "battle.boss.intimidate": "💀 {name} 先手威壓！你的「{move}」被封印了！（{turns}回合）",
   "battle.boss.phase2": "💀 {name} 進入狂暴狀態！攻擊力上升！",
   "battle.boss.phase3": "💀 {name} 覺醒了！背水一戰！",
 

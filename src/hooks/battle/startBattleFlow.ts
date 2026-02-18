@@ -1,4 +1,6 @@
 import type { BattleMode, BattlePhase, EnemyVm, ScreenName, StarterVm } from '../../types/battle';
+import { BOSS_IDS } from '../../data/monsterConfigs.ts';
+import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -25,6 +27,8 @@ type RunStartBattleFlowArgs = {
     enemy: EnemyLite;
     enemySub: EnemyLite;
     round: number;
+    sealedMove?: number;
+    sealedTurns?: number;
   }) => void;
   updateEnc: (enemy: ExistingEnemy) => void;
   setPhase: (phase: BattlePhase) => void;
@@ -87,7 +91,13 @@ export function runStartBattleFlow({
   const isTeamMode = battleMode === 'double' || battleMode === 'coop';
   const enemySub = isTeamMode ? localizeEnemy(list[idx + 1] || null, locale) : null;
 
-  dispatchBattle({ type: 'start_battle', enemy, enemySub, round: idx });
+  // Boss first-move intimidation: seal a random move at battle start
+  const isBoss = BOSS_IDS.has(enemy.id ?? '');
+  const sealPool = BALANCE_CONFIG.traits.boss.sealMovePool;
+  const sealIdx = isBoss ? sealPool[Math.floor(Math.random() * sealPool.length)] : undefined;
+  const sealTurns = isBoss ? BALANCE_CONFIG.traits.boss.sealDurationTurns : undefined;
+
+  dispatchBattle({ type: 'start_battle', enemy, enemySub, round: idx, sealedMove: sealIdx, sealedTurns: sealTurns });
   resetFrozen();
 
   updateEnc(enemy);
@@ -130,7 +140,7 @@ export function runStartBattleFlow({
       ));
     }
   } else {
-    setBText(tr(
+    let introText = tr(
       t,
       'battle.start.single',
       '【{scene}】A wild {enemy}({enemyType}) Lv.{level} appeared!',
@@ -140,7 +150,22 @@ export function runStartBattleFlow({
         enemyType: `${enemy.typeIcon || ''}${enemy.typeIcon2 || ''}${enemy.typeName || ''}${enemy.typeName2 ? '/' + enemy.typeName2 : ''}`,
         level: enemy.lvl ?? 1,
       },
-    ));
+    );
+    // Append boss intimidation message
+    if (isBoss && sealIdx != null && starter?.moves) {
+      const sealedMoveName = starter.moves[sealIdx]?.name || '???';
+      introText += '\n' + tr(
+        t,
+        'battle.boss.intimidate',
+        '💀 {name} intimidates! Your "{move}" is sealed! ({turns} turns)',
+        {
+          name: enemy.name || '',
+          move: sealedMoveName,
+          turns: sealTurns ?? 0,
+        },
+      );
+    }
+    setBText(introText);
   }
 
   setScreen('battle');

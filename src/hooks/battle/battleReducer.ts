@@ -75,6 +75,10 @@ type StartBattleAction = {
   enemy?: BattleEntity;
   enemySub?: BattleEntity;
   round?: number;
+  /** Boss first-move intimidation: sealed move index (0-2) */
+  sealedMove?: number;
+  /** Boss first-move intimidation: seal duration in turns */
+  sealedTurns?: number;
 };
 
 type PromoteEnemySubAction = {
@@ -218,8 +222,8 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         bossPhase: BOSS_IDS.has(enemy?.id ?? '') ? 1 : 0,
         bossTurn: 0,
         bossCharging: false,
-        sealedMove: -1,
-        sealedTurns: 0,
+        sealedMove: action.sealedMove ?? -1,
+        sealedTurns: action.sealedTurns ?? 0,
       };
     }
 

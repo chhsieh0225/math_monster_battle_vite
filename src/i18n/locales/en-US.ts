@@ -374,6 +374,7 @@ const enUS = {
   "battle.ko.bossBreath": "{name} was knocked out by dark breath...",
   "battle.boss.charge": "⚠️ {name} is charging! It will unleash a big move next turn!",
   "battle.boss.sealMove": "💀 {name} sealed your \"{move}\"! ({turns} turns)",
+  "battle.boss.intimidate": "💀 {name} intimidates! Your \"{move}\" is sealed! ({turns} turns)",
   "battle.boss.phase2": "💀 {name} entered rage state! ATK increased!",
   "battle.boss.phase3": "💀 {name} awakened! Final stand!",
 

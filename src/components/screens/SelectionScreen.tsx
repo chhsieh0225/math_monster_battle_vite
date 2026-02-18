@@ -3,9 +3,15 @@ import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters.ts';
 import { PVP_SELECTABLE_ROSTER } from '../../data/pvpRoster.ts';
-import type { SelectionMode, StarterId, StarterSelectable } from '../../types/game';
+import type {
+  EncyclopediaData,
+  SelectionMode,
+  StarterId,
+  StarterSelectable,
+} from '../../types/game';
 import { useI18n } from '../../i18n';
 import { localizeStarterList } from '../../utils/contentLocalization.ts';
+import { isPvpBossLockedForSelection } from './selectionBossUnlock.ts';
 import './SelectionScreen.css';
 
 type StarterDesc = {
@@ -132,11 +138,17 @@ function normalizeStarterList(value: unknown): StarterSelectable[] {
 
 type SelectionScreenProps = {
   mode?: SelectionMode;
+  encData?: EncyclopediaData;
   onSelect: (payload: StarterSelectable | DualSelectionPayload) => void;
   onBack: () => void;
 };
 
-export default function SelectionScreen({ mode = 'single', onSelect, onBack }: SelectionScreenProps) {
+export default function SelectionScreen({
+  mode = 'single',
+  encData,
+  onSelect,
+  onBack,
+}: SelectionScreenProps) {
   const { t, locale } = useI18n();
   const DESCS = buildStarterDescs(t);
   const starters = useMemo(
@@ -150,6 +162,7 @@ export default function SelectionScreen({ mode = 'single', onSelect, onBack }: S
   const [focusSlot, setFocusSlot] = useState<'p1' | 'p2'>('p1');
 
   const handlePick = (starter: StarterSelectable) => {
+    if (isPvpBossLockedForSelection(mode, starter.id, encData)) return;
     if (!isDual) {
       if (picked?.id === starter.id) {
         setPicked(null);
@@ -290,6 +303,7 @@ export default function SelectionScreen({ mode = 'single', onSelect, onBack }: S
 
       <div className="selection-card-list">
         {starters.map((starter) => {
+          const locked = isPvpBossLockedForSelection(mode, starter.id, encData);
           const isP1 = picked1?.id === starter.id;
           const isP2 = picked2?.id === starter.id;
           const selected = isDual ? (isP1 || isP2) : picked?.id === starter.id;
@@ -319,12 +333,17 @@ export default function SelectionScreen({ mode = 'single', onSelect, onBack }: S
               className={[
                 'selection-card-btn',
                 selected ? 'is-selected' : '',
+                locked ? 'is-locked' : '',
                 isP1 ? 'is-p1' : '',
                 isP2 ? 'is-p2' : '',
               ].join(' ').trim()}
               key={starter.id}
               onClick={() => handlePick(starter)}
-              aria-label={t('selection.a11y.pickStarter', 'Choose starter {name}', { name: starter.name })}
+              disabled={locked}
+              aria-disabled={locked || undefined}
+              aria-label={locked
+                ? t('selection.a11y.lockedStarter', 'Locked boss. Defeat it in other modes first.')
+                : t('selection.a11y.pickStarter', 'Choose starter {name}', { name: starter.name })}
               style={cardVars}
             >
               <div className="selection-card-top">
@@ -332,27 +351,43 @@ export default function SelectionScreen({ mode = 'single', onSelect, onBack }: S
                   <MonsterSprite
                     svgStr={selectedStage.svgFn(starter.c1, starter.c2)}
                     size={selected ? 72 : 56}
-                    ariaLabel={t('selection.a11y.starterSprite', '{name} sprite', { name: starter.name })}
+                    ariaLabel={locked
+                      ? t('selection.a11y.lockedStarter', 'Locked boss. Defeat it in other modes first.')
+                      : t('selection.a11y.starterSprite', '{name} sprite', { name: starter.name })}
                   />
                 </div>
                 <div className="selection-card-main">
                   <div className="selection-card-name">
-                    {starter.typeIcon} {selected ? selectedStage.name : starter.name}
-                    <span className="selection-card-type-tag">
-                      {t('selection.typeTag', '{type} type', { type: starter.typeName })}
-                    </span>
+                    {locked
+                      ? t('selection.locked.name', '????')
+                      : `${starter.typeIcon} ${selected ? selectedStage.name : starter.name}`}
+                    {locked ? (
+                      <span className="selection-card-locked-tag">
+                        {t('selection.locked.tag', 'Locked')}
+                      </span>
+                    ) : (
+                      <span className="selection-card-type-tag">
+                        {t('selection.typeTag', '{type} type', { type: starter.typeName })}
+                      </span>
+                    )}
                     {isDual && isP1 && <span className="selection-role-tag is-p1">{t('selection.slot.p1', 'Player 1')}</span>}
                     {isDual && isP2 && <span className="selection-role-tag is-p2">{t('selection.slot.p2', 'Player 2')}</span>}
                   </div>
-                  <div className="selection-card-moves-brief">
-                    {starter.moves.slice(0, 3).map((move, idx) => (
-                      <span key={idx}>{move.icon} {move.name}{idx < 2 ? '　' : ''}</span>
-                    ))}
-                  </div>
+                  {locked ? (
+                    <div className="selection-card-locked-hint">
+                      {t('selection.locked.hint', 'Defeat this boss in non-PvP modes to unlock selection.')}
+                    </div>
+                  ) : (
+                    <div className="selection-card-moves-brief">
+                      {starter.moves.slice(0, 3).map((move, idx) => (
+                        <span key={idx}>{move.icon} {move.name}{idx < 2 ? '　' : ''}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {selected && (
+              {selected && !locked && (
                 <div className="selection-card-expand">
                   <div className="selection-card-desc">{descText}</div>
                   <div className="selection-card-passive-list">

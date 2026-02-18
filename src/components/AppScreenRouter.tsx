@@ -209,6 +209,7 @@ export default function AppScreenRouter({
     return wrapMain(
       <SelectionScreen
         mode={S.battleMode}
+        encData={S.encData}
         onSelect={(payload: SelectionPayload) => {
           void V.sfx.init().catch(() => {});
           if (S.battleMode === 'coop' && isDualSelectionPayload(payload)) {

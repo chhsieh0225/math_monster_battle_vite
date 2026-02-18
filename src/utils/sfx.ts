@@ -25,6 +25,56 @@ function clampBgmVolume(next: number): number {
 }
 let bgmVolume = clampBgmVolume(Number.parseFloat(readText(BGM_VOLUME_KEY, String(DEFAULT_BGM_VOLUME))));
 
+// ── Reverb send bus ──────────────────────────────────────────────
+const REVERB_DECAY_SEC = 1.4;     // IR length — short plate-style tail
+const REVERB_WET_SFX = 0.18;     // subtle wet for SFX
+const REVERB_WET_BGM = 0.08;     // even subtler for BGM (already a full mix)
+const REVERB_DRY = 0.92;         // keep dry signal nearly unity
+let sfxDest: AudioNode | null = null;     // SFX master bus → dry+wet
+let reverbConvolver: ConvolverNode | null = null;
+
+/** Generate a stereo impulse response buffer (exponential decay white noise). */
+function buildReverbIR(audioCtx: AudioContext, decay: number): AudioBuffer {
+  const rate = audioCtx.sampleRate;
+  const length = Math.floor(rate * Math.max(0.3, decay));
+  const buf = audioCtx.createBuffer(2, length, rate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = buf.getChannelData(ch);
+    for (let i = 0; i < length; i++) {
+      // Exponential decay × white noise; slight stereo decorrelation via independent noise
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-3.5 * i / length);
+    }
+  }
+  return buf;
+}
+
+/** Build the reverb send bus: sfxDest → dry + wet→convolver → destination. */
+function initReverbBus(audioCtx: AudioContext): void {
+  try {
+    reverbConvolver = audioCtx.createConvolver();
+    reverbConvolver.buffer = buildReverbIR(audioCtx, REVERB_DECAY_SEC);
+
+    const dryGain = audioCtx.createGain();
+    dryGain.gain.value = REVERB_DRY;
+
+    const wetGain = audioCtx.createGain();
+    wetGain.gain.value = REVERB_WET_SFX;
+
+    const bus = audioCtx.createGain();
+    bus.connect(dryGain);
+    bus.connect(wetGain);
+    dryGain.connect(audioCtx.destination);
+    wetGain.connect(reverbConvolver);
+    reverbConvolver.connect(audioCtx.destination);
+
+    sfxDest = bus;
+  } catch {
+    // Fallback: no reverb, direct to destination
+    sfxDest = audioCtx.destination;
+    reverbConvolver = null;
+  }
+}
+
 // ── Note → frequency lookup (pre-computed, avoids runtime Math) ──
 const NOTE_FREQ: Record<string, number> = {
   C2: 65.41, D2: 73.42, E2: 82.41, F2: 87.31, G2: 98,
@@ -90,7 +140,7 @@ function playNote(freq: number, dur: number, {
   } else {
     osc.connect(gain);
   }
-  gain.connect(ctx.destination);
+  gain.connect(sfxDest || ctx.destination);
   osc.start(t);
   osc.stop(t + attack + decay + dur + release + 0.05);
 }
@@ -151,7 +201,7 @@ function noiseBurst({
   src.connect(hpFilter);
   hpFilter.connect(lpFilter);
   lpFilter.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(sfxDest || ctx.destination);
   src.start(t);
   src.stop(t + dur + 0.1);
 }
@@ -296,7 +346,7 @@ function shapedNoise({
   const gain = ctx.createGain();
   applyEnvelope(gain, t, Math.max(0.05, dur), vol, shape);
   node.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(sfxDest || ctx.destination);
   src.start(t, randomFloat(0, 0.35));
   src.stop(t + dur + 0.08);
 }
@@ -336,7 +386,7 @@ function sweepTone({
   gain.gain.exponentialRampToValueAtTime(0.001, t + dur + 0.06);
   osc.connect(filter);
   filter.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(sfxDest || ctx.destination);
   osc.start(t);
   osc.stop(t + dur + 0.08);
 }
@@ -358,7 +408,7 @@ function metalPing(dur = 0.1): void {
   gain.gain.setValueAtTime(0.08, t);
   gain.gain.exponentialRampToValueAtTime(0.001, t + dur + 0.05);
   osc.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(sfxDest || ctx.destination);
   osc.start(t);
   mod.start(t);
   osc.stop(t + dur + 0.1);
@@ -1518,6 +1568,15 @@ function startBgmLoop(track: BgmTrack): void {
   bgmGain.gain.setValueAtTime(0.0001, ctx.currentTime);
   bgmGain.gain.linearRampToValueAtTime(bgmVolume, ctx.currentTime + 0.5);
   bgmGain.connect(ctx.destination);
+  // Light reverb send for BGM (subtler than SFX)
+  if (reverbConvolver) {
+    try {
+      const bgmWet = ctx.createGain();
+      bgmWet.gain.value = REVERB_WET_BGM;
+      bgmGain.connect(bgmWet);
+      bgmWet.connect(reverbConvolver);
+    } catch { /* reverb unavailable — fine */ }
+  }
 
   const pattern = BGM_PATTERNS[track];
   bgmCurrent = track;
@@ -1582,6 +1641,7 @@ const sfx = {
       if (!Ctor) return;
       ctx = new Ctor();
       if (ctx.state === 'suspended') await ctx.resume();
+      initReverbBus(ctx);
       ready = true;
     } catch {
       // audio not available

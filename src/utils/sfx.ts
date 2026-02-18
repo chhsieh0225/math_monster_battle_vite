@@ -33,6 +33,8 @@ const REVERB_DRY = 1.0;          // full dry signal — no attenuation
 const SFX_MASTER_GAIN = 1.8;     // global SFX volume boost (individual vols were too conservative)
 let sfxDest: AudioNode | null = null;     // SFX master bus → dry+wet
 let reverbConvolver: ConvolverNode | null = null;
+const pendingSfx = new Set<string>();             // deferred plays waiting for AudioContext resume
+const lastPlayTime = new Map<string, number>();   // debounce: last fire time per sound name
 
 /** Generate a stereo impulse response buffer (exponential decay white noise). */
 function buildReverbIR(audioCtx: AudioContext, decay: number): AudioBuffer {
@@ -62,6 +64,7 @@ function initReverbBus(audioCtx: AudioContext): void {
     wetGain.gain.value = REVERB_WET_SFX;
 
     const bus = audioCtx.createGain();
+    bus.gain.value = SFX_MASTER_GAIN;
     bus.connect(dryGain);
     bus.connect(wetGain);
     dryGain.connect(audioCtx.destination);
@@ -927,6 +930,7 @@ let bgmCurrent: BgmTrack | null = null;
 let bgmNextLoopTime = 0;
 let bgmFormIndex = 0;
 let pendingBgmTrack: BgmTrack | null = null;
+let lastBgmTrack: BgmTrack | null = null;   // remember track for mute→unmute resume
 let resumePromise: Promise<void> | null = null;
 const BGM_SCHEDULE_INTERVAL_MS = 50;
 const BGM_LOOKAHEAD_SEC = 0.12;
@@ -1661,9 +1665,21 @@ const sfx = {
   play(name: string): void {
     if (!ready || sfxMuted) return;
     if (ctx && ctx.state !== 'running') {
-      resumeAudioIfNeeded(() => sfx.play(name));
+      // Only queue ONE deferred play per name to prevent overlap stacking
+      if (!pendingSfx.has(name)) {
+        pendingSfx.add(name);
+        resumeAudioIfNeeded(() => {
+          pendingSfx.delete(name);
+          sfx.play(name);
+        });
+      }
       return;
     }
+    // Debounce: skip if the same sound fired within 30ms
+    const now = performance.now();
+    const last = lastPlayTime.get(name) || 0;
+    if (now - last < 30) return;
+    lastPlayTime.set(name, now);
     try {
       const fn = isSoundName(name) ? SOUNDS[name] : null;
       if (fn) fn();
@@ -1683,11 +1699,20 @@ const sfx = {
   },
   /** Set BGM mute (does NOT affect SFX). */
   setBgmMuted(next: boolean): boolean {
+    const wasMuted = bgmMuted;
     bgmMuted = !!next;
     writeText(BGM_MUTED_KEY, bgmMuted ? '1' : '0');
     if (bgmMuted) {
+      // Remember which track was playing so we can resume later
+      if (bgmCurrent) lastBgmTrack = bgmCurrent;
       pendingBgmTrack = null;
       stopBgmLoop();
+    } else if (wasMuted && !bgmMuted) {
+      // Unmuting: restart the last track immediately
+      const track = lastBgmTrack || pendingBgmTrack;
+      if (track && ready) {
+        try { startBgmLoop(track); } catch { /* best-effort */ }
+      }
     }
     return bgmMuted;
   },
@@ -1733,6 +1758,7 @@ const sfx = {
     return ready;
   },
   startBgm(track: BgmTrack): void {
+    lastBgmTrack = track;  // always remember intent for mute→unmute
     if (!ready || bgmMuted) return;
     if (bgmCurrent === track) return;
     pendingBgmTrack = track;

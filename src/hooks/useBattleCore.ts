@@ -28,6 +28,7 @@ import type {
   ScreenName,
   StarterVm,
 } from '../types/battle';
+import type { ItemId } from '../types/game';
 import type { DailyChallengePlan, StreakTowerPlan } from '../types/challenges';
 
 import { SCENE_NAMES } from '../data/scenes';
@@ -55,6 +56,7 @@ import {
 import {
   getLevelMaxHp,
   getStarterMaxHp,
+  getStarterLevelMaxHp,
   getStarterStageIdx,
 } from '../utils/playerHp';
 import { useTimer } from './useTimer';
@@ -62,6 +64,13 @@ import { useAchievements } from './useAchievements';
 import { useEncyclopedia } from './useEncyclopedia';
 import { useSessionLog } from './useSessionLog';
 import { getCollectionPerks, loadCollection, type CollectionPerks } from '../utils/collectionStore.ts';
+import {
+  applyDropsToInventory,
+  consumeInventory,
+  loadInventory,
+  saveInventory,
+} from '../utils/inventoryStore.ts';
+import { ITEM_CATALOG } from '../data/itemCatalog.ts';
 import { useBattleRng } from './useBattleRng';
 import { useBattleUIState } from './useBattleUIState';
 import { useDailyChallengeRun } from './useDailyChallengeRun';
@@ -153,6 +162,7 @@ export function useBattle() {
   const UI = useBattleUIState({ rand, randInt });
   const campaignPlanRef = useRef<ReturnType<typeof buildCampaignRunPlan> | null>(null);
   const [collectionPerks, setCollectionPerks] = useState<CollectionPerks>(() => getCollectionPerks(loadCollection()));
+  const [inventory, setInventory] = useState(() => loadInventory());
 
   // ──── Screen & mode ────
   const [screen, setScreenState] = useState<ScreenName>('title');
@@ -245,6 +255,8 @@ export function useBattle() {
     setEHp,
     setFrozen,
     setDiffLevel,
+    setSpecDef,
+    setDefAnim,
   } = battleFieldSetters;
 
   // ──── Phase & UI ────
@@ -311,6 +323,7 @@ export function useBattle() {
     pvpStarter2, pvpHp2, pvpTurn, pvpWinner, pvpChargeP1, pvpChargeP2, pvpActionCount,
     pvpBurnP1, pvpBurnP2, pvpFreezeP1, pvpFreezeP2, pvpStaticP1, pvpStaticP2,
     pvpParalyzeP1, pvpParalyzeP2, pvpComboP1, pvpComboP2, pvpSpecDefP1, pvpSpecDefP2,
+    inventory,
   });
 
   const {
@@ -698,6 +711,16 @@ export function useBattle() {
           tryUnlock,
           applyVictoryAchievements,
           updateEncDefeated,
+          onDropResolved: (drop) => {
+            if (!drop) return;
+            setInventory((prev) => {
+              const result = applyDropsToInventory(prev, [drop]);
+              if (result.changed) {
+                saveInventory(result.inventory);
+              }
+              return result.inventory;
+            });
+          },
           onCollectionUpdated: (result) => {
             if (result && result.perks) setCollectionPerks(result.perks);
           },
@@ -898,6 +921,134 @@ export function useBattle() {
     });
   };
 
+  const useItem = useCallback((itemId: ItemId) => {
+    if (phase !== 'menu') return;
+
+    const itemDef = ITEM_CATALOG[itemId];
+    const itemName = t(itemDef.nameKey, itemDef.nameFallback);
+    const spendItem = (): boolean => {
+      const result = consumeInventory(inventory, itemId, 1);
+      if (!result.consumed) return false;
+      setInventory(result.inventory);
+      saveInventory(result.inventory);
+      return true;
+    };
+
+    if (battleMode === 'pvp') {
+      setEffMsg({
+        text: t('battle.item.use.disabledPvp', '{item} is disabled in PvP.', { item: itemName }),
+        color: '#ef4444',
+      });
+      return;
+    }
+
+    if (itemId === 'potion') {
+      const isCoopSubActive = (battleMode === 'coop' || battleMode === 'double')
+        && coopActiveSlot === 'sub'
+        && Boolean(allySub)
+        && pHpSub > 0;
+      const currentHp = isCoopSubActive ? pHpSub : pHp;
+      const maxHp = isCoopSubActive && allySub
+        ? getStarterLevelMaxHp(allySub, pLvl, pStg)
+        : getPlayerMaxHp(pStg, pLvl);
+
+      if (currentHp >= maxHp) {
+        setEffMsg({
+          text: t('battle.item.use.potion.full', '{item} failed: HP already full.', { item: itemName }),
+          color: '#f97316',
+        });
+        return;
+      }
+      if (!spendItem()) {
+        setEffMsg({
+          text: t('battle.item.use.none', 'No {item} left.', { item: itemName }),
+          color: '#ef4444',
+        });
+        return;
+      }
+
+      const heal = Math.max(12, Math.round(maxHp * 0.32));
+      const restored = Math.max(1, Math.min(maxHp, currentHp + heal) - currentHp);
+      if (isCoopSubActive) {
+        setPHpSub((prev) => Math.min(maxHp, prev + restored));
+      } else {
+        setPHp((prev) => Math.min(maxHp, prev + restored));
+      }
+      setBText(t('battle.item.use.potion.heal', '{item} restored {hp} HP!', {
+        item: itemName,
+        hp: restored,
+      }));
+      setEffMsg({
+        text: t('battle.item.use.potion.heal', '{item} restored {hp} HP!', {
+          item: itemName,
+          hp: restored,
+        }),
+        color: '#22c55e',
+      });
+      sfx.play('heal');
+      return;
+    }
+
+    if (itemId === 'shield') {
+      if (specDef) {
+        setEffMsg({
+          text: t('battle.item.use.shield.active', 'Counter shield already active.'),
+          color: '#f97316',
+        });
+        return;
+      }
+      if (!spendItem()) {
+        setEffMsg({
+          text: t('battle.item.use.none', 'No {item} left.', { item: itemName }),
+          color: '#ef4444',
+        });
+        return;
+      }
+      setSpecDef(true);
+      const activeStarterType = getActingStarter(sr.current)?.type || 'fire';
+      setDefAnim(activeStarterType);
+      safeTo(() => setDefAnim(null), 280);
+      setBText(t('battle.item.use.shield.ready', '{item} activated! Next hit will be blocked.', {
+        item: itemName,
+      }));
+      setEffMsg({
+        text: t('battle.item.use.shield.ready', '{item} activated! Next hit will be blocked.', {
+          item: itemName,
+        }),
+        color: '#22c55e',
+      });
+      sfx.play('specDef');
+      return;
+    }
+
+    setEffMsg({
+      text: t('battle.item.use.none', 'No {item} left.', { item: itemName }),
+      color: '#ef4444',
+    });
+  }, [
+    phase,
+    t,
+    inventory,
+    battleMode,
+    coopActiveSlot,
+    allySub,
+    pHpSub,
+    pHp,
+    pLvl,
+    pStg,
+    getPlayerMaxHp,
+    setPHpSub,
+    setPHp,
+    setBText,
+    setEffMsg,
+    specDef,
+    setSpecDef,
+    getActingStarter,
+    sr,
+    setDefAnim,
+    safeTo,
+  ]);
+
   const setStarterLocalized = useCallback((nextStarter: StarterVm | null) => {
     setStarter(localizeStarter(nextStarter, locale));
   }, [locale]);
@@ -928,6 +1079,7 @@ export function useBattle() {
     dailyChallengeFeedback,
     towerChallengeFeedback,
     expNext, chargeReady,
+    inventory,
     achUnlocked, achPopup, encData,
   });
 
@@ -944,6 +1096,7 @@ export function useBattle() {
     setPvpStarter2Localized,
     startGame,
     selectMove,
+    useItem,
     onAns,
     advance,
     continueAfterEvolve,

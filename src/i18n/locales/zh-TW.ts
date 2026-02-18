@@ -288,6 +288,17 @@ const zhTW = {
   "battle.pause": "暫停",
   "battle.settings": "設定",
   "battle.run": "逃跑",
+  "battle.item.potion.name": "回復藥",
+  "battle.item.potion.desc": "恢復目前出戰角色生命",
+  "battle.item.shield.name": "護盾符",
+  "battle.item.shield.desc": "下一次受擊時格擋",
+  "battle.item.use.none": "沒有 {item} 了。",
+  "battle.item.use.disabledPvp": "{item} 在 PvP 中不可使用。",
+  "battle.item.use.disabledPvpShort": "PvP 不可使用道具",
+  "battle.item.use.potion.full": "{item} 使用失敗：生命已滿。",
+  "battle.item.use.potion.heal": "{item} 恢復了 {hp} 點生命！",
+  "battle.item.use.shield.active": "反制護盾已啟用。",
+  "battle.item.use.shield.ready": "{item} 啟動！下一擊將被格擋。",
   "battle.answer.timed": "⏱️ 限時回答！",
   "battle.answer.hit": "回答正確才能命中",
   "battle.qtype.mul": "乘法題",
@@ -582,6 +593,8 @@ const zhTW = {
   "a11y.battle.pause": "暫停遊戲",
   "a11y.battle.settings": "開啟戰鬥設定",
   "a11y.battle.run": "逃離戰鬥",
+  "a11y.battle.items": "戰鬥道具",
+  "a11y.battle.useItem": "使用 {item}",
 } as const;
 
 export default zhTW;

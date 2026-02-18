@@ -72,6 +72,7 @@ type RunVictoryFlowArgs = {
   t?: Translator;
   setPendingEvolve: (value: boolean) => void;
   onCollectionUpdated?: (result: CollectionAddResult) => void;
+  onDropResolved?: (drop: string) => void;
 };
 
 function formatFallback(template: string, params?: TranslatorParams): string {
@@ -118,6 +119,7 @@ export function runVictoryFlow({
   t,
   setPendingEvolve,
   onCollectionUpdated,
+  onDropResolved,
 }: RunVictoryFlowArgs): void {
   const s = sr.current;
   const enemy = s.enemy;
@@ -168,6 +170,9 @@ export function runVictoryFlow({
     randInt,
   });
   const drop = dropResult.drop;
+  if (drop && typeof onDropResolved === 'function') {
+    onDropResolved(drop);
+  }
 
   // Persist the drop to the collection store (best-effort fire-and-forget).
   if (drop) {

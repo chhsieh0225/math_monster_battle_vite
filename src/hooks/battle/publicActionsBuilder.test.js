@@ -22,6 +22,7 @@ test('buildUseBattleActions maps localized starter setters into public action na
     setPvpStarter2Localized: createFn('setPvpStarter2Localized', calls),
     startGame: createFn('startGame', calls),
     selectMove: createFn('selectMove', calls),
+    useItem: createFn('useItem', calls),
     onAns: createFn('onAns', calls),
     advance: createFn('advance', calls),
     continueAfterEvolve: createFn('continueAfterEvolve', calls),
@@ -56,6 +57,7 @@ test('buildUseBattleActions exposes full expected public action surface', () => 
     setPvpStarter2Localized: noop,
     startGame: noop,
     selectMove: noop,
+    useItem: noop,
     onAns: noop,
     advance: noop,
     continueAfterEvolve: noop,
@@ -87,5 +89,6 @@ test('buildUseBattleActions exposes full expected public action surface', () => 
     'startGame',
     'toggleCoopActive',
     'togglePause',
+    'useItem',
   ]);
 });

@@ -65,6 +65,7 @@ test('runVictoryFlow settles exp, evolve state, drops, and victory text', () => 
     phase: [],
     sfx: [],
     pending: [],
+    drops: [],
     achievements: [],
     encDefeated: [],
   };
@@ -112,6 +113,7 @@ test('runVictoryFlow settles exp, evolve state, drops, and victory text', () => 
     setPhase: (value) => { calls.phase.push(value); },
     sfx: { play: (name) => { calls.sfx.push(name); } },
     setPendingEvolve: (value) => { calls.pending.push(value); },
+    onDropResolved: (drop) => { calls.drops.push(drop); },
   });
 
   assert.deepEqual(calls.burned, [0]);
@@ -128,6 +130,7 @@ test('runVictoryFlow settles exp, evolve state, drops, and victory text', () => 
   assert.equal(pHp.getValue(), 45);
   assert.equal(defeated.getValue(), 3);
   assert.deepEqual(calls.pending, [true]);
+  assert.deepEqual(calls.drops, ['🍖']);
   assert.deepEqual(calls.sfx, ['evolve', 'victory']);
   assert.deepEqual(calls.achievements, ['史萊姆王']);
   assert.deepEqual(calls.encDefeated, ['史萊姆王']);

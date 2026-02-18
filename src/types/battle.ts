@@ -1,4 +1,10 @@
-import type { AchievementId, EncyclopediaData, StarterId } from './game';
+import type {
+  AchievementId,
+  EncyclopediaData,
+  InventoryData,
+  ItemId,
+  StarterId,
+} from './game';
 import type {
   DailyChallengeFeedback,
   DailyChallengePlan,
@@ -233,6 +239,7 @@ export type UseBattleState = {
   towerChallengeFeedback: TowerChallengeFeedback | null;
   expNext: number;
   chargeReady: boolean;
+  inventory: InventoryData;
   achUnlocked: AchievementId[];
   achPopup: AchievementId | null;
   encData: EncyclopediaData;
@@ -254,6 +261,7 @@ export type UseBattleActions = {
     starter2?: StarterVm | null,
   ) => void;
   selectMove: (idx: number) => void;
+  useItem: (itemId: ItemId) => void;
   onAns: (choice: number) => void;
   advance: () => void;
   continueAfterEvolve: () => void;

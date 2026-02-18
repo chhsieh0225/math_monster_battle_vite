@@ -639,7 +639,9 @@ export default function BattleScreen({
             chargeReady={S.chargeReady}
             sealedTurns={S.sealedTurns}
             moveRuntime={moveRuntime}
+            inventory={S.inventory}
             onSelectMove={A.selectMove}
+            onUseItem={A.useItem}
             onToggleCoopActive={A.toggleCoopActive}
             onTogglePause={A.togglePause}
             onOpenSettings={() => onOpenSettings('battle')}

@@ -1,4 +1,5 @@
 import type { UseBattleActions, BattleMode, ScreenName, StarterVm } from '../../types/battle';
+import type { ItemId } from '../../types/game';
 import type { DailyChallengePlan, StreakTowerPlan } from '../../types/challenges';
 
 export type BuildUseBattleActionsArgs = {
@@ -17,6 +18,7 @@ export type BuildUseBattleActionsArgs = {
     starter2?: StarterVm | null,
   ) => void;
   selectMove: (idx: number) => void;
+  useItem: (itemId: ItemId) => void;
   onAns: (choice: number) => void;
   advance: () => void;
   continueAfterEvolve: () => void;
@@ -44,6 +46,7 @@ export function buildUseBattleActions(args: BuildUseBattleActionsArgs): UseBattl
     setPvpStarter2: args.setPvpStarter2Localized,
     startGame: args.startGame,
     selectMove: args.selectMove,
+    useItem: args.useItem,
     onAns: args.onAns,
     advance: args.advance,
     continueAfterEvolve: args.continueAfterEvolve,

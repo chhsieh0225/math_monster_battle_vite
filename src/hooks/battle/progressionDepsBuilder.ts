@@ -21,6 +21,7 @@ type BuildVictoryFlowArgsArgs = {
     | 'applyVictoryAchievements'
     | 'updateEncDefeated'
     | 'onCollectionUpdated'
+    | 'onDropResolved'
     | 'sfx'
     | 't'
   >;
@@ -82,6 +83,7 @@ export function buildVictoryFlowArgs({
     applyVictoryAchievements: runtime.applyVictoryAchievements,
     updateEncDefeated: runtime.updateEncDefeated,
     onCollectionUpdated: runtime.onCollectionUpdated,
+    onDropResolved: runtime.onDropResolved,
     setBurnStack: battleFields.setBurnStack,
     setStaticStack: battleFields.setStaticStack,
     setFrozen: battleFields.setFrozen,

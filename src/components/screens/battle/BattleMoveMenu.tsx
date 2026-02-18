@@ -1,6 +1,8 @@
 import { memo } from 'react';
 import type { CSSProperties } from 'react';
 import type { StarterVm } from '../../../types/battle';
+import type { InventoryData, ItemId } from '../../../types/game';
+import { BATTLE_ITEM_ORDER, ITEM_CATALOG } from '../../../data/itemCatalog.ts';
 import type { MoveRuntime } from './buildBattleCore';
 
 type TranslatorParams = Record<string, string | number>;
@@ -23,7 +25,9 @@ type BattleMoveMenuProps = {
   chargeReady: boolean;
   sealedTurns: number;
   moveRuntime: MoveRuntime[];
+  inventory: InventoryData;
   onSelectMove: (idx: number) => void;
+  onUseItem: (itemId: ItemId) => void;
   onToggleCoopActive: () => void;
   onTogglePause: () => void;
   onOpenSettings: () => void;
@@ -46,7 +50,9 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
   chargeReady,
   sealedTurns,
   moveRuntime,
+  inventory,
   onSelectMove,
+  onUseItem,
   onToggleCoopActive,
   onTogglePause,
   onOpenSettings,
@@ -152,6 +158,34 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
             </button>
           );
         })}
+      </div>
+
+      <div className="battle-item-row" role="group" aria-label={t('a11y.battle.items', 'Battle items')}>
+        {BATTLE_ITEM_ORDER.map((itemId) => {
+          const item = ITEM_CATALOG[itemId];
+          const count = inventory[itemId] || 0;
+          const disabled = battleMode === 'pvp' || count <= 0;
+          return (
+            <button
+              key={itemId}
+              className="battle-item-btn"
+              onClick={() => onUseItem(itemId)}
+              disabled={disabled}
+              aria-label={t('a11y.battle.useItem', 'Use {item}', {
+                item: t(item.nameKey, item.nameFallback),
+              })}
+            >
+              <span className="battle-item-btn-icon">{item.icon}</span>
+              <span className="battle-item-btn-name">{t(item.nameKey, item.nameFallback)}</span>
+              <span className="battle-item-btn-count">x{count}</span>
+            </button>
+          );
+        })}
+        {battleMode === 'pvp' && (
+          <span className="battle-item-note">
+            {t('battle.item.use.disabledPvpShort', 'Items disabled in PvP')}
+          </span>
+        )}
       </div>
 
       <div className="battle-util-row">

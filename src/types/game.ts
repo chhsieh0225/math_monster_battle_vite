@@ -51,6 +51,19 @@ export type PlayerStarterId = "fire" | "water" | "grass" | "electric" | "lion";
 export type BossStarterId = "boss" | "boss_hydra" | "boss_crazy_dragon" | "boss_sword_god";
 export type StarterId = PlayerStarterId | BossStarterId;
 
+export type ItemId = "potion" | "shield";
+export type InventoryData = Record<ItemId, number>;
+
+export type ItemDef = {
+  id: ItemId;
+  icon: string;
+  nameKey: string;
+  nameFallback: string;
+  descKey: string;
+  descFallback: string;
+  sourceDrops: string[];
+};
+
 export type StarterMoveLite = {
   icon: string;
   name: string;

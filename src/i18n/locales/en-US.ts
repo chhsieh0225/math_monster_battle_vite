@@ -288,6 +288,17 @@ const enUS = {
   "battle.pause": "Pause",
   "battle.settings": "Settings",
   "battle.run": "Run",
+  "battle.item.potion.name": "Potion",
+  "battle.item.potion.desc": "Restore HP for active ally",
+  "battle.item.shield.name": "Shield Charm",
+  "battle.item.shield.desc": "Block the next incoming hit",
+  "battle.item.use.none": "No {item} left.",
+  "battle.item.use.disabledPvp": "{item} is disabled in PvP.",
+  "battle.item.use.disabledPvpShort": "Items disabled in PvP",
+  "battle.item.use.potion.full": "{item} failed: HP already full.",
+  "battle.item.use.potion.heal": "{item} restored {hp} HP!",
+  "battle.item.use.shield.active": "Counter shield already active.",
+  "battle.item.use.shield.ready": "{item} activated! Next hit will be blocked.",
   "battle.answer.timed": "⏱️ Timed Answer!",
   "battle.answer.hit": "Answer correctly to hit",
   "battle.qtype.mul": "Multiplication",
@@ -582,6 +593,8 @@ const enUS = {
   "a11y.battle.pause": "Pause game",
   "a11y.battle.settings": "Open battle settings",
   "a11y.battle.run": "Run from battle",
+  "a11y.battle.items": "Battle items",
+  "a11y.battle.useItem": "Use {item}",
 } as const;
 
 export default enUS;

@@ -884,6 +884,49 @@
   letter-spacing:.2px;
 }
 .battle-menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.battle-item-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:8px;
+  flex-wrap:wrap;
+}
+.battle-item-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:30px;
+  border-radius:999px;
+  border:1px solid rgba(56,189,248,.35);
+  background:linear-gradient(135deg,rgba(14,116,144,.2),rgba(14,165,233,.1));
+  color:#e0f2fe;
+  font-size:11px;
+  font-weight:700;
+  padding:4px 10px;
+  line-height:1.2;
+  transition:transform .15s ease,opacity .15s ease,border-color .15s ease,background .15s ease;
+}
+.battle-item-btn:not(:disabled):hover{
+  transform:translateY(-1px);
+  border-color:rgba(125,211,252,.58);
+  background:linear-gradient(135deg,rgba(14,116,144,.35),rgba(14,165,233,.16));
+}
+.battle-item-btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.battle-item-btn-icon{font-size:13px;line-height:1}
+.battle-item-btn-name{white-space:nowrap}
+.battle-item-btn-count{
+  font-family:'Press Start 2P',monospace;
+  font-size:8px;
+  color:#bae6fd;
+}
+.battle-item-note{
+  font-size:10px;
+  color:rgba(148,163,184,.88);
+  letter-spacing:.2px;
+}
 
 .battle-menu-btn{
   min-height:88px;
@@ -1172,6 +1215,8 @@
   .battle-menu-wrap{padding:9px 9px 10px}
   .battle-menu-grid{gap:7px}
   .battle-menu-btn{min-height:86px;padding:10px 9px}
+  .battle-item-row{gap:6px;margin-top:7px}
+  .battle-item-btn{font-size:10.5px;padding:4px 9px;min-height:29px}
   .move-name-row{padding-right:68px}
   .move-icon{font-size:18px}
   .move-name{font-size:14px}
@@ -1222,6 +1267,9 @@
   .battle-menu-hint{font-size:11px;margin-bottom:7px}
   .battle-menu-grid{gap:6px}
   .battle-menu-btn{min-height:90px;padding:9px 8px;border-radius:11px}
+  .battle-item-row{gap:5px}
+  .battle-item-btn{font-size:10px;padding:4px 8px;min-height:28px}
+  .battle-item-btn-count{font-size:7px}
   .move-name-row{padding-right:62px;min-height:20px}
   .move-icon{font-size:17px}
   .move-name{font-size:13px}
@@ -1287,6 +1335,7 @@
 @media (max-width:420px){
   .battle-eff-toast{top:14%;font-size:12px;padding:6px 12px}
   .battle-level-toast{font-size:12px;padding:5px 12px;max-width:90vw}
+  .battle-item-btn{font-size:9.5px;padding:3px 7px}
   .move-name-row{padding-right:58px}
   .move-name{font-size:12px}
   .battle-util-btn{font-size:10.5px!important;padding:4px 8px!important}

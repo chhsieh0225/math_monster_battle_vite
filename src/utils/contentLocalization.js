@@ -10,6 +10,8 @@ const TYPE_NAME_EN_BY_ID = {
   ghost: "Ghost",
   steel: "Steel",
   light: "Light",
+  poison: "Poison",
+  rock: "Rock",
 };
 
 const TYPE_NAME_EN_BY_ZH = {
@@ -21,6 +23,8 @@ const TYPE_NAME_EN_BY_ZH = {
   靈: "Ghost",
   鋼: "Steel",
   光: "Light",
+  毒: "Poison",
+  岩: "Rock",
 };
 
 const SCENE_NAME_EN = {
@@ -31,6 +35,8 @@ const SCENE_NAME_EN = {
   ghost: "🌙 Gloom Graveyard",
   steel: "⚙️ Iron Fortress",
   dark: "💀 Abyssal Depths",
+  rock: "🪨 Rocky Canyon",
+  poison: "☠️ Toxic Mire",
 };
 
 const STARTER_TEXT_EN = {
@@ -112,10 +118,15 @@ const MONSTER_NAME_EN = {
   fire: "Flame Lizard",
   fireEvolved: "Inferno Dragon",
   ghost: "Phantom Fiend",
+  ghost_lantern: "Lantern Wraith",
   ghostEvolved: "Nether Reaper",
   dragon: "Iron Dragon",
   dragonEvolved: "Aegis Skywyrm",
   boss: "Dark Dragon King",
+  boss_hydra: "Abyss Hydra",
+  boss_crazy_dragon: "One-Winged Frenzy Dragon",
+  golumn: "Stone Golem",
+  golumn_mud: "Mudstone Golem",
 };
 
 const MONSTER_DESC_EN = {
@@ -134,10 +145,15 @@ const MONSTER_DESC_EN = {
   fire: "A lizard monster near volcanic vents. Its scales gather heat for flame attacks.",
   fireEvolved: "The ultimate evolution of Flame Lizard, empowered by a volcanic core.",
   ghost: "A spectral monster haunting ancient graves, drifting through walls and minds.",
+  ghost_lantern: "A lantern-bearing ghost variant. Its underworld flame distorts vision and misleads prey.",
   ghostEvolved: "A transcendent spirit wielding reaper power from the underworld.",
   dragon: "An ancient mechanical dragon with heavy alloy armor and strong defense.",
   dragonEvolved: "An upgraded war-dragon with a sky engine, balancing speed and armor.",
   boss: "The legendary ruler of the abyss. Only top trainers can challenge this tyrant.",
+  boss_hydra: "A triple-headed serpent from toxic marshes. It floods the battlefield with corrosive venom and relentless pressure.",
+  boss_crazy_dragon: "An ancient dragon driven mad after losing one wing. It cannot soar, but its grounded darkflame strikes are devastating.",
+  golumn: "A canyon-born stone giant with immense defense. Slow but crushing once it closes in.",
+  golumn_mud: "A mudstone subspecies with a layered shell that absorbs impact before re-hardening.",
 };
 
 const MONSTER_HABITAT_EN = {
@@ -156,10 +172,15 @@ const MONSTER_HABITAT_EN = {
   fire: "🌋 Blazing Volcano",
   fireEvolved: "🌋 Blazing Volcano",
   ghost: "🌙 Gloom Graveyard",
+  ghost_lantern: "🌙 Gloom Graveyard",
   ghostEvolved: "🌙 Gloom Graveyard",
   dragon: "⚙️ Iron Fortress",
   dragonEvolved: "⚙️ Iron Fortress",
   boss: "💀 Abyssal Depths",
+  boss_hydra: "☠️ Toxic Mire",
+  boss_crazy_dragon: "🔥 Scorched Wasteland",
+  golumn: "🪨 Rocky Canyon",
+  golumn_mud: "🪨 Rocky Canyon",
 };
 
 const STARTER_DESC_EN = {
@@ -248,6 +269,14 @@ const TRAIT_TEXT_EN_BY_ID = {
     name: "Tyrant",
     desc: "A multi-phase boss trait with charge attacks and skill-seal pressure.",
   },
+  venom: {
+    name: "Venom Fog",
+    desc: "Emits toxic mist that corrodes the opponent over time, with stronger ticks at higher phases.",
+  },
+  fortify: {
+    name: "Stonewall",
+    desc: "A hardened rock body reduces incoming damage.",
+  },
   berserk: {
     name: "Berserk",
     desc: "Lower HP but fierce offense, with a chance to crit for 1.5x damage.",
@@ -276,6 +305,9 @@ const TRAIT_NAME_EN_BY_ZH = {
   幻影: "Phantom",
   反擊裝甲: "Counter Armor",
   霸王: "Tyrant",
+  毒霧: "Venom Fog",
+  堅岩: "Stonewall",
+  狂怒: "Tyrant",
   狂暴: "Berserk",
   堅韌: "Tenacity",
   迅捷: "Swift",

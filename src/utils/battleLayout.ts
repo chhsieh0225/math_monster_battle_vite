@@ -59,7 +59,7 @@ export function resolveBattleLayout({
   const isBoss = BOSS_IDS.has(enemyId ?? '');
   const isDragonOrFire = enemyId === "fire" || enemyId === "dragon";
   const isEvolvedSlime = Boolean(enemyId?.startsWith("slime") && enemyIsEvolved);
-  const isLargeMonster = enemyId === "golumn";
+  const isLargeMonster = enemyId === "golumn" || enemyId === "golumn_mud";
   const isCrazyDragon = enemyId === "boss_crazy_dragon";
   const enemyBaseSize = isCrazyDragon ? 260
     : isBoss ? 230

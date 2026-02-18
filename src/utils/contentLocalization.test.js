@@ -30,6 +30,17 @@ test('localizeEnemy maps evolved base-id monsters to evolved English names', () 
   assert.equal(evolvedFire.typeName, "Fire");
 });
 
+test('localizeEnemy maps new monster variants to English names', () => {
+  const lantern = localizeEnemy({
+    id: "ghost_lantern",
+    name: "提燈幽魂",
+    mType: "ghost",
+    typeName: "靈",
+  }, EN);
+  assert.equal(lantern.name, "Lantern Wraith");
+  assert.equal(lantern.typeName, "Ghost");
+});
+
 test('localizeStarterList maps starter and move names to English', () => {
   const starters = localizeStarterList([{
     id: "fire",

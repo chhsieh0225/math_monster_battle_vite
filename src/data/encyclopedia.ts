@@ -62,6 +62,7 @@ const DESCS: Record<string, string> = {
   fire: '棲息在火山口附近的蜥蜴型怪獸。背部的鱗片能聚集熱能，在戰鬥中噴射灼熱火焰。',
   fireEvolved: '火焰蜥的最終進化。吸收了火山核心的能量後化身為巨龍，翅膀上的火焰永不熄滅。',
   ghost: '出沒於古老墓地的靈體怪獸。能穿越牆壁，用幽冥之力操控敵人的心智。白天幾乎看不到它的身影。',
+  ghost_lantern: '手提冥燈的幽魂變體。燈火會引導迷失者走向陰影，並在戰鬥中干擾對手判斷。據說牠出現時，周圍溫度會瞬間下降。',
   ghostEvolved: '幽靈魔突破生死界限後的終極型態。手持冥界死神鐮刀，據說能看穿一切防禦。',
   dragon: '由古代機械文明創造的龍型機甲。全身覆蓋鈦合金裝甲，防禦力極高，但行動略顯笨重。',
   dragonEvolved: '鋼鐵龍裝載了傳說中的天空引擎後的形態。速度與防禦兼備，被稱為空中要塞。',
@@ -69,6 +70,7 @@ const DESCS: Record<string, string> = {
   boss_hydra: '棲息於毒沼深淵的三頭毒蛇。全身散發致命毒霧，被牠纏上的獵物會在不知不覺中被毒素侵蝕。每顆頭都能噴出不同劇毒，是最令冒險者恐懼的存在。',
   boss_crazy_dragon: '傳說中失去一翼的古龍。斷翼之痛讓牠陷入永恆的狂怒，全身燃燒著暗黑火焰。雖然無法飛行，但地面上的爆發力遠超一般龍族，是三大Boss中攻擊力最強的存在。',
   golumn: '棲息在荒涼峽谷深處的岩石巨人。全身由千年沉積的花崗岩構成，移動時地面都會震動。雖然行動遲緩，但防禦力驚人，普通攻擊幾乎無法穿透牠的岩石外殼。',
+  golumn_mud: '泥岩層孕育出的高崙亞種。外層看似鬆散，實則能吸收衝擊並重新凝固。每一步都會留下沉重泥痕，難以被正面突破。',
 };
 
 const HABITATS: Record<string, string> = {
@@ -87,6 +89,7 @@ const HABITATS: Record<string, string> = {
   fire: '🌋 炎熱火山',
   fireEvolved: '🌋 炎熱火山',
   ghost: '🌙 幽暗墓地',
+  ghost_lantern: '🌙 幽暗墓地',
   ghostEvolved: '🌙 幽暗墓地',
   dragon: '⚙️ 鋼鐵要塞',
   dragonEvolved: '⚙️ 鋼鐵要塞',
@@ -94,6 +97,7 @@ const HABITATS: Record<string, string> = {
   boss_hydra: '☠️ 毒沼深淵',
   boss_crazy_dragon: '🔥 焦灼荒原',
   golumn: '🪨 岩石峽谷',
+  golumn_mud: '🪨 岩石峽谷',
 };
 
 const RARITY: Record<string, string> = {
@@ -112,6 +116,7 @@ const RARITY: Record<string, string> = {
   fire: '★★',
   fireEvolved: '★★★',
   ghost: '★★',
+  ghost_lantern: '★★',
   ghostEvolved: '★★★',
   dragon: '★★★',
   dragonEvolved: '★★★★',
@@ -119,6 +124,7 @@ const RARITY: Record<string, string> = {
   boss_hydra: '★★★★★',
   boss_crazy_dragon: '★★★★★',
   golumn: '★★',
+  golumn_mud: '★★',
 };
 
 export const ENC_ENTRIES: EncyclopediaEnemyEntry[] = [];

@@ -7,6 +7,7 @@ export const SPRITE_IMGS = {
   slime: `${BASE}sprites/slime.png`,
   fire: `${BASE}sprites/fire.png`,
   ghost: `${BASE}sprites/ghost.png`,
+  ghost_lantern: `${BASE}sprites/ghost_lantern.png`,
   dragon: `${BASE}sprites/dragon.png`,
   boss: `${BASE}sprites/boss.png`,
   player_fire0: `${BASE}sprites/player_fire0.png`,
@@ -41,6 +42,7 @@ export const SPRITE_IMGS = {
   boss_hydra: `${BASE}sprites/boss_hydra.png`,
   boss_crazy_dragon: `${BASE}sprites/boss_crazy_dragon.png`,
   golumn: `${BASE}sprites/golumn.png`,
+  golumn_mud: `${BASE}sprites/golumn_mud.png`,
 };
 
 export const BG_IMGS = {
@@ -98,6 +100,7 @@ export const slimeSteelSVG  = makeSvgFn('slime_steel', 'pixelated');
 
 export const fireLizardSVG = makeSvgFn('fire');
 export const ghostSVG = makeSvgFn('ghost');
+export const ghostLanternSVG = makeSvgFn('ghost_lantern');
 export const dragonSVG = makeSvgFn('dragon', 'pixelated');
 export const darkLordSVG = makeSvgFn('boss');
 export const slimeEvolvedSVG = makeSvgFn('slime_evolved');
@@ -127,3 +130,4 @@ export const playerlion2SVG = makeSvgFnFill('player_lion2', 677, 369);
 export const bossHydraSVG = makeSvgFnFit('boss_hydra', 677, 369);
 export const bossCrazyDragonSVG = makeSvgFnFitFlip('boss_crazy_dragon', 677, 369);
 export const golumnSVG = makeSvgFn('golumn');
+export const golumnMudSVG = makeSvgFn('golumn_mud');

@@ -517,7 +517,7 @@ export default function BattleScreen({
       ? "enemyDissolve .9s ease-out forwards"
       : S.eAnim || (UX.lowPerfMode ? "none" : enemyIdleAnim),
   } as CSSProperties);
-  const isLargeEnemySub = S.enemySub?.id === "golumn";
+  const isLargeEnemySub = S.enemySub?.id === "golumn" || S.enemySub?.id === "golumn_mud";
   const enemySubScale = isLargeEnemySub
     ? (compactDual ? "0.86" : "0.94")
     : (compactDual ? "0.72" : "0.8");

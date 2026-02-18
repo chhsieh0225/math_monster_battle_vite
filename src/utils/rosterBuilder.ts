@@ -46,6 +46,30 @@ const RANDOM_SWAP_CANDIDATES: StageWave[] = [
   { monsterId: 'golumn', sceneType: 'rock' },
 ];
 
+/**
+ * Optional visual/entry variants for specific monsters.
+ * Used to diversify encounters while keeping base role/trait identity.
+ */
+const GHOST_VARIANTS = ['ghost', 'ghost_lantern'] as const;
+const GOLUMN_VARIANTS = ['golumn', 'golumn_mud'] as const;
+
+function getVariantPool(baseId: string): readonly string[] | null {
+  if (baseId === 'ghost') return GHOST_VARIANTS;
+  if (baseId === 'golumn') return GOLUMN_VARIANTS;
+  return null;
+}
+
+function resolveVariantMonsterId(baseId: string, pickIndex: PickIndex): string {
+  const pool = getVariantPool(baseId);
+  if (!pool || pool.length === 0) return baseId;
+  const rawIdx = Number(pickIndex(pool.length));
+  const idx = Number.isFinite(rawIdx)
+    ? Math.min(pool.length - 1, Math.max(0, Math.trunc(rawIdx)))
+    : 0;
+  const picked = pool[idx];
+  return typeof picked === 'string' ? picked : baseId;
+}
+
 export function buildRoster(pickIndex: PickIndex, mode: 'single' | 'double' = 'single'): BattleRosterMonster[] {
   const pick = (arr: SlimeVariant[]): SlimeVariant => arr[pickIndex(arr.length)];
   const baseWaves: StageWave[] = mode === 'double' ? DOUBLE_STAGE_WAVES : STAGE_WAVES;
@@ -68,9 +92,10 @@ export function buildRoster(pickIndex: PickIndex, mode: 'single' | 'double' = 's
 
   return waves.map((wave, i) => {
     // If wave requests a boss, randomly pick from the boss pool
-    const resolvedId = BOSS_IDS.has(wave.monsterId)
+    const bossOrBaseId = BOSS_IDS.has(wave.monsterId)
       ? BOSS_ID_LIST[pickIndex(BOSS_ID_LIST.length)]
       : wave.monsterId;
+    const resolvedId = resolveVariantMonsterId(bossOrBaseId, pickIndex);
     const b = MONSTER_BY_ID.get(resolvedId);
     if (!b) throw new Error(`[rosterBuilder] unknown monsterId: ${resolvedId}`);
     const sc = STAGE_SCALE_BASE + i * STAGE_SCALE_STEP;

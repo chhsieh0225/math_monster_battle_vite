@@ -1826,7 +1826,7 @@ function startBgmLoop(track: BgmTrack): void {
   }, BGM_SCHEDULE_INTERVAL_MS);
 }
 
-function stopBgmLoop(): void {
+function stopBgmLoop(immediate = false): void {
   if (bgmInterval) {
     clearInterval(bgmInterval);
     bgmInterval = null;
@@ -1834,11 +1834,17 @@ function stopBgmLoop(): void {
   if (bgmGain && ctx) {
     try {
       const g = bgmGain;
-      // Cancel any pending automation (e.g. fade-in ramp) so our fade-out works
+      // Cancel any pending automation (e.g. fade-in ramp) before stopping.
       g.gain.cancelScheduledValues(ctx.currentTime);
-      g.gain.setValueAtTime(g.gain.value, ctx.currentTime);
-      g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
-      setTimeout(() => { try { g.disconnect(); } catch { /* ok */ } }, 350);
+      if (immediate) {
+        // Settings mute should hard-stop BGM right away.
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        try { g.disconnect(); } catch { /* ok */ }
+      } else {
+        g.gain.setValueAtTime(g.gain.value, ctx.currentTime);
+        g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+        setTimeout(() => { try { g.disconnect(); } catch { /* ok */ } }, 350);
+      }
     } catch { /* ok */ }
   }
   bgmGain = null;
@@ -1932,7 +1938,7 @@ const sfx = {
       // Remember which track was playing so we can resume later
       if (bgmCurrent) lastBgmTrack = bgmCurrent;
       pendingBgmTrack = null;
-      stopBgmLoop();
+      stopBgmLoop(true);
     } else if (wasMuted && !bgmMuted) {
       // Unmuting: restart the last track immediately
       const track = lastBgmTrack || pendingBgmTrack;
@@ -1999,9 +2005,9 @@ const sfx = {
     }
     boot();
   },
-  stopBgm(): void {
+  stopBgm(immediate = false): void {
     pendingBgmTrack = null;
-    try { stopBgmLoop(); } catch { /* ok */ }
+    try { stopBgmLoop(immediate); } catch { /* ok */ }
   },
   get bgmTrack(): string | null {
     return bgmCurrent;

@@ -265,6 +265,35 @@ export const SCENES = {
       <div style={{position:"absolute",bottom:"25%",left:"5%",width:60,height:60,background:"radial-gradient(circle,rgba(139,92,246,0.04),transparent)",borderRadius:"50%"}}/>
       {[0,1,2].map(i=><div key={`p${i}`} style={{position:"absolute",bottom:`${10+i*8}%`,left:`${15+i*30}%`,width:30+i*10,height:2,background:`rgba(168,85,247,${0.04+i*0.02})`,filter:"blur(3px)"}}/>)}
     </>)
+  },
+
+  /* ═══ Burnt Warplace — scorched battlefield with lightning + lava cracks ═══ */
+  burnt_warplace:{
+    bgImg:BG_IMGS.burnt_warplace,
+    sky:"linear-gradient(180deg,#3b0a0a 0%,#7c1d1d 20%,#991b1b 40%,#7f1d1d 65%,#450a0a 100%)",
+    ground:"linear-gradient(180deg,transparent,rgba(234,88,12,0.08) 40%,rgba(127,29,29,0.2))",
+    platform1:"rgba(220,38,38,0.25)",platform2:"rgba(154,52,18,0.2)",
+    Deco:memo(()=><>
+      {/* Rising embers from lava cracks */}
+      {Array.from({length:10},(_,i)=>i).map(i=><div key={`be${i}`} style={{
+        position:"absolute",bottom:`${1+i*3}%`,left:`${4+i*9}%`,
+        width:3+i%3*2,height:3+i%3*2,
+        background:["#f97316","#ef4444","#fbbf24","#dc2626","#fb923c","#f59e0b","#ea580c","#fcd34d","#b91c1c","#f97316"][i],
+        borderRadius:"50%",
+        boxShadow:`0 0 ${4+i%3*3}px ${["#f97316","#ef4444","#fbbf24","#dc2626","#fb923c","#f59e0b","#ea580c","#fcd34d","#b91c1c","#f97316"][i]}`,
+        animation:`emberRise ${2+i*0.5}s ease-in ${i*0.3}s infinite`
+      }}/>)}
+      {/* Lightning flash overlay */}
+      <div style={{position:"absolute",inset:0,background:"rgba(255,255,255,0.0)",animation:"lightningFlash 6s ease-in-out infinite"}}/>
+      {/* Lava glow pools */}
+      <div style={{position:"absolute",bottom:"0%",left:"5%",width:140,height:40,background:"radial-gradient(ellipse,rgba(234,88,12,0.3),transparent)",borderRadius:"50%",animation:"lavaGlow 2.5s ease-in-out infinite"}}/>
+      <div style={{position:"absolute",bottom:"2%",right:"8%",width:110,height:35,background:"radial-gradient(ellipse,rgba(220,38,38,0.25),transparent)",borderRadius:"50%",animation:"lavaGlow 3s ease-in-out 1s infinite"}}/>
+      <div style={{position:"absolute",bottom:"5%",left:"40%",width:90,height:30,background:"radial-gradient(ellipse,rgba(251,146,60,0.2),transparent)",borderRadius:"50%",animation:"lavaGlow 3.5s ease-in-out 0.5s infinite"}}/>
+      {/* Dark ash haze */}
+      <div style={{position:"absolute",top:"0%",left:"0%",width:"100%",height:"30%",background:"linear-gradient(180deg,rgba(69,10,10,0.15),transparent)",animation:"float 5s ease-in-out infinite"}}/>
+      {/* Red sky throb */}
+      <div style={{position:"absolute",top:"0%",left:"20%",width:"60%",height:"40%",background:"radial-gradient(ellipse,rgba(220,38,38,0.08),transparent)",animation:"lavaGlow 4s ease-in-out 0.3s infinite"}}/>
+    </>)
   }
 };
 
@@ -278,5 +307,6 @@ export const SCENE_NAMES = {
   light:"☁️ 天界聖域",
   dark:"💀 暗黑深淵",
   rock:"🪨 岩石峽谷",
-  heaven:"☁️ 天界聖域"
+  heaven:"☁️ 天界聖域",
+  burnt_warplace:"🔥 焦土戰場"
 };

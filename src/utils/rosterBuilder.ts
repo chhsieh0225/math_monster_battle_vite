@@ -131,7 +131,9 @@ export function buildRoster(pickIndex: PickIndex, mode: 'single' | 'double' = 's
       : (isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn));
     const resolvedSceneType = resolvedId === 'boss_sword_god'
       ? 'heaven'
-      : (wave.sceneType || b.mType);
+      : resolvedId === 'boss_crazy_dragon'
+        ? 'burnt_warplace'
+        : (wave.sceneType || b.mType);
 
     return {
       ...b,

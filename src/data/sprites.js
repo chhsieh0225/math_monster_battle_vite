@@ -53,7 +53,8 @@ export const BG_IMGS = {
   steel: `${BASE}backgrounds/steel.jpg`,
   dark: `${BASE}backgrounds/dark.jpg`,
   rock: `${BASE}backgrounds/rock.jpg`,
-  heaven: `${BASE}backgrounds/heaven.png`,
+  heaven: `${BASE}backgrounds/heaven.jpg`,
+  burnt_warplace: `${BASE}backgrounds/burnt_warplace.jpg`,
 };
 
 // SVG wrapper functions — return inner SVG markup using image paths

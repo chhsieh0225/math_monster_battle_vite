@@ -6,6 +6,7 @@ import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { useI18n } from '../../i18n';
 import { hasSpecialTrait } from '../../utils/traits';
 import { loadCollection, type CollectionData } from '../../utils/collectionStore.ts';
+import './EncyclopediaScreen.css';
 import {
   localizeEncyclopediaEnemyEntries,
   localizeEncyclopediaStarterEntries,
@@ -19,7 +20,7 @@ import type {
 
 const PAGE_BG = 'linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)';
 
-const LARGE_MONSTER_IDS: ReadonlySet<string> = new Set([...BOSS_IDS, 'golumn']);
+const LARGE_MONSTER_IDS: ReadonlySet<string> = new Set([...BOSS_IDS, 'golumn', 'golumn_mud', 'ghost_lantern']);
 function encCardSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 64 : 48; }
 function encModalSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 200 : 160; }
 

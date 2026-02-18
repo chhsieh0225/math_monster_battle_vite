@@ -214,13 +214,13 @@
   position:absolute;
   top:-20%;
   left:var(--wx);
-  width:3px;
+  width:4px;
   height:var(--wh);
   opacity:var(--wop);
   border-radius:3px;
-  background:linear-gradient(180deg,rgba(148,163,184,0),rgba(160,200,255,.98));
-  transform:rotate(12deg);
-  filter:drop-shadow(0 0 2px rgba(160,200,255,.4));
+  background:linear-gradient(180deg,rgba(148,163,184,0),rgba(191,219,254,.98));
+  transform:rotate(13deg);
+  filter:drop-shadow(0 0 3px rgba(191,219,254,.55));
   animation:weatherRainFall var(--wd) linear var(--wdelay) infinite;
 }
 .battle-weather-snow-flake{
@@ -1320,6 +1320,6 @@
     transform:none!important;
     will-change:auto;
   }
-  .battle-weather-layer{display:none!important}
+  .battle-weather-layer{opacity:.7}
   [aria-hidden="true"] > div { animation: none !important; opacity: 0.4 !important; }
 }

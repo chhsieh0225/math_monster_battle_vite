@@ -14,4 +14,4 @@ export const EFX = {
   enemy: ['💢', '❗'],
 };
 
-export const VERSION = '202602ver08';
+export const VERSION = '202602ver10';

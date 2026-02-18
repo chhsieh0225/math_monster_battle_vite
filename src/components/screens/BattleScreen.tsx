@@ -101,12 +101,10 @@ type BattleScreenProps = {
 };
 
 export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: BattleScreenProps) {
-  // Consume battle slices only; do not depend on hook-level flattened fields.
-  const B = {
-    ...battle.state,
-    ...battle.actions,
-    ...battle.view,
-  };
+  // Consume explicit battle slices (state/actions/view); avoid flattened API coupling.
+  const S = battle.state;
+  const A = battle.actions;
+  const V = battle.view;
 
   const showHeavyFx = !UX.lowPerfMode;
   const battleRootRef = useRef<HTMLDivElement | null>(null);
@@ -125,7 +123,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
   useEffect(() => () => clearImpactTimers(), [clearImpactTimers]);
 
   useEffect(() => {
-    if (!showHeavyFx || !B.atkEffect) {
+    if (!showHeavyFx || !S.atkEffect) {
       clearImpactTimers();
       lastAtkEffectKeyRef.current = '';
       const toIdle = window.setTimeout(() => setImpactPhase('idle'), 0);
@@ -133,12 +131,12 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
       return clearImpactTimers;
     }
 
-    const atkKey = `${B.atkEffect.type}-${B.atkEffect.idx}-${B.atkEffect.lvl}-${B.atkEffect.targetSide || "enemy"}`;
+    const atkKey = `${S.atkEffect.type}-${S.atkEffect.idx}-${S.atkEffect.lvl}-${S.atkEffect.targetSide || "enemy"}`;
     if (lastAtkEffectKeyRef.current === atkKey) return;
     lastAtkEffectKeyRef.current = atkKey;
 
     clearImpactTimers();
-    const profile = resolveImpactProfile(B.atkEffect.idx, B.atkEffect.lvl);
+    const profile = resolveImpactProfile(S.atkEffect.idx, S.atkEffect.lvl);
 
     const toCharge = window.setTimeout(() => setImpactPhase('charge'), 0);
     const toFreeze = window.setTimeout(() => setImpactPhase('freeze'), profile.chargeMs);
@@ -148,17 +146,17 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
 
     impactTimersRef.current = [toCharge, toFreeze, toShake, toSettle, toIdle];
     return clearImpactTimers;
-  }, [B.atkEffect, clearImpactTimers, showHeavyFx]);
+  }, [S.atkEffect, clearImpactTimers, showHeavyFx]);
   const { measuredEnemyTarget, measuredPlayerTarget } = useSpriteTargets({
-    screen: B.screen,
-    phase: B.phase,
-    enemyId: B.enemy?.id,
-    enemyIsEvolved: B.enemy?.isEvolved,
-    enemySceneMType: B.enemy?.sceneMType,
-    enemyMType: B.enemy?.mType,
-    playerStageIdx: B.pStg,
-    battleMode: B.battleMode,
-    pvpTurn: B.pvpTurn,
+    screen: S.screen,
+    phase: S.phase,
+    enemyId: S.enemy?.id,
+    enemyIsEvolved: S.enemy?.isEvolved,
+    enemySceneMType: S.enemy?.sceneMType,
+    enemyMType: S.enemy?.mType,
+    playerStageIdx: S.pStg,
+    battleMode: S.battleMode,
+    pvpTurn: S.pvpTurn,
     battleRootRef,
     enemySpriteRef,
     playerSpriteRef,
@@ -193,8 +191,8 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     sealedMove,
     mLvls,
     mHits,
-  } = battle.state;
-  const { getPow, dualEff } = battle.view;
+  } = S;
+  const { getPow, dualEff } = V;
 
   const core = useMemo(() => {
     const starter = stateStarter;
@@ -392,9 +390,9 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     pvpPlayerSpecDef,
   } = core;
 
-  const canTapAdvance = B.phase === "text" || B.phase === "victory";
-  const isKoPhase = B.phase === "ko" || B.phase === "victory";
-  const enemyDefeated = isKoPhase && B.eHp === 0;
+  const canTapAdvance = S.phase === "text" || S.phase === "victory";
+  const isKoPhase = S.phase === "ko" || S.phase === "victory";
+  const enemyDefeated = isKoPhase && S.eHp === 0;
   const pvpComboTrigger = PVP_BALANCE.passive.specDefComboTrigger || 4;
   const {
     compactDual,
@@ -442,11 +440,11 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
   };
   const eTarget = measuredEnemyTarget || enemyFallbackTarget;
   const pTarget = measuredPlayerTarget || playerFallbackTarget;
-  const effectTarget = B.atkEffect?.targetSide === "player" ? pTarget : eTarget;
-  const question = B.q;
-  const feedback = B.fb;
-  const selectedMove = activeStarter && B.selIdx !== null
-    ? activeStarter.moves[B.selIdx]
+  const effectTarget = S.atkEffect?.targetSide === "player" ? pTarget : eTarget;
+  const question = S.q;
+  const feedback = S.fb;
+  const selectedMove = activeStarter && S.selIdx !== null
+    ? activeStarter.moves[S.selIdx]
     : null;
   const questionTypeLabel = !question
     ? ""
@@ -480,8 +478,8 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
         : starter.type === "light"
           ? "battle-pill-specdef-light"
           : "battle-pill-specdef-grass";
-  const toastShadowStyle = B.effMsg
-    ? ({ "--battle-eff-shadow": `0 8px 22px ${B.effMsg.color}55` } as CSSProperties)
+  const toastShadowStyle = S.effMsg
+    ? ({ "--battle-eff-shadow": `0 8px 22px ${S.effMsg.color}55` } as CSSProperties)
     : undefined;
   const sceneBgStyle = scene.bgImg
     ? ({ backgroundImage: `url(${scene.bgImg})` } as CSSProperties)
@@ -492,7 +490,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
   const sceneBottomPlatformStyle = ({ "--scene-platform-bottom": scene.platform1 } as CSSProperties);
   const enemyInfoStyle = ({ "--battle-enemy-info-right": enemyInfoRight } as CSSProperties);
   const playerInfoStyle = ({ "--battle-player-info-left": playerInfoLeft } as CSSProperties);
-  const enemyLowHp = enemy.maxHp > 0 && B.eHp > 0 && B.eHp / enemy.maxHp < 0.25;
+  const enemyLowHp = enemy.maxHp > 0 && S.eHp > 0 && S.eHp / enemy.maxHp < 0.25;
   const enemyIdleAnim = BOSS_IDS.has(enemy.id)
     ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
     : enemyLowHp
@@ -503,12 +501,25 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     "--enemy-main-top": `${eTopPct}%`,
     "--enemy-main-anim": enemyDefeated
       ? "enemyDissolve .9s ease-out forwards"
-      : B.eAnim || (UX.lowPerfMode ? "none" : enemyIdleAnim),
+      : S.eAnim || (UX.lowPerfMode ? "none" : enemyIdleAnim),
   } as CSSProperties);
+  const isLargeEnemySub = S.enemySub?.id === "golumn";
+  const enemySubScale = isLargeEnemySub
+    ? (compactDual ? "0.86" : "0.94")
+    : (compactDual ? "0.72" : "0.8");
+  const enemySubSize = !S.enemySub
+    ? 96
+    : BOSS_IDS.has(S.enemySub.id)
+      ? 160
+      : isLargeEnemySub
+        ? 150
+        : S.enemySub.isEvolved
+          ? 120
+          : 96;
   const enemySubSpriteStyle = ({
     "--enemy-sub-right": `${enemySubRightPct}%`,
     "--enemy-sub-top": `${enemySubTopPct}%`,
-    "--enemy-sub-scale": compactDual ? "0.72" : "0.8",
+    "--enemy-sub-scale": enemySubScale,
     "--enemy-sub-anim": UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite",
   } as CSSProperties);
   const enemyMainShadowStyle = ({
@@ -523,7 +534,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     "--player-main-filter": isCoopBattle && !coopUsingSub ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))" : "none",
     "--player-main-z": coopUsingSub ? "4" : "6",
     "--player-main-opacity": coopUsingSub ? ".84" : "1",
-    "--player-main-anim": B.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite"),
+    "--player-main-anim": S.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite"),
   } as CSSProperties);
   const playerSubSpriteStyle = ({
     "--player-sub-left": `${playerSubLeftPct}%`,
@@ -538,16 +549,16 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
     "--player-shadow-bottom": `${Math.max(8, playerMainBottomPct - 1)}%`,
     "--player-shadow-width": `${Math.round(mainPlayerSize * 0.5)}px`,
   } as CSSProperties);
-  const isUltimateEffect = !!(B.atkEffect && B.atkEffect.idx >= 3);
-  const ultimateToneClass = B.atkEffect?.type === "fire"
+  const isUltimateEffect = !!(S.atkEffect && S.atkEffect.idx >= 3);
+  const ultimateToneClass = S.atkEffect?.type === "fire"
     ? "is-fire"
-    : B.atkEffect?.type === "water"
+    : S.atkEffect?.type === "water"
       ? "is-water"
-      : B.atkEffect?.type === "electric"
+      : S.atkEffect?.type === "electric"
         ? "is-electric"
-        : B.atkEffect?.type === "grass"
+        : S.atkEffect?.type === "grass"
           ? "is-grass"
-          : B.atkEffect?.type === "light"
+          : S.atkEffect?.type === "light"
             ? "is-light"
             : "is-dark";
   const ultimateSyncStyle = ({
@@ -568,13 +579,13 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
         if (!canTapAdvance) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          B.advance();
+          A.advance();
         }
       }}
-      onClick={canTapAdvance ? B.advance : undefined}
+      onClick={canTapAdvance ? A.advance : undefined}
     >
       {/* Pause overlay */}
-      {B.gamePaused && <div
+      {S.gamePaused && <div
         role="button"
         tabIndex={0}
         className={`battle-pause-overlay ${UX.lowPerfMode ? "low-perf" : ""}`}
@@ -582,10 +593,10 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            B.togglePause();
+            A.togglePause();
           }
         }}
-        onClick={B.togglePause}
+        onClick={A.togglePause}
       >
         <div className="battle-pause-icon">⏸️</div>
         <div className="battle-pause-title">{t("app.pause.title", "Game Paused")}</div>
@@ -598,21 +609,21 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
       )}
 
       {/* Popups & particles */}
-      {B.dmgs.map((d) => <DamagePopup key={d.id} value={d.value} x={d.x} y={d.y} color={d.color} onDone={() => B.rmD(d.id)} />)}
-      {showHeavyFx && B.parts.map((p) => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} seed={p.id} onDone={() => B.rmP(p.id)} />)}
+      {S.dmgs.map((d) => <DamagePopup key={d.id} value={d.value} x={d.x} y={d.y} color={d.color} onDone={() => A.rmD(d.id)} />)}
+      {showHeavyFx && S.parts.map((p) => <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} seed={p.id} onDone={() => A.rmP(p.id)} />)}
 
       {/* Move level-up toast */}
-      {B.battleMode !== "pvp" && B.mLvlUp !== null && (
+      {S.battleMode !== "pvp" && S.mLvlUp !== null && (
         <div className="battle-level-toast">
-          {starter.moves[B.mLvlUp].icon} {starter.moves[B.mLvlUp].name}{" "}
+          {starter.moves[S.mLvlUp].icon} {starter.moves[S.mLvlUp].name}{" "}
           {t("battle.moveLevelUp", "leveled up to Lv.{level}! Power -> {power}", {
-            level: B.mLvls[B.mLvlUp],
-            power: B.getPow(B.mLvlUp),
+            level: S.mLvls[S.mLvlUp],
+            power: V.getPow(S.mLvlUp),
           })}
         </div>
       )}
       {/* Achievement popup */}
-      {B.achPopup && ACH_MAP[B.achPopup] && <AchievementPopup achievement={ACH_MAP[B.achPopup]} onDone={B.dismissAch} />}
+      {S.achPopup && ACH_MAP[S.achPopup] && <AchievementPopup achievement={ACH_MAP[S.achPopup]} onDone={A.dismissAch} />}
 
       {/* Attack effects */}
       {showHeavyFx && isUltimateEffect && (
@@ -623,26 +634,26 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
           <div className="battle-ult-sync-ring battle-ult-sync-ring-alt" />
         </div>
       )}
-      {showHeavyFx && B.atkEffect && (
-        <AttackEffect type={B.atkEffect.type} idx={B.atkEffect.idx} lvl={B.atkEffect.lvl} target={effectTarget} />
+      {showHeavyFx && S.atkEffect && (
+        <AttackEffect type={S.atkEffect.type} idx={S.atkEffect.idx} lvl={S.atkEffect.lvl} target={effectTarget} />
       )}
 
       {/* Victory drop toast */}
-      {B.phase === "victory" && !UX.lowPerfMode && Array.isArray(enemy.drops) && enemy.drops.length > 0 && (
+      {S.phase === "victory" && !UX.lowPerfMode && Array.isArray(enemy.drops) && enemy.drops.length > 0 && (
         <div className="battle-drop-toast" aria-hidden="true">
           {enemy.drops[0]}
         </div>
       )}
 
       {/* Special Defense animations */}
-      {showHeavyFx && B.defAnim === "fire" && (
+      {showHeavyFx && S.defAnim === "fire" && (
         <div className="battle-def-fx battle-def-fx-fire">
           <div className="battle-def-layer battle-def-layer-fire-core" />
           <div className="battle-def-layer battle-def-layer-fire-ring" />
           <div className="battle-def-icon battle-def-icon-fire">🛡️</div>
         </div>
       )}
-      {showHeavyFx && B.defAnim === "water" && (
+      {showHeavyFx && S.defAnim === "water" && (
         <div className="battle-def-fx battle-def-fx-water">
           <div className="battle-def-layer battle-def-layer-water-ripple-1" />
           <div className="battle-def-layer battle-def-layer-water-ripple-2" />
@@ -650,21 +661,21 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
           <div className="battle-def-icon battle-def-icon-water">💨</div>
         </div>
       )}
-      {showHeavyFx && B.defAnim === "grass" && (
+      {showHeavyFx && S.defAnim === "grass" && (
         <div className="battle-def-fx battle-def-fx-grass">
           <div className="battle-def-layer battle-def-layer-grass-core" />
           <div className="battle-def-layer battle-def-layer-grass-ring" />
           <div className="battle-def-icon battle-def-icon-grass">🌿</div>
         </div>
       )}
-      {showHeavyFx && B.defAnim === "electric" && (
+      {showHeavyFx && S.defAnim === "electric" && (
         <div className="battle-def-fx battle-def-fx-electric">
           <div className="battle-def-layer battle-def-layer-electric-core" />
           <div className="battle-def-layer battle-def-layer-electric-ring" />
           <div className="battle-def-icon battle-def-icon-electric">⚡</div>
         </div>
       )}
-      {showHeavyFx && B.defAnim === "light" && (
+      {showHeavyFx && S.defAnim === "light" && (
         <div className="battle-def-fx battle-def-fx-light">
           <div className="battle-def-layer battle-def-layer-light-core" />
           <div className="battle-def-layer battle-def-layer-light-ring" />
@@ -672,15 +683,15 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
           <div className="battle-def-icon battle-def-icon-light">✨</div>
         </div>
       )}
-      {showHeavyFx && B.defAnim && <div className={`battle-def-screen battle-def-screen-${B.defAnim}`} />}
+      {showHeavyFx && S.defAnim && <div className={`battle-def-screen battle-def-screen-${S.defAnim}`} />}
 
       {/* Type effectiveness popup */}
-      {B.effMsg && (
+      {S.effMsg && (
         <div
-          className={`battle-eff-toast ${B.effMsg.color === "#22c55e" ? "battle-eff-toast-good" : "battle-eff-toast-bad"}`}
+          className={`battle-eff-toast ${S.effMsg.color === "#22c55e" ? "battle-eff-toast-good" : "battle-eff-toast-bad"}`}
           style={toastShadowStyle}
         >
-          {B.effMsg.text}
+          {S.effMsg.text}
         </div>
       )}
 
@@ -696,24 +707,24 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
         <div className="battle-info-enemy" style={enemyInfoStyle}>
           <div className={hpFocusClass(pvpEnemyBarActive)}>
             <HPBar
-              cur={B.eHp}
+              cur={S.eHp}
               max={enemy.maxHp}
               color={enemy.c1}
               label={`${enemy.typeIcon}${enemy.typeIcon2 || ''}${enemy.name} ${t("battle.level", "Lv.{level}", { level: enemy.lvl })}`}
             />
           </div>
-          {showEnemySub && B.enemySub && (
+          {showEnemySub && S.enemySub && (
             <div className={`battle-hp-sub-row ${hpFocusClass(false)}`}>
               <HPBar
-                cur={B.eHpSub}
-                max={B.enemySub.maxHp}
-                color={B.enemySub.c1}
-                label={`${t("battle.subUnit", "Sub")} ${B.enemySub.typeIcon}${B.enemySub.name} ${t("battle.level", "Lv.{level}", { level: B.enemySub.lvl })}`}
+                cur={S.eHpSub}
+                max={S.enemySub.maxHp}
+                color={S.enemySub.c1}
+                label={`${t("battle.subUnit", "Sub")} ${S.enemySub.typeIcon}${S.enemySub.name} ${t("battle.level", "Lv.{level}", { level: S.enemySub.lvl })}`}
               />
             </div>
           )}
           <div className="battle-status-row">
-            {B.battleMode === "pvp" ? (
+            {S.battleMode === "pvp" ? (
               <>
                 {pvpEnemyBurn > 0 && <div className="battle-status-chip is-burn">🔥 {t("battle.status.burnStack", "Burn x{count}", { count: pvpEnemyBurn })}</div>}
                 {pvpEnemyFreeze && <div className="battle-status-chip is-freeze">❄️ {t("battle.status.freeze", "Freeze")}</div>}
@@ -725,11 +736,11 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
             ) : (
               <>
                 {hasSpecialTrait(enemy.traitName, enemy.traitDesc) && <div className="battle-status-chip is-counter-soft">✦{enemy.traitName}</div>}
-                {B.burnStack > 0 && <div className="battle-status-chip is-burn">🔥 {t("battle.status.burnStack", "Burn x{count}", { count: B.burnStack })}</div>}
-                {B.frozen && <div className="battle-status-chip is-freeze">❄️ {t("battle.status.freeze", "Freeze")}</div>}
-                {B.staticStack > 0 && <div className="battle-status-chip is-static">⚡ {t("battle.status.staticStack", "Static x{count}", { count: B.staticStack })}{B.staticStack >= 2 ? " ⚠️" : ""}</div>}
-                {B.bossPhase >= 2 && <div className="battle-status-chip is-boss">{B.bossPhase >= 3 ? t("battle.status.bossAwaken", "💀 Awaken ATKx2") : t("battle.status.bossRage", "💀 Rage ATKx1.5")}</div>}
-                {B.bossCharging && <div className="battle-status-chip is-charge">⚠️ {t("battle.status.charging", "Charging!")}</div>}
+                {S.burnStack > 0 && <div className="battle-status-chip is-burn">🔥 {t("battle.status.burnStack", "Burn x{count}", { count: S.burnStack })}</div>}
+                {S.frozen && <div className="battle-status-chip is-freeze">❄️ {t("battle.status.freeze", "Freeze")}</div>}
+                {S.staticStack > 0 && <div className="battle-status-chip is-static">⚡ {t("battle.status.staticStack", "Static x{count}", { count: S.staticStack })}{S.staticStack >= 2 ? " ⚠️" : ""}</div>}
+                {S.bossPhase >= 2 && <div className="battle-status-chip is-boss">{S.bossPhase >= 3 ? t("battle.status.bossAwaken", "💀 Awaken ATKx2") : t("battle.status.bossRage", "💀 Rage ATKx1.5")}</div>}
+                {S.bossCharging && <div className="battle-status-chip is-charge">⚠️ {t("battle.status.charging", "Charging!")}</div>}
               </>
             )}
           </div>
@@ -739,36 +750,36 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
         <div ref={enemySpriteRef} className="battle-sprite-enemy-main" style={enemyMainSpriteStyle}>
           <MonsterSprite svgStr={eSvg} size={eSize} />
         </div>
-        {showEnemySub && B.enemySub && eSubSvg && (
+        {showEnemySub && S.enemySub && eSubSvg && (
           <div className="battle-sprite-enemy-sub" style={enemySubSpriteStyle}>
-            <MonsterSprite svgStr={eSubSvg} size={BOSS_IDS.has(B.enemySub.id) ? 160 : B.enemySub.isEvolved ? 120 : 96} />
+            <MonsterSprite svgStr={eSubSvg} size={enemySubSize} />
           </div>
         )}
-        {!B.eAnim && !UX.lowPerfMode && <div className="battle-sprite-enemy-shadow" style={enemyMainShadowStyle} />}
+        {!S.eAnim && !UX.lowPerfMode && <div className="battle-sprite-enemy-shadow" style={enemyMainShadowStyle} />}
 
         {/* Player platform & info */}
         <div className="battle-scene-platform-bottom" style={sceneBottomPlatformStyle} />
         <div className="battle-info-player" style={playerInfoStyle}>
           <div className={hpFocusClass(mainBarActive)}>
             <HPBar
-              cur={B.pHp}
+              cur={S.pHp}
               max={mainMaxHp}
               color="#6366f1"
-              label={`${isCoopBattle && !coopUsingSub ? "▶ " : ""}${st.name} ${t("battle.level", "Lv.{level}", { level: B.pLvl })}`}
+              label={`${isCoopBattle && !coopUsingSub ? "▶ " : ""}${st.name} ${t("battle.level", "Lv.{level}", { level: S.pLvl })}`}
             />
           </div>
-          {showAllySub && B.allySub && (
+          {showAllySub && S.allySub && (
             <div className={`battle-hp-sub-row ${hpFocusClass(subBarActive)}`}>
               <HPBar
-                cur={B.pHpSub}
+                cur={S.pHpSub}
                 max={subMaxHp}
-                color={B.allySub.c1}
-                label={`${isCoopBattle && coopUsingSub ? "▶ " : ""}${t("battle.partner", "Partner")} ${B.allySub.typeIcon}${B.allySub.name}`}
+                color={S.allySub.c1}
+                label={`${isCoopBattle && coopUsingSub ? "▶ " : ""}${t("battle.partner", "Partner")} ${S.allySub.typeIcon}${S.allySub.name}`}
               />
             </div>
           )}
-          <XPBar exp={B.pExp} max={B.expNext} />
-          {B.battleMode === "pvp" ? (
+          <XPBar exp={S.pExp} max={S.expNext} />
+          {S.battleMode === "pvp" ? (
             <div className="battle-status-row">
               {pvpPlayerBurn > 0 && <div className="battle-status-chip is-burn">🔥 {t("battle.status.burnStack", "Burn x{count}", { count: pvpPlayerBurn })}</div>}
               {pvpPlayerFreeze && <div className="battle-status-chip is-freeze">❄️ {t("battle.status.freeze", "Freeze")}</div>}
@@ -779,7 +790,7 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
             </div>
           ) : (
             <>
-              {B.cursed && <div className="battle-status-chip is-curse battle-status-chip-inline">💀 {t("battle.status.curse", "Cursed: next attack weakened")}</div>}
+              {S.cursed && <div className="battle-status-chip is-curse battle-status-chip-inline">💀 {t("battle.status.curse", "Cursed: next attack weakened")}</div>}
             </>
           )}
         </div>
@@ -793,15 +804,15 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
             <MonsterSprite svgStr={pSubSvg} size={subPlayerSize} />
           </div>
         )}
-        {!B.pAnim && !UX.lowPerfMode && <div className="battle-sprite-player-shadow" style={playerMainShadowStyle} />}
+        {!S.pAnim && !UX.lowPerfMode && <div className="battle-sprite-player-shadow" style={playerMainShadowStyle} />}
 
         <div className={`battle-top-right-stack ${UX.lowPerfMode ? "low-perf" : ""}`} aria-live="polite" aria-atomic="true">
-          {B.streak >= 2 && <div className="battle-pill is-streak">🔥 {t("battle.streak", "{count} combo!", { count: B.streak })}</div>}
-          {B.passiveCount >= 1 && !B.specDef && <div className="battle-pill is-passive">🛡️ {B.passiveCount}/8</div>}
-          {B.timedMode && B.streak < 2 && <div className="battle-pill is-timed">⏱️ {t("battle.timed", "Timed")}</div>}
-          {B.diffLevel !== 2 && (
-            <div className={`battle-pill ${B.diffLevel > 2 ? "is-diff-up" : "is-diff-down"}`}>
-              {B.diffLevel > 2 ? t("battle.diff.up", "📈 Difficulty +{value}", { value: B.diffLevel - 2 }) : t("battle.diff.down", "📉 Difficulty {value}", { value: B.diffLevel - 2 })}
+          {S.streak >= 2 && <div className="battle-pill is-streak">🔥 {t("battle.streak", "{count} combo!", { count: S.streak })}</div>}
+          {S.passiveCount >= 1 && !S.specDef && <div className="battle-pill is-passive">🛡️ {S.passiveCount}/8</div>}
+          {S.timedMode && S.streak < 2 && <div className="battle-pill is-timed">⏱️ {t("battle.timed", "Timed")}</div>}
+          {S.diffLevel !== 2 && (
+            <div className={`battle-pill ${S.diffLevel > 2 ? "is-diff-up" : "is-diff-down"}`}>
+              {S.diffLevel > 2 ? t("battle.diff.up", "📈 Difficulty +{value}", { value: S.diffLevel - 2 }) : t("battle.diff.down", "📉 Difficulty {value}", { value: S.diffLevel - 2 })}
             </div>
           )}
         </div>
@@ -814,24 +825,24 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
 
         {/* Special defense ready badge */}
         <div className="battle-left-badge-stack" aria-live="polite" aria-atomic="true">
-          {B.bossPhase >= 3 && <div className="battle-pill is-last-stand">{t("battle.lastStand", "🔥 Last Stand DMGx1.3")}</div>}
-          {B.specDef && <div className={`battle-pill is-specdef ${specDefToneClass}`}>{specDefReadyLabel} {t("battle.ready", "Ready!")}</div>}
+          {S.bossPhase >= 3 && <div className="battle-pill is-last-stand">{t("battle.lastStand", "🔥 Last Stand DMGx1.3")}</div>}
+          {S.specDef && <div className={`battle-pill is-specdef ${specDefToneClass}`}>{specDefReadyLabel} {t("battle.ready", "Ready!")}</div>}
         </div>
-        {B.bossCharging && <div className="battle-boss-hint">⚠️ {t("battle.bossBreakHint", "Answer correctly to interrupt charging!")}</div>}
+        {S.bossCharging && <div className="battle-boss-hint">⚠️ {t("battle.bossBreakHint", "Answer correctly to interrupt charging!")}</div>}
       </div>
 
       {/* ═══ Bottom panel ═══ */}
-      <div className={`battle-panel ${B.phase === "question" ? "is-question" : "is-normal"}`}>
+      <div className={`battle-panel ${S.phase === "question" ? "is-question" : "is-normal"}`}>
         {/* Move menu */}
-        {B.phase === "menu" && activeStarter && <div className="battle-menu-wrap">
+        {S.phase === "menu" && activeStarter && <div className="battle-menu-wrap">
           {isCoopBattle && (
             <div className="battle-menu-hint">
               🤝 {t("battle.coopTurn", "Co-op · Active:")} {activeStarter.typeIcon} {activeStarter.name}
             </div>
           )}
-          {B.battleMode === "pvp" && (
+          {S.battleMode === "pvp" && (
             <div className="battle-menu-hint">
-              {B.pvpTurn === "p1" ? t("battle.pvpTurn.p1", "🔵 Player 1 Turn") : t("battle.pvpTurn.p2", "🔴 Player 2 Turn")} · {activeStarter.typeIcon} {activeStarter.name} · ⚡{pvpActiveCharge}/3 · {pvpActiveSpecDefReady ? `🛡️${t("battle.status.counterReady", "Counter Ready")}` : `🛡️${pvpActiveCombo}/${pvpComboTrigger}`}
+              {S.pvpTurn === "p1" ? t("battle.pvpTurn.p1", "🔵 Player 1 Turn") : t("battle.pvpTurn.p2", "🔴 Player 2 Turn")} · {activeStarter.typeIcon} {activeStarter.name} · ⚡{pvpActiveCharge}/3 · {pvpActiveSpecDefReady ? `🛡️${t("battle.status.counterReady", "Counter Ready")}` : `🛡️${pvpActiveCombo}/${pvpComboTrigger}`}
             </div>
           )}
           <div className="battle-menu-grid">
@@ -856,12 +867,12 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
               return <button
                 className={`battle-menu-btn ${locked ? "is-locked" : ""}`}
                 key={i}
-                onClick={() => !locked && B.selectMove(i)}
+                onClick={() => !locked && A.selectMove(i)}
                 style={moveBtnStyle}
               >
-                {sealed && <div className="move-sealed-mask"><span className="move-sealed-text">{t("battle.sealed", "🔮 Sealed ({turns})", { turns: B.sealedTurns })}</span></div>}
+                {sealed && <div className="move-sealed-mask"><span className="move-sealed-text">{t("battle.sealed", "🔮 Sealed ({turns})", { turns: S.sealedTurns })}</span></div>}
                 <div className="move-badge-stack">
-                  {B.battleMode !== "pvp" && lv > 1 && (
+                  {S.battleMode !== "pvp" && lv > 1 && (
                     <div
                       className={`move-badge move-badge-level ${atCap ? "cap" : ""}`}
                       style={moveLevelBadgeStyle}
@@ -877,33 +888,33 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
                   <span className="move-name">{m.name}</span>
                 </div>
                 <div className="move-desc-row">
-                  {m.desc} · {t("battle.power", "Power")} <b className="move-power">{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && B.battleMode === "pvp" && !chargeReadyDisplay && ` ${t("battle.risky.lockedPvp", "🔒Need 3 correct")}`}{m.risky && B.battleMode === "pvp" && chargeReadyDisplay && ` ${t("battle.risky.readyPvp", "⚡Cast Ready")}`}{m.risky && !B.chargeReady && B.battleMode !== "pvp" && ` ${t("battle.risky.locked", "🔒")}`}{m.risky && B.chargeReady && B.battleMode !== "pvp" && ` ${t("battle.risky.ready", "⚡Charge Ready!")}`}{B.battleMode !== "pvp" && !m.risky && !atCap && lv > 1 && " ↑"}{B.battleMode !== "pvp" && atCap && ` ${t("battle.max", "✦MAX")}`}
+                  {m.desc} · {t("battle.power", "Power")} <b className="move-power">{pw}</b>{eff > 1 ? " ×1.5" : eff < 1 ? " ×0.6" : ""}{m.risky && S.battleMode === "pvp" && !chargeReadyDisplay && ` ${t("battle.risky.lockedPvp", "🔒Need 3 correct")}`}{m.risky && S.battleMode === "pvp" && chargeReadyDisplay && ` ${t("battle.risky.readyPvp", "⚡Cast Ready")}`}{m.risky && !S.chargeReady && S.battleMode !== "pvp" && ` ${t("battle.risky.locked", "🔒")}`}{m.risky && S.chargeReady && S.battleMode !== "pvp" && ` ${t("battle.risky.ready", "⚡Charge Ready!")}`}{S.battleMode !== "pvp" && !m.risky && !atCap && lv > 1 && " ↑"}{S.battleMode !== "pvp" && atCap && ` ${t("battle.max", "✦MAX")}`}
                 </div>
-                {B.battleMode !== "pvp" && !m.risky && !atCap && <div className="move-progress-track"><div className="move-progress-fill" style={moveProgressStyle} /></div>}
+                {S.battleMode !== "pvp" && !m.risky && !atCap && <div className="move-progress-track"><div className="move-progress-fill" style={moveProgressStyle} /></div>}
               </button>;
             })}
           </div>
           <div className="battle-util-row">
             {isCoopBattle && (
-              <button className="battle-util-btn" onClick={B.toggleCoopActive} disabled={!coopCanSwitch}>
+              <button className="battle-util-btn" onClick={A.toggleCoopActive} disabled={!coopCanSwitch}>
                 🔁 {coopUsingSub ? t("battle.coop.mainTurn", "Main Turn") : t("battle.coop.subTurn", "Sub Turn")}
               </button>
             )}
-            <button className="battle-util-btn" aria-label={t("a11y.battle.pause", "Pause game")} onClick={B.togglePause}>⏸️ {t("battle.pause", "Pause")}</button>
+            <button className="battle-util-btn" aria-label={t("a11y.battle.pause", "Pause game")} onClick={A.togglePause}>⏸️ {t("battle.pause", "Pause")}</button>
             <button className="battle-util-btn" aria-label={t("a11y.battle.settings", "Open battle settings")} onClick={() => onOpenSettings("battle")}>⚙️ {t("battle.settings", "Settings")}</button>
-            <button className="battle-util-btn battle-util-btn-danger" aria-label={t("a11y.battle.run", "Run from battle")} onClick={B.quitGame}>🏳️ {t("battle.run", "Run")}</button>
+            <button className="battle-util-btn battle-util-btn-danger" aria-label={t("a11y.battle.run", "Run from battle")} onClick={A.quitGame}>🏳️ {t("battle.run", "Run")}</button>
           </div>
         </div>}
 
         {/* Question panel */}
-        {B.phase === "question" && question && activeStarter && selectedMove && <div className="battle-question-wrap">
-          <div className="battle-question-head"><span className="battle-question-icon">{selectedMove.icon}</span><span className="battle-question-title">{selectedMove.name}！</span><span className="battle-question-sub">{activeStarter.typeIcon} {activeStarter.name}</span><span className="battle-question-note">{B.timedMode ? t("battle.answer.timed", "⏱️ Timed Answer!") : t("battle.answer.hit", "Answer correctly to hit")}</span></div>
+        {S.phase === "question" && question && activeStarter && selectedMove && <div className="battle-question-wrap">
+          <div className="battle-question-head"><span className="battle-question-icon">{selectedMove.icon}</span><span className="battle-question-title">{selectedMove.name}！</span><span className="battle-question-sub">{activeStarter.typeIcon} {activeStarter.name}</span><span className="battle-question-note">{S.timedMode ? t("battle.answer.timed", "⏱️ Timed Answer!") : t("battle.answer.hit", "Answer correctly to hit")}</span></div>
           <div className="battle-question-card">
-            {B.timedMode && !B.answered && (
+            {S.timedMode && !S.answered && (
               <QuestionTimerHud
-                timerSec={B.questionTimerSec}
-                subscribe={B.timerSubscribe}
-                getSnapshot={B.getTimerLeft}
+                timerSec={S.questionTimerSec}
+                subscribe={V.timerSubscribe}
+                getSnapshot={V.getTimerLeft}
               />
             )}
             <div className="battle-question-type">{questionTypeLabel}</div>
@@ -924,13 +935,13 @@ export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: 
             {question.choices.map((c: number, i: number) => {
               let answerState = "";
               if (feedback) answerState = c === question.answer ? "is-correct" : "is-dim";
-              return <button className={`answer-btn battle-answer-btn ${answerState}`} key={i} onClick={() => B.onAns(c)} disabled={B.answered}>{c}</button>;
+              return <button className={`answer-btn battle-answer-btn ${answerState}`} key={i} onClick={() => A.onAns(c)} disabled={S.answered}>{c}</button>;
             })}
           </div>
         </div>}
 
         {/* Text box */}
-        {(B.phase === "text" || B.phase === "playerAtk" || B.phase === "enemyAtk" || B.phase === "victory" || B.phase === "ko") && <TextBox text={B.bText} onClick={B.advance} />}
+        {(S.phase === "text" || S.phase === "playerAtk" || S.phase === "enemyAtk" || S.phase === "victory" || S.phase === "ko") && <TextBox text={S.bText} onClick={A.advance} />}
       </div>
     </div>
   );

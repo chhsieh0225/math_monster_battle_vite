@@ -20,6 +20,7 @@ type DecideBossTurnEventArgs = {
   turnCount?: number;
   bossPhase?: number;
   sealedMove?: number;
+  enemyId?: string;
 };
 
 type BossTurnEvent = 'attack' | 'release' | 'start_charge' | 'seal_move';
@@ -30,10 +31,14 @@ export function decideBossTurnEvent({
   turnCount = 0,
   bossPhase = 1,
   sealedMove = -1,
+  enemyId = '',
 }: DecideBossTurnEventArgs): BossTurnEvent {
   if (!isBoss) return 'attack';
   if (bossCharging) return 'release';
-  if (turnCount > 0 && turnCount % BOSS_BALANCE.chargeEveryTurns === 0) return 'start_charge';
+  const chargeInterval = enemyId === 'boss_sword_god'
+    ? BOSS_BALANCE.swordGodChargeEveryTurns
+    : BOSS_BALANCE.chargeEveryTurns;
+  if (turnCount > 0 && turnCount % chargeInterval === 0) return 'start_charge';
   if (
     bossPhase >= BOSS_BALANCE.sealStartsAtPhase
     && sealedMove < 0

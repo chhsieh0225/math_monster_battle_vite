@@ -574,7 +574,10 @@ export function runEnemyTurn({
           const s2 = sr.current;
           const target = resolvePlayerTarget(s2);
           const targetName = target === 'sub' ? (s2.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s2.starter?.name || tr(t, 'battle.role.main', 'Main'));
-          const bigDmg = Math.round((s2.enemy?.atk || 0) * TRAIT_BALANCE.boss.releaseAttackScale);
+          const releaseScale = s2.enemy?.id === 'boss_sword_god'
+            ? TRAIT_BALANCE.boss.swordGodReleaseScale
+            : TRAIT_BALANCE.boss.releaseAttackScale;
+          const bigDmg = Math.round((s2.enemy?.atk || 0) * releaseScale);
           const nh = applyDamageToTarget({
             s: s2,
             target,

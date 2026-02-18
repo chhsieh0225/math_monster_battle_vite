@@ -301,6 +301,9 @@ export const BALANCE_CONFIG = {
       /** Sword God: chance to halve incoming damage */
       swordParryChance: 0.2,
       swordParryScale: 0.5,
+      /** Sword God: faster charge cycle + weaker release */
+      swordGodChargeEveryTurns: 2,
+      swordGodReleaseScale: 1.5,
     },
   },
 } as const;

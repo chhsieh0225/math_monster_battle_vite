@@ -4,9 +4,7 @@ import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { SCENES } from '../../data/scenes';
 import { PVP_BALANCE } from '../../data/pvpBalance';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
-import MonsterSprite from '../ui/MonsterSprite';
 import TextBox from '../ui/TextBox';
-import AmbientParticles from '../effects/AmbientParticles';
 import type {
   ScreenName,
   UseBattleActions,
@@ -21,6 +19,8 @@ import { BattleQuestionPanel } from './battle/BattleQuestionPanel.tsx';
 import { BattleEnemyInfoPanel, BattlePlayerInfoPanel } from './battle/BattleInfoPanels.tsx';
 import { BattleStatusOverlay } from './battle/BattleStatusOverlay.tsx';
 import { BattleFxLayer } from './battle/BattleFxLayer.tsx';
+import { BattleArenaSprites } from './battle/BattleArenaSprites.tsx';
+import { BattleSceneLayers } from './battle/BattleSceneLayers.tsx';
 import './BattleScreen.css';
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
 
@@ -445,11 +445,14 @@ export default function BattleScreen({
 
       {/* ═══ Battle arena ═══ */}
       <div className="battle-arena">
-        {scene.bgImg && <div className="scene-bg" style={sceneBgStyle} />}
-        <div className="battle-scene-sky" style={sceneSkyStyle} />
-        <div className="battle-scene-ground" style={sceneGroundStyle} />
-        <div className="battle-scene-platform-top" style={sceneTopPlatformStyle} />
-        <div className="battle-scene-deco">{showHeavyFx && scene.Deco && <scene.Deco />}</div>
+        <BattleSceneLayers
+          showHeavyFx={showHeavyFx}
+          bgStyle={sceneBgStyle}
+          skyStyle={sceneSkyStyle}
+          groundStyle={sceneGroundStyle}
+          platformTopStyle={sceneTopPlatformStyle}
+          Deco={scene.Deco}
+        />
 
         {/* Enemy info */}
         <BattleEnemyInfoPanel
@@ -476,17 +479,31 @@ export default function BattleScreen({
           bossCharging={S.bossCharging}
         />
 
-        {/* Enemy sprite */}
-        <div ref={enemySpriteRef} className="battle-sprite-enemy-main" style={enemyMainSpriteStyle}>
-          <MonsterSprite svgStr={eSvg} size={eSize} />
-          {showHeavyFx && <AmbientParticles type={enemy.mType || 'grass'} type2={enemy.mType2} size={eSize} seed={`e-${enemy.id}`} />}
-        </div>
-        {showEnemySub && S.enemySub && eSubSvg && (
-          <div className="battle-sprite-enemy-sub" style={enemySubSpriteStyle}>
-            <MonsterSprite svgStr={eSubSvg} size={enemySubSize} />
-          </div>
-        )}
-        {!S.eAnim && !UX.lowPerfMode && <div className="battle-sprite-enemy-shadow" style={enemyMainShadowStyle} />}
+        <BattleArenaSprites
+          showHeavyFx={showHeavyFx}
+          enemy={enemy}
+          starterType={starter.type}
+          showEnemySub={showEnemySub}
+          showAllySub={showAllySub}
+          eSvg={eSvg}
+          pSvg={pSvg}
+          eSubSvg={eSubSvg}
+          pSubSvg={pSubSvg}
+          eSize={eSize}
+          enemySubSize={enemySubSize}
+          mainPlayerSize={mainPlayerSize}
+          subPlayerSize={subPlayerSize}
+          enemySpriteRef={enemySpriteRef}
+          playerSpriteRef={playerSpriteRef}
+          enemyMainSpriteStyle={enemyMainSpriteStyle}
+          enemySubSpriteStyle={enemySubSpriteStyle}
+          enemyMainShadowStyle={enemyMainShadowStyle}
+          playerMainSpriteStyle={playerMainSpriteStyle}
+          playerSubSpriteStyle={playerSubSpriteStyle}
+          playerMainShadowStyle={playerMainShadowStyle}
+          showEnemyShadow={!S.eAnim && !UX.lowPerfMode}
+          showPlayerShadow={!S.pAnim && !UX.lowPerfMode}
+        />
 
         {/* Player platform & info */}
         <div className="battle-scene-platform-bottom" style={sceneBottomPlatformStyle} />
@@ -518,18 +535,6 @@ export default function BattleScreen({
           cursed={S.cursed}
           poisoned={S.enemy?.trait === 'venom'}
         />
-
-        {/* Player sprite */}
-        <div ref={playerSpriteRef} className="battle-sprite-player-main" style={playerMainSpriteStyle}>
-          <MonsterSprite svgStr={pSvg} size={mainPlayerSize} />
-          {showHeavyFx && <AmbientParticles type={starter.type || 'grass'} size={mainPlayerSize} seed={`p-${starter.type}`} count={5} />}
-        </div>
-        {showAllySub && pSubSvg && (
-          <div className="battle-sprite-player-sub" style={playerSubSpriteStyle}>
-            <MonsterSprite svgStr={pSubSvg} size={subPlayerSize} />
-          </div>
-        )}
-        {!S.pAnim && !UX.lowPerfMode && <div className="battle-sprite-player-shadow" style={playerMainShadowStyle} />}
 
         <BattleStatusOverlay
           t={t}

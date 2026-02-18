@@ -292,6 +292,7 @@ export function resolveBossTurnState({
     turnCount: nextBossTurn,
     bossPhase: phase,
     sealedMove,
+    enemyId: enemy.id,
   });
 
   return {

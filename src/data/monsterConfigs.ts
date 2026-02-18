@@ -150,9 +150,12 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     mType: "dark",
     typeIcon: "💀",
     typeName: "暗",
+    mType2: "electric",
+    typeIcon2: "⚡",
+    typeName2: "電",
     trait: "tyrant",
     traitName: "霸王",
-    traitDesc: "擁有多階段戰鬥形態，能蓄力釋放毀滅大招，還能封印對手技能。每三次攻擊會展開暗影護盾抵消一次傷害。",
+    traitDesc: "操控暗雷之力的多階段王者。能蓄力釋放毀滅大招、封印對手技能。每三次攻擊會展開暗影護盾抵消一次傷害。暗/電雙屬性讓水系與電系攻擊大幅削弱。",
   },
   {
     id: "boss_hydra",

@@ -18,6 +18,7 @@ import enUS from './i18n/locales/en-US';
 import { useBattle } from './hooks/useBattle';
 import { useMobileExperience } from './hooks/useMobileExperience';
 import { BOSS_IDS } from './data/monsterConfigs.ts';
+import { BG_IMGS } from './data/sprites.ts';
 
 // Screens
 import AppScreenRouter from './components/AppScreenRouter';
@@ -47,6 +48,19 @@ const STATIC_DICTS: Readonly<Record<StaticLocaleCode, Record<string, string>>> =
 function staticT(key: string, fallback: string): string {
   const locale = resolveStaticLocale();
   return STATIC_DICTS[locale][key] || STATIC_DICTS["zh-TW"][key] || fallback;
+}
+
+const preloadedSceneBackgrounds = new Set<string>();
+
+function preloadSceneBackground(src: string): void {
+  if (typeof window === "undefined" || !src || preloadedSceneBackgrounds.has(src)) return;
+  preloadedSceneBackgrounds.add(src);
+  const img = new Image();
+  img.decoding = "async";
+  img.src = src;
+  if (typeof img.decode === "function") {
+    void img.decode().catch(() => {});
+  }
 }
 
 // ─── ErrorBoundary: catches render crashes to show error instead of black screen ───
@@ -164,6 +178,12 @@ function App() {
   const [sfxMuted, setSfxMuted] = useState<boolean>(() => Boolean(V.sfx.sfxMuted));
   const settingsReturnRef = useRef<ScreenName>("title");
   const resumeBattleAfterSettingsRef = useRef(false);
+
+  // Preload all scene backgrounds once to avoid visible flash on scene switch.
+  useEffect(() => {
+    Object.values(BG_IMGS).forEach((src) => preloadSceneBackground(src));
+  }, []);
+
   const handleSetBgmMuted = (next: boolean) => {
     const m = V.sfx.setBgmMuted(next);
     setBgmMuted(m);

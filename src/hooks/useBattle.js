@@ -123,6 +123,8 @@ import { useCoopTurnRotation } from './useCoopTurnRotation';
 import { useBattleAsyncGate, useBattleStateRef } from './useBattleRuntime';
 import { buildUseBattleState } from './battle/publicStateBuilder.ts';
 import { buildUseBattleView } from './battle/publicViewBuilder.ts';
+import { buildUseBattleActions } from './battle/publicActionsBuilder.ts';
+import { buildUseBattlePublicApi } from './battle/publicApi.ts';
 
 // ═══════════════════════════════════════════════════════════════════
 /** @returns {import('../types/battle').UseBattlePublicApi} */
@@ -836,15 +838,27 @@ export function useBattle() {
     achUnlocked, achPopup, encData,
   });
 
-  /** @type {import('../types/battle').UseBattleActions} */
-  const actions = {
+  // eslint-disable-next-line react-hooks/refs
+  const actions = buildUseBattleActions({
     dismissAch,
-    setTimedMode, setBattleMode, setScreen, queueDailyChallenge, clearChallengeRun,
-    setStarter: setStarterLocalized, setPvpStarter2: setPvpStarter2Localized,
-    startGame, selectMove, onAns, advance, continueAfterEvolve,
-    quitGame, togglePause, toggleCoopActive,
-    rmD, rmP,
-  };
+    setTimedMode,
+    setBattleMode,
+    setScreen,
+    queueDailyChallenge,
+    clearChallengeRun,
+    setStarterLocalized,
+    setPvpStarter2Localized,
+    startGame,
+    selectMove,
+    onAns,
+    advance,
+    continueAfterEvolve,
+    quitGame,
+    togglePause,
+    toggleCoopActive,
+    rmD,
+    rmP,
+  });
 
   const view = buildUseBattleView({
     timerSubscribe: subscribeTimerLeft,
@@ -853,11 +867,10 @@ export function useBattle() {
     sfx,
   });
 
-  /** @type {import('../types/battle').UseBattlePublicApi} */
-  const publicApi = {
+  const publicApi = buildUseBattlePublicApi({
     state,
     actions,
     view,
-  };
+  });
   return publicApi;
 }

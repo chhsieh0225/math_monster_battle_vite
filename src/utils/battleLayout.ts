@@ -30,6 +30,11 @@ export type BattleLayoutConfig = {
   enemyTopPct: number;
 };
 
+function normalizeEnemyVisualId(enemyId?: string | null): string {
+  if (!enemyId) return '';
+  return enemyId.startsWith('pvp_') ? enemyId.slice(4) : enemyId;
+}
+
 export function resolveBattleLayout({
   battleMode,
   hasDualUnits,
@@ -53,25 +58,30 @@ export function resolveBattleLayout({
   const playerSubLeftPct = dualUnits ? (compactDual ? 21 : 23) : 24;
   const playerSubBottomPct = dualUnits ? (compactDual ? 13 : 15) : 17;
 
-  const isLionFinalInTeam = dualUnits && playerStarterId === "lion" && playerStageIdx >= 2;
-  const mainPlayerBaseSize = isLionFinalInTeam
-    ? 188
-    : playerStageIdx >= 2
-      ? 200
-      : playerStageIdx >= 1
-        ? 170
-        : 120;
+  const normalizedPlayerId = normalizeEnemyVisualId(playerStarterId);
+  const isBossPlayer = BOSS_IDS.has(normalizedPlayerId);
+  const isLionFinalInTeam = dualUnits && normalizedPlayerId === "lion" && playerStageIdx >= 2;
+  const mainPlayerBaseSize = isBossPlayer
+    ? 230
+    : isLionFinalInTeam
+      ? 188
+      : playerStageIdx >= 2
+        ? 200
+        : playerStageIdx >= 1
+          ? 170
+          : 120;
   const mainPlayerScale = dualUnits ? (compactDual ? 0.9 : 0.96) : 1;
   const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale);
   const subPlayerSize = Math.round((compactDual ? 104 : 112) * (dualUnits ? (compactDual ? 0.9 : 0.95) : 1));
 
-  const isBoss = BOSS_IDS.has(enemyId ?? '');
-  const isDragonOrFire = enemyId === "fire" || enemyId === "dragon";
-  const isEvolvedSlime = Boolean(enemyId?.startsWith("slime") && enemyIsEvolved);
-  const isGolumn = enemyId === "golumn" || enemyId === "golumn_mud";
-  const isCrazyDragon = enemyId === "boss_crazy_dragon";
-  const isSwordGod = enemyId === "boss_sword_god";
-  const isHydra = enemyId === "boss_hydra";
+  const visualEnemyId = normalizeEnemyVisualId(enemyId);
+  const isBoss = BOSS_IDS.has(visualEnemyId);
+  const isDragonOrFire = visualEnemyId === "fire" || visualEnemyId === "dragon";
+  const isEvolvedSlime = Boolean(visualEnemyId.startsWith("slime") && enemyIsEvolved);
+  const isGolumn = visualEnemyId === "golumn" || visualEnemyId === "golumn_mud";
+  const isCrazyDragon = visualEnemyId === "boss_crazy_dragon";
+  const isSwordGod = visualEnemyId === "boss_sword_god";
+  const isHydra = visualEnemyId === "boss_hydra";
   const enemyBaseSize = isSwordGod ? 270
     : isCrazyDragon ? 260
     : isHydra ? 260

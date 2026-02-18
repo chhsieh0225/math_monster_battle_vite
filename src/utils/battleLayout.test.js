@@ -53,3 +53,55 @@ test('hydra gets coop-only size boost to avoid looking undersized', () => {
   assert.ok(coopHydra.enemySize > soloHydra.enemySize);
   assert.equal(coopHydra.enemySize, 280);
 });
+
+test('pvp boss id prefix keeps boss visual sizing', () => {
+  const normalBoss = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'boss_sword_god',
+    enemySceneType: 'light',
+    enemyIsEvolved: false,
+  });
+  const pvpBoss = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'pvp_boss_sword_god',
+    enemySceneType: 'light',
+    enemyIsEvolved: false,
+  });
+
+  assert.equal(pvpBoss.enemySize, normalBoss.enemySize);
+  assert.equal(pvpBoss.enemyTopPct, normalBoss.enemyTopPct);
+});
+
+test('boss selected as player starter uses boss-class sprite size', () => {
+  const normalStarterLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 0,
+    playerStarterId: 'fire',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+  });
+  const bossStarterLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 0,
+    playerStarterId: 'boss_sword_god',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+  });
+
+  assert.ok(bossStarterLayout.mainPlayerSize > normalStarterLayout.mainPlayerSize);
+  assert.equal(bossStarterLayout.mainPlayerSize, 230);
+});

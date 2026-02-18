@@ -13,9 +13,9 @@ type BattleWeatherLayerProps = {
 type WeatherCssVars = CSSProperties & Record<`--${string}`, string | number>;
 
 const WEATHER_BY_SCENE: Record<string, BattleWeatherType> = {
-  grass: 'rain',
+  grass: 'none',
   water: 'rain',
-  steel: 'rain',
+  steel: 'none',
   electric: 'storm',
   dark: 'storm',
   poison: 'fog',
@@ -24,11 +24,11 @@ const WEATHER_BY_SCENE: Record<string, BattleWeatherType> = {
   light: 'snow',
   rock: 'dust',
   fire: 'dust',
-  burnt_warplace: 'storm',
+  burnt_warplace: 'dust',
 };
 
 function resolveWeather(sceneType: string): BattleWeatherType {
-  return WEATHER_BY_SCENE[sceneType] || 'rain';
+  return WEATHER_BY_SCENE[sceneType] || 'none';
 }
 
 type RainDropVm = {
@@ -52,13 +52,13 @@ type DustVm = {
 };
 
 function buildRain(seed: string, dense: boolean): RainDropVm[] {
-  const count = dense ? 55 : 40;
+  const count = dense ? 68 : 46;
   return Array.from({ length: count }, (_, i) => {
     const x = seedRange(`weather-rain-x-${seed}-${i}`, 1, 98);
-    const h = seedRange(`weather-rain-h-${seed}-${i}`, 18, dense ? 34 : 28);
+    const h = seedRange(`weather-rain-h-${seed}-${i}`, 24, dense ? 42 : 34);
     const duration = seedRange(`weather-rain-d-${seed}-${i}`, dense ? 0.38 : 0.45, dense ? 0.72 : 0.88);
     const delay = seedRange(`weather-rain-delay-${seed}-${i}`, 0, 1.4);
-    const opacity = seedRange(`weather-rain-op-${seed}-${i}`, dense ? 0.5 : 0.4, dense ? 0.88 : 0.78);
+    const opacity = seedRange(`weather-rain-op-${seed}-${i}`, dense ? 0.62 : 0.5, dense ? 0.96 : 0.86);
     return {
       key: `rain-${i}`,
       style: {

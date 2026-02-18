@@ -332,7 +332,13 @@ export default function BattleScreen({
   const enemyInfoStyle: BattleCssVars = { "--battle-enemy-info-right": enemyInfoRight };
   const playerInfoStyle: BattleCssVars = { "--battle-player-info-left": playerInfoLeft };
   const enemyLowHp = enemy.maxHp > 0 && S.eHp > 0 && S.eHp / enemy.maxHp < 0.25;
-  const enemyIdleAnim = BOSS_IDS.has(enemy.id)
+  const normalizeBossVisualId = (id?: string | null): string => {
+    if (!id) return '';
+    return id.startsWith('pvp_') ? id.slice(4) : id;
+  };
+  const enemyIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemy.id));
+  const enemySubIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(S.enemySub?.id ?? ''));
+  const enemyIdleAnim = enemyIsBossVisual
     ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
     : enemyLowHp
       ? "float 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite"
@@ -350,9 +356,9 @@ export default function BattleScreen({
     : (compactDual ? "0.72" : "0.8");
   const enemySubSize = !S.enemySub
     ? 96
-    : BOSS_IDS.has(S.enemySub.id)
+    : enemySubIsBossVisual
       ? 160
-      : isLargeEnemySub
+    : isLargeEnemySub
         ? 150
         : S.enemySub.isEvolved
           ? 120
@@ -367,7 +373,7 @@ export default function BattleScreen({
     "--enemy-shadow-right": `calc(${enemyMainRightPct}% + ${Math.round(eSize * 0.18)}px)`,
     "--enemy-shadow-top": `calc(${eTopPct}% + ${Math.round(eHeight * 0.72)}px)`,
     "--enemy-shadow-width": `${Math.round(eSize * 0.56)}px`,
-    "--enemy-shadow-anim": BOSS_IDS.has(enemy.id) ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
+    "--enemy-shadow-anim": enemyIsBossVisual ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
   });
   const playerMainSpriteStyle: BattleCssVars = ({
     "--player-main-left": `${playerMainLeftPct}%`,

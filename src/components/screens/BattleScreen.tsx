@@ -25,6 +25,7 @@ import type {
   UseBattleView,
   UseMobileExperienceApi,
 } from '../../types/battle';
+import './BattleScreen.css';
 
 const NOOP_SUBSCRIBE: TimerSubscribe = () => () => {};
 const ZERO_SNAPSHOT = (): number => 0;

@@ -100,7 +100,7 @@ export const slimeSteelSVG  = makeSvgFn('slime_steel', 'pixelated');
 
 export const fireLizardSVG = makeSvgFn('fire');
 export const ghostSVG = makeSvgFn('ghost');
-export const ghostLanternSVG = makeSvgFn('ghost_lantern');
+export const ghostLanternSVG = makeSvgFnFill('ghost_lantern', 677, 369);
 export const dragonSVG = makeSvgFn('dragon', 'pixelated');
 export const darkLordSVG = makeSvgFn('boss');
 export const slimeEvolvedSVG = makeSvgFn('slime_evolved');

@@ -1,16 +1,11 @@
 import { getStarterStageIdx } from '../../utils/playerHp.ts';
 import { isBattleActiveState, scheduleIfBattleActive, tryReturnToMenu } from './menuResetGuard.ts';
+import type { StarterVm } from '../../types/battle';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 
-type StarterLite = {
-  id?: string;
-  name: string;
-  selectedStageIdx?: number;
-  stages?: Array<{ name?: string }>;
-  type?: string;
-};
+type StarterLite = StarterVm;
 
 type BattleState = {
   battleMode?: string;

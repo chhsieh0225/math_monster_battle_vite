@@ -27,7 +27,27 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'enc_defeat', name: '圖鑑獵人', icon: '💀', desc: '圖鑑擊敗全 14 種怪獸' },
 ];
 
-export const ACH_MAP: Record<AchievementId, AchievementDef> = ACHIEVEMENTS.reduce((acc, item) => {
-  acc[item.id] = item;
-  return acc;
-}, {} as Record<AchievementId, AchievementDef>);
+function assertAchievementMapComplete(
+  map: Partial<Record<AchievementId, AchievementDef>>,
+): asserts map is Record<AchievementId, AchievementDef> {
+  const ids: AchievementId[] = [
+    'first_win', 'streak_5', 'streak_10', 'perfect', 'timed_clear',
+    'one_hit', 'spec_def', 'evolve_max', 'move_max', 'all_moves_max',
+    'fire_clear', 'water_clear', 'grass_clear', 'electric_clear', 'lion_clear',
+    'boss_kill', 'low_hp', 'no_damage', 'enc_all', 'enc_defeat',
+  ];
+  for (const id of ids) {
+    if (!map[id]) throw new Error(`Missing achievement definition: ${id}`);
+  }
+}
+
+function buildAchievementMap(): Record<AchievementId, AchievementDef> {
+  const map: Partial<Record<AchievementId, AchievementDef>> = {};
+  for (const item of ACHIEVEMENTS) {
+    map[item.id] = item;
+  }
+  assertAchievementMapComplete(map);
+  return map;
+}
+
+export const ACH_MAP: Record<AchievementId, AchievementDef> = buildAchievementMap();

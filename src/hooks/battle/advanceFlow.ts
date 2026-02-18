@@ -1,5 +1,6 @@
 import { buildNextEvolvedAlly, isCoopBattleMode } from './coopFlow.ts';
 import { processPvpTurnStart } from './pvpFlow.ts';
+import type { StarterVm } from '../../types/battle';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -8,10 +9,7 @@ type EnemyLite = {
   name?: string;
 };
 
-type StarterLite = {
-  name: string;
-  selectedStageIdx?: number;
-};
+type StarterLite = StarterVm;
 
 type BattleState = {
   battleMode?: string;

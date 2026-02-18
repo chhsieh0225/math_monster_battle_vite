@@ -1,14 +1,13 @@
 import { PLAYER_MAX_HP } from '../../data/constants.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
+import type { EnemyVm, StarterVm } from '../../types/battle';
 
-type UnknownRecord = Record<string, unknown>;
-
-type BattleEntity = ({ id?: string; maxHp: number } & UnknownRecord) | null;
+type BattleEntity = EnemyVm | null;
 
 export type BattleState = {
   // Player
   pHp: number;
-  allySub: UnknownRecord | null;
+  allySub: StarterVm | null;
   pHpSub: number;
   pExp: number;
   pLvl: number;

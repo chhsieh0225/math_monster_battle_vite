@@ -1,3 +1,5 @@
+import type { BattleState } from './battleReducer.ts';
+
 type FieldKey =
   | 'pHp'
   | 'allySub'
@@ -29,56 +31,60 @@ type FieldKey =
   | 'sealedMove'
   | 'sealedTurns';
 
-type DispatchBattle = (action: {
+type FieldValue<K extends FieldKey> = BattleState[K] | ((prev: BattleState[K]) => BattleState[K]);
+
+type SetFieldAction<K extends FieldKey = FieldKey> = {
   type: 'set_field';
-  key: FieldKey;
-  value: unknown;
-}) => void;
-
-type FieldSetter = (value: unknown) => void;
-
-type BattleFieldSetters = {
-  setBattleField: (key: FieldKey, value: unknown) => void;
-  setPHp: FieldSetter;
-  setAllySub: FieldSetter;
-  setPHpSub: FieldSetter;
-  setPExp: FieldSetter;
-  setPLvl: FieldSetter;
-  setPStg: FieldSetter;
-  setEHp: FieldSetter;
-  setStreak: FieldSetter;
-  setPassiveCount: FieldSetter;
-  setCharge: FieldSetter;
-  setTC: FieldSetter;
-  setTW: FieldSetter;
-  setDefeated: FieldSetter;
-  setMaxStreak: FieldSetter;
-  setMHits: FieldSetter;
-  setMLvls: FieldSetter;
-  setMLvlUp: FieldSetter;
-  setBurnStack: FieldSetter;
-  setFrozen: FieldSetter;
-  setStaticStack: FieldSetter;
-  setSpecDef: FieldSetter;
-  setDefAnim: FieldSetter;
-  setCursed: FieldSetter;
-  setDiffLevel: FieldSetter;
-  setBossPhase: FieldSetter;
-  setBossTurn: FieldSetter;
-  setBossCharging: FieldSetter;
-  setSealedMove: FieldSetter;
-  setSealedTurns: FieldSetter;
+  key: K;
+  value: FieldValue<K>;
 };
 
-function createFieldSetter(
-  setBattleField: (key: FieldKey, value: unknown) => void,
-  key: FieldKey,
-): FieldSetter {
+type DispatchBattle = <K extends FieldKey>(action: SetFieldAction<K>) => void;
+
+type FieldSetter<K extends FieldKey> = (value: FieldValue<K>) => void;
+
+type BattleFieldSetters = {
+  setBattleField: <K extends FieldKey>(key: K, value: FieldValue<K>) => void;
+  setPHp: FieldSetter<'pHp'>;
+  setAllySub: FieldSetter<'allySub'>;
+  setPHpSub: FieldSetter<'pHpSub'>;
+  setPExp: FieldSetter<'pExp'>;
+  setPLvl: FieldSetter<'pLvl'>;
+  setPStg: FieldSetter<'pStg'>;
+  setEHp: FieldSetter<'eHp'>;
+  setStreak: FieldSetter<'streak'>;
+  setPassiveCount: FieldSetter<'passiveCount'>;
+  setCharge: FieldSetter<'charge'>;
+  setTC: FieldSetter<'tC'>;
+  setTW: FieldSetter<'tW'>;
+  setDefeated: FieldSetter<'defeated'>;
+  setMaxStreak: FieldSetter<'maxStreak'>;
+  setMHits: FieldSetter<'mHits'>;
+  setMLvls: FieldSetter<'mLvls'>;
+  setMLvlUp: FieldSetter<'mLvlUp'>;
+  setBurnStack: FieldSetter<'burnStack'>;
+  setFrozen: FieldSetter<'frozen'>;
+  setStaticStack: FieldSetter<'staticStack'>;
+  setSpecDef: FieldSetter<'specDef'>;
+  setDefAnim: FieldSetter<'defAnim'>;
+  setCursed: FieldSetter<'cursed'>;
+  setDiffLevel: FieldSetter<'diffLevel'>;
+  setBossPhase: FieldSetter<'bossPhase'>;
+  setBossTurn: FieldSetter<'bossTurn'>;
+  setBossCharging: FieldSetter<'bossCharging'>;
+  setSealedMove: FieldSetter<'sealedMove'>;
+  setSealedTurns: FieldSetter<'sealedTurns'>;
+};
+
+function createFieldSetter<K extends FieldKey>(
+  setBattleField: <T extends FieldKey>(key: T, value: FieldValue<T>) => void,
+  key: K,
+): FieldSetter<K> {
   return (value) => setBattleField(key, value);
 }
 
 export function createBattleFieldSetters(dispatchBattle: DispatchBattle): BattleFieldSetters {
-  const setBattleField = (key: FieldKey, value: unknown): void => {
+  const setBattleField = <K extends FieldKey>(key: K, value: FieldValue<K>): void => {
     dispatchBattle({ type: 'set_field', key, value });
   };
 

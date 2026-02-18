@@ -14,9 +14,9 @@ let ready = false;
 const SFX_MUTED_KEY = 'mathMonsterBattle_sfxMuted';
 const BGM_MUTED_KEY = 'mathMonsterBattle_bgmMuted';
 const BGM_VOLUME_KEY = 'mathMonsterBattle_bgmVolume';
-const DEFAULT_BGM_VOLUME = 0.24;
+const DEFAULT_BGM_VOLUME = 0.5;
 const MIN_BGM_VOLUME = 0;
-const MAX_BGM_VOLUME = 0.55;
+const MAX_BGM_VOLUME = 1.0;
 let sfxMuted = readText(SFX_MUTED_KEY, '0') === '1';
 let bgmMuted = readText(BGM_MUTED_KEY, '0') === '1';
 function clampBgmVolume(next: number): number {
@@ -27,9 +27,10 @@ let bgmVolume = clampBgmVolume(Number.parseFloat(readText(BGM_VOLUME_KEY, String
 
 // ── Reverb send bus ──────────────────────────────────────────────
 const REVERB_DECAY_SEC = 1.4;     // IR length — short plate-style tail
-const REVERB_WET_SFX = 0.18;     // subtle wet for SFX
-const REVERB_WET_BGM = 0.08;     // even subtler for BGM (already a full mix)
-const REVERB_DRY = 0.92;         // keep dry signal nearly unity
+const REVERB_WET_SFX = 0.22;     // subtle wet for SFX
+const REVERB_WET_BGM = 0.10;     // even subtler for BGM (already a full mix)
+const REVERB_DRY = 1.0;          // full dry signal — no attenuation
+const SFX_MASTER_GAIN = 1.8;     // global SFX volume boost (individual vols were too conservative)
 let sfxDest: AudioNode | null = null;     // SFX master bus → dry+wet
 let reverbConvolver: ConvolverNode | null = null;
 

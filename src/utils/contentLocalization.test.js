@@ -41,6 +41,35 @@ test('localizeEnemy maps new monster variants to English names', () => {
   assert.equal(lantern.typeName, "Ghost");
 });
 
+test('localizeEnemy localizes dual-type labels and evolved lantern name', () => {
+  const hydra = localizeEnemy({
+    id: "boss_hydra",
+    name: "深淵九頭蛇",
+    mType: "poison",
+    typeName: "毒",
+    mType2: "dark",
+    typeName2: "暗",
+    trait: "venom",
+    traitName: "毒霧",
+    traitDesc: "散發致命毒霧。",
+  }, EN);
+
+  assert.equal(hydra.name, "Abyss Hydra");
+  assert.equal(hydra.typeName, "Poison");
+  assert.equal(hydra.typeName2, "Dark");
+  assert.equal(hydra.traitName, "Venom Fog");
+  assert.ok(!hasCjk(hydra.traitDesc));
+
+  const evolvedLantern = localizeEnemy({
+    id: "ghost_lantern",
+    isEvolved: true,
+    name: "冥燈死神",
+    mType: "ghost",
+    typeName: "靈",
+  }, EN);
+  assert.equal(evolvedLantern.name, "Lantern Reaper");
+});
+
 test('localizeStarterList maps starter and move names to English', () => {
   const starters = localizeStarterList([{
     id: "fire",
@@ -81,6 +110,8 @@ test('localizeEncyclopediaEnemyEntries maps names and descriptions to English', 
     name: "烈焰巨龍",
     mType: "fire",
     typeName: "火",
+    mType2: "dark",
+    typeName2: "暗",
     weakAgainst: ["水"],
     resistAgainst: ["草"],
     desc: "火焰蜥的最終進化。",
@@ -94,6 +125,9 @@ test('localizeEncyclopediaEnemyEntries maps names and descriptions to English', 
   for (const entry of enemies) {
     assert.ok(!hasCjk(entry.name), `encyclopedia enemy name still contains CJK: ${entry.name}`);
     assert.ok(!hasCjk(entry.typeName), `encyclopedia enemy type still contains CJK: ${entry.typeName}`);
+    if (entry.typeName2) {
+      assert.ok(!hasCjk(entry.typeName2), `encyclopedia enemy type2 still contains CJK: ${entry.typeName2}`);
+    }
     if (entry.desc) {
       assert.ok(!hasCjk(entry.desc), `encyclopedia enemy desc still contains CJK: ${entry.key}`);
     }

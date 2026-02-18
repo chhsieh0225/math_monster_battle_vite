@@ -119,6 +119,7 @@ const MONSTER_NAME_EN = {
   fireEvolved: "Inferno Dragon",
   ghost: "Phantom Fiend",
   ghost_lantern: "Lantern Wraith",
+  ghost_lanternEvolved: "Lantern Reaper",
   ghostEvolved: "Nether Reaper",
   dragon: "Iron Dragon",
   dragonEvolved: "Aegis Skywyrm",
@@ -127,6 +128,35 @@ const MONSTER_NAME_EN = {
   boss_crazy_dragon: "One-Winged Frenzy Dragon",
   golumn: "Stone Golem",
   golumn_mud: "Mudstone Golem",
+};
+
+const MONSTER_NAME_EN_BY_ZH = {
+  史萊姆: "Green Slime",
+  綠史萊姆: "Green Slime",
+  紅史萊姆: "Crimson Slime",
+  藍史萊姆: "Azure Slime",
+  黃史萊姆: "Volt Slime",
+  黑史萊姆: "Shadow Slime",
+  鋼史萊姆: "Iron Slime",
+  叢林巨魔: "Jungle Ogre",
+  雷霆巨魔: "Thunder Ogre",
+  烈焰巨魔: "Inferno Ogre",
+  深海巨魔: "Abyssal Ogre",
+  鋼鐵巨魔: "Titan Ogre",
+  深淵巨魔: "Void Ogre",
+  火焰蜥: "Flame Lizard",
+  烈焰巨龍: "Inferno Dragon",
+  幽靈魔: "Phantom Fiend",
+  提燈幽魂: "Lantern Wraith",
+  冥界死神: "Nether Reaper",
+  冥燈死神: "Lantern Reaper",
+  鋼鐵龍: "Iron Dragon",
+  鐵甲天龍: "Aegis Skywyrm",
+  岩石高崙: "Stone Golem",
+  泥岩高崙: "Mudstone Golem",
+  暗黑龍王: "Dark Dragon King",
+  深淵九頭蛇: "Abyss Hydra",
+  單翼狂龍: "One-Winged Frenzy Dragon",
 };
 
 const MONSTER_DESC_EN = {
@@ -146,6 +176,7 @@ const MONSTER_DESC_EN = {
   fireEvolved: "The ultimate evolution of Flame Lizard, empowered by a volcanic core.",
   ghost: "A spectral monster haunting ancient graves, drifting through walls and minds.",
   ghost_lantern: "A lantern-bearing ghost variant. Its underworld flame distorts vision and misleads prey.",
+  ghost_lanternEvolved: "An evolved lantern spirit whose underworld flame can pierce armor and morale alike.",
   ghostEvolved: "A transcendent spirit wielding reaper power from the underworld.",
   dragon: "An ancient mechanical dragon with heavy alloy armor and strong defense.",
   dragonEvolved: "An upgraded war-dragon with a sky engine, balancing speed and armor.",
@@ -173,6 +204,7 @@ const MONSTER_HABITAT_EN = {
   fireEvolved: "🌋 Blazing Volcano",
   ghost: "🌙 Gloom Graveyard",
   ghost_lantern: "🌙 Gloom Graveyard",
+  ghost_lanternEvolved: "🌙 Gloom Graveyard",
   ghostEvolved: "🌙 Gloom Graveyard",
   dragon: "⚙️ Iron Fortress",
   dragonEvolved: "⚙️ Iron Fortress",
@@ -459,10 +491,12 @@ export function localizeEnemy(enemy, locale) {
       ? `${enemyId}Evolved`
       : enemyId
   );
+  const fallbackName = MONSTER_NAME_EN_BY_ZH[enemy.name] || enemy.name;
   return {
     ...enemy,
-    name: MONSTER_NAME_EN[enemyKey] || MONSTER_NAME_EN[enemyId] || enemy.name,
+    name: MONSTER_NAME_EN[enemyKey] || MONSTER_NAME_EN[enemyId] || fallbackName,
     typeName: localizeTypeName(enemy.mType || enemy.typeName, locale),
+    typeName2: localizeTypeName(enemy.mType2 || enemy.typeName2, locale),
     traitName: localizeTraitName(enemy.trait, enemy.traitName, locale),
     traitDesc: localizeTraitDesc(enemy.trait, enemy.traitDesc, locale),
   };
@@ -484,10 +518,12 @@ function parseStarterIdFromKey(entry) {
 export function localizeEncyclopediaEnemyEntry(entry, locale) {
   if (!isObject(entry) || !isEnglishLocale(locale)) return entry;
   const key = entry.key || entry.id;
+  const fallbackName = MONSTER_NAME_EN_BY_ZH[entry.name] || entry.name;
   return {
     ...entry,
-    name: MONSTER_NAME_EN[key] || MONSTER_NAME_EN[entry.id] || entry.name,
+    name: MONSTER_NAME_EN[key] || MONSTER_NAME_EN[entry.id] || fallbackName,
     typeName: localizeTypeName(entry.mType || entry.typeName, locale),
+    typeName2: localizeTypeName(entry.mType2 || entry.typeName2, locale),
     weakAgainst: Array.isArray(entry.weakAgainst)
       ? entry.weakAgainst.map((name) => localizeTypeName(name, locale))
       : entry.weakAgainst,

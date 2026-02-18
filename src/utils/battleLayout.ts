@@ -7,6 +7,7 @@ type ResolveBattleLayoutInput = {
   hasDualUnits: boolean;
   compactUI: boolean;
   playerStageIdx: number;
+  playerStarterId?: string | null;
   enemyId?: string | null;
   enemySceneType?: string | null;
   enemyIsEvolved?: boolean;
@@ -34,6 +35,7 @@ export function resolveBattleLayout({
   hasDualUnits,
   compactUI,
   playerStageIdx,
+  playerStarterId,
   enemyId,
   enemySceneType,
   enemyIsEvolved,
@@ -51,7 +53,14 @@ export function resolveBattleLayout({
   const playerSubLeftPct = dualUnits ? (compactDual ? 21 : 23) : 24;
   const playerSubBottomPct = dualUnits ? (compactDual ? 13 : 15) : 17;
 
-  const mainPlayerBaseSize = playerStageIdx >= 2 ? 200 : playerStageIdx >= 1 ? 170 : 120;
+  const isLionFinalInTeam = dualUnits && playerStarterId === "lion" && playerStageIdx >= 2;
+  const mainPlayerBaseSize = isLionFinalInTeam
+    ? 188
+    : playerStageIdx >= 2
+      ? 200
+      : playerStageIdx >= 1
+        ? 170
+        : 120;
   const mainPlayerScale = dualUnits ? (compactDual ? 0.9 : 0.96) : 1;
   const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale);
   const subPlayerSize = Math.round((compactDual ? 104 : 112) * (dualUnits ? (compactDual ? 0.9 : 0.95) : 1));
@@ -71,7 +80,8 @@ export function resolveBattleLayout({
         : (isDragonOrFire || isEvolvedSlime) ? 190
           : enemyIsEvolved ? 155 : 120;
   const enemyScale = dualUnits ? (compactDual ? 0.92 : 0.98) : 1;
-  const enemySize = Math.round(enemyBaseSize * enemyScale);
+  const hydraCoopBoost = isHydra && dualUnits ? (compactDual ? 1.08 : 1.1) : 1;
+  const enemySize = Math.round(enemyBaseSize * enemyScale * hydraCoopBoost);
 
   const enemyBaseTopPct = (enemySceneType === "ghost" || isBoss) ? 12
     : enemySceneType === "steel" ? 16 : 26;

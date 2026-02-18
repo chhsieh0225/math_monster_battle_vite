@@ -207,6 +207,7 @@ export function buildBattleCore({
     hasDualUnits,
     compactUI,
     playerStageIdx: pStg,
+    playerStarterId: starter.id,
     enemyId: enemy.id,
     enemySceneType: enemy.sceneMType || enemy.mType,
     enemyIsEvolved: enemy.isEvolved,

@@ -1,16 +1,16 @@
 import { seedRange } from '../../utils/prng';
+import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
 
 // SVG 8-pointed star
 const STAR = "M0,-8 L2,-2 L8,0 L2,2 L0,8 L-2,2 L-8,0 L-2,-2Z";
 // SVG 4-pointed spark (smaller)
 const SPARK4 = "M0,-5 L1,-1 L5,0 L1,1 L0,5 L-1,1 L-5,0 L-1,-1Z";
-const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
-
-export default function DarkEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
+export default function DarkEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
   const dur = 800 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
-  const rr = (slot, i, min, max) => seedRange(`dark-${idx}-${lvl}-${slot}-${i}`, min, max);
+  const rr = (slot: string, i: number, min: number, max: number): number =>
+    seedRange(`dark-${idx}-${lvl}-${slot}-${i}`, min, max);
 
   // --- idx 0: 暗影彈 (Shadow Bolt) ---
   if (idx === 0) {

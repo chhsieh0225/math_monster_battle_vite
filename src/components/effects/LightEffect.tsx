@@ -1,15 +1,15 @@
 import { seedRange } from '../../utils/prng';
+import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
 
 // Golden light orb shape
 const ORB = "M12,2 C6,2 2,6 2,12 C2,18 6,22 12,22 C18,22 22,18 22,12 C22,6 18,2 12,2Z";
 
-const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
-
-export default function LightEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
+export default function LightEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
   const dur = 700 + idx * 120 + lvl * 30;
   const glow = 4 + lvl * 2;
   const T = target;
-  const rr = (slot, i, min, max) => seedRange(`light-${idx}-${lvl}-${slot}-${i}`, min, max);
+  const rr = (slot: string, i: number, min: number, max: number): number =>
+    seedRange(`light-${idx}-${lvl}-${slot}-${i}`, min, max);
 
   // --- idx 0: 獵爪撲 (Light Claw) — golden orbs fly toward enemy ---
   if (idx === 0) {

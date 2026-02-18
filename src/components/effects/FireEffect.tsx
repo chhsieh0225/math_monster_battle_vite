@@ -1,15 +1,15 @@
 import { seedRange } from '../../utils/prng';
+import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
 
 const FLAME = "M10,28 C10,28 2,18 2,12 C2,5 5.5,0 10,0 C14.5,0 18,5 18,12 C18,18 10,28 10,28Z";
 
-const DEF_TARGET = { top: "calc(26% + 60px)", right: "calc(10% + 60px)", flyRight: 25, flyTop: 37 };
-
-export default function FireEffect({ idx = 0, lvl = 1, target = DEF_TARGET }) {
+export default function FireEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
   const fxLvl = Math.max(1, Math.min(12, lvl));
   const dur = 680 + idx * 120 + fxLvl * 24;
   const glow = 5 + fxLvl * 1.8;
   const T = target;
-  const rr = (slot, i, min, max) => seedRange(`fire-${idx}-${fxLvl}-${slot}-${i}`, min, max);
+  const rr = (slot: string, i: number, min: number, max: number): number =>
+    seedRange(`fire-${idx}-${fxLvl}-${slot}-${i}`, min, max);
   const uid = `${idx}-${fxLvl}-${Math.round((T.flyRight || 0) * 10)}-${Math.round((T.flyTop || 0) * 10)}`;
 
   if (idx === 0) {

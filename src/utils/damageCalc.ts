@@ -15,11 +15,10 @@ type MoveLite = {
 };
 
 type EnemyLite = {
-  mType: string;
+  mType?: string;
   mType2?: string;
 };
 
-const getDualEffTyped = getDualEff as (moveType?: string, monType?: string, monType2?: string) => number;
 const DAMAGE_BALANCE = BALANCE_CONFIG.damage;
 
 /**
@@ -35,8 +34,8 @@ export function movePower(move: MoveLite, lvl: number, idx: number): number {
  */
 export function bestAttackType(move: MoveLite, enemy: EnemyLite | null): string {
   if (!move.type2 || !enemy) return move.type;
-  const eff1 = getDualEffTyped(move.type, enemy.mType, enemy.mType2);
-  const eff2 = getDualEffTyped(move.type2, enemy.mType, enemy.mType2);
+  const eff1 = getDualEff(move.type, enemy.mType, enemy.mType2);
+  const eff2 = getDualEff(move.type2, enemy.mType, enemy.mType2);
   return eff2 > eff1 ? move.type2 : move.type;
 }
 
@@ -45,9 +44,9 @@ export function bestAttackType(move: MoveLite, enemy: EnemyLite | null): string 
  * get the better effectiveness multiplier.
  */
 export function bestEffectiveness(move: MoveLite, enemy: EnemyLite | null): number {
-  const e1 = enemy ? getDualEffTyped(move.type, enemy.mType, enemy.mType2) : 1;
+  const e1 = enemy ? getDualEff(move.type, enemy.mType, enemy.mType2) : 1;
   if (!move.type2 || !enemy) return e1;
-  return Math.max(e1, getDualEffTyped(move.type2, enemy.mType, enemy.mType2));
+  return Math.max(e1, getDualEff(move.type2, enemy.mType, enemy.mType2));
 }
 
 type AttackDamageParams = {

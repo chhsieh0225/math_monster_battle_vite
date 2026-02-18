@@ -19,6 +19,11 @@ type SessionStateSnapshot = {
   tC?: number;
   tW?: number;
   timedMode?: boolean;
+  enemy?: {
+    id?: string;
+    name?: string;
+  } | null;
+  [key: string]: unknown;
 };
 
 type SessionFinalizeStats = {
@@ -48,20 +53,12 @@ type UseBattleSessionLifecycleResult = {
   appendQuitEventIfOpen: (state: SessionStateSnapshot) => void;
 };
 
-const appendEventTyped = appendEvent as (
-  name: string,
-  payload?: SessionPayload,
-  options?: { sessionId?: string | null; ts?: number },
-) => unknown;
-
-const createEventSessionIdTyped = createEventSessionId as () => string;
-const nowMsTyped = nowMs as () => number;
 type CryptoLike = {
   getRandomValues?: (values: Uint32Array) => Uint32Array;
 };
 
 function getEntropySeed(runCount: number): number {
-  const entropyBase = hashSeed(`${runCount}:${nowMsTyped()}`) || (runCount * 2654435761);
+  const entropyBase = hashSeed(`${runCount}:${nowMs()}`) || (runCount * 2654435761);
   const cryptoLike = (globalThis as { crypto?: CryptoLike }).crypto;
   if (cryptoLike?.getRandomValues) {
     const buffer = new Uint32Array(1);
@@ -90,12 +87,12 @@ export function useBattleSessionLifecycle({
     const nextSeed = explicitSeed || getEntropySeed(runSeedRef.current);
     reseed(nextSeed >>> 0);
     sessionClosedRef.current = false;
-    sessionStartRef.current = nowMsTyped();
-    eventSessionIdRef.current = createEventSessionIdTyped();
+    sessionStartRef.current = nowMs();
+    eventSessionIdRef.current = createEventSessionId();
   }, [reseed]);
 
   const appendSessionEvent = useCallback((name: string, payload: SessionPayload) => {
-    appendEventTyped(name, payload, { sessionId: eventSessionIdRef.current });
+    appendEvent(name, payload, { sessionId: eventSessionIdRef.current });
   }, []);
 
   const endSessionOnce = useCallback((
@@ -107,7 +104,7 @@ export function useBattleSessionLifecycle({
     sessionClosedRef.current = true;
 
     const durationMs = sessionStartRef.current > 0
-      ? nowMsTyped() - sessionStartRef.current
+      ? nowMs() - sessionStartRef.current
       : null;
     const resultPayload = buildBattleResultPayload({
       state,

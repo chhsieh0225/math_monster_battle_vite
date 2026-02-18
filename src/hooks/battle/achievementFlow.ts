@@ -15,8 +15,8 @@ type BattleState = {
 };
 
 type EncyclopediaState = {
-  encountered?: Record<string, unknown>;
-  defeated?: Record<string, unknown>;
+  encountered: Record<string, number>;
+  defeated: Record<string, number>;
   [key: string]: unknown;
 };
 
@@ -33,8 +33,6 @@ type ApplyGameCompletionAchievementsArgs = {
   setEncData: SetEncData;
   encTotal: number;
 };
-
-const getLevelMaxHpTyped = getLevelMaxHp as (pLvl?: number, pStg?: number) => number;
 
 const STARTER_CLEAR_ACHIEVEMENTS: Partial<Record<string, AchievementId>> = {
   fire: 'fire_clear',
@@ -67,7 +65,7 @@ export function applyGameCompletionAchievements({
 }: ApplyGameCompletionAchievementsArgs): void {
   if ((state.tW || 0) === 0) tryUnlock('perfect');
   if (state.timedMode) tryUnlock('timed_clear');
-  if ((state.pHp || 0) >= getLevelMaxHpTyped(state.pLvl || 1, state.pStg || 0)) tryUnlock('no_damage');
+  if ((state.pHp || 0) >= getLevelMaxHp(state.pLvl || 1, state.pStg || 0)) tryUnlock('no_damage');
   unlockStarterClearAchievement(state.starter?.id, tryUnlock);
 
   setEncData((prev) => {

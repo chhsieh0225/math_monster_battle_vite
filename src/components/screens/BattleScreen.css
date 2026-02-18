@@ -235,6 +235,24 @@
   border-radius:4px;
   transition:width .6s ease;
 }
+/* Venom poison HP bar flicker */
+.battle-hp-card.is-poisoned .battle-hp-fill{
+  animation:venomFlicker 1.2s ease-in-out infinite;
+}
+@keyframes venomFlicker{
+  0%,100%{filter:brightness(1) hue-rotate(0deg);}
+  25%{filter:brightness(0.7) hue-rotate(60deg);}
+  50%{filter:brightness(1.1) hue-rotate(0deg);}
+  75%{filter:brightness(0.8) hue-rotate(40deg);}
+}
+.battle-hp-card.is-poisoned .battle-hp-label,
+.battle-hp-card.is-poisoned .battle-hp-value{
+  animation:venomTextPulse 2s ease-in-out infinite;
+}
+@keyframes venomTextPulse{
+  0%,100%{color:inherit;}
+  50%{color:#a855f7;}
+}
 .battle-xp-track{
   height:4px;
   background:rgba(255,255,255,.1);

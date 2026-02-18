@@ -39,6 +39,7 @@ type BattleAlly = {
 };
 
 type BattleEnemy = {
+  id?: string;
   trait?: string;
   maxHp: number;
   mType?: string;
@@ -68,6 +69,7 @@ type BattleRuntimeState = {
   bossPhase: number;
   bossCharging: boolean;
   shadowShieldCD: number;
+  furyRegenUsed: boolean;
   eHp: number;
   burnStack: number;
   staticStack: number;
@@ -156,6 +158,7 @@ type RunPlayerAnswerArgs = {
   handleFreeze: () => void;
   setCursed: BoolSetter;
   setShadowShieldCD: NumberSetter;
+  setFuryRegenUsed: BoolSetter;
   _endSession: (completed: boolean, reasonOverride?: string | null) => void;
   setScreen: (screen: string) => void;
   setBText: TextSetter;
@@ -249,6 +252,7 @@ export function runPlayerAnswer({
   handleFreeze,
   setCursed,
   setShadowShieldCD,
+  setFuryRegenUsed,
   _endSession,
   setScreen,
   setBText,
@@ -498,7 +502,17 @@ export function runPlayerAnswer({
             safeToIfBattleActive(() => addD(tr(t, 'battle.tag.chargeInterrupted', '💥Charge Interrupted!'), 155, 30, '#fbbf24'), 400);
           }
 
-          let afterHp = Math.max(0, s3.eHp - dmg);
+          // Sword God parry: 20% chance to halve incoming damage
+          let finalDmg = dmg;
+          if (s3.enemy.id === 'boss_sword_god' && chance(TRAIT_BALANCE.boss.swordParryChance)) {
+            finalDmg = Math.max(1, Math.round(dmg * TRAIT_BALANCE.boss.swordParryScale));
+            sfx.play('specDef');
+            setEffMsg({ text: tr(t, 'battle.effect.swordParry', '⚔️ Sword Parry! Damage halved!'), color: '#94a3b8' });
+            safeToIfBattleActive(() => setEffMsg(null), 1500);
+            addD(tr(t, 'battle.tag.parry', '⚔️PARRY'), 155, 30, '#94a3b8');
+          }
+
+          let afterHp = Math.max(0, s3.eHp - finalDmg);
 
           let newBurn = s3.burnStack;
           if (starter.type === 'fire' && afterHp > 0) {
@@ -539,10 +553,28 @@ export function runPlayerAnswer({
             }
           }
 
+          // Crazy Dragon fury regen: one-time 15% HP heal when HP drops below 30%
+          if (
+            s3.enemy.id === 'boss_crazy_dragon'
+            && !s3.furyRegenUsed
+            && afterHp > 0
+            && afterHp < s3.enemy.maxHp * TRAIT_BALANCE.boss.furyRegenThreshold
+          ) {
+            const healAmt = Math.round(s3.enemy.maxHp * TRAIT_BALANCE.boss.furyRegenHealRatio);
+            afterHp = Math.min(afterHp + healAmt, s3.enemy.maxHp);
+            setFuryRegenUsed(true);
+            sfx.play('heal');
+            safeToIfBattleActive(() => {
+              addD(`+${healAmt}`, 155, 30, '#ef4444');
+              setEffMsg({ text: tr(t, 'battle.effect.furyRegen', '🐉 Fury Regen! The dragon recovers!'), color: '#dc2626' });
+              safeToIfBattleActive(() => setEffMsg(null), 1500);
+            }, 600);
+          }
+
           setEHp(afterHp);
           setEAnim(HIT_ANIMS[vfxType] || 'enemyHit 0.5s ease');
           const dmgColor = HIT_COLORS[vfxType] || '#ef4444';
-          addD(isCrit ? `💥-${dmg}` : `-${dmg}`, 140, 55, isCrit ? '#ff6b00' : dmgColor);
+          addD(isCrit ? `💥-${finalDmg}` : `-${finalDmg}`, 140, 55, isCrit ? '#ff6b00' : dmgColor);
           safeToIfBattleActive(() => {
             setEAnim('');
             setAtkEffect(null);
@@ -571,7 +603,7 @@ export function runPlayerAnswer({
             }
           }
 
-          if (afterHp <= 0 && dmg >= s3.enemy.maxHp) tryUnlock('one_hit');
+          if (afterHp <= 0 && finalDmg >= s3.enemy.maxHp) tryUnlock('one_hit');
           if (afterHp <= 0) {
             safeToIfBattleActive(() => handleVictory(), effectTimeline.nextDelay);
           } else {

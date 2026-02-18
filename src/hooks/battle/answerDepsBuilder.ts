@@ -138,6 +138,7 @@ export function buildPlayerAnswerHandlerDeps({
     handleFreeze: callbacks.handleFreeze,
     setCursed: battleFields.setCursed,
     setShadowShieldCD: battleFields.setShadowShieldCD,
+    setFuryRegenUsed: battleFields.setFuryRegenUsed,
     _endSession: callbacks._endSession,
     setScreen: callbacks.setScreen,
     setBText: ui.setBText,

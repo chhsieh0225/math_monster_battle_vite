@@ -522,8 +522,14 @@ export function runEnemyTurn({
     } else {
       setPHp(nextHp);
     }
-    addD(`☠️-${dotDmg}`, target === 'sub' ? 112 : 60, target === 'sub' ? 146 : 170, '#7c3aed');
-    addP('enemy', target === 'sub' ? 112 : 60, target === 'sub' ? 146 : 170, 3);
+    const tx = target === 'sub' ? 112 : 60;
+    const ty = target === 'sub' ? 146 : 170;
+    addD(`☠️-${dotDmg}`, tx, ty, '#7c3aed');
+    // Enhanced venom VFX: toxic cloud particles around player
+    addP('enemy', tx, ty, 5);
+    addP('enemy', tx - 20, ty - 10, 3);
+    addP('enemy', tx + 20, ty + 10, 3);
+    sfx.play('dark');
     setBText(tr(t, 'battle.enemy.venomDot', '☠️ Toxic fog corrodes {name}!', {
       name: target === 'sub' ? (s.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s.starter?.name || tr(t, 'battle.role.main', 'Main')),
     }));

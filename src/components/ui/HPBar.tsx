@@ -5,6 +5,8 @@ type HPBarProps = {
   max: number;
   color: string;
   label: string;
+  /** When true, the HP bar flickers with a toxic pulse. */
+  poisoned?: boolean;
 };
 
 type HPFillVars = CSSProperties & {
@@ -12,7 +14,7 @@ type HPFillVars = CSSProperties & {
   '--battle-hp-color': string;
 };
 
-export default function HPBar({ cur, max, color, label }: HPBarProps) {
+export default function HPBar({ cur, max, color, label, poisoned = false }: HPBarProps) {
   const safeMax = Math.max(1, max);
   const safeCur = Math.max(0, Math.ceil(cur));
   const p = Math.max(0, safeCur / safeMax * 100);
@@ -23,7 +25,7 @@ export default function HPBar({ cur, max, color, label }: HPBarProps) {
   };
   return (
     <div
-      className="battle-hp-card"
+      className={`battle-hp-card${poisoned ? ' is-poisoned' : ''}`}
       role="group"
       aria-label={`${label} HP`}
     >

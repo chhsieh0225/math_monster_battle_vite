@@ -75,6 +75,7 @@ function createValidPublicApi() {
       sealedMove: -1,
       sealedTurns: 0,
       shadowShieldCD: -1,
+      furyRegenUsed: false,
       diffLevel: 2,
       gamePaused: false,
       questionTimerSec: 8,

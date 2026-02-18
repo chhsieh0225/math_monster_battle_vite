@@ -190,7 +190,7 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     typeName2: "火",
     trait: "tyrant",
     traitName: "狂怒",
-    traitDesc: "失去一翼後陷入永恆狂怒。擁有多階段戰鬥形態，能蓄力釋放暗焰吐息，還能封印對手技能。攻擊力冠絕三大Boss。",
+    traitDesc: "失去一翼後陷入永恆狂怒。擁有多階段戰鬥形態，能蓄力釋放暗焰吐息，還能封印對手技能。攻擊力冠絕三大Boss。生命值低於30%時會觸發一次狂怒再生，恢復15%最大HP。",
   },
   {
     id: "boss_sword_god",
@@ -209,7 +209,7 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     typeName2: "劍",
     trait: "tyrant",
     traitName: "神裁",
-    traitDesc: "掌握神聖與劍意的多階段王者。可蓄力斬擊、封印技能，並以神罰壓制全場。",
+    traitDesc: "掌握神聖與劍意的多階段王者。可蓄力斬擊、封印技能，並以神罰壓制全場。劍意格擋可隨機將受到的傷害減半。",
   },
 ];
 

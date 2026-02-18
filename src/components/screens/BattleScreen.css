@@ -205,21 +205,22 @@
 }
 .battle-weather-layer.weather-rain,
 .battle-weather-layer.weather-storm{
-  mix-blend-mode:screen;
+  mix-blend-mode:normal;
 }
 .battle-weather-layer.weather-fog{
-  mix-blend-mode:screen;
+  mix-blend-mode:normal;
 }
 .battle-weather-rain-drop{
   position:absolute;
   top:-20%;
   left:var(--wx);
-  width:2px;
+  width:3px;
   height:var(--wh);
   opacity:var(--wop);
-  border-radius:2px;
-  background:linear-gradient(180deg,rgba(148,163,184,0),rgba(191,219,254,.95));
+  border-radius:3px;
+  background:linear-gradient(180deg,rgba(148,163,184,0),rgba(160,200,255,.98));
   transform:rotate(12deg);
+  filter:drop-shadow(0 0 2px rgba(160,200,255,.4));
   animation:weatherRainFall var(--wd) linear var(--wdelay) infinite;
 }
 .battle-weather-snow-flake{
@@ -230,7 +231,8 @@
   height:var(--ws);
   opacity:var(--wop);
   border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.92) 0%,rgba(226,232,240,.38) 62%,rgba(148,163,184,0) 100%);
+  background:radial-gradient(circle,rgba(255,255,255,.98) 0%,rgba(226,232,240,.6) 50%,rgba(148,163,184,0) 100%);
+  filter:drop-shadow(0 0 3px rgba(255,255,255,.6));
   animation:weatherSnowFall var(--wd) linear var(--wdelay) infinite;
 }
 .battle-weather-fog-band{
@@ -241,15 +243,15 @@
   height:var(--wh);
   opacity:var(--wop);
   border-radius:999px;
-  filter:blur(8px);
-  background:linear-gradient(90deg,rgba(226,232,240,.2),rgba(226,232,240,.44),rgba(226,232,240,.16));
+  filter:blur(10px);
+  background:linear-gradient(90deg,rgba(226,232,240,.28),rgba(226,232,240,.58),rgba(226,232,240,.22));
   animation:weatherFogDrift var(--wd) ease-in-out var(--wdelay) infinite;
 }
 .battle-weather-dust-haze{
   position:absolute;
   inset:0;
-  background:linear-gradient(180deg,rgba(234,179,8,.06),rgba(120,53,15,.1) 65%,rgba(120,53,15,.18));
-  opacity:.45;
+  background:linear-gradient(180deg,rgba(234,179,8,.1),rgba(120,53,15,.18) 55%,rgba(120,53,15,.28));
+  opacity:.6;
 }
 .battle-weather-dust-dot{
   position:absolute;
@@ -259,7 +261,8 @@
   height:var(--ws);
   border-radius:50%;
   opacity:var(--wop);
-  background:radial-gradient(circle,rgba(245,158,11,.82),rgba(146,64,14,.2) 72%,rgba(0,0,0,0) 100%);
+  background:radial-gradient(circle,rgba(245,158,11,.92),rgba(146,64,14,.35) 68%,rgba(0,0,0,0) 100%);
+  filter:drop-shadow(0 0 2px rgba(245,158,11,.3));
   animation:weatherDustFlow var(--wd) linear var(--wdelay) infinite;
 }
 .battle-weather-lightning{
@@ -270,10 +273,10 @@
   background:
     radial-gradient(circle at 65% 24%,rgba(255,255,255,.5),rgba(191,219,254,.18) 24%,rgba(15,23,42,0) 58%),
     linear-gradient(180deg,rgba(191,219,254,.08),rgba(15,23,42,0));
-  animation:weatherLightning 8.6s linear var(--wdelay) infinite;
+  animation:weatherLightning 7s linear var(--wdelay) infinite;
 }
 .battle-weather-lightning-secondary{
-  animation-duration:11.2s;
+  animation-duration:9.5s;
 }
 .battle-info-enemy{
   position:absolute;
@@ -1299,9 +1302,10 @@
 @keyframes weatherLightning{
   0%{opacity:0}
   56%{opacity:0}
-  57.5%{opacity:.52}
-  59%{opacity:.1}
-  60%{opacity:.62}
+  57%{opacity:.72}
+  58.5%{opacity:.15}
+  59.5%{opacity:.85}
+  61%{opacity:.2}
   62%{opacity:0}
   100%{opacity:0}
 }

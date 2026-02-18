@@ -52,13 +52,13 @@ type DustVm = {
 };
 
 function buildRain(seed: string, dense: boolean): RainDropVm[] {
-  const count = dense ? 42 : 30;
+  const count = dense ? 55 : 40;
   return Array.from({ length: count }, (_, i) => {
     const x = seedRange(`weather-rain-x-${seed}-${i}`, 1, 98);
-    const h = seedRange(`weather-rain-h-${seed}-${i}`, 16, dense ? 28 : 24);
-    const duration = seedRange(`weather-rain-d-${seed}-${i}`, dense ? 0.42 : 0.5, dense ? 0.82 : 0.98);
+    const h = seedRange(`weather-rain-h-${seed}-${i}`, 18, dense ? 34 : 28);
+    const duration = seedRange(`weather-rain-d-${seed}-${i}`, dense ? 0.38 : 0.45, dense ? 0.72 : 0.88);
     const delay = seedRange(`weather-rain-delay-${seed}-${i}`, 0, 1.4);
-    const opacity = seedRange(`weather-rain-op-${seed}-${i}`, dense ? 0.35 : 0.28, dense ? 0.72 : 0.62);
+    const opacity = seedRange(`weather-rain-op-${seed}-${i}`, dense ? 0.5 : 0.4, dense ? 0.88 : 0.78);
     return {
       key: `rain-${i}`,
       style: {
@@ -73,14 +73,14 @@ function buildRain(seed: string, dense: boolean): RainDropVm[] {
 }
 
 function buildSnow(seed: string): SnowFlakeVm[] {
-  const count = 28;
+  const count = 36;
   return Array.from({ length: count }, (_, i) => {
     const x = seedRange(`weather-snow-x-${seed}-${i}`, 2, 98);
-    const size = seedRange(`weather-snow-s-${seed}-${i}`, 2, 7);
-    const sway = seedRange(`weather-snow-sway-${seed}-${i}`, 6, 20);
-    const duration = seedRange(`weather-snow-d-${seed}-${i}`, 3.6, 6.8);
+    const size = seedRange(`weather-snow-s-${seed}-${i}`, 3, 9);
+    const sway = seedRange(`weather-snow-sway-${seed}-${i}`, 8, 24);
+    const duration = seedRange(`weather-snow-d-${seed}-${i}`, 3.2, 6.2);
     const delay = seedRange(`weather-snow-delay-${seed}-${i}`, 0, 2.4);
-    const opacity = seedRange(`weather-snow-op-${seed}-${i}`, 0.35, 0.8);
+    const opacity = seedRange(`weather-snow-op-${seed}-${i}`, 0.5, 0.92);
     return {
       key: `snow-${i}`,
       style: {
@@ -96,12 +96,12 @@ function buildSnow(seed: string): SnowFlakeVm[] {
 }
 
 function buildFog(seed: string): FogBandVm[] {
-  return Array.from({ length: 4 }, (_, i) => {
-    const top = seedRange(`weather-fog-top-${seed}-${i}`, 8 + i * 10, 24 + i * 12);
-    const left = seedRange(`weather-fog-left-${seed}-${i}`, -22, 68);
-    const width = seedRange(`weather-fog-w-${seed}-${i}`, 36, 64);
-    const height = seedRange(`weather-fog-h-${seed}-${i}`, 12, 22);
-    const opacity = seedRange(`weather-fog-op-${seed}-${i}`, 0.12, 0.26);
+  return Array.from({ length: 5 }, (_, i) => {
+    const top = seedRange(`weather-fog-top-${seed}-${i}`, 6 + i * 10, 22 + i * 12);
+    const left = seedRange(`weather-fog-left-${seed}-${i}`, -26, 72);
+    const width = seedRange(`weather-fog-w-${seed}-${i}`, 42, 72);
+    const height = seedRange(`weather-fog-h-${seed}-${i}`, 14, 28);
+    const opacity = seedRange(`weather-fog-op-${seed}-${i}`, 0.22, 0.42);
     const duration = seedRange(`weather-fog-d-${seed}-${i}`, 8, 15);
     const delay = seedRange(`weather-fog-delay-${seed}-${i}`, 0, 2.4);
     return {
@@ -120,14 +120,14 @@ function buildFog(seed: string): FogBandVm[] {
 }
 
 function buildDust(seed: string): DustVm[] {
-  const count = 24;
+  const count = 32;
   return Array.from({ length: count }, (_, i) => {
-    const top = seedRange(`weather-dust-top-${seed}-${i}`, 12, 82);
-    const size = seedRange(`weather-dust-s-${seed}-${i}`, 1.8, 5.2);
-    const duration = seedRange(`weather-dust-d-${seed}-${i}`, 3.6, 6.5);
+    const top = seedRange(`weather-dust-top-${seed}-${i}`, 10, 85);
+    const size = seedRange(`weather-dust-s-${seed}-${i}`, 2.4, 6.5);
+    const duration = seedRange(`weather-dust-d-${seed}-${i}`, 3.2, 6);
     const delay = seedRange(`weather-dust-delay-${seed}-${i}`, 0, 2.6);
-    const driftY = seedRange(`weather-dust-y-${seed}-${i}`, -10, 10);
-    const opacity = seedRange(`weather-dust-op-${seed}-${i}`, 0.2, 0.5);
+    const driftY = seedRange(`weather-dust-y-${seed}-${i}`, -12, 12);
+    const opacity = seedRange(`weather-dust-op-${seed}-${i}`, 0.35, 0.68);
     return {
       key: `dust-${i}`,
       style: {

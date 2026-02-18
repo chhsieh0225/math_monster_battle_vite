@@ -44,15 +44,27 @@ test('buildStreakTowerPlan slices floors and keeps deterministic output', () => 
 });
 
 test('buildStreakTowerPlan ramps pressure across floors', () => {
-  const plan = buildStreakTowerPlan({ runId: 'curve', startFloor: 1, floorCount: 15 });
+  const plan = buildStreakTowerPlan({ runId: 'curve', startFloor: 1, floorCount: 16 });
   const floor1 = plan.floors.find((f) => f.floor === 1);
+  const floor4 = plan.floors.find((f) => f.floor === 4);
+  const floor6 = plan.floors.find((f) => f.floor === 6);
   const floor9 = plan.floors.find((f) => f.floor === 9);
+  const floor10 = plan.floors.find((f) => f.floor === 10);
+  const floor11 = plan.floors.find((f) => f.floor === 11);
   const floor13 = plan.floors.find((f) => f.floor === 13);
+  const floor14 = plan.floors.find((f) => f.floor === 14);
   const floor15 = plan.floors.find((f) => f.floor === 15);
+  const floor16 = plan.floors.find((f) => f.floor === 16);
   assert.ok(floor1);
+  assert.ok(floor4);
+  assert.ok(floor6);
   assert.ok(floor9);
+  assert.ok(floor10);
+  assert.ok(floor11);
   assert.ok(floor13);
+  assert.ok(floor14);
   assert.ok(floor15);
+  assert.ok(floor16);
 
   assert.ok(floor9.levelScale > floor1.levelScale);
   assert.ok((floor9.atkScale || 1) > (floor1.atkScale || 1));
@@ -60,6 +72,13 @@ test('buildStreakTowerPlan ramps pressure across floors', () => {
   assert.ok(floor9.battle.timeLimitSec <= floor1.battle.timeLimitSec);
   assert.ok(floor9.battle.enemyCount >= floor1.battle.enemyCount);
   assert.ok(floor9.battle.rewardMultiplier > floor1.battle.rewardMultiplier);
+  assert.ok(floor6.levelScale - floor4.levelScale >= 0.2);
+  assert.ok((floor6.atkScale || 0) - (floor4.atkScale || 0) >= 0.16);
+  assert.ok(floor11.levelScale - floor9.levelScale >= 0.24);
+  assert.ok((floor11.atkScale || 0) - (floor9.atkScale || 0) >= 0.2);
+  assert.ok(floor16.levelScale - floor14.levelScale >= 0.3);
+  assert.ok((floor16.atkScale || 0) - (floor14.atkScale || 0) >= 0.24);
+  assert.ok(floor16.battle.timeLimitSec <= floor10.battle.timeLimitSec);
 
   assert.equal(floor15.battle.enemyCount, 1);
   assert.equal(floor15.battle.difficulty, 'master');

@@ -152,6 +152,15 @@ export const BALANCE_CONFIG = {
       expertStartsAtFloor: 6,
       masterStartsAtFloor: 11,
       rewardMultiplierPerFloor: 0.03,
+      pressureBands: {
+        floors: [1, 6, 11, 16],
+        hpBonus: [0, 0.08, 0.2, 0.38],
+        atkBonus: [0, 0.06, 0.16, 0.3],
+        levelOffsetBonus: [0, 1, 3, 5],
+        rewardBonus: [0, 0.08, 0.18, 0.34],
+        extraTimePressure: [0, 0, 1, 1],
+        enemyCountBonus: [0, 0, 1, 1],
+      },
       focusUnlockFloor: {
         mixed4: 5,
         unknown1: 6,

@@ -31,6 +31,15 @@ type TowerBalanceConfig = {
   expertStartsAtFloor: number;
   masterStartsAtFloor: number;
   rewardMultiplierPerFloor: number;
+  pressureBands: {
+    floors: number[];
+    hpBonus: number[];
+    atkBonus: number[];
+    levelOffsetBonus: number[];
+    rewardBonus: number[];
+    extraTimePressure: number[];
+    enemyCountBonus: number[];
+  };
   focusUnlockFloor: Partial<Record<QuestionFocusTag, number>>;
   boss: {
     extraLevelOffset: number;
@@ -53,6 +62,15 @@ const DEFAULT_TOWER_BALANCE: TowerBalanceConfig = {
   expertStartsAtFloor: 6,
   masterStartsAtFloor: 11,
   rewardMultiplierPerFloor: 0.03,
+  pressureBands: {
+    floors: [1, 6, 11, 16],
+    hpBonus: [0, 0.08, 0.2, 0.38],
+    atkBonus: [0, 0.06, 0.16, 0.3],
+    levelOffsetBonus: [0, 1, 3, 5],
+    rewardBonus: [0, 0.08, 0.18, 0.34],
+    extraTimePressure: [0, 0, 1, 1],
+    enemyCountBonus: [0, 0, 1, 1],
+  },
   focusUnlockFloor: {
     mixed4: 5,
     unknown1: 6,
@@ -74,6 +92,34 @@ const towerBalanceRaw = BALANCE_CONFIG?.challenges?.tower || {};
 const TOWER_BALANCE: TowerBalanceConfig = {
   ...DEFAULT_TOWER_BALANCE,
   ...towerBalanceRaw,
+  pressureBands: {
+    ...DEFAULT_TOWER_BALANCE.pressureBands,
+    ...(towerBalanceRaw?.pressureBands || {}),
+    floors: Array.isArray(towerBalanceRaw?.pressureBands?.floors) && towerBalanceRaw.pressureBands.floors.length > 0
+      ? towerBalanceRaw.pressureBands.floors
+      : DEFAULT_TOWER_BALANCE.pressureBands.floors,
+    hpBonus: Array.isArray(towerBalanceRaw?.pressureBands?.hpBonus) && towerBalanceRaw.pressureBands.hpBonus.length > 0
+      ? towerBalanceRaw.pressureBands.hpBonus
+      : DEFAULT_TOWER_BALANCE.pressureBands.hpBonus,
+    atkBonus: Array.isArray(towerBalanceRaw?.pressureBands?.atkBonus) && towerBalanceRaw.pressureBands.atkBonus.length > 0
+      ? towerBalanceRaw.pressureBands.atkBonus
+      : DEFAULT_TOWER_BALANCE.pressureBands.atkBonus,
+    levelOffsetBonus:
+      Array.isArray(towerBalanceRaw?.pressureBands?.levelOffsetBonus) && towerBalanceRaw.pressureBands.levelOffsetBonus.length > 0
+        ? towerBalanceRaw.pressureBands.levelOffsetBonus
+        : DEFAULT_TOWER_BALANCE.pressureBands.levelOffsetBonus,
+    rewardBonus: Array.isArray(towerBalanceRaw?.pressureBands?.rewardBonus) && towerBalanceRaw.pressureBands.rewardBonus.length > 0
+      ? towerBalanceRaw.pressureBands.rewardBonus
+      : DEFAULT_TOWER_BALANCE.pressureBands.rewardBonus,
+    extraTimePressure:
+      Array.isArray(towerBalanceRaw?.pressureBands?.extraTimePressure) && towerBalanceRaw.pressureBands.extraTimePressure.length > 0
+        ? towerBalanceRaw.pressureBands.extraTimePressure
+        : DEFAULT_TOWER_BALANCE.pressureBands.extraTimePressure,
+    enemyCountBonus:
+      Array.isArray(towerBalanceRaw?.pressureBands?.enemyCountBonus) && towerBalanceRaw.pressureBands.enemyCountBonus.length > 0
+        ? towerBalanceRaw.pressureBands.enemyCountBonus
+        : DEFAULT_TOWER_BALANCE.pressureBands.enemyCountBonus,
+  },
   focusUnlockFloor: {
     ...DEFAULT_TOWER_BALANCE.focusUnlockFloor,
     ...(towerBalanceRaw?.focusUnlockFloor || {}),
@@ -108,11 +154,42 @@ function resolveTowerDifficulty(floor: number, isBossFloor: boolean): ChallengeD
   return 'hard';
 }
 
+type TowerPressureProfile = {
+  hpBonus: number;
+  atkBonus: number;
+  levelOffsetBonus: number;
+  rewardBonus: number;
+  extraTimePressure: number;
+  enemyCountBonus: number;
+};
+
+function resolveTowerPressureProfile(floor: number): TowerPressureProfile {
+  const starts = TOWER_BALANCE.pressureBands.floors;
+  let index = 0;
+  for (let i = 0; i < starts.length; i += 1) {
+    if (floor >= starts[i]) index = i;
+  }
+  const pick = (arr: number[], fallback = 0): number => {
+    if (!Array.isArray(arr) || arr.length <= 0) return fallback;
+    const value = Number(arr[Math.min(index, arr.length - 1)]);
+    return Number.isFinite(value) ? value : fallback;
+  };
+  return {
+    hpBonus: pick(TOWER_BALANCE.pressureBands.hpBonus),
+    atkBonus: pick(TOWER_BALANCE.pressureBands.atkBonus),
+    levelOffsetBonus: pick(TOWER_BALANCE.pressureBands.levelOffsetBonus),
+    rewardBonus: pick(TOWER_BALANCE.pressureBands.rewardBonus),
+    extraTimePressure: pick(TOWER_BALANCE.pressureBands.extraTimePressure),
+    enemyCountBonus: pick(TOWER_BALANCE.pressureBands.enemyCountBonus),
+  };
+}
+
 function resolveTowerEnemyCount(baseEnemyCount: number, floor: number, isBossFloor: boolean): number {
   if (isBossFloor) return Math.max(1, TOWER_BALANCE.boss.enemyCount);
   const stepFloor = Math.max(1, TOWER_BALANCE.enemyCountStepFloor);
   const extra = Math.floor(Math.max(0, floor - 1) / stepFloor);
-  return clampInt(baseEnemyCount + extra, 1, Math.max(1, TOWER_BALANCE.maxEnemyCount));
+  const pressure = resolveTowerPressureProfile(floor);
+  return clampInt(baseEnemyCount + extra + Math.max(0, Math.floor(pressure.enemyCountBonus)), 1, Math.max(1, TOWER_BALANCE.maxEnemyCount));
 }
 
 function resolveTowerQuestionFocus(
@@ -135,8 +212,15 @@ function resolveTowerQuestionFocus(
 
 function resolveTowerScales(floor: number, isBossFloor: boolean): { hpScale: number; atkScale: number } {
   const floorOffset = Math.max(0, floor - 1);
-  const hpScale = 1 + floorOffset * TOWER_BALANCE.hpScalePerFloor + (isBossFloor ? TOWER_BALANCE.boss.hpBonusScale : 0);
-  const atkScale = 1 + floorOffset * TOWER_BALANCE.atkScalePerFloor + (isBossFloor ? TOWER_BALANCE.boss.atkBonusScale : 0);
+  const pressure = resolveTowerPressureProfile(floor);
+  const hpScale = 1
+    + floorOffset * TOWER_BALANCE.hpScalePerFloor
+    + pressure.hpBonus
+    + (isBossFloor ? TOWER_BALANCE.boss.hpBonusScale : 0);
+  const atkScale = 1
+    + floorOffset * TOWER_BALANCE.atkScalePerFloor
+    + pressure.atkBonus
+    + (isBossFloor ? TOWER_BALANCE.boss.atkBonusScale : 0);
   return {
     hpScale: round2(hpScale),
     atkScale: round2(atkScale),
@@ -146,9 +230,10 @@ function resolveTowerScales(floor: number, isBossFloor: boolean): { hpScale: num
 function resolveTowerTimeLimit(baseTimeLimitSec: number, floor: number, isBossFloor: boolean): number {
   const tightenStep = Math.max(1, TOWER_BALANCE.timeTightenEveryFloors);
   const floorPressure = Math.floor(Math.max(0, floor - 1) / tightenStep);
+  const pressure = resolveTowerPressureProfile(floor);
   const bossPressure = isBossFloor ? TOWER_BALANCE.boss.extraTimePressure : 0;
   return clampInt(
-    baseTimeLimitSec - floorPressure - bossPressure,
+    baseTimeLimitSec - floorPressure - bossPressure - Math.max(0, Math.floor(pressure.extraTimePressure)),
     Math.max(1, TOWER_BALANCE.minTimeLimitSec),
     Math.max(baseTimeLimitSec, 60),
   );
@@ -156,14 +241,16 @@ function resolveTowerTimeLimit(baseTimeLimitSec: number, floor: number, isBossFl
 
 function resolveTowerLevelOffset(baseLevelOffset: number, floor: number, isBossFloor: boolean): number {
   const floorRamp = Math.floor(Math.max(0, floor - 1) * TOWER_BALANCE.levelOffsetPerFloor);
+  const pressure = resolveTowerPressureProfile(floor);
   const bossBonus = isBossFloor ? TOWER_BALANCE.boss.extraLevelOffset : 0;
-  return Math.max(0, baseLevelOffset + floorRamp + bossBonus);
+  return Math.max(0, baseLevelOffset + floorRamp + Math.max(0, Math.floor(pressure.levelOffsetBonus)) + bossBonus);
 }
 
 function resolveTowerRewardMultiplier(baseRewardMultiplier: number, floor: number, isBossFloor: boolean): number {
   const floorBonus = Math.max(0, floor - 1) * TOWER_BALANCE.rewardMultiplierPerFloor;
+  const pressure = resolveTowerPressureProfile(floor);
   const bossBonus = isBossFloor ? TOWER_BALANCE.boss.rewardMultiplierBonus : 0;
-  return round2(baseRewardMultiplier + floorBonus + bossBonus);
+  return round2(baseRewardMultiplier + floorBonus + pressure.rewardBonus + bossBonus);
 }
 
 function pad2(value: number): string {

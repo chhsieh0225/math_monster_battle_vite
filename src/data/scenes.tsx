@@ -203,6 +203,52 @@ export const SCENES = {
     </>)
   },
 
+  /* ═══ Heaven — sacred glints + gentle aurora ═══ */
+  heaven:{
+    bgImg:BG_IMGS.heaven,
+    sky:"linear-gradient(180deg,#e0f2fe 0%,#dbeafe 28%,#ede9fe 60%,#f8fafc 100%)",
+    ground:"linear-gradient(180deg,transparent,rgba(255,255,255,0.24) 40%,rgba(148,163,184,0.18))",
+    platform1:"rgba(226,232,240,0.38)",platform2:"rgba(191,219,254,0.24)",
+    Deco:memo(()=><>
+      {Array.from({length:10},(_,i)=>i).map(i=><div key={`hv${i}`} style={{
+        position:"absolute",
+        top:`${8 + ((i * 9) % 60)}%`,
+        left:`${5 + ((i * 11) % 88)}%`,
+        width:2 + (i % 3),
+        height:2 + (i % 3),
+        borderRadius:"50%",
+        background:["#ffffff","#e0e7ff","#bfdbfe","#fef9c3","#e2e8f0","#ffffff","#ddd6fe","#bfdbfe","#f8fafc","#e2e8f0"][i],
+        boxShadow:"0 0 10px rgba(255,255,255,0.65)",
+        animation:`sparkle ${2.2 + i * 0.35}s ease ${i * 0.22}s infinite`
+      }}/>)}
+      <div style={{position:"absolute",top:"8%",left:"0",width:"100%",height:56,background:"linear-gradient(90deg,transparent,rgba(191,219,254,0.24),transparent)",filter:"blur(6px)",animation:"windSweep 7s ease-in-out infinite"}}/>
+      <div style={{position:"absolute",bottom:"10%",left:"12%",width:140,height:44,background:"radial-gradient(ellipse,rgba(255,255,255,0.42),transparent)",borderRadius:"50%"}}/>
+      <div style={{position:"absolute",bottom:"7%",right:"10%",width:128,height:40,background:"radial-gradient(ellipse,rgba(224,231,255,0.32),transparent)",borderRadius:"50%"}}/>
+    </>)
+  },
+  light:{
+    bgImg:BG_IMGS.heaven,
+    sky:"linear-gradient(180deg,#e0f2fe 0%,#dbeafe 28%,#ede9fe 60%,#f8fafc 100%)",
+    ground:"linear-gradient(180deg,transparent,rgba(255,255,255,0.24) 40%,rgba(148,163,184,0.18))",
+    platform1:"rgba(226,232,240,0.38)",platform2:"rgba(191,219,254,0.24)",
+    Deco:memo(()=><>
+      {Array.from({length:10},(_,i)=>i).map(i=><div key={`lt${i}`} style={{
+        position:"absolute",
+        top:`${8 + ((i * 9) % 60)}%`,
+        left:`${5 + ((i * 11) % 88)}%`,
+        width:2 + (i % 3),
+        height:2 + (i % 3),
+        borderRadius:"50%",
+        background:["#ffffff","#e0e7ff","#bfdbfe","#fef9c3","#e2e8f0","#ffffff","#ddd6fe","#bfdbfe","#f8fafc","#e2e8f0"][i],
+        boxShadow:"0 0 10px rgba(255,255,255,0.65)",
+        animation:`sparkle ${2.2 + i * 0.35}s ease ${i * 0.22}s infinite`
+      }}/>)}
+      <div style={{position:"absolute",top:"8%",left:"0",width:"100%",height:56,background:"linear-gradient(90deg,transparent,rgba(191,219,254,0.24),transparent)",filter:"blur(6px)",animation:"windSweep 7s ease-in-out infinite"}}/>
+      <div style={{position:"absolute",bottom:"10%",left:"12%",width:140,height:44,background:"radial-gradient(ellipse,rgba(255,255,255,0.42),transparent)",borderRadius:"50%"}}/>
+      <div style={{position:"absolute",bottom:"7%",right:"10%",width:128,height:40,background:"radial-gradient(ellipse,rgba(224,231,255,0.32),transparent)",borderRadius:"50%"}}/>
+    </>)
+  },
+
   /* ═══ Dark — white sparkle dots + purple glows (already clean) ═══ */
   dark:{
     bgImg:BG_IMGS.dark,
@@ -229,6 +275,8 @@ export const SCENE_NAMES = {
   electric:"⚡ 雷電荒原",
   ghost:"🌙 幽暗墓地",
   steel:"⚙️ 鋼鐵要塞",
+  light:"☁️ 天界聖域",
   dark:"💀 暗黑深淵",
-  rock:"🪨 岩石峽谷"
+  rock:"🪨 岩石峽谷",
+  heaven:"☁️ 天界聖域"
 };

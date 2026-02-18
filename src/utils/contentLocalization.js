@@ -25,6 +25,8 @@ const TYPE_NAME_EN_BY_ZH = {
   光: "Light",
   毒: "Poison",
   岩: "Rock",
+  神聖: "Holy",
+  劍: "Sword",
 };
 
 const SCENE_NAME_EN = {
@@ -34,9 +36,11 @@ const SCENE_NAME_EN = {
   electric: "⚡ Thunder Wasteland",
   ghost: "🌙 Gloom Graveyard",
   steel: "⚙️ Iron Fortress",
+  light: "☁️ Celestial Sanctum",
   dark: "💀 Abyssal Depths",
   rock: "🪨 Rocky Canyon",
   poison: "☠️ Toxic Mire",
+  heaven: "☁️ Celestial Sanctum",
 };
 
 const STARTER_TEXT_EN = {
@@ -126,6 +130,7 @@ const MONSTER_NAME_EN = {
   boss: "Dark Dragon King",
   boss_hydra: "Abyss Hydra",
   boss_crazy_dragon: "One-Winged Frenzy Dragon",
+  boss_sword_god: "Kusanagi Sword God",
   golumn: "Stone Golem",
   golumn_mud: "Mudstone Golem",
 };
@@ -157,6 +162,7 @@ const MONSTER_NAME_EN_BY_ZH = {
   暗黑龍王: "Dark Dragon King",
   深淵九頭蛇: "Abyss Hydra",
   單翼狂龍: "One-Winged Frenzy Dragon",
+  叢雲劍神: "Kusanagi Sword God",
 };
 
 const MONSTER_DESC_EN = {
@@ -183,6 +189,7 @@ const MONSTER_DESC_EN = {
   boss: "The legendary ruler of the abyss. Only top trainers can challenge this tyrant.",
   boss_hydra: "A triple-headed serpent from toxic marshes. It floods the battlefield with corrosive venom and relentless pressure.",
   boss_crazy_dragon: "An ancient dragon driven mad after losing one wing. It cannot soar, but its grounded darkflame strikes are devastating.",
+  boss_sword_god: "A divine sword sovereign guarding the celestial court. It blends holy authority with blade precision and punishes mistakes with relentless judgment.",
   golumn: "A canyon-born stone giant with immense defense. Slow but crushing once it closes in.",
   golumn_mud: "A mudstone subspecies with a layered shell that absorbs impact before re-hardening.",
 };
@@ -211,6 +218,7 @@ const MONSTER_HABITAT_EN = {
   boss: "💀 Abyssal Depths",
   boss_hydra: "☠️ Toxic Mire",
   boss_crazy_dragon: "🔥 Scorched Wasteland",
+  boss_sword_god: "☁️ Celestial Sanctum",
   golumn: "🪨 Rocky Canyon",
   golumn_mud: "🪨 Rocky Canyon",
 };
@@ -340,6 +348,7 @@ const TRAIT_NAME_EN_BY_ZH = {
   毒霧: "Venom Fog",
   堅岩: "Stonewall",
   狂怒: "Tyrant",
+  神裁: "Divine Verdict",
   狂暴: "Berserk",
   堅韌: "Tenacity",
   迅捷: "Swift",
@@ -495,8 +504,8 @@ export function localizeEnemy(enemy, locale) {
   return {
     ...enemy,
     name: MONSTER_NAME_EN[enemyKey] || MONSTER_NAME_EN[enemyId] || fallbackName,
-    typeName: localizeTypeName(enemy.mType || enemy.typeName, locale),
-    typeName2: localizeTypeName(enemy.mType2 || enemy.typeName2, locale),
+    typeName: localizeTypeName(enemy.typeName || enemy.mType, locale),
+    typeName2: localizeTypeName(enemy.typeName2 || enemy.mType2, locale),
     traitName: localizeTraitName(enemy.trait, enemy.traitName, locale),
     traitDesc: localizeTraitDesc(enemy.trait, enemy.traitDesc, locale),
   };
@@ -522,8 +531,8 @@ export function localizeEncyclopediaEnemyEntry(entry, locale) {
   return {
     ...entry,
     name: MONSTER_NAME_EN[key] || MONSTER_NAME_EN[entry.id] || fallbackName,
-    typeName: localizeTypeName(entry.mType || entry.typeName, locale),
-    typeName2: localizeTypeName(entry.mType2 || entry.typeName2, locale),
+    typeName: localizeTypeName(entry.typeName || entry.mType, locale),
+    typeName2: localizeTypeName(entry.typeName2 || entry.mType2, locale),
     weakAgainst: Array.isArray(entry.weakAgainst)
       ? entry.weakAgainst.map((name) => localizeTypeName(name, locale))
       : entry.weakAgainst,

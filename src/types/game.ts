@@ -149,6 +149,7 @@ export type MonsterType =
   | "electric"
   | "ghost"
   | "steel"
+  | "light"
   | "dark"
   | "poison"
   | "rock";

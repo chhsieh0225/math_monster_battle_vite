@@ -129,6 +129,9 @@ export function buildRoster(pickIndex: PickIndex, mode: 'single' | 'double' = 's
     const svgFn = evolvedVariant
       ? evolvedVariant.svgFn
       : (isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn));
+    const resolvedSceneType = resolvedId === 'boss_sword_god'
+      ? 'heaven'
+      : (wave.sceneType || b.mType);
 
     return {
       ...b,
@@ -160,7 +163,7 @@ export function buildRoster(pickIndex: PickIndex, mode: 'single' | 'double' = 's
       }),
       name,
       svgFn,
-      sceneMType: wave.sceneType || b.mType,
+      sceneMType: resolvedSceneType,
       hp: Math.round(b.hp * sc * hm),
       maxHp: Math.round(b.hp * sc * hm),
       atk: Math.round(b.atk * sc * am),

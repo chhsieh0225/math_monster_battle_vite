@@ -41,6 +41,7 @@ export const SPRITE_IMGS = {
   player_lion2: `${BASE}sprites/player_lion2.png`,
   boss_hydra: `${BASE}sprites/boss_hydra.png`,
   boss_crazy_dragon: `${BASE}sprites/boss_crazy_dragon.png`,
+  boss_sword_god: `${BASE}sprites/boss_sword_god.png`,
   golumn: `${BASE}sprites/golumn.png`,
   golumn_mud: `${BASE}sprites/golumn_mud.png`,
 };
@@ -52,6 +53,7 @@ export const BG_IMGS = {
   steel: `${BASE}backgrounds/steel.jpg`,
   dark: `${BASE}backgrounds/dark.jpg`,
   rock: `${BASE}backgrounds/rock.jpg`,
+  heaven: `${BASE}backgrounds/heaven.png`,
 };
 
 // SVG wrapper functions — return inner SVG markup using image paths
@@ -129,5 +131,6 @@ export const playerlion1SVG = makeSvgFnFill('player_lion1', 677, 369);
 export const playerlion2SVG = makeSvgFnFill('player_lion2', 677, 369);
 export const bossHydraSVG = makeSvgFnFit('boss_hydra', 677, 369);
 export const bossCrazyDragonSVG = makeSvgFnFitFlip('boss_crazy_dragon', 677, 369);
+export const bossSwordGodSVG = makeSvgFnFit('boss_sword_god', 409, 610);
 export const golumnSVG = makeSvgFn('golumn');
 export const golumnMudSVG = makeSvgFn('golumn_mud');

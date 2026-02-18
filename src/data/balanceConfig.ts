@@ -93,6 +93,7 @@ export const BALANCE_CONFIG = {
       boss: { hp: 120, atk: 15 },
       boss_hydra: { hp: 140, atk: 13 },
       boss_crazy_dragon: { hp: 110, atk: 17 },
+      boss_sword_god: { hp: 120, atk: 15 },
     },
     evolveLevelById: {
       slime: 5,

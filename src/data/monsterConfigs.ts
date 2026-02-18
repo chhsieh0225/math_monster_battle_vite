@@ -11,7 +11,7 @@ const SLIME_VARIANT_MULTIPLIERS = BALANCE_CONFIG.monsters.slimeVariantMultiplier
 const EVOLVED_SLIME_VARIANT_MULTIPLIERS = BALANCE_CONFIG.monsters.evolvedSlimeVariantMultipliersById;
 
 /** Set of monster IDs that are bosses (use boss battle mechanics). */
-export const BOSS_IDS: ReadonlySet<string> = new Set(['boss', 'boss_hydra', 'boss_crazy_dragon']);
+export const BOSS_IDS: ReadonlySet<string> = new Set(['boss', 'boss_hydra', 'boss_crazy_dragon', 'boss_sword_god']);
 
 /** All boss monster IDs as an array (for random selection). */
 export const BOSS_ID_LIST: readonly string[] = [...BOSS_IDS];
@@ -194,6 +194,25 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "tyrant",
     traitName: "狂怒",
     traitDesc: "失去一翼後陷入永恆狂怒。擁有多階段戰鬥形態，能蓄力釋放暗焰吐息，還能封印對手技能。攻擊力冠絕三大Boss。",
+  },
+  {
+    id: "boss_sword_god",
+    name: "叢雲劍神",
+    hp: MONSTER_STATS.boss_sword_god.hp,
+    atk: MONSTER_STATS.boss_sword_god.atk,
+    c1: "#e2e8f0",
+    c2: "#64748b",
+    spriteKey: "bossSwordGodSVG",
+    dropTable: "boss_sword_god",
+    mType: "light",
+    typeIcon: "✨",
+    typeName: "神聖",
+    mType2: "steel",
+    typeIcon2: "⚔️",
+    typeName2: "劍",
+    trait: "tyrant",
+    traitName: "神裁",
+    traitDesc: "掌握神聖與劍意的多階段王者。可蓄力斬擊、封印技能，並以神罰壓制全場。",
   },
 ];
 

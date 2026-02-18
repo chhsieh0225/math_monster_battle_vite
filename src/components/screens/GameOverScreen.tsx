@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
-import type { ChangeEvent, KeyboardEvent } from 'react';
+import type { ChangeEvent, KeyboardEvent, CSSProperties } from 'react';
 import { calcScore, saveScore } from '../../utils/leaderboard.ts';
 import { readText, writeText } from '../../utils/storage.ts';
 import type { LeaderboardEntry } from '../../types/game';
 import type { DailyChallengeFeedback, TowerChallengeFeedback } from '../../types/challenges';
 import { useI18n } from '../../i18n';
+import './GameOverScreen.css';
 
 type StarterMoveLite = {
   icon: string;
@@ -55,9 +56,7 @@ export default function GameOverScreen({
   const finalScore = calcScore(defeated, tC, tW, pLvl, timedMode, maxStreak);
   const [lastRank, setLastRank] = useState(-1);
   const [nameSaved, setNameSaved] = useState(false);
-  const [playerName, setPlayerName] = useState(() => {
-    return readText("mathMonsterBattle_name", "");
-  });
+  const [playerName, setPlayerName] = useState(() => readText('mathMonsterBattle_name', ''));
   const scoreSaved = useRef(false);
   const hasDailyFeedback = Boolean(dailyChallengeFeedback);
   const dailySuccess = dailyChallengeFeedback?.outcome === 'cleared';
@@ -70,69 +69,68 @@ export default function GameOverScreen({
     if (scoreSaved.current) return;
     scoreSaved.current = true;
     const acc = (tC + tW > 0) ? Math.round(tC / (tC + tW) * 100) : 0;
-    const nm = playerName.trim() || "???";
-    writeText("mathMonsterBattle_name", nm);
-    const entry: LeaderboardEntry = { score: finalScore, name: nm, defeated, correct: tC, wrong: tW, accuracy: acc, level: pLvl, timed: timedMode, maxStreak, completed: won, date: new Date().toISOString() };
+    const nm = playerName.trim() || '???';
+    writeText('mathMonsterBattle_name', nm);
+    const entry: LeaderboardEntry = {
+      score: finalScore,
+      name: nm,
+      defeated,
+      correct: tC,
+      wrong: tW,
+      accuracy: acc,
+      level: pLvl,
+      timed: timedMode,
+      maxStreak,
+      completed: won,
+      date: new Date().toISOString(),
+    };
     setLastRank(Number(saveScore(entry)));
     setNameSaved(true);
   };
 
   return (
-    <div style={{
-      height: "100%", display: "flex", flexDirection: "column", alignItems: "center",
-      justifyContent: "center", color: "white", padding: "24px 20px", textAlign: "center",
-      background: won ? "linear-gradient(180deg,#1e1b4b,#312e81,#4338ca)" : "linear-gradient(180deg,#1e1b4b,#1a0a2e,#0f0520)",
-    }}>
-      {/* Icon + Title */}
-      <div style={{ fontSize: 56, marginBottom: 6, animation: "popIn 0.5s ease" }}>{won ? "🏆" : "💀"}</div>
-      <h2 style={{ fontSize: 24, fontWeight: 900, margin: "0 0 4px" }}>
-        {won ? t("gameOver.winTitle", "Stage Cleared!") : t("gameOver.loseTitle", "Challenge Over")}
-        {timedMode && <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(239,68,68,0.25)", padding: "2px 8px", borderRadius: 10, marginLeft: 8, verticalAlign: "middle" }}>⏱️ {t("gameOver.timedBadge", "Timed")}</span>}
+    <div className={`game-over-root ${won ? 'is-win' : 'is-lose'}`}>
+      <div className="game-over-icon">{won ? '🏆' : '💀'}</div>
+      <h2 className="game-over-title">
+        {won ? t('gameOver.winTitle', 'Stage Cleared!') : t('gameOver.loseTitle', 'Challenge Over')}
+        {timedMode && (
+          <span className="game-over-timed-badge">
+            ⏱️ {t('gameOver.timedBadge', 'Timed')}
+          </span>
+        )}
       </h2>
 
       {hasDailyFeedback && dailyChallengeFeedback && (
-        <div
-          style={{
-            width: "100%",
-            maxWidth: 320,
-            marginBottom: 10,
-            borderRadius: 14,
-            border: dailySuccess ? "1px solid rgba(34,197,94,0.5)" : "1px solid rgba(239,68,68,0.45)",
-            background: dailySuccess ? "linear-gradient(180deg,rgba(22,163,74,0.28),rgba(15,23,42,0.55))" : "linear-gradient(180deg,rgba(239,68,68,0.2),rgba(15,23,42,0.55))",
-            padding: "10px 12px",
-            textAlign: "left",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.25)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <div style={{ fontSize: 12, fontWeight: 900 }}>{t("daily.result.title", "Daily Challenge Result")}</div>
-            <div style={{ fontSize: 11, fontWeight: 900, color: dailySuccess ? "#4ade80" : "#fca5a5" }}>
-              {dailySuccess ? `✅ ${t("daily.result.cleared", "Cleared")}` : `❌ ${t("daily.result.failed", "Failed")}`}
+        <div className={`game-over-result-card ${dailySuccess ? 'is-success' : 'is-fail'}`}>
+          <div className="game-over-result-head">
+            <div className="game-over-result-title">{t('daily.result.title', 'Daily Challenge Result')}</div>
+            <div className={`game-over-result-outcome ${dailySuccess ? 'is-success' : 'is-fail'}`}>
+              {dailySuccess ? `✅ ${t('daily.result.cleared', 'Cleared')}` : `❌ ${t('daily.result.failed', 'Failed')}`}
             </div>
           </div>
-          <div style={{ marginTop: 6, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-            <div style={{ borderRadius: 10, background: "rgba(15,23,42,0.45)", padding: "6px 8px" }}>
-              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.result.battles", "Battles")}</div>
-              <div style={{ fontSize: 13, fontWeight: 800 }}>{dailyChallengeFeedback.battlesCleared}/{dailyChallengeFeedback.battlesTotal}</div>
+          <div className="game-over-result-stats-two">
+            <div className="game-over-result-stat-box">
+              <div className="game-over-result-stat-label">{t('daily.result.battles', 'Battles')}</div>
+              <div className="game-over-result-stat-value">{dailyChallengeFeedback.battlesCleared}/{dailyChallengeFeedback.battlesTotal}</div>
             </div>
-            <div style={{ borderRadius: 10, background: "rgba(15,23,42,0.45)", padding: "6px 8px" }}>
-              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.result.streakNow", "Streak")}</div>
-              <div style={{ fontSize: 13, fontWeight: 800 }}>{dailyChallengeFeedback.streakAfter}</div>
+            <div className="game-over-result-stat-box">
+              <div className="game-over-result-stat-label">{t('daily.result.streakNow', 'Streak')}</div>
+              <div className="game-over-result-stat-value">{dailyChallengeFeedback.streakAfter}</div>
             </div>
           </div>
-          <div style={{ marginTop: 6, fontSize: 11, opacity: 0.88 }}>
-            {t("daily.result.streakDelta", "Streak Change")} {streakDeltaPrefix}{dailyChallengeFeedback.streakDelta} ({dailyChallengeFeedback.streakBefore} → {dailyChallengeFeedback.streakAfter})
+          <div className="game-over-result-meta">
+            {t('daily.result.streakDelta', 'Streak Change')} {streakDeltaPrefix}{dailyChallengeFeedback.streakDelta} ({dailyChallengeFeedback.streakBefore} → {dailyChallengeFeedback.streakAfter})
           </div>
           {dailyChallengeFeedback.preservedClear && (
-            <div style={{ marginTop: 4, fontSize: 11, color: "#fde68a", fontWeight: 700 }}>
-              {t("daily.result.preserved", "Today was already cleared. Streak is preserved.")}
+            <div className="game-over-result-note-warn">
+              {t('daily.result.preserved', 'Today was already cleared. Streak is preserved.')}
             </div>
           )}
           {dailyChallengeFeedback.rewardLabels.length > 0 && (
-            <div style={{ marginTop: 6, display: "grid", gap: 3 }}>
-              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.result.rewards", "Rewards")}</div>
+            <div className="game-over-result-rewards">
+              <div className="game-over-result-reward-label">{t('daily.result.rewards', 'Rewards')}</div>
               {dailyChallengeFeedback.rewardLabels.map((label, idx) => (
-                <div key={`${label}-${idx}`} style={{ fontSize: 11, fontWeight: 700 }}>
+                <div key={`${label}-${idx}`} className="game-over-result-reward-item">
                   • {label}
                 </div>
               ))}
@@ -142,55 +140,43 @@ export default function GameOverScreen({
       )}
 
       {hasTowerFeedback && towerChallengeFeedback && (
-        <div
-          style={{
-            width: "100%",
-            maxWidth: 320,
-            marginBottom: 10,
-            borderRadius: 14,
-            border: towerSuccess ? "1px solid rgba(59,130,246,0.5)" : "1px solid rgba(239,68,68,0.45)",
-            background: towerSuccess ? "linear-gradient(180deg,rgba(37,99,235,0.28),rgba(15,23,42,0.55))" : "linear-gradient(180deg,rgba(239,68,68,0.2),rgba(15,23,42,0.55))",
-            padding: "10px 12px",
-            textAlign: "left",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.25)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <div style={{ fontSize: 12, fontWeight: 900 }}>{t("daily.tower.result.title", "Streak Tower Result")}</div>
-            <div style={{ fontSize: 11, fontWeight: 900, color: towerSuccess ? "#93c5fd" : "#fca5a5" }}>
-              {towerSuccess ? `✅ ${t("daily.tower.result.cleared", "Cleared")}` : `❌ ${t("daily.tower.result.failed", "Failed")}`}
+        <div className={`game-over-result-card is-tower ${towerSuccess ? 'is-success' : 'is-fail'}`}>
+          <div className="game-over-result-head">
+            <div className="game-over-result-title">{t('daily.tower.result.title', 'Streak Tower Result')}</div>
+            <div className={`game-over-result-outcome ${towerSuccess ? 'is-tower-success' : 'is-fail'}`}>
+              {towerSuccess ? `✅ ${t('daily.tower.result.cleared', 'Cleared')}` : `❌ ${t('daily.tower.result.failed', 'Failed')}`}
             </div>
           </div>
-          <div style={{ marginTop: 6, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-            <div style={{ borderRadius: 10, background: "rgba(15,23,42,0.45)", padding: "6px 8px" }}>
-              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.tower.result.floor", "Cleared Floor")}</div>
-              <div style={{ fontSize: 13, fontWeight: 800 }}>{towerChallengeFeedback.floor}</div>
+          <div className="game-over-result-stats-two">
+            <div className="game-over-result-stat-box">
+              <div className="game-over-result-stat-label">{t('daily.tower.result.floor', 'Cleared Floor')}</div>
+              <div className="game-over-result-stat-value">{towerChallengeFeedback.floor}</div>
             </div>
-            <div style={{ borderRadius: 10, background: "rgba(15,23,42,0.45)", padding: "6px 8px" }}>
-              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.tower.result.nextFloor", "Next Floor")}</div>
-              <div style={{ fontSize: 13, fontWeight: 800 }}>{towerChallengeFeedback.nextFloor}</div>
+            <div className="game-over-result-stat-box">
+              <div className="game-over-result-stat-label">{t('daily.tower.result.nextFloor', 'Next Floor')}</div>
+              <div className="game-over-result-stat-value">{towerChallengeFeedback.nextFloor}</div>
             </div>
-            <div style={{ borderRadius: 10, background: "rgba(15,23,42,0.45)", padding: "6px 8px" }}>
-              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.tower.result.best", "Best Floor")}</div>
-              <div style={{ fontSize: 13, fontWeight: 800 }}>{towerChallengeFeedback.bestFloorAfter}</div>
+            <div className="game-over-result-stat-box">
+              <div className="game-over-result-stat-label">{t('daily.tower.result.best', 'Best Floor')}</div>
+              <div className="game-over-result-stat-value">{towerChallengeFeedback.bestFloorAfter}</div>
             </div>
-            <div style={{ borderRadius: 10, background: "rgba(15,23,42,0.45)", padding: "6px 8px" }}>
-              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.tower.result.winStreak", "Win Streak")}</div>
-              <div style={{ fontSize: 13, fontWeight: 800 }}>
+            <div className="game-over-result-stat-box">
+              <div className="game-over-result-stat-label">{t('daily.tower.result.winStreak', 'Win Streak')}</div>
+              <div className="game-over-result-stat-value">
                 {towerChallengeFeedback.winStreakAfter} ({towerStreakDeltaPrefix}{towerChallengeFeedback.winStreakDelta})
               </div>
             </div>
           </div>
           {towerChallengeFeedback.checkpointReached && (
-            <div style={{ marginTop: 6, fontSize: 11, color: "#a7f3d0", fontWeight: 700 }}>
-              {t("daily.tower.result.checkpoint", "Checkpoint reached!")}
+            <div className="game-over-result-note-good">
+              {t('daily.tower.result.checkpoint', 'Checkpoint reached!')}
             </div>
           )}
           {towerChallengeFeedback.rewardLabels.length > 0 && (
-            <div style={{ marginTop: 6, display: "grid", gap: 3 }}>
-              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.result.rewards", "Rewards")}</div>
+            <div className="game-over-result-rewards">
+              <div className="game-over-result-reward-label">{t('daily.result.rewards', 'Rewards')}</div>
               {towerChallengeFeedback.rewardLabels.map((label, idx) => (
-                <div key={`${label}-${idx}`} style={{ fontSize: 11, fontWeight: 700 }}>
+                <div key={`${label}-${idx}`} className="game-over-result-reward-item">
                   • {label}
                 </div>
               ))}
@@ -199,63 +185,85 @@ export default function GameOverScreen({
         </div>
       )}
 
-      {/* Score */}
-      <div style={{ marginBottom: 10, animation: "popIn 0.4s ease 0.2s both" }}>
-        <div style={{ fontSize: 11, opacity: 0.4, marginBottom: 2 }}>{t("gameOver.scoreLabel", "Score")}</div>
-        <div style={{ fontSize: 30, fontWeight: 900, color: "#fbbf24", fontFamily: "'Press Start 2P',monospace", textShadow: "0 0 16px rgba(251,191,36,0.35)" }}>{finalScore}</div>
-        {lastRank >= 0 && lastRank < 3 && <div style={{ fontSize: 12, color: "#fbbf24", fontWeight: 700, marginTop: 2 }}>{[
-          t("gameOver.rank.top1", "🥇 New record! #1!"),
-          t("gameOver.rank.top2", "🥈 #2 place!"),
-          t("gameOver.rank.top3", "🥉 #3 place!"),
-        ][lastRank]}</div>}
-        {lastRank >= 3 && <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>{t("gameOver.rank.generic", "Leaderboard rank #{rank}", { rank: lastRank + 1 })}</div>}
+      <div className="game-over-score-block">
+        <div className="game-over-score-label">{t('gameOver.scoreLabel', 'Score')}</div>
+        <div className="game-over-score-value">{finalScore}</div>
+        {lastRank >= 0 && lastRank < 3 && (
+          <div className="game-over-rank-top">
+            {[
+              t('gameOver.rank.top1', '🥇 New record! #1!'),
+              t('gameOver.rank.top2', '🥈 #2 place!'),
+              t('gameOver.rank.top3', '🥉 #3 place!'),
+            ][lastRank]}
+          </div>
+        )}
+        {lastRank >= 3 && (
+          <div className="game-over-rank-generic">
+            {t('gameOver.rank.generic', 'Leaderboard rank #{rank}', { rank: lastRank + 1 })}
+          </div>
+        )}
       </div>
 
-      {/* Name input */}
       {!nameSaved ? (
-        <div style={{ marginBottom: 10, animation: "popIn 0.3s ease 0.4s both" }}>
-          <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center" }}>
-            <input value={playerName} onChange={(e: ChangeEvent<HTMLInputElement>) => setPlayerName(e.target.value)} placeholder={t("gameOver.playerName.placeholder", "Your name")} maxLength={8}
-              aria-label={t("a11y.common.playerName", "Enter player name")}
-              onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") handleSaveScore(); }}
-              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, color: "white", fontSize: 15, fontWeight: 700, padding: "8px 12px", textAlign: "center", width: 130, outline: "none" }} />
-            <button className="touch-btn" onClick={handleSaveScore} aria-label={t("a11y.common.saveScore", "Save score")} style={{ background: "linear-gradient(135deg,#22c55e,#16a34a)", border: "none", color: "white", fontSize: 13, fontWeight: 700, padding: "10px 18px", borderRadius: 12 }}>{t("gameOver.save", "Save")}</button>
+        <div className="game-over-name-wrap">
+          <div className="game-over-name-row">
+            <input
+              className="game-over-name-input"
+              value={playerName}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setPlayerName(e.target.value)}
+              placeholder={t('gameOver.playerName.placeholder', 'Your name')}
+              maxLength={8}
+              aria-label={t('a11y.common.playerName', 'Enter player name')}
+              onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                if (e.key === 'Enter') handleSaveScore();
+              }}
+            />
+            <button
+              className="touch-btn game-over-save-btn"
+              onClick={handleSaveScore}
+              aria-label={t('a11y.common.saveScore', 'Save score')}
+            >
+              {t('gameOver.save', 'Save')}
+            </button>
           </div>
         </div>
       ) : (
-        <div style={{ marginBottom: 10, fontSize: 12, color: "#22c55e", fontWeight: 700 }}>{t("gameOver.saved", "✅ Saved")}</div>
+        <div className="game-over-saved">{t('gameOver.saved', '✅ Saved')}</div>
       )}
 
-      {/* Stats grid */}
-      <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 14, padding: "16px 18px", marginBottom: 10, width: "100%", maxWidth: 300, border: "1px solid rgba(255,255,255,0.08)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-          <Stat value={tC} label={t("gameOver.stat.correct", "Correct")} color="#22c55e" />
-          <Stat value={tW} label={t("gameOver.stat.wrong", "Wrong")} color="#ef4444" />
-          <Stat value={maxStreak} label={t("gameOver.stat.streak", "Streak")} color="#f97316" />
-          <Stat value={defeated} label={t("gameOver.stat.defeated", "Defeated")} color="#f59e0b" />
-          <Stat value={`Lv.${pLvl}`} label={t("gameOver.stat.level", "Level")} color="#a855f7" />
-          <Stat value={`${tC + tW > 0 ? Math.round(tC / (tC + tW) * 100) : 0}%`} label={t("gameOver.stat.accuracy", "Accuracy")} color="#38bdf8" />
+      <div className="game-over-stats-panel">
+        <div className="game-over-stats-grid">
+          <Stat value={tC} label={t('gameOver.stat.correct', 'Correct')} color="#22c55e" />
+          <Stat value={tW} label={t('gameOver.stat.wrong', 'Wrong')} color="#ef4444" />
+          <Stat value={maxStreak} label={t('gameOver.stat.streak', 'Streak')} color="#f97316" />
+          <Stat value={defeated} label={t('gameOver.stat.defeated', 'Defeated')} color="#f59e0b" />
+          <Stat value={`Lv.${pLvl}`} label={t('gameOver.stat.level', 'Level')} color="#a855f7" />
+          <Stat value={`${tC + tW > 0 ? Math.round(tC / (tC + tW) * 100) : 0}%`} label={t('gameOver.stat.accuracy', 'Accuracy')} color="#38bdf8" />
         </div>
       </div>
 
-      {/* Move levels */}
       {starter && (
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 14 }}>
-          {starter.moves.map((m, i) => (
-            <div key={i} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 20 }}>{m.icon}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: m.color }}>Lv.{mLvls[i]}</div>
-              <div style={{ fontSize: 10, opacity: 0.35 }}>{getPow(i)}</div>
+        <div className="game-over-move-levels">
+          {starter.moves.map((move, idx) => (
+            <div key={idx} className="game-over-move-level-item">
+              <div className="game-over-move-icon">{move.icon}</div>
+              <div className="game-over-move-level" style={{ '--move-color': move.color } as CSSProperties}>Lv.{mLvls[idx]}</div>
+              <div className="game-over-move-power">{getPow(idx)}</div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Action buttons */}
-      <div style={{ display: "flex", gap: 8 }}>
-        <button className="end-action-btn touch-btn" onClick={onRestart} aria-label={t("gameOver.restart", "Retry")} style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)", border: "none", color: "white", fontSize: 15, fontWeight: 700, padding: "12px 28px", borderRadius: 14 }}>🔄 {t("gameOver.restart", "Retry")}</button>
-        <button className="end-action-btn touch-btn" onClick={onLeaderboard} aria-label={t("a11y.common.openLeaderboard", "Open leaderboard")} style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)", border: "none", color: "white", fontSize: 13, fontWeight: 700, padding: "12px 20px", borderRadius: 14 }}>🏆</button>
-        <button className="end-action-btn touch-btn" onClick={onHome} aria-label={t("a11y.common.goHome", "Back to title")} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 13, fontWeight: 600, padding: "12px 18px", borderRadius: 14 }}>🏠</button>
+      <div className="game-over-actions">
+        <button className="end-action-btn touch-btn game-over-action-restart" onClick={onRestart} aria-label={t('gameOver.restart', 'Retry')}>
+          🔄 {t('gameOver.restart', 'Retry')}
+        </button>
+        <button className="end-action-btn touch-btn game-over-action-leaderboard" onClick={onLeaderboard} aria-label={t('a11y.common.openLeaderboard', 'Open leaderboard')}>
+          🏆
+        </button>
+        <button className="end-action-btn touch-btn game-over-action-home" onClick={onHome} aria-label={t('a11y.common.goHome', 'Back to title')}>
+          🏠
+        </button>
       </div>
     </div>
   );
@@ -269,9 +277,9 @@ type StatProps = {
 
 function Stat({ value, label, color }: StatProps) {
   return (
-    <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 22, fontWeight: 900, color }}>{value}</div>
-      <div style={{ fontSize: 10, opacity: 0.45 }}>{label}</div>
+    <div className="game-over-stat">
+      <div className="game-over-stat-value" style={{ '--stat-color': color } as CSSProperties}>{value}</div>
+      <div className="game-over-stat-label">{label}</div>
     </div>
   );
 }

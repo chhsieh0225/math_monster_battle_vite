@@ -2,11 +2,9 @@
  * SettingsScreen — Unified runtime settings.
  * Includes performance, audio, and language controls.
  */
-import type { CSSProperties } from 'react';
 import { useI18n } from '../../i18n';
 import type { LocaleCode } from '../../i18n';
-
-const PAGE_BG = 'radial-gradient(120% 80% at 50% 0%, #1f2a44 0%, #131a2f 45%, #0a1020 100%)';
+import './SettingsScreen.css';
 
 type PerfMode = 'auto' | 'on' | 'off';
 
@@ -22,15 +20,6 @@ type SettingsScreenProps = {
   onSetBgmMuted: (muted: boolean) => void;
   onSetBgmVolume: (nextVolume: number) => void;
   onSetSfxMuted: (muted: boolean) => void;
-};
-
-const cardStyle: CSSProperties = {
-  background: 'linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.05))',
-  border: '1px solid rgba(255,255,255,0.16)',
-  borderRadius: 16,
-  padding: '14px 14px 12px',
-  textAlign: 'left',
-  boxShadow: '0 10px 26px rgba(0,0,0,0.25)',
 };
 
 export default function SettingsScreen({
@@ -58,20 +47,26 @@ export default function SettingsScreen({
     : t('settings.locale.enUS', 'English');
 
   return (
-    <main style={{ height: '100%', display: 'flex', flexDirection: 'column', background: PAGE_BG, color: 'white', padding: '16px 12px', overflowY: 'auto' }}>
-      <header style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <button className="back-touch-btn" onClick={onBack} aria-label={t('a11y.settings.back', 'Back to title')} style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)', color: 'white', fontSize: 17, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}>←</button>
-        <div style={{ textAlign: 'left' }}>
-          <h1 style={{ fontSize: 18, fontWeight: 900, letterSpacing: 0.6, margin: 0 }}>⚙️ {t('settings.title', 'Settings')}</h1>
-          <div style={{ fontSize: 11, opacity: 0.55 }}>{t('settings.subtitle', 'Simple controls for performance and audio')}</div>
+    <main className="settings-root">
+      <header className="settings-header">
+        <button
+          className="back-touch-btn settings-back-btn"
+          onClick={onBack}
+          aria-label={t('a11y.settings.back', 'Back to title')}
+        >
+          ←
+        </button>
+        <div className="settings-header-text">
+          <h1 className="settings-title">⚙️ {t('settings.title', 'Settings')}</h1>
+          <div className="settings-subtitle">{t('settings.subtitle', 'Simple controls for performance and audio')}</div>
         </div>
       </header>
 
-      <section style={{ ...cardStyle, marginBottom: 10 }} aria-label={t('settings.bgm.title', 'Background Music')}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>🎵 {t('settings.bgm.title', 'Background Music')}</div>
-        <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 10 }}>{t('settings.bgm.subtitle', 'Toggle background music (saved locally)')}</div>
+      <section className="settings-card" aria-label={t('settings.bgm.title', 'Background Music')}>
+        <div className="settings-card-title">🎵 {t('settings.bgm.title', 'Background Music')}</div>
+        <div className="settings-card-subtitle">{t('settings.bgm.subtitle', 'Toggle background music (saved locally)')}</div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div className="settings-option-grid settings-option-grid-two">
           <OptionButton
             label={t('common.on', 'On')}
             active={bgmOn}
@@ -88,16 +83,17 @@ export default function SettingsScreen({
           />
         </div>
 
-        <div style={{ marginTop: 10, fontSize: 11, color: bgmOn ? '#86efac' : '#cbd5e1', fontWeight: 700 }}>
+        <div className={`settings-status-line ${bgmOn ? 'is-on' : 'is-off'}`}>
           {bgmOn ? t('settings.bgm.statusOn', 'Status: BGM enabled') : t('settings.bgm.statusOff', 'Status: BGM muted')}
         </div>
 
-        <div style={{ marginTop: 10 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, fontSize: 11, opacity: 0.85 }}>
+        <div className="settings-volume-wrap">
+          <div className="settings-volume-row">
             <span>{t('settings.bgm.volume', 'Volume')}</span>
-            <span style={{ fontWeight: 800 }}>{bgmPercent}%</span>
+            <span className="settings-volume-value">{bgmPercent}%</span>
           </div>
           <input
+            className="settings-range-input"
             type="range"
             min={0}
             max={100}
@@ -105,16 +101,15 @@ export default function SettingsScreen({
             value={bgmPercent}
             onChange={(e) => onSetBgmVolume(Number(e.currentTarget.value) / 100)}
             aria-label={t('a11y.settings.bgmVolume', 'Adjust background music volume')}
-            style={{ width: '100%' }}
           />
         </div>
       </section>
 
-      <section style={{ ...cardStyle, marginBottom: 10 }} aria-label={t('settings.sfx.title', 'Sound Effects')}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>🔊 {t('settings.sfx.title', 'Sound Effects')}</div>
-        <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 10 }}>{t('settings.sfx.subtitle', 'Toggle battle sound effects (saved locally)')}</div>
+      <section className="settings-card" aria-label={t('settings.sfx.title', 'Sound Effects')}>
+        <div className="settings-card-title">🔊 {t('settings.sfx.title', 'Sound Effects')}</div>
+        <div className="settings-card-subtitle">{t('settings.sfx.subtitle', 'Toggle battle sound effects (saved locally)')}</div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div className="settings-option-grid settings-option-grid-two">
           <OptionButton
             label={t('common.on', 'On')}
             active={sfxOn}
@@ -131,16 +126,16 @@ export default function SettingsScreen({
           />
         </div>
 
-        <div style={{ marginTop: 10, fontSize: 11, color: sfxOn ? '#86efac' : '#cbd5e1', fontWeight: 700 }}>
+        <div className={`settings-status-line ${sfxOn ? 'is-on' : 'is-off'}`}>
           {sfxOn ? t('settings.sfx.statusOn', 'Status: SFX enabled') : t('settings.sfx.statusOff', 'Status: SFX muted')}
         </div>
       </section>
 
-      <section style={{ ...cardStyle, marginBottom: 10 }} aria-label={t('settings.perf.title', 'Performance')}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>🚀 {t('settings.perf.title', 'Performance')}</div>
-        <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 10 }}>{t('settings.perf.subtitle', 'Reduce animation/effects for better stability')}</div>
+      <section className="settings-card" aria-label={t('settings.perf.title', 'Performance')}>
+        <div className="settings-card-title">🚀 {t('settings.perf.title', 'Performance')}</div>
+        <div className="settings-card-subtitle">{t('settings.perf.subtitle', 'Reduce animation/effects for better stability')}</div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
+        <div className="settings-option-grid settings-option-grid-one">
           <ModeButton
             title={t('settings.perf.auto.title', 'Auto')}
             subtitle={autoLowEnd ? t('settings.perf.auto.subtitle.low', 'Low-end device detected, battery mode preferred') : t('settings.perf.auto.subtitle.normal', 'Auto choose by device capability')}
@@ -164,16 +159,16 @@ export default function SettingsScreen({
           />
         </div>
 
-        <div style={{ marginTop: 10, fontSize: 11, color: lowPerfMode ? '#fbbf24' : '#93c5fd', fontWeight: 700 }}>
+        <div className={`settings-status-line ${lowPerfMode ? 'is-low-perf' : 'is-std-perf'}`}>
           {t('settings.perf.resolved', 'Applied: {mode}', { mode: perfResolved })}
         </div>
       </section>
 
-      <section style={{ ...cardStyle, marginBottom: 10 }} aria-label={t('settings.locale.title', 'Language')}>
-        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>🌐 {t('settings.locale.title', 'Language')}</div>
-        <div style={{ fontSize: 11, opacity: 0.65, marginBottom: 10 }}>{t('settings.locale.subtitle', 'You can switch UI language anytime')}</div>
+      <section className="settings-card" aria-label={t('settings.locale.title', 'Language')}>
+        <div className="settings-card-title">🌐 {t('settings.locale.title', 'Language')}</div>
+        <div className="settings-card-subtitle">{t('settings.locale.subtitle', 'You can switch UI language anytime')}</div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div className="settings-option-grid settings-option-grid-two">
           <LocaleButton
             locale="zh-TW"
             current={locale}
@@ -190,13 +185,13 @@ export default function SettingsScreen({
           />
         </div>
 
-        <div style={{ marginTop: 10, fontSize: 11, color: '#cbd5e1', fontWeight: 700 }}>
+        <div className="settings-status-line">
           {t('settings.locale.current', 'Current language: {lang}', { lang: localeLabel })}
         </div>
       </section>
 
-      <section style={{ ...cardStyle, padding: '10px 12px', opacity: 0.82 }}>
-        <div style={{ fontSize: 10, lineHeight: 1.8, opacity: 0.72 }}>
+      <section className="settings-card settings-card-storage">
+        <div className="settings-storage-lines">
           <div>{t('settings.storage.line1', '• Settings are saved in localStorage')}</div>
           <div>{t('settings.storage.line2', '• They persist after reload/reopen')}</div>
         </div>
@@ -214,26 +209,16 @@ type OptionButtonProps = {
 };
 
 function OptionButton({ label, active, tone, ariaLabel, onClick }: OptionButtonProps) {
-  const activeStyle = tone === 'green'
-    ? 'linear-gradient(135deg, rgba(34,197,94,0.95), rgba(22,163,74,0.95))'
-    : 'linear-gradient(135deg, rgba(100,116,139,0.9), rgba(71,85,105,0.9))';
+  const toneClass = tone === 'green'
+    ? 'settings-option-btn-green'
+    : 'settings-option-btn-gray';
 
   return (
     <button
-      className="touch-btn"
+      className={`touch-btn settings-option-btn ${toneClass} ${active ? 'is-active' : ''}`}
       onClick={onClick}
       aria-label={ariaLabel}
       aria-pressed={active}
-      style={{
-        background: active ? activeStyle : 'rgba(255,255,255,0.06)',
-        color: 'white',
-        border: active ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.12)',
-        borderRadius: 12,
-        padding: '10px 0',
-        fontSize: 13,
-        fontWeight: 800,
-        cursor: 'pointer',
-      }}
     >
       {label}
     </button>
@@ -251,24 +236,13 @@ type ModeButtonProps = {
 function ModeButton({ title, subtitle, active, ariaLabel, onClick }: ModeButtonProps) {
   return (
     <button
-      className="touch-btn"
+      className={`touch-btn settings-mode-btn ${active ? 'is-active' : ''}`}
       onClick={onClick}
       aria-label={ariaLabel}
       aria-pressed={active}
-      style={{
-        textAlign: 'left',
-        background: active
-          ? 'linear-gradient(135deg, rgba(59,130,246,0.32), rgba(14,165,233,0.22))'
-          : 'rgba(255,255,255,0.05)',
-        border: active ? '1px solid rgba(56,189,248,0.7)' : '1px solid rgba(255,255,255,0.12)',
-        color: 'white',
-        borderRadius: 12,
-        padding: '10px 12px',
-        cursor: 'pointer',
-      }}
     >
-      <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 2 }}>{title}</div>
-      <div style={{ fontSize: 11, opacity: 0.65, lineHeight: 1.4 }}>{subtitle}</div>
+      <div className="settings-mode-title">{title}</div>
+      <div className="settings-mode-subtitle">{subtitle}</div>
     </button>
   );
 }
@@ -285,20 +259,10 @@ function LocaleButton({ locale, current, label, ariaLabel, onPick }: LocaleButto
   const active = locale === current;
   return (
     <button
-      className="touch-btn"
+      className={`touch-btn settings-locale-btn ${active ? 'is-active' : ''}`}
       onClick={() => onPick(locale)}
       aria-label={ariaLabel}
       aria-pressed={active}
-      style={{
-        background: active ? 'linear-gradient(135deg, rgba(99,102,241,0.35), rgba(168,85,247,0.25))' : 'rgba(255,255,255,0.06)',
-        color: 'white',
-        border: active ? '1px solid rgba(139,92,246,0.7)' : '1px solid rgba(255,255,255,0.12)',
-        borderRadius: 12,
-        padding: '10px 0',
-        fontSize: 13,
-        fontWeight: 800,
-        cursor: 'pointer',
-      }}
     >
       {label}
     </button>

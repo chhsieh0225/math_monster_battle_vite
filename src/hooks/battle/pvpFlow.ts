@@ -1,5 +1,5 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
-import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
+import { getLevelMaxHp, getStarterLevelMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import { isBattleActiveState } from './menuResetGuard.ts';
 import {
   runPvpAttackAnimation,
@@ -73,6 +73,7 @@ type PvpBattleState = {
   pHp: number;
   pvpHp2: number;
   pStg: number;
+  pLvl?: number;
   pvpBurnP1: number;
   pvpBurnP2: number;
   pvpFreezeP1: boolean;
@@ -266,8 +267,12 @@ type ProcessPvpTurnStartArgs = {
 };
 
 const PVP = PVP_BALANCE as unknown as PvpBalanceConfig;
-const getStageMaxHpTyped = getStageMaxHp as (stageIdx: number) => number;
-const getStarterMaxHpTyped = getStarterMaxHp as (starter: StarterLike | null) => number;
+const getLevelMaxHpTyped = getLevelMaxHp as (pLvl: number, pStg: number) => number;
+const getStarterLevelMaxHpTyped = getStarterLevelMaxHp as (
+  starter: StarterLike | null,
+  pLvl: number,
+  fallbackStageIdx?: number,
+) => number;
 const getStarterStageIdxTyped = getStarterStageIdx as (starter: StarterLike) => number;
 
 const TYPE_TO_SCENE: Record<string, string> = {
@@ -300,7 +305,7 @@ export function createPvpEnemyFromStarter(starter: StarterLike | null | undefine
   if (!starter) return null;
   const stageIdx = getStarterStageIdxTyped(starter);
   const stage = starter.stages?.[stageIdx] || starter.stages?.[0];
-  const maxHp = getStarterMaxHpTyped(starter);
+  const maxHp = getStarterLevelMaxHpTyped(starter, 1, stageIdx);
   return {
     id: `pvp_${starter.id || 'starter'}`,
     name: stage?.name || starter.name,
@@ -421,8 +426,8 @@ export function handlePvpAnswer({
 
   const attackerHp = currentTurn === 'p1' ? state.pHp : state.pvpHp2;
   const attackerMaxHp = currentTurn === 'p1'
-    ? getStageMaxHpTyped(state.pStg)
-    : getStarterMaxHpTyped(state.pvpStarter2);
+    ? getLevelMaxHpTyped(state.pLvl || 1, state.pStg)
+    : getStarterLevelMaxHpTyped(state.pvpStarter2, state.pLvl || 1, state.pStg);
   const strike = resolvePvpStrike({
     move,
     moveIdx: state.selIdx,

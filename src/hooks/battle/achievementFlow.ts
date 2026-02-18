@@ -1,4 +1,4 @@
-import { getStageMaxHp } from '../../utils/playerHp.ts';
+import { getLevelMaxHp } from '../../utils/playerHp.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import type { AchievementId } from '../../types/game';
 
@@ -9,6 +9,7 @@ type BattleState = {
   pHp?: number;
   tW?: number;
   timedMode?: boolean;
+  pLvl?: number;
   pStg?: number;
   starter?: { id?: string } | null;
 };
@@ -33,7 +34,7 @@ type ApplyGameCompletionAchievementsArgs = {
   encTotal: number;
 };
 
-const getStageMaxHpTyped = getStageMaxHp as (stageIdx?: number) => number;
+const getLevelMaxHpTyped = getLevelMaxHp as (pLvl?: number, pStg?: number) => number;
 
 const STARTER_CLEAR_ACHIEVEMENTS: Partial<Record<string, AchievementId>> = {
   fire: 'fire_clear',
@@ -66,7 +67,7 @@ export function applyGameCompletionAchievements({
 }: ApplyGameCompletionAchievementsArgs): void {
   if ((state.tW || 0) === 0) tryUnlock('perfect');
   if (state.timedMode) tryUnlock('timed_clear');
-  if ((state.pHp || 0) >= getStageMaxHpTyped(state.pStg || 0)) tryUnlock('no_damage');
+  if ((state.pHp || 0) >= getLevelMaxHpTyped(state.pLvl || 1, state.pStg || 0)) tryUnlock('no_damage');
   unlockStarterClearAchievement(state.starter?.id, tryUnlock);
 
   setEncData((prev) => {

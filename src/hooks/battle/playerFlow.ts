@@ -5,7 +5,7 @@ import {
 } from '../../data/constants.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { bestAttackType, freezeChance } from '../../utils/damageCalc.ts';
-import { getStageMaxHp, getStarterMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
+import { getLevelMaxHp, getStarterLevelMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import {
   getAttackEffectClearDelay,
   getAttackEffectHitDelay,
@@ -61,6 +61,7 @@ type BattleRuntimeState = {
   mLvls: number[];
   selIdx: number;
   pStg: number;
+  pLvl?: number;
   enemy: BattleEnemy;
   cursed: boolean;
   bossPhase: number;
@@ -186,8 +187,12 @@ const bestAttackTypeTyped = bestAttackType as (
   enemy: BattleEnemy,
 ) => string;
 const freezeChanceTyped = freezeChance as (moveLvl: number) => number;
-const getStageMaxHpTyped = getStageMaxHp as (stageIdx: number) => number;
-const getStarterMaxHpTyped = getStarterMaxHp as (starter: BattleAlly | null) => number;
+const getLevelMaxHpTyped = getLevelMaxHp as (pLvl: number, pStg: number) => number;
+const getStarterLevelMaxHpTyped = getStarterLevelMaxHp as (
+  starter: BattleAlly | null,
+  pLvl: number,
+  fallbackStageIdx?: number,
+) => number;
 const getStarterStageIdxTyped = getStarterStageIdx as (starter: BattleAlly | null) => number;
 const getAttackEffectHitDelayTyped = getAttackEffectHitDelay as (type: string) => number;
 const getAttackEffectClearDelayTyped = getAttackEffectClearDelay as (effect?: { idx?: number; lvl?: number }) => number;
@@ -301,8 +306,8 @@ export function runPlayerAnswer({
 
   const getAttackerMaxHp = (state: BattleRuntimeState): number => (
     isSubAttacker
-      ? getStarterMaxHpTyped(state.allySub)
-      : getStageMaxHpTyped(state.pStg)
+      ? getStarterLevelMaxHpTyped(state.allySub, state.pLvl || 1, state.pStg || 0)
+      : getLevelMaxHpTyped(state.pLvl || 1, state.pStg || 0)
   );
 
   const healAttacker = (heal: number): void => {
@@ -635,6 +640,6 @@ export function runPlayerAnswer({
   }, 2500);
   } catch (err) {
     console.error('[playerFlow] runPlayerAnswer crashed:', err);
-    try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch (_) { /* last resort */ }
+    try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch { /* last resort */ }
   }
 }

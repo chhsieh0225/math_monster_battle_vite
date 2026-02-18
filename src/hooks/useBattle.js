@@ -41,7 +41,7 @@ import {
   bestEffectiveness,
 } from '../utils/damageCalc';
 import {
-  getStageMaxHp,
+  getLevelMaxHp,
   getStarterMaxHp,
   getStarterStageIdx,
 } from '../utils/playerHp';
@@ -73,16 +73,12 @@ import { runTimeoutController } from './battle/timeoutController.ts';
 import { buildTimeoutControllerArgs } from './battle/timeoutDepsBuilder.ts';
 import {
   runBattleEnemyTurn,
-  runBattleSelectMove,
 } from './battle/turnFlowAdapter.ts';
 import { runResetRuntimeState } from './battle/runtimeReset.ts';
 import { runScreenTransition } from './battle/screenTransition.ts';
 import {
   runEndSessionController,
   runFinishGameController,
-  runHandleFreezeController,
-  runQuitGameController,
-  runToggleCoopActiveController,
 } from './battle/gameLifecycleController.ts';
 import {
   getActingStarter as resolveActingStarter,
@@ -96,10 +92,6 @@ import {
   canSwitchCoopActiveSlot,
 } from './battle/coopFlow';
 import {
-  runAllySupportTurnController,
-  runPlayerPartyKoController,
-} from './battle/coopActionController.ts';
-import {
   applyVictoryAchievements,
 } from './battle/achievementFlow';
 import {
@@ -109,15 +101,9 @@ import { DIFF_MODS, pickPartnerStarter } from './battle/partnerStarter.ts';
 import { resolveBattleQuestionConfig } from './battle/questionConfig.ts';
 import {
   runBattleStart,
-  runBattleStartGame,
 } from './battle/startFlowAdapter.ts';
 import {
-  runBattleAdvance,
-  runBattleAnswer,
-} from './battle/interactionFlowAdapter.ts';
-import {
   runBattleVictory,
-  runBattleContinueFromVictory,
 } from './battle/progressionFlowAdapter.ts';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
 import { useBattleAsyncGate, useBattleStateRef } from './useBattleRuntime';
@@ -125,6 +111,20 @@ import { buildUseBattleState } from './battle/publicStateBuilder.ts';
 import { buildUseBattleView } from './battle/publicViewBuilder.ts';
 import { buildUseBattleActions } from './battle/publicActionsBuilder.ts';
 import { buildUseBattlePublicApi } from './battle/publicApi.ts';
+import {
+  runAdvanceWithContext,
+  runAnswerWithContext,
+  runContinueWithContext,
+  runSelectMoveWithContext,
+  runStartGameWithContext,
+} from './battle/actionFlowDelegates.ts';
+import {
+  runAllySupportTurnWithContext,
+  runHandleFreezeWithContext,
+  runPlayerPartyKoWithContext,
+  runQuitGameWithContext,
+  runToggleCoopActiveWithContext,
+} from './battle/lifecycleActionDelegates.ts';
 
 // ═══════════════════════════════════════════════════════════════════
 /** @returns {import('../types/battle').UseBattlePublicApi} */
@@ -279,6 +279,13 @@ export function useBattle() {
     endSessionOnce,
     appendQuitEventIfOpen,
   } = useBattleSessionLifecycle({ reseed, endSession });
+
+  const getPlayerMaxHp = useCallback((stageIdx = 0, levelOverride = null) => {
+    const resolvedLevel = Number.isFinite(levelOverride)
+      ? Number(levelOverride)
+      : Number(sr.current?.pLvl || 1);
+    return getLevelMaxHp(resolvedLevel, stageIdx);
+  }, [sr]);
 
   // ──── Computed ────
   const expNext = pLvl * 30;
@@ -482,10 +489,7 @@ export function useBattle() {
   }, [setDmgs, setParts, setAtkEffect, setEffMsg]);
 
   const startGame = (starterOverride, modeOverride = null, allyOverride = null) => {
-    runBattleStartGame({
-      starterOverride,
-      modeOverride,
-      allyOverride,
+    runStartGameWithContext({
       setDailyChallengeFeedback,
       queuedChallenge,
       activeChallenge,
@@ -536,15 +540,15 @@ export function useBattle() {
           localizeStarter,
           pickPartnerStarter: (mainStarter) => pickPartnerStarter(mainStarter, pickIndex, locale),
           getStarterStageIdx,
-          getStageMaxHp,
+          getStageMaxHp: getPlayerMaxHp,
         },
       },
       activateQueuedChallenge,
-    });
+    }, starterOverride, modeOverride, allyOverride);
   };
 
   const quitGame = () => {
-    runQuitGameController({
+    runQuitGameWithContext({
       clearTimer,
       appendQuitEventIfOpen,
       sr,
@@ -554,10 +558,8 @@ export function useBattle() {
   };
 
   const handlePlayerPartyKo = ({ target = "main", reason = t("battle.ally.ko", "Your partner has fallen...") }) => {
-    return runPlayerPartyKoController({
+    return runPlayerPartyKoWithContext({
       sr,
-      target,
-      reason,
       setStarter,
       setPStg,
       setPHp,
@@ -570,11 +572,11 @@ export function useBattle() {
       endSession: _endSession,
       setScreen,
       t,
-    });
+    }, { target, reason });
   };
 
   const runAllySupportTurn = ({ delayMs = 850, onDone } = {}) => {
-    return runAllySupportTurnController({
+    return runAllySupportTurnWithContext({
       sr,
       safeTo,
       chance,
@@ -587,10 +589,8 @@ export function useBattle() {
       addP,
       sfx,
       handleVictory,
-      delayMs,
-      onDone,
       t,
-    });
+    }, { delayMs, onDone });
   };
 
   // --- Handle a defeated enemy ---
@@ -602,7 +602,7 @@ export function useBattle() {
         runtime: {
           randInt,
           resolveLevelProgress,
-          getStageMaxHp,
+          getStageMaxHp: getPlayerMaxHp,
           tryUnlock,
           applyVictoryAchievements,
           updateEncDefeated,
@@ -619,7 +619,7 @@ export function useBattle() {
 
   // --- Frozen enemy skips turn ---
   const handleFreeze = () => {
-    runHandleFreezeController({
+    runHandleFreezeWithContext({
       sr,
       frozenRef: frozenR,
       setFrozen,
@@ -632,27 +632,24 @@ export function useBattle() {
 
   // --- Player selects a move ---
   const selectMove = (i) => {
-    runBattleSelectMove({
-      selectMoveInput: {
-        index: i,
-        sr,
-        runtime: {
-          timedMode,
-          questionTimeLimitSec: questionTimerSec,
-          questionAllowedOps,
-          diffMods: DIFF_MODS,
-          t,
-          getActingStarter,
-          getMoveDiffLevel: _getMoveDiffLevel,
-          genQuestion: genBattleQuestion,
-          startTimer,
-          markQStart,
-          sfx,
-        },
-        ui: UI,
-        battleFields: battleFieldSetters,
+    runSelectMoveWithContext({
+      sr,
+      runtime: {
+        timedMode,
+        questionTimeLimitSec: questionTimerSec,
+        questionAllowedOps,
+        diffMods: DIFF_MODS,
+        t,
+        getActingStarter,
+        getMoveDiffLevel: _getMoveDiffLevel,
+        genQuestion: genBattleQuestion,
+        startTimer,
+        markQStart,
+        sfx,
       },
-    });
+      ui: UI,
+      battleFields: battleFieldSetters,
+    }, i);
   };
 
   // --- Enemy turn logic (reads from stateRef) ---
@@ -683,8 +680,7 @@ export function useBattle() {
 
   // --- Player answers a question ---
   const onAns = (choice) => {
-    runBattleAnswer({
-      choice,
+    runAnswerWithContext({
       answered,
       setAnswered,
       clearTimer,
@@ -733,12 +729,12 @@ export function useBattle() {
         updateAbility: _updateAbility,
         markCoopRotatePending,
       },
-    });
+    }, choice);
   };
 
   // --- Advance from text / victory phase ---
   const continueFromVictory = () => {
-    runBattleContinueFromVictory({
+    runContinueWithContext({
       continueFromVictoryInput: {
         sr,
         enemiesLength: enemies.length,
@@ -747,7 +743,7 @@ export function useBattle() {
           dispatchBattle,
           localizeEnemy,
           locale,
-          getStageMaxHp,
+          getStageMaxHp: getPlayerMaxHp,
           getStarterMaxHp,
           t,
         },
@@ -762,7 +758,7 @@ export function useBattle() {
   };
 
   const advance = () => {
-    runBattleAdvance({
+    runAdvanceWithContext({
       phase,
       sr,
       setPhase,
@@ -781,15 +777,15 @@ export function useBattle() {
         pvp: pvpState,
         battleFields: battleFieldSetters,
       },
-      pendingEvolutionInput: {
-        pendingEvolveRef: pendingEvolve,
-        battleFields: battleFieldSetters,
-        setScreen,
-        tryUnlock,
-        getStageMaxHp,
-        getStarterMaxHp,
-        maxMoveLvl: MAX_MOVE_LVL,
-      },
+        pendingEvolutionInput: {
+          pendingEvolveRef: pendingEvolve,
+          battleFields: battleFieldSetters,
+          setScreen,
+          tryUnlock,
+          getStageMaxHp: getPlayerMaxHp,
+          getStarterMaxHp,
+          maxMoveLvl: MAX_MOVE_LVL,
+        },
     });
   };
 
@@ -799,7 +795,7 @@ export function useBattle() {
   };
 
   const toggleCoopActive = () => {
-    runToggleCoopActiveController({
+    runToggleCoopActiveWithContext({
       sr,
       canSwitchCoopActiveSlot,
       setCoopActiveSlot,

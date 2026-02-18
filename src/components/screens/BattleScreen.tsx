@@ -4,7 +4,7 @@ import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { SCENES } from '../../data/scenes';
 import { HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from '../../data/constants';
 import { PVP_BALANCE } from '../../data/pvpBalance';
-import { getStageMaxHp, getStarterMaxHp } from '../../utils/playerHp';
+import { getLevelMaxHp, getStarterLevelMaxHp } from '../../utils/playerHp';
 import { resolveBattleLayout } from '../../utils/battleLayout';
 import { hasSpecialTrait } from '../../utils/traits';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
@@ -178,6 +178,7 @@ export default function BattleScreen({
   const {
     starter: stateStarter,
     enemy: stateEnemy,
+    pLvl,
     pStg,
     battleMode,
     enemySub,
@@ -246,8 +247,8 @@ export default function BattleScreen({
     const pSubSvg = allyStage ? allyStage.svgFn() : null;
     const pSvg = st.svgFn();
 
-    const mainMaxHp = getStageMaxHp(pStg);
-    const subMaxHp = showAllySub && allySub ? getStarterMaxHp(allySub) : getStageMaxHp(0);
+    const mainMaxHp = getLevelMaxHp(pLvl, pStg);
+    const subMaxHp = showAllySub && allySub ? getStarterLevelMaxHp(allySub, pLvl, pStg) : getLevelMaxHp(1, 0);
     const sceneKey = (enemy.sceneMType || enemy.mType) as keyof typeof SCENES;
     const scene = SCENES[sceneKey] || SCENES.grass;
 
@@ -323,6 +324,7 @@ export default function BattleScreen({
   }, [
     stateStarter,
     stateEnemy,
+    pLvl,
     pStg,
     battleMode,
     enemySub,

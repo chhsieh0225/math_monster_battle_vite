@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { getStageMaxHp } from '../../utils/playerHp.ts';
+import { getLevelMaxHp } from '../../utils/playerHp.ts';
 import {
   applyGameCompletionAchievements,
   applyVictoryAchievements,
@@ -26,7 +26,8 @@ test('applyGameCompletionAchievements unlocks run and encyclopedia milestones', 
     state: {
       tW: 0,
       timedMode: true,
-      pHp: getStageMaxHp(0),
+      pHp: getLevelMaxHp(1, 0),
+      pLvl: 1,
       pStg: 0,
       starter: { id: "fire" },
     },

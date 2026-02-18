@@ -40,7 +40,7 @@ type RunVictoryFlowArgs = {
     currentStage: number;
     gainExp: number;
   }) => ProgressResult;
-  getStageMaxHp: (stageIdx?: number) => number;
+  getStageMaxHp: (stageIdx?: number, levelOverride?: number) => number;
   tryUnlock: (id: string) => void;
   applyVictoryAchievements: (args: { state: BattleState; tryUnlock: (id: string) => void }) => void;
   updateEncDefeated: (enemy: EnemyLite) => void;
@@ -141,7 +141,7 @@ export function runVictoryFlow({
   if (progress.nextLevel !== (s.pLvl || 1)) {
     setPLvl(progress.nextLevel);
     if (progress.hpBonus > 0) {
-      setPHp((prev) => Math.min(prev + progress.hpBonus, getStageMaxHp(s.pStg || 0)));
+      setPHp((prev) => Math.min(prev + progress.hpBonus, getStageMaxHp(s.pStg || 0, progress.nextLevel)));
     }
   }
 

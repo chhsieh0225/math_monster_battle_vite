@@ -22,7 +22,7 @@ type RunStartGameControllerArgs = {
   localizeStarter: (starter: StarterLite, locale: string) => StarterLite;
   pickPartnerStarter: (mainStarter: StarterLite) => StarterLite;
   getStarterStageIdx: (starter: StarterLite) => number;
-  getStageMaxHp: (stageIdx: number) => number;
+  getStageMaxHp: (stageIdx: number, levelOverride?: number) => number;
   pvpStartDeps: Omit<RunPvpStartFlowArgs, 'leader' | 'rival' | 'leaderMaxHp' | 'leaderStageIdx'>;
   standardStartDeps: Omit<
     RunStandardStartFlowArgs,
@@ -61,7 +61,7 @@ export function runStartGameController({
     locale,
   );
   const leaderStageIdx = getStarterStageIdx(leader);
-  const leaderMaxHp = getStageMaxHp(leaderStageIdx);
+  const leaderMaxHp = getStageMaxHp(leaderStageIdx, 1);
 
   if (mode === 'pvp') {
     runPvpStartFlow({

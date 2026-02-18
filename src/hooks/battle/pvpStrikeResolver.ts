@@ -1,5 +1,5 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
-import { getStageMaxHp, getStarterMaxHp } from '../../utils/playerHp.ts';
+import { getLevelMaxHp, getStarterLevelMaxHp } from '../../utils/playerHp.ts';
 import { declarePvpWinner, swapPvpTurnToText } from './pvpTurnPrimitives.ts';
 
 type TranslatorParams = Record<string, string | number>;
@@ -40,6 +40,7 @@ type PvpStateRef = {
     pHp: number;
     pvpHp2: number;
     pStg: number;
+    pLvl?: number;
     pvpStarter2: StarterLike | null;
     pvpSpecDefP1: boolean;
     pvpSpecDefP2: boolean;
@@ -118,8 +119,12 @@ type ExecutePvpStrikeTurnArgs = {
 };
 
 const PVP = PVP_BALANCE as unknown as PvpBalanceConfig;
-const getStageMaxHpTyped = getStageMaxHp as (stageIdx: number) => number;
-const getStarterMaxHpTyped = getStarterMaxHp as (starter: StarterLike | null) => number;
+const getLevelMaxHpTyped = getLevelMaxHp as (pLvl: number, pStg: number) => number;
+const getStarterLevelMaxHpTyped = getStarterLevelMaxHp as (
+  starter: StarterLike | null,
+  pLvl: number,
+  fallbackStageIdx?: number,
+) => number;
 
 const PVP_HIT_ANIMS: Record<string, string> = {
   fire: 'enemyFireHit 0.55s ease',
@@ -377,7 +382,7 @@ export function executePvpStrikeTurn({
     addD(strike.isCrit ? `💥-${totalDmg}` : `-${totalDmg}`, 140, 55, '#ef4444');
 
     if (strike.heal > 0) {
-      setPHp((hp) => Math.min(getStageMaxHpTyped(s2.pStg), hp + strike.heal));
+      setPHp((hp) => Math.min(getLevelMaxHpTyped(s2.pLvl || 1, s2.pStg), hp + strike.heal));
       addD(`+${strike.heal}`, 52, 164, '#22c55e');
       passiveNotes.push(tr(t, 'battle.pvp.note.heal', '🌿Heal'));
     }
@@ -401,7 +406,10 @@ export function executePvpStrikeTurn({
     addD(strike.isCrit ? `💥-${totalDmg}` : `-${totalDmg}`, 60, 170, '#ef4444');
 
     if (strike.heal > 0) {
-      const healed = Math.min(getStarterMaxHpTyped(s2.pvpStarter2), s2.pvpHp2 + strike.heal);
+      const healed = Math.min(
+        getStarterLevelMaxHpTyped(s2.pvpStarter2, s2.pLvl || 1, s2.pStg),
+        s2.pvpHp2 + strike.heal,
+      );
       setPvpHp2(healed);
       setEHp(healed);
       addD(`+${strike.heal}`, 146, 54, '#22c55e');

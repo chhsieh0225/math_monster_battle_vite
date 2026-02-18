@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { getStageMaxHp } from '../utils/playerHp';
+import { getLevelMaxHp } from '../utils/playerHp';
 
 type PvpTurn = 'p1' | 'p2';
 
@@ -55,7 +55,7 @@ type UsePvpStateResult = {
 
 export function usePvpState(): UsePvpStateResult {
   const [pvpStarter2, setPvpStarter2] = useState<StarterLite>(null);
-  const [pvpHp2, setPvpHp2] = useState(() => getStageMaxHp(0));
+  const [pvpHp2, setPvpHp2] = useState(() => getLevelMaxHp(1, 0));
   const [pvpTurn, setPvpTurn] = useState<PvpTurn>('p1');
   const [pvpWinner, setPvpWinner] = useState<PvpTurn | null>(null);
   const [pvpChargeP1, setPvpChargeP1] = useState(0);

@@ -1610,9 +1610,12 @@ function stopBgmLoop(): void {
   }
   if (bgmGain && ctx) {
     try {
-      bgmGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.3);
       const g = bgmGain;
-      setTimeout(() => { try { g.disconnect(); } catch { /* ok */ } }, 400);
+      // Cancel any pending automation (e.g. fade-in ramp) so our fade-out works
+      g.gain.cancelScheduledValues(ctx.currentTime);
+      g.gain.setValueAtTime(g.gain.value, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+      setTimeout(() => { try { g.disconnect(); } catch { /* ok */ } }, 350);
     } catch { /* ok */ }
   }
   bgmGain = null;

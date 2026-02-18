@@ -1,9 +1,7 @@
-import type { CSSProperties } from 'react';
 import { loadScores } from '../../utils/leaderboard.ts';
 import type { LeaderboardEntry } from '../../types/game';
 import { useI18n } from '../../i18n';
-
-const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
+import './LeaderboardScreen.css';
 
 type LeaderboardScreenProps = {
   totalEnemies: number;
@@ -14,43 +12,45 @@ export default function LeaderboardScreen({ totalEnemies, onBack }: LeaderboardS
   const { t } = useI18n();
   const scores: LeaderboardEntry[] = loadScores();
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", overflow: "hidden" }}>
+    <div className="leaderboard-screen">
       {/* Header */}
-      <div style={{ padding: "16px 16px 12px", display: "flex", alignItems: "center", gap: 12 }}>
-        <button className="back-touch-btn" onClick={onBack} aria-label={t("a11y.common.backToTitle", "Back to title")} style={backBtn}>←</button>
-        <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>🏆 {t("leaderboard.title", "Leaderboard")}</div>
+      <div className="leaderboard-header">
+        <button className="back-touch-btn leaderboard-back-btn" onClick={onBack} aria-label={t("a11y.common.backToTitle", "Back to title")}>←</button>
+        <div className="leaderboard-title">🏆 {t("leaderboard.title", "Leaderboard")}</div>
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 14px 20px", WebkitOverflowScrolling: "touch" }}>
+      <div className="leaderboard-list-wrap">
         {scores.length === 0
-          ? <div style={{ opacity: 0.4, fontSize: 13, marginTop: 60, textAlign: "center" }}>{t("leaderboard.empty", "No records yet. Start a run!")}</div>
+          ? <div className="leaderboard-empty">{t("leaderboard.empty", "No records yet. Start a run!")}</div>
           : scores.map((s, i) => {
               const d = new Date(s.date);
               const ds = `${d.getMonth() + 1}/${d.getDate()}`;
+              const rowClass = i === 0 ? "leaderboard-row is-first" : i < 3 ? "leaderboard-row is-top" : "leaderboard-row";
+              const rankClass = i === 0
+                ? "leaderboard-rank is-first"
+                : i === 1
+                  ? "leaderboard-rank is-second"
+                  : i === 2
+                    ? "leaderboard-rank is-third"
+                    : "leaderboard-rank is-other";
               return (
-                <div key={s.date + "_" + i} style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  background: i === 0 ? "rgba(251,191,36,0.1)" : i < 3 ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.03)",
-                  borderRadius: 12, padding: "10px 14px", marginBottom: 6,
-                  border: `1px solid ${i === 0 ? "rgba(251,191,36,0.2)" : "rgba(255,255,255,0.06)"}`,
-                  animation: `fadeSlide 0.3s ease ${i * 0.04}s both`,
-                }}>
-                  <div style={{ width: 28, fontSize: i < 3 ? 20 : 14, textAlign: "center", fontWeight: 900, color: i === 0 ? "#fbbf24" : i === 1 ? "#c0c0c0" : i === 2 ? "#cd7f32" : "rgba(255,255,255,0.4)" }}>
+                <div key={s.date + "_" + i} className={rowClass}>
+                  <div className={rankClass}>
                     {i < 3 ? ["🥇", "🥈", "🥉"][i] : `${i + 1}`}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>{s.name || t("leaderboard.playerUnknown", "???")}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 17, fontWeight: 900, color: "#fbbf24", fontFamily: "'Press Start 2P',monospace" }}>{s.score}</span>
-                      {s.timed && <span style={{ fontSize: 9, background: "rgba(239,68,68,0.25)", padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>⏱️</span>}
-                      {s.completed && <span style={{ fontSize: 9, background: "rgba(34,197,94,0.25)", padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>👑</span>}
+                  <div className="leaderboard-main">
+                    <div className="leaderboard-name">{s.name || t("leaderboard.playerUnknown", "???")}</div>
+                    <div className="leaderboard-score-row">
+                      <span className="leaderboard-score">{s.score}</span>
+                      {s.timed && <span className="leaderboard-badge leaderboard-badge-timed">⏱️</span>}
+                      {s.completed && <span className="leaderboard-badge leaderboard-badge-complete">👑</span>}
                     </div>
-                    <div style={{ fontSize: 10, opacity: 0.45, marginTop: 2 }}>
+                    <div className="leaderboard-stat-line">
                       {t("leaderboard.statLine", "Monsters {defeated}/{total} · Accuracy {accuracy}% · Lv.{level}", { defeated: s.defeated, total: totalEnemies, accuracy: s.accuracy, level: s.level })}
                     </div>
                   </div>
-                  <div style={{ fontSize: 10, opacity: 0.3, flexShrink: 0 }}>{ds}</div>
+                  <div className="leaderboard-date">{ds}</div>
                 </div>
               );
             })
@@ -59,5 +59,3 @@ export default function LeaderboardScreen({ totalEnemies, onBack }: LeaderboardS
     </div>
   );
 }
-
-const backBtn: CSSProperties = { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 16, fontWeight: 700, width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 };

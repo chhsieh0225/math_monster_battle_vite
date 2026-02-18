@@ -1,0 +1,149 @@
+.leaderboard-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 40%, #312e81 100%);
+  color: white;
+  overflow: hidden;
+}
+
+.leaderboard-header {
+  padding: 16px 16px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.leaderboard-back-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.leaderboard-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.leaderboard-list-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 14px 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.leaderboard-empty {
+  opacity: 0.4;
+  font-size: 13px;
+  margin-top: 60px;
+  text-align: center;
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  animation: fadeSlide 0.3s ease both;
+}
+
+.leaderboard-row.is-top {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.leaderboard-row.is-first {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.2);
+}
+
+.leaderboard-rank {
+  width: 28px;
+  text-align: center;
+  font-weight: 900;
+}
+
+.leaderboard-rank.is-first {
+  font-size: 20px;
+  color: #fbbf24;
+}
+
+.leaderboard-rank.is-second {
+  font-size: 20px;
+  color: #c0c0c0;
+}
+
+.leaderboard-rank.is-third {
+  font-size: 20px;
+  color: #cd7f32;
+}
+
+.leaderboard-rank.is-other {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.leaderboard-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.leaderboard-name {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.leaderboard-score-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.leaderboard-score {
+  font-size: 17px;
+  font-weight: 900;
+  color: #fbbf24;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.leaderboard-badge {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.leaderboard-badge-timed {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.leaderboard-badge-complete {
+  background: rgba(34, 197, 94, 0.25);
+}
+
+.leaderboard-stat-line {
+  font-size: 10px;
+  opacity: 0.45;
+  margin-top: 2px;
+}
+
+.leaderboard-date {
+  font-size: 10px;
+  opacity: 0.3;
+  flex-shrink: 0;
+}

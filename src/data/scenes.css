@@ -1,0 +1,414 @@
+.scn-leaf {
+  position: absolute;
+  bottom: var(--bottom);
+  left: var(--left);
+  width: var(--w);
+  height: var(--h);
+  background: var(--color);
+  border-radius: 50% 0 50% 0;
+  box-shadow: 0 0 var(--glow) var(--color);
+  opacity: 0;
+  animation: leafDrift var(--dur) ease-in-out var(--del) infinite;
+}
+
+.scn-grass-wind {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+}
+
+.scn-grass-wind-top {
+  top: 30%;
+  height: 1.5px;
+  animation: windSweep 6s ease-in-out infinite;
+}
+
+.scn-grass-wind-mid {
+  top: 55%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
+  animation: windSweep 8s ease-in-out 2s infinite;
+}
+
+.scn-fire-ember {
+  position: absolute;
+  bottom: var(--bottom);
+  left: var(--left);
+  width: var(--size);
+  height: var(--size);
+  background: var(--color);
+  border-radius: 50%;
+  animation: emberRise var(--dur) ease-in var(--del) infinite;
+}
+
+.scn-fire-lava {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.scn-fire-lava-left {
+  bottom: 0%;
+  left: 8%;
+  width: 120px;
+  height: 35px;
+  background: radial-gradient(ellipse, rgba(234, 88, 12, 0.25), transparent);
+  animation: lavaGlow 3s ease-in-out infinite;
+}
+
+.scn-fire-lava-right {
+  bottom: 3%;
+  right: 12%;
+  width: 90px;
+  height: 30px;
+  background: radial-gradient(ellipse, rgba(220, 38, 38, 0.2), transparent);
+  animation: lavaGlow 3.5s ease-in-out 0.8s infinite;
+}
+
+.scn-fire-haze {
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  width: 100%;
+  height: 25%;
+  background: linear-gradient(180deg, rgba(251, 146, 60, 0.06), transparent);
+  animation: float 5s ease-in-out infinite;
+}
+
+.scn-ghost-firefly {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: var(--size);
+  height: var(--size);
+  background: var(--color);
+  border-radius: 50%;
+  box-shadow: 0 0 var(--glow) var(--glow-spread) var(--color);
+  animation: fireflyGlow var(--dur) ease var(--del) infinite;
+}
+
+.scn-ghost-mist {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.scn-ghost-mist-left {
+  bottom: 18%;
+  left: 5%;
+  width: 100px;
+  height: 35px;
+  background: rgba(139, 92, 246, 0.06);
+  filter: blur(10px);
+}
+
+.scn-ghost-mist-top {
+  top: 22%;
+  left: 55%;
+  width: 70px;
+  height: 50px;
+  background: rgba(139, 92, 246, 0.04);
+  filter: blur(14px);
+}
+
+.scn-ghost-moon {
+  position: absolute;
+  top: 3%;
+  right: 22%;
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle, rgba(250, 250, 210, 0.1), transparent);
+  border-radius: 50%;
+}
+
+.scn-steel-smoke {
+  position: absolute;
+  bottom: var(--bottom);
+  left: var(--left);
+  width: var(--w);
+  height: var(--h);
+  background: radial-gradient(ellipse, rgba(203, 213, 225, 0.85), rgba(148, 163, 184, 0.45), transparent);
+  border-radius: 50%;
+  filter: blur(var(--blur));
+  animation: smokeDrift var(--dur) ease-in-out var(--del) infinite;
+}
+
+.scn-steel-cone {
+  position: absolute;
+  top: 0%;
+  clip-path: polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%);
+}
+
+.scn-steel-cone-left {
+  left: 18%;
+  width: 90px;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.4), rgba(251, 191, 36, 0.12) 60%, transparent);
+  --lp-lo: 0.6;
+  --lp-hi: 1;
+  animation: lightPulse 4s ease-in-out infinite;
+}
+
+.scn-steel-cone-right {
+  right: 22%;
+  width: 80px;
+  height: 45%;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.35), rgba(203, 213, 225, 0.1) 60%, transparent);
+  --lp-lo: 0.5;
+  --lp-hi: 1;
+  animation: lightPulse 5s ease-in-out 1.5s infinite;
+}
+
+.scn-steel-lightdot {
+  position: absolute;
+  top: 1%;
+  border-radius: 50%;
+}
+
+.scn-steel-lightdot-left {
+  left: 22%;
+  width: 14px;
+  height: 6px;
+  background: rgba(251, 191, 36, 0.6);
+  box-shadow: 0 0 20px 6px rgba(251, 191, 36, 0.35);
+}
+
+.scn-steel-lightdot-right {
+  right: 26%;
+  width: 12px;
+  height: 5px;
+  background: rgba(248, 250, 252, 0.5);
+  box-shadow: 0 0 18px 5px rgba(248, 250, 252, 0.3);
+}
+
+.scn-steel-spark {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: var(--size);
+  height: var(--size);
+  background: var(--color);
+  border-radius: 50%;
+  box-shadow: 0 0 var(--glow) var(--glow-spread) var(--color);
+  animation: steelSpark var(--dur) ease var(--del) infinite;
+}
+
+.scn-steel-beam {
+  position: absolute;
+  bottom: 5%;
+  left: 2%;
+  width: 96%;
+  height: 6px;
+  background: linear-gradient(90deg, #6b7280, #9ca3af, #6b7280);
+  opacity: 0.1;
+  border-radius: 2px;
+}
+
+.scn-rock-dust {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: var(--size);
+  height: var(--size);
+  background: var(--color);
+  border-radius: 50%;
+  opacity: var(--op);
+  animation: smokeDrift var(--dur) ease-in-out var(--del) infinite;
+}
+
+.scn-rock-pebble {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: var(--size);
+  height: var(--size);
+  background: var(--color);
+  border-radius: 30%;
+  animation: emberRise var(--dur) ease-in var(--del) infinite reverse;
+}
+
+.scn-rock-haze {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.scn-rock-haze-left {
+  bottom: 0%;
+  left: 5%;
+  width: 130px;
+  height: 40px;
+  background: radial-gradient(ellipse, rgba(210, 180, 140, 0.2), transparent);
+}
+
+.scn-rock-haze-right {
+  bottom: 5%;
+  right: 10%;
+  width: 100px;
+  height: 35px;
+  background: radial-gradient(ellipse, rgba(184, 134, 11, 0.15), transparent);
+}
+
+.scn-rock-shimmer {
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  width: 100%;
+  height: 20%;
+  background: linear-gradient(180deg, rgba(210, 180, 140, 0.08), transparent);
+  animation: float 6s ease-in-out infinite;
+}
+
+.scn-heaven-glint {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: var(--color);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.65);
+  animation: sparkle var(--dur) ease var(--del) infinite;
+}
+
+.scn-heaven-aurora {
+  position: absolute;
+  top: 8%;
+  left: 0;
+  width: 100%;
+  height: 56px;
+  background: linear-gradient(90deg, transparent, rgba(191, 219, 254, 0.24), transparent);
+  filter: blur(6px);
+  animation: windSweep 7s ease-in-out infinite;
+}
+
+.scn-heaven-haze-left {
+  position: absolute;
+  bottom: 10%;
+  left: 12%;
+  width: 140px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 255, 255, 0.42), transparent);
+}
+
+.scn-heaven-haze-right {
+  position: absolute;
+  bottom: 7%;
+  right: 10%;
+  width: 128px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(224, 231, 255, 0.32), transparent);
+}
+
+.scn-dark-spark {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: var(--w);
+  height: var(--h);
+  background: white;
+  border-radius: 50%;
+  opacity: var(--op);
+  animation: sparkle var(--dur) ease var(--del) infinite;
+}
+
+.scn-dark-glow-main {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.06), transparent);
+}
+
+.scn-dark-glow-sub {
+  position: absolute;
+  bottom: 25%;
+  left: 5%;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.04), transparent);
+}
+
+.scn-dark-band {
+  position: absolute;
+  bottom: var(--bottom);
+  left: var(--left);
+  width: var(--w);
+  height: 2px;
+  background: rgba(168, 85, 247, var(--alpha));
+  filter: blur(3px);
+}
+
+.scn-burnt-ember {
+  position: absolute;
+  bottom: var(--bottom);
+  left: var(--left);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: var(--color);
+  box-shadow: 0 0 var(--glow) var(--color);
+  animation: emberRise var(--dur) ease-in var(--del) infinite;
+}
+
+.scn-burnt-lightning {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0);
+  animation: lightningFlash 6s ease-in-out infinite;
+}
+
+.scn-burnt-lava {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.scn-burnt-lava-left {
+  bottom: 0%;
+  left: 5%;
+  width: 140px;
+  height: 40px;
+  background: radial-gradient(ellipse, rgba(234, 88, 12, 0.3), transparent);
+  animation: lavaGlow 2.5s ease-in-out infinite;
+}
+
+.scn-burnt-lava-right {
+  bottom: 2%;
+  right: 8%;
+  width: 110px;
+  height: 35px;
+  background: radial-gradient(ellipse, rgba(220, 38, 38, 0.25), transparent);
+  animation: lavaGlow 3s ease-in-out 1s infinite;
+}
+
+.scn-burnt-lava-mid {
+  bottom: 5%;
+  left: 40%;
+  width: 90px;
+  height: 30px;
+  background: radial-gradient(ellipse, rgba(251, 146, 60, 0.2), transparent);
+  animation: lavaGlow 3.5s ease-in-out 0.5s infinite;
+}
+
+.scn-burnt-haze {
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  width: 100%;
+  height: 30%;
+  background: linear-gradient(180deg, rgba(69, 10, 10, 0.15), transparent);
+  animation: float 5s ease-in-out infinite;
+}
+
+.scn-burnt-throb {
+  position: absolute;
+  top: 0%;
+  left: 20%;
+  width: 60%;
+  height: 40%;
+  background: radial-gradient(ellipse, rgba(220, 38, 38, 0.08), transparent);
+  animation: lavaGlow 4s ease-in-out 0.3s infinite;
+}

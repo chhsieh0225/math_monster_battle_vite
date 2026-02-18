@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import type { StarterLite } from '../../types/game';
 import { useI18n } from '../../i18n';
+import './EvolveScreen.css';
 
 type EvolveScreenProps = {
   starter: StarterLite | null;
@@ -11,6 +12,22 @@ type EvolveScreenProps = {
 
 type OrbitCssVars = CSSProperties & {
   '--orbit': string;
+  '--spin-dur': string;
+  '--spin-del': string;
+};
+
+type OrbitDotCssVars = CSSProperties & {
+  '--dot-size': string;
+  '--dot-color': string;
+  '--dot-glow': string;
+};
+
+type SparkCssVars = CSSProperties & {
+  '--left': string;
+  '--top': string;
+  '--size': string;
+  '--dur': string;
+  '--del': string;
 };
 
 export default function EvolveScreen({ starter, stageIdx, onContinue }: EvolveScreenProps) {
@@ -20,44 +37,64 @@ export default function EvolveScreen({ starter, stageIdx, onContinue }: EvolveSc
 
   if (!starter || !st) {
     return (
-      <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg,#0f172a,#1e1b4b,#312e81)", color: "white", padding: 24, textAlign: "center", gap: 16 }}>
-        <div style={{ fontSize: 20, fontWeight: 800 }}>{t("evolve.fallbackTitle", "Evolution data is temporarily unavailable")}</div>
-        <div style={{ fontSize: 13, opacity: 0.65 }}>{t("evolve.fallbackDesc", "Safety fallback is active. You can continue the game.")}</div>
-        <button className="touch-btn" onClick={onContinue} aria-label={t("a11y.common.continueBattle", "Continue battle")} style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)", border: "none", color: "white", fontSize: 16, fontWeight: 700, padding: "14px 40px", borderRadius: 50, boxShadow: "0 4px 24px rgba(99,102,241,0.5)" }}>{t("evolve.continue", "Continue Battle!")}</button>
+      <div className="evolve-screen-fallback">
+        <div className="evolve-fallback-title">{t("evolve.fallbackTitle", "Evolution data is temporarily unavailable")}</div>
+        <div className="evolve-fallback-desc">{t("evolve.fallbackDesc", "Safety fallback is active. You can continue the game.")}</div>
+        <button className="touch-btn evolve-continue-btn" onClick={onContinue} aria-label={t("a11y.common.continueBattle", "Continue battle")}>
+          {t("evolve.continue", "Continue Battle!")}
+        </button>
       </div>
     );
   }
 
   return (
-    <div style={{height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"linear-gradient(270deg,#0f0520,#1e1b4b,#312e81,#1e1b4b,#0f0520)",backgroundSize:"400% 400%",animation:"bgShimmer 6s ease infinite",color:"white",padding:24,textAlign:"center",position:"relative",overflow:"hidden"}}>
-      <div style={{position:"absolute",inset:0,background:"white",animation:"evolveFlash 1.8s ease forwards",zIndex:100,pointerEvents:"none"}}/>
-      {[0,0.3,0.6].map((dl,i)=><div key={"br"+i} style={{position:"absolute",left:"50%",top:"42%",width:60,height:60,marginLeft:-30,marginTop:-30,borderRadius:"50%",border:"3px solid",borderColor:["rgba(99,102,241,0.6)","rgba(168,85,247,0.5)","rgba(251,191,36,0.4)"][i],animation:`colorBurst 1.8s ease ${dl}s forwards`,pointerEvents:"none"}}/>)}
+    <div className="evolve-screen">
+      <div className="evolve-flash" />
+      {[0, 0.3, 0.6].map((_, i) => (
+        <div key={`br${i}`} className={`evolve-burst evolve-burst-${i}`} />
+      ))}
       {Array.from({ length: 12 }, (_, i) => {
         const orbitStyle: OrbitCssVars = {
-          position: "absolute",
-          left: "50%",
-          top: "42%",
-          width: 0,
-          height: 0,
-          animation: `evolveSpin ${2.2 + i * 0.25}s linear ${i * 0.12}s infinite`,
-          zIndex: 50,
-          "--orbit": `${45 + i * 7}px`,
+          '--orbit': `${45 + i * 7}px`,
+          '--spin-dur': `${2.2 + i * 0.25}s`,
+          '--spin-del': `${i * 0.12}s`,
+        };
+        const color = ECOLORS[i % ECOLORS.length];
+        const dotStyle: OrbitDotCssVars = {
+          '--dot-size': `${4 + (i % 3) * 2}px`,
+          '--dot-color': color,
+          '--dot-glow': `${6 + i * 2}px`,
         };
 
         return (
-          <div key={`op${i}`} style={orbitStyle}>
-            <div style={{ width: 4 + i % 3 * 2, height: 4 + i % 3 * 2, borderRadius: "50%", background: ECOLORS[i % 10], boxShadow: `0 0 ${6 + i * 2}px ${ECOLORS[i % 10]}`, opacity: 0.85 }} />
+          <div key={`op${i}`} className="evolve-orbit" style={orbitStyle}>
+            <div className="evolve-orbit-dot" style={dotStyle} />
           </div>
         );
       })}
-      {Array.from({length:8},(_,i)=><div key={"ss"+i} style={{position:"absolute",left:`${12+Math.sin(i*1.3)*32+32}%`,top:`${8+Math.cos(i*1.7)*32+32}%`,fontSize:12+i%3*8,animation:`sparkle ${1.5+i*0.2}s ease ${0.3+i*0.25}s infinite`,zIndex:50,pointerEvents:"none"}}>{i%2===0?"✨":"⭐"}</div>)}
-      <div style={{position:"relative",zIndex:60}}>
-        <div style={{fontSize:20,fontWeight:700,opacity:0.8,marginBottom:16,animation:"fadeSlide 0.5s ease 0.8s both",textShadow:"0 0 20px rgba(168,85,247,0.5)"}}>{t("evolve.title", "Congrats! Your partner evolved!")}</div>
-        <div style={{fontSize:56,marginBottom:8,animation:"popIn 0.6s ease 1s both",filter:"drop-shadow(0 0 12px rgba(251,191,36,0.5))"}}>{st.emoji}</div>
-        <div style={{animation:"growIn 1.2s ease 0.4s both",marginBottom:16}}><div style={{animation:"evolveGlow 2s ease 1.5s infinite"}}><MonsterSprite svgStr={st.svgFn(starter.c1,starter.c2)} size={180}/></div></div>
-        <div style={{fontSize:32,fontWeight:900,animation:"fadeSlide 0.5s ease 1.3s both",marginBottom:6,textShadow:"0 0 20px rgba(168,85,247,0.5)",letterSpacing:2}}>{st.name}</div>
-        <div style={{fontSize:14,opacity:0.6,marginBottom:32,animation:"fadeSlide 0.3s ease 1.6s both"}}>{t("evolve.buff", "Attack up! HP recovered!")}</div>
-        <button className="touch-btn" onClick={onContinue} aria-label={t("a11y.common.continueBattle", "Continue battle")} style={{background:"linear-gradient(135deg,#6366f1,#a855f7)",border:"none",color:"white",fontSize:16,fontWeight:700,padding:"14px 40px",borderRadius:50,boxShadow:"0 4px 24px rgba(99,102,241,0.5)",animation:"fadeSlide 0.3s ease 1.9s both",position:"relative",zIndex:70}}>{t("evolve.continue", "Continue Battle!")}</button>
+      {Array.from({ length: 8 }, (_, i) => {
+        const sparkStyle: SparkCssVars = {
+          '--left': `${12 + Math.sin(i * 1.3) * 32 + 32}%`,
+          '--top': `${8 + Math.cos(i * 1.7) * 32 + 32}%`,
+          '--size': `${12 + (i % 3) * 8}px`,
+          '--dur': `${1.5 + i * 0.2}s`,
+          '--del': `${0.3 + i * 0.25}s`,
+        };
+        return (
+          <div key={`ss${i}`} className="evolve-spark" style={sparkStyle}>
+            {i % 2 === 0 ? "✨" : "⭐"}
+          </div>
+        );
+      })}
+      <div className="evolve-front">
+        <div className="evolve-title">{t("evolve.title", "Congrats! Your partner evolved!")}</div>
+        <div className="evolve-emoji">{st.emoji}</div>
+        <div className="evolve-sprite-wrap"><div className="evolve-sprite-glow"><MonsterSprite svgStr={st.svgFn(starter.c1,starter.c2)} size={180}/></div></div>
+        <div className="evolve-name">{st.name}</div>
+        <div className="evolve-buff">{t("evolve.buff", "Attack up! HP recovered!")}</div>
+        <button className="touch-btn evolve-continue-btn evolve-continue-btn-animated" onClick={onContinue} aria-label={t("a11y.common.continueBattle", "Continue battle")}>
+          {t("evolve.continue", "Continue Battle!")}
+        </button>
       </div>
     </div>
   );

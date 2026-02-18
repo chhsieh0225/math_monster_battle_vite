@@ -1,5 +1,6 @@
 import { memo, type CSSProperties } from 'react';
 import { BG_IMGS } from './sprites.js';
+import './scenes.css';
 
 type CssVarStyle = CSSProperties & Record<`--${string}`, string | number>;
 
@@ -60,6 +61,63 @@ const DARK_R = Array.from({ length: 8 }, (_, i)=>({
   op:0.1+(i%4)*0.05,dur:2+i*0.4,del:i*0.3
 }));
 
+const FIRE_EMBER_R = Array.from({ length: 8 }, (_, i) => ({
+  bottom: 2 + i * 3,
+  left: 6 + i * 11,
+  size: 3 + (i % 3) * 2,
+  color: ['#f97316', '#ef4444', '#fbbf24', '#dc2626', '#fb923c', '#f59e0b', '#ea580c', '#fcd34d'][i],
+  dur: 2.5 + i * 0.6,
+  del: i * 0.35,
+}));
+
+const ROCK_DUST_R = Array.from({ length: 8 }, (_, i) => ({
+  top: 10 + ((i * 11) % 60),
+  left: (i * 13) % 85,
+  size: 3 + (i % 3),
+  color: ['#d4a574', '#c2956a', '#deb887', '#cdaa7d', '#c4a882', '#b8860b', '#d2b48c', '#deb887'][i],
+  op: 0.3 + (i % 3) * 0.1,
+  dur: 5 + i * 0.8,
+  del: i * 0.5,
+}));
+
+const ROCK_PEBBLE_R = Array.from({ length: 4 }, (_, i) => ({
+  top: 5 + i * 8,
+  left: 15 + i * 20,
+  size: 4 + (i % 2) * 2,
+  color: ['#8b7355', '#a0522d', '#6b4226', '#8b6914'][i],
+  dur: 3 + i * 0.7,
+  del: i * 0.4,
+}));
+
+const HEAVEN_GLINT_R = Array.from({ length: 10 }, (_, i) => ({
+  top: 8 + ((i * 9) % 60),
+  left: 5 + ((i * 11) % 88),
+  size: 2 + (i % 3),
+  color: ['#ffffff', '#e0e7ff', '#bfdbfe', '#fef9c3', '#e2e8f0', '#ffffff', '#ddd6fe', '#bfdbfe', '#f8fafc', '#e2e8f0'][i],
+  dur: 2.2 + i * 0.35,
+  del: i * 0.22,
+}));
+
+const DARK_BAND_R = [0, 1, 2].map((i) => ({
+  bottom: 10 + i * 8,
+  left: 15 + i * 30,
+  width: 30 + i * 10,
+  alpha: 0.04 + i * 0.02,
+}));
+
+const BURNT_EMBER_R = Array.from({ length: 10 }, (_, i) => {
+  const color = ['#f97316', '#ef4444', '#fbbf24', '#dc2626', '#fb923c', '#f59e0b', '#ea580c', '#fcd34d', '#b91c1c', '#f97316'][i];
+  return {
+    bottom: 1 + i * 3,
+    left: 4 + i * 9,
+    size: 3 + (i % 3) * 2,
+    color,
+    glow: 4 + (i % 3) * 3,
+    dur: 2 + i * 0.5,
+    del: i * 0.3,
+  };
+});
+
 export const SCENES = {
   /* ═══ Grass — wind-blown leaf particles ═══ */
   grass:{
@@ -69,17 +127,27 @@ export const SCENES = {
     platform1:"rgba(34,197,94,0.25)",platform2:"rgba(34,197,94,0.2)",
     Deco:memo(()=><>
       {/* Drifting leaf particles with glow */}
-      {LEAF_R.map((r,i)=><div key={`lf${i}`} style={withVars({
-        position:"absolute",bottom:`${r.bottom}%`,left:`${r.left}%`,
-        width:r.w,height:r.h,background:r.color,borderRadius:"50% 0 50% 0",
-        boxShadow:`0 0 ${r.w*2}px ${r.color}`,
-        opacity:0,
-        "--ldx":`${r.ldx}px`,"--ldy":`${r.ldy}px`,
-        animation:`leafDrift ${r.dur}s ease-in-out ${r.del}s infinite`
-      })}/>)}
+      {LEAF_R.map((r, i) => (
+        <div
+          key={`lf${i}`}
+          className="scn-leaf"
+          style={withVars({
+            '--bottom': `${r.bottom}%`,
+            '--left': `${r.left}%`,
+            '--w': `${r.w}px`,
+            '--h': `${r.h}px`,
+            '--color': r.color,
+            '--glow': `${r.w * 2}px`,
+            '--ldx': `${r.ldx}px`,
+            '--ldy': `${r.ldy}px`,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
       {/* Soft wind streaks */}
-      <div style={{position:"absolute",top:"30%",left:0,width:"100%",height:1.5,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent)",animation:"windSweep 6s ease-in-out infinite"}}/>
-      <div style={{position:"absolute",top:"55%",left:0,width:"100%",height:1,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent)",animation:"windSweep 8s ease-in-out 2s infinite"}}/>
+      <div className="scn-grass-wind scn-grass-wind-top" />
+      <div className="scn-grass-wind scn-grass-wind-mid" />
     </>)
   },
 
@@ -91,17 +159,25 @@ export const SCENES = {
     platform1:"rgba(234,88,12,0.3)",platform2:"rgba(234,88,12,0.2)",
     Deco:memo(()=><>
       {/* Rising ember dots */}
-      {Array.from({ length: 8 }, (_, i) => i).map((i)=><div key={`e${i}`} style={{
-        position:"absolute",bottom:`${2+i*3}%`,left:`${6+i*11}%`,
-        width:3+i%3*2,height:3+i%3*2,
-        background:["#f97316","#ef4444","#fbbf24","#dc2626","#fb923c","#f59e0b","#ea580c","#fcd34d"][i],
-        borderRadius:"50%",animation:`emberRise ${2.5+i*0.6}s ease-in ${i*0.35}s infinite`
-      }}/>)}
+      {FIRE_EMBER_R.map((r, i) => (
+        <div
+          key={`e${i}`}
+          className="scn-fire-ember"
+          style={withVars({
+            '--bottom': `${r.bottom}%`,
+            '--left': `${r.left}%`,
+            '--size': `${r.size}px`,
+            '--color': r.color,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
       {/* Lava glow pools */}
-      <div style={{position:"absolute",bottom:"0%",left:"8%",width:120,height:35,background:"radial-gradient(ellipse,rgba(234,88,12,0.25),transparent)",borderRadius:"50%",animation:"lavaGlow 3s ease-in-out infinite"}}/>
-      <div style={{position:"absolute",bottom:"3%",right:"12%",width:90,height:30,background:"radial-gradient(ellipse,rgba(220,38,38,0.2),transparent)",borderRadius:"50%",animation:"lavaGlow 3.5s ease-in-out 0.8s infinite"}}/>
+      <div className="scn-fire-lava scn-fire-lava-left" />
+      <div className="scn-fire-lava scn-fire-lava-right" />
       {/* Heat haze overlay */}
-      <div style={{position:"absolute",top:"0%",left:"0%",width:"100%",height:"25%",background:"linear-gradient(180deg,rgba(251,146,60,0.06),transparent)",animation:"float 5s ease-in-out infinite"}}/>
+      <div className="scn-fire-haze" />
     </>)
   },
 
@@ -113,18 +189,30 @@ export const SCENES = {
     platform1:"rgba(99,102,241,0.15)",platform2:"rgba(99,102,241,0.1)",
     Deco:memo(()=><>
       {/* Firefly particles */}
-      {FIREFLY_R.map((r,i)=><div key={`ff${i}`} style={withVars({
-        position:"absolute",top:`${r.top}%`,left:`${r.left}%`,
-        width:r.w,height:r.w,background:r.color,borderRadius:"50%",
-        boxShadow:`0 0 ${r.w*3}px ${r.w}px ${r.color}`,
-        "--fx":`${r.fx}px`,"--fy":`${r.fy}px`,"--ff-op":`${r.op}`,
-        animation:`fireflyGlow ${r.dur}s ease ${r.del}s infinite`
-      })}/>)}
+      {FIREFLY_R.map((r, i) => (
+        <div
+          key={`ff${i}`}
+          className="scn-ghost-firefly"
+          style={withVars({
+            '--top': `${r.top}%`,
+            '--left': `${r.left}%`,
+            '--size': `${r.w}px`,
+            '--color': r.color,
+            '--glow': `${r.w * 3}px`,
+            '--glow-spread': `${r.w}px`,
+            '--fx': `${r.fx}px`,
+            '--fy': `${r.fy}px`,
+            '--ff-op': `${r.op}`,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
       {/* Ambient mist patches */}
-      <div style={{position:"absolute",bottom:"18%",left:"5%",width:100,height:35,background:"rgba(139,92,246,0.06)",borderRadius:"50%",filter:"blur(10px)"}}/>
-      <div style={{position:"absolute",top:"22%",left:"55%",width:70,height:50,background:"rgba(139,92,246,0.04)",borderRadius:"50%",filter:"blur(14px)"}}/>
+      <div className="scn-ghost-mist scn-ghost-mist-left" />
+      <div className="scn-ghost-mist scn-ghost-mist-top" />
       {/* Faint moonlight glow */}
-      <div style={{position:"absolute",top:"3%",right:"22%",width:40,height:40,background:"radial-gradient(circle,rgba(250,250,210,0.10),transparent)",borderRadius:"50%"}}/>
+      <div className="scn-ghost-moon" />
     </>)
   },
 
@@ -136,38 +224,50 @@ export const SCENES = {
     platform1:"rgba(100,116,139,0.3)",platform2:"rgba(100,116,139,0.2)",
     Deco:memo(()=><>
       {/* Drifting smoke wisps */}
-      {SMOKE_R.map((r,i)=><div key={`sm${i}`} style={withVars({
-        position:"absolute",bottom:`${r.bottom}%`,left:`${r.left}%`,
-        width:r.w,height:r.h,
-        background:"radial-gradient(ellipse,rgba(203,213,225,0.85),rgba(148,163,184,0.45),transparent)",
-        borderRadius:"50%",filter:`blur(${5+i}px)`,
-        "--sm-dx":`${r.dx}px`,"--sm-dy":`${r.dy}px`,
-        "--sm-s":`${r.sc}`,"--sm-op":`${r.op}`,
-        animation:`smokeDrift ${r.dur}s ease-in-out ${r.del}s infinite`
-      })}/>)}
+      {SMOKE_R.map((r, i) => (
+        <div
+          key={`sm${i}`}
+          className="scn-steel-smoke"
+          style={withVars({
+            '--bottom': `${r.bottom}%`,
+            '--left': `${r.left}%`,
+            '--w': `${r.w}px`,
+            '--h': `${r.h}px`,
+            '--blur': `${5 + i}px`,
+            '--sm-dx': `${r.dx}px`,
+            '--sm-dy': `${r.dy}px`,
+            '--sm-s': `${r.sc}`,
+            '--sm-op': `${r.op}`,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
       {/* Overhead industrial light cones */}
-      <div style={withVars({position:"absolute",top:"0%",left:"18%",width:90,height:"50%",
-        background:"linear-gradient(180deg,rgba(251,191,36,0.4),rgba(251,191,36,0.12) 60%,transparent)",
-        clipPath:"polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)",
-        "--lp-lo":"0.6","--lp-hi":"1",
-        animation:"lightPulse 4s ease-in-out infinite"})}/>
-      <div style={withVars({position:"absolute",top:"0%",right:"22%",width:80,height:"45%",
-        background:"linear-gradient(180deg,rgba(248,250,252,0.35),rgba(203,213,225,0.1) 60%,transparent)",
-        clipPath:"polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)",
-        "--lp-lo":"0.5","--lp-hi":"1",
-        animation:"lightPulse 5s ease-in-out 1.5s infinite"})}/>
+      <div className="scn-steel-cone scn-steel-cone-left" />
+      <div className="scn-steel-cone scn-steel-cone-right" />
       {/* Light source dots at ceiling */}
-      <div style={{position:"absolute",top:"1%",left:"22%",width:14,height:6,background:"rgba(251,191,36,0.6)",borderRadius:"50%",boxShadow:"0 0 20px 6px rgba(251,191,36,0.35)"}}/>
-      <div style={{position:"absolute",top:"1%",right:"26%",width:12,height:5,background:"rgba(248,250,252,0.5)",borderRadius:"50%",boxShadow:"0 0 18px 5px rgba(248,250,252,0.3)"}}/>
+      <div className="scn-steel-lightdot scn-steel-lightdot-left" />
+      <div className="scn-steel-lightdot scn-steel-lightdot-right" />
       {/* Sparks */}
-      {SPARK_R.map((r,i)=><div key={`sp${i}`} style={{
-        position:"absolute",top:`${r.top}%`,left:`${r.left}%`,
-        width:r.w+1,height:r.w+1,background:r.color,borderRadius:"50%",
-        boxShadow:`0 0 ${r.w*3}px ${r.w}px ${r.color}`,
-        animation:`steelSpark ${r.dur}s ease ${r.del}s infinite`
-      }}/>)}
+      {SPARK_R.map((r, i) => (
+        <div
+          key={`sp${i}`}
+          className="scn-steel-spark"
+          style={withVars({
+            '--top': `${r.top}%`,
+            '--left': `${r.left}%`,
+            '--size': `${r.w + 1}px`,
+            '--color': r.color,
+            '--glow': `${r.w * 3}px`,
+            '--glow-spread': `${r.w}px`,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
       {/* Structural beam (subtle) */}
-      <div style={{position:"absolute",bottom:"5%",left:"2%",width:"96%",height:6,background:"linear-gradient(90deg,#6b7280,#9ca3af,#6b7280)",opacity:0.1,borderRadius:2}}/>
+      <div className="scn-steel-beam" />
     </>)
   },
 
@@ -179,27 +279,41 @@ export const SCENES = {
     platform1:"rgba(139,90,43,0.3)",platform2:"rgba(139,90,43,0.22)",
     Deco:memo(()=><>
       {/* Dust particles drifting */}
-      {Array.from({length:8},(_,i)=>i).map(i=><div key={`dust${i}`} style={{
-        position:"absolute",
-        top:`${10+((i*11)%60)}%`,left:`${((i*13)%85)}%`,
-        width:3+(i%3),height:3+(i%3),
-        background:["#d4a574","#c2956a","#deb887","#cdaa7d","#c4a882","#b8860b","#d2b48c","#deb887"][i],
-        borderRadius:"50%",opacity:0.3+(i%3)*0.1,
-        animation:`smokeDrift ${5+i*0.8}s ease-in-out ${i*0.5}s infinite`
-      }}/>)}
+      {ROCK_DUST_R.map((r, i) => (
+        <div
+          key={`dust${i}`}
+          className="scn-rock-dust"
+          style={withVars({
+            '--top': `${r.top}%`,
+            '--left': `${r.left}%`,
+            '--size': `${r.size}px`,
+            '--color': r.color,
+            '--op': `${r.op}`,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
       {/* Falling pebbles */}
-      {Array.from({length:4},(_,i)=>i).map(i=><div key={`peb${i}`} style={{
-        position:"absolute",top:`${5+i*8}%`,left:`${15+i*20}%`,
-        width:4+(i%2)*2,height:4+(i%2)*2,
-        background:["#8B7355","#A0522D","#6B4226","#8B6914"][i],
-        borderRadius:"30%",
-        animation:`emberRise ${3+i*0.7}s ease-in ${i*0.4}s infinite reverse`
-      }}/>)}
+      {ROCK_PEBBLE_R.map((r, i) => (
+        <div
+          key={`peb${i}`}
+          className="scn-rock-pebble"
+          style={withVars({
+            '--top': `${r.top}%`,
+            '--left': `${r.left}%`,
+            '--size': `${r.size}px`,
+            '--color': r.color,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
       {/* Canyon haze */}
-      <div style={{position:"absolute",bottom:"0%",left:"5%",width:130,height:40,background:"radial-gradient(ellipse,rgba(210,180,140,0.2),transparent)",borderRadius:"50%"}}/>
-      <div style={{position:"absolute",bottom:"5%",right:"10%",width:100,height:35,background:"radial-gradient(ellipse,rgba(184,134,11,0.15),transparent)",borderRadius:"50%"}}/>
+      <div className="scn-rock-haze scn-rock-haze-left" />
+      <div className="scn-rock-haze scn-rock-haze-right" />
       {/* Heat shimmer */}
-      <div style={{position:"absolute",top:"0%",left:"0%",width:"100%",height:"20%",background:"linear-gradient(180deg,rgba(210,180,140,0.08),transparent)",animation:"float 6s ease-in-out infinite"}}/>
+      <div className="scn-rock-shimmer" />
     </>)
   },
 
@@ -210,20 +324,23 @@ export const SCENES = {
     ground:"linear-gradient(180deg,transparent,rgba(255,255,255,0.24) 40%,rgba(148,163,184,0.18))",
     platform1:"rgba(226,232,240,0.38)",platform2:"rgba(191,219,254,0.24)",
     Deco:memo(()=><>
-      {Array.from({length:10},(_,i)=>i).map(i=><div key={`hv${i}`} style={{
-        position:"absolute",
-        top:`${8 + ((i * 9) % 60)}%`,
-        left:`${5 + ((i * 11) % 88)}%`,
-        width:2 + (i % 3),
-        height:2 + (i % 3),
-        borderRadius:"50%",
-        background:["#ffffff","#e0e7ff","#bfdbfe","#fef9c3","#e2e8f0","#ffffff","#ddd6fe","#bfdbfe","#f8fafc","#e2e8f0"][i],
-        boxShadow:"0 0 10px rgba(255,255,255,0.65)",
-        animation:`sparkle ${2.2 + i * 0.35}s ease ${i * 0.22}s infinite`
-      }}/>)}
-      <div style={{position:"absolute",top:"8%",left:"0",width:"100%",height:56,background:"linear-gradient(90deg,transparent,rgba(191,219,254,0.24),transparent)",filter:"blur(6px)",animation:"windSweep 7s ease-in-out infinite"}}/>
-      <div style={{position:"absolute",bottom:"10%",left:"12%",width:140,height:44,background:"radial-gradient(ellipse,rgba(255,255,255,0.42),transparent)",borderRadius:"50%"}}/>
-      <div style={{position:"absolute",bottom:"7%",right:"10%",width:128,height:40,background:"radial-gradient(ellipse,rgba(224,231,255,0.32),transparent)",borderRadius:"50%"}}/>
+      {HEAVEN_GLINT_R.map((r, i) => (
+        <div
+          key={`hv${i}`}
+          className="scn-heaven-glint"
+          style={withVars({
+            '--top': `${r.top}%`,
+            '--left': `${r.left}%`,
+            '--size': `${r.size}px`,
+            '--color': r.color,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
+      <div className="scn-heaven-aurora" />
+      <div className="scn-heaven-haze-left" />
+      <div className="scn-heaven-haze-right" />
     </>)
   },
   light:{
@@ -232,20 +349,23 @@ export const SCENES = {
     ground:"linear-gradient(180deg,transparent,rgba(255,255,255,0.24) 40%,rgba(148,163,184,0.18))",
     platform1:"rgba(226,232,240,0.38)",platform2:"rgba(191,219,254,0.24)",
     Deco:memo(()=><>
-      {Array.from({length:10},(_,i)=>i).map(i=><div key={`lt${i}`} style={{
-        position:"absolute",
-        top:`${8 + ((i * 9) % 60)}%`,
-        left:`${5 + ((i * 11) % 88)}%`,
-        width:2 + (i % 3),
-        height:2 + (i % 3),
-        borderRadius:"50%",
-        background:["#ffffff","#e0e7ff","#bfdbfe","#fef9c3","#e2e8f0","#ffffff","#ddd6fe","#bfdbfe","#f8fafc","#e2e8f0"][i],
-        boxShadow:"0 0 10px rgba(255,255,255,0.65)",
-        animation:`sparkle ${2.2 + i * 0.35}s ease ${i * 0.22}s infinite`
-      }}/>)}
-      <div style={{position:"absolute",top:"8%",left:"0",width:"100%",height:56,background:"linear-gradient(90deg,transparent,rgba(191,219,254,0.24),transparent)",filter:"blur(6px)",animation:"windSweep 7s ease-in-out infinite"}}/>
-      <div style={{position:"absolute",bottom:"10%",left:"12%",width:140,height:44,background:"radial-gradient(ellipse,rgba(255,255,255,0.42),transparent)",borderRadius:"50%"}}/>
-      <div style={{position:"absolute",bottom:"7%",right:"10%",width:128,height:40,background:"radial-gradient(ellipse,rgba(224,231,255,0.32),transparent)",borderRadius:"50%"}}/>
+      {HEAVEN_GLINT_R.map((r, i) => (
+        <div
+          key={`lt${i}`}
+          className="scn-heaven-glint"
+          style={withVars({
+            '--top': `${r.top}%`,
+            '--left': `${r.left}%`,
+            '--size': `${r.size}px`,
+            '--color': r.color,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
+      <div className="scn-heaven-aurora" />
+      <div className="scn-heaven-haze-left" />
+      <div className="scn-heaven-haze-right" />
     </>)
   },
 
@@ -256,14 +376,35 @@ export const SCENES = {
     ground:"linear-gradient(180deg,transparent,rgba(88,28,135,0.06) 40%,rgba(30,10,60,0.2))",
     platform1:"rgba(88,28,135,0.2)",platform2:"rgba(88,28,135,0.15)",
     Deco:memo(()=><>
-      {DARK_R.map((r,i)=><div key={`d${i}`} style={{
-        position:"absolute",top:`${r.t}%`,left:`${r.l}%`,
-        width:r.w,height:r.h,background:"white",borderRadius:"50%",
-        opacity:r.op,animation:`sparkle ${r.dur}s ease ${r.del}s infinite`
-      }}/>)}
-      <div style={{position:"absolute",top:"10%",left:"50%",width:100,height:100,background:"radial-gradient(circle,rgba(168,85,247,0.06),transparent)",borderRadius:"50%"}}/>
-      <div style={{position:"absolute",bottom:"25%",left:"5%",width:60,height:60,background:"radial-gradient(circle,rgba(139,92,246,0.04),transparent)",borderRadius:"50%"}}/>
-      {[0,1,2].map(i=><div key={`p${i}`} style={{position:"absolute",bottom:`${10+i*8}%`,left:`${15+i*30}%`,width:30+i*10,height:2,background:`rgba(168,85,247,${0.04+i*0.02})`,filter:"blur(3px)"}}/>)}
+      {DARK_R.map((r, i) => (
+        <div
+          key={`d${i}`}
+          className="scn-dark-spark"
+          style={withVars({
+            '--top': `${r.t}%`,
+            '--left': `${r.l}%`,
+            '--w': `${r.w}px`,
+            '--h': `${r.h}px`,
+            '--op': `${r.op}`,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
+      <div className="scn-dark-glow-main" />
+      <div className="scn-dark-glow-sub" />
+      {DARK_BAND_R.map((r, i) => (
+        <div
+          key={`p${i}`}
+          className="scn-dark-band"
+          style={withVars({
+            '--bottom': `${r.bottom}%`,
+            '--left': `${r.left}%`,
+            '--w': `${r.width}px`,
+            '--alpha': `${r.alpha}`,
+          })}
+        />
+      ))}
     </>)
   },
 
@@ -275,24 +416,31 @@ export const SCENES = {
     platform1:"rgba(220,38,38,0.25)",platform2:"rgba(154,52,18,0.2)",
     Deco:memo(()=><>
       {/* Rising embers from lava cracks */}
-      {Array.from({length:10},(_,i)=>i).map(i=><div key={`be${i}`} style={{
-        position:"absolute",bottom:`${1+i*3}%`,left:`${4+i*9}%`,
-        width:3+i%3*2,height:3+i%3*2,
-        background:["#f97316","#ef4444","#fbbf24","#dc2626","#fb923c","#f59e0b","#ea580c","#fcd34d","#b91c1c","#f97316"][i],
-        borderRadius:"50%",
-        boxShadow:`0 0 ${4+i%3*3}px ${["#f97316","#ef4444","#fbbf24","#dc2626","#fb923c","#f59e0b","#ea580c","#fcd34d","#b91c1c","#f97316"][i]}`,
-        animation:`emberRise ${2+i*0.5}s ease-in ${i*0.3}s infinite`
-      }}/>)}
+      {BURNT_EMBER_R.map((r, i) => (
+        <div
+          key={`be${i}`}
+          className="scn-burnt-ember"
+          style={withVars({
+            '--bottom': `${r.bottom}%`,
+            '--left': `${r.left}%`,
+            '--size': `${r.size}px`,
+            '--color': r.color,
+            '--glow': `${r.glow}px`,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
       {/* Lightning flash overlay */}
-      <div style={{position:"absolute",inset:0,background:"rgba(255,255,255,0.0)",animation:"lightningFlash 6s ease-in-out infinite"}}/>
+      <div className="scn-burnt-lightning" />
       {/* Lava glow pools */}
-      <div style={{position:"absolute",bottom:"0%",left:"5%",width:140,height:40,background:"radial-gradient(ellipse,rgba(234,88,12,0.3),transparent)",borderRadius:"50%",animation:"lavaGlow 2.5s ease-in-out infinite"}}/>
-      <div style={{position:"absolute",bottom:"2%",right:"8%",width:110,height:35,background:"radial-gradient(ellipse,rgba(220,38,38,0.25),transparent)",borderRadius:"50%",animation:"lavaGlow 3s ease-in-out 1s infinite"}}/>
-      <div style={{position:"absolute",bottom:"5%",left:"40%",width:90,height:30,background:"radial-gradient(ellipse,rgba(251,146,60,0.2),transparent)",borderRadius:"50%",animation:"lavaGlow 3.5s ease-in-out 0.5s infinite"}}/>
+      <div className="scn-burnt-lava scn-burnt-lava-left" />
+      <div className="scn-burnt-lava scn-burnt-lava-right" />
+      <div className="scn-burnt-lava scn-burnt-lava-mid" />
       {/* Dark ash haze */}
-      <div style={{position:"absolute",top:"0%",left:"0%",width:"100%",height:"30%",background:"linear-gradient(180deg,rgba(69,10,10,0.15),transparent)",animation:"float 5s ease-in-out infinite"}}/>
+      <div className="scn-burnt-haze" />
       {/* Red sky throb */}
-      <div style={{position:"absolute",top:"0%",left:"20%",width:"60%",height:"40%",background:"radial-gradient(ellipse,rgba(220,38,38,0.08),transparent)",animation:"lavaGlow 4s ease-in-out 0.3s infinite"}}/>
+      <div className="scn-burnt-throb" />
     </>)
   }
 };

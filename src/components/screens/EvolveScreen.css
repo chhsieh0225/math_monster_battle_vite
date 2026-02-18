@@ -1,0 +1,167 @@
+.evolve-screen-fallback {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #0f172a, #1e1b4b, #312e81);
+  color: white;
+  padding: 24px;
+  text-align: center;
+  gap: 16px;
+}
+
+.evolve-fallback-title {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.evolve-fallback-desc {
+  font-size: 13px;
+  opacity: 0.65;
+}
+
+.evolve-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(270deg, #0f0520, #1e1b4b, #312e81, #1e1b4b, #0f0520);
+  background-size: 400% 400%;
+  animation: bgShimmer 6s ease infinite;
+  color: white;
+  padding: 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.evolve-flash {
+  position: absolute;
+  inset: 0;
+  background: white;
+  animation: evolveFlash 1.8s ease forwards;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.evolve-burst {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 60px;
+  height: 60px;
+  margin-left: -30px;
+  margin-top: -30px;
+  border-radius: 50%;
+  border: 3px solid;
+  pointer-events: none;
+}
+
+.evolve-burst-0 {
+  border-color: rgba(99, 102, 241, 0.6);
+  animation: colorBurst 1.8s ease 0s forwards;
+}
+
+.evolve-burst-1 {
+  border-color: rgba(168, 85, 247, 0.5);
+  animation: colorBurst 1.8s ease 0.3s forwards;
+}
+
+.evolve-burst-2 {
+  border-color: rgba(251, 191, 36, 0.4);
+  animation: colorBurst 1.8s ease 0.6s forwards;
+}
+
+.evolve-orbit {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 0;
+  height: 0;
+  z-index: 50;
+  animation: evolveSpin var(--spin-dur) linear var(--spin-del) infinite;
+}
+
+.evolve-orbit-dot {
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+  background: var(--dot-color);
+  box-shadow: 0 0 var(--dot-glow) var(--dot-color);
+  opacity: 0.85;
+}
+
+.evolve-spark {
+  position: absolute;
+  left: var(--left);
+  top: var(--top);
+  font-size: var(--size);
+  animation: sparkle var(--dur) ease var(--del) infinite;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.evolve-front {
+  position: relative;
+  z-index: 60;
+}
+
+.evolve-title {
+  font-size: 20px;
+  font-weight: 700;
+  opacity: 0.8;
+  margin-bottom: 16px;
+  animation: fadeSlide 0.5s ease 0.8s both;
+  text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+}
+
+.evolve-emoji {
+  font-size: 56px;
+  margin-bottom: 8px;
+  animation: popIn 0.6s ease 1s both;
+  filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.5));
+}
+
+.evolve-sprite-wrap {
+  animation: growIn 1.2s ease 0.4s both;
+  margin-bottom: 16px;
+}
+
+.evolve-sprite-glow {
+  animation: evolveGlow 2s ease 1.5s infinite;
+}
+
+.evolve-name {
+  font-size: 32px;
+  font-weight: 900;
+  animation: fadeSlide 0.5s ease 1.3s both;
+  margin-bottom: 6px;
+  text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+  letter-spacing: 2px;
+}
+
+.evolve-buff {
+  font-size: 14px;
+  opacity: 0.6;
+  margin-bottom: 32px;
+  animation: fadeSlide 0.3s ease 1.6s both;
+}
+
+.evolve-continue-btn {
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border: none;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 14px 40px;
+  border-radius: 50px;
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.5);
+}
+
+.evolve-continue-btn-animated {
+  animation: fadeSlide 0.3s ease 1.9s both;
+  position: relative;
+  z-index: 70;
+}

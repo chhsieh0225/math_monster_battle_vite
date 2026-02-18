@@ -1,0 +1,171 @@
+.pvp-result-screen {
+  --winner-c1: #6366f1;
+  --winner-c2: #a855f7;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(270deg, #0f0520, #1e1b4b, #312e81, #1e1b4b, #0f0520);
+  background-size: 400% 400%;
+  animation: bgShimmer 6s ease infinite;
+  padding: 24px 20px;
+  text-align: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.pvp-result-flash {
+  position: absolute;
+  inset: 0;
+  background: white;
+  animation: evolveFlash 1.8s ease forwards;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pvp-result-burst {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 60px;
+  height: 60px;
+  margin-left: -30px;
+  margin-top: -30px;
+  border-radius: 50%;
+  border: 3px solid;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.pvp-result-burst-0 {
+  border-color: rgba(99, 102, 241, 0.6);
+  animation: colorBurst 1.8s ease 0s forwards;
+}
+
+.pvp-result-burst-1 {
+  border-color: rgba(168, 85, 247, 0.5);
+  animation: colorBurst 1.8s ease 0.3s forwards;
+}
+
+.pvp-result-burst-2 {
+  border-color: rgba(251, 191, 36, 0.4);
+  animation: colorBurst 1.8s ease 0.6s forwards;
+}
+
+.pvp-result-orbit {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 0;
+  height: 0;
+  z-index: 3;
+  animation: evolveSpin var(--spin-dur) linear var(--spin-del) infinite;
+}
+
+.pvp-result-orbit-dot {
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+  background: var(--dot-color);
+  box-shadow: 0 0 var(--dot-glow) var(--dot-color);
+  opacity: 0.85;
+}
+
+.pvp-result-front {
+  position: relative;
+  z-index: 6;
+}
+
+.pvp-result-title {
+  font-size: 16px;
+  font-weight: 800;
+  opacity: 0.9;
+  margin-bottom: 6px;
+  animation: fadeSlide 0.4s ease both;
+}
+
+.pvp-result-winner-name {
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  color: var(--winner-c1);
+  text-shadow: 0 0 20px var(--winner-c1);
+}
+
+.pvp-result-winner-sprite-wrap {
+  animation: growIn 1.2s ease 0.15s both;
+  margin-bottom: 8px;
+}
+
+.pvp-result-winner-sprite-glow {
+  animation: evolveGlow 2s ease 1s infinite;
+}
+
+.pvp-result-loser-wrap {
+  position: relative;
+  z-index: 6;
+  opacity: 0.62;
+  margin-bottom: 4px;
+}
+
+.pvp-result-loser-label {
+  font-size: 11px;
+  opacity: 0.65;
+  margin-bottom: 2px;
+}
+
+.pvp-result-loser-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pvp-result-loser-name {
+  font-size: 13px;
+}
+
+.pvp-result-line {
+  font-size: 15px;
+  opacity: 0.95;
+  z-index: 6;
+}
+
+.pvp-result-subline {
+  font-size: 11px;
+  opacity: 0.45;
+  z-index: 6;
+}
+
+.pvp-result-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  z-index: 6;
+}
+
+.pvp-result-btn-rematch {
+  background: linear-gradient(135deg, var(--winner-c1), var(--winner-c2));
+  border: none;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.pvp-result-btn-home {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 14px;
+  cursor: pointer;
+}

@@ -1,0 +1,221 @@
+.title-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 40%, #312e81 100%);
+  color: #fff;
+  padding: 24px 20px 16px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.title-star {
+  position: absolute;
+}
+
+.title-star-one {
+  top: 8%;
+  left: 12%;
+  font-size: 40px;
+  opacity: 0.1;
+  animation: sparkle 3s ease infinite;
+}
+
+.title-star-two {
+  top: 18%;
+  right: 18%;
+  font-size: 30px;
+  opacity: 0.06;
+  animation: sparkle 4s ease 1s infinite;
+}
+
+.title-star-three {
+  bottom: 15%;
+  left: 8%;
+  font-size: 24px;
+  opacity: 0.05;
+  animation: sparkle 5s ease 2s infinite;
+}
+
+.title-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.title-sprite-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.title-sprite-row-top {
+  margin-bottom: 6px;
+}
+
+.title-sprite-row-bottom {
+  margin-bottom: 12px;
+}
+
+.title-monster-float {
+  animation: float 3s ease-in-out 0s infinite;
+}
+
+.title-monster-float-0 {
+  animation-duration: 3s;
+  animation-delay: 0s;
+}
+
+.title-monster-float-1 {
+  animation-duration: 3.4s;
+  animation-delay: 0.3s;
+}
+
+.title-monster-float-2 {
+  animation-duration: 3.8s;
+  animation-delay: 0.6s;
+}
+
+.title-monster-float-3 {
+  animation-duration: 4.2s;
+  animation-delay: 0.9s;
+}
+
+.title-monster-float-4 {
+  animation-duration: 4.6s;
+  animation-delay: 1.2s;
+}
+
+.title-monster-float-5 {
+  animation-duration: 5s;
+  animation-delay: 1.5s;
+}
+
+.title-game-name {
+  font-size: 28px;
+  font-weight: 900;
+  margin: 0;
+  letter-spacing: 2px;
+  text-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+}
+
+.title-tagline {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.4;
+  margin-top: 4px;
+}
+
+.title-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.title-action-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.title-action-btn {
+  border: none;
+  color: #fff;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+.title-action-btn-normal,
+.title-action-btn-timed {
+  flex: 1;
+  font-size: 16px;
+  padding: 14px 0;
+}
+
+.title-action-btn-normal {
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+}
+
+.title-action-btn-timed {
+  background: linear-gradient(135deg, #ef4444, #f59e0b);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+}
+
+.title-mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.title-action-btn-coop,
+.title-action-btn-pvp {
+  width: 100%;
+  font-size: 14px;
+  padding: 12px 0;
+}
+
+.title-action-btn-coop {
+  background: linear-gradient(135deg, #0ea5e9, #22d3ee);
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.28);
+}
+
+.title-action-btn-pvp {
+  background: linear-gradient(135deg, #ec4899, #f43f5e);
+  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.25);
+}
+
+.title-timed-hint {
+  font-size: 11px;
+  opacity: 0.3;
+  margin-top: -4px;
+}
+
+.title-feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.title-feature-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.title-footer {
+  opacity: 0.2;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.title-footer-line {
+  margin-top: 2px;
+}
+
+.title-version {
+  margin-top: 2px;
+  font-family: monospace;
+}
+
+.title-screen.is-low-perf .title-star,
+.title-screen.is-low-perf .title-monster-float {
+  animation: none;
+}

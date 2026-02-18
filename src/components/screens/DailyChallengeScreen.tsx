@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import type { CSSProperties } from 'react';
 
 import { STREAK_TOWER_BLUEPRINT } from '../../data/challengeCatalog.ts';
 import { useI18n } from '../../i18n';
@@ -11,16 +10,7 @@ import {
   loadTowerProgress,
   startTowerRun,
 } from '../../utils/challengeProgress.ts';
-
-const PAGE_BG = 'linear-gradient(180deg,#0b1324 0%,#14223d 42%,#1f2a44 100%)';
-
-const cardStyle: CSSProperties = {
-  borderRadius: 16,
-  border: '1px solid rgba(255,255,255,0.12)',
-  background: 'linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-  boxShadow: '0 10px 30px rgba(0,0,0,0.26)',
-  padding: '12px 12px 10px',
-};
+import './DailyChallengeScreen.css';
 
 type DailyChallengeScreenProps = {
   onBack: () => void;
@@ -28,11 +18,11 @@ type DailyChallengeScreenProps = {
   onStartTower: (plan: StreakTowerPlan) => void;
 };
 
-function statusTone(status: string): string {
-  if (status === 'cleared') return '#22c55e';
-  if (status === 'failed') return '#ef4444';
-  if (status === 'in_progress') return '#f59e0b';
-  return '#94a3b8';
+function statusClass(status: string): string {
+  if (status === 'cleared') return 'daily-status is-cleared';
+  if (status === 'failed') return 'daily-status is-failed';
+  if (status === 'in_progress') return 'daily-status is-progress';
+  return 'daily-status';
 }
 
 export default function DailyChallengeScreen({
@@ -91,79 +81,50 @@ export default function DailyChallengeScreen({
     : t('daily.tower.start', 'Start Tower Run');
 
   return (
-    <main
-      style={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        background: PAGE_BG,
-        color: 'white',
-        padding: '14px 12px 12px',
-        overflow: 'auto',
-      }}
-    >
-      <header style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+    <main className="daily-screen">
+      <header className="daily-header">
         <button
-          className="back-touch-btn"
+          className="daily-back-btn"
           onClick={onBack}
           aria-label={t('a11y.common.backToTitle', 'Back to title')}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            border: '1px solid rgba(255,255,255,0.2)',
-            background: 'rgba(255,255,255,0.08)',
-            color: 'white',
-            fontWeight: 800,
-            fontSize: 17,
-            flexShrink: 0,
-          }}
         >
           ←
         </button>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>
+        <div className="daily-header-text">
+          <h1 className="daily-title">
             🗓️ {t('daily.title', 'Daily Challenge')}
           </h1>
-          <div style={{ fontSize: 11, opacity: 0.66 }}>
+          <div className="daily-subtitle">
             {t('daily.subtitle', 'Fixed daily seed + streak tower progression')}
           </div>
         </div>
       </header>
 
-      <section style={{ ...cardStyle, marginBottom: 10 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
-          <div style={{ fontSize: 14, fontWeight: 800 }}>{dailyPlan.label}</div>
-          <div style={{ fontSize: 11, color: statusTone(dailyStatus), fontWeight: 800 }}>{dailyStatusLabel}</div>
+      <section className="daily-card daily-card-gap">
+        <div className="daily-row daily-row-between">
+          <div className="daily-card-title">{dailyPlan.label}</div>
+          <div className={statusClass(dailyStatus)}>{dailyStatusLabel}</div>
         </div>
-        <div style={{ marginTop: 4, fontSize: 11, opacity: 0.8 }}>{dailyPlan.description}</div>
-        <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          <span style={{ fontSize: 10, opacity: 0.85, background: 'rgba(59,130,246,0.22)', borderRadius: 999, padding: '2px 8px' }}>
+        <div className="daily-description">{dailyPlan.description}</div>
+        <div className="daily-chip-row">
+          <span className="daily-chip daily-chip-seed">
             {t('daily.seed', 'Seed')} {dailyPlan.seedKey}
           </span>
-          <span style={{ fontSize: 10, opacity: 0.85, background: 'rgba(245,158,11,0.2)', borderRadius: 999, padding: '2px 8px' }}>
+          <span className="daily-chip daily-chip-reset">
             {t('daily.resetAt', 'Reset at')} {resetAt}
           </span>
-          <span style={{ fontSize: 10, opacity: 0.85, background: 'rgba(34,197,94,0.2)', borderRadius: 999, padding: '2px 8px' }}>
+          <span className="daily-chip daily-chip-streak">
             {t('daily.streak', 'Streak')} {dailyProgress.streakCount}
           </span>
         </div>
 
-        <div style={{ marginTop: 8, display: 'grid', gap: 6 }}>
+        <div className="daily-battle-list">
           {dailyPlan.battles.map((battle) => (
-            <div
-              key={battle.battleSeed}
-              style={{
-                borderRadius: 12,
-                border: '1px solid rgba(255,255,255,0.1)',
-                background: 'rgba(15,23,42,0.5)',
-                padding: '8px 10px',
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 800 }}>
+            <div key={battle.battleSeed} className="daily-battle-item">
+              <div className="daily-battle-title">
                 {t('daily.battle.label', 'Battle {index}', { index: battle.index })} · {battle.label}
               </div>
-              <div style={{ marginTop: 3, fontSize: 10, opacity: 0.76 }}>
+              <div className="daily-battle-meta">
                 ⏱️ {battle.timeLimitSec}s · {t('daily.enemy.count', 'Enemies x{count}', { count: battle.enemyCount })} · {battle.enemyTier}
               </div>
             </div>
@@ -171,57 +132,36 @@ export default function DailyChallengeScreen({
         </div>
 
         <button
-          className="touch-btn"
+          className="touch-btn daily-action-btn daily-action-btn-primary"
           onClick={handleStartDaily}
-          style={{
-            marginTop: 10,
-            width: '100%',
-            borderRadius: 12,
-            border: 'none',
-            background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-            color: 'white',
-            padding: '11px 0',
-            fontSize: 14,
-            fontWeight: 900,
-            boxShadow: '0 8px 20px rgba(99,102,241,0.35)',
-          }}
         >
           ⚔️ {t('daily.start', 'Start Daily Challenge')}
         </button>
       </section>
 
-      <section style={cardStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-          <div style={{ fontSize: 14, fontWeight: 800 }}>
+      <section className="daily-card">
+        <div className="daily-row daily-row-between">
+          <div className="daily-card-title">
             🏯 {t('daily.tower.title', 'Streak Tower')} · {STREAK_TOWER_BLUEPRINT.label}
           </div>
-          <div style={{ fontSize: 11, opacity: 0.72 }}>
+          <div className="daily-floor-label">
             {t('daily.tower.floor', 'F{floor}', { floor: towerProgress.currentFloor })}
           </div>
         </div>
 
-        <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+        <div className="daily-stat-grid">
           <StatCard label={t('daily.tower.best', 'Best')} value={String(towerProgress.bestFloor)} />
           <StatCard label={t('daily.tower.winStreak', 'Win Streak')} value={String(towerProgress.winStreak)} />
           <StatCard label={t('daily.tower.totalClears', 'Clears')} value={String(towerProgress.totalClears)} />
         </div>
 
-        <div style={{ marginTop: 8, display: 'grid', gap: 5 }}>
+        <div className="daily-floor-list">
           {towerPlan.floors.map((floor) => (
-            <div
-              key={floor.floorSeed}
-              style={{
-                borderRadius: 10,
-                border: '1px solid rgba(255,255,255,0.1)',
-                background: 'rgba(15,23,42,0.5)',
-                padding: '7px 9px',
-                fontSize: 11,
-              }}
-            >
+            <div key={floor.floorSeed} className="daily-floor-item">
               <div>
                 <b>F{floor.floor}</b> · {floor.battle.label}
               </div>
-              <div style={{ marginTop: 2, opacity: 0.82 }}>
+              <div className="daily-floor-meta">
                 ⏱️{floor.battle.timeLimitSec}s · 👾x{floor.battle.enemyCount} · 🧠{floor.battle.difficulty.toUpperCase()}
                 {' · '}HP×{floor.levelScale.toFixed(2)}
                 {typeof floor.atkScale === 'number' ? ` · ATK×${floor.atkScale.toFixed(2)}` : ''}
@@ -231,20 +171,8 @@ export default function DailyChallengeScreen({
         </div>
 
         <button
-          className="touch-btn"
+          className="touch-btn daily-action-btn daily-action-btn-secondary"
           onClick={handleEnterTower}
-          style={{
-            marginTop: 10,
-            width: '100%',
-            borderRadius: 12,
-            border: 'none',
-            background: 'linear-gradient(135deg,#0ea5e9,#22d3ee)',
-            color: 'white',
-            padding: '11px 0',
-            fontSize: 14,
-            fontWeight: 900,
-            boxShadow: '0 8px 20px rgba(14,165,233,0.28)',
-          }}
         >
           🧗 {towerActionLabel}
         </button>
@@ -260,16 +188,9 @@ type StatCardProps = {
 
 function StatCard({ label, value }: StatCardProps) {
   return (
-    <div
-      style={{
-        borderRadius: 10,
-        border: '1px solid rgba(255,255,255,0.1)',
-        background: 'rgba(15,23,42,0.55)',
-        padding: '7px 8px',
-      }}
-    >
-      <div style={{ fontSize: 10, opacity: 0.7 }}>{label}</div>
-      <div style={{ marginTop: 2, fontSize: 13, fontWeight: 800 }}>{value}</div>
+    <div className="daily-stat-card">
+      <div className="daily-stat-label">{label}</div>
+      <div className="daily-stat-value">{value}</div>
     </div>
   );
 }

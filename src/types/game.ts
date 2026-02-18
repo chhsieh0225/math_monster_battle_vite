@@ -47,7 +47,9 @@ export type StarterStage = {
   svgFn: (c1: string, c2: string) => string;
 };
 
-export type StarterId = "fire" | "water" | "grass" | "electric" | "lion";
+export type PlayerStarterId = "fire" | "water" | "grass" | "electric" | "lion";
+export type BossStarterId = "boss" | "boss_hydra" | "boss_crazy_dragon" | "boss_sword_god";
+export type StarterId = PlayerStarterId | BossStarterId;
 
 export type StarterMoveLite = {
   icon: string;

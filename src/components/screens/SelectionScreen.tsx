@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters.ts';
+import { PVP_SELECTABLE_ROSTER } from '../../data/pvpRoster.ts';
 import type { SelectionMode, StarterId, StarterSelectable } from '../../types/game';
 import { useI18n } from '../../i18n';
 import { localizeStarterList } from '../../utils/contentLocalization.ts';
@@ -16,7 +17,7 @@ type StarterDesc = {
 type TranslateParams = Record<string, string | number>;
 type TranslateFn = (key: string, fallback?: string, params?: TranslateParams) => string;
 
-function buildStarterDescs(t: TranslateFn): Record<StarterId, StarterDesc> {
+function buildStarterDescs(t: TranslateFn): Record<string, StarterDesc> {
   return {
     fire: {
       desc: t('selection.fire.desc', 'A fiery partner from volcanic lands. Excels at multiplication with high attack growth.'),
@@ -42,6 +43,26 @@ function buildStarterDescs(t: TranslateFn): Record<StarterId, StarterDesc> {
       desc: t('selection.lion.desc', 'A brave partner from golden plains. Excels at unknowns with high-risk high-reward style.'),
       passive: t('selection.lion.passive', '🦁 Courage: lower HP grants higher damage (up to +50%).'),
       specDef: t('selection.lion.specDef', '✨ Roar: at 8-combo, blocks a hit and deals fixed counter damage.'),
+    },
+    boss: {
+      desc: t('selection.boss.desc', 'A final boss from the abyss. Heavy dark-thunder pressure with ruthless finishers.'),
+      passive: t('selection.boss.passive', '💀 Tyrant: controls battle pace with overwhelming pressure.'),
+      specDef: t('selection.boss.specDef', '🛡️ Boss Guard: high combo enables stronger counter tempo.'),
+    },
+    boss_hydra: {
+      desc: t('selection.bossHydra.desc', 'A venom ruler of the toxic mire. Sustained pressure and combo control specialist.'),
+      passive: t('selection.bossHydra.passive', '☠️ Venom Fog: corrosive momentum and relentless follow-up pressure.'),
+      specDef: t('selection.bossHydra.specDef', '🛡️ Multi-Head Counter: combo readiness turns defense into offense.'),
+    },
+    boss_crazy_dragon: {
+      desc: t('selection.bossCrazyDragon.desc', 'A one-winged berserk dragon. Explosive dark-flame burst with high risk/high reward style.'),
+      passive: t('selection.bossCrazyDragon.passive', '🔥 Frenzy: dangerous offense that scales hard during heated exchanges.'),
+      specDef: t('selection.bossCrazyDragon.specDef', '🛡️ Rage Parry: combo threshold unlocks deadly retaliation windows.'),
+    },
+    boss_sword_god: {
+      desc: t('selection.bossSwordGod.desc', 'A celestial sword sovereign. Precision punishment and clean execution specialist.'),
+      passive: t('selection.bossSwordGod.passive', '⚔️ Divine Verdict: punishes mistakes with strict tempo control.'),
+      specDef: t('selection.bossSwordGod.specDef', '🛡️ Sword Intent: combo readiness empowers decisive counters.'),
     },
   };
 }
@@ -75,8 +96,20 @@ function isRecord(value: unknown): value is UnknownRecord {
   return typeof value === 'object' && value !== null;
 }
 
+const STARTER_ID_SET: ReadonlySet<StarterId> = new Set([
+  'fire',
+  'water',
+  'grass',
+  'electric',
+  'lion',
+  'boss',
+  'boss_hydra',
+  'boss_crazy_dragon',
+  'boss_sword_god',
+]);
+
 function isStarterId(value: unknown): value is StarterId {
-  return value === 'fire' || value === 'water' || value === 'grass' || value === 'electric' || value === 'lion';
+  return typeof value === 'string' && STARTER_ID_SET.has(value as StarterId);
 }
 
 function isStarterSelectable(value: unknown): value is StarterSelectable {
@@ -107,8 +140,8 @@ export default function SelectionScreen({ mode = 'single', onSelect, onBack }: S
   const { t, locale } = useI18n();
   const DESCS = buildStarterDescs(t);
   const starters = useMemo(
-    () => normalizeStarterList(localizeStarterList(STARTERS, locale)),
-    [locale],
+    () => normalizeStarterList(localizeStarterList(mode === 'pvp' ? PVP_SELECTABLE_ROSTER : STARTERS, locale)),
+    [locale, mode],
   );
   const isDual = mode === 'coop' || mode === 'pvp' || mode === 'double';
   const [picked, setPicked] = useState<StarterSelectable | null>(null);
@@ -267,6 +300,9 @@ export default function SelectionScreen({ mode = 'single', onSelect, onBack }: S
               : (picked?.selectedStageIdx || 0);
           const selectedStage = starter.stages[selectedStageIdx] || starter.stages[0];
           const info = DESCS[starter.id];
+          const descText = info?.desc || t('selection.generic.desc', 'A versatile combatant with unique battle rhythm.');
+          const passiveText = info?.passive || t('selection.generic.passive', 'Passive effects change battle tempo as the fight unfolds.');
+          const specDefText = info?.specDef || t('selection.generic.specDef', 'Build combo to unlock a strong defensive response.');
           const cardVars = {
             '--sel-c1': starter.c1,
             '--sel-c2': starter.c2,
@@ -318,13 +354,13 @@ export default function SelectionScreen({ mode = 'single', onSelect, onBack }: S
 
               {selected && (
                 <div className="selection-card-expand">
-                  <div className="selection-card-desc">{info.desc}</div>
+                  <div className="selection-card-desc">{descText}</div>
                   <div className="selection-card-passive-list">
                     <div className="selection-card-passive-item">
-                      <span className="selection-card-passive-label">{t('selection.label.passive', 'Passive')}｜</span>{info.passive}
+                      <span className="selection-card-passive-label">{t('selection.label.passive', 'Passive')}｜</span>{passiveText}
                     </div>
                     <div className="selection-card-passive-item">
-                      <span className="selection-card-passive-label">{t('selection.label.combo', 'Combo')}｜</span>{info.specDef}
+                      <span className="selection-card-passive-label">{t('selection.label.combo', 'Combo')}｜</span>{specDefText}
                     </div>
                   </div>
                   <div className="selection-card-move-grid">

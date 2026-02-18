@@ -94,6 +94,40 @@ test('localizeStarterList maps starter and move names to English', () => {
   }
 });
 
+test('localizeStarterList handles boss starters and unknown starter ids safely', () => {
+  const starters = localizeStarterList([
+    {
+      id: "boss_sword_god",
+      name: "叢雲劍神",
+      type: "light",
+      typeName: "神聖",
+      selectedStageIdx: 0,
+      stages: [{ name: "叢雲劍神", emoji: "⚔️", svgFn: () => "" }],
+      moves: [
+        { icon: "✨", name: "天斬一閃", desc: "神聖·加減求未知" },
+        { icon: "⚔️", name: "雲劍連華", desc: "劍意·混合四則" },
+        { icon: "✨", name: "神罰斷空", desc: "神聖·高階未知" },
+        { icon: "💥", name: "叢雲終式", desc: "神劍·終局未知" },
+      ],
+    },
+    {
+      id: "custom_debug_id",
+      name: "測試角色",
+      type: "fire",
+      typeName: "火",
+      selectedStageIdx: 0,
+      stages: [{ name: "測試角色", emoji: "🔥", svgFn: () => "" }],
+      moves: [{ icon: "🔥", name: "測試招式", desc: "測試描述" }],
+    },
+  ], EN);
+
+  assert.equal(starters.length, 2);
+  assert.equal(starters[0].name, "Kusanagi Sword God");
+  assert.equal(starters[0].moves[0].name, "Heaven Slash");
+  assert.equal(starters[1].name, "測試角色");
+  assert.equal(starters[1].moves[0].name, "測試招式");
+});
+
 test('localizeEncyclopediaEnemyEntries maps names and descriptions to English', () => {
   const enemies = localizeEncyclopediaEnemyEntries([{
     key: "fireEvolved",

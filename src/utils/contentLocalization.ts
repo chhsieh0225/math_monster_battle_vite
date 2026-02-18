@@ -189,6 +189,54 @@ const STARTER_TEXT_EN: Dict<StarterText> = {
       { name: "Eclipse Roar", desc: "Darklight · mixed unknowns" },
     ],
   },
+  boss: {
+    name: "Dark Dragon King",
+    typeName: "Dark",
+    stages: ["Dark Dragon King"],
+    skill: "💀 Dark · Thunder Pressure",
+    moves: [
+      { name: "Abyss Claw", desc: "Dark thunder mixed operations" },
+      { name: "Void Storm", desc: "Dark thunder mul/add mix" },
+      { name: "Dread Breath", desc: "Advanced four-op pressure" },
+      { name: "Cataclysm Verdict", desc: "Final dark thunder execution" },
+    ],
+  },
+  boss_hydra: {
+    name: "Abyss Hydra",
+    typeName: "Poison",
+    stages: ["Abyss Hydra"],
+    skill: "☠️ Venom · Control Pressure",
+    moves: [
+      { name: "Venom Fang", desc: "Poison add/sub mix" },
+      { name: "Mire Tide", desc: "Poison mul/div mix" },
+      { name: "Ninefold Coil", desc: "Abyssal four-op chain" },
+      { name: "Marsh Oblivion", desc: "Final venom execution" },
+    ],
+  },
+  boss_crazy_dragon: {
+    name: "One-Winged Frenzy Dragon",
+    typeName: "Dark",
+    stages: ["One-Winged Frenzy Dragon"],
+    skill: "🔥 Darkflame · Burst",
+    moves: [
+      { name: "Frenzy Bite", desc: "Darkflame multiplication" },
+      { name: "Broken Wing Rush", desc: "Frenzy four-op mix" },
+      { name: "Blackflame Skyfall", desc: "Darkflame mul/div pressure" },
+      { name: "Wingfall Judgment", desc: "Final dragon execution" },
+    ],
+  },
+  boss_sword_god: {
+    name: "Kusanagi Sword God",
+    typeName: "Holy",
+    stages: ["Kusanagi Sword God"],
+    skill: "⚔️ Holy Blade · Precision",
+    moves: [
+      { name: "Heaven Slash", desc: "Holy unknown add/sub" },
+      { name: "Cloudblade Combo", desc: "Blade four-op mix" },
+      { name: "Divine Sever", desc: "Advanced unknown control" },
+      { name: "Kusanagi Finale", desc: "Final holy-blade execution" },
+    ],
+  },
 };
 
 const MONSTER_NAME_EN: Dict<string> = {
@@ -340,6 +388,10 @@ const STARTER_NAME_EN_BY_ZH: Dict<string> = {
   小獅獸: "Lioncub",
   獅鬃獸: "Manelion",
   獅焰王: "Solar King",
+  暗黑龍王: "Dark Dragon King",
+  深淵九頭蛇: "Abyss Hydra",
+  單翼狂龍: "One-Winged Frenzy Dragon",
+  叢雲劍神: "Kusanagi Sword God",
 };
 
 const STARTER_NAME_ZH_BY_EN: Dict<string> = Object.fromEntries(
@@ -366,6 +418,22 @@ const STARTER_TEXT_ZH: Dict<StarterText> = {
   lion: {
     name: "小獅獸",
     stages: ["小獅獸", "獅鬃獸", "獅焰王"],
+  },
+  boss: {
+    name: "暗黑龍王",
+    stages: ["暗黑龍王"],
+  },
+  boss_hydra: {
+    name: "深淵九頭蛇",
+    stages: ["深淵九頭蛇"],
+  },
+  boss_crazy_dragon: {
+    name: "單翼狂龍",
+    stages: ["單翼狂龍"],
+  },
+  boss_sword_god: {
+    name: "叢雲劍神",
+    stages: ["叢雲劍神"],
   },
 };
 
@@ -521,7 +589,7 @@ export function localizeStarter<T>(starter: T, locale: LocaleCode): T {
   const stages = Array.isArray(starterData.stages)
     ? starterData.stages.map((stage, idx) => ({
       ...stage,
-      name: starterText.stages?.[idx] || stage.name,
+      name: starterText?.stages?.[idx] || stage.name,
     }))
     : starterData.stages;
   const selectedStageIdx = Number.isFinite(starterData.selectedStageIdx)
@@ -607,6 +675,10 @@ const STARTERS_FALLBACK_ZH: Dict<string> = {
   grass: "小草獸",
   electric: "小雷獸",
   lion: "小獅獸",
+  boss: "暗黑龍王",
+  boss_hydra: "深淵九頭蛇",
+  boss_crazy_dragon: "單翼狂龍",
+  boss_sword_god: "叢雲劍神",
 };
 
 export function localizeEnemy<T>(enemy: T, locale: LocaleCode): T {

@@ -56,6 +56,22 @@ const appendEventTyped = appendEvent as (
 
 const createEventSessionIdTyped = createEventSessionId as () => string;
 const nowMsTyped = nowMs as () => number;
+type CryptoLike = {
+  getRandomValues?: (values: Uint32Array) => Uint32Array;
+};
+
+function getEntropySeed(runCount: number): number {
+  const entropyBase = hashSeed(`${runCount}:${nowMsTyped()}`) || (runCount * 2654435761);
+  const cryptoLike = (globalThis as { crypto?: CryptoLike }).crypto;
+  if (cryptoLike?.getRandomValues) {
+    const buffer = new Uint32Array(1);
+    cryptoLike.getRandomValues(buffer);
+    return ((buffer[0] ^ entropyBase) >>> 0) || DEFAULT_FALLBACK_SEED;
+  }
+  return (entropyBase >>> 0) || DEFAULT_FALLBACK_SEED;
+}
+
+const DEFAULT_FALLBACK_SEED = 0x9e3779b9;
 
 export function useBattleSessionLifecycle({
   reseed,
@@ -68,11 +84,11 @@ export function useBattleSessionLifecycle({
 
   const beginRun = useCallback((seed: BeginRunSeed = null) => {
     runSeedRef.current += 1;
-    // Non-challenge runs should feel fresh across app reloads.
-    // Keep explicit seed behavior unchanged for deterministic modes (daily challenge).
-    const fallbackSeed = hashSeed(`${runSeedRef.current}:${nowMsTyped()}`) || (runSeedRef.current * 2654435761);
-    const seeded = seed == null ? 0 : hashSeed(seed);
-    reseed((seeded || fallbackSeed) >>> 0);
+    // Deterministic modes (daily challenge) keep explicit seed behavior.
+    // Non-seeded runs use high-entropy seed to avoid repeated encounter patterns.
+    const explicitSeed = seed == null ? 0 : hashSeed(seed);
+    const nextSeed = explicitSeed || getEntropySeed(runSeedRef.current);
+    reseed(nextSeed >>> 0);
     sessionClosedRef.current = false;
     sessionStartRef.current = nowMsTyped();
     eventSessionIdRef.current = createEventSessionIdTyped();

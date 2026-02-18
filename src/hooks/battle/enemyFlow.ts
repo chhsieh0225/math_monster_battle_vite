@@ -1,6 +1,6 @@
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
-import { getEff, getDualEff } from '../../data/typeEffectiveness.ts';
+import { getEff } from '../../data/typeEffectiveness.ts';
 import { calcEnemyDamage } from '../../utils/damageCalc.ts';
 import { computeBossPhase } from '../../utils/turnFlow.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
@@ -569,7 +569,8 @@ export function runEnemyTurn({
 
     if (bossEvent === 'release') {
       setBossCharging(false);
-      setBText(tr(t, 'battle.boss.release', '💀 Dark Dragon King unleashes dark breath!'));
+      const bossName = s.enemy?.name || tr(t, 'battle.word.boss', 'Boss');
+      setBText(tr(t, 'battle.boss.release', '💀 {name} unleashes dark breath!', { name: bossName }));
       sfx.play('bossBoom');
       setPhase('enemyAtk');
       effectOrchestratorTyped.runEnemyLunge({
@@ -610,7 +611,8 @@ export function runEnemyTurn({
     if (bossEvent === 'start_charge') {
       setBossCharging(true);
       sfx.play('bossCharge');
-      setBText(tr(t, 'battle.boss.charge', '⚠️ Dark Dragon King is charging! It will unleash a big move next turn!'));
+      const bossName = s.enemy?.name || tr(t, 'battle.word.boss', 'Boss');
+      setBText(tr(t, 'battle.boss.charge', '⚠️ {name} is charging! It will unleash a big move next turn!', { name: bossName }));
       setPhase('text');
       setEAnim('bossShake 0.5s ease infinite');
       safeToIfBattleActive(() => {
@@ -631,7 +633,12 @@ export function runEnemyTurn({
       const sealTurns = TRAIT_BALANCE.boss.sealDurationTurns;
       setSealedTurns(sealTurns);
       const moveName = s.starter.moves?.[sealIdx]?.name || '???';
-      setBText(tr(t, 'battle.boss.sealMove', '💀 Dark Dragon King sealed your "{move}"! ({turns} turns)', { move: moveName, turns: sealTurns }));
+      const bossName = s.enemy?.name || tr(t, 'battle.word.boss', 'Boss');
+      setBText(tr(t, 'battle.boss.sealMove', '💀 {name} sealed your "{move}"! ({turns} turns)', {
+        name: bossName,
+        move: moveName,
+        turns: sealTurns,
+      }));
       setPhase('text');
       safeToIfBattleActive(() => {
         if (!isBattleActive()) return;
@@ -658,8 +665,9 @@ export function runEnemyTurn({
     const newPhase = computeBossPhaseTyped(s.eHp, s.enemy.maxHp || 1);
     if (newPhase !== s.bossPhase) {
       setBossPhase(newPhase);
-      const phaseMsg = newPhase === 2 ? tr(t, 'battle.boss.phase2', '💀 Dark Dragon King entered rage state! ATK increased!')
-        : newPhase === 3 ? tr(t, 'battle.boss.phase3', '💀 Dark Dragon King awakened! Final stand!')
+      const bossName = s.enemy?.name || tr(t, 'battle.word.boss', 'Boss');
+      const phaseMsg = newPhase === 2 ? tr(t, 'battle.boss.phase2', '💀 {name} entered rage state! ATK increased!', { name: bossName })
+        : newPhase === 3 ? tr(t, 'battle.boss.phase3', '💀 {name} awakened! Final stand!', { name: bossName })
           : '';
       if (phaseMsg) {
         setBText(phaseMsg);
@@ -695,6 +703,6 @@ export function runEnemyTurn({
   doEnemyTurnInner();
   } catch (err) {
     console.error('[enemyFlow] runEnemyTurn crashed:', err);
-    try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch (_) { /* last resort */ }
+    try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch { /* last resort */ }
   }
 }

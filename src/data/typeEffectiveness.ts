@@ -1,3 +1,5 @@
+import { BALANCE_CONFIG } from './balanceConfig.ts';
+
 export const TYPE_EFF = {
   fire: { grass: 1.5, fire: 0.6, water: 0.6, electric: 1.0, ghost: 1.5, steel: 0.6, dark: 1.0, light: 1.0, poison: 1.0, rock: 0.6 },
   electric: { grass: 1.0, fire: 1.0, water: 1.5, electric: 0.6, ghost: 0.6, steel: 1.5, dark: 1.0, light: 1.0, poison: 1.0, rock: 0.6 },
@@ -24,7 +26,10 @@ export function getEff(moveType: string | null | undefined, monType: string | nu
 /**
  * Dual-type defense effectiveness: multiply the attacker's effectiveness
  * against both defender types (like Pokemon dual-type).
- * e.g. light vs poison/dark = 1.5 × 1.5 = 2.25 (double super effective)
+ *
+ * Capped at BALANCE_CONFIG.dualTypeEffCap (default 1.8×) to prevent
+ * degenerate 1.5 × 1.5 = 2.25× one-shot scenarios.
+ * Single-type matchups are unaffected (max 1.5×, below cap).
  */
 export function getDualEff(
   moveType: string | null | undefined,
@@ -33,5 +38,6 @@ export function getDualEff(
 ): number {
   const eff1 = getEff(moveType, monType);
   if (!monType2) return eff1;
-  return eff1 * getEff(moveType, monType2);
+  const raw = eff1 * getEff(moveType, monType2);
+  return Math.min(raw, BALANCE_CONFIG.dualTypeEffCap);
 }

@@ -89,11 +89,12 @@ type StepOut = {
 };
 
 function step(state: number): StepOut {
-  let t = (state + DEFAULT_SEED) >>> 0;
+  const nextState = (state + DEFAULT_SEED) >>> 0;
+  let t = nextState;
   t = Math.imul(t ^ (t >>> 15), t | 1);
   t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
   return {
-    state: t >>> 0,
+    state: nextState,
     value: ((t ^ (t >>> 14)) >>> 0) / UINT32_SCALE,
   };
 }

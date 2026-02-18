@@ -4,7 +4,7 @@
  */
 import { POWER_CAPS } from '../data/constants.ts';
 import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
-import { getEff, getDualEff } from '../data/typeEffectiveness.ts';
+import { getDualEff } from '../data/typeEffectiveness.ts';
 import { randomFloat } from './prng.ts';
 
 type MoveLite = {
@@ -19,7 +19,6 @@ type EnemyLite = {
   mType2?: string;
 };
 
-const getEffTyped = getEff as (moveType?: string, monType?: string) => number;
 const getDualEffTyped = getDualEff as (moveType?: string, monType?: string, monType2?: string) => number;
 const DAMAGE_BALANCE = BALANCE_CONFIG.damage;
 

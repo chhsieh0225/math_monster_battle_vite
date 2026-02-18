@@ -1,7 +1,9 @@
-import type { DailyChallengeRunState } from '../useDailyChallengeRun.ts';
+import type { ChallengeRunState } from '../../types/challenges.ts';
 import {
   buildDailyChallengeRoster,
   getDailyChallengeSeed,
+  buildTowerChallengeRoster,
+  getTowerChallengeSeed,
 } from './challengeRuntime.ts';
 import { runStartBattleController } from './startBattleController.ts';
 import {
@@ -57,8 +59,9 @@ type RunBattleStartGameArgs = {
   modeOverride?: RunStartGameOrchestratorArgs['modeOverride'];
   allyOverride?: RunStartGameOrchestratorArgs['allyOverride'];
   setDailyChallengeFeedback: (value: null) => void;
-  queuedChallenge: DailyChallengeRunState | null;
-  activeChallenge: DailyChallengeRunState | null;
+  setTowerChallengeFeedback: (value: null) => void;
+  queuedChallenge: ChallengeRunState | null;
+  activeChallenge: ChallengeRunState | null;
   buildNewRoster: BuildNewRoster;
   startGameOrchestratorArgs: StartGameOrchestratorArgsWithoutOverrides & {
     standardStartDepsArgs: Omit<StandardStartDepsArgs, 'runtime'> & {
@@ -68,7 +71,9 @@ type RunBattleStartGameArgs = {
   activateQueuedChallenge: () => void;
   runStartGameOrchestratorFn?: typeof runStartGameOrchestrator;
   buildDailyChallengeRosterFn?: typeof buildDailyChallengeRoster;
+  buildTowerChallengeRosterFn?: typeof buildTowerChallengeRoster;
   getDailyChallengeSeedFn?: typeof getDailyChallengeSeed;
+  getTowerChallengeSeedFn?: typeof getTowerChallengeSeed;
 };
 
 export function runBattleStartGame({
@@ -76,6 +81,7 @@ export function runBattleStartGame({
   modeOverride = null,
   allyOverride = null,
   setDailyChallengeFeedback,
+  setTowerChallengeFeedback,
   queuedChallenge,
   activeChallenge,
   buildNewRoster,
@@ -83,19 +89,29 @@ export function runBattleStartGame({
   activateQueuedChallenge,
   runStartGameOrchestratorFn = runStartGameOrchestrator,
   buildDailyChallengeRosterFn = buildDailyChallengeRoster,
+  buildTowerChallengeRosterFn = buildTowerChallengeRoster,
   getDailyChallengeSeedFn = getDailyChallengeSeed,
+  getTowerChallengeSeedFn = getTowerChallengeSeed,
 }: RunBattleStartGameArgs): void {
   setDailyChallengeFeedback(null);
+  setTowerChallengeFeedback(null);
 
   const challengeContext = queuedChallenge || activeChallenge;
   const runSeed = challengeContext?.kind === 'daily'
     ? getDailyChallengeSeedFn(challengeContext.plan)
-    : null;
+    : challengeContext?.kind === 'tower'
+      ? getTowerChallengeSeedFn(challengeContext.plan)
+      : null;
 
   const buildRosterForRun: BuildNewRoster = (mode) => {
     const baseRoster = buildNewRoster(mode) as Array<Record<string, unknown>>;
-    if (challengeContext?.kind !== 'daily') return baseRoster;
-    return buildDailyChallengeRosterFn(baseRoster, challengeContext.plan);
+    if (challengeContext?.kind === 'daily') {
+      return buildDailyChallengeRosterFn(baseRoster, challengeContext.plan);
+    }
+    if (challengeContext?.kind === 'tower') {
+      return buildTowerChallengeRosterFn(baseRoster, challengeContext.plan);
+    }
+    return baseRoster;
   };
 
   runStartGameOrchestratorFn({

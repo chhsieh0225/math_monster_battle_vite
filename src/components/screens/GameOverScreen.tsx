@@ -3,7 +3,7 @@ import type { ChangeEvent, KeyboardEvent } from 'react';
 import { calcScore, saveScore } from '../../utils/leaderboard.ts';
 import { readText, writeText } from '../../utils/storage.ts';
 import type { LeaderboardEntry } from '../../types/game';
-import type { DailyChallengeFeedback } from '../../types/challenges';
+import type { DailyChallengeFeedback, TowerChallengeFeedback } from '../../types/challenges';
 import { useI18n } from '../../i18n';
 
 type StarterMoveLite = {
@@ -27,6 +27,7 @@ type GameOverScreenProps = {
   mLvls: number[];
   getPow: (moveIdx: number) => number;
   dailyChallengeFeedback?: DailyChallengeFeedback | null;
+  towerChallengeFeedback?: TowerChallengeFeedback | null;
   onRestart: () => void;
   onLeaderboard: () => void;
   onHome: () => void;
@@ -44,6 +45,7 @@ export default function GameOverScreen({
   mLvls,
   getPow,
   dailyChallengeFeedback = null,
+  towerChallengeFeedback = null,
   onRestart,
   onLeaderboard,
   onHome,
@@ -60,6 +62,9 @@ export default function GameOverScreen({
   const hasDailyFeedback = Boolean(dailyChallengeFeedback);
   const dailySuccess = dailyChallengeFeedback?.outcome === 'cleared';
   const streakDeltaPrefix = (dailyChallengeFeedback?.streakDelta || 0) > 0 ? '+' : '';
+  const hasTowerFeedback = Boolean(towerChallengeFeedback);
+  const towerSuccess = towerChallengeFeedback?.outcome === 'cleared';
+  const towerStreakDeltaPrefix = (towerChallengeFeedback?.winStreakDelta || 0) > 0 ? '+' : '';
 
   const handleSaveScore = () => {
     if (scoreSaved.current) return;
@@ -127,6 +132,64 @@ export default function GameOverScreen({
             <div style={{ marginTop: 6, display: "grid", gap: 3 }}>
               <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.result.rewards", "Rewards")}</div>
               {dailyChallengeFeedback.rewardLabels.map((label, idx) => (
+                <div key={`${label}-${idx}`} style={{ fontSize: 11, fontWeight: 700 }}>
+                  • {label}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {hasTowerFeedback && towerChallengeFeedback && (
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 320,
+            marginBottom: 10,
+            borderRadius: 14,
+            border: towerSuccess ? "1px solid rgba(59,130,246,0.5)" : "1px solid rgba(239,68,68,0.45)",
+            background: towerSuccess ? "linear-gradient(180deg,rgba(37,99,235,0.28),rgba(15,23,42,0.55))" : "linear-gradient(180deg,rgba(239,68,68,0.2),rgba(15,23,42,0.55))",
+            padding: "10px 12px",
+            textAlign: "left",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.25)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <div style={{ fontSize: 12, fontWeight: 900 }}>{t("daily.tower.result.title", "Streak Tower Result")}</div>
+            <div style={{ fontSize: 11, fontWeight: 900, color: towerSuccess ? "#93c5fd" : "#fca5a5" }}>
+              {towerSuccess ? `✅ ${t("daily.tower.result.cleared", "Cleared")}` : `❌ ${t("daily.tower.result.failed", "Failed")}`}
+            </div>
+          </div>
+          <div style={{ marginTop: 6, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            <div style={{ borderRadius: 10, background: "rgba(15,23,42,0.45)", padding: "6px 8px" }}>
+              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.tower.result.floor", "Cleared Floor")}</div>
+              <div style={{ fontSize: 13, fontWeight: 800 }}>{towerChallengeFeedback.floor}</div>
+            </div>
+            <div style={{ borderRadius: 10, background: "rgba(15,23,42,0.45)", padding: "6px 8px" }}>
+              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.tower.result.nextFloor", "Next Floor")}</div>
+              <div style={{ fontSize: 13, fontWeight: 800 }}>{towerChallengeFeedback.nextFloor}</div>
+            </div>
+            <div style={{ borderRadius: 10, background: "rgba(15,23,42,0.45)", padding: "6px 8px" }}>
+              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.tower.result.best", "Best Floor")}</div>
+              <div style={{ fontSize: 13, fontWeight: 800 }}>{towerChallengeFeedback.bestFloorAfter}</div>
+            </div>
+            <div style={{ borderRadius: 10, background: "rgba(15,23,42,0.45)", padding: "6px 8px" }}>
+              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.tower.result.winStreak", "Win Streak")}</div>
+              <div style={{ fontSize: 13, fontWeight: 800 }}>
+                {towerChallengeFeedback.winStreakAfter} ({towerStreakDeltaPrefix}{towerChallengeFeedback.winStreakDelta})
+              </div>
+            </div>
+          </div>
+          {towerChallengeFeedback.checkpointReached && (
+            <div style={{ marginTop: 6, fontSize: 11, color: "#a7f3d0", fontWeight: 700 }}>
+              {t("daily.tower.result.checkpoint", "Checkpoint reached!")}
+            </div>
+          )}
+          {towerChallengeFeedback.rewardLabels.length > 0 && (
+            <div style={{ marginTop: 6, display: "grid", gap: 3 }}>
+              <div style={{ fontSize: 10, opacity: 0.72 }}>{t("daily.result.rewards", "Rewards")}</div>
+              {towerChallengeFeedback.rewardLabels.map((label, idx) => (
                 <div key={`${label}-${idx}`} style={{ fontSize: 11, fontWeight: 700 }}>
                   • {label}
                 </div>

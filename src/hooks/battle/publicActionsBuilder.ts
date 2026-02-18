@@ -1,5 +1,5 @@
 import type { UseBattleActions, BattleMode, ScreenName } from '../../types/battle';
-import type { DailyChallengePlan } from '../../types/challenges';
+import type { DailyChallengePlan, StreakTowerPlan } from '../../types/challenges';
 
 export type BuildUseBattleActionsArgs = {
   dismissAch: () => void;
@@ -7,6 +7,7 @@ export type BuildUseBattleActionsArgs = {
   setBattleMode: (mode: BattleMode) => void;
   setScreen: (screen: ScreenName) => void;
   queueDailyChallenge: (plan: DailyChallengePlan) => void;
+  queueTowerChallenge: (plan: StreakTowerPlan) => void;
   clearChallengeRun: () => void;
   setStarterLocalized: (starter: unknown) => void;
   setPvpStarter2Localized: (starter: unknown) => void;
@@ -33,6 +34,7 @@ export function buildUseBattleActions(args: BuildUseBattleActionsArgs): UseBattl
     setBattleMode: args.setBattleMode,
     setScreen: args.setScreen,
     queueDailyChallenge: args.queueDailyChallenge,
+    queueTowerChallenge: args.queueTowerChallenge,
     clearChallengeRun: args.clearChallengeRun,
     setStarter: args.setStarterLocalized,
     setPvpStarter2: args.setPvpStarter2Localized,

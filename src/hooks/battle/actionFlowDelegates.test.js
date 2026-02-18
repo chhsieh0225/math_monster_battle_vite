@@ -13,6 +13,7 @@ test('runStartGameWithContext injects overrides into adapter args', () => {
   const runner = (args) => { received = args; };
   const base = {
     setDailyChallengeFeedback: () => {},
+    setTowerChallengeFeedback: () => {},
     queuedChallenge: null,
     activeChallenge: null,
     buildNewRoster: () => [],

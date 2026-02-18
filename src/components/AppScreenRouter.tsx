@@ -144,10 +144,8 @@ export default function AppScreenRouter({
             A.queueDailyChallenge(plan);
             A.setScreen('selection');
           }}
-          onStartTower={() => {
-            A.clearChallengeRun();
-            A.setTimedMode(true);
-            A.setBattleMode('single');
+          onStartTower={(plan) => {
+            A.queueTowerChallenge(plan);
             A.setScreen('selection');
           }}
         />,
@@ -271,6 +269,7 @@ export default function AppScreenRouter({
           mLvls={S.mLvls}
           getPow={V.getPow}
           dailyChallengeFeedback={S.dailyChallengeFeedback}
+          towerChallengeFeedback={S.towerChallengeFeedback}
           onRestart={() => S.starter && A.startGame()}
           onLeaderboard={() => A.setScreen('leaderboard')}
           onHome={() => A.setScreen('title')}

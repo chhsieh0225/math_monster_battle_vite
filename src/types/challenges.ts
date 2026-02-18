@@ -106,6 +106,16 @@ export type StreakTowerPlan = {
   floors: StreakTowerFloorPlan[];
 };
 
+export type ChallengeRunState =
+  | {
+    kind: 'daily';
+    plan: DailyChallengePlan;
+  }
+  | {
+    kind: 'tower';
+    plan: StreakTowerPlan;
+  };
+
 export type DailyRunStatus = 'idle' | 'in_progress' | 'cleared' | 'failed';
 
 export type DailyRunRecord = {
@@ -141,6 +151,25 @@ export type DailyChallengeFeedback = {
   rewardLabels: string[];
   streakRewardUnlocked: boolean;
   preservedClear: boolean;
+};
+
+export type TowerChallengeFeedback = {
+  seasonId: string;
+  runId: string;
+  floor: number;
+  outcome: 'cleared' | 'failed';
+  nextFloor: number;
+  winStreakBefore: number;
+  winStreakAfter: number;
+  winStreakDelta: number;
+  bestFloorBefore: number;
+  bestFloorAfter: number;
+  bestFloorDelta: number;
+  totalClearsBefore: number;
+  totalClearsAfter: number;
+  totalClearsDelta: number;
+  rewardLabels: string[];
+  checkpointReached: boolean;
 };
 
 export type TowerProgress = {

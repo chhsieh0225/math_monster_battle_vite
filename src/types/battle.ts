@@ -1,5 +1,10 @@
 import type { AchievementId, EncyclopediaData, StarterId } from './game';
-import type { DailyChallengeFeedback, DailyChallengePlan } from './challenges';
+import type {
+  DailyChallengeFeedback,
+  DailyChallengePlan,
+  StreakTowerPlan,
+  TowerChallengeFeedback,
+} from './challenges';
 
 export type BattleMode = "single" | "coop" | "pvp" | "double";
 export type ScreenName =
@@ -213,6 +218,7 @@ export type UseBattleState = {
   gamePaused: boolean;
   questionTimerSec: number;
   dailyChallengeFeedback: DailyChallengeFeedback | null;
+  towerChallengeFeedback: TowerChallengeFeedback | null;
   expNext: number;
   chargeReady: boolean;
   achUnlocked: AchievementId[];
@@ -226,6 +232,7 @@ export type UseBattleActions = {
   setBattleMode: (mode: BattleMode) => void;
   setScreen: (screen: ScreenName) => void;
   queueDailyChallenge: (plan: DailyChallengePlan) => void;
+  queueTowerChallenge: (plan: StreakTowerPlan) => void;
   clearChallengeRun: () => void;
   setStarter: (starter: unknown) => void;
   setPvpStarter2: (starter: unknown) => void;

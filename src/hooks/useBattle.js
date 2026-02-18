@@ -96,6 +96,7 @@ import {
 } from './battle/achievementFlow';
 import {
   resolveDailyBattleRule,
+  resolveTowerBattleRule,
 } from './battle/challengeRuntime.ts';
 import { DIFF_MODS, pickPartnerStarter } from './battle/partnerStarter.ts';
 import { resolveBattleQuestionConfig } from './battle/questionConfig.ts';
@@ -151,11 +152,15 @@ export function useBattle() {
     queuedChallenge,
     activeChallenge,
     dailyChallengeFeedback,
+    towerChallengeFeedback,
     setDailyChallengeFeedback,
+    setTowerChallengeFeedback,
     clearChallengeRun,
-    queueChallengePlan,
+    queueDailyChallengePlan,
+    queueTowerChallengePlan,
     activateQueuedChallenge,
     dailyPlan,
+    towerPlan,
     settleRunAsFailed,
     settleRunAsCleared,
   } = useDailyChallengeRun();
@@ -302,18 +307,29 @@ export function useBattle() {
   );
 
   const queueDailyChallenge = useCallback((plan) => {
-    queueChallengePlan(plan);
+    queueDailyChallengePlan(plan);
     setTimedMode(true);
     setBattleMode('single');
-  }, [queueChallengePlan]);
+  }, [queueDailyChallengePlan]);
+
+  const queueTowerChallenge = useCallback((plan) => {
+    queueTowerChallengePlan(plan);
+    setTimedMode(true);
+    setBattleMode('single');
+  }, [queueTowerChallengePlan]);
 
   const currentDailyBattleRule = useMemo(
     () => resolveDailyBattleRule(dailyPlan, round),
     [dailyPlan, round],
   );
+  const currentTowerBattleRule = useMemo(
+    () => resolveTowerBattleRule(towerPlan, round),
+    [towerPlan, round],
+  );
+  const currentChallengeBattleRule = currentDailyBattleRule || currentTowerBattleRule;
   const { questionTimerSec, questionAllowedOps } = useMemo(
-    () => resolveBattleQuestionConfig(currentDailyBattleRule, TIMER_SEC),
-    [currentDailyBattleRule],
+    () => resolveBattleQuestionConfig(currentChallengeBattleRule, TIMER_SEC),
+    [currentChallengeBattleRule],
   );
 
   const genBattleQuestion = useCallback(
@@ -491,6 +507,7 @@ export function useBattle() {
   const startGame = (starterOverride, modeOverride = null, allyOverride = null) => {
     runStartGameWithContext({
       setDailyChallengeFeedback,
+      setTowerChallengeFeedback,
       queuedChallenge,
       activeChallenge,
       buildNewRoster,
@@ -830,6 +847,7 @@ export function useBattle() {
     gamePaused,
     questionTimerSec,
     dailyChallengeFeedback,
+    towerChallengeFeedback,
     expNext, chargeReady,
     achUnlocked, achPopup, encData,
   });
@@ -841,6 +859,7 @@ export function useBattle() {
     setBattleMode,
     setScreen,
     queueDailyChallenge,
+    queueTowerChallenge,
     clearChallengeRun,
     setStarterLocalized,
     setPvpStarter2Localized,

@@ -1,5 +1,4 @@
 import type { StarterVm } from '../../types/battle';
-import type { StarterLite } from '../../types/game';
 import { STARTERS } from '../../data/starters.ts';
 import { localizeStarter } from '../../utils/contentLocalization';
 
@@ -19,31 +18,38 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function isStarterLite(value: unknown): value is StarterLite {
+function isStarterVm(value: unknown): value is StarterVm {
   if (!isRecord(value)) return false;
   const name = value.name;
+  const type = value.type;
+  const typeIcon = value.typeIcon;
   const c1 = value.c1;
   const c2 = value.c2;
   const stages = value.stages;
+  const moves = value.moves;
   return (
     typeof name === 'string'
+    && typeof type === 'string'
+    && typeof typeIcon === 'string'
     && typeof c1 === 'string'
     && typeof c2 === 'string'
     && Array.isArray(stages)
     && stages.length > 0
+    && Array.isArray(moves)
+    && moves.length > 0
   );
 }
 
-function localizeStarterSafe(starter: StarterLite, locale: string): StarterLite {
+function localizeStarterSafe(starter: StarterVm, locale: string): StarterVm {
   const localized = localizeStarter(starter, locale);
-  return isStarterLite(localized) ? localized : starter;
+  return isStarterVm(localized) ? localized : starter;
 }
 
 export function pickPartnerStarter(
   mainStarter: StarterVm | null,
   pickIndex: PickIndexFn,
   locale: string,
-): StarterLite | null {
+): StarterVm | null {
   if (!mainStarter) return null;
   const preferId = PARTNER_BY_STARTER[mainStarter.id || ''];
   const preferred = STARTERS.find((s) => s.id === preferId);

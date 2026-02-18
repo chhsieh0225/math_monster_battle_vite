@@ -83,6 +83,7 @@ function isStarterId(value: unknown): value is StarterId {
 function isStarterSelectable(value: unknown): value is StarterSelectable {
   if (!isRecord(value)) return false;
   if (!isStarterId(value.id)) return false;
+  if (typeof value.type !== 'string') return false;
   if (typeof value.name !== 'string') return false;
   if (typeof value.c1 !== 'string' || typeof value.c2 !== 'string') return false;
   if (typeof value.typeIcon !== 'string' || typeof value.typeName !== 'string') return false;

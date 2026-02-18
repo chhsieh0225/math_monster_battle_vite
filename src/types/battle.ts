@@ -148,7 +148,7 @@ export type UseBattleState = {
   screen: ScreenName;
   timedMode: boolean;
   battleMode: BattleMode;
-  enemies: unknown[];
+  enemies: EnemyVm[];
   starter: StarterVm | null;
   allySub: StarterVm | null;
   pHp: number;
@@ -234,9 +234,13 @@ export type UseBattleActions = {
   queueDailyChallenge: (plan: DailyChallengePlan) => void;
   queueTowerChallenge: (plan: StreakTowerPlan) => void;
   clearChallengeRun: () => void;
-  setStarter: (starter: unknown) => void;
-  setPvpStarter2: (starter: unknown) => void;
-  startGame: (starter?: unknown, mode?: BattleMode, starter2?: unknown) => void;
+  setStarter: (starter: StarterVm | null) => void;
+  setPvpStarter2: (starter: StarterVm | null) => void;
+  startGame: (
+    starter?: StarterVm | null,
+    mode?: BattleMode,
+    starter2?: StarterVm | null,
+  ) => void;
   selectMove: (idx: number) => void;
   onAns: (choice: number) => void;
   advance: () => void;

@@ -2,6 +2,7 @@ import type { useBattleUIState } from '../useBattleUIState.ts';
 import type { usePvpState } from '../usePvpState.ts';
 import type { runStartBattleFlow } from './startBattleFlow.ts';
 import type { runStartGameController } from './startGameController.ts';
+import type { BattleMode } from '../../types/battle';
 
 type RunStartBattleFlowArgs = Parameters<typeof runStartBattleFlow>[0];
 type RunStartGameControllerArgs = Parameters<typeof runStartGameController>[0];
@@ -15,11 +16,11 @@ type PvpState = ReturnType<typeof usePvpState>;
 type BuildStartBattleSharedArgsArgs = Omit<StartBattleSharedArgs, 'battleMode' | 'allySub'> & {
   sr: {
     current: {
-      battleMode?: string;
+      battleMode?: BattleMode;
       allySub?: StartBattleSharedArgs['allySub'];
     };
   };
-  fallbackBattleMode: string;
+  fallbackBattleMode: BattleMode;
 };
 
 type BuildPvpStartDepsArgs = {

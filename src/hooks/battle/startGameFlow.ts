@@ -1,20 +1,11 @@
+import type { BattleAction } from './battleReducer.ts';
+import type { BattleMode, BattlePhase, EnemyVm, ScreenName, StarterVm } from '../../types/battle';
+
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 
-type StarterLite = {
-  id?: string;
-  name?: string;
-  type?: string;
-  selectedStageIdx?: number;
-} | null;
-
-type BattleDispatch = (action: {
-  type: string;
-  patch?: Record<string, unknown>;
-  enemy?: unknown;
-  enemySub?: unknown;
-  round?: number;
-}) => void;
+type StarterLite = StarterVm | null;
+type BattleDispatch = (action: BattleAction) => void;
 
 type RunPvpStartFlowArgs = {
   leader: StarterLite;
@@ -24,7 +15,7 @@ type RunPvpStartFlowArgs = {
   chance: (probability: number) => boolean;
   getStarterMaxHp: (starter: StarterLite) => number;
   t?: Translator;
-  setEnemies: (value: unknown[]) => void;
+  setEnemies: (value: EnemyVm[]) => void;
   setTimedMode: (value: boolean) => void;
   setCoopActiveSlot: (value: 'main' | 'sub') => void;
   dispatchBattle: BattleDispatch;
@@ -35,31 +26,31 @@ type RunPvpStartFlowArgs = {
   resetRunRuntimeState: () => void;
   appendSessionEvent: (name: string, payload: Record<string, unknown>) => void;
   initSession: (starter: StarterLite, timedMode?: boolean) => void;
-  createPvpEnemyFromStarter: (starter: StarterLite, t?: Translator) => unknown;
-  setPhase: (value: string) => void;
+  createPvpEnemyFromStarter: (starter: StarterLite, t?: Translator) => EnemyVm | null;
+  setPhase: (value: BattlePhase) => void;
   setBText: (value: string) => void;
-  setScreen: (value: string) => void;
+  setScreen: (value: ScreenName) => void;
   playBattleIntro: () => void;
 };
 
 type RunStandardStartFlowArgs = {
-  mode: string;
+  mode: BattleMode;
   leader: StarterLite;
   partner: StarterLite;
   leaderMaxHp: number;
   leaderStageIdx: number;
   currentTimedMode: boolean;
-  buildNewRoster: (mode: string) => unknown[];
+  buildNewRoster: (mode: BattleMode) => EnemyVm[];
   getStarterMaxHp: (starter: StarterLite) => number;
-  setEnemies: (value: unknown[]) => void;
+  setEnemies: (value: EnemyVm[]) => void;
   setCoopActiveSlot: (value: 'main' | 'sub') => void;
   resetPvpRuntime: () => void;
   dispatchBattle: BattleDispatch;
   resetRunRuntimeState: () => void;
   appendSessionEvent: (name: string, payload: Record<string, unknown>) => void;
   initSession: (starter: StarterLite, timedMode?: boolean) => void;
-  setScreen: (value: string) => void;
-  startBattle: (idx: number, roster?: unknown[]) => void;
+  setScreen: (value: ScreenName) => void;
+  startBattle: (idx: number, roster?: EnemyVm[]) => void;
 };
 
 function formatFallback(template: string, params?: TranslatorParams): string {

@@ -1,4 +1,5 @@
 import type { ChallengeRunState } from '../../types/challenges.ts';
+import type { EnemyVm } from '../../types/battle';
 import {
   buildDailyChallengeRoster,
   getDailyChallengeSeed,
@@ -17,7 +18,6 @@ type BuildStartBattleSharedArgsInput = Parameters<typeof buildStartBattleSharedA
 type RunStartGameOrchestratorArgs = Parameters<typeof runStartGameOrchestrator>[0];
 type StandardStartDepsArgs = RunStartGameOrchestratorArgs['standardStartDepsArgs'];
 type BuildNewRoster = StandardStartDepsArgs['runtime']['buildNewRoster'];
-type RosterEntry = Record<string, unknown>;
 
 type RunBattleStartArgs = {
   idx: RunStartBattleControllerArgs['idx'];
@@ -104,12 +104,8 @@ export function runBattleStartGame({
       ? getTowerChallengeSeedFn(challengeContext.plan)
       : null;
 
-  const toRosterEntries = (value: unknown[]): RosterEntry[] => (
-    value.filter((entry): entry is RosterEntry => Boolean(entry) && typeof entry === 'object')
-  );
-
   const buildRosterForRun: BuildNewRoster = (mode) => {
-    const baseRoster = toRosterEntries(buildNewRoster(mode));
+    const baseRoster: EnemyVm[] = buildNewRoster(mode);
     if (challengeContext?.kind === 'daily') {
       return buildDailyChallengeRosterFn(baseRoster, challengeContext.plan);
     }

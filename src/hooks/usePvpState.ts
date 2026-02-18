@@ -1,15 +1,10 @@
 import { useCallback, useState } from 'react';
 import { getLevelMaxHp } from '../utils/playerHp';
+import type { StarterVm } from '../types/battle';
 
 type PvpTurn = 'p1' | 'p2';
 
-type StarterLite = {
-  id?: string;
-  name?: string;
-  type?: string;
-  selectedStageIdx?: number;
-  moves?: unknown[];
-} | null;
+type StarterLite = StarterVm | null;
 
 type UsePvpStateResult = {
   pvpStarter2: StarterLite;

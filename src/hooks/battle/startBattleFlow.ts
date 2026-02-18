@@ -1,37 +1,23 @@
+import type { BattleMode, BattlePhase, EnemyVm, ScreenName, StarterVm } from '../../types/battle';
+
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 
-type StarterLite = {
-  name?: string;
-} | null;
-
-type AllyLite = {
-  name?: string;
-} | null;
-
-type EnemyLite = {
-  name?: string;
-  typeIcon?: string;
-  typeIcon2?: string;
-  typeName?: string;
-  typeName2?: string;
-  lvl?: number;
-  mType?: string;
-  mType2?: string;
-  sceneMType?: string;
-} | null;
+type StarterLite = StarterVm | null;
+type AllyLite = StarterVm | null;
+type EnemyLite = EnemyVm | null;
 
 type RunStartBattleFlowArgs = {
   idx: number;
-  roster?: unknown[] | null;
-  enemies: unknown[];
+  roster?: EnemyVm[] | null;
+  enemies: EnemyVm[];
   locale: string;
-  battleMode: string;
+  battleMode: BattleMode;
   allySub: AllyLite;
   starter: StarterLite;
   t?: Translator;
   sceneNames: Record<string, string>;
-  localizeEnemy: (enemy: unknown, locale: string) => EnemyLite;
+  localizeEnemy: (enemy: EnemyLite, locale: string) => EnemyLite;
   localizeSceneName: (sceneType: string, defaultName: string, locale: string) => string;
   dispatchBattle: (action: {
     type: 'start_battle';
@@ -40,9 +26,9 @@ type RunStartBattleFlowArgs = {
     round: number;
   }) => void;
   updateEnc: (enemy: EnemyLite) => void;
-  setPhase: (phase: string) => void;
+  setPhase: (phase: BattlePhase) => void;
   setBText: (text: string) => void;
-  setScreen: (screen: string) => void;
+  setScreen: (screen: ScreenName) => void;
   finishGame: () => void;
   resetFrozen: () => void;
   playBattleIntro: () => void;

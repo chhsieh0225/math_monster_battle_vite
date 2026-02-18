@@ -1,22 +1,23 @@
 import { runPvpStartFlow, runStandardStartFlow } from './startGameFlow.ts';
+import type { BattleMode, StarterVm } from '../../types/battle';
 
 type RunPvpStartFlowArgs = Parameters<typeof runPvpStartFlow>[0];
 type RunStandardStartFlowArgs = Parameters<typeof runStandardStartFlow>[0];
-type StarterLite = RunPvpStartFlowArgs['leader'];
+type StarterLite = StarterVm | null;
 
 type RunStartGameControllerArgs = {
   starterOverride?: StarterLite;
-  modeOverride?: string | null;
+  modeOverride?: BattleMode | null;
   allyOverride?: StarterLite;
   sr: {
     current: {
-      battleMode?: string;
+      battleMode?: BattleMode;
       starter?: StarterLite;
       pvpStarter2?: StarterLite;
       timedMode?: boolean;
     };
   };
-  battleMode: string;
+  battleMode: BattleMode;
   pvpStarter2: StarterLite;
   locale: string;
   localizeStarter: (starter: StarterLite, locale: string) => StarterLite;

@@ -222,6 +222,9 @@ export default function AppScreenRouter({
             A.startGame(payload.p1, 'pvp', payload.p2);
             return;
           }
+          if (isDualSelectionPayload(payload)) {
+            return;
+          }
           A.setStarter(payload);
           A.startGame(payload, S.battleMode);
         }}

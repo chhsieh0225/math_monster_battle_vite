@@ -79,15 +79,14 @@ export type StarterLite = {
 
 export type StarterSelectable = StarterLite & {
   id: StarterId;
+  type: string;
   typeIcon: string;
   typeName: string;
   moves: StarterMoveDef[];
   selectedStageIdx?: number;
 };
 
-export type StarterConfig = StarterSelectable & {
-  type: string;
-};
+export type StarterConfig = StarterSelectable;
 
 export type SelectionMode = "single" | "coop" | "pvp" | "double";
 

@@ -1,6 +1,7 @@
 import type { BattleMode, BattlePhase, EnemyVm, ScreenName, StarterVm } from '../../types/battle';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
+import { randomInt } from '../../utils/prng.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -37,6 +38,7 @@ type RunStartBattleFlowArgs = {
   finishGame: () => void;
   resetFrozen: () => void;
   playBattleIntro: () => void;
+  pickIndex?: (size: number) => number;
 };
 
 function formatFallback(template: string, params?: TranslatorParams): string {
@@ -74,6 +76,7 @@ export function runStartBattleFlow({
   finishGame,
   resetFrozen,
   playBattleIntro,
+  pickIndex,
 }: RunStartBattleFlowArgs): void {
   const list = roster || enemies;
   const nextEnemy = list[idx];
@@ -94,7 +97,11 @@ export function runStartBattleFlow({
   // Boss first-move intimidation: seal a random move at battle start
   const isBoss = BOSS_IDS.has(enemy.id ?? '');
   const sealPool = BALANCE_CONFIG.traits.boss.sealMovePool;
-  const sealIdx = isBoss ? sealPool[Math.floor(Math.random() * sealPool.length)] : undefined;
+  const sealIdx = isBoss
+    ? sealPool[(pickIndex && sealPool.length > 0)
+      ? pickIndex(sealPool.length)
+      : randomInt(0, Math.max(0, sealPool.length - 1))]
+    : undefined;
   const sealTurns = isBoss ? BALANCE_CONFIG.traits.boss.sealDurationTurns : undefined;
 
   dispatchBattle({ type: 'start_battle', enemy, enemySub, round: idx, sealedMove: sealIdx, sealedTurns: sealTurns });

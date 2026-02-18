@@ -10,6 +10,7 @@ import {
   movePower,
 } from '../../utils/damageCalc.ts';
 import { computeBossPhase, decideBossTurnEvent } from '../../utils/turnFlow.ts';
+import { random as prngRandom } from '../../utils/prng.ts';
 
 type ChanceFn = (probability: number) => boolean;
 type RandomFn = () => number;
@@ -223,7 +224,7 @@ function resolveCritOutcome({
   isRisky = false,
   baseConfig,
   byType,
-  random = Math.random,
+  random = prngRandom,
   chanceFn = null,
   chanceFloor = 0,
   multiplierFloor = 1,
@@ -248,7 +249,7 @@ function resolveCritOutcome({
   const critChance = clamp(Math.max(cappedCritChance, chanceFloor), 0, 1);
   const isCrit = typeof chanceFn === 'function'
     ? chanceFn(critChance)
-    : clamp(random?.() ?? Math.random(), 0, 1) < critChance;
+    : clamp(random?.() ?? prngRandom(), 0, 1) < critChance;
 
   const maxAntiCritDamage = clamp(baseConfig?.maxAntiCritDamage ?? 0.95, 0, 0.95);
   const antiCritDamage = clamp(defenderCritProfile.antiCritDamage ?? 0, 0, maxAntiCritDamage);

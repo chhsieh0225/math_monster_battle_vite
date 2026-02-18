@@ -9,7 +9,7 @@ import { useCallback, useMemo, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { loadSessions, clearSessions, loadPin, savePin } from '../../utils/sessionLogger.ts';
 import { useI18n } from '../../i18n';
-import { localizeStarterDisplayName } from '../../utils/contentLocalization';
+import { localizeStarterDisplayName } from '../../utils/contentLocalization.ts';
 import './DashboardScreen.css';
 import {
   OPS,

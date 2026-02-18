@@ -40,7 +40,7 @@ import {
   localizeEnemyRoster,
   localizeSceneName,
   localizeStarter,
-} from '../utils/contentLocalization';
+} from '../utils/contentLocalization.ts';
 
 import {
   genQ,
@@ -501,6 +501,7 @@ export function useBattle() {
         finishGame: _finishGame,
         resetFrozen: () => { frozenR.current = false; },
         playBattleIntro,
+        pickIndex,
       },
     });
   }, [
@@ -512,6 +513,7 @@ export function useBattle() {
     battleMode,
     starter,
     t,
+    pickIndex,
     dispatchBattle,
     updateEnc,
     setPhase,

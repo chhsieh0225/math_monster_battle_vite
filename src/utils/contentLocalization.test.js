@@ -7,7 +7,7 @@ import {
   localizeEncyclopediaStarterEntries,
   localizeStarterDisplayName,
   localizeStarterList,
-} from './contentLocalization.js';
+} from './contentLocalization.ts';
 
 const EN = "en-US";
 const ZH = "zh-TW";

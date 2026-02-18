@@ -45,7 +45,7 @@ function buildReverbIR(audioCtx: AudioContext, decay: number): AudioBuffer {
     const data = buf.getChannelData(ch);
     for (let i = 0; i < length; i++) {
       // Exponential decay × white noise; slight stereo decorrelation via independent noise
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-3.5 * i / length);
+      data[i] = randomFloat(-1, 1) * Math.exp(-3.5 * i / length);
     }
   }
   return buf;

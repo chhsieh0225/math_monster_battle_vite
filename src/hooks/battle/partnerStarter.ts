@@ -1,6 +1,6 @@
 import type { StarterVm } from '../../types/battle';
 import { STARTERS } from '../../data/starters.ts';
-import { localizeStarter } from '../../utils/contentLocalization';
+import { localizeStarter } from '../../utils/contentLocalization.ts';
 
 const PARTNER_BY_STARTER: Record<string, string> = {
   fire: 'water',

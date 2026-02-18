@@ -10,7 +10,7 @@ import './EncyclopediaScreen.css';
 import {
   localizeEncyclopediaEnemyEntries,
   localizeEncyclopediaStarterEntries,
-} from '../../utils/contentLocalization';
+} from '../../utils/contentLocalization.ts';
 import type {
   EncyclopediaCounts,
   EncyclopediaData,

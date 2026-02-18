@@ -4,7 +4,7 @@ import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters.ts';
 import type { SelectionMode, StarterId, StarterSelectable } from '../../types/game';
 import { useI18n } from '../../i18n';
-import { localizeStarterList } from '../../utils/contentLocalization';
+import { localizeStarterList } from '../../utils/contentLocalization.ts';
 import './SelectionScreen.css';
 
 type StarterDesc = {

@@ -4,7 +4,7 @@ import { STARTERS } from '../../data/starters.ts';
 import { VERSION } from '../../data/constants';
 import type { StarterLite, StarterStage } from '../../types/game';
 import { useI18n } from '../../i18n';
-import { localizeStarterList } from '../../utils/contentLocalization';
+import { localizeStarterList } from '../../utils/contentLocalization.ts';
 import './TitleScreen.css';
 
 type TitleStarter = StarterLite & {

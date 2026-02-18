@@ -1,6 +1,6 @@
 // Vite 會根據 vite.config.js 的 base 設定自動填入正確的前綴
 // 本地開發時 BASE = '/'，GitHub Pages 部署時 BASE = './'
-const BASE = import.meta.env?.BASE_URL || '/';
+const BASE = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL || '/';
 
 // Sprite image paths — loaded as static assets from public/
 export const SPRITE_IMGS = {
@@ -44,7 +44,7 @@ export const SPRITE_IMGS = {
   boss_sword_god: `${BASE}sprites/boss_sword_god.png`,
   golumn: `${BASE}sprites/golumn.png`,
   golumn_mud: `${BASE}sprites/golumn_mud.png`,
-};
+} as const;
 
 export const BG_IMGS = {
   grass: `${BASE}backgrounds/grass.jpg`,
@@ -55,16 +55,24 @@ export const BG_IMGS = {
   rock: `${BASE}backgrounds/rock.jpg`,
   heaven: `${BASE}backgrounds/heaven.jpg`,
   burnt_warplace: `${BASE}backgrounds/burnt_warplace.jpg`,
-};
+} as const;
+
+type SpriteKey = keyof typeof SPRITE_IMGS;
+type SvgFactory = () => string;
 
 // SVG wrapper functions — return inner SVG markup using image paths
 // viewBox is 120×100; standard images (~1.2:1) fill it directly.
-function makeSvgFn(key, rendering = 'auto') {
+function makeSvgFn(key: SpriteKey, rendering = 'auto'): SvgFactory {
   return () => `<image href="${SPRITE_IMGS[key]}" x="0" y="0" width="120" height="100" style="image-rendering:${rendering}"/>`;
 }
 // For wide-aspect sprites (e.g. lion 677×369 = 1.83:1):
 // scale to fill viewBox height, center horizontally, let viewBox clip sides.
-function makeSvgFnFill(key, natW, natH, rendering = 'auto') {
+function makeSvgFnFill(
+  key: SpriteKey,
+  natW: number,
+  natH: number,
+  rendering = 'auto',
+): SvgFactory {
   const h = 100;
   const w = Math.round(natW / natH * h);
   const x = Math.round((120 - w) / 2);
@@ -72,7 +80,12 @@ function makeSvgFnFill(key, natW, natH, rendering = 'auto') {
 }
 // For sprites that must show in full (no clipping):
 // scale to fit entirely within the 120×100 viewBox, centered both axes.
-function makeSvgFnFit(key, natW, natH, rendering = 'auto') {
+function makeSvgFnFit(
+  key: SpriteKey,
+  natW: number,
+  natH: number,
+  rendering = 'auto',
+): SvgFactory {
   const vbW = 120, vbH = 100;
   const scale = Math.min(vbW / natW, vbH / natH);
   const w = Math.round(natW * scale);
@@ -82,7 +95,12 @@ function makeSvgFnFit(key, natW, natH, rendering = 'auto') {
   return () => `<image href="${SPRITE_IMGS[key]}" x="${x}" y="${y}" width="${w}" height="${h}" style="image-rendering:${rendering}"/>`;
 }
 // Like makeSvgFnFit but horizontally flipped (faces left → faces right).
-function makeSvgFnFitFlip(key, natW, natH, rendering = 'auto') {
+function makeSvgFnFitFlip(
+  key: SpriteKey,
+  natW: number,
+  natH: number,
+  rendering = 'auto',
+): SvgFactory {
   const vbW = 120, vbH = 100;
   const scale = Math.min(vbW / natW, vbH / natH);
   const w = Math.round(natW * scale);

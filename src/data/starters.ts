@@ -4,7 +4,7 @@ import {
   playergrass0SVG, playergrass1SVG, playergrass2SVG,
   playerelectric0SVG, playerelectric1SVG, playerelectric2SVG,
   playerlion0SVG, playerlion1SVG, playerlion2SVG,
-} from './sprites.js';
+} from './sprites.ts';
 import type { StarterConfig } from '../types/game';
 import { SKILL_SETS } from './skillSets.ts';
 

@@ -1,11 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useMemo, useRef, useSyncExternalStore } from 'react';
 import type { CSSProperties } from 'react';
 import { useSpriteTargets } from '../../hooks/useSpriteTargets';
-import { SCENES } from '../../data/scenes';
-import { HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from '../../data/constants';
 import { PVP_BALANCE } from '../../data/pvpBalance';
-import { getLevelMaxHp, getStarterLevelMaxHp } from '../../utils/playerHp';
-import { resolveBattleLayout } from '../../utils/battleLayout';
 import { hasSpecialTrait } from '../../utils/traits';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import MonsterSprite from '../ui/MonsterSprite';
@@ -26,15 +22,13 @@ import type {
   UseBattleView,
   UseMobileExperienceApi,
 } from '../../types/battle';
+import { buildBattleCore } from './battle/buildBattleCore.ts';
+import { useAttackImpactPhase } from './battle/useAttackImpactPhase.ts';
 import './BattleScreen.css';
 
 const NOOP_SUBSCRIBE: TimerSubscribe = () => () => {};
 const ZERO_SNAPSHOT = (): number => 0;
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
-
-function hasSceneKey(value: string): value is keyof typeof SCENES {
-  return value in SCENES;
-}
 
 type QuestionTimerHudProps = {
   timerSec: number;
@@ -71,40 +65,6 @@ function QuestionTimerHud({ timerSec, subscribe, getSnapshot }: QuestionTimerHud
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
-type ImpactPhase = 'idle' | 'charge' | 'freeze' | 'shake' | 'settle';
-
-type ImpactProfile = {
-  chargeMs: number;
-  freezeMs: number;
-  shakeMs: number;
-  settleMs: number;
-};
-
-function resolveImpactProfile(idx = 0, lvl = 1): ImpactProfile {
-  const levelBoost = Math.min(36, Math.max(0, (lvl - 1) * 6));
-  if (idx >= 3) {
-    return {
-      chargeMs: 95 + levelBoost,
-      freezeMs: 100,
-      shakeMs: 230,
-      settleMs: 190,
-    };
-  }
-  if (idx === 2) {
-    return {
-      chargeMs: 75 + levelBoost,
-      freezeMs: 86,
-      shakeMs: 175,
-      settleMs: 150,
-    };
-  }
-  return {
-    chargeMs: 44 + Math.floor(levelBoost * 0.4),
-    freezeMs: 68,
-    shakeMs: 130,
-    settleMs: 116,
-  };
-}
 
 type BattleScreenProps = {
   state: UseBattleState;
@@ -128,46 +88,13 @@ export default function BattleScreen({
   const V = view;
 
   const showHeavyFx = !UX.lowPerfMode;
+  const impactPhase = useAttackImpactPhase({
+    atkEffect: S.atkEffect,
+    enabled: showHeavyFx,
+  });
   const battleRootRef = useRef<HTMLDivElement | null>(null);
   const enemySpriteRef = useRef<HTMLDivElement | null>(null);
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
-  const [impactPhase, setImpactPhase] = useState<ImpactPhase>('idle');
-  const impactTimersRef = useRef<number[]>([]);
-  const lastAtkEffectKeyRef = useRef('');
-
-  const clearImpactTimers = useCallback(() => {
-    if (impactTimersRef.current.length === 0) return;
-    impactTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
-    impactTimersRef.current = [];
-  }, []);
-
-  useEffect(() => () => clearImpactTimers(), [clearImpactTimers]);
-
-  useEffect(() => {
-    if (!showHeavyFx || !S.atkEffect) {
-      clearImpactTimers();
-      lastAtkEffectKeyRef.current = '';
-      const toIdle = window.setTimeout(() => setImpactPhase('idle'), 0);
-      impactTimersRef.current = [toIdle];
-      return clearImpactTimers;
-    }
-
-    const atkKey = `${S.atkEffect.type}-${S.atkEffect.idx}-${S.atkEffect.lvl}-${S.atkEffect.targetSide || "enemy"}`;
-    if (lastAtkEffectKeyRef.current === atkKey) return;
-    lastAtkEffectKeyRef.current = atkKey;
-
-    clearImpactTimers();
-    const profile = resolveImpactProfile(S.atkEffect.idx, S.atkEffect.lvl);
-
-    const toCharge = window.setTimeout(() => setImpactPhase('charge'), 0);
-    const toFreeze = window.setTimeout(() => setImpactPhase('freeze'), profile.chargeMs);
-    const toShake = window.setTimeout(() => setImpactPhase('shake'), profile.chargeMs + profile.freezeMs);
-    const toSettle = window.setTimeout(() => setImpactPhase('settle'), profile.chargeMs + profile.freezeMs + profile.shakeMs);
-    const toIdle = window.setTimeout(() => setImpactPhase('idle'), profile.chargeMs + profile.freezeMs + profile.shakeMs + profile.settleMs);
-
-    impactTimersRef.current = [toCharge, toFreeze, toShake, toSettle, toIdle];
-    return clearImpactTimers;
-  }, [S.atkEffect, clearImpactTimers, showHeavyFx]);
   const { measuredEnemyTarget, measuredPlayerTarget } = useSpriteTargets({
     screen: S.screen,
     phase: S.phase,
@@ -216,119 +143,43 @@ export default function BattleScreen({
   } = S;
   const { getPow, dualEff } = V;
 
-  const core = useMemo(() => {
-    const starter = stateStarter;
-    const enemy = stateEnemy;
-    if (!starter || !enemy) return null;
-
-    const st = starter.stages[pStg] || starter.stages[0];
-    if (!st) return null;
-
-    const isCoopBattle = battleMode === "coop" || battleMode === "double";
-    const showEnemySub = isCoopBattle && Boolean(enemySub);
-    const showAllySub = isCoopBattle && Boolean(allySub);
-    const hasDualUnits = showEnemySub || showAllySub;
-    const coopCanSwitch = showAllySub && pHpSub > 0;
-    const coopUsingSub = coopCanSwitch && coopActiveSlot === "sub";
-    const activeStarter = battleMode === "pvp"
-      ? (pvpTurn === "p1" ? starter : pvpStarter2)
-      : (coopUsingSub ? allySub : starter);
-
-    const pvpActiveCharge = battleMode === "pvp"
-      ? (pvpTurn === "p1" ? (pvpChargeP1 || 0) : (pvpChargeP2 || 0))
-      : 0;
-    const pvpActiveCombo = battleMode === "pvp"
-      ? (pvpTurn === "p1" ? (pvpComboP1 || 0) : (pvpComboP2 || 0))
-      : 0;
-    const pvpActiveSpecDefReady = battleMode === "pvp"
-      ? (pvpTurn === "p1" ? !!pvpSpecDefP1 : !!pvpSpecDefP2)
-      : false;
-    const chargeDisplay = battleMode === "pvp" ? pvpActiveCharge : charge;
-    const chargeReadyDisplay = battleMode === "pvp" ? pvpActiveCharge >= 3 : chargeReady;
-
-    const eSvg = enemy.svgFn();
-    const eSubSvg = showEnemySub && enemySub ? enemySub.svgFn() : null;
-    const allyStage = showAllySub && allySub
-      ? (allySub.stages[allySub.selectedStageIdx || 0] || allySub.stages[0])
-      : null;
-    const pSubSvg = allyStage ? allyStage.svgFn() : null;
-    const pSvg = st.svgFn();
-
-    const mainMaxHp = getLevelMaxHp(pLvl, pStg);
-    const subMaxHp = showAllySub && allySub ? getStarterLevelMaxHp(allySub, pLvl, pStg) : getLevelMaxHp(1, 0);
-    const sceneKey = enemy.sceneMType || enemy.mType || 'grass';
-    const scene = hasSceneKey(sceneKey) ? SCENES[sceneKey] : SCENES.grass;
-
-    const layout = resolveBattleLayout({
+  const core = useMemo(() => buildBattleCore({
+    state: {
+      starter: stateStarter,
+      enemy: stateEnemy,
+      pLvl,
+      pStg,
       battleMode,
-      hasDualUnits,
-      compactUI: UX.compactUI,
-      playerStageIdx: pStg,
-      enemyId: enemy.id,
-      enemySceneType: enemy.sceneMType || enemy.mType,
-      enemyIsEvolved: enemy.isEvolved,
-    });
-
-    const pvpEnemyBarActive = battleMode !== "pvp" || pvpTurn === "p2";
-    const mainBarActive = battleMode === "pvp"
-      ? pvpTurn === "p1"
-      : (isCoopBattle ? !coopUsingSub : true);
-    const subBarActive = showAllySub && coopUsingSub;
-    const moveRuntime = (activeStarter?.moves || []).map((m, i) => {
-      const sealed = battleMode === "pvp" ? false : sealedMove === i;
-      const pvpLocked = battleMode === "pvp" ? (m.risky && !chargeReadyDisplay) : false;
-      const locked = battleMode === "pvp" ? pvpLocked : ((m.risky && !chargeReady) || sealed);
-      const lv = mLvls[i];
-      const pw = battleMode === "pvp" ? m.basePower : getPow(i);
-      const atCap = lv >= MAX_MOVE_LVL || m.basePower + lv * m.growth > POWER_CAPS[i];
-      const eff = battleMode === "pvp" ? 1 : dualEff(m);
-      const progressBase = HITS_PER_LVL * mLvls[i];
-      const moveProgressPct = progressBase > 0 ? (mHits[i] % progressBase) / progressBase * 100 : 0;
-      return { m, i, sealed, locked, lv, pw, atCap, eff, moveProgressPct };
-    });
-
-    return {
-      starter,
-      enemy,
-      st,
-      isCoopBattle,
-      showEnemySub,
-      showAllySub,
-      hasDualUnits,
-      coopCanSwitch,
-      coopUsingSub,
-      activeStarter,
-      pvpActiveCharge,
-      pvpActiveCombo,
-      pvpActiveSpecDefReady,
-      chargeDisplay,
-      chargeReadyDisplay,
-      eSvg,
-      eSubSvg,
-      pSubSvg,
-      pSvg,
-      mainMaxHp,
-      subMaxHp,
-      scene,
-      layout,
-      pvpEnemyBarActive,
-      mainBarActive,
-      subBarActive,
-      moveRuntime,
-      pvpEnemyBurn: pvpBurnP2 || 0,
-      pvpEnemyFreeze: !!pvpFreezeP2,
-      pvpEnemyParalyze: !!pvpParalyzeP2,
-      pvpEnemyStatic: pvpStaticP2 || 0,
-      pvpEnemyCombo: pvpComboP2 || 0,
-      pvpEnemySpecDef: !!pvpSpecDefP2,
-      pvpPlayerBurn: pvpBurnP1 || 0,
-      pvpPlayerFreeze: !!pvpFreezeP1,
-      pvpPlayerParalyze: !!pvpParalyzeP1,
-      pvpPlayerStatic: pvpStaticP1 || 0,
-      pvpPlayerCombo: pvpComboP1 || 0,
-      pvpPlayerSpecDef: !!pvpSpecDefP1,
-    };
-  }, [
+      enemySub,
+      allySub,
+      pHpSub,
+      coopActiveSlot,
+      pvpTurn,
+      pvpStarter2,
+      pvpChargeP1,
+      pvpChargeP2,
+      pvpComboP1,
+      pvpComboP2,
+      pvpSpecDefP1,
+      pvpSpecDefP2,
+      pvpBurnP1,
+      pvpBurnP2,
+      pvpFreezeP1,
+      pvpFreezeP2,
+      pvpParalyzeP1,
+      pvpParalyzeP2,
+      pvpStaticP1,
+      pvpStaticP2,
+      charge,
+      chargeReady,
+      sealedMove,
+      mLvls,
+      mHits,
+    },
+    compactUI: UX.compactUI,
+    getPow,
+    dualEff,
+  }), [
     stateStarter,
     stateEnemy,
     pLvl,

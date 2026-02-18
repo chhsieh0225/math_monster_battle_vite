@@ -67,6 +67,7 @@ type BattleRuntimeState = {
   cursed: boolean;
   bossPhase: number;
   bossCharging: boolean;
+  shadowShieldCD: number;
   eHp: number;
   burnStack: number;
   staticStack: number;
@@ -154,6 +155,7 @@ type RunPlayerAnswerArgs = {
   handleVictory: (verb?: string) => void;
   handleFreeze: () => void;
   setCursed: BoolSetter;
+  setShadowShieldCD: NumberSetter;
   _endSession: (completed: boolean, reasonOverride?: string | null) => void;
   setScreen: (screen: string) => void;
   setBText: TextSetter;
@@ -246,6 +248,7 @@ export function runPlayerAnswer({
   handleVictory,
   handleFreeze,
   setCursed,
+  setShadowShieldCD,
   _endSession,
   setScreen,
   setBText,
@@ -442,6 +445,27 @@ export function runPlayerAnswer({
             }, effectTimeline.clearDelay);
             safeToIfBattleActive(() => doEnemyTurn(), effectTimeline.nextDelay);
             return;
+          }
+
+          // Dark Lord shadow shield: every 3rd player attack is absorbed
+          if (s3.shadowShieldCD >= 0) {
+            const cd = s3.shadowShieldCD - 1;
+            if (cd <= 0) {
+              // Shield activates — negate this attack
+              setShadowShieldCD(3);
+              sfx.play('specDef');
+              setEAnim('shieldPulse 0.8s ease');
+              setEffMsg({ text: tr(t, 'battle.effect.shadowShield', '🛡️ Shadow Shield absorbed the attack!'), color: '#7c3aed' });
+              safeToIfBattleActive(() => setEffMsg(null), 1500);
+              addD(tr(t, 'battle.tag.shielded', '🛡️BLOCKED'), 155, 50, '#7c3aed');
+              safeToIfBattleActive(() => {
+                setEAnim('');
+                setAtkEffect(null);
+              }, effectTimeline.clearDelay);
+              safeToIfBattleActive(() => doEnemyTurn(), effectTimeline.nextDelay);
+              return;
+            }
+            setShadowShieldCD(cd);
           }
 
           if (wasCursed) setCursed(false);

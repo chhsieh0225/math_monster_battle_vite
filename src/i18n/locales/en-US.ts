@@ -332,6 +332,8 @@ const enUS = {
   "battle.pvp.turnstart.freeze": "❄️ {name} is frozen and skips the turn!",
   "battle.role.sub": "Sub",
   "battle.effect.phantomDodge": "👻 Phantom Dodge!",
+  "battle.effect.shadowShield": "🛡️ Shadow Shield absorbed the attack!",
+  "battle.tag.shielded": "🛡️BLOCKED",
   "battle.effect.crit": "💥 Critical!",
   "battle.effect.curseWeak": "💀 Curse weakened the attack...",
   "battle.effect.fortressGuard": "🛡️ Fortress reduced damage!",

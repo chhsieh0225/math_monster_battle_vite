@@ -152,7 +152,7 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     typeName: "暗",
     trait: "tyrant",
     traitName: "霸王",
-    traitDesc: "擁有多階段戰鬥形態，能蓄力釋放毀滅大招，還能封印對手技能。",
+    traitDesc: "擁有多階段戰鬥形態，能蓄力釋放毀滅大招，還能封印對手技能。每三次攻擊會展開暗影護盾抵消一次傷害。",
   },
   {
     id: "boss_hydra",

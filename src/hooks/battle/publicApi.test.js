@@ -74,6 +74,7 @@ function createValidPublicApi() {
       bossCharging: false,
       sealedMove: -1,
       sealedTurns: 0,
+      shadowShieldCD: -1,
       diffLevel: 2,
       gamePaused: false,
       questionTimerSec: 8,

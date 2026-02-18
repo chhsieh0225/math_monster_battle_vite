@@ -1,5 +1,5 @@
 import { memo, type CSSProperties } from 'react';
-import { BG_IMGS } from './sprites.js';
+import { BG_IMGS } from './sprites.ts';
 import './scenes.css';
 
 type CssVarStyle = CSSProperties & Record<`--${string}`, string | number>;

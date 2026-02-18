@@ -121,6 +121,7 @@ export function createPlayerAnswerHandlers(deps: PlayerAnswerHandlers): PlayerAn
     handleVictory: deps.handleVictory,
     handleFreeze: deps.handleFreeze,
     setCursed: deps.setCursed,
+    setShadowShieldCD: deps.setShadowShieldCD,
     _endSession: deps._endSession,
     setScreen: deps.setScreen,
     setBText: deps.setBText,

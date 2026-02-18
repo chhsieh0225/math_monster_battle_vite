@@ -137,6 +137,7 @@ export function buildPlayerAnswerHandlerDeps({
     handleVictory: callbacks.handleVictory,
     handleFreeze: callbacks.handleFreeze,
     setCursed: battleFields.setCursed,
+    setShadowShieldCD: battleFields.setShadowShieldCD,
     _endSession: callbacks._endSession,
     setScreen: callbacks.setScreen,
     setBText: ui.setBText,

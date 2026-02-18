@@ -216,6 +216,7 @@ export type UseBattleState = {
   bossCharging: boolean;
   sealedMove: number;
   sealedTurns: number;
+  shadowShieldCD: number;
   diffLevel: number;
   gamePaused: boolean;
   questionTimerSec: number;

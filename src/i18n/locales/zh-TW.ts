@@ -332,6 +332,8 @@ const zhTW = {
   "battle.pvp.turnstart.freeze": "❄️ {name} 被凍結，回合跳過！",
   "battle.role.sub": "副將",
   "battle.effect.phantomDodge": "👻 幻影閃避！",
+  "battle.effect.shadowShield": "🛡️ 暗影護盾吸收了攻擊！",
+  "battle.tag.shielded": "🛡️格擋",
   "battle.effect.crit": "💥 暴擊！",
   "battle.effect.curseWeak": "💀 詛咒弱化了攻擊...",
   "battle.effect.fortressGuard": "🛡️ 鐵壁減傷！",

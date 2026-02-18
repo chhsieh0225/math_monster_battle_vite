@@ -107,6 +107,7 @@ const REQUIRED_STATE_KEYS = [
   'bossCharging',
   'sealedMove',
   'sealedTurns',
+  'shadowShieldCD',
   'diffLevel',
   'gamePaused',
   'questionTimerSec',

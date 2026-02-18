@@ -47,6 +47,8 @@ export type BattleState = {
   bossCharging: boolean;
   sealedMove: number;
   sealedTurns: number;
+  /** Dark Lord shadow-shield cooldown: counts down each player attack, triggers at 0 */
+  shadowShieldCD: number;
 };
 
 export type BattlePatch = Partial<BattleState>;
@@ -135,6 +137,7 @@ const BASE_STATE: BattleState = {
   bossCharging: false,
   sealedMove: -1,
   sealedTurns: 0,
+  shadowShieldCD: -1,
 };
 
 function resolveValue(
@@ -224,6 +227,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         bossCharging: false,
         sealedMove: action.sealedMove ?? -1,
         sealedTurns: action.sealedTurns ?? 0,
+        shadowShieldCD: enemy?.id === 'boss' ? 3 : -1,
       };
     }
 
@@ -246,6 +250,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         bossTurn: 0,
         bossCharging: false,
         sealedMove: -1,
+        shadowShieldCD: promoted?.id === 'boss' ? 3 : -1,
         sealedTurns: 0,
       };
     }

@@ -30,20 +30,6 @@ type StorageLike = {
   removeItem: (key: string) => void;
 };
 
-type IdleDeadlineLike = {
-  didTimeout: boolean;
-  timeRemaining: () => number;
-};
-
-type IdleRequestOptionsLike = {
-  timeout?: number;
-};
-
-type GlobalIdleApi = {
-  requestIdleCallback?: (callback: (deadline: IdleDeadlineLike) => void, options?: IdleRequestOptionsLike) => number;
-  cancelIdleCallback?: (handle: number) => void;
-};
-
 let pendingEvents: EventRecord[] = [];
 let flushTimerId: ReturnType<typeof setTimeout> | null = null;
 let idleCallbackId: number | null = null;
@@ -54,8 +40,23 @@ function createId(ts = Date.now()): string {
   return `${ts.toString(36)}-${randomToken(6)}`;
 }
 
+function hasFunction(target: object, key: string): boolean {
+  return key in target && typeof Reflect.get(target, key) === 'function';
+}
+
+function isStorageLike(value: unknown): value is StorageLike {
+  if (typeof value !== 'object' || value === null) return false;
+  return hasFunction(value, 'getItem')
+    && hasFunction(value, 'setItem')
+    && hasFunction(value, 'removeItem');
+}
+
 function normalizePayload(payload: unknown): EventPayload {
-  if (payload && typeof payload === 'object' && !Array.isArray(payload)) return payload as EventPayload;
+  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+    const normalized: EventPayload = {};
+    for (const [key, value] of Object.entries(payload)) normalized[key] = value;
+    return normalized;
+  }
   if (payload == null) return {};
   return { value: payload };
 }
@@ -66,8 +67,8 @@ export function createEventSessionId(): string {
 
 function getStorageRef(): StorageLike | null {
   try {
-    const candidate = (globalThis as typeof globalThis & { localStorage?: StorageLike }).localStorage;
-    return candidate || null;
+    const candidate = Reflect.get(globalThis, 'localStorage');
+    return isStorageLike(candidate) ? candidate : null;
   } catch {
     return null;
   }
@@ -90,8 +91,9 @@ function cancelScheduledFlush(): void {
     flushTimerId = null;
   }
   if (idleCallbackId != null) {
-    const g = globalThis as typeof globalThis & GlobalIdleApi;
-    if (typeof g.cancelIdleCallback === 'function') g.cancelIdleCallback(idleCallbackId);
+    if (typeof window !== 'undefined' && typeof window.cancelIdleCallback === 'function') {
+      window.cancelIdleCallback(idleCallbackId);
+    }
     idleCallbackId = null;
   }
 }
@@ -127,9 +129,8 @@ function scheduleFlush(): void {
   // In non-browser runtimes (tests), do not create timers.
   if (typeof window === 'undefined') return;
 
-  const g = globalThis as typeof globalThis & GlobalIdleApi;
-  if (typeof g.requestIdleCallback === 'function' && idleCallbackId == null) {
-    idleCallbackId = g.requestIdleCallback(() => {
+  if (typeof window.requestIdleCallback === 'function' && idleCallbackId == null) {
+    idleCallbackId = window.requestIdleCallback(() => {
       idleCallbackId = null;
       flushPendingEvents();
     }, { timeout: FLUSH_DELAY_MS });

@@ -78,7 +78,7 @@ type UseBattleUIStateResult = {
   rmP: (id: number) => void;
 };
 
-const EFX_MAP = EFX as Record<string, string[]>;
+const EFX_MAP: Record<string, string[]> = { ...EFX };
 
 export function useBattleUIState({ rand, randInt }: RngDeps): UseBattleUIStateResult {
   const [phase, setPhase] = useState('menu');

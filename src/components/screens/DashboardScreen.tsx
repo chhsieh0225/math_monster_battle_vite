@@ -5,7 +5,7 @@
  * session history, and weak-area indicators.
  * Protected by a 4-digit PIN.
  */
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { loadSessions, clearSessions, loadPin, savePin } from '../../utils/sessionLogger.ts';
 import { useI18n } from '../../i18n';
@@ -18,10 +18,7 @@ import {
   opName,
 } from '../../utils/dashboardInsights.ts';
 
-type DashboardOp =
-  | '+' | '-' | '×' | '÷'
-  | 'mixed2' | 'mixed3' | 'mixed4'
-  | 'unknown1' | 'unknown2' | 'unknown3' | 'unknown4';
+type DashboardOp = (typeof OPS)[number];
 
 type DashboardTab = 'overview' | 'history' | 'settings';
 
@@ -51,7 +48,7 @@ type GroupMetric = {
   id: string;
   label: string;
   icon: string;
-  ops: DashboardOp[];
+  ops: string[];
   attempted: number;
   correct: number;
   totalMs: number;
@@ -88,7 +85,7 @@ type WeakSuggestion = {
   title: string;
   summary: string;
   action: string;
-  focusOps: DashboardOp[];
+  focusOps: string[];
   score: number;
 };
 
@@ -127,7 +124,7 @@ type PracticeTask = {
   title: string;
   summary: string;
   goal: string;
-  focusOps: DashboardOp[];
+  focusOps: string[];
   level: string;
 };
 
@@ -144,21 +141,12 @@ type DashboardTranslate = (
   params?: Record<string, string | number>,
 ) => string;
 
-const OPS_TYPED = OPS as unknown as DashboardOp[];
+const OPS_TYPED: DashboardOp[] = [...OPS];
 const CORE_OPS: DashboardOp[] = ['+', '-', '×', '÷'];
 const loadSessionsTyped: () => DashboardSession[] = loadSessions;
 const clearSessionsTyped: () => void = clearSessions;
 const loadPinTyped: () => string = loadPin;
 const savePinTyped: (pin: string) => void = savePin;
-const buildDashboardInsightsTyped = buildDashboardInsights as (
-  sessions: DashboardSession[],
-  options?: { t?: DashboardTranslate },
-) => DashboardInsights;
-const opIconTyped = opIcon as (op: DashboardOp) => string;
-const opNameTyped = opName as (
-  op: DashboardOp,
-  options?: { t?: DashboardTranslate },
-) => string;
 
 function toneClass(acc: number): 'dash-tone-good' | 'dash-tone-mid' | 'dash-tone-bad' {
   if (acc >= 70) return 'dash-tone-good';
@@ -267,7 +255,14 @@ type OverviewTabProps = {
 
 function OverviewTab({ sessions }: OverviewTabProps) {
   const { t } = useI18n();
-  const insights = useMemo(() => buildDashboardInsightsTyped(sessions, { t }), [sessions, t]);
+  const translate = useCallback<DashboardTranslate>(
+    (key, fallback, params) => t(key, fallback, params),
+    [t],
+  );
+  const insights = useMemo(
+    () => buildDashboardInsights(sessions, { t: translate }),
+    [sessions, translate],
+  );
   const { overview: stats, weakSuggestions, weeklyReport, practiceTasks } = insights;
   const visibleOps = OPS_TYPED.filter((op) => stats.opData[op]?.attempted > 0 || CORE_OPS.includes(op));
 
@@ -300,8 +295,8 @@ function OverviewTab({ sessions }: OverviewTabProps) {
           const tone = toneClass(d.acc);
           return (
             <div key={op} className={`dash-op-card ${d.weak ? 'is-weak' : ''}`}>
-              <div className="dash-op-icon">{opIconTyped(op)}</div>
-              <div className="dash-op-name">{opNameTyped(op, { t })}</div>
+              <div className="dash-op-icon">{opIcon(op)}</div>
+              <div className="dash-op-name">{opName(op, { t: translate })}</div>
               <div className={`dash-op-acc ${tone}`}>{d.attempted > 0 ? `${d.acc}%` : '—'}</div>
               <div className="dash-op-count">{t('dashboard.attemptedCount', '{count} items', { count: d.attempted })}</div>
               {d.weak && <div className="dash-op-weak">⚠️ {t('dashboard.weakTag', 'Needs Practice')}</div>}
@@ -323,7 +318,7 @@ function OverviewTab({ sessions }: OverviewTabProps) {
           const d = stats.opData[op] || { attempted: 0, correct: 0, totalMs: 0, acc: 0, avgTimeSec: null, avgTime: '—', weak: false };
           return (
             <div key={op} className="dash-time-card">
-              <div className="dash-time-card-icon">{opIconTyped(op)}</div>
+              <div className="dash-time-card-icon">{opIcon(op)}</div>
               <div className="dash-time-card-value">{d.attempted > 0 ? `${d.avgTime}s` : '—'}</div>
             </div>
           );
@@ -407,7 +402,7 @@ function PracticeTaskList({ tasks }: PracticeTaskListProps) {
           <div className="dash-pill-row">
             {(task.focusOps || []).slice(0, 4).map((op) => (
               <span key={`${task.id}-${op}`} className="dash-op-pill">
-                {opIconTyped(op)} {opNameTyped(op, { t })}
+                {opIcon(op)} {opName(op)}
               </span>
             ))}
           </div>
@@ -464,7 +459,7 @@ function HistoryTab({ sessions }: HistoryTabProps) {
                 const od = s.opStats?.[op];
                 if (!od || od.attempted === 0) return null;
                 const oa = Math.round(od.correct / od.attempted * 100);
-                return <span key={op} className={`dash-history-op-pill ${toneClass(oa)}`}>{opIconTyped(op)} {oa}%</span>;
+                return <span key={op} className={`dash-history-op-pill ${toneClass(oa)}`}>{opIcon(op)} {oa}%</span>;
               })}
             </div>
           </div>

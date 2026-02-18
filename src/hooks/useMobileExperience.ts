@@ -3,9 +3,9 @@ import { readText, writeText } from '../utils/storage.ts';
 import type { PerfMode, UseMobileExperienceApi } from '../types/battle';
 
 const PERF_MODE_KEY = "mathMonsterBattle_perfMode";
-const PERF_AUTO = "auto" as const;
-const PERF_ON = "on" as const;
-const PERF_OFF = "off" as const;
+const PERF_AUTO: PerfMode = "auto";
+const PERF_ON: PerfMode = "on";
+const PERF_OFF: PerfMode = "off";
 
 type Viewport = {
   width: number;
@@ -19,14 +19,17 @@ function initialViewport(): Viewport {
 
 function detectLowEndDevice(): boolean {
   if (typeof navigator === "undefined") return false;
-  const nav = navigator as Navigator & { deviceMemory?: number };
-  const cores = Number(nav.hardwareConcurrency || 0);
-  const memory = Number(nav.deviceMemory || 0);
+  const cores = Number(navigator.hardwareConcurrency || 0);
+  const memory = Number(Reflect.get(navigator, 'deviceMemory') || 0);
   return (cores > 0 && cores <= 4) || (memory > 0 && memory <= 4);
 }
 
+function isPerfMode(mode: unknown): mode is PerfMode {
+  return mode === PERF_ON || mode === PERF_OFF || mode === PERF_AUTO;
+}
+
 function normalizePerfMode(mode: unknown): PerfMode {
-  if (mode === PERF_ON || mode === PERF_OFF || mode === PERF_AUTO) return mode;
+  if (isPerfMode(mode)) return mode;
   return PERF_OFF;
 }
 

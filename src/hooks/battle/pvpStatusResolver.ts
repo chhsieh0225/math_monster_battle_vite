@@ -58,7 +58,7 @@ type ResolvePvpTurnStartStatusArgs<TState extends PvpTurnStartState> = {
   t?: Translator;
 };
 
-const PVP = PVP_BALANCE as unknown as PvpBalanceConfig;
+const PVP: PvpBalanceConfig = PVP_BALANCE;
 
 function formatFallback(template: string, params?: TranslatorParams): string {
   if (!params) return template;

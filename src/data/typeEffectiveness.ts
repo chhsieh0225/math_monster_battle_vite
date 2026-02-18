@@ -12,15 +12,22 @@ export const TYPE_EFF = {
 } as const;
 
 type AttackType = keyof typeof TYPE_EFF;
-type DefendType = keyof (typeof TYPE_EFF)[AttackType];
+
+function isAttackType(value: string): value is AttackType {
+  return value in TYPE_EFF;
+}
+
+function hasOwnKey<T extends object>(obj: T, key: string): key is Extract<keyof T, string> {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}
 
 export function getEff(moveType: string | null | undefined, monType: string | null | undefined): number {
   if (!moveType || !monType) return 1.0;
-  const atk = moveType as AttackType;
-  const def = monType as DefendType;
-  const row = TYPE_EFF[atk];
-  if (!row) return 1.0;
-  return row[def] || 1.0;
+  if (!isAttackType(moveType)) return 1.0;
+  const row = TYPE_EFF[moveType];
+  if (!hasOwnKey(row, monType)) return 1.0;
+  const eff = row[monType];
+  return typeof eff === 'number' ? eff : 1.0;
 }
 
 /**

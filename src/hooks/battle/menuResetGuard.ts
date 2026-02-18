@@ -9,7 +9,10 @@ type ResetStateLike = {
 
 function asResetState(state: unknown): ResetStateLike | null {
   if (!state || typeof state !== 'object') return null;
-  return state as ResetStateLike;
+  return {
+    phase: Reflect.get(state, 'phase'),
+    screen: Reflect.get(state, 'screen'),
+  };
 }
 
 export function shouldSkipMenuReset(state: unknown): boolean {

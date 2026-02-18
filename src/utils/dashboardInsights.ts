@@ -253,9 +253,47 @@ function resolveGroupLabel(groupId: string, translate: Translator, fallbackLabel
 }
 
 function createOpAgg(): OpAgg {
-  const agg = {} as OpAgg;
-  for (const op of OPS) agg[op] = { a: 0, c: 0, ms: 0 };
-  return agg;
+  return {
+    '+': { a: 0, c: 0, ms: 0 },
+    '-': { a: 0, c: 0, ms: 0 },
+    '×': { a: 0, c: 0, ms: 0 },
+    '÷': { a: 0, c: 0, ms: 0 },
+    mixed2: { a: 0, c: 0, ms: 0 },
+    mixed3: { a: 0, c: 0, ms: 0 },
+    mixed4: { a: 0, c: 0, ms: 0 },
+    unknown1: { a: 0, c: 0, ms: 0 },
+    unknown2: { a: 0, c: 0, ms: 0 },
+    unknown3: { a: 0, c: 0, ms: 0 },
+    unknown4: { a: 0, c: 0, ms: 0 },
+  };
+}
+
+function createOpDataEntry(): OpDataEntry {
+  return {
+    attempted: 0,
+    correct: 0,
+    totalMs: 0,
+    acc: 0,
+    avgTimeSec: null,
+    avgTime: '—',
+    weak: false,
+  };
+}
+
+function createOpData(): OpData {
+  return {
+    '+': createOpDataEntry(),
+    '-': createOpDataEntry(),
+    '×': createOpDataEntry(),
+    '÷': createOpDataEntry(),
+    mixed2: createOpDataEntry(),
+    mixed3: createOpDataEntry(),
+    mixed4: createOpDataEntry(),
+    unknown1: createOpDataEntry(),
+    unknown2: createOpDataEntry(),
+    unknown3: createOpDataEntry(),
+    unknown4: createOpDataEntry(),
+  };
 }
 
 function getSessionTs(session: SessionData | undefined): number {
@@ -292,7 +330,7 @@ function aggregateOpStats(sessions: SessionData[]): OpAgg {
 }
 
 function deriveOpData(opAgg: OpAgg): OpData {
-  const opData = {} as OpData;
+  const opData = createOpData();
   for (const op of OPS) {
     const d = opAgg[op] || { a: 0, c: 0, ms: 0 };
     const attempted = toNum(d.a);

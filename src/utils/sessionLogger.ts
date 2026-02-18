@@ -108,10 +108,29 @@ function newOpStat(): SessionOpStat {
   return { attempted: 0, correct: 0, totalMs: 0 };
 }
 
+function isSessionOp(op: string): op is SessionOp {
+  return OPS.some((value) => value === op);
+}
+
+function buildOpStats(): Record<SessionOp, SessionOpStat> {
+  return {
+    '+': newOpStat(),
+    '-': newOpStat(),
+    '×': newOpStat(),
+    '÷': newOpStat(),
+    mixed2: newOpStat(),
+    mixed3: newOpStat(),
+    mixed4: newOpStat(),
+    unknown1: newOpStat(),
+    unknown2: newOpStat(),
+    unknown3: newOpStat(),
+    unknown4: newOpStat(),
+  };
+}
+
 /** Create a fresh session log object at game start. */
 export function initSessionLog(starter: StarterForSession, timedMode?: boolean): SessionLog {
-  const opStats = {} as Record<SessionOp, SessionOpStat>;
-  for (const op of OPS) opStats[op] = newOpStat();
+  const opStats = buildOpStats();
   const starterStageIdx = Number.isFinite(starter?.selectedStageIdx)
     ? Number(starter?.selectedStageIdx)
     : null;
@@ -146,7 +165,7 @@ export function logAnswer(
   if (!session || !question) return;
 
   const op = question.op || '?';
-  const opStat = (session.opStats as Record<string, SessionOpStat>)[op];
+  const opStat = isSessionOp(op) ? session.opStats[op] : null;
 
   // Update op stats
   if (opStat) {

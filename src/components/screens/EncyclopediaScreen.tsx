@@ -19,6 +19,7 @@ import type {
 } from '../../types/game';
 
 const PAGE_BG = 'linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)';
+type EncyclopediaCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
 
 const LARGE_MONSTER_IDS: ReadonlySet<string> = new Set([...BOSS_IDS, 'golumn', 'golumn_mud', 'ghost_lantern']);
 function encCardSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 64 : 48; }
@@ -71,6 +72,26 @@ function handleKeyboardActivate(ev: KeyboardEvent<HTMLElement>, action: () => vo
   }
 }
 
+function isEnemyEntry(value: unknown): value is EncyclopediaEnemyEntry {
+  if (typeof value !== 'object' || value === null) return false;
+  return 'key' in value && 'svgFn' in value;
+}
+
+function isStarterEntry(value: unknown): value is EncyclopediaStarterEntry {
+  if (typeof value !== 'object' || value === null) return false;
+  return 'key' in value && 'svgFn' in value;
+}
+
+function normalizeEnemyEntries(value: unknown): EncyclopediaEnemyEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(isEnemyEntry);
+}
+
+function normalizeStarterEntries(value: unknown): EncyclopediaStarterEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(isStarterEntry);
+}
+
 type TabId = 'monsters' | 'starters' | 'drops';
 
 const RARITY_DESC: Record<string, string> = {
@@ -83,11 +104,11 @@ const RARITY_DESC: Record<string, string> = {
 export default function EncyclopediaScreen({ encData = {}, onBack }: EncyclopediaScreenProps) {
   const { t, locale } = useI18n();
   const enemyEntries = useMemo(
-    () => localizeEncyclopediaEnemyEntries(ENC_ENTRIES, locale) as EncyclopediaEnemyEntry[],
+    () => normalizeEnemyEntries(localizeEncyclopediaEnemyEntries(ENC_ENTRIES, locale)),
     [locale],
   );
   const starterEntries = useMemo(
-    () => localizeEncyclopediaStarterEntries(STARTER_ENTRIES, locale) as EncyclopediaStarterEntry[],
+    () => normalizeStarterEntries(localizeEncyclopediaStarterEntries(STARTER_ENTRIES, locale)),
     [locale],
   );
   const enc: EncyclopediaCounts = encData.encountered || {};
@@ -225,11 +246,11 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                 const count = collection[emoji] || 0;
                 const owned = count > 0;
                 const rc = RARITY_COLORS[rarity];
-                const dropStyle: CSSProperties = {
+                const dropStyle: EncyclopediaCssVars = {
                   '--enc-rarity': rc,
                   '--enc-rarity-bg': `${rc}12`,
                   '--enc-rarity-border': `${rc}44`,
-                } as CSSProperties;
+                };
                 return (
                   <div key={emoji} className={`enc-drop-card ${owned ? 'is-owned' : 'is-locked'}`} style={dropStyle}>
                     <div className={`enc-drop-emoji ${owned ? '' : 'is-locked'}`}>{emoji}</div>
@@ -266,7 +287,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
   const encounterCount = enc[entry.key] || 0;
   const defeatCount = def[entry.key] || 0;
   const defeatRate = encounterCount > 0 ? Math.round((defeatCount / encounterCount) * 100) : 0;
-  const modalToneStyle: CSSProperties = {
+  const modalToneStyle: EncyclopediaCssVars = {
     '--enc-type-color': tc,
     '--enc-type-light': `${tc}55`,
     '--enc-type-border': `${tc}33`,
@@ -274,7 +295,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
     '--enc-type-shadow-wide': `${tc}11`,
     '--enc-type-soft-bg': `${tc}25`,
     '--enc-type-soft-border': `${tc}44`,
-  } as CSSProperties;
+  };
 
   return (
     <div
@@ -425,7 +446,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
   const { t } = useI18n();
   const tc = TYPE_COLORS[entry.mType] || '#6366f1';
   const stageStars = ['⭐', '⭐⭐', '⭐⭐⭐'][entry.stageIdx] || '⭐';
-  const modalToneStyle: CSSProperties = {
+  const modalToneStyle: EncyclopediaCssVars = {
     '--enc-type-color': tc,
     '--enc-type-light': `${tc}55`,
     '--enc-type-border': `${tc}33`,
@@ -433,7 +454,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
     '--enc-type-shadow-wide': `${tc}11`,
     '--enc-type-soft-bg': `${tc}25`,
     '--enc-type-soft-border': `${tc}44`,
-  } as CSSProperties;
+  };
 
   return (
     <div

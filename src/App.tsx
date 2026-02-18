@@ -90,15 +90,20 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 // ─── GameShell: orientation lock wrapper ───
 const isTouchDevice = (): boolean => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
+function canLockScreenOrientation(value: unknown): value is { lock: (orientation: string) => Promise<void> } {
+  if (!value || typeof value !== 'object') return false;
+  return typeof Reflect.get(value, 'lock') === 'function';
+}
+
 function GameShell() {
   const { t } = useI18n();
   const [showRotateHint, setShowRotateHint] = useState(false);
   useEffect(() => {
     try {
-      const orientation = screen.orientation as ScreenOrientation & {
-        lock?: (orientation: string) => Promise<void>;
-      };
-      orientation.lock?.("portrait-primary").catch(() => {});
+      const orientation = screen.orientation;
+      if (canLockScreenOrientation(orientation)) {
+        orientation.lock("portrait-primary").catch(() => {});
+      }
     } catch {
       // unsupported
     }

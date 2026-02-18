@@ -23,12 +23,24 @@ function challengeKey(scope: string): string {
   return `${CHALLENGE_PREFIX}${scope}`;
 }
 
+function parseJsonUnknown(raw: string): unknown {
+  return JSON.parse(raw);
+}
+
+function matchesFallbackShape<T>(value: unknown, fallback: T): value is T {
+  if (fallback == null) return value == null;
+  if (Array.isArray(fallback)) return Array.isArray(value);
+  if (typeof fallback === 'object') return Boolean(value) && typeof value === 'object';
+  return typeof value === typeof fallback;
+}
+
 export function readJson<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return cloneFallback(fallback);
-    const parsed = JSON.parse(raw) as T | null;
-    return parsed ?? cloneFallback(fallback);
+    const parsed = parseJsonUnknown(raw);
+    if (parsed == null) return cloneFallback(fallback);
+    return matchesFallbackShape(parsed, fallback) ? parsed : cloneFallback(fallback);
   } catch (error) {
     warn('readJson', key, error);
     return cloneFallback(fallback);

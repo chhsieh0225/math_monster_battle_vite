@@ -83,8 +83,6 @@ type RunCoopAllySupportTurnArgs = {
   t?: Translator;
 };
 
-const getStarterStageIdxTyped = getStarterStageIdx as (starter: StarterLite | null | undefined) => number;
-
 function formatFallback(template: string, params?: TranslatorParams): string {
   if (!params) return template;
   return template.replace(/\{(\w+)\}/g, (_m: string, key: string) => String(params[key] ?? ''));
@@ -115,7 +113,7 @@ export function canSwitchCoopActiveSlot(state: CoopSlotSwitchState | null | unde
 
 export function buildNextEvolvedAlly(allySub: StarterLite | null | undefined): StarterLite | null {
   if (!allySub) return null;
-  const allyStage = getStarterStageIdxTyped(allySub);
+  const allyStage = getStarterStageIdx(allySub);
   const nextAllyStage = Math.min(allyStage + 1, 2);
   const allyStageData = allySub.stages?.[nextAllyStage] || allySub.stages?.[0];
   return {
@@ -174,7 +172,7 @@ export function handleCoopPartyKo({
   if ((state.pHpSub || 0) > 0 && state.allySub) {
     const promoted = state.allySub;
     setStarter(promoted);
-    setPStg(getStarterStageIdxTyped(promoted));
+    setPStg(getStarterStageIdx(promoted));
     setPHp(state.pHpSub || 0);
     setAllySub(null);
     setPHpSub(0);

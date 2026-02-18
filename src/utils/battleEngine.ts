@@ -58,18 +58,26 @@ export type AbilityBucket = {
 
 export type AbilityModel = Record<AbilityGroup, AbilityBucket>;
 
+function isOperationKey(op: string): op is OperationKey {
+  return op in OP_TO_GROUP;
+}
+
 export function mapOpToAbilityGroup(op: string | null | undefined): AbilityGroup {
-  const group = OP_TO_GROUP[(op || 'mixed') as OperationKey];
+  const key: OperationKey = typeof op === 'string' && isOperationKey(op) ? op : 'mixed2';
+  const group = OP_TO_GROUP[key];
   return group || 'mixed';
 }
 
 export function createAbilityModel(initialLevel = 2): AbilityModel {
   const clamped = Math.max(0, Math.min(4, initialLevel));
-  const model = {} as AbilityModel;
-  for (const group of ABILITY_GROUPS) {
-    model[group] = { level: clamped, recent: [] };
-  }
-  return model;
+  return {
+    add: { level: clamped, recent: [] },
+    sub: { level: clamped, recent: [] },
+    mul: { level: clamped, recent: [] },
+    div: { level: clamped, recent: [] },
+    unknown: { level: clamped, recent: [] },
+    mixed: { level: clamped, recent: [] },
+  };
 }
 
 function getBucket(model: Partial<AbilityModel> | null | undefined, group: AbilityGroup, fallbackLevel = 2): AbilityBucket {
@@ -79,6 +87,17 @@ function getBucket(model: Partial<AbilityModel> | null | undefined, group: Abili
     level: typeof bucket.level === 'number' ? bucket.level : fallbackLevel,
     recent: Array.isArray(bucket.recent) ? bucket.recent : [],
   };
+}
+
+function normalizeAbilityModel(
+  model: Partial<AbilityModel> | null | undefined,
+  fallbackLevel = 2,
+): AbilityModel {
+  const normalized = createAbilityModel(fallbackLevel);
+  for (const group of ABILITY_GROUPS) {
+    normalized[group] = getBucket(model, group, fallbackLevel);
+  }
+  return normalized;
 }
 
 export function getDifficultyLevelForOp(
@@ -143,9 +162,9 @@ export function updateAbilityModel({
     nextLevel,
     nextRecent,
     nextModel: {
-      ...(model || createAbilityModel(fallbackLevel)),
+      ...normalizeAbilityModel(model, fallbackLevel),
       [group]: { level: nextLevel, recent: nextRecent },
-    } as AbilityModel,
+    },
   };
 }
 

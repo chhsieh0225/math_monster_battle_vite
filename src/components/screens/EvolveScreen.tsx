@@ -9,6 +9,10 @@ type EvolveScreenProps = {
   onContinue: () => void;
 };
 
+type OrbitCssVars = CSSProperties & {
+  '--orbit': string;
+};
+
 export default function EvolveScreen({ starter, stageIdx, onContinue }: EvolveScreenProps) {
   const { t } = useI18n();
   const st = starter?.stages?.[stageIdx];
@@ -29,7 +33,7 @@ export default function EvolveScreen({ starter, stageIdx, onContinue }: EvolveSc
       <div style={{position:"absolute",inset:0,background:"white",animation:"evolveFlash 1.8s ease forwards",zIndex:100,pointerEvents:"none"}}/>
       {[0,0.3,0.6].map((dl,i)=><div key={"br"+i} style={{position:"absolute",left:"50%",top:"42%",width:60,height:60,marginLeft:-30,marginTop:-30,borderRadius:"50%",border:"3px solid",borderColor:["rgba(99,102,241,0.6)","rgba(168,85,247,0.5)","rgba(251,191,36,0.4)"][i],animation:`colorBurst 1.8s ease ${dl}s forwards`,pointerEvents:"none"}}/>)}
       {Array.from({ length: 12 }, (_, i) => {
-        const orbitStyle = {
+        const orbitStyle: OrbitCssVars = {
           position: "absolute",
           left: "50%",
           top: "42%",
@@ -38,7 +42,7 @@ export default function EvolveScreen({ starter, stageIdx, onContinue }: EvolveSc
           animation: `evolveSpin ${2.2 + i * 0.25}s linear ${i * 0.12}s infinite`,
           zIndex: 50,
           "--orbit": `${45 + i * 7}px`,
-        } as CSSProperties;
+        };
 
         return (
           <div key={`op${i}`} style={orbitStyle}>

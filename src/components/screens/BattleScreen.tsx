@@ -29,6 +29,11 @@ import './BattleScreen.css';
 
 const NOOP_SUBSCRIBE: TimerSubscribe = () => () => {};
 const ZERO_SNAPSHOT = (): number => 0;
+type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
+
+function hasSceneKey(value: string): value is keyof typeof SCENES {
+  return value in SCENES;
+}
 
 type QuestionTimerHudProps = {
   timerSec: number;
@@ -44,14 +49,14 @@ function QuestionTimerHud({ timerSec, subscribe, getSnapshot }: QuestionTimerHud
   );
   const left = Math.max(0, Math.min(timerSec, timerLeft));
   const tone = left <= 1.5 ? "#ef4444" : left <= 3 ? "#f59e0b" : "#22c55e";
-  const timerBarStyle = {
+  const timerBarStyle: BattleCssVars = {
     "--battle-timer-width": `${left / timerSec * 100}%`,
     "--battle-timer-tone": tone,
     "--battle-timer-pulse": left <= 1.5 ? "timerPulse 0.4s ease infinite" : "none",
-  } as CSSProperties;
-  const timerTextStyle = {
+  };
+  const timerTextStyle: BattleCssVars = {
     "--battle-timer-text-tone": left <= 1.5 ? "#ef4444" : left <= 3 ? "#f59e0b" : "rgba(255,255,255,0.4)",
-  } as CSSProperties;
+  };
 
   return (
     <>
@@ -250,8 +255,8 @@ export default function BattleScreen({
 
     const mainMaxHp = getLevelMaxHp(pLvl, pStg);
     const subMaxHp = showAllySub && allySub ? getStarterLevelMaxHp(allySub, pLvl, pStg) : getLevelMaxHp(1, 0);
-    const sceneKey = (enemy.sceneMType || enemy.mType) as keyof typeof SCENES;
-    const scene = SCENES[sceneKey] || SCENES.grass;
+    const sceneKey = enemy.sceneMType || enemy.mType || 'grass';
+    const scene = hasSceneKey(sceneKey) ? SCENES[sceneKey] : SCENES.grass;
 
     const layout = resolveBattleLayout({
       battleMode,
@@ -495,31 +500,31 @@ export default function BattleScreen({
         : starter.type === "light"
           ? "battle-pill-specdef-light"
           : "battle-pill-specdef-grass";
-  const toastShadowStyle = S.effMsg
-    ? ({ "--battle-eff-shadow": `0 8px 22px ${S.effMsg.color}55` } as CSSProperties)
+  const toastShadowStyle: BattleCssVars | undefined = S.effMsg
+    ? { "--battle-eff-shadow": `0 8px 22px ${S.effMsg.color}55` }
     : undefined;
-  const sceneBgStyle = scene.bgImg
-    ? ({ backgroundImage: `url(${scene.bgImg})` } as CSSProperties)
+  const sceneBgStyle: CSSProperties | undefined = scene.bgImg
+    ? { backgroundImage: `url(${scene.bgImg})` }
     : undefined;
-  const sceneSkyStyle = ({ "--scene-sky": scene.sky } as CSSProperties);
-  const sceneGroundStyle = ({ "--scene-ground": scene.ground } as CSSProperties);
-  const sceneTopPlatformStyle = ({ "--scene-platform-top": scene.platform2 } as CSSProperties);
-  const sceneBottomPlatformStyle = ({ "--scene-platform-bottom": scene.platform1 } as CSSProperties);
-  const enemyInfoStyle = ({ "--battle-enemy-info-right": enemyInfoRight } as CSSProperties);
-  const playerInfoStyle = ({ "--battle-player-info-left": playerInfoLeft } as CSSProperties);
+  const sceneSkyStyle: BattleCssVars = { "--scene-sky": scene.sky };
+  const sceneGroundStyle: BattleCssVars = { "--scene-ground": scene.ground };
+  const sceneTopPlatformStyle: BattleCssVars = { "--scene-platform-top": scene.platform2 };
+  const sceneBottomPlatformStyle: BattleCssVars = { "--scene-platform-bottom": scene.platform1 };
+  const enemyInfoStyle: BattleCssVars = { "--battle-enemy-info-right": enemyInfoRight };
+  const playerInfoStyle: BattleCssVars = { "--battle-player-info-left": playerInfoLeft };
   const enemyLowHp = enemy.maxHp > 0 && S.eHp > 0 && S.eHp / enemy.maxHp < 0.25;
   const enemyIdleAnim = BOSS_IDS.has(enemy.id)
     ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
     : enemyLowHp
       ? "float 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite"
       : "float 3s ease-in-out infinite";
-  const enemyMainSpriteStyle = ({
+  const enemyMainSpriteStyle: BattleCssVars = ({
     "--enemy-main-right": `${enemyMainRightPct}%`,
     "--enemy-main-top": `${eTopPct}%`,
     "--enemy-main-anim": enemyDefeated
       ? "enemyDissolve .9s ease-out forwards"
       : S.eAnim || (UX.lowPerfMode ? "none" : enemyIdleAnim),
-  } as CSSProperties);
+  });
   const isLargeEnemySub = S.enemySub?.id === "golumn" || S.enemySub?.id === "golumn_mud";
   const enemySubScale = isLargeEnemySub
     ? (compactDual ? "0.86" : "0.94")
@@ -533,39 +538,39 @@ export default function BattleScreen({
         : S.enemySub.isEvolved
           ? 120
           : 96;
-  const enemySubSpriteStyle = ({
+  const enemySubSpriteStyle: BattleCssVars = ({
     "--enemy-sub-right": `${enemySubRightPct}%`,
     "--enemy-sub-top": `${enemySubTopPct}%`,
     "--enemy-sub-scale": enemySubScale,
     "--enemy-sub-anim": UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite",
-  } as CSSProperties);
-  const enemyMainShadowStyle = ({
+  });
+  const enemyMainShadowStyle: BattleCssVars = ({
     "--enemy-shadow-right": `calc(${enemyMainRightPct}% + ${Math.round(eSize * 0.18)}px)`,
     "--enemy-shadow-top": `calc(${eTopPct}% + ${Math.round(eHeight * 0.72)}px)`,
     "--enemy-shadow-width": `${Math.round(eSize * 0.56)}px`,
     "--enemy-shadow-anim": BOSS_IDS.has(enemy.id) ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
-  } as CSSProperties);
-  const playerMainSpriteStyle = ({
+  });
+  const playerMainSpriteStyle: BattleCssVars = ({
     "--player-main-left": `${playerMainLeftPct}%`,
     "--player-main-bottom": `${playerMainBottomPct}%`,
     "--player-main-filter": isCoopBattle && !coopUsingSub ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))" : "none",
     "--player-main-z": coopUsingSub ? "4" : "6",
     "--player-main-opacity": coopUsingSub ? ".84" : "1",
     "--player-main-anim": S.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite"),
-  } as CSSProperties);
-  const playerSubSpriteStyle = ({
+  });
+  const playerSubSpriteStyle: BattleCssVars = ({
     "--player-sub-left": `${playerSubLeftPct}%`,
     "--player-sub-bottom": `${playerSubBottomPct}%`,
     "--player-sub-filter": isCoopBattle && coopUsingSub ? "drop-shadow(0 0 12px rgba(34,197,94,0.75))" : "none",
     "--player-sub-z": coopUsingSub ? "6" : "4",
     "--player-sub-opacity": coopUsingSub ? "1" : ".84",
     "--player-sub-anim": UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite",
-  } as CSSProperties);
-  const playerMainShadowStyle = ({
+  });
+  const playerMainShadowStyle: BattleCssVars = ({
     "--player-shadow-left": `calc(${playerMainLeftPct}% + ${Math.round(mainPlayerSize * 0.48)}px)`,
     "--player-shadow-bottom": `${Math.max(8, playerMainBottomPct - 1)}%`,
     "--player-shadow-width": `${Math.round(mainPlayerSize * 0.5)}px`,
-  } as CSSProperties);
+  });
   const isUltimateEffect = !!(S.atkEffect && S.atkEffect.idx >= 3);
   const ultimateToneClass = S.atkEffect?.type === "fire"
     ? "is-fire"
@@ -578,10 +583,10 @@ export default function BattleScreen({
           : S.atkEffect?.type === "light"
             ? "is-light"
             : "is-dark";
-  const ultimateSyncStyle = ({
+  const ultimateSyncStyle: BattleCssVars = ({
     "--ult-sync-top": effectTarget.top,
     "--ult-sync-right": effectTarget.right,
-  } as CSSProperties);
+  });
   const impactPhaseClass = showHeavyFx ? `battle-impact-${impactPhase}` : "battle-impact-idle";
 
   return (
@@ -864,7 +869,7 @@ export default function BattleScreen({
           )}
           <div className="battle-menu-grid">
             {moveRuntime.map(({ m, i, sealed, locked, lv, pw, atCap, eff, moveProgressPct }) => {
-              const moveBtnStyle = {
+              const moveBtnStyle: BattleCssVars = {
                 "--move-bg": locked ? "rgba(255,255,255,0.03)" : eff > 1 ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))` : eff < 1 ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))` : m.bg,
                 "--move-border": sealed ? "rgba(168,85,247,0.4)" : locked ? "rgba(255,255,255,0.08)" : eff > 1 ? "#22c55e66" : `${m.color}44`,
                 "--move-opacity": locked ? "0.4" : "1",
@@ -873,14 +878,14 @@ export default function BattleScreen({
                 "--move-name-color": locked ? "#94a3b8" : m.color,
                 "--move-desc-color": locked ? "#64748b" : "#94a3b8",
                 "--move-power-color": lv > 1 ? m.color : "inherit",
-              } as CSSProperties;
-              const moveLevelBadgeStyle = atCap
+              };
+              const moveLevelBadgeStyle: BattleCssVars | undefined = atCap
                 ? undefined
-                : ({ "--move-level-bg": m.color } as CSSProperties);
-              const moveProgressStyle = {
+                : { "--move-level-bg": m.color };
+              const moveProgressStyle: BattleCssVars = {
                 "--move-progress-width": `${moveProgressPct}%`,
                 "--move-progress-color": m.color,
-              } as CSSProperties;
+              };
               return <button
                 className={`battle-menu-btn ${locked ? "is-locked" : ""}`}
                 key={i}

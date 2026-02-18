@@ -9,6 +9,12 @@ type SessionBattleState = {
     id?: string;
     name?: string;
   } | null;
+  pHp?: number;
+  tW?: number;
+  timedMode?: boolean;
+  pLvl?: number;
+  pStg?: number;
+  starter?: { id?: string } | null;
   [key: string]: unknown;
 };
 
@@ -100,7 +106,7 @@ export function runFinishGameController({
   setScreen,
 }: RunFinishGameControllerArgs): void {
   applyGameCompletionAchievements({
-    state: sr.current as Parameters<typeof applyGameCompletionAchievements>[0]['state'],
+    state: sr.current,
     tryUnlock,
     setEncData,
     encTotal,

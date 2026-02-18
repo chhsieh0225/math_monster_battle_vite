@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters.ts';
 import { VERSION } from '../../data/constants';
@@ -12,6 +11,7 @@ type TitleStarter = StarterLite & {
   stages: StarterStage[];
 };
 
+type UnknownRecord = Record<string, unknown>;
 type TitleAction = () => void;
 
 type TitleScreenProps = {
@@ -28,6 +28,33 @@ type TitleScreenProps = {
   lowPerfMode?: boolean;
 };
 
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === 'object' && value !== null;
+}
+
+function isStarterStage(value: unknown): value is StarterStage {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.name === 'string' &&
+    typeof value.emoji === 'string' &&
+    typeof value.svgFn === 'function'
+  );
+}
+
+function isTitleStarter(value: unknown): value is TitleStarter {
+  if (!isRecord(value)) return false;
+  if (typeof value.id !== 'string') return false;
+  if (typeof value.name !== 'string') return false;
+  if (typeof value.c1 !== 'string' || typeof value.c2 !== 'string') return false;
+  if (!Array.isArray(value.stages) || value.stages.length === 0) return false;
+  return value.stages.every(isStarterStage);
+}
+
+function normalizeTitleStarters(value: unknown): TitleStarter[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(isTitleStarter);
+}
+
 export default function TitleScreen({
   onStartNormal,
   onStartTimed,
@@ -43,7 +70,7 @@ export default function TitleScreen({
 }: TitleScreenProps) {
   const { t, locale } = useI18n();
   const starters = useMemo(
-    () => localizeStarterList(STARTERS, locale) as TitleStarter[],
+    () => normalizeTitleStarters(localizeStarterList(STARTERS, locale)),
     [locale],
   );
   const row1 = starters.slice(0, 3);
@@ -130,7 +157,7 @@ export default function TitleScreen({
               color: 'white', fontSize: 13, fontWeight: 600,
               padding: '10px 0', borderRadius: 12,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            } as CSSProperties}>{b.icon} {b.label}</button>
+            }}>{b.icon} {b.label}</button>
           ))}
         </div>
       </section>

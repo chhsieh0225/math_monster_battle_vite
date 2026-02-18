@@ -19,21 +19,7 @@ type StrikeSummary = {
   eff: number;
 };
 
-type EffectOrchestratorApi = {
-  runPlayerLunge: (args: {
-    safeTo: SafeTo;
-    setPAnim: TextSetter;
-    onReady?: () => void;
-    startDelay?: number;
-    settleDelay?: number;
-  }) => void;
-  runEnemyLunge: (args: {
-    safeTo: SafeTo;
-    setEAnim: TextSetter;
-    onStrike?: () => void;
-    strikeDelay?: number;
-  }) => void;
-};
+type EffectOrchestratorApi = Pick<typeof effectOrchestrator, 'runPlayerLunge' | 'runEnemyLunge'>;
 
 type ShowPvpEffectivenessMessageArgs = {
   strike: StrikeSummary;
@@ -100,7 +86,7 @@ export function runPvpAttackAnimation({
   setPAnim,
   setEAnim,
   onStrike,
-  orchestratorApi = effectOrchestrator as unknown as EffectOrchestratorApi,
+  orchestratorApi = effectOrchestrator,
 }: RunPvpAttackAnimationArgs): void {
   setPhase('playerAtk');
   if (turn === 'p1') {

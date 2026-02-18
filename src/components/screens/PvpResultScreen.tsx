@@ -18,6 +18,10 @@ type PvpResultScreenProps = {
   onHome: () => void;
 };
 
+type OrbitCssVars = CSSProperties & {
+  '--orbit': string;
+};
+
 export default function PvpResultScreen({
   p1Starter,
   p2Starter,
@@ -87,7 +91,7 @@ export default function PvpResultScreen({
         />
       ))}
       {Array.from({ length: 10 }, (_, i) => {
-        const orbitStyle = {
+        const orbitStyle: OrbitCssVars = {
           position: "absolute",
           left: "50%",
           top: "40%",
@@ -96,7 +100,7 @@ export default function PvpResultScreen({
           animation: `evolveSpin ${2.2 + i * 0.25}s linear ${i * 0.12}s infinite`,
           zIndex: 3,
           "--orbit": `${45 + i * 7}px`,
-        } as CSSProperties;
+        };
 
         return (
           <div key={`op_${i}`} style={orbitStyle}>

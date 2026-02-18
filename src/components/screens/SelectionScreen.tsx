@@ -70,6 +70,33 @@ type DualSelectionPayload = {
   p2: StarterSelectable;
 };
 
+type UnknownRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === 'object' && value !== null;
+}
+
+function isStarterId(value: unknown): value is StarterId {
+  return value === 'fire' || value === 'water' || value === 'grass' || value === 'electric' || value === 'lion';
+}
+
+function isStarterSelectable(value: unknown): value is StarterSelectable {
+  if (!isRecord(value)) return false;
+  if (!isStarterId(value.id)) return false;
+  if (typeof value.name !== 'string') return false;
+  if (typeof value.c1 !== 'string' || typeof value.c2 !== 'string') return false;
+  if (typeof value.typeIcon !== 'string' || typeof value.typeName !== 'string') return false;
+  if (!Array.isArray(value.stages) || value.stages.length === 0) return false;
+  if (!value.stages.every((stage) => isRecord(stage) && typeof stage.name === 'string' && typeof stage.svgFn === 'function')) return false;
+  if (!Array.isArray(value.moves)) return false;
+  return value.moves.every((move) => isRecord(move) && typeof move.name === 'string' && typeof move.icon === 'string');
+}
+
+function normalizeStarterList(value: unknown): StarterSelectable[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(isStarterSelectable);
+}
+
 type SelectionScreenProps = {
   mode?: SelectionMode;
   onSelect: (payload: StarterSelectable | DualSelectionPayload) => void;
@@ -80,7 +107,7 @@ export default function SelectionScreen({ mode = "single", onSelect, onBack }: S
   const { t, locale } = useI18n();
   const DESCS = buildStarterDescs(t);
   const starters = useMemo(
-    () => localizeStarterList(STARTERS, locale) as StarterSelectable[],
+    () => normalizeStarterList(localizeStarterList(STARTERS, locale)),
     [locale],
   );
   const isDual = mode === "coop" || mode === "pvp" || mode === "double";

@@ -7,15 +7,20 @@ type HPBarProps = {
   label: string;
 };
 
+type HPFillVars = CSSProperties & {
+  '--battle-hp-width': string;
+  '--battle-hp-color': string;
+};
+
 export default function HPBar({ cur, max, color, label }: HPBarProps) {
   const safeMax = Math.max(1, max);
   const safeCur = Math.max(0, Math.ceil(cur));
   const p = Math.max(0, safeCur / safeMax * 100);
   const bc = p > 50 ? color : p > 25 ? "#f59e0b" : "#ef4444";
-  const fillStyle = ({
+  const fillStyle: HPFillVars = {
     "--battle-hp-width": `${p}%`,
     "--battle-hp-color": bc,
-  } as CSSProperties);
+  };
   return (
     <div
       className="battle-hp-card"

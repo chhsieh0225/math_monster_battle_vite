@@ -11,7 +11,7 @@ type RunStandardAnswerFlowArgs = Parameters<typeof runStandardAnswerFlow>[0];
 type TryHandlePvpAnswerArgs = Parameters<typeof tryHandlePvpAnswer>[0];
 
 type StateRef = {
-  current: RunStandardAnswerFlowArgs['state'];
+  current: RunStandardAnswerFlowArgs['state'] & TryHandlePvpAnswerArgs['state'];
 };
 
 type PvpAnswerHandlers = TryHandlePvpAnswerArgs['handlers'];
@@ -31,6 +31,16 @@ type RunAnswerControllerArgs = {
   updateAbility: RunStandardAnswerFlowArgs['updateAbility'];
   markCoopRotatePending: RunStandardAnswerFlowArgs['markCoopRotatePending'];
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function getPhaseFromState(state: unknown): string | null {
+  if (!isRecord(state)) return null;
+  const phase = state.phase;
+  return typeof phase === 'string' ? phase : null;
+}
 
 /**
  * runAnswerController
@@ -53,8 +63,8 @@ export function runAnswerController({
   markCoopRotatePending,
 }: RunAnswerControllerArgs): void {
   const state = sr.current;
-  const phase = (state as { phase?: unknown }).phase;
-  if (typeof phase === 'string' && phase !== 'question') return;
+  const phase = getPhaseFromState(state);
+  if (phase !== null && phase !== 'question') return;
   if (answered) return;
 
   setAnswered(true);
@@ -63,7 +73,7 @@ export function runAnswerController({
   const pvpHandlers = createPvpAnswerHandlers(pvpHandlerDeps);
   const pvpHandled = tryHandlePvpAnswer({
     choice,
-    state: state as TryHandlePvpAnswerArgs['state'],
+    state,
     handlers: pvpHandlers,
   });
   if (state.battleMode === 'pvp') {

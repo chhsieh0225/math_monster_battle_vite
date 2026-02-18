@@ -15,6 +15,9 @@ type RosterEnemy = {
   hp?: number;
   maxHp?: number;
   atk?: number;
+  challengeBattleIndex?: number;
+  challengeBattleSeed?: string;
+  challengeTowerFloor?: number;
   [key: string]: unknown;
 };
 
@@ -61,15 +64,14 @@ function tuneChallengeEnemy<T extends RosterEnemy>(
   const nextAtk = Math.max(1, Math.round(baseAtk * atkScale));
   const levelBonus = offset + (battle.enemyTier === 'boss' ? 2 : battle.enemyTier === 'elite' ? 1 : 0);
 
-  return {
-    ...enemy,
-    lvl: baseLvl + levelBonus,
-    hp: nextMaxHp,
-    maxHp: nextMaxHp,
-    atk: nextAtk,
-    challengeBattleIndex: battle.index,
-    challengeBattleSeed: battle.battleSeed,
-  } as T;
+  const tunedEnemy: T = { ...enemy };
+  tunedEnemy.lvl = baseLvl + levelBonus;
+  tunedEnemy.hp = nextMaxHp;
+  tunedEnemy.maxHp = nextMaxHp;
+  tunedEnemy.atk = nextAtk;
+  tunedEnemy.challengeBattleIndex = battle.index;
+  tunedEnemy.challengeBattleSeed = battle.battleSeed;
+  return tunedEnemy;
 }
 
 function tuneTowerEnemy<T extends RosterEnemy>(
@@ -92,16 +94,15 @@ function tuneTowerEnemy<T extends RosterEnemy>(
   const nextAtk = Math.max(1, Math.round(baseAtk * atkScale));
   const levelBonus = offset + (battle.enemyTier === 'boss' ? 2 : battle.enemyTier === 'elite' ? 1 : 0);
 
-  return {
-    ...enemy,
-    lvl: baseLvl + levelBonus,
-    hp: nextMaxHp,
-    maxHp: nextMaxHp,
-    atk: nextAtk,
-    challengeTowerFloor: floor.floor,
-    challengeBattleIndex: floor.floor,
-    challengeBattleSeed: floor.floorSeed,
-  } as T;
+  const tunedEnemy: T = { ...enemy };
+  tunedEnemy.lvl = baseLvl + levelBonus;
+  tunedEnemy.hp = nextMaxHp;
+  tunedEnemy.maxHp = nextMaxHp;
+  tunedEnemy.atk = nextAtk;
+  tunedEnemy.challengeTowerFloor = floor.floor;
+  tunedEnemy.challengeBattleIndex = floor.floor;
+  tunedEnemy.challengeBattleSeed = floor.floorSeed;
+  return tunedEnemy;
 }
 
 function resolveTowerFloorPlan(

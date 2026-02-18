@@ -882,6 +882,10 @@ const SOUNDS = {
 type SoundName = keyof typeof SOUNDS;
 type MoveType = 'fire' | 'water' | 'electric' | 'grass' | 'dark' | 'light';
 
+function isSoundName(name: string): name is SoundName {
+  return Object.prototype.hasOwnProperty.call(SOUNDS, name);
+}
+
 function normalizeMoveType(type: string): MoveType | null {
   const raw = String(type || '').toLowerCase();
   if (raw === 'lion') return 'light';
@@ -904,9 +908,15 @@ type AudioCtor = {
   new (): AudioContext;
 };
 
-type WindowWithWebkitAudio = Window & {
-  webkitAudioContext?: AudioCtor;
-};
+function isAudioCtor(value: unknown): value is AudioCtor {
+  return typeof value === 'function';
+}
+
+declare global {
+  interface Window {
+    webkitAudioContext?: AudioCtor;
+  }
+}
 
 // ── BGM (procedural chiptune loops) ──────────────────────────────
 type BgmTrack = 'menu' | 'battle' | 'boss';
@@ -1636,8 +1646,8 @@ const sfx = {
   async init(): Promise<void> {
     if (ready || typeof window === 'undefined') return;
     try {
-      const w = window as WindowWithWebkitAudio;
-      const Ctor: AudioCtor | undefined = window.AudioContext || w.webkitAudioContext;
+      const webkitCtor = window.webkitAudioContext;
+      const Ctor = window.AudioContext || (isAudioCtor(webkitCtor) ? webkitCtor : null);
       if (!Ctor) return;
       ctx = new Ctor();
       if (ctx.state === 'suspended') await ctx.resume();
@@ -1654,7 +1664,7 @@ const sfx = {
       return;
     }
     try {
-      const fn = SOUNDS[name as SoundName];
+      const fn = isSoundName(name) ? SOUNDS[name] : null;
       if (fn) fn();
     } catch {
       // best-effort SFX

@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { memo, useState, useEffect, useMemo } from 'react';
 import { seedRange } from '../../utils/prng';
 
 type ParticleProps = {
+  id: number;
   emoji: string;
   x: number;
   y: number;
   seed: number;
-  onDone: () => void;
+  onDone: (id: number) => void;
 };
 
 type ParticleState = {
@@ -16,7 +17,7 @@ type ParticleState = {
   transform: string;
 };
 
-export default function Particle({ emoji, x, y, seed, onDone }: ParticleProps) {
+const Particle = memo(function Particle({ id, emoji, x, y, seed, onDone }: ParticleProps) {
   const offset = useMemo<{ dx: number; dy: number }>(() => ({
     dx: Number(seedRange(`p-${seed}-dx`, -40, 40)),
     dy: -Number(seedRange(`p-${seed}-dy`, 20, 80)),
@@ -29,9 +30,9 @@ export default function Particle({ emoji, x, y, seed, onDone }: ParticleProps) {
     requestAnimationFrame(() =>
       setS({ left: x + dx, top: y + dy, opacity: 0, transform: "scale(1.2)" })
     );
-    const t = setTimeout(onDone, 800);
+    const t = setTimeout(() => onDone(id), 800);
     return () => clearTimeout(t);
-  }, [offset, onDone, x, y]);
+  }, [id, offset, onDone, x, y]);
 
   return (
     <div style={{
@@ -39,4 +40,6 @@ export default function Particle({ emoji, x, y, seed, onDone }: ParticleProps) {
       transition: "all 0.8s ease-out", pointerEvents: "none", zIndex: 90,
     }}>{emoji}</div>
   );
-}
+});
+
+export default Particle;

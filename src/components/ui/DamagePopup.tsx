@@ -1,18 +1,19 @@
-import { useEffect } from 'react';
+import { memo, useEffect } from 'react';
 
 type DamagePopupProps = {
+  id: number;
   value: string | number;
   x: number | string;
   y: number | string;
   color: string;
-  onDone: () => void;
+  onDone: (id: number) => void;
 };
 
-export default function DamagePopup({ value, x, y, color, onDone }: DamagePopupProps) {
+const DamagePopup = memo(function DamagePopup({ id, value, x, y, color, onDone }: DamagePopupProps) {
   useEffect(() => {
-    const t = setTimeout(onDone, 1000);
+    const t = setTimeout(() => onDone(id), 1000);
     return () => clearTimeout(t);
-  }, [onDone]);
+  }, [id, onDone]);
   const valueText = String(value);
   const isHeal = valueText.startsWith('+');
   const announce = isHeal ? `Heal ${valueText}` : `Damage ${valueText}`;
@@ -31,4 +32,6 @@ export default function DamagePopup({ value, x, y, color, onDone }: DamagePopupP
       {value}
     </div>
   );
-}
+});
+
+export default DamagePopup;

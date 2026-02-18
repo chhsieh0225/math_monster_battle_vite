@@ -89,15 +89,24 @@ export const BattleFxLayer = memo(function BattleFxLayer({
       {dmgs.map((d) => (
         <DamagePopup
           key={d.id}
+          id={d.id}
           value={d.value}
           x={d.x}
           y={d.y}
           color={d.color}
-          onDone={() => onRemoveDamage(d.id)}
+          onDone={onRemoveDamage}
         />
       ))}
       {showHeavyFx && parts.map((p) => (
-        <Particle key={p.id} emoji={p.emoji} x={p.x} y={p.y} seed={p.id} onDone={() => onRemoveParticle(p.id)} />
+        <Particle
+          key={p.id}
+          id={p.id}
+          emoji={p.emoji}
+          x={p.x}
+          y={p.y}
+          seed={p.id}
+          onDone={onRemoveParticle}
+        />
       ))}
 
       {/* Move level-up toast */}

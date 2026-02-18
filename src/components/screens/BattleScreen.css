@@ -53,6 +53,10 @@
 .battle-util-btn,.answer-btn{min-height:var(--touch-target)}
 
 .battle-root{
+  --battle-face-shift-main:-2px;
+  --battle-face-tilt-main:-1.6deg;
+  --battle-face-shift-sub:-1px;
+  --battle-face-tilt-sub:-1deg;
   height:100%;
   display:flex;
   flex-direction:column;
@@ -100,6 +104,12 @@
 .battle-root.battle-impact-shake .battle-info-player{transform:translateY(-2px)}
 .battle-root.battle-impact-settle .battle-arena{animation:battleImpactSettle .2s ease-out both}
 .battle-root.low-perf .battle-hit-react-layer{display:none}
+.battle-root.low-perf{
+  --battle-face-shift-main:0px;
+  --battle-face-tilt-main:0deg;
+  --battle-face-shift-sub:0px;
+  --battle-face-tilt-sub:0deg;
+}
 .battle-root.low-perf.battle-impact-charge .battle-arena,
 .battle-root.low-perf.battle-impact-shake .battle-arena,
 .battle-root.low-perf.battle-impact-settle .battle-arena{
@@ -386,7 +396,7 @@
   right:var(--enemy-main-right,10%);
   top:var(--enemy-main-top,26%);
   z-index:6;
-  transform:scale(var(--battle-enemy-main-scale,1));
+  transform:scale(var(--battle-enemy-main-scale,1)) rotate(-2.5deg);
   transform-origin:top right;
   animation:var(--enemy-main-anim,none);
 }
@@ -396,7 +406,7 @@
   top:var(--enemy-sub-top,23%);
   z-index:4;
   opacity:.78;
-  transform:scale(calc(var(--enemy-sub-scale,.8) * var(--battle-enemy-sub-scale,1)));
+  transform:scale(calc(var(--enemy-sub-scale,.8) * var(--battle-enemy-sub-scale,1))) rotate(-2deg);
   transform-origin:top right;
   filter:saturate(.9);
   animation:var(--enemy-sub-anim,none);
@@ -416,7 +426,7 @@
   position:absolute;
   left:var(--player-main-left,6%);
   bottom:var(--player-main-bottom,14%);
-  transform:scaleX(-1) scale(var(--battle-player-main-scale,1));
+  transform:scaleX(-1) scale(var(--battle-player-main-scale,1)) rotate(-2.5deg);
   transform-origin:center bottom;
   z-index:var(--player-main-z,6);
   opacity:var(--player-main-opacity,1);
@@ -428,7 +438,7 @@
   position:absolute;
   left:var(--player-sub-left,23%);
   bottom:var(--player-sub-bottom,15%);
-  transform:scaleX(-1) scale(var(--battle-player-sub-scale,1));
+  transform:scaleX(-1) scale(var(--battle-player-sub-scale,1)) rotate(-2deg);
   transform-origin:center bottom;
   z-index:var(--player-sub-z,4);
   opacity:var(--player-sub-opacity,.84);

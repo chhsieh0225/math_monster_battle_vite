@@ -55,11 +55,21 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
   showEnemyShadow,
   showPlayerShadow,
 }: BattleArenaSpritesProps) {
+  const facingMainStyle: CSSProperties = {
+    // Keep a subtle inward-facing posture without touching outer attack/hit transforms.
+    transform: 'translate3d(var(--battle-face-shift-main, -2px), 0, 0) rotate(var(--battle-face-tilt-main, -1.6deg))',
+    transformOrigin: '50% 62%',
+  };
+  const facingSubStyle: CSSProperties = {
+    transform: 'translate3d(var(--battle-face-shift-sub, -1px), 0, 0) rotate(var(--battle-face-tilt-sub, -1deg))',
+    transformOrigin: '50% 64%',
+  };
+
   return (
     <>
       {/* Enemy sprite */}
       <div ref={enemySpriteRef} className="battle-sprite-enemy-main" style={enemyMainSpriteStyle}>
-        <MonsterSprite svgStr={eSvg} size={eSize} />
+        <MonsterSprite svgStr={eSvg} size={eSize} style={facingMainStyle} />
         {showHeavyFx && (
           <AmbientParticles
             type={enemy.mType || 'grass'}
@@ -71,14 +81,14 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
       </div>
       {showEnemySub && eSubSvg && (
         <div className="battle-sprite-enemy-sub" style={enemySubSpriteStyle}>
-          <MonsterSprite svgStr={eSubSvg} size={enemySubSize} />
+          <MonsterSprite svgStr={eSubSvg} size={enemySubSize} style={facingSubStyle} />
         </div>
       )}
       {showEnemyShadow && <div className="battle-sprite-enemy-shadow" style={enemyMainShadowStyle} />}
 
       {/* Player sprite */}
       <div ref={playerSpriteRef} className="battle-sprite-player-main" style={playerMainSpriteStyle}>
-        <MonsterSprite svgStr={pSvg} size={mainPlayerSize} />
+        <MonsterSprite svgStr={pSvg} size={mainPlayerSize} style={facingMainStyle} />
         {showHeavyFx && (
           <AmbientParticles
             type={starterType || 'grass'}
@@ -90,7 +100,7 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
       </div>
       {showAllySub && pSubSvg && (
         <div className="battle-sprite-player-sub" style={playerSubSpriteStyle}>
-          <MonsterSprite svgStr={pSubSvg} size={subPlayerSize} />
+          <MonsterSprite svgStr={pSubSvg} size={subPlayerSize} style={facingSubStyle} />
         </div>
       )}
       {showPlayerShadow && <div className="battle-sprite-player-shadow" style={playerMainShadowStyle} />}

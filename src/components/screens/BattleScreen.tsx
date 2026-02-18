@@ -17,7 +17,14 @@ import TextBox from '../ui/TextBox';
 import AttackEffect from '../effects/AttackEffect';
 import AchievementPopup from '../ui/AchievementPopup';
 import { ACH_MAP } from '../../data/achievements';
-import type { ScreenName, TimerSubscribe, UseBattlePublicApi, UseMobileExperienceApi } from '../../types/battle';
+import type {
+  ScreenName,
+  TimerSubscribe,
+  UseBattleActions,
+  UseBattleState,
+  UseBattleView,
+  UseMobileExperienceApi,
+} from '../../types/battle';
 
 const NOOP_SUBSCRIBE: TimerSubscribe = () => () => {};
 const ZERO_SNAPSHOT = (): number => 0;
@@ -57,7 +64,6 @@ function QuestionTimerHud({ timerSec, subscribe, getSnapshot }: QuestionTimerHud
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
-type BattleSlices = Pick<UseBattlePublicApi, 'state' | 'actions' | 'view'>;
 type ImpactPhase = 'idle' | 'charge' | 'freeze' | 'shake' | 'settle';
 
 type ImpactProfile = {
@@ -94,17 +100,25 @@ function resolveImpactProfile(idx = 0, lvl = 1): ImpactProfile {
 }
 
 type BattleScreenProps = {
-  battle: BattleSlices;
+  state: UseBattleState;
+  actions: UseBattleActions;
+  view: UseBattleView;
   mobile: UseMobileExperienceApi;
   onOpenSettings: (fromScreen: ScreenName) => void;
   t: Translator;
 };
 
-export default function BattleScreen({ battle, mobile: UX, onOpenSettings, t }: BattleScreenProps) {
-  // Consume explicit battle slices (state/actions/view); avoid flattened API coupling.
-  const S = battle.state;
-  const A = battle.actions;
-  const V = battle.view;
+export default function BattleScreen({
+  state,
+  actions,
+  view,
+  mobile: UX,
+  onOpenSettings,
+  t,
+}: BattleScreenProps) {
+  const S = state;
+  const A = actions;
+  const V = view;
 
   const showHeavyFx = !UX.lowPerfMode;
   const battleRootRef = useRef<HTMLDivElement | null>(null);

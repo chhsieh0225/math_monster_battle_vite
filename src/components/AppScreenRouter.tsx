@@ -3,7 +3,13 @@ import type { ComponentProps, ReactNode } from 'react';
 
 import TitleScreen from './screens/TitleScreen';
 import SelectionScreen from './screens/SelectionScreen';
-import type { ScreenName, UseBattlePublicApi, UseMobileExperienceApi } from '../types/battle';
+import type {
+  ScreenName,
+  UseBattleActions,
+  UseBattleState,
+  UseBattleView,
+  UseMobileExperienceApi,
+} from '../types/battle';
 
 const LeaderboardScreen = lazy(() => import('./screens/LeaderboardScreen'));
 const EvolveScreen = lazy(() => import('./screens/EvolveScreen'));
@@ -19,10 +25,11 @@ type SelectionPayload = Parameters<ComponentProps<typeof SelectionScreen>['onSel
 type DualSelectionPayload = Extract<SelectionPayload, { p1: unknown; p2: unknown }>;
 
 type TranslateFn = (key: string, fallback: string) => string;
-type BattleSlices = Pick<UseBattlePublicApi, 'state' | 'actions' | 'view'>;
 
 type AppScreenRouterProps = {
-  battle: BattleSlices;
+  state: UseBattleState;
+  actions: UseBattleActions;
+  view: UseBattleView;
   mobile: UseMobileExperienceApi;
   bgmMuted: boolean;
   bgmVolume: number;
@@ -40,7 +47,9 @@ function isDualSelectionPayload(payload: SelectionPayload): payload is DualSelec
 }
 
 export default function AppScreenRouter({
-  battle,
+  state,
+  actions,
+  view,
   mobile,
   bgmMuted,
   bgmVolume,
@@ -52,15 +61,12 @@ export default function AppScreenRouter({
   onCloseSettings,
   t,
 }: AppScreenRouterProps): ReactNode {
-  // Consume battle slices only; do not depend on hook-level flattened fields.
-  const B = {
-    ...battle.state,
-    ...battle.actions,
-    ...battle.view,
-  };
+  const S = state;
+  const A = actions;
+  const V = view;
 
   const wrapMain = (node: ReactNode) => (
-    <div id="main-content" className="screen-transition" key={B.screen} style={{ height: '100%' }}>
+    <div id="main-content" className="screen-transition" key={S.screen} style={{ height: '100%' }}>
       {node}
     </div>
   );
@@ -89,91 +95,91 @@ export default function AppScreenRouter({
     </Suspense>
   );
 
-  if (B.screen === 'battle') return null;
+  if (S.screen === 'battle') return null;
 
-  if (B.screen === 'title') {
+  if (S.screen === 'title') {
     return wrapMain(
       <TitleScreen
         onStartNormal={() => {
-          B.clearChallengeRun();
-          B.setTimedMode(false);
-          B.setBattleMode('single');
-          B.setScreen('selection');
+          A.clearChallengeRun();
+          A.setTimedMode(false);
+          A.setBattleMode('single');
+          A.setScreen('selection');
         }}
         onStartTimed={() => {
-          B.clearChallengeRun();
-          B.setTimedMode(true);
-          B.setBattleMode('single');
-          B.setScreen('selection');
+          A.clearChallengeRun();
+          A.setTimedMode(true);
+          A.setBattleMode('single');
+          A.setScreen('selection');
         }}
         onStartCoop={() => {
-          B.clearChallengeRun();
-          B.setTimedMode(false);
-          B.setBattleMode('coop');
-          B.setScreen('selection');
+          A.clearChallengeRun();
+          A.setTimedMode(false);
+          A.setBattleMode('coop');
+          A.setScreen('selection');
         }}
         onStartPvp={() => {
-          B.clearChallengeRun();
-          B.setTimedMode(true);
-          B.setBattleMode('pvp');
-          B.setScreen('selection');
+          A.clearChallengeRun();
+          A.setTimedMode(true);
+          A.setBattleMode('pvp');
+          A.setScreen('selection');
         }}
-        onLeaderboard={() => B.setScreen('leaderboard')}
-        onAchievements={() => B.setScreen('achievements')}
-        onEncyclopedia={() => B.setScreen('encyclopedia')}
-        onDashboard={() => B.setScreen('dashboard')}
-        onDailyChallenge={() => B.setScreen('daily_challenge')}
+        onLeaderboard={() => A.setScreen('leaderboard')}
+        onAchievements={() => A.setScreen('achievements')}
+        onEncyclopedia={() => A.setScreen('encyclopedia')}
+        onDashboard={() => A.setScreen('dashboard')}
+        onDailyChallenge={() => A.setScreen('daily_challenge')}
         onSettings={() => onOpenSettings('title')}
         lowPerfMode={mobile.lowPerfMode}
       />,
     );
   }
 
-  if (B.screen === 'daily_challenge') {
+  if (S.screen === 'daily_challenge') {
     return wrapMain(
       withScreenSuspense(
         <DailyChallengeScreen
-          onBack={() => B.setScreen('title')}
+          onBack={() => A.setScreen('title')}
           onStartDaily={(plan) => {
-            B.queueDailyChallenge(plan);
-            B.setScreen('selection');
+            A.queueDailyChallenge(plan);
+            A.setScreen('selection');
           }}
           onStartTower={() => {
-            B.clearChallengeRun();
-            B.setTimedMode(true);
-            B.setBattleMode('single');
-            B.setScreen('selection');
+            A.clearChallengeRun();
+            A.setTimedMode(true);
+            A.setBattleMode('single');
+            A.setScreen('selection');
           }}
         />,
       ),
     );
   }
 
-  if (B.screen === 'achievements') {
+  if (S.screen === 'achievements') {
     return wrapMain(
       withScreenSuspense(
-        <AchievementScreen unlockedIds={B.achUnlocked} onBack={() => B.setScreen('title')} />,
+        <AchievementScreen unlockedIds={S.achUnlocked} onBack={() => A.setScreen('title')} />,
       ),
     );
   }
 
-  if (B.screen === 'encyclopedia') {
+  if (S.screen === 'encyclopedia') {
     return wrapMain(
       withScreenSuspense(
-        <EncyclopediaScreen encData={B.encData} onBack={() => B.setScreen('title')} />,
+        <EncyclopediaScreen encData={S.encData} onBack={() => A.setScreen('title')} />,
       ),
     );
   }
 
-  if (B.screen === 'dashboard') {
+  if (S.screen === 'dashboard') {
     return wrapMain(
       withScreenSuspense(
-        <DashboardScreen onBack={() => B.setScreen('title')} />,
+        <DashboardScreen onBack={() => A.setScreen('title')} />,
       ),
     );
   }
 
-  if (B.screen === 'settings') {
+  if (S.screen === 'settings') {
     return wrapMain(
       withScreenSuspense(
         <SettingsScreen
@@ -193,81 +199,81 @@ export default function AppScreenRouter({
     );
   }
 
-  if (B.screen === 'leaderboard') {
+  if (S.screen === 'leaderboard') {
     return wrapMain(
       withScreenSuspense(
-        <LeaderboardScreen totalEnemies={B.enemies.length} onBack={() => B.setScreen('title')} />,
+        <LeaderboardScreen totalEnemies={S.enemies.length} onBack={() => A.setScreen('title')} />,
       ),
     );
   }
 
-  if (B.screen === 'selection') {
+  if (S.screen === 'selection') {
     return wrapMain(
       <SelectionScreen
-        mode={B.battleMode}
+        mode={S.battleMode}
         onSelect={(payload: SelectionPayload) => {
-          void B.sfx.init().catch(() => {});
-          if (B.battleMode === 'coop' && isDualSelectionPayload(payload)) {
-            B.setStarter(payload.p1);
-            B.startGame(payload.p1, 'coop', payload.p2);
+          void V.sfx.init().catch(() => {});
+          if (S.battleMode === 'coop' && isDualSelectionPayload(payload)) {
+            A.setStarter(payload.p1);
+            A.startGame(payload.p1, 'coop', payload.p2);
             return;
           }
-          if (B.battleMode === 'pvp' && isDualSelectionPayload(payload)) {
-            B.setStarter(payload.p1);
-            B.setPvpStarter2(payload.p2);
-            B.startGame(payload.p1, 'pvp', payload.p2);
+          if (S.battleMode === 'pvp' && isDualSelectionPayload(payload)) {
+            A.setStarter(payload.p1);
+            A.setPvpStarter2(payload.p2);
+            A.startGame(payload.p1, 'pvp', payload.p2);
             return;
           }
-          B.setStarter(payload);
-          B.startGame(payload, B.battleMode);
+          A.setStarter(payload);
+          A.startGame(payload, S.battleMode);
         }}
-        onBack={() => B.setScreen('title')}
+        onBack={() => A.setScreen('title')}
       />,
     );
   }
 
-  if (B.screen === 'pvp_result') {
+  if (S.screen === 'pvp_result') {
     return wrapMain(
       withScreenSuspense(
         <PvpResultScreen
-          p1Starter={B.starter}
-          p2Starter={B.pvpStarter2}
-          p1StageIdx={B.pStg}
-          p2StageIdx={B.pvpStarter2?.selectedStageIdx || 0}
-          winner={B.pvpWinner || 'p1'}
-          onRematch={() => B.starter && B.startGame(B.starter, 'pvp')}
-          onHome={() => B.setScreen('title')}
+          p1Starter={S.starter}
+          p2Starter={S.pvpStarter2}
+          p1StageIdx={S.pStg}
+          p2StageIdx={S.pvpStarter2?.selectedStageIdx || 0}
+          winner={S.pvpWinner || 'p1'}
+          onRematch={() => S.starter && A.startGame(S.starter, 'pvp')}
+          onHome={() => A.setScreen('title')}
         />,
       ),
     );
   }
 
-  if (B.screen === 'evolve') {
+  if (S.screen === 'evolve') {
     return wrapMain(
       withScreenSuspense(
-        <EvolveScreen starter={B.starter} stageIdx={B.pStg} onContinue={B.continueAfterEvolve} />,
+        <EvolveScreen starter={S.starter} stageIdx={S.pStg} onContinue={A.continueAfterEvolve} />,
       ),
     );
   }
 
-  if (B.screen === 'gameover') {
+  if (S.screen === 'gameover') {
     return wrapMain(
       withScreenSuspense(
         <GameOverScreen
-          defeated={B.defeated}
-          totalEnemies={B.enemies.length}
-          tC={B.tC}
-          tW={B.tW}
-          pLvl={B.pLvl}
-          timedMode={B.timedMode}
-          maxStreak={B.maxStreak}
-          starter={B.starter}
-          mLvls={B.mLvls}
-          getPow={B.getPow}
-          dailyChallengeFeedback={B.dailyChallengeFeedback}
-          onRestart={() => B.starter && B.startGame()}
-          onLeaderboard={() => B.setScreen('leaderboard')}
-          onHome={() => B.setScreen('title')}
+          defeated={S.defeated}
+          totalEnemies={S.enemies.length}
+          tC={S.tC}
+          tW={S.tW}
+          pLvl={S.pLvl}
+          timedMode={S.timedMode}
+          maxStreak={S.maxStreak}
+          starter={S.starter}
+          mLvls={S.mLvls}
+          getPow={V.getPow}
+          dailyChallengeFeedback={S.dailyChallengeFeedback}
+          onRestart={() => S.starter && A.startGame()}
+          onLeaderboard={() => A.setScreen('leaderboard')}
+          onHome={() => A.setScreen('title')}
         />,
       ),
     );

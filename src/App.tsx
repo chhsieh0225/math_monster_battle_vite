@@ -21,7 +21,7 @@ import { BOSS_IDS } from './data/monsterConfigs.ts';
 
 // Screens
 import AppScreenRouter from './components/AppScreenRouter';
-import type { ScreenName, UseBattlePublicApi } from './types/battle';
+import type { ScreenName } from './types/battle';
 
 const BattleScreen = lazy(() => import('./components/screens/BattleScreen'));
 
@@ -149,7 +149,7 @@ function GameShell() {
 // ─── App: main game component (render only) ───
 function App() {
   const { t } = useI18n();
-  const B: UseBattlePublicApi = useBattle();
+  const B = useBattle();
   const S = B.state;
   const A = B.actions;
   const V = B.view;
@@ -231,7 +231,9 @@ function App() {
   if (S.screen !== "battle") {
     return (
       <AppScreenRouter
-        battle={B}
+        state={S}
+        actions={A}
+        view={V}
         mobile={UX}
         bgmMuted={bgmMuted}
         bgmVolume={bgmVolume}
@@ -256,7 +258,9 @@ function App() {
       )}
     >
       <BattleScreen
-        battle={B}
+        state={S}
+        actions={A}
+        view={V}
         mobile={UX}
         onOpenSettings={openSettings}
         t={t}

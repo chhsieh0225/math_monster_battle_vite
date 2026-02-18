@@ -422,3 +422,13 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeDarkEvolved.atkMult,
   },
 ];
+
+export const DROP_TABLE_BY_MONSTER_ID: Readonly<Record<string, string>> = Object.freeze(
+  Object.fromEntries(
+    [
+      ...MONSTER_CONFIGS,
+      ...SLIME_VARIANT_CONFIGS,
+      ...EVOLVED_SLIME_VARIANT_CONFIGS,
+    ].map((cfg) => [cfg.id, cfg.dropTable]),
+  ),
+);

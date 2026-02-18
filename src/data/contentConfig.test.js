@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { DROP_TABLES } from './dropTables.ts';
+import { DROP_TABLES, WEIGHTED_DROP_TABLES } from './dropTables.ts';
 import {
   BOSS_ID_LIST,
   BOSS_SCENE_BY_ID,
@@ -73,6 +73,22 @@ test('all monster/variant configs point to existing drop tables', () => {
     const table = DROP_TABLES[cfg.dropTable];
     assert.ok(Array.isArray(table), `missing drop table: ${cfg.dropTable}`);
     assert.ok(table.length > 0, `empty drop table: ${cfg.dropTable}`);
+  }
+});
+
+test('weighted drop tables cover every configured drop table with valid weights', () => {
+  for (const [tableKey, basePool] of Object.entries(DROP_TABLES)) {
+    const weighted = WEIGHTED_DROP_TABLES[tableKey];
+    assert.ok(weighted, `missing weighted drop table: ${tableKey}`);
+    assert.ok(Array.isArray(weighted.entries), `weighted table entries missing: ${tableKey}`);
+    assert.ok(weighted.entries.length > 0, `weighted table empty: ${tableKey}`);
+    const weightedEmojiSet = new Set(weighted.entries.map((entry) => entry.emoji));
+    for (const emoji of basePool) {
+      assert.ok(weightedEmojiSet.has(emoji), `weighted table ${tableKey} missing emoji: ${emoji}`);
+    }
+    for (const entry of weighted.entries) {
+      assert.ok(entry.weight > 0, `invalid weight in ${tableKey}/${entry.emoji}`);
+    }
   }
 });
 

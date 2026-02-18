@@ -1,5 +1,6 @@
 import type { AchievementId } from '../../types/game';
 import type { CollectionAddResult } from '../../utils/collectionStore.ts';
+import { resolveBattleDrop } from '../../utils/dropResolver.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -16,6 +17,9 @@ type EnemyLite = {
   lvl?: number;
   name?: string;
   drops?: string[];
+  mType?: string;
+  sceneMType?: string;
+  campaignBranch?: 'left' | 'right';
 };
 
 type BattleState = {
@@ -156,7 +160,14 @@ export function runVictoryFlow({
   applyVictoryAchievements({ state: s, tryUnlock });
 
   const dropPool = Array.isArray(enemy.drops) && enemy.drops.length > 0 ? enemy.drops : [''];
-  const drop = dropPool[randInt(0, dropPool.length - 1)] || '';
+  const dropResult = resolveBattleDrop({
+    enemyId: enemy.id,
+    enemyDrops: dropPool,
+    campaignBranch: enemy.campaignBranch ?? null,
+    sceneType: enemy.sceneMType || enemy.mType || null,
+    randInt,
+  });
+  const drop = dropResult.drop;
 
   // Persist the drop to the collection store (best-effort fire-and-forget).
   if (drop) {

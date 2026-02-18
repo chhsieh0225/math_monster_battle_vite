@@ -13,7 +13,7 @@ import type {
   UseBattleView,
   UseMobileExperienceApi,
 } from '../../types/battle';
-import { buildBattleCore } from './battle/buildBattleCore.ts';
+import { buildBattleRuntimeCore, buildBattleStaticCore } from './battle/buildBattleCore.ts';
 import { useAttackImpactPhase } from './battle/useAttackImpactPhase.ts';
 import { BattleMoveMenu } from './battle/BattleMoveMenu.tsx';
 import { BattleQuestionPanel } from './battle/BattleQuestionPanel.tsx';
@@ -95,29 +95,10 @@ export default function BattleScreen({
     coopActiveSlot,
     pvpTurn,
     pvpStarter2,
-    pvpChargeP1,
-    pvpChargeP2,
-    pvpComboP1,
-    pvpComboP2,
-    pvpSpecDefP1,
-    pvpSpecDefP2,
-    pvpBurnP1,
-    pvpBurnP2,
-    pvpFreezeP1,
-    pvpFreezeP2,
-    pvpParalyzeP1,
-    pvpParalyzeP2,
-    pvpStaticP1,
-    pvpStaticP2,
-    charge,
-    chargeReady,
-    sealedMove,
-    mLvls,
-    mHits,
   } = S;
   const { getPow, dualEff } = V;
 
-  const core = useMemo(() => buildBattleCore({
+  const coreStatic = useMemo(() => buildBattleStaticCore({
     state: {
       starter: stateStarter,
       enemy: stateEnemy,
@@ -130,29 +111,8 @@ export default function BattleScreen({
       coopActiveSlot,
       pvpTurn,
       pvpStarter2,
-      pvpChargeP1,
-      pvpChargeP2,
-      pvpComboP1,
-      pvpComboP2,
-      pvpSpecDefP1,
-      pvpSpecDefP2,
-      pvpBurnP1,
-      pvpBurnP2,
-      pvpFreezeP1,
-      pvpFreezeP2,
-      pvpParalyzeP1,
-      pvpParalyzeP2,
-      pvpStaticP1,
-      pvpStaticP2,
-      charge,
-      chargeReady,
-      sealedMove,
-      mLvls,
-      mHits,
     },
     compactUI: UX.compactUI,
-    getPow,
-    dualEff,
     scenes: SCENES,
   }), [
     stateStarter,
@@ -166,33 +126,12 @@ export default function BattleScreen({
     coopActiveSlot,
     pvpTurn,
     pvpStarter2,
-    pvpChargeP1,
-    pvpChargeP2,
-    pvpComboP1,
-    pvpComboP2,
-    pvpSpecDefP1,
-    pvpSpecDefP2,
-    pvpBurnP1,
-    pvpBurnP2,
-    pvpFreezeP1,
-    pvpFreezeP2,
-    pvpParalyzeP1,
-    pvpParalyzeP2,
-    pvpStaticP1,
-    pvpStaticP2,
-    charge,
-    chargeReady,
-    sealedMove,
-    mLvls,
-    mHits,
-    getPow,
-    dualEff,
     UX.compactUI,
   ]);
 
   const memoSceneStyles = useMemo(() => {
-    if (!core) return null;
-    const { scene, layout } = core;
+    if (!coreStatic) return null;
+    const { scene, layout } = coreStatic;
     const bgStyle: CSSProperties | undefined = scene.bgImg
       ? { backgroundImage: `url(${scene.bgImg})` }
       : undefined;
@@ -205,10 +144,10 @@ export default function BattleScreen({
       enemyInfoStyle: { "--battle-enemy-info-right": layout.enemyInfoRight } as BattleCssVars,
       playerInfoStyle: { "--battle-player-info-left": layout.playerInfoLeft } as BattleCssVars,
     };
-  }, [core]);
+  }, [coreStatic]);
 
   const memoEffectTarget = useMemo(() => {
-    if (!core) return null;
+    if (!coreStatic) return null;
     const {
       layout: {
         enemyMainRightPct,
@@ -222,7 +161,7 @@ export default function BattleScreen({
         enemySize,
       },
       coopUsingSub,
-    } = core;
+    } = coreStatic;
 
     const playerMainLeftPct = coopUsingSub ? rawSubLeftPct : rawMainLeftPct;
     const playerMainBottomPct = coopUsingSub ? rawSubBottomPct : rawMainBottomPct;
@@ -249,10 +188,10 @@ export default function BattleScreen({
     const enemyTarget = measuredEnemyTarget || enemyFallbackTarget;
     const playerTarget = measuredPlayerTarget || playerFallbackTarget;
     return S.atkEffect?.targetSide === "player" ? playerTarget : enemyTarget;
-  }, [core, measuredEnemyTarget, measuredPlayerTarget, S.atkEffect?.targetSide]);
+  }, [coreStatic, measuredEnemyTarget, measuredPlayerTarget, S.atkEffect?.targetSide]);
 
   const memoSpriteStyles = useMemo(() => {
-    if (!core) return null;
+    if (!coreStatic) return null;
     const {
       enemy,
       isCoopBattle,
@@ -271,7 +210,7 @@ export default function BattleScreen({
         enemySize,
         enemyTopPct,
       },
-    } = core;
+    } = coreStatic;
 
     const isKoPhase = S.phase === "ko" || S.phase === "victory";
     const enemyDefeated = isKoPhase && S.eHp === 0;
@@ -350,9 +289,9 @@ export default function BattleScreen({
         "--player-shadow-width": `${Math.round(mainPlayerSize * 0.5)}px`,
       } as BattleCssVars,
     };
-  }, [core, S.eHp, S.eAnim, S.enemySub?.id, S.enemySub?.isEvolved, S.pAnim, S.phase, UX.lowPerfMode]);
+  }, [coreStatic, S.eHp, S.eAnim, S.enemySub?.id, S.enemySub?.isEvolved, S.pAnim, S.phase, UX.lowPerfMode]);
 
-  if (!core) return (
+  if (!coreStatic) return (
     <div className="battle-loading-wrap">
       <div className="battle-loading-icon">⚔️</div>
       <div className="battle-loading-text">{t("app.loading.battle", "Preparing battle...")}</div>
@@ -360,6 +299,35 @@ export default function BattleScreen({
   );
 
   // ─── Battle screen locals ───
+  const coreRuntime = buildBattleRuntimeCore({
+    state: {
+      battleMode,
+      pvpTurn,
+      pvpChargeP1: S.pvpChargeP1,
+      pvpChargeP2: S.pvpChargeP2,
+      pvpComboP1: S.pvpComboP1,
+      pvpComboP2: S.pvpComboP2,
+      pvpSpecDefP1: S.pvpSpecDefP1,
+      pvpSpecDefP2: S.pvpSpecDefP2,
+      pvpBurnP1: S.pvpBurnP1,
+      pvpBurnP2: S.pvpBurnP2,
+      pvpFreezeP1: S.pvpFreezeP1,
+      pvpFreezeP2: S.pvpFreezeP2,
+      pvpParalyzeP1: S.pvpParalyzeP1,
+      pvpParalyzeP2: S.pvpParalyzeP2,
+      pvpStaticP1: S.pvpStaticP1,
+      pvpStaticP2: S.pvpStaticP2,
+      charge: S.charge,
+      chargeReady: S.chargeReady,
+      sealedMove: S.sealedMove,
+      mLvls: S.mLvls,
+      mHits: S.mHits,
+    },
+    activeStarter: coreStatic.activeStarter,
+    getPow,
+    dualEff,
+  });
+
   const {
     starter,
     enemy,
@@ -370,11 +338,6 @@ export default function BattleScreen({
     coopCanSwitch,
     coopUsingSub,
     activeStarter,
-    pvpActiveCharge,
-    pvpActiveCombo,
-    pvpActiveSpecDefReady,
-    chargeDisplay,
-    chargeReadyDisplay,
     eSvg,
     eSubSvg,
     pSubSvg,
@@ -387,6 +350,14 @@ export default function BattleScreen({
     pvpEnemyBarActive,
     mainBarActive,
     subBarActive,
+  } = coreStatic;
+
+  const {
+    pvpActiveCharge,
+    pvpActiveCombo,
+    pvpActiveSpecDefReady,
+    chargeDisplay,
+    chargeReadyDisplay,
     moveRuntime,
     pvpEnemyBurn,
     pvpEnemyFreeze,
@@ -400,7 +371,7 @@ export default function BattleScreen({
     pvpPlayerStatic,
     pvpPlayerCombo,
     pvpPlayerSpecDef,
-  } = core;
+  } = coreRuntime;
 
   const canTapAdvance = S.phase === "text" || S.phase === "victory";
   const pvpComboTrigger = PVP_BALANCE.passive.specDefComboTrigger || 4;

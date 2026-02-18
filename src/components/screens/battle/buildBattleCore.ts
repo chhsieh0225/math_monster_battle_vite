@@ -8,7 +8,7 @@ import type {
   UseBattleState,
 } from '../../../types/battle';
 
-type BattleCoreState = Pick<
+type BattleCoreStaticState = Pick<
   UseBattleState,
   | 'starter'
   | 'enemy'
@@ -21,6 +21,12 @@ type BattleCoreState = Pick<
   | 'coopActiveSlot'
   | 'pvpTurn'
   | 'pvpStarter2'
+>;
+
+type BattleCoreRuntimeState = Pick<
+  UseBattleState,
+  | 'battleMode'
+  | 'pvpTurn'
   | 'pvpChargeP1'
   | 'pvpChargeP2'
   | 'pvpComboP1'
@@ -42,12 +48,27 @@ type BattleCoreState = Pick<
   | 'mHits'
 >;
 
+type BattleCoreState = BattleCoreStaticState & BattleCoreRuntimeState;
+
 type BuildBattleCoreArgs = {
   state: BattleCoreState;
   compactUI: boolean;
   getPow: (idx: number) => number;
   dualEff: (move: MoveVm) => number;
   scenes: Record<string, SceneLike>;
+};
+
+export type BuildBattleStaticCoreArgs = {
+  state: BattleCoreStaticState;
+  compactUI: boolean;
+  scenes: Record<string, SceneLike>;
+};
+
+export type BuildBattleRuntimeCoreArgs = {
+  state: BattleCoreRuntimeState;
+  activeStarter: StarterVm | null;
+  getPow: (idx: number) => number;
+  dualEff: (move: MoveVm) => number;
 };
 
 export type MoveRuntime = {
@@ -116,13 +137,34 @@ export type BattleCore = {
   pvpPlayerSpecDef: boolean;
 };
 
-export function buildBattleCore({
+type BattleCoreRuntimeKey =
+  | 'pvpActiveCharge'
+  | 'pvpActiveCombo'
+  | 'pvpActiveSpecDefReady'
+  | 'chargeDisplay'
+  | 'chargeReadyDisplay'
+  | 'moveRuntime'
+  | 'pvpEnemyBurn'
+  | 'pvpEnemyFreeze'
+  | 'pvpEnemyParalyze'
+  | 'pvpEnemyStatic'
+  | 'pvpEnemyCombo'
+  | 'pvpEnemySpecDef'
+  | 'pvpPlayerBurn'
+  | 'pvpPlayerFreeze'
+  | 'pvpPlayerParalyze'
+  | 'pvpPlayerStatic'
+  | 'pvpPlayerCombo'
+  | 'pvpPlayerSpecDef';
+
+export type BattleCoreRuntime = Pick<BattleCore, BattleCoreRuntimeKey>;
+export type BattleCoreStatic = Omit<BattleCore, BattleCoreRuntimeKey>;
+
+export function buildBattleStaticCore({
   state,
   compactUI,
-  getPow,
-  dualEff,
   scenes,
-}: BuildBattleCoreArgs): BattleCore | null {
+}: BuildBattleStaticCoreArgs): BattleCoreStatic | null {
   const {
     starter,
     enemy,
@@ -135,25 +177,6 @@ export function buildBattleCore({
     coopActiveSlot,
     pvpTurn,
     pvpStarter2,
-    pvpChargeP1,
-    pvpChargeP2,
-    pvpComboP1,
-    pvpComboP2,
-    pvpSpecDefP1,
-    pvpSpecDefP2,
-    pvpBurnP1,
-    pvpBurnP2,
-    pvpFreezeP1,
-    pvpFreezeP2,
-    pvpParalyzeP1,
-    pvpParalyzeP2,
-    pvpStaticP1,
-    pvpStaticP2,
-    charge,
-    chargeReady,
-    sealedMove,
-    mLvls,
-    mHits,
   } = state;
 
   if (!starter || !enemy) return null;
@@ -169,18 +192,6 @@ export function buildBattleCore({
   const activeStarter = battleMode === 'pvp'
     ? (pvpTurn === 'p1' ? starter : pvpStarter2)
     : (coopUsingSub ? allySub : starter);
-
-  const pvpActiveCharge = battleMode === 'pvp'
-    ? (pvpTurn === 'p1' ? (pvpChargeP1 || 0) : (pvpChargeP2 || 0))
-    : 0;
-  const pvpActiveCombo = battleMode === 'pvp'
-    ? (pvpTurn === 'p1' ? (pvpComboP1 || 0) : (pvpComboP2 || 0))
-    : 0;
-  const pvpActiveSpecDefReady = battleMode === 'pvp'
-    ? (pvpTurn === 'p1' ? !!pvpSpecDefP1 : !!pvpSpecDefP2)
-    : false;
-  const chargeDisplay = battleMode === 'pvp' ? pvpActiveCharge : charge;
-  const chargeReadyDisplay = battleMode === 'pvp' ? pvpActiveCharge >= 3 : chargeReady;
 
   const eSvg = enemy.svgFn();
   const eSubSvg = showEnemySub && enemySub ? enemySub.svgFn() : null;
@@ -218,6 +229,74 @@ export function buildBattleCore({
     ? pvpTurn === 'p1'
     : (isCoopBattle ? !coopUsingSub : true);
   const subBarActive = showAllySub && coopUsingSub;
+
+  return {
+    starter,
+    enemy,
+    st,
+    isCoopBattle,
+    showEnemySub,
+    showAllySub,
+    hasDualUnits,
+    coopCanSwitch,
+    coopUsingSub,
+    activeStarter,
+    eSvg,
+    eSubSvg,
+    pSubSvg,
+    pSvg,
+    mainMaxHp,
+    subMaxHp,
+    sceneKey,
+    scene,
+    layout,
+    pvpEnemyBarActive,
+    mainBarActive,
+    subBarActive,
+  };
+}
+
+export function buildBattleRuntimeCore({
+  state,
+  activeStarter,
+  getPow,
+  dualEff,
+}: BuildBattleRuntimeCoreArgs): BattleCoreRuntime {
+  const {
+    battleMode,
+    pvpTurn,
+    pvpChargeP1,
+    pvpChargeP2,
+    pvpComboP1,
+    pvpComboP2,
+    pvpSpecDefP1,
+    pvpSpecDefP2,
+    pvpBurnP1,
+    pvpBurnP2,
+    pvpFreezeP1,
+    pvpFreezeP2,
+    pvpParalyzeP1,
+    pvpParalyzeP2,
+    pvpStaticP1,
+    pvpStaticP2,
+    charge,
+    chargeReady,
+    sealedMove,
+    mLvls,
+    mHits,
+  } = state;
+
+  const pvpActiveCharge = battleMode === 'pvp'
+    ? (pvpTurn === 'p1' ? (pvpChargeP1 || 0) : (pvpChargeP2 || 0))
+    : 0;
+  const pvpActiveCombo = battleMode === 'pvp'
+    ? (pvpTurn === 'p1' ? (pvpComboP1 || 0) : (pvpComboP2 || 0))
+    : 0;
+  const pvpActiveSpecDefReady = battleMode === 'pvp'
+    ? (pvpTurn === 'p1' ? !!pvpSpecDefP1 : !!pvpSpecDefP2)
+    : false;
+  const chargeDisplay = battleMode === 'pvp' ? pvpActiveCharge : charge;
+  const chargeReadyDisplay = battleMode === 'pvp' ? pvpActiveCharge >= 3 : chargeReady;
   const moveRuntime = (activeStarter?.moves || []).map((m, i) => {
     const sealed = battleMode === 'pvp' ? false : sealedMove === i;
     const pvpLocked = battleMode === 'pvp' ? (Boolean(m.risky) && !chargeReadyDisplay) : false;
@@ -232,33 +311,11 @@ export function buildBattleCore({
   });
 
   return {
-    starter,
-    enemy,
-    st,
-    isCoopBattle,
-    showEnemySub,
-    showAllySub,
-    hasDualUnits,
-    coopCanSwitch,
-    coopUsingSub,
-    activeStarter,
     pvpActiveCharge,
     pvpActiveCombo,
     pvpActiveSpecDefReady,
     chargeDisplay,
     chargeReadyDisplay,
-    eSvg,
-    eSubSvg,
-    pSubSvg,
-    pSvg,
-    mainMaxHp,
-    subMaxHp,
-    sceneKey,
-    scene,
-    layout,
-    pvpEnemyBarActive,
-    mainBarActive,
-    subBarActive,
     moveRuntime,
     pvpEnemyBurn: pvpBurnP2 || 0,
     pvpEnemyFreeze: !!pvpFreezeP2,
@@ -272,5 +329,32 @@ export function buildBattleCore({
     pvpPlayerStatic: pvpStaticP1 || 0,
     pvpPlayerCombo: pvpComboP1 || 0,
     pvpPlayerSpecDef: !!pvpSpecDefP1,
+  };
+}
+
+export function buildBattleCore({
+  state,
+  compactUI,
+  getPow,
+  dualEff,
+  scenes,
+}: BuildBattleCoreArgs): BattleCore | null {
+  const staticCore = buildBattleStaticCore({
+    state,
+    compactUI,
+    scenes,
+  });
+  if (!staticCore) return null;
+
+  const runtimeCore = buildBattleRuntimeCore({
+    state,
+    activeStarter: staticCore.activeStarter,
+    getPow,
+    dualEff,
+  });
+
+  return {
+    ...staticCore,
+    ...runtimeCore,
   };
 }

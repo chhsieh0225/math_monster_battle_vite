@@ -222,7 +222,7 @@
   mix-blend-mode:normal;
 }
 .battle-weather-layer.weather-sun{
-  mix-blend-mode:screen;
+  mix-blend-mode:normal;
 }
 .battle-weather-rain-drop{
   position:absolute;

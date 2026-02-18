@@ -45,6 +45,13 @@ export function useSpriteTargets({
   const [measuredEnemyTarget, setMeasuredEnemyTarget] = useState<SpriteTarget | null>(null);
   const [measuredPlayerTarget, setMeasuredPlayerTarget] = useState<SpriteTarget | null>(null);
 
+  const shouldUpdateTarget = (prev: SpriteTarget | null, next: SpriteTarget): boolean => {
+    if (!prev) return true;
+    const dx = Math.abs(prev.flyRight - next.flyRight);
+    const dy = Math.abs(prev.flyTop - next.flyTop);
+    return dx > 0.08 || dy > 0.08;
+  };
+
   useEffect(() => {
     if (screen !== 'battle') return;
     let rafId = 0;
@@ -65,12 +72,13 @@ export function useSpriteTargets({
           const cy = enemyRect.top - rootRect.top + enemyRect.height / 2;
           const rightPx = rootRect.width - cx;
           const topPx = cy;
-          setMeasuredEnemyTarget({
+          const nextTarget: SpriteTarget = {
             right: `${rightPx}px`,
             top: `${topPx}px`,
             flyRight: rightPx / rootRect.width * 100,
             flyTop: topPx / rootRect.height * 100,
-          });
+          };
+          setMeasuredEnemyTarget((prev) => (shouldUpdateTarget(prev, nextTarget) ? nextTarget : prev));
         }
       }
 
@@ -81,12 +89,13 @@ export function useSpriteTargets({
           const cy = playerRect.top - rootRect.top + playerRect.height / 2;
           const rightPx = rootRect.width - cx;
           const topPx = cy;
-          setMeasuredPlayerTarget({
+          const nextTarget: SpriteTarget = {
             right: `${rightPx}px`,
             top: `${topPx}px`,
             flyRight: rightPx / rootRect.width * 100,
             flyTop: topPx / rootRect.height * 100,
-          });
+          };
+          setMeasuredPlayerTarget((prev) => (shouldUpdateTarget(prev, nextTarget) ? nextTarget : prev));
         }
       }
     };

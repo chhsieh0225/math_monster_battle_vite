@@ -61,7 +61,8 @@ export default function BattleScreen({
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
   useBattleParallax({
     hostRef: battleArenaRef,
-    enabled: showHeavyFx && !S.gamePaused,
+    // Disable on compact/mobile layout to reduce input/render jitter on lower-end devices.
+    enabled: showHeavyFx && !S.gamePaused && !UX.compactUI,
   });
   const { measuredEnemyTarget, measuredPlayerTarget } = useSpriteTargets({
     screen: S.screen,

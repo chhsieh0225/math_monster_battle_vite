@@ -423,3 +423,7 @@ test('resolvePvpStrike applies type-based crit and anti-crit profiles', () => {
   });
   assert.ok(fireVsFire.critMultiplier > fireVsGrass.critMultiplier);
 });
+
+test('dark pvp skill scale decays by move slot', () => {
+  assert.deepEqual(PVP_BALANCE.skillScaleByType.dark, [1.0, 0.99, 0.98, 0.97]);
+});

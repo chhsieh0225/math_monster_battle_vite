@@ -14,6 +14,14 @@ const CRIT_BY_TYPE = {
 } as const;
 
 export const BALANCE_CONFIG = {
+  /** Cap for dual-type effectiveness multiplier (prevents 1.5×1.5 = 2.25× OHKO) */
+  dualTypeEffCap: 1.8,
+
+  /** HP ceiling grows with player level: +hpPerLevel per pLvl */
+  hpPerLevel: 5,
+  /** Extra HP ceiling bonus per evolution stage (on top of per-level growth) */
+  evolutionHpBonus: 15,
+
   damage: {
     playerAttackVariance: {
       min: 0.85,
@@ -184,7 +192,7 @@ export const BALANCE_CONFIG = {
       grass: [0.99, 0.99, 0.98, 0.95],
       electric: [1.0, 0.99, 0.97, 0.94],
       light: [0.99, 0.99, 0.98, 0.95],
-      dark: [1.0, 1.0, 1.0, 1.0],
+      dark: [1.0, 0.99, 0.98, 0.97],
     },
     passiveScaleByType: {
       fire: 0.99,

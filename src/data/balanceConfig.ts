@@ -278,8 +278,8 @@ export const BALANCE_CONFIG = {
     },
     boss: {
       phase2AttackMultiplier: 1.5,
-      phase3AttackMultiplier: 2.0,
-      releaseAttackScale: 2.2,
+      phase3AttackMultiplier: 1.7,
+      releaseAttackScale: 1.8,
       sealDurationTurns: 2,
       sealMovePool: [0, 1, 2],
       chargeEveryTurns: 4,

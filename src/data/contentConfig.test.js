@@ -14,6 +14,7 @@ import {
   STAGE_SCALE_STEP,
   STAGE_WAVES,
 } from './stageConfigs.ts';
+import { BALANCE_CONFIG } from './balanceConfig.ts';
 
 test('stage config references valid monster ids', () => {
   const knownIds = new Set(MONSTER_CONFIGS.map(mon => mon.id));
@@ -72,4 +73,9 @@ test('skill sets have required structure for all starters', () => {
       assert.ok(move.growth > 0, `${id}/${move.name} growth should be positive`);
     }
   }
+});
+
+test('boss phase-3 burst multipliers stay within survivability guardrails', () => {
+  assert.ok(BALANCE_CONFIG.traits.boss.phase3AttackMultiplier <= 1.8);
+  assert.ok(BALANCE_CONFIG.traits.boss.releaseAttackScale <= 1.8);
 });

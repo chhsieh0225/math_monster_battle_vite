@@ -836,6 +836,7 @@ export function useBattle() {
     achUnlocked, achPopup, encData,
   });
 
+  /** @type {import('../types/battle').UseBattleActions} */
   const actions = {
     dismissAch,
     setTimedMode, setBattleMode, setScreen, queueDailyChallenge, clearChallengeRun,
@@ -852,9 +853,11 @@ export function useBattle() {
     sfx,
   });
 
-  return {
+  /** @type {import('../types/battle').UseBattlePublicApi} */
+  const publicApi = {
     state,
     actions,
     view,
   };
+  return publicApi;
 }

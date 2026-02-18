@@ -1,9 +1,7 @@
-import type { CSSProperties } from 'react';
 import { ACHIEVEMENTS } from '../../data/achievements';
 import type { AchievementDef, AchievementId } from '../../types/game';
 import { useI18n } from '../../i18n';
-
-const PAGE_BG = "linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)";
+import './AchievementScreen.css';
 
 type AchievementScreenProps = {
   unlockedIds?: AchievementId[];
@@ -16,41 +14,38 @@ export default function AchievementScreen({ unlockedIds = [], onBack }: Achievem
   const unlocked = new Set<AchievementId>(unlockedIds);
   const total = achievements.length;
   const done = unlockedIds.length;
-  const pct = Math.round(done / Math.max(1, total) * 100);
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: PAGE_BG, color: "white", overflow: "hidden" }}>
+    <div className="achievement-screen">
       {/* Header */}
-      <div style={{ padding: "16px 16px 10px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-          <button className="back-touch-btn" onClick={onBack} aria-label={t("a11y.common.backToTitle", "Back to title")} style={backBtn}>←</button>
-          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>⭐ {t("achievement.title", "Achievements")}</div>
-          <div style={{ flex: 1 }} />
-          <div style={{ fontSize: 12, opacity: 0.5 }}>{done}/{total}</div>
+      <div className="achievement-header">
+        <div className="achievement-head-row">
+          <button className="back-touch-btn achievement-back-btn" onClick={onBack} aria-label={t("a11y.common.backToTitle", "Back to title")}>←</button>
+          <div className="achievement-title">⭐ {t("achievement.title", "Achievements")}</div>
+          <div className="achievement-head-spacer" />
+          <div className="achievement-count">{done}/{total}</div>
         </div>
-        <div style={{ height: 5, background: "rgba(255,255,255,0.08)", borderRadius: 3 }}>
-          <div style={{ width: `${pct}%`, height: "100%", background: "linear-gradient(90deg,#6366f1,#a855f7)", borderRadius: 3, transition: "width 0.5s ease" }} />
-        </div>
+        <progress
+          className="achievement-progress"
+          value={done}
+          max={Math.max(1, total)}
+          aria-label={t("achievement.progress", "Achievement progress")}
+        />
       </div>
 
       {/* Grid */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "6px 12px 16px", WebkitOverflowScrolling: "touch" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+      <div className="achievement-grid-wrap">
+        <div className="achievement-grid">
           {achievements.map((a) => {
             const ok = unlocked.has(a.id);
+            const cardClass = ok ? "achievement-card is-unlocked" : "achievement-card is-locked";
             return (
-              <div key={a.id} style={{
-                background: ok ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.025)",
-                border: ok ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(255,255,255,0.05)",
-                borderRadius: 12, padding: "10px 12px",
-                opacity: ok ? 1 : 0.4,
-                filter: ok ? "none" : "grayscale(0.8)",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 22 }}>{ok ? a.icon : "🔒"}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700 }}>{a.name}</span>
+              <div key={a.id} className={cardClass}>
+                <div className="achievement-card-head">
+                  <span className="achievement-card-icon">{ok ? a.icon : "🔒"}</span>
+                  <span className="achievement-card-name">{a.name}</span>
                 </div>
-                <div style={{ fontSize: 11, opacity: 0.55, lineHeight: 1.4 }}>{a.desc}</div>
+                <div className="achievement-card-desc">{a.desc}</div>
               </div>
             );
           })}
@@ -59,5 +54,3 @@ export default function AchievementScreen({ unlockedIds = [], onBack }: Achievem
     </div>
   );
 }
-
-const backBtn: CSSProperties = { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "white", fontSize: 16, fontWeight: 700, width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 };

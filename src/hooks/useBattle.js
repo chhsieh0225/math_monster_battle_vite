@@ -121,6 +121,8 @@ import {
 } from './battle/progressionFlowAdapter.ts';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
 import { useBattleAsyncGate, useBattleStateRef } from './useBattleRuntime';
+import { buildUseBattleState } from './battle/publicStateBuilder.ts';
+import { buildUseBattleView } from './battle/publicViewBuilder.ts';
 
 // ═══════════════════════════════════════════════════════════════════
 /** @returns {import('../types/battle').UseBattlePublicApi} */
@@ -813,7 +815,7 @@ export function useBattle() {
   // ═══════════════════════════════════════════════════════════════
   //  PUBLIC API
   // ═══════════════════════════════════════════════════════════════
-  const state = {
+  const state = buildUseBattleState({
     screen, timedMode, battleMode, enemies,
     starter, allySub, pHp, pHpSub, pExp, pLvl, pStg,
     coopActiveSlot,
@@ -832,7 +834,7 @@ export function useBattle() {
     dailyChallengeFeedback,
     expNext, chargeReady,
     achUnlocked, achPopup, encData,
-  };
+  });
 
   const actions = {
     dismissAch,
@@ -843,12 +845,12 @@ export function useBattle() {
     rmD, rmP,
   };
 
-  const view = {
+  const view = buildUseBattleView({
     timerSubscribe: subscribeTimerLeft,
     getTimerLeft,
     getPow, dualEff,
     sfx,
-  };
+  });
 
   return {
     state,

@@ -29,6 +29,11 @@ type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | und
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 
+function normalizeBossVisualId(id?: string | null): string {
+  if (!id) return '';
+  return id.startsWith('pvp_') ? id.slice(4) : id;
+}
+
 type BattleScreenProps = {
   state: UseBattleState;
   actions: UseBattleActions;
@@ -185,6 +190,168 @@ export default function BattleScreen({
     UX.compactUI,
   ]);
 
+  const memoSceneStyles = useMemo(() => {
+    if (!core) return null;
+    const { scene, layout } = core;
+    const bgStyle: CSSProperties | undefined = scene.bgImg
+      ? { backgroundImage: `url(${scene.bgImg})` }
+      : undefined;
+    return {
+      sceneBgStyle: bgStyle,
+      sceneSkyStyle: { "--scene-sky": scene.sky } as BattleCssVars,
+      sceneGroundStyle: { "--scene-ground": scene.ground } as BattleCssVars,
+      sceneTopPlatformStyle: { "--scene-platform-top": scene.platform2 } as BattleCssVars,
+      sceneBottomPlatformStyle: { "--scene-platform-bottom": scene.platform1 } as BattleCssVars,
+      enemyInfoStyle: { "--battle-enemy-info-right": layout.enemyInfoRight } as BattleCssVars,
+      playerInfoStyle: { "--battle-player-info-left": layout.playerInfoLeft } as BattleCssVars,
+    };
+  }, [core]);
+
+  const memoEffectTarget = useMemo(() => {
+    if (!core) return null;
+    const {
+      layout: {
+        enemyMainRightPct,
+        enemyTopPct,
+        playerMainLeftPct: rawMainLeftPct,
+        playerMainBottomPct: rawMainBottomPct,
+        playerSubLeftPct: rawSubLeftPct,
+        playerSubBottomPct: rawSubBottomPct,
+        mainPlayerSize: rawMainSize,
+        subPlayerSize: rawSubSize,
+        enemySize,
+      },
+      coopUsingSub,
+    } = core;
+
+    const playerMainLeftPct = coopUsingSub ? rawSubLeftPct : rawMainLeftPct;
+    const playerMainBottomPct = coopUsingSub ? rawSubBottomPct : rawMainBottomPct;
+    const mainPlayerSize = coopUsingSub ? rawSubSize : rawMainSize;
+
+    const enemyHeight = enemySize * 100 / 120;
+    const enemyFallbackTarget = {
+      top: `calc(${enemyTopPct}% + ${enemyHeight / 2}px)`,
+      right: `calc(${enemyMainRightPct}% + ${enemySize / 2}px)`,
+      flyRight: enemyMainRightPct + enemySize / 2 * 100 / 390,
+      flyTop: enemyTopPct + enemyHeight / 2 * 100 / 550,
+    };
+
+    const playerMainHeight = mainPlayerSize * 100 / 120;
+    const playerCenterTopPct = Math.max(8, 100 - playerMainBottomPct - (playerMainHeight * 100 / 550) / 2);
+    const playerCenterRightPct = Math.max(8, 100 - playerMainLeftPct - (mainPlayerSize * 100 / 390) / 2);
+    const playerFallbackTarget = {
+      top: `calc(${playerCenterTopPct}% + 0px)`,
+      right: `calc(${playerCenterRightPct}% + 0px)`,
+      flyRight: playerCenterRightPct,
+      flyTop: playerCenterTopPct,
+    };
+
+    const enemyTarget = measuredEnemyTarget || enemyFallbackTarget;
+    const playerTarget = measuredPlayerTarget || playerFallbackTarget;
+    return S.atkEffect?.targetSide === "player" ? playerTarget : enemyTarget;
+  }, [core, measuredEnemyTarget, measuredPlayerTarget, S.atkEffect?.targetSide]);
+
+  const memoSpriteStyles = useMemo(() => {
+    if (!core) return null;
+    const {
+      enemy,
+      isCoopBattle,
+      coopUsingSub,
+      layout: {
+        compactDual,
+        enemyMainRightPct,
+        enemySubRightPct,
+        enemySubTopPct,
+        playerMainLeftPct: rawMainLeftPct,
+        playerMainBottomPct: rawMainBottomPct,
+        playerSubLeftPct: rawSubLeftPct,
+        playerSubBottomPct: rawSubBottomPct,
+        mainPlayerSize: rawMainSize,
+        subPlayerSize: rawSubSize,
+        enemySize,
+        enemyTopPct,
+      },
+    } = core;
+
+    const isKoPhase = S.phase === "ko" || S.phase === "victory";
+    const enemyDefeated = isKoPhase && S.eHp === 0;
+    const enemySubId = S.enemySub?.id ?? '';
+    const enemySubIsEvolved = Boolean(S.enemySub?.isEvolved);
+    const enemyLowHp = enemy.maxHp > 0 && S.eHp > 0 && S.eHp / enemy.maxHp < 0.25;
+    const enemyIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemy.id));
+    const enemySubIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemySubId));
+    const enemyIdleAnim = enemyIsBossVisual
+      ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
+      : enemyLowHp
+        ? "float 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite"
+        : "float 3s ease-in-out infinite";
+
+    const playerMainLeftPct = coopUsingSub ? rawSubLeftPct : rawMainLeftPct;
+    const playerMainBottomPct = coopUsingSub ? rawSubBottomPct : rawMainBottomPct;
+    const playerSubLeftPct = coopUsingSub ? rawMainLeftPct : rawSubLeftPct;
+    const playerSubBottomPct = coopUsingSub ? rawMainBottomPct : rawSubBottomPct;
+    const mainPlayerSize = coopUsingSub ? rawSubSize : rawMainSize;
+
+    const isLargeEnemySub = enemySubId === "golumn" || enemySubId === "golumn_mud";
+    const enemySubScale = isLargeEnemySub
+      ? (compactDual ? "0.86" : "0.94")
+      : (compactDual ? "0.72" : "0.8");
+    const enemySubSize = !enemySubId
+      ? 96
+      : enemySubIsBossVisual
+        ? 160
+        : isLargeEnemySub
+          ? 150
+          : enemySubIsEvolved
+            ? 120
+            : 96;
+
+    const enemyHeight = enemySize * 100 / 120;
+    return {
+      enemySubSize,
+      enemyMainSpriteStyle: {
+        "--enemy-main-right": `${enemyMainRightPct}%`,
+        "--enemy-main-top": `${enemyTopPct}%`,
+        "--enemy-main-anim": enemyDefeated
+          ? "enemyDissolve .9s ease-out forwards"
+          : S.eAnim || (UX.lowPerfMode ? "none" : enemyIdleAnim),
+      } as BattleCssVars,
+      enemySubSpriteStyle: {
+        "--enemy-sub-right": `${enemySubRightPct}%`,
+        "--enemy-sub-top": `${enemySubTopPct}%`,
+        "--enemy-sub-scale": enemySubScale,
+        "--enemy-sub-anim": UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite",
+      } as BattleCssVars,
+      enemyMainShadowStyle: {
+        "--enemy-shadow-right": `calc(${enemyMainRightPct}% + ${Math.round(enemySize * 0.18)}px)`,
+        "--enemy-shadow-top": `calc(${enemyTopPct}% + ${Math.round(enemyHeight * 0.72)}px)`,
+        "--enemy-shadow-width": `${Math.round(enemySize * 0.56)}px`,
+        "--enemy-shadow-anim": enemyIsBossVisual ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
+      } as BattleCssVars,
+      playerMainSpriteStyle: {
+        "--player-main-left": `${playerMainLeftPct}%`,
+        "--player-main-bottom": `${playerMainBottomPct}%`,
+        "--player-main-filter": isCoopBattle && !coopUsingSub ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))" : "none",
+        "--player-main-z": coopUsingSub ? "4" : "6",
+        "--player-main-opacity": coopUsingSub ? ".84" : "1",
+        "--player-main-anim": S.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite"),
+      } as BattleCssVars,
+      playerSubSpriteStyle: {
+        "--player-sub-left": `${playerSubLeftPct}%`,
+        "--player-sub-bottom": `${playerSubBottomPct}%`,
+        "--player-sub-filter": isCoopBattle && coopUsingSub ? "drop-shadow(0 0 12px rgba(34,197,94,0.75))" : "none",
+        "--player-sub-z": coopUsingSub ? "6" : "4",
+        "--player-sub-opacity": coopUsingSub ? "1" : ".84",
+        "--player-sub-anim": UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite",
+      } as BattleCssVars,
+      playerMainShadowStyle: {
+        "--player-shadow-left": `calc(${playerMainLeftPct}% + ${Math.round(mainPlayerSize * 0.48)}px)`,
+        "--player-shadow-bottom": `${Math.max(8, playerMainBottomPct - 1)}%`,
+        "--player-shadow-width": `${Math.round(mainPlayerSize * 0.5)}px`,
+      } as BattleCssVars,
+    };
+  }, [core, S.eHp, S.eAnim, S.enemySub?.id, S.enemySub?.isEvolved, S.pAnim, S.phase, UX.lowPerfMode]);
+
   if (!core) return (
     <div className="battle-loading-wrap">
       <div className="battle-loading-icon">⚔️</div>
@@ -236,55 +403,16 @@ export default function BattleScreen({
   } = core;
 
   const canTapAdvance = S.phase === "text" || S.phase === "victory";
-  const isKoPhase = S.phase === "ko" || S.phase === "victory";
-  const enemyDefeated = isKoPhase && S.eHp === 0;
   const pvpComboTrigger = PVP_BALANCE.passive.specDefComboTrigger || 4;
   const {
-    compactDual,
-    enemyInfoRight,
-    playerInfoLeft,
-    enemyMainRightPct,
-    enemySubRightPct,
-    enemySubTopPct,
-    playerMainLeftPct: rawMainLeftPct,
-    playerMainBottomPct: rawMainBottomPct,
-    playerSubLeftPct: rawSubLeftPct,
-    playerSubBottomPct: rawSubBottomPct,
     mainPlayerSize: rawMainSize,
     subPlayerSize: rawSubSize,
     enemySize: eSize,
-    enemyTopPct: eTopPct,
   } = layout;
-
-  // Co-op: swap main/sub positions AND sizes so active character is always in front
-  const playerMainLeftPct = coopUsingSub ? rawSubLeftPct : rawMainLeftPct;
-  const playerMainBottomPct = coopUsingSub ? rawSubBottomPct : rawMainBottomPct;
-  const playerSubLeftPct = coopUsingSub ? rawMainLeftPct : rawSubLeftPct;
-  const playerSubBottomPct = coopUsingSub ? rawMainBottomPct : rawSubBottomPct;
   const mainPlayerSize = coopUsingSub ? rawSubSize : rawMainSize;
   const subPlayerSize = coopUsingSub ? rawMainSize : rawSubSize;
 
-  // Enemy visual center fallback (used before first DOM measurement)
-  // Note: MonsterSprite height = size * 100 / 120, so center Y uses sprite height / 2.
-  const eHeight = eSize * 100 / 120;
-  const enemyFallbackTarget = {
-    top: `calc(${eTopPct}% + ${eHeight / 2}px)`,
-    right: `calc(${enemyMainRightPct}% + ${eSize / 2}px)`,
-    flyRight: enemyMainRightPct + eSize / 2 * 100 / 390,
-    flyTop: eTopPct + eHeight / 2 * 100 / 550,
-  };
-  const pMainHeight = mainPlayerSize * 100 / 120;
-  const playerCenterTopPct = Math.max(8, 100 - playerMainBottomPct - (pMainHeight * 100 / 550) / 2);
-  const playerCenterRightPct = Math.max(8, 100 - playerMainLeftPct - (mainPlayerSize * 100 / 390) / 2);
-  const playerFallbackTarget = {
-    top: `calc(${playerCenterTopPct}% + 0px)`,
-    right: `calc(${playerCenterRightPct}% + 0px)`,
-    flyRight: playerCenterRightPct,
-    flyTop: playerCenterTopPct,
-  };
-  const eTarget = measuredEnemyTarget || enemyFallbackTarget;
-  const pTarget = measuredPlayerTarget || playerFallbackTarget;
-  const effectTarget = S.atkEffect?.targetSide === "player" ? pTarget : eTarget;
+  const effectTarget = memoEffectTarget!;
   const question = S.q;
   const feedback = S.fb;
   const selectedMove = activeStarter && S.selIdx != null
@@ -322,81 +450,26 @@ export default function BattleScreen({
         : starter.type === "light"
           ? "battle-pill-specdef-light"
           : "battle-pill-specdef-grass";
-  const sceneBgStyle: CSSProperties | undefined = scene.bgImg
-    ? { backgroundImage: `url(${scene.bgImg})` }
-    : undefined;
-  const sceneSkyStyle: BattleCssVars = { "--scene-sky": scene.sky };
-  const sceneGroundStyle: BattleCssVars = { "--scene-ground": scene.ground };
-  const sceneTopPlatformStyle: BattleCssVars = { "--scene-platform-top": scene.platform2 };
-  const sceneBottomPlatformStyle: BattleCssVars = { "--scene-platform-bottom": scene.platform1 };
-  const weatherSeed = `${sceneKey}-${enemy.id}-${S.round}-${S.battleMode}`;
-  const enemyInfoStyle: BattleCssVars = { "--battle-enemy-info-right": enemyInfoRight };
-  const playerInfoStyle: BattleCssVars = { "--battle-player-info-left": playerInfoLeft };
-  const enemyLowHp = enemy.maxHp > 0 && S.eHp > 0 && S.eHp / enemy.maxHp < 0.25;
-  const normalizeBossVisualId = (id?: string | null): string => {
-    if (!id) return '';
-    return id.startsWith('pvp_') ? id.slice(4) : id;
-  };
-  const enemyIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemy.id));
-  const enemySubIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(S.enemySub?.id ?? ''));
-  const enemyIdleAnim = enemyIsBossVisual
-    ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
-    : enemyLowHp
-      ? "float 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite"
-      : "float 3s ease-in-out infinite";
-  const enemyMainSpriteStyle: BattleCssVars = ({
-    "--enemy-main-right": `${enemyMainRightPct}%`,
-    "--enemy-main-top": `${eTopPct}%`,
-    "--enemy-main-anim": enemyDefeated
-      ? "enemyDissolve .9s ease-out forwards"
-      : S.eAnim || (UX.lowPerfMode ? "none" : enemyIdleAnim),
-  });
-  const isLargeEnemySub = S.enemySub?.id === "golumn" || S.enemySub?.id === "golumn_mud";
-  const enemySubScale = isLargeEnemySub
-    ? (compactDual ? "0.86" : "0.94")
-    : (compactDual ? "0.72" : "0.8");
-  const enemySubSize = !S.enemySub
-    ? 96
-    : enemySubIsBossVisual
-      ? 160
-    : isLargeEnemySub
-        ? 150
-        : S.enemySub.isEvolved
-          ? 120
-          : 96;
-  const enemySubSpriteStyle: BattleCssVars = ({
-    "--enemy-sub-right": `${enemySubRightPct}%`,
-    "--enemy-sub-top": `${enemySubTopPct}%`,
-    "--enemy-sub-scale": enemySubScale,
-    "--enemy-sub-anim": UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite",
-  });
-  const enemyMainShadowStyle: BattleCssVars = ({
-    "--enemy-shadow-right": `calc(${enemyMainRightPct}% + ${Math.round(eSize * 0.18)}px)`,
-    "--enemy-shadow-top": `calc(${eTopPct}% + ${Math.round(eHeight * 0.72)}px)`,
-    "--enemy-shadow-width": `${Math.round(eSize * 0.56)}px`,
-    "--enemy-shadow-anim": enemyIsBossVisual ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
-  });
-  const playerMainSpriteStyle: BattleCssVars = ({
-    "--player-main-left": `${playerMainLeftPct}%`,
-    "--player-main-bottom": `${playerMainBottomPct}%`,
-    "--player-main-filter": isCoopBattle && !coopUsingSub ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))" : "none",
-    "--player-main-z": coopUsingSub ? "4" : "6",
-    "--player-main-opacity": coopUsingSub ? ".84" : "1",
-    "--player-main-anim": S.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite"),
-  });
-  const playerSubSpriteStyle: BattleCssVars = ({
-    "--player-sub-left": `${playerSubLeftPct}%`,
-    "--player-sub-bottom": `${playerSubBottomPct}%`,
-    "--player-sub-filter": isCoopBattle && coopUsingSub ? "drop-shadow(0 0 12px rgba(34,197,94,0.75))" : "none",
-    "--player-sub-z": coopUsingSub ? "6" : "4",
-    "--player-sub-opacity": coopUsingSub ? "1" : ".84",
-    "--player-sub-anim": UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite",
-  });
-  const playerMainShadowStyle: BattleCssVars = ({
-    "--player-shadow-left": `calc(${playerMainLeftPct}% + ${Math.round(mainPlayerSize * 0.48)}px)`,
-    "--player-shadow-bottom": `${Math.max(8, playerMainBottomPct - 1)}%`,
-    "--player-shadow-width": `${Math.round(mainPlayerSize * 0.5)}px`,
-  });
+  const {
+    sceneBgStyle,
+    sceneSkyStyle,
+    sceneGroundStyle,
+    sceneTopPlatformStyle,
+    sceneBottomPlatformStyle,
+    enemyInfoStyle,
+    playerInfoStyle,
+  } = memoSceneStyles!;
+  const enemyId = enemy.id;
+  const weatherSeed = `${sceneKey}-${enemyId}-${S.round}-${S.battleMode}`;
+  const {
+    enemyMainSpriteStyle,
+    enemySubSpriteStyle,
+    enemyMainShadowStyle,
+    playerMainSpriteStyle,
+    playerSubSpriteStyle,
+    playerMainShadowStyle,
+    enemySubSize,
+  } = memoSpriteStyles!;
   const impactPhaseClass = showHeavyFx ? `battle-impact-${impactPhase}` : "battle-impact-idle";
 
   return (
@@ -473,6 +546,7 @@ export default function BattleScreen({
           sceneType={sceneKey}
           seed={weatherSeed}
           enabled={showHeavyFx && !S.gamePaused}
+          reduced={UX.compactUI || UX.autoLowEnd}
         />
 
         {/* Enemy info */}

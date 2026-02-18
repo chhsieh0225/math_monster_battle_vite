@@ -69,6 +69,7 @@ import { useBattleSessionLifecycle } from './useBattleSessionLifecycle';
 import { ENC_TOTAL } from '../data/encyclopedia.ts';
 import sfx from '../utils/sfx.ts';
 import { buildRoster, type BattleRosterMonster } from '../utils/rosterBuilder';
+import { applyCampaignPlanToRoster, buildCampaignRunPlan } from '../utils/campaignPlanner.ts';
 import {
   createAbilityModel,
   getDifficultyLevelForOps,
@@ -149,15 +150,7 @@ export function useBattle() {
   const { initSession, markQStart, logAns, endSession } = useSessionLog();
   const { rand, randInt, chance, pickIndex, reseed } = useBattleRng();
   const UI = useBattleUIState({ rand, randInt });
-
-  const buildNewRoster = useCallback(
-    (mode: BattleMode = 'single'): EnemyVm[] => {
-      const rosterMode = mode === 'coop' || mode === 'double' ? 'double' : 'single';
-      return localizeEnemyRoster(buildRoster(pickIndex, rosterMode), locale);
-    },
-    [pickIndex, locale],
-  );
-  const [enemies, setEnemies] = useState<EnemyVm[]>(() => buildNewRoster('single'));
+  const campaignPlanRef = useRef<ReturnType<typeof buildCampaignRunPlan> | null>(null);
 
   // ──── Screen & mode ────
   const [screen, setScreenState] = useState<ScreenName>('title');
@@ -179,6 +172,28 @@ export function useBattle() {
     settleRunAsFailed,
     settleRunAsCleared,
   } = useDailyChallengeRun();
+  const hasChallengeRun = Boolean(queuedChallenge || activeChallenge);
+  const buildNewRoster = useCallback(
+    (mode: BattleMode = 'single'): EnemyVm[] => {
+      const rosterMode = mode === 'coop' || mode === 'double' ? 'double' : 'single';
+      if (rosterMode === 'single' && !hasChallengeRun) {
+        const campaignPlan = buildCampaignRunPlan(pickIndex);
+        campaignPlanRef.current = campaignPlan;
+        const campaignWaves = campaignPlan.nodes.map((node) => node.wave);
+        const roster = buildRoster(pickIndex, 'single', {
+          singleWaves: campaignWaves,
+          disableRandomSwap: true,
+        });
+        return localizeEnemyRoster(applyCampaignPlanToRoster(roster, campaignPlan), locale);
+      }
+      campaignPlanRef.current = null;
+      return localizeEnemyRoster(buildRoster(pickIndex, rosterMode), locale);
+    },
+    [pickIndex, locale, hasChallengeRun],
+  );
+  const [enemies, setEnemies] = useState<EnemyVm[]>(
+    () => localizeEnemyRoster(buildRoster(pickIndex, 'single'), locale),
+  );
   const [coopActiveSlot, setCoopActiveSlot] = useState<'main' | 'sub'>('main');
   const pvpState = usePvpState();
   const {
@@ -502,6 +517,17 @@ export function useBattle() {
         resetFrozen: () => { frozenR.current = false; },
         playBattleIntro,
         pickIndex,
+        getCampaignNodeMeta: (roundIndex) => {
+          const node = campaignPlanRef.current?.nodes?.[roundIndex];
+          if (!node) return null;
+          return {
+            roundIndex: node.roundIndex,
+            totalNodes: node.totalNodes,
+            branch: node.branch,
+            tier: node.tier,
+            eventTag: node.eventTag,
+          };
+        },
       },
     });
   }, [

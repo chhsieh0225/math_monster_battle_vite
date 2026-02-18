@@ -81,6 +81,62 @@ export const BALANCE_CONFIG = {
         { monsterId: 'boss', sceneType: 'dark' },
       ],
     },
+    campaign: {
+      branchChoices: [
+        {
+          left: { monsterId: 'slime', slimeType: 'grass', sceneType: 'grass' },
+          right: { monsterId: 'slime', slimeType: 'water', sceneType: 'grass' },
+        },
+        {
+          left: { monsterId: 'fire', sceneType: 'fire' },
+          right: { monsterId: 'ghost', sceneType: 'ghost' },
+        },
+        {
+          left: { monsterId: 'slime', slimeType: 'steel', sceneType: 'steel' },
+          right: { monsterId: 'golumn', sceneType: 'rock' },
+        },
+        {
+          left: { monsterId: 'dragon', sceneType: 'steel' },
+          right: { monsterId: 'fire', sceneType: 'dark' },
+        },
+        {
+          left: { monsterId: 'ghost', sceneType: 'dark' },
+          right: { monsterId: 'golumn', sceneType: 'rock' },
+        },
+        {
+          left: { monsterId: 'dragon', sceneType: 'dark' },
+          right: { monsterId: 'ghost', sceneType: 'poison' },
+        },
+        {
+          left: { monsterId: 'fire', sceneType: 'fire' },
+          right: { monsterId: 'dragon', sceneType: 'dark' },
+        },
+        {
+          left: { monsterId: 'golumn', sceneType: 'rock' },
+          right: { monsterId: 'ghost', sceneType: 'ghost' },
+        },
+        {
+          left: { monsterId: 'dragon', sceneType: 'steel' },
+          right: { monsterId: 'fire', sceneType: 'dark' },
+        },
+        {
+          left: { monsterId: 'boss', sceneType: 'dark' },
+          right: { monsterId: 'boss', sceneType: 'dark' },
+        },
+      ],
+      eliteRounds: [3, 6, 8],
+      eventRounds: [2, 5, 7],
+      eventPool: ['healing_spring', 'focus_surge', 'hazard_ambush'],
+      tierScale: {
+        elite: { hp: 1.22, atk: 1.18 },
+        boss: { hp: 1.08, atk: 1.06 },
+      },
+      eventScaleByTag: {
+        healing_spring: { hp: 0.9, atk: 0.92 },
+        focus_surge: { hp: 0.95, atk: 0.95 },
+        hazard_ambush: { hp: 1.1, atk: 1.08 },
+      },
+    },
     randomSwap: {
       startIndex: 1,
       endIndexExclusiveFromTail: 1,

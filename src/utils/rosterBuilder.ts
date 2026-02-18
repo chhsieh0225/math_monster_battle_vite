@@ -28,6 +28,10 @@ export type BattleRosterMonster = MonsterBase & {
 };
 
 type PickIndex = (length: number) => number;
+type BuildRosterOptions = {
+  singleWaves?: StageWave[];
+  disableRandomSwap?: boolean;
+};
 
 const MONSTER_BY_ID = new Map<string, MonsterBase>(MONSTERS.map((mon) => [mon.id, mon]));
 
@@ -60,15 +64,22 @@ function resolveVariantMonsterId(baseId: string, pickIndex: PickIndex): string {
   return typeof picked === 'string' ? picked : baseId;
 }
 
-export function buildRoster(pickIndex: PickIndex, mode: 'single' | 'double' = 'single'): BattleRosterMonster[] {
+export function buildRoster(
+  pickIndex: PickIndex,
+  mode: 'single' | 'double' = 'single',
+  options: BuildRosterOptions = {},
+): BattleRosterMonster[] {
   const pick = (arr: SlimeVariant[]): SlimeVariant => arr[pickIndex(arr.length)];
-  const baseWaves: StageWave[] = mode === 'double' ? DOUBLE_STAGE_WAVES : STAGE_WAVES;
+  const useSingleWaveOverride = mode === 'single' && Array.isArray(options.singleWaves) && options.singleWaves.length > 0;
+  const baseWaves: StageWave[] = useSingleWaveOverride
+    ? options.singleWaves || []
+    : (mode === 'double' ? DOUBLE_STAGE_WAVES : STAGE_WAVES);
 
   // Deep-copy waves so we can mutate safely
   const waves: StageWave[] = baseWaves.map(w => ({ ...w }));
 
   // Randomly inject one swap candidate into a mid-game slot (indices 1..8)
-  if (STAGE_RANDOM_SWAP_CANDIDATES.length > 0) {
+  if (!options.disableRandomSwap && STAGE_RANDOM_SWAP_CANDIDATES.length > 0) {
     const candidate = STAGE_RANDOM_SWAP_CANDIDATES[pickIndex(STAGE_RANDOM_SWAP_CANDIDATES.length)];
     const swappableUpperExclusive = Math.max(
       STAGE_RANDOM_SWAP_START_INDEX,

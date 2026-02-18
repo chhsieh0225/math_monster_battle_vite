@@ -10,6 +10,13 @@ type StarterLite = StarterVm | null;
 type AllyLite = StarterVm | null;
 type EnemyLite = EnemyVm | null;
 type ExistingEnemy = NonNullable<EnemyLite>;
+type CampaignNodeMeta = {
+  roundIndex: number;
+  totalNodes: number;
+  branch: 'left' | 'right';
+  tier: 'normal' | 'elite' | 'boss';
+  eventTag: 'healing_spring' | 'focus_surge' | 'hazard_ambush' | null;
+};
 
 type RunStartBattleFlowArgs = {
   idx: number;
@@ -39,6 +46,7 @@ type RunStartBattleFlowArgs = {
   resetFrozen: () => void;
   playBattleIntro: () => void;
   pickIndex?: (size: number) => number;
+  getCampaignNodeMeta?: (roundIndex: number) => CampaignNodeMeta | null;
 };
 
 function formatFallback(template: string, params?: TranslatorParams): string {
@@ -77,6 +85,7 @@ export function runStartBattleFlow({
   resetFrozen,
   playBattleIntro,
   pickIndex,
+  getCampaignNodeMeta,
 }: RunStartBattleFlowArgs): void {
   const list = roster || enemies;
   const nextEnemy = list[idx];
@@ -116,11 +125,47 @@ export function runStartBattleFlow({
     sceneNames[sceneType] || '',
     locale,
   );
+  const campaignMeta = getCampaignNodeMeta ? getCampaignNodeMeta(idx) : null;
+  const campaignLines: string[] = [];
+  if (campaignMeta) {
+    const branchLabel = campaignMeta.branch === 'left'
+      ? tr(t, 'battle.route.branch.left', 'Left Path')
+      : tr(t, 'battle.route.branch.right', 'Right Path');
+    campaignLines.push(tr(
+      t,
+      'battle.route.node',
+      '🧭 Route node {step}/{total} ({branch})',
+      {
+        step: campaignMeta.roundIndex + 1,
+        total: campaignMeta.totalNodes,
+        branch: branchLabel,
+      },
+    ));
+    if (campaignMeta.tier === 'elite') {
+      campaignLines.push(tr(
+        t,
+        'battle.route.elite',
+        '⚔️ Elite node: enemy stats increased this battle.',
+      ));
+    }
+    if (campaignMeta.eventTag) {
+      const fallbackByTag: Record<NonNullable<CampaignNodeMeta['eventTag']>, string> = {
+        healing_spring: '💧 Event: Healing Spring (enemy stats reduced this battle).',
+        focus_surge: '✨ Event: Focus Surge (enemy slightly weakened this battle).',
+        hazard_ambush: '⚠️ Event: Ambush Trap (enemy gains bonus this battle).',
+      };
+      campaignLines.push(tr(
+        t,
+        `battle.route.event.${campaignMeta.eventTag}`,
+        fallbackByTag[campaignMeta.eventTag],
+      ));
+    }
+  }
 
   setPhase('text');
   if (enemySub) {
     if (allySub) {
-      setBText(tr(
+      const intro = tr(
         t,
         'battle.start.doubleWithAlly',
         '【{scene}】2v2 battle! Our {leader} and {ally} face {enemy} and {enemySub}!',
@@ -131,9 +176,10 @@ export function runStartBattleFlow({
           enemy: enemy.name || '',
           enemySub: enemySub.name || '',
         },
-      ));
+      );
+      setBText(campaignLines.length > 0 ? `${campaignLines.join('\n')}\n${intro}` : intro);
     } else {
-      setBText(tr(
+      const intro = tr(
         t,
         'battle.start.double',
         '【{scene}】Double battle! {enemy}({enemyType}) and {enemySub}({enemySubType}) appeared!',
@@ -144,7 +190,8 @@ export function runStartBattleFlow({
           enemySub: enemySub.name || '',
           enemySubType: `${enemySub.typeIcon || ''}${enemySub.typeIcon2 || ''}${enemySub.typeName || ''}${enemySub.typeName2 ? '/' + enemySub.typeName2 : ''}`,
         },
-      ));
+      );
+      setBText(campaignLines.length > 0 ? `${campaignLines.join('\n')}\n${intro}` : intro);
     }
   } else {
     let introText = tr(
@@ -172,7 +219,7 @@ export function runStartBattleFlow({
         },
       );
     }
-    setBText(introText);
+    setBText(campaignLines.length > 0 ? `${campaignLines.join('\n')}\n${introText}` : introText);
   }
 
   setScreen('battle');

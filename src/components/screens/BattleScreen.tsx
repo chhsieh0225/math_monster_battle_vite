@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import { useSpriteTargets } from '../../hooks/useSpriteTargets';
+import { useBattleParallax } from '../../hooks/useBattleParallax';
 import { SCENES } from '../../data/scenes';
 import { PVP_BALANCE } from '../../data/pvpBalance';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
@@ -21,6 +22,7 @@ import { BattleStatusOverlay } from './battle/BattleStatusOverlay.tsx';
 import { BattleFxLayer } from './battle/BattleFxLayer.tsx';
 import { BattleArenaSprites } from './battle/BattleArenaSprites.tsx';
 import { BattleSceneLayers } from './battle/BattleSceneLayers.tsx';
+import { BattleWeatherLayer } from './battle/BattleWeatherLayer.tsx';
 import './BattleScreen.css';
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
 
@@ -54,8 +56,13 @@ export default function BattleScreen({
     enabled: showHeavyFx,
   });
   const battleRootRef = useRef<HTMLDivElement | null>(null);
+  const battleArenaRef = useRef<HTMLDivElement | null>(null);
   const enemySpriteRef = useRef<HTMLDivElement | null>(null);
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
+  useBattleParallax({
+    hostRef: battleArenaRef,
+    enabled: showHeavyFx && !S.gamePaused,
+  });
   const { measuredEnemyTarget, measuredPlayerTarget } = useSpriteTargets({
     screen: S.screen,
     phase: S.phase,
@@ -206,6 +213,7 @@ export default function BattleScreen({
     pSvg,
     mainMaxHp,
     subMaxHp,
+    sceneKey,
     scene,
     layout,
     pvpEnemyBarActive,
@@ -320,6 +328,7 @@ export default function BattleScreen({
   const sceneGroundStyle: BattleCssVars = { "--scene-ground": scene.ground };
   const sceneTopPlatformStyle: BattleCssVars = { "--scene-platform-top": scene.platform2 };
   const sceneBottomPlatformStyle: BattleCssVars = { "--scene-platform-bottom": scene.platform1 };
+  const weatherSeed = `${sceneKey}-${enemy.id}-${S.round}-${S.battleMode}`;
   const enemyInfoStyle: BattleCssVars = { "--battle-enemy-info-right": enemyInfoRight };
   const playerInfoStyle: BattleCssVars = { "--battle-player-info-left": playerInfoLeft };
   const enemyLowHp = enemy.maxHp > 0 && S.eHp > 0 && S.eHp / enemy.maxHp < 0.25;
@@ -444,7 +453,7 @@ export default function BattleScreen({
       />
 
       {/* ═══ Battle arena ═══ */}
-      <div className="battle-arena">
+      <div className="battle-arena" ref={battleArenaRef}>
         <BattleSceneLayers
           showHeavyFx={showHeavyFx}
           bgStyle={sceneBgStyle}
@@ -452,6 +461,11 @@ export default function BattleScreen({
           groundStyle={sceneGroundStyle}
           platformTopStyle={sceneTopPlatformStyle}
           Deco={scene.Deco}
+        />
+        <BattleWeatherLayer
+          sceneType={sceneKey}
+          seed={weatherSeed}
+          enabled={showHeavyFx && !S.gamePaused}
         />
 
         {/* Enemy info */}

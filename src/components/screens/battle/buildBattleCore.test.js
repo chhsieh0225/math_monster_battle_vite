@@ -128,3 +128,21 @@ test('buildBattleCore uses pvp charge gate and ignores sealed move in pvp', () =
   assert.equal(readyCore.moveRuntime[1].locked, false); // risky unlocked at 3
   assert.equal(readyCore.chargeDisplay, 3);
 });
+
+test('buildBattleCore returns resolved sceneKey when requested key is missing', () => {
+  const core = buildBattleCore({
+    state: makeState({
+      enemy: {
+        ...makeEnemy('volt'),
+        sceneMType: 'electric',
+      },
+    }),
+    compactUI: false,
+    getPow: (idx) => 10 + idx,
+    dualEff: () => 1,
+    scenes: TEST_SCENES,
+  });
+
+  assert.ok(core);
+  assert.equal(core.sceneKey, 'grass');
+});

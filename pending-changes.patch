@@ -1,0 +1,900 @@
+diff --git a/src/components/screens/BattleScreen.css b/src/components/screens/BattleScreen.css
+index 57c4a3d..02240f3 100644
+--- a/src/components/screens/BattleScreen.css
++++ b/src/components/screens/BattleScreen.css
+@@ -1,4 +1,13 @@
+-.scene-bg{position:absolute;inset:0;background-size:cover;background-position:center;image-rendering:auto;z-index:0;}
++.scene-bg{
++  position:absolute;
++  inset:0;
++  background-size:cover;
++  background-position:center;
++  image-rendering:auto;
++  z-index:0;
++  transform:translate3d(calc(var(--battle-parallax-x) * .16),calc(var(--battle-parallax-y) * .1),0) scale(1.04);
++  will-change:transform;
++}
+ 
+ @keyframes dropFloat{0%{transform:translateY(0) scale(0);opacity:0}20%{transform:translateY(-10px) scale(1.3);opacity:1}50%{transform:translateY(-30px) scale(1);opacity:1}100%{transform:translateY(-50px) scale(0.8);opacity:0}}
+ @keyframes effToastFadeOut{0%{opacity:1}100%{opacity:0}}
+@@ -121,6 +130,8 @@
+ }
+ 
+ .battle-arena{
++  --battle-parallax-x:0px;
++  --battle-parallax-y:0px;
+   flex:1;
+   position:relative;
+   min-height:0;
+@@ -134,6 +145,8 @@
+   opacity:.25;
+   z-index:1;
+   transition:background 1s ease;
++  transform:translate3d(calc(var(--battle-parallax-x) * .22),calc(var(--battle-parallax-y) * .14),0);
++  will-change:transform;
+ }
+ .battle-scene-ground{
+   position:absolute;
+@@ -144,6 +157,8 @@
+   background:var(--scene-ground,#1f2937);
+   transition:background 1s ease;
+   z-index:2;
++  transform:translate3d(calc(var(--battle-parallax-x) * .34),calc(var(--battle-parallax-y) * .2),0);
++  will-change:transform;
+ }
+ .battle-scene-platform-top{
+   position:absolute;
+@@ -155,6 +170,8 @@
+   border-radius:50%;
+   filter:blur(2px);
+   z-index:3;
++  transform:translate3d(calc(var(--battle-parallax-x) * .48),calc(var(--battle-parallax-y) * .26),0);
++  will-change:transform;
+ }
+ .battle-scene-platform-bottom{
+   position:absolute;
+@@ -166,12 +183,97 @@
+   border-radius:50%;
+   filter:blur(2px);
+   z-index:3;
++  transform:translate3d(calc(var(--battle-parallax-x) * .56),calc(var(--battle-parallax-y) * .3),0);
++  will-change:transform;
+ }
+ .battle-scene-deco{
+   position:absolute;
+   inset:0;
+   z-index:4;
+   pointer-events:none;
++  transform:translate3d(calc(var(--battle-parallax-x) * .72),calc(var(--battle-parallax-y) * .42),0);
++  will-change:transform;
++}
++.battle-weather-layer{
++  position:absolute;
++  inset:0;
++  overflow:hidden;
++  pointer-events:none;
++  z-index:5;
++  transform:translate3d(calc(var(--battle-parallax-x) * .84),calc(var(--battle-parallax-y) * .5),0);
++  will-change:transform;
++}
++.battle-weather-layer.weather-rain,
++.battle-weather-layer.weather-storm{
++  mix-blend-mode:screen;
++}
++.battle-weather-layer.weather-fog{
++  mix-blend-mode:screen;
++}
++.battle-weather-rain-drop{
++  position:absolute;
++  top:-20%;
++  left:var(--wx);
++  width:2px;
++  height:var(--wh);
++  opacity:var(--wop);
++  border-radius:2px;
++  background:linear-gradient(180deg,rgba(148,163,184,0),rgba(191,219,254,.95));
++  transform:rotate(12deg);
++  animation:weatherRainFall var(--wd) linear var(--wdelay) infinite;
++}
++.battle-weather-snow-flake{
++  position:absolute;
++  top:-8%;
++  left:var(--wx);
++  width:var(--ws);
++  height:var(--ws);
++  opacity:var(--wop);
++  border-radius:50%;
++  background:radial-gradient(circle,rgba(255,255,255,.92) 0%,rgba(226,232,240,.38) 62%,rgba(148,163,184,0) 100%);
++  animation:weatherSnowFall var(--wd) linear var(--wdelay) infinite;
++}
++.battle-weather-fog-band{
++  position:absolute;
++  top:var(--wtop);
++  left:var(--wleft);
++  width:var(--ww);
++  height:var(--wh);
++  opacity:var(--wop);
++  border-radius:999px;
++  filter:blur(8px);
++  background:linear-gradient(90deg,rgba(226,232,240,.2),rgba(226,232,240,.44),rgba(226,232,240,.16));
++  animation:weatherFogDrift var(--wd) ease-in-out var(--wdelay) infinite;
++}
++.battle-weather-dust-haze{
++  position:absolute;
++  inset:0;
++  background:linear-gradient(180deg,rgba(234,179,8,.06),rgba(120,53,15,.1) 65%,rgba(120,53,15,.18));
++  opacity:.45;
++}
++.battle-weather-dust-dot{
++  position:absolute;
++  top:var(--wtop);
++  left:-5%;
++  width:var(--ws);
++  height:var(--ws);
++  border-radius:50%;
++  opacity:var(--wop);
++  background:radial-gradient(circle,rgba(245,158,11,.82),rgba(146,64,14,.2) 72%,rgba(0,0,0,0) 100%);
++  animation:weatherDustFlow var(--wd) linear var(--wdelay) infinite;
++}
++.battle-weather-lightning{
++  --wdelay:4s;
++  position:absolute;
++  inset:0;
++  opacity:0;
++  background:
++    radial-gradient(circle at 65% 24%,rgba(255,255,255,.5),rgba(191,219,254,.18) 24%,rgba(15,23,42,0) 58%),
++    linear-gradient(180deg,rgba(191,219,254,.08),rgba(15,23,42,0));
++  animation:weatherLightning 8.6s linear var(--wdelay) infinite;
++}
++.battle-weather-lightning-secondary{
++  animation-duration:11.2s;
+ }
+ .battle-info-enemy{
+   position:absolute;
+@@ -994,6 +1096,17 @@
+ .low-perf-mode .scene-bg{transition:none!important}
+ .low-perf-mode .battle-root{backdrop-filter:none!important}
+ .low-perf-mode .battle-hp-card{backdrop-filter:none}
++.battle-root.low-perf .scene-bg,
++.battle-root.low-perf .battle-scene-sky,
++.battle-root.low-perf .battle-scene-ground,
++.battle-root.low-perf .battle-scene-platform-top,
++.battle-root.low-perf .battle-scene-platform-bottom,
++.battle-root.low-perf .battle-scene-deco,
++.battle-root.low-perf .battle-weather-layer{
++  transform:none!important;
++  will-change:auto;
++}
++.battle-root.low-perf .battle-weather-layer{display:none}
+ 
+ @media (max-width:768px){
+   .battle-arena{min-height:250px}
+@@ -1162,6 +1275,47 @@
+   90%  { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+   100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+ }
++@keyframes weatherRainFall{
++  0%{transform:translate3d(0,0,0) rotate(12deg);opacity:0}
++  8%{opacity:var(--wop)}
++  100%{transform:translate3d(-14px,128%,0) rotate(12deg);opacity:0}
++}
++@keyframes weatherSnowFall{
++  0%{transform:translate3d(0,0,0);opacity:0}
++  10%{opacity:var(--wop)}
++  55%{transform:translate3d(var(--wsway),58%,0)}
++  100%{transform:translate3d(calc(var(--wsway) * -1),122%,0);opacity:0}
++}
++@keyframes weatherFogDrift{
++  0%{transform:translate3d(0,0,0) scale(1)}
++  50%{transform:translate3d(24px,-5px,0) scale(1.04)}
++  100%{transform:translate3d(0,0,0) scale(1)}
++}
++@keyframes weatherDustFlow{
++  0%{transform:translate3d(0,0,0) scale(.7);opacity:0}
++  15%{opacity:var(--wop)}
++  100%{transform:translate3d(112vw,var(--wdy),0) scale(1.08);opacity:0}
++}
++@keyframes weatherLightning{
++  0%{opacity:0}
++  56%{opacity:0}
++  57.5%{opacity:.52}
++  59%{opacity:.1}
++  60%{opacity:.62}
++  62%{opacity:0}
++  100%{opacity:0}
++}
+ @media (prefers-reduced-motion: reduce) {
++  .scene-bg,
++  .battle-scene-sky,
++  .battle-scene-ground,
++  .battle-scene-platform-top,
++  .battle-scene-platform-bottom,
++  .battle-scene-deco,
++  .battle-weather-layer{
++    transform:none!important;
++    will-change:auto;
++  }
++  .battle-weather-layer{display:none!important}
+   [aria-hidden="true"] > div { animation: none !important; opacity: 0.4 !important; }
+ }
+diff --git a/src/components/screens/BattleScreen.tsx b/src/components/screens/BattleScreen.tsx
+index 105ecfc..35c84dd 100644
+--- a/src/components/screens/BattleScreen.tsx
++++ b/src/components/screens/BattleScreen.tsx
+@@ -1,6 +1,7 @@
+ import { useMemo, useRef } from 'react';
+ import type { CSSProperties } from 'react';
+ import { useSpriteTargets } from '../../hooks/useSpriteTargets';
++import { useBattleParallax } from '../../hooks/useBattleParallax';
+ import { SCENES } from '../../data/scenes';
+ import { PVP_BALANCE } from '../../data/pvpBalance';
+ import { BOSS_IDS } from '../../data/monsterConfigs.ts';
+@@ -21,6 +22,7 @@ import { BattleStatusOverlay } from './battle/BattleStatusOverlay.tsx';
+ import { BattleFxLayer } from './battle/BattleFxLayer.tsx';
+ import { BattleArenaSprites } from './battle/BattleArenaSprites.tsx';
+ import { BattleSceneLayers } from './battle/BattleSceneLayers.tsx';
++import { BattleWeatherLayer } from './battle/BattleWeatherLayer.tsx';
+ import './BattleScreen.css';
+ type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
+ 
+@@ -54,8 +56,13 @@ export default function BattleScreen({
+     enabled: showHeavyFx,
+   });
+   const battleRootRef = useRef<HTMLDivElement | null>(null);
++  const battleArenaRef = useRef<HTMLDivElement | null>(null);
+   const enemySpriteRef = useRef<HTMLDivElement | null>(null);
+   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
++  useBattleParallax({
++    hostRef: battleArenaRef,
++    enabled: showHeavyFx && !S.gamePaused,
++  });
+   const { measuredEnemyTarget, measuredPlayerTarget } = useSpriteTargets({
+     screen: S.screen,
+     phase: S.phase,
+@@ -206,6 +213,7 @@ export default function BattleScreen({
+     pSvg,
+     mainMaxHp,
+     subMaxHp,
++    sceneKey,
+     scene,
+     layout,
+     pvpEnemyBarActive,
+@@ -320,6 +328,7 @@ export default function BattleScreen({
+   const sceneGroundStyle: BattleCssVars = { "--scene-ground": scene.ground };
+   const sceneTopPlatformStyle: BattleCssVars = { "--scene-platform-top": scene.platform2 };
+   const sceneBottomPlatformStyle: BattleCssVars = { "--scene-platform-bottom": scene.platform1 };
++  const weatherSeed = `${sceneKey}-${enemy.id}-${S.round}-${S.battleMode}`;
+   const enemyInfoStyle: BattleCssVars = { "--battle-enemy-info-right": enemyInfoRight };
+   const playerInfoStyle: BattleCssVars = { "--battle-player-info-left": playerInfoLeft };
+   const enemyLowHp = enemy.maxHp > 0 && S.eHp > 0 && S.eHp / enemy.maxHp < 0.25;
+@@ -444,7 +453,7 @@ export default function BattleScreen({
+       />
+ 
+       {/* ═══ Battle arena ═══ */}
+-      <div className="battle-arena">
++      <div className="battle-arena" ref={battleArenaRef}>
+         <BattleSceneLayers
+           showHeavyFx={showHeavyFx}
+           bgStyle={sceneBgStyle}
+@@ -453,6 +462,11 @@ export default function BattleScreen({
+           platformTopStyle={sceneTopPlatformStyle}
+           Deco={scene.Deco}
+         />
++        <BattleWeatherLayer
++          sceneType={sceneKey}
++          seed={weatherSeed}
++          enabled={showHeavyFx && !S.gamePaused}
++        />
+ 
+         {/* Enemy info */}
+         <BattleEnemyInfoPanel
+diff --git a/src/components/screens/battle/buildBattleCore.test.js b/src/components/screens/battle/buildBattleCore.test.js
+index 4ac1e7b..2310d25 100644
+--- a/src/components/screens/battle/buildBattleCore.test.js
++++ b/src/components/screens/battle/buildBattleCore.test.js
+@@ -128,3 +128,21 @@ test('buildBattleCore uses pvp charge gate and ignores sealed move in pvp', () =
+   assert.equal(readyCore.moveRuntime[1].locked, false); // risky unlocked at 3
+   assert.equal(readyCore.chargeDisplay, 3);
+ });
++
++test('buildBattleCore returns resolved sceneKey when requested key is missing', () => {
++  const core = buildBattleCore({
++    state: makeState({
++      enemy: {
++        ...makeEnemy('volt'),
++        sceneMType: 'electric',
++      },
++    }),
++    compactUI: false,
++    getPow: (idx) => 10 + idx,
++    dualEff: () => 1,
++    scenes: TEST_SCENES,
++  });
++
++  assert.ok(core);
++  assert.equal(core.sceneKey, 'grass');
++});
+diff --git a/src/components/screens/battle/buildBattleCore.ts b/src/components/screens/battle/buildBattleCore.ts
+index e71217c..390ec96 100644
+--- a/src/components/screens/battle/buildBattleCore.ts
++++ b/src/components/screens/battle/buildBattleCore.ts
+@@ -95,6 +95,7 @@ export type BattleCore = {
+   pSvg: string;
+   mainMaxHp: number;
+   subMaxHp: number;
++  sceneKey: string;
+   scene: SceneConfig;
+   layout: BattleLayoutConfig;
+   pvpEnemyBarActive: boolean;
+@@ -191,7 +192,13 @@ export function buildBattleCore({
+ 
+   const mainMaxHp = getLevelMaxHp(pLvl, pStg);
+   const subMaxHp = showAllySub && allySub ? getStarterLevelMaxHp(allySub, pLvl, pStg) : getLevelMaxHp(1, 0);
+-  const sceneKey = enemy.sceneMType || enemy.mType || 'grass';
++  const requestedSceneKey = enemy.sceneMType || enemy.mType || 'grass';
++  const fallbackSceneKey = Object.keys(scenes)[0] || 'grass';
++  const sceneKey = scenes[requestedSceneKey]
++    ? requestedSceneKey
++    : scenes.grass
++      ? 'grass'
++      : fallbackSceneKey;
+   const scene = scenes[sceneKey] || scenes.grass || Object.values(scenes)[0];
+   if (!scene) return null;
+ 
+@@ -245,6 +252,7 @@ export function buildBattleCore({
+     pSvg,
+     mainMaxHp,
+     subMaxHp,
++    sceneKey,
+     scene,
+     layout,
+     pvpEnemyBarActive,
+diff --git a/src/data/balanceConfig.ts b/src/data/balanceConfig.ts
+index 591f8c8..d81bf62 100644
+--- a/src/data/balanceConfig.ts
++++ b/src/data/balanceConfig.ts
+@@ -81,6 +81,62 @@ export const BALANCE_CONFIG = {
+         { monsterId: 'boss', sceneType: 'dark' },
+       ],
+     },
++    campaign: {
++      branchChoices: [
++        {
++          left: { monsterId: 'slime', slimeType: 'grass', sceneType: 'grass' },
++          right: { monsterId: 'slime', slimeType: 'water', sceneType: 'grass' },
++        },
++        {
++          left: { monsterId: 'fire', sceneType: 'fire' },
++          right: { monsterId: 'ghost', sceneType: 'ghost' },
++        },
++        {
++          left: { monsterId: 'slime', slimeType: 'steel', sceneType: 'steel' },
++          right: { monsterId: 'golumn', sceneType: 'rock' },
++        },
++        {
++          left: { monsterId: 'dragon', sceneType: 'steel' },
++          right: { monsterId: 'fire', sceneType: 'dark' },
++        },
++        {
++          left: { monsterId: 'ghost', sceneType: 'dark' },
++          right: { monsterId: 'golumn', sceneType: 'rock' },
++        },
++        {
++          left: { monsterId: 'dragon', sceneType: 'dark' },
++          right: { monsterId: 'ghost', sceneType: 'poison' },
++        },
++        {
++          left: { monsterId: 'fire', sceneType: 'fire' },
++          right: { monsterId: 'dragon', sceneType: 'dark' },
++        },
++        {
++          left: { monsterId: 'golumn', sceneType: 'rock' },
++          right: { monsterId: 'ghost', sceneType: 'ghost' },
++        },
++        {
++          left: { monsterId: 'dragon', sceneType: 'steel' },
++          right: { monsterId: 'fire', sceneType: 'dark' },
++        },
++        {
++          left: { monsterId: 'boss', sceneType: 'dark' },
++          right: { monsterId: 'boss', sceneType: 'dark' },
++        },
++      ],
++      eliteRounds: [3, 6, 8],
++      eventRounds: [2, 5, 7],
++      eventPool: ['healing_spring', 'focus_surge', 'hazard_ambush'],
++      tierScale: {
++        elite: { hp: 1.22, atk: 1.18 },
++        boss: { hp: 1.08, atk: 1.06 },
++      },
++      eventScaleByTag: {
++        healing_spring: { hp: 0.9, atk: 0.92 },
++        focus_surge: { hp: 0.95, atk: 0.95 },
++        hazard_ambush: { hp: 1.1, atk: 1.08 },
++      },
++    },
+     randomSwap: {
+       startIndex: 1,
+       endIndexExclusiveFromTail: 1,
+diff --git a/src/data/challengeCatalog.ts b/src/data/challengeCatalog.ts
+index c5beb51..b96b966 100644
+--- a/src/data/challengeCatalog.ts
++++ b/src/data/challengeCatalog.ts
+@@ -197,7 +197,7 @@ const TOWER_RULES: ChallengeBattleRule[] = [
+     label: 'Precision Drill',
+     mode: 'single',
+     timed: true,
+-    timeLimitSec: 6,
++    timeLimitSec: 30,
+     enemyTier: 'elite',
+     enemyCount: 1,
+     enemyLevelOffset: 2,
+@@ -211,7 +211,7 @@ const TOWER_RULES: ChallengeBattleRule[] = [
+     label: 'Mixed Breaker',
+     mode: 'single',
+     timed: true,
+-    timeLimitSec: 5,
++    timeLimitSec: 30,
+     enemyTier: 'elite',
+     enemyCount: 2,
+     enemyLevelOffset: 3,
+@@ -225,7 +225,7 @@ const TOWER_RULES: ChallengeBattleRule[] = [
+     label: 'Unknown Pressure',
+     mode: 'single',
+     timed: true,
+-    timeLimitSec: 5,
++    timeLimitSec: 30,
+     enemyTier: 'elite',
+     enemyCount: 2,
+     enemyLevelOffset: 4,
+@@ -239,7 +239,7 @@ const TOWER_RULES: ChallengeBattleRule[] = [
+     label: 'Tower Boss Gate',
+     mode: 'single',
+     timed: true,
+-    timeLimitSec: 4,
++    timeLimitSec: 30,
+     enemyTier: 'boss',
+     enemyCount: 1,
+     enemyLevelOffset: 6,
+diff --git a/src/data/contentConfig.test.js b/src/data/contentConfig.test.js
+index 7ec898c..bc5cbe2 100644
+--- a/src/data/contentConfig.test.js
++++ b/src/data/contentConfig.test.js
+@@ -99,3 +99,22 @@ test('boss phase-3 burst multipliers stay within survivability guardrails', () =
+   assert.ok(BALANCE_CONFIG.traits.boss.phase3AttackMultiplier <= 1.8);
+   assert.ok(BALANCE_CONFIG.traits.boss.releaseAttackScale <= 1.8);
+ });
++
++test('campaign branch choices reference valid monster ids and event tags', () => {
++  const knownIds = new Set(MONSTER_CONFIGS.map(mon => mon.id));
++  const validEvents = new Set(['healing_spring', 'focus_surge', 'hazard_ambush']);
++  const campaign = BALANCE_CONFIG.stage.campaign;
++
++  assert.ok(Array.isArray(campaign.branchChoices));
++  assert.ok(campaign.branchChoices.length > 0);
++
++  for (const choice of campaign.branchChoices) {
++    assert.ok(knownIds.has(choice.left.monsterId), `unknown campaign left monsterId: ${choice.left.monsterId}`);
++    assert.ok(knownIds.has(choice.right.monsterId), `unknown campaign right monsterId: ${choice.right.monsterId}`);
++  }
++
++  assert.ok(Array.isArray(campaign.eventPool));
++  for (const eventTag of campaign.eventPool) {
++    assert.ok(validEvents.has(eventTag), `unknown campaign event tag: ${eventTag}`);
++  }
++});
+diff --git a/src/hooks/battle/startBattleFlow.test.js b/src/hooks/battle/startBattleFlow.test.js
+index c8fce3f..5698c41 100644
+--- a/src/hooks/battle/startBattleFlow.test.js
++++ b/src/hooks/battle/startBattleFlow.test.js
+@@ -114,3 +114,41 @@ test('runStartBattleFlow starts single battle intro text', () => {
+   assert.equal(text.includes('Lv.'), true);
+   assert.equal(text.includes('哥布林'), true);
+ });
++
++test('runStartBattleFlow prepends campaign node context when provided', () => {
++  const enemy = createEnemy('伏擊狼');
++  let text = '';
++
++  runStartBattleFlow({
++    idx: 0,
++    roster: [enemy],
++    enemies: [enemy],
++    locale: 'en-US',
++    battleMode: 'single',
++    allySub: null,
++    starter: { name: 'Aqua' },
++    sceneNames: { fire: 'Magma Field' },
++    localizeEnemy: (next) => next,
++    localizeSceneName: (_sceneType, defaultName) => defaultName,
++    dispatchBattle: () => {},
++    updateEnc: () => {},
++    setPhase: () => {},
++    setBText: (next) => { text = next; },
++    setScreen: () => {},
++    finishGame: () => { throw new Error('finishGame should not be called'); },
++    resetFrozen: () => {},
++    playBattleIntro: () => {},
++    getCampaignNodeMeta: () => ({
++      roundIndex: 2,
++      totalNodes: 10,
++      branch: 'right',
++      tier: 'elite',
++      eventTag: 'hazard_ambush',
++    }),
++  });
++
++  assert.equal(text.includes('Route node 3/10'), true);
++  assert.equal(text.includes('Right Path'), true);
++  assert.equal(text.includes('Elite node'), true);
++  assert.equal(text.includes('Ambush Trap'), true);
++});
+diff --git a/src/hooks/battle/startBattleFlow.ts b/src/hooks/battle/startBattleFlow.ts
+index 176da0c..5f87a65 100644
+--- a/src/hooks/battle/startBattleFlow.ts
++++ b/src/hooks/battle/startBattleFlow.ts
+@@ -10,6 +10,13 @@ type StarterLite = StarterVm | null;
+ type AllyLite = StarterVm | null;
+ type EnemyLite = EnemyVm | null;
+ type ExistingEnemy = NonNullable<EnemyLite>;
++type CampaignNodeMeta = {
++  roundIndex: number;
++  totalNodes: number;
++  branch: 'left' | 'right';
++  tier: 'normal' | 'elite' | 'boss';
++  eventTag: 'healing_spring' | 'focus_surge' | 'hazard_ambush' | null;
++};
+ 
+ type RunStartBattleFlowArgs = {
+   idx: number;
+@@ -39,6 +46,7 @@ type RunStartBattleFlowArgs = {
+   resetFrozen: () => void;
+   playBattleIntro: () => void;
+   pickIndex?: (size: number) => number;
++  getCampaignNodeMeta?: (roundIndex: number) => CampaignNodeMeta | null;
+ };
+ 
+ function formatFallback(template: string, params?: TranslatorParams): string {
+@@ -77,6 +85,7 @@ export function runStartBattleFlow({
+   resetFrozen,
+   playBattleIntro,
+   pickIndex,
++  getCampaignNodeMeta,
+ }: RunStartBattleFlowArgs): void {
+   const list = roster || enemies;
+   const nextEnemy = list[idx];
+@@ -116,11 +125,47 @@ export function runStartBattleFlow({
+     sceneNames[sceneType] || '',
+     locale,
+   );
++  const campaignMeta = getCampaignNodeMeta ? getCampaignNodeMeta(idx) : null;
++  const campaignLines: string[] = [];
++  if (campaignMeta) {
++    const branchLabel = campaignMeta.branch === 'left'
++      ? tr(t, 'battle.route.branch.left', 'Left Path')
++      : tr(t, 'battle.route.branch.right', 'Right Path');
++    campaignLines.push(tr(
++      t,
++      'battle.route.node',
++      '🧭 Route node {step}/{total} ({branch})',
++      {
++        step: campaignMeta.roundIndex + 1,
++        total: campaignMeta.totalNodes,
++        branch: branchLabel,
++      },
++    ));
++    if (campaignMeta.tier === 'elite') {
++      campaignLines.push(tr(
++        t,
++        'battle.route.elite',
++        '⚔️ Elite node: enemy stats increased this battle.',
++      ));
++    }
++    if (campaignMeta.eventTag) {
++      const fallbackByTag: Record<NonNullable<CampaignNodeMeta['eventTag']>, string> = {
++        healing_spring: '💧 Event: Healing Spring (enemy stats reduced this battle).',
++        focus_surge: '✨ Event: Focus Surge (enemy slightly weakened this battle).',
++        hazard_ambush: '⚠️ Event: Ambush Trap (enemy gains bonus this battle).',
++      };
++      campaignLines.push(tr(
++        t,
++        `battle.route.event.${campaignMeta.eventTag}`,
++        fallbackByTag[campaignMeta.eventTag],
++      ));
++    }
++  }
+ 
+   setPhase('text');
+   if (enemySub) {
+     if (allySub) {
+-      setBText(tr(
++      const intro = tr(
+         t,
+         'battle.start.doubleWithAlly',
+         '【{scene}】2v2 battle! Our {leader} and {ally} face {enemy} and {enemySub}!',
+@@ -131,9 +176,10 @@ export function runStartBattleFlow({
+           enemy: enemy.name || '',
+           enemySub: enemySub.name || '',
+         },
+-      ));
++      );
++      setBText(campaignLines.length > 0 ? `${campaignLines.join('\n')}\n${intro}` : intro);
+     } else {
+-      setBText(tr(
++      const intro = tr(
+         t,
+         'battle.start.double',
+         '【{scene}】Double battle! {enemy}({enemyType}) and {enemySub}({enemySubType}) appeared!',
+@@ -144,7 +190,8 @@ export function runStartBattleFlow({
+           enemySub: enemySub.name || '',
+           enemySubType: `${enemySub.typeIcon || ''}${enemySub.typeIcon2 || ''}${enemySub.typeName || ''}${enemySub.typeName2 ? '/' + enemySub.typeName2 : ''}`,
+         },
+-      ));
++      );
++      setBText(campaignLines.length > 0 ? `${campaignLines.join('\n')}\n${intro}` : intro);
+     }
+   } else {
+     let introText = tr(
+@@ -172,7 +219,7 @@ export function runStartBattleFlow({
+         },
+       );
+     }
+-    setBText(introText);
++    setBText(campaignLines.length > 0 ? `${campaignLines.join('\n')}\n${introText}` : introText);
+   }
+ 
+   setScreen('battle');
+diff --git a/src/hooks/useBattleCore.ts b/src/hooks/useBattleCore.ts
+index d1b3fb7..d39c3d7 100644
+--- a/src/hooks/useBattleCore.ts
++++ b/src/hooks/useBattleCore.ts
+@@ -69,6 +69,7 @@ import { useBattleSessionLifecycle } from './useBattleSessionLifecycle';
+ import { ENC_TOTAL } from '../data/encyclopedia.ts';
+ import sfx from '../utils/sfx.ts';
+ import { buildRoster, type BattleRosterMonster } from '../utils/rosterBuilder';
++import { applyCampaignPlanToRoster, buildCampaignRunPlan } from '../utils/campaignPlanner.ts';
+ import {
+   createAbilityModel,
+   getDifficultyLevelForOps,
+@@ -149,15 +150,7 @@ export function useBattle() {
+   const { initSession, markQStart, logAns, endSession } = useSessionLog();
+   const { rand, randInt, chance, pickIndex, reseed } = useBattleRng();
+   const UI = useBattleUIState({ rand, randInt });
+-
+-  const buildNewRoster = useCallback(
+-    (mode: BattleMode = 'single'): EnemyVm[] => {
+-      const rosterMode = mode === 'coop' || mode === 'double' ? 'double' : 'single';
+-      return localizeEnemyRoster(buildRoster(pickIndex, rosterMode), locale);
+-    },
+-    [pickIndex, locale],
+-  );
+-  const [enemies, setEnemies] = useState<EnemyVm[]>(() => buildNewRoster('single'));
++  const campaignPlanRef = useRef<ReturnType<typeof buildCampaignRunPlan> | null>(null);
+ 
+   // ──── Screen & mode ────
+   const [screen, setScreenState] = useState<ScreenName>('title');
+@@ -179,6 +172,28 @@ export function useBattle() {
+     settleRunAsFailed,
+     settleRunAsCleared,
+   } = useDailyChallengeRun();
++  const hasChallengeRun = Boolean(queuedChallenge || activeChallenge);
++  const buildNewRoster = useCallback(
++    (mode: BattleMode = 'single'): EnemyVm[] => {
++      const rosterMode = mode === 'coop' || mode === 'double' ? 'double' : 'single';
++      if (rosterMode === 'single' && !hasChallengeRun) {
++        const campaignPlan = buildCampaignRunPlan(pickIndex);
++        campaignPlanRef.current = campaignPlan;
++        const campaignWaves = campaignPlan.nodes.map((node) => node.wave);
++        const roster = buildRoster(pickIndex, 'single', {
++          singleWaves: campaignWaves,
++          disableRandomSwap: true,
++        });
++        return localizeEnemyRoster(applyCampaignPlanToRoster(roster, campaignPlan), locale);
++      }
++      campaignPlanRef.current = null;
++      return localizeEnemyRoster(buildRoster(pickIndex, rosterMode), locale);
++    },
++    [pickIndex, locale, hasChallengeRun],
++  );
++  const [enemies, setEnemies] = useState<EnemyVm[]>(
++    () => localizeEnemyRoster(buildRoster(pickIndex, 'single'), locale),
++  );
+   const [coopActiveSlot, setCoopActiveSlot] = useState<'main' | 'sub'>('main');
+   const pvpState = usePvpState();
+   const {
+@@ -502,6 +517,17 @@ export function useBattle() {
+         resetFrozen: () => { frozenR.current = false; },
+         playBattleIntro,
+         pickIndex,
++        getCampaignNodeMeta: (roundIndex) => {
++          const node = campaignPlanRef.current?.nodes?.[roundIndex];
++          if (!node) return null;
++          return {
++            roundIndex: node.roundIndex,
++            totalNodes: node.totalNodes,
++            branch: node.branch,
++            tier: node.tier,
++            eventTag: node.eventTag,
++          };
++        },
+       },
+     });
+   }, [
+diff --git a/src/i18n/locales/en-US.ts b/src/i18n/locales/en-US.ts
+index cc174d3..9f63dce 100644
+--- a/src/i18n/locales/en-US.ts
++++ b/src/i18n/locales/en-US.ts
+@@ -299,6 +299,13 @@ const enUS = {
+   "battle.role.main": "Main",
+   "battle.start.double": "【{scene}】Double battle! {enemy}({enemyType}) and {enemySub}({enemySubType}) appeared!",
+   "battle.start.single": "【{scene}】A wild {enemy}({enemyType}) Lv.{level} appeared!",
++  "battle.route.node": "🧭 Route node {step}/{total} ({branch})",
++  "battle.route.branch.left": "Left Path",
++  "battle.route.branch.right": "Right Path",
++  "battle.route.elite": "⚔️ Elite node: enemy stats increased this battle.",
++  "battle.route.event.healing_spring": "💧 Event: Healing Spring (enemy stats reduced this battle).",
++  "battle.route.event.focus_surge": "✨ Event: Focus Surge (enemy slightly weakened this battle).",
++  "battle.route.event.hazard_ambush": "⚠️ Event: Ambush Trap (enemy gains bonus this battle).",
+   "battle.pvp.start": "⚔️ PvP start! {p1} vs {p2}, first turn: {first}",
+   "battle.ally.ko": "Your partner has fallen...",
+   "battle.victory.verb.defeated": "was defeated",
+diff --git a/src/i18n/locales/zh-TW.ts b/src/i18n/locales/zh-TW.ts
+index 15a39b9..241e2c3 100644
+--- a/src/i18n/locales/zh-TW.ts
++++ b/src/i18n/locales/zh-TW.ts
+@@ -299,6 +299,13 @@ const zhTW = {
+   "battle.role.main": "主將",
+   "battle.start.double": "【{scene}】雙打戰！{enemy}({enemyType}) 與 {enemySub}({enemySubType}) 出現了！",
+   "battle.start.single": "【{scene}】野生的 {enemy}({enemyType}) Lv.{level} 出現了！",
++  "battle.route.node": "🧭 路線節點 {step}/{total}（{branch}）",
++  "battle.route.branch.left": "左線",
++  "battle.route.branch.right": "右線",
++  "battle.route.elite": "⚔️ 精英節點：本戰敵方能力提升",
++  "battle.route.event.healing_spring": "💧 事件：治癒泉流（本戰敵方較弱）",
++  "battle.route.event.focus_surge": "✨ 事件：專注加護（本戰敵方略弱）",
++  "battle.route.event.hazard_ambush": "⚠️ 事件：伏擊陷阱（本戰敵方更強）",
+   "battle.pvp.start": "⚔️ 雙人對戰開始！{p1} vs {p2}，先手：{first}",
+   "battle.ally.ko": "你的夥伴倒下了...",
+   "battle.victory.verb.defeated": "被打倒了",
+diff --git a/src/types/battle.ts b/src/types/battle.ts
+index 7b6ca95..8ace17b 100644
+--- a/src/types/battle.ts
++++ b/src/types/battle.ts
+@@ -70,6 +70,8 @@ export type EnemyVm = {
+   name: string;
+   lvl: number;
+   maxHp: number;
++  hp?: number;
++  atk?: number;
+   mType: string;
+   mType2?: string;
+   sceneMType?: string;
+@@ -85,6 +87,12 @@ export type EnemyVm = {
+   traitDesc?: string;
+   drops?: string[];
+   svgFn: (...args: string[]) => string;
++  campaignNodeIndex?: number;
++  campaignNodeTotal?: number;
++  campaignTier?: 'normal' | 'elite' | 'boss';
++  campaignBranch?: 'left' | 'right';
++  campaignEventTag?: 'healing_spring' | 'focus_surge' | 'hazard_ambush' | null;
++  campaignPathKey?: string;
+ };
+ 
+ export type QuestionVm = {
+diff --git a/src/utils/challengePlanner.ts b/src/utils/challengePlanner.ts
+index ee6695c..4ca0819 100644
+--- a/src/utils/challengePlanner.ts
++++ b/src/utils/challengePlanner.ts
+@@ -56,7 +56,7 @@ const DEFAULT_TOWER_BALANCE: TowerBalanceConfig = {
+   atkScalePerFloor: 0.065,
+   levelOffsetPerFloor: 0.55,
+   timeTightenEveryFloors: 3,
+-  minTimeLimitSec: 3,
++  minTimeLimitSec: 10,
+   enemyCountStepFloor: 4,
+   maxEnemyCount: 3,
+   expertStartsAtFloor: 6,
+diff --git a/src/utils/leaderboard.ts b/src/utils/leaderboard.ts
+index 6e1c8f5..5a94a3f 100644
+--- a/src/utils/leaderboard.ts
++++ b/src/utils/leaderboard.ts
+@@ -4,11 +4,27 @@ import { readJson, writeJson } from './storage.ts';
+ const LB_KEY = 'mathMonsterBattle_lb';
+ const LB_MAX = 10;
+ 
++function clamp(value: number, min: number, max: number): number {
++  return Math.min(max, Math.max(min, value));
++}
++
++function calcStreakBonus(maxStreak: number): number {
++  const streak = Math.max(0, Math.floor(maxStreak));
++  let bonus = streak * 12;
++  if (streak >= 5) bonus += 30;
++  if (streak >= 10) bonus += 80;
++  return bonus;
++}
++
+ /**
+  * 計分公式：
+- *   基礎分 = (擊倒數 × 100) + (正確率% × 50) + (等級 × 30)
+- *   連擊獎勵 = 最大連擊數 × 20（鼓勵持續答對）
+- *   計時加成 = 整體 × 1.5（計時模式）
++ *   1) 基礎分 = (擊倒數 × 100) + (等級 × 30)
++ *   2) 準確率分數 = 正確率% × 50 × 作答樣本權重
++ *      - 樣本越少，準確率加分越保守，避免開局少量答題就衝高分。
++ *   3) 連擊獎勵 = 連擊線性分 + 里程碑加成（5 / 10 連擊）
++ *   4) 進度校正 = 依「擊倒數 + 作答量」縮放總分
++ *      - 用於校正初始退出或超短局的分數膨脹。
++ *   5) 計時加成 = 整體 × 1.5（計時模式）
+  */
+ export function calcScore(
+   defeated: number,
+@@ -18,9 +34,23 @@ export function calcScore(
+   timed: boolean,
+   maxStreak = 0,
+ ): number {
+-  const acc = (correct + wrong > 0) ? Math.round((correct / (correct + wrong)) * 100) : 0;
+-  const raw = defeated * 100 + acc * 50 + level * 30 + maxStreak * 20;
+-  return Math.round(raw * (timed ? 1.5 : 1));
++  const safeDefeated = Math.max(0, Number(defeated) || 0);
++  const safeCorrect = Math.max(0, Number(correct) || 0);
++  const safeWrong = Math.max(0, Number(wrong) || 0);
++  const safeLevel = Math.max(1, Number(level) || 1);
++  const attempts = safeCorrect + safeWrong;
++  const acc = attempts > 0 ? Math.round((safeCorrect / attempts) * 100) : 0;
++
++  // Few attempts should not generate an outsized accuracy bonus.
++  const sampleWeight = clamp(attempts / 20, 0.12, 1);
++  const accuracyScore = Math.round(acc * 50 * sampleWeight);
++  const streakBonus = calcStreakBonus(maxStreak);
++  const baseScore = safeDefeated * 100 + safeLevel * 30 + accuracyScore + streakBonus;
++
++  // Early-exit calibration: low defeated + low attempt runs are scaled down.
++  const progressWeight = clamp((safeDefeated + attempts / 6) / 10, 0.18, 1);
++  const timedMultiplier = timed ? 1.5 : 1;
++  return Math.round(baseScore * progressWeight * timedMultiplier);
+ }
+ 
+ export function loadScores(): LeaderboardEntry[] {
+diff --git a/src/utils/rosterBuilder.ts b/src/utils/rosterBuilder.ts
+index 590f287..f398326 100644
+--- a/src/utils/rosterBuilder.ts
++++ b/src/utils/rosterBuilder.ts
+@@ -28,6 +28,10 @@ export type BattleRosterMonster = MonsterBase & {
+ };
+ 
+ type PickIndex = (length: number) => number;
++type BuildRosterOptions = {
++  singleWaves?: StageWave[];
++  disableRandomSwap?: boolean;
++};
+ 
+ const MONSTER_BY_ID = new Map<string, MonsterBase>(MONSTERS.map((mon) => [mon.id, mon]));
+ 
+@@ -60,15 +64,22 @@ function resolveVariantMonsterId(baseId: string, pickIndex: PickIndex): string {
+   return typeof picked === 'string' ? picked : baseId;
+ }
+ 
+-export function buildRoster(pickIndex: PickIndex, mode: 'single' | 'double' = 'single'): BattleRosterMonster[] {
++export function buildRoster(
++  pickIndex: PickIndex,
++  mode: 'single' | 'double' = 'single',
++  options: BuildRosterOptions = {},
++): BattleRosterMonster[] {
+   const pick = (arr: SlimeVariant[]): SlimeVariant => arr[pickIndex(arr.length)];
+-  const baseWaves: StageWave[] = mode === 'double' ? DOUBLE_STAGE_WAVES : STAGE_WAVES;
++  const useSingleWaveOverride = mode === 'single' && Array.isArray(options.singleWaves) && options.singleWaves.length > 0;
++  const baseWaves: StageWave[] = useSingleWaveOverride
++    ? options.singleWaves || []
++    : (mode === 'double' ? DOUBLE_STAGE_WAVES : STAGE_WAVES);
+ 
+   // Deep-copy waves so we can mutate safely
+   const waves: StageWave[] = baseWaves.map(w => ({ ...w }));
+ 
+   // Randomly inject one swap candidate into a mid-game slot (indices 1..8)
+-  if (STAGE_RANDOM_SWAP_CANDIDATES.length > 0) {
++  if (!options.disableRandomSwap && STAGE_RANDOM_SWAP_CANDIDATES.length > 0) {
+     const candidate = STAGE_RANDOM_SWAP_CANDIDATES[pickIndex(STAGE_RANDOM_SWAP_CANDIDATES.length)];
+     const swappableUpperExclusive = Math.max(
+       STAGE_RANDOM_SWAP_START_INDEX,

@@ -95,6 +95,7 @@ export type BattleCore = {
   pSvg: string;
   mainMaxHp: number;
   subMaxHp: number;
+  sceneKey: string;
   scene: SceneConfig;
   layout: BattleLayoutConfig;
   pvpEnemyBarActive: boolean;
@@ -191,7 +192,13 @@ export function buildBattleCore({
 
   const mainMaxHp = getLevelMaxHp(pLvl, pStg);
   const subMaxHp = showAllySub && allySub ? getStarterLevelMaxHp(allySub, pLvl, pStg) : getLevelMaxHp(1, 0);
-  const sceneKey = enemy.sceneMType || enemy.mType || 'grass';
+  const requestedSceneKey = enemy.sceneMType || enemy.mType || 'grass';
+  const fallbackSceneKey = Object.keys(scenes)[0] || 'grass';
+  const sceneKey = scenes[requestedSceneKey]
+    ? requestedSceneKey
+    : scenes.grass
+      ? 'grass'
+      : fallbackSceneKey;
   const scene = scenes[sceneKey] || scenes.grass || Object.values(scenes)[0];
   if (!scene) return null;
 
@@ -245,6 +252,7 @@ export function buildBattleCore({
     pSvg,
     mainMaxHp,
     subMaxHp,
+    sceneKey,
     scene,
     layout,
     pvpEnemyBarActive,

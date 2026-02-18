@@ -99,3 +99,22 @@ test('boss phase-3 burst multipliers stay within survivability guardrails', () =
   assert.ok(BALANCE_CONFIG.traits.boss.phase3AttackMultiplier <= 1.8);
   assert.ok(BALANCE_CONFIG.traits.boss.releaseAttackScale <= 1.8);
 });
+
+test('campaign branch choices reference valid monster ids and event tags', () => {
+  const knownIds = new Set(MONSTER_CONFIGS.map(mon => mon.id));
+  const validEvents = new Set(['healing_spring', 'focus_surge', 'hazard_ambush']);
+  const campaign = BALANCE_CONFIG.stage.campaign;
+
+  assert.ok(Array.isArray(campaign.branchChoices));
+  assert.ok(campaign.branchChoices.length > 0);
+
+  for (const choice of campaign.branchChoices) {
+    assert.ok(knownIds.has(choice.left.monsterId), `unknown campaign left monsterId: ${choice.left.monsterId}`);
+    assert.ok(knownIds.has(choice.right.monsterId), `unknown campaign right monsterId: ${choice.right.monsterId}`);
+  }
+
+  assert.ok(Array.isArray(campaign.eventPool));
+  for (const eventTag of campaign.eventPool) {
+    assert.ok(validEvents.has(eventTag), `unknown campaign event tag: ${eventTag}`);
+  }
+});

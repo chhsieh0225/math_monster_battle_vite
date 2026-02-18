@@ -114,3 +114,41 @@ test('runStartBattleFlow starts single battle intro text', () => {
   assert.equal(text.includes('Lv.'), true);
   assert.equal(text.includes('哥布林'), true);
 });
+
+test('runStartBattleFlow prepends campaign node context when provided', () => {
+  const enemy = createEnemy('伏擊狼');
+  let text = '';
+
+  runStartBattleFlow({
+    idx: 0,
+    roster: [enemy],
+    enemies: [enemy],
+    locale: 'en-US',
+    battleMode: 'single',
+    allySub: null,
+    starter: { name: 'Aqua' },
+    sceneNames: { fire: 'Magma Field' },
+    localizeEnemy: (next) => next,
+    localizeSceneName: (_sceneType, defaultName) => defaultName,
+    dispatchBattle: () => {},
+    updateEnc: () => {},
+    setPhase: () => {},
+    setBText: (next) => { text = next; },
+    setScreen: () => {},
+    finishGame: () => { throw new Error('finishGame should not be called'); },
+    resetFrozen: () => {},
+    playBattleIntro: () => {},
+    getCampaignNodeMeta: () => ({
+      roundIndex: 2,
+      totalNodes: 10,
+      branch: 'right',
+      tier: 'elite',
+      eventTag: 'hazard_ambush',
+    }),
+  });
+
+  assert.equal(text.includes('Route node 3/10'), true);
+  assert.equal(text.includes('Right Path'), true);
+  assert.equal(text.includes('Elite node'), true);
+  assert.equal(text.includes('Ambush Trap'), true);
+});

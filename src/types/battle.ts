@@ -70,6 +70,8 @@ export type EnemyVm = {
   name: string;
   lvl: number;
   maxHp: number;
+  hp?: number;
+  atk?: number;
   mType: string;
   mType2?: string;
   sceneMType?: string;
@@ -85,6 +87,12 @@ export type EnemyVm = {
   traitDesc?: string;
   drops?: string[];
   svgFn: (...args: string[]) => string;
+  campaignNodeIndex?: number;
+  campaignNodeTotal?: number;
+  campaignTier?: 'normal' | 'elite' | 'boss';
+  campaignBranch?: 'left' | 'right';
+  campaignEventTag?: 'healing_spring' | 'focus_surge' | 'hazard_ambush' | null;
+  campaignPathKey?: string;
 };
 
 export type QuestionVm = {

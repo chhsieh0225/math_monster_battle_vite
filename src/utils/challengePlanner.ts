@@ -56,7 +56,7 @@ const DEFAULT_TOWER_BALANCE: TowerBalanceConfig = {
   atkScalePerFloor: 0.065,
   levelOffsetPerFloor: 0.55,
   timeTightenEveryFloors: 3,
-  minTimeLimitSec: 3,
+  minTimeLimitSec: 10,
   enemyCountStepFloor: 4,
   maxEnemyCount: 3,
   expertStartsAtFloor: 6,

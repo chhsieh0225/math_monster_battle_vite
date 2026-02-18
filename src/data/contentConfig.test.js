@@ -3,8 +3,11 @@ import test from 'node:test';
 
 import { DROP_TABLES } from './dropTables.ts';
 import {
+  BOSS_ID_LIST,
+  BOSS_SCENE_BY_ID,
   EVOLVED_SLIME_VARIANT_CONFIGS,
   MONSTER_CONFIGS,
+  RANDOM_ENCOUNTER_VARIANTS_BY_BASE_ID,
   SLIME_VARIANT_CONFIGS,
 } from './monsterConfigs.ts';
 import { SKILL_SETS } from './skillSets.ts';
@@ -39,6 +42,23 @@ test('stage config references valid monster ids', () => {
     }
     if (wave.sceneType) {
       assert.ok(knownSceneTypes.has(wave.sceneType), `unknown sceneType: ${wave.sceneType}`);
+    }
+  }
+});
+
+test('boss and random encounter config map only to valid monster ids', () => {
+  const knownIds = new Set(MONSTER_CONFIGS.map(mon => mon.id));
+
+  for (const bossId of BOSS_ID_LIST) {
+    assert.ok(knownIds.has(bossId), `unknown boss id: ${bossId}`);
+    assert.equal(typeof BOSS_SCENE_BY_ID[bossId], 'string', `missing boss scene for id: ${bossId}`);
+  }
+
+  for (const [baseId, variants] of Object.entries(RANDOM_ENCOUNTER_VARIANTS_BY_BASE_ID)) {
+    assert.ok(knownIds.has(baseId), `unknown random-encounter base id: ${baseId}`);
+    assert.ok(Array.isArray(variants) && variants.length > 0, `empty variants for base id: ${baseId}`);
+    for (const variantId of variants) {
+      assert.ok(knownIds.has(variantId), `unknown random-encounter variant id: ${variantId}`);
     }
   }
 });

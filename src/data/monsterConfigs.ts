@@ -9,12 +9,21 @@ const MONSTER_STATS = BALANCE_CONFIG.monsters.baseStatsById;
 const MONSTER_EVOLVE_LEVEL = BALANCE_CONFIG.monsters.evolveLevelById;
 const SLIME_VARIANT_MULTIPLIERS = BALANCE_CONFIG.monsters.slimeVariantMultipliersById;
 const EVOLVED_SLIME_VARIANT_MULTIPLIERS = BALANCE_CONFIG.monsters.evolvedSlimeVariantMultipliersById;
+const BOSS_IDS_FROM_CONFIG = BALANCE_CONFIG.monsters.bossIds;
+const BOSS_SCENE_BY_ID_FROM_CONFIG = BALANCE_CONFIG.monsters.bossSceneById;
+const RANDOM_ENCOUNTER_VARIANTS_BY_BASE_ID_FROM_CONFIG = BALANCE_CONFIG.monsters.randomEncounterVariantsByBaseId;
 
 /** Set of monster IDs that are bosses (use boss battle mechanics). */
-export const BOSS_IDS: ReadonlySet<string> = new Set(['boss', 'boss_hydra', 'boss_crazy_dragon', 'boss_sword_god']);
+export const BOSS_ID_LIST: readonly string[] = [...BOSS_IDS_FROM_CONFIG];
+export const BOSS_IDS: ReadonlySet<string> = new Set(BOSS_ID_LIST);
 
-/** All boss monster IDs as an array (for random selection). */
-export const BOSS_ID_LIST: readonly string[] = [...BOSS_IDS];
+/** Boss-specific scene override map (falls back to wave scene or monster type). */
+export const BOSS_SCENE_BY_ID: Readonly<Record<string, string>> = {
+  ...BOSS_SCENE_BY_ID_FROM_CONFIG,
+};
+export const RANDOM_ENCOUNTER_VARIANTS_BY_BASE_ID: Readonly<Record<string, readonly string[]>> = {
+  ...RANDOM_ENCOUNTER_VARIANTS_BY_BASE_ID_FROM_CONFIG,
+};
 
 export const MONSTER_CONFIGS: MonsterConfig[] = [
   {

@@ -81,9 +81,27 @@ export const BALANCE_CONFIG = {
         { monsterId: 'boss', sceneType: 'dark' },
       ],
     },
+    randomSwap: {
+      startIndex: 1,
+      endIndexExclusiveFromTail: 1,
+      candidates: [
+        { monsterId: 'golumn', sceneType: 'rock' },
+      ],
+    },
   },
 
   monsters: {
+    bossIds: ['boss', 'boss_hydra', 'boss_crazy_dragon', 'boss_sword_god'],
+    bossSceneById: {
+      boss: 'dark',
+      boss_hydra: 'poison',
+      boss_crazy_dragon: 'burnt_warplace',
+      boss_sword_god: 'heaven',
+    },
+    randomEncounterVariantsByBaseId: {
+      ghost: ['ghost', 'ghost_lantern'],
+      golumn: ['golumn', 'golumn_mud'],
+    },
     baseStatsById: {
       slime: { hp: 40, atk: 6 },
       fire: { hp: 55, atk: 9 },

@@ -14,6 +14,10 @@ export type StageWave = {
 };
 
 export const STAGE_WAVES: StageWave[] = [...BALANCE_CONFIG.stage.waves.single];
+export const STAGE_RANDOM_SWAP_START_INDEX = BALANCE_CONFIG.stage.randomSwap.startIndex;
+export const STAGE_RANDOM_SWAP_END_INDEX_EXCLUSIVE_FROM_TAIL =
+  BALANCE_CONFIG.stage.randomSwap.endIndexExclusiveFromTail;
+export const STAGE_RANDOM_SWAP_CANDIDATES: StageWave[] = [...BALANCE_CONFIG.stage.randomSwap.candidates];
 
 /**
  * Double-battle lineup (1v2):

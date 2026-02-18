@@ -1,7 +1,15 @@
 import { EVOLVED_SLIME_VARIANTS, MONSTERS, SLIME_VARIANTS } from '../data/monsters.ts';
-import { BOSS_IDS, BOSS_ID_LIST } from '../data/monsterConfigs.ts';
+import {
+  BOSS_IDS,
+  BOSS_ID_LIST,
+  BOSS_SCENE_BY_ID,
+  RANDOM_ENCOUNTER_VARIANTS_BY_BASE_ID,
+} from '../data/monsterConfigs.ts';
 import {
   DOUBLE_STAGE_WAVES,
+  STAGE_RANDOM_SWAP_CANDIDATES,
+  STAGE_RANDOM_SWAP_END_INDEX_EXCLUSIVE_FROM_TAIL,
+  STAGE_RANDOM_SWAP_START_INDEX,
   STAGE_SCALE_BASE,
   STAGE_SCALE_STEP,
   STAGE_WAVES,
@@ -37,26 +45,8 @@ function pickSlimeVariant({
   return pick(typedPool.length > 0 ? typedPool : pool);
 }
 
-/**
- * Candidate waves that can randomly replace one mid-game wave.
- * Each run, one of the swappable waves (indices 1–8, non-boss) is randomly
- * replaced by one of these candidates.
- */
-const RANDOM_SWAP_CANDIDATES: StageWave[] = [
-  { monsterId: 'golumn', sceneType: 'rock' },
-];
-
-/**
- * Optional visual/entry variants for specific monsters.
- * Used to diversify encounters while keeping base role/trait identity.
- */
-const GHOST_VARIANTS = ['ghost', 'ghost_lantern'] as const;
-const GOLUMN_VARIANTS = ['golumn', 'golumn_mud'] as const;
-
 function getVariantPool(baseId: string): readonly string[] | null {
-  if (baseId === 'ghost') return GHOST_VARIANTS;
-  if (baseId === 'golumn') return GOLUMN_VARIANTS;
-  return null;
+  return RANDOM_ENCOUNTER_VARIANTS_BY_BASE_ID[baseId] || null;
 }
 
 function resolveVariantMonsterId(baseId: string, pickIndex: PickIndex): string {
@@ -78,12 +68,15 @@ export function buildRoster(pickIndex: PickIndex, mode: 'single' | 'double' = 's
   const waves: StageWave[] = baseWaves.map(w => ({ ...w }));
 
   // Randomly inject one swap candidate into a mid-game slot (indices 1..8)
-  if (RANDOM_SWAP_CANDIDATES.length > 0) {
-    const candidate = RANDOM_SWAP_CANDIDATES[pickIndex(RANDOM_SWAP_CANDIDATES.length)];
-    // Swappable = not first wave (0) and not boss wave (last)
+  if (STAGE_RANDOM_SWAP_CANDIDATES.length > 0) {
+    const candidate = STAGE_RANDOM_SWAP_CANDIDATES[pickIndex(STAGE_RANDOM_SWAP_CANDIDATES.length)];
+    const swappableUpperExclusive = Math.max(
+      STAGE_RANDOM_SWAP_START_INDEX,
+      waves.length - STAGE_RANDOM_SWAP_END_INDEX_EXCLUSIVE_FROM_TAIL,
+    );
     const swappable = waves
       .map((w, idx) => ({ w, idx }))
-      .filter(({ idx }) => idx > 0 && idx < waves.length - 1);
+      .filter(({ idx }) => idx >= STAGE_RANDOM_SWAP_START_INDEX && idx < swappableUpperExclusive);
     if (swappable.length > 0) {
       const chosen = swappable[pickIndex(swappable.length)];
       waves[chosen.idx] = { ...candidate };
@@ -129,11 +122,8 @@ export function buildRoster(pickIndex: PickIndex, mode: 'single' | 'double' = 's
     const svgFn = evolvedVariant
       ? evolvedVariant.svgFn
       : (isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn));
-    const resolvedSceneType = resolvedId === 'boss_sword_god'
-      ? 'heaven'
-      : resolvedId === 'boss_crazy_dragon'
-        ? 'burnt_warplace'
-        : (wave.sceneType || b.mType);
+    const bossSceneType = BOSS_SCENE_BY_ID[resolvedId];
+    const resolvedSceneType = bossSceneType || wave.sceneType || b.mType;
 
     return {
       ...b,

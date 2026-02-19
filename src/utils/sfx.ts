@@ -973,6 +973,7 @@ let bgmMediaToken = 0;
 let pendingBgmTrack: BgmTrack | null = null;
 let lastBgmTrack: BgmTrack | null = null;   // remember track for mute→unmute resume
 let resumePromise: Promise<void> | null = null;
+let bgmUnlockRetryArmed = false;
 const BGM_SCHEDULE_INTERVAL_MS = 50;
 const BGM_LOOKAHEAD_SEC = 0.12;
 const BGM_FADE_IN_MS = 900;
@@ -1980,6 +1981,38 @@ function stopBgmMedia(immediate = false): void {
   }
 }
 
+function disarmBgmUnlockRetry(): void {
+  if (!bgmUnlockRetryArmed || typeof document === 'undefined') return;
+  bgmUnlockRetryArmed = false;
+  document.removeEventListener('click', onBgmUnlockRetryGesture, true);
+  document.removeEventListener('touchstart', onBgmUnlockRetryGesture, true);
+  document.removeEventListener('keydown', onBgmUnlockRetryGesture, true);
+}
+
+function armBgmUnlockRetry(track: BgmTrack): void {
+  pendingBgmTrack = track;
+  if (bgmUnlockRetryArmed || typeof document === 'undefined') return;
+  bgmUnlockRetryArmed = true;
+  document.addEventListener('click', onBgmUnlockRetryGesture, true);
+  document.addEventListener('touchstart', onBgmUnlockRetryGesture, true);
+  document.addEventListener('keydown', onBgmUnlockRetryGesture, true);
+}
+
+function onBgmUnlockRetryGesture(): void {
+  disarmBgmUnlockRetry();
+  if (!pendingBgmTrack || bgmMuted || !ready) return;
+  const track = pendingBgmTrack;
+  const retry = () => {
+    if (bgmMuted || pendingBgmTrack !== track) return;
+    try { startBgmLoop(track); } catch { /* best-effort */ }
+  };
+  if (ctx && ctx.state !== 'running') {
+    resumeAudioIfNeeded(retry);
+    return;
+  }
+  retry();
+}
+
 function startSynthBgmLoop(track: BgmTrack): void {
   if (!ctx || bgmMuted) return;
   const synthTrack = SYNTH_FALLBACK_BY_TRACK[track];
@@ -2010,6 +2043,7 @@ function startSynthBgmLoop(track: BgmTrack): void {
 function startBgmMedia(track: BgmTrack): boolean {
   const src = BGM_FILE_BY_TRACK[track];
   if (!src || typeof Audio === 'undefined') return false;
+  disarmBgmUnlockRetry();
   const el = new Audio(src);
   bgmMediaElements.add(el);
   el.loop = false;
@@ -2021,14 +2055,24 @@ function startBgmMedia(track: BgmTrack): boolean {
   const playPromise = el.play();
   const onReady = () => {
     if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) return;
+    disarmBgmUnlockRetry();
     rampMediaVolume(el, 0, bgmVolume, BGM_FADE_IN_MS);
     startBgmMediaLoopMonitor(el, token, track);
   };
   playPromise.then(onReady).catch(() => {
-    // If autoplay policy blocks the file playback, fallback to synth.
+    // Mobile autoplay blocks can happen; queue a retry on next user gesture.
     if (bgmMediaToken !== token) return;
     stopBgmMedia(true);
-    startSynthBgmLoop(track);
+    armBgmUnlockRetry(track);
+    if (ctx && ctx.state !== 'running') {
+      resumeAudioIfNeeded(() => {
+        if (!bgmMuted && pendingBgmTrack === track) {
+          try { startSynthBgmLoop(track); } catch { /* best-effort */ }
+        }
+      });
+    } else {
+      try { startSynthBgmLoop(track); } catch { /* best-effort */ }
+    }
   });
   return true;
 }
@@ -2041,6 +2085,7 @@ function startBgmLoop(track: BgmTrack): void {
 
 function stopBgmLoop(immediate = false): void {
   bgmMediaToken += 1;
+  disarmBgmUnlockRetry();
   stopBgmMedia(immediate);
   if (bgmInterval) {
     clearInterval(bgmInterval);

@@ -16,13 +16,13 @@ type HowToPlayScreenProps = {
 };
 
 const STARTER_IMAGE_BY_ID: Record<string, string> = {
-  fire: SPRITE_IMGS.player_fire2,
-  water: SPRITE_IMGS.player_water2,
-  grass: SPRITE_IMGS.player_grass2,
-  electric: SPRITE_IMGS.player_electric2,
-  wolf: SPRITE_IMGS.player_wolf2,
-  tiger: SPRITE_IMGS.player_tiger2,
-  lion: SPRITE_IMGS.player_lion2,
+  fire: SPRITE_IMGS.player_fire0,
+  water: SPRITE_IMGS.player_water0,
+  grass: SPRITE_IMGS.player_grass0,
+  electric: SPRITE_IMGS.player_electric0,
+  wolf: SPRITE_IMGS.player_wolf0,
+  tiger: SPRITE_IMGS.player_tiger0,
+  lion: SPRITE_IMGS.player_lion0,
 };
 
 const SHOWCASE_ROW_1 = ['fire', 'water', 'grass', 'electric'] as const;

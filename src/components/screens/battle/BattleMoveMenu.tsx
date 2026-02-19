@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import type { CSSProperties } from 'react';
 import type { StarterVm } from '../../../types/battle';
 import type { InventoryData, ItemId } from '../../../types/game';
@@ -67,6 +67,12 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
   onQuitGame,
 }: BattleMoveMenuProps) {
   const specDefItemName = resolveSpecDefItemName(activeStarter.type, t);
+  const handleMoveSelect = useCallback((idx: number, locked: boolean) => {
+    if (!locked) onSelectMove(idx);
+  }, [onSelectMove]);
+  const handleUseItem = useCallback((itemId: ItemId) => {
+    onUseItem(itemId);
+  }, [onUseItem]);
   const moveVisuals = useMemo(() => moveRuntime.map(({ m, i, sealed, locked, lv, pw, atCap, eff, moveProgressPct }) => {
     const moveBtnStyle: BattleCssVars = {
       '--move-bg': locked
@@ -139,7 +145,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
             <button
               className={`battle-menu-btn ${locked ? 'is-locked' : ''}`}
               key={i}
-              onClick={() => !locked && onSelectMove(i)}
+              onClick={() => handleMoveSelect(i, locked)}
               style={moveBtnStyle}
             >
               {sealed && (
@@ -198,7 +204,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
             <button
               key={itemId}
               className="battle-item-btn"
-              onClick={() => onUseItem(itemId)}
+              onClick={() => handleUseItem(itemId)}
               disabled={disabled}
               aria-label={t('a11y.battle.useItem', 'Use {item}', {
                 item: itemDisplayName,

@@ -1,5 +1,5 @@
 import type { AchievementId } from '../../types/game';
-import type { CollectionAddResult } from '../../utils/collectionStore.ts';
+import { addToCollection, type CollectionAddResult } from '../../utils/collectionStore.ts';
 import { resolveBattleDrop } from '../../utils/dropResolver.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 
@@ -175,16 +175,12 @@ export function runVictoryFlow({
     onDropResolved(drop);
   }
 
-  // Persist the drop to the collection store (best-effort fire-and-forget).
+  // Persist the drop to the collection store (best-effort).
   if (drop) {
-    import('../../utils/collectionStore.ts')
-      .then(({ addToCollection }) => {
-        const result = addToCollection([drop]);
-        if (typeof onCollectionUpdated === 'function') {
-          onCollectionUpdated(result);
-        }
-      })
-      .catch(() => { /* non-critical */ });
+    const result = addToCollection([drop]);
+    if (typeof onCollectionUpdated === 'function') {
+      onCollectionUpdated(result);
+    }
   }
 
   const victoryGainText = tr(

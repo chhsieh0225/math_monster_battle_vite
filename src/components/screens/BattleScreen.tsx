@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { useBattleParallax } from '../../hooks/useBattleParallax';
@@ -363,6 +363,49 @@ function BattleScreenComponent({
     dualEff,
   ]);
 
+  const canTapAdvance = S.phase === "text" || S.phase === "victory";
+  const handleAdvance = A.advance;
+  const handleAdvanceKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
+    if (!canTapAdvance) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleAdvance();
+    }
+  }, [canTapAdvance, handleAdvance]);
+  const handleOpenBattleSettings = useCallback(() => {
+    onOpenSettings('battle');
+  }, [onOpenSettings]);
+  const handlePauseOverlayKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      A.togglePause();
+    }
+  }, [A]);
+  const question = S.q;
+  const feedback = S.fb;
+  const questionTypeLabel = useMemo(() => (!question
+    ? ""
+    : question.op === "×" ? t("battle.qtype.mul", "Multiplication")
+    : question.op === "÷" ? t("battle.qtype.div", "Division")
+    : question.op === "+" ? t("battle.qtype.add", "Addition")
+    : question.op === "-" ? t("battle.qtype.sub", "Subtraction")
+    : question.op === "mixed2" ? t("battle.qtype.mixed2", "Add/Sub Mix")
+    : question.op === "mixed3" ? t("battle.qtype.mixed3", "Mul/Add Mix")
+    : question.op === "mixed4" ? t("battle.qtype.mixed4", "Four Ops")
+    : question.op === "unknown1" ? t("battle.qtype.unknown1", "Unknown Add/Sub")
+    : question.op === "unknown2" ? t("battle.qtype.unknown2", "Unknown Mul/Div")
+    : question.op === "unknown3" ? t("battle.qtype.unknown3", "Unknown Large Number")
+    : question.op === "unknown4" ? t("battle.qtype.unknown4", "Unknown Mixed")
+    : t("battle.qtype.mixed", "Mixed")), [question, t]);
+  const impactPhaseClass = showHeavyFx ? `battle-impact-${impactPhase}` : "battle-impact-idle";
+  const battleRootClassName = useMemo(() => (
+    `battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""} ${canTapAdvance ? "battle-root-advance" : ""} ${impactPhaseClass}`
+  ), [UX.compactUI, UX.lowPerfMode, canTapAdvance, impactPhaseClass]);
+  const battlePanelClassName = useMemo(
+    () => `battle-panel ${S.phase === "question" ? "is-question" : "is-normal"}`,
+    [S.phase],
+  );
+
   if (!coreStatic) return (
     <div className="battle-loading-wrap">
       <div className="battle-loading-icon">⚔️</div>
@@ -415,18 +458,6 @@ function BattleScreenComponent({
     pvpPlayerSpecDef,
   } = coreRuntime;
 
-  const canTapAdvance = S.phase === "text" || S.phase === "victory";
-  const handleAdvance = A.advance;
-  const handleAdvanceKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (!canTapAdvance) return;
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleAdvance();
-    }
-  };
-  const handleOpenBattleSettings = () => {
-    onOpenSettings('battle');
-  };
   const pvpComboTrigger = PVP_BALANCE.passive.specDefComboTrigger || 4;
   const {
     mainPlayerSize: rawMainSize,
@@ -437,25 +468,9 @@ function BattleScreenComponent({
   const subPlayerSize = coopUsingSub ? rawMainSize : rawSubSize;
 
   const effectTarget = memoEffectTarget!;
-  const question = S.q;
-  const feedback = S.fb;
   const selectedMove = activeStarter && S.selIdx != null
     ? activeStarter.moves[S.selIdx]
     : null;
-  const questionTypeLabel = !question
-    ? ""
-    : question.op === "×" ? t("battle.qtype.mul", "Multiplication")
-    : question.op === "÷" ? t("battle.qtype.div", "Division")
-    : question.op === "+" ? t("battle.qtype.add", "Addition")
-    : question.op === "-" ? t("battle.qtype.sub", "Subtraction")
-    : question.op === "mixed2" ? t("battle.qtype.mixed2", "Add/Sub Mix")
-    : question.op === "mixed3" ? t("battle.qtype.mixed3", "Mul/Add Mix")
-    : question.op === "mixed4" ? t("battle.qtype.mixed4", "Four Ops")
-    : question.op === "unknown1" ? t("battle.qtype.unknown1", "Unknown Add/Sub")
-    : question.op === "unknown2" ? t("battle.qtype.unknown2", "Unknown Mul/Div")
-    : question.op === "unknown3" ? t("battle.qtype.unknown3", "Unknown Large Number")
-    : question.op === "unknown4" ? t("battle.qtype.unknown4", "Unknown Mixed")
-    : t("battle.qtype.mixed", "Mixed");
   const specDefReadyLabel = starter.type === "fire"
     ? t("battle.specDef.fire", "🛡️ Shield")
     : starter.type === "water"
@@ -494,7 +509,6 @@ function BattleScreenComponent({
     playerMainShadowStyle,
     enemySubSize,
   } = memoSpriteStyles!;
-  const impactPhaseClass = showHeavyFx ? `battle-impact-${impactPhase}` : "battle-impact-idle";
   const coOpBossSubIntro = isCoopBattle
     && showEnemySub
     && Boolean(S.enemySub?.name)
@@ -504,7 +518,7 @@ function BattleScreenComponent({
     <div
       id="main-content"
       ref={battleRootRef}
-      className={`battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""} ${canTapAdvance ? "battle-root-advance" : ""} ${impactPhaseClass}`}
+      className={battleRootClassName}
       role={canTapAdvance ? "button" : undefined}
       tabIndex={canTapAdvance ? 0 : -1}
       aria-label={canTapAdvance ? t("a11y.battle.advance", "Advance to next step") : undefined}
@@ -530,12 +544,7 @@ function BattleScreenComponent({
         tabIndex={0}
         className={`battle-pause-overlay ${UX.lowPerfMode ? "low-perf" : ""}`}
         aria-label={t("a11y.overlay.pauseResume", "Resume game")}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            A.togglePause();
-          }
-        }}
+        onKeyDown={handlePauseOverlayKeyDown}
         onClick={A.togglePause}
       >
         <div className="battle-pause-icon">⏸️</div>
@@ -685,7 +694,7 @@ function BattleScreenComponent({
       </div>
 
       {/* ═══ Bottom panel ═══ */}
-      <div className={`battle-panel ${S.phase === "question" ? "is-question" : "is-normal"}`}>
+      <div className={battlePanelClassName}>
         {/* Move menu */}
         {S.phase === 'menu' && activeStarter && (
           <BattleMoveMenu

@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "test": "node --test --experimental-specifier-resolution=node",
+    "test:coverage": "node --test --experimental-specifier-resolution=node --experimental-test-coverage",
+    "test:coverage:gate": "node --test --experimental-specifier-resolution=node --experimental-test-coverage --test-coverage-lines=80 --test-coverage-branches=60 --test-coverage-functions=70",
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"

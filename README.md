@@ -6,6 +6,8 @@
 - `npm run build` : production build
 - `npm run lint` : ESLint
 - `npm test` : node test suite
+- `npm run test:coverage` : run tests with coverage report
+- `npm run test:coverage:gate` : run tests with coverage thresholds (lines 80%, branches 60%, functions 70%)
 - `npm run typecheck` : TypeScript type check (`tsc --noEmit`)
 
 ## TypeScript Migration (Incremental)

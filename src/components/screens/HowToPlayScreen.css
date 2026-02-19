@@ -62,33 +62,43 @@
   line-height: 1.5;
 }
 
-.howto-list {
-  margin: 8px 0 0 16px;
-  padding: 0;
-  display: grid;
-  gap: 4px;
-  font-size: 12px;
-  line-height: 1.45;
+.howto-card-desc-subtle {
+  opacity: 0.7;
 }
 
-.howto-starter-grid {
+.howto-starter-row {
   margin-top: 10px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
+.howto-starter-row-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.howto-starter-row-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .howto-starter-card {
-  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
   background: rgba(15, 23, 42, 0.45);
-  padding: 8px 6px 6px;
+  padding: 8px 6px 8px;
   text-align: center;
+  color: #fff;
+  min-height: 0 !important;
+  min-width: 0 !important;
+}
+
+.howto-starter-card.is-active {
+  border-color: rgba(250, 204, 21, 0.85);
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.45), 0 10px 22px rgba(250, 204, 21, 0.2);
 }
 
 .howto-starter-img {
   width: 100%;
-  max-width: 72px;
+  max-width: 112px;
   aspect-ratio: 1 / 1;
   object-fit: contain;
   image-rendering: pixelated;
@@ -99,6 +109,61 @@
   font-size: 10px;
   font-weight: 700;
   line-height: 1.2;
+}
+
+.howto-starter-detail {
+  margin-top: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(2, 6, 23, 0.5);
+  padding: 10px 11px;
+}
+
+.howto-starter-detail-name {
+  font-size: 14px;
+  font-weight: 900;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.howto-starter-type {
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.86;
+}
+
+.howto-starter-detail-meta {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.9;
+  line-height: 1.45;
+}
+
+.howto-starter-detail-desc {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.howto-starter-move-list {
+  margin: 7px 0 0 16px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.howto-list {
+  margin: 8px 0 0 16px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .howto-skill-grid {
@@ -194,7 +259,15 @@
 }
 
 @media (max-width: 520px) {
-  .howto-starter-grid {
+  .howto-starter-row-four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .howto-starter-row-three {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .howto-starter-img {
+    max-width: 100px;
   }
 }

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { MAX_MOVE_LVL, POWER_CAPS } from '../../data/constants.ts';
 import { DROP_TABLES } from '../../data/dropTables.ts';
@@ -16,14 +16,17 @@ type HowToPlayScreenProps = {
 };
 
 const STARTER_IMAGE_BY_ID: Record<string, string> = {
-  grass: SPRITE_IMGS.player_grass0,
-  fire: SPRITE_IMGS.player_fire0,
-  water: SPRITE_IMGS.player_water0,
-  tiger: SPRITE_IMGS.player_tiger0,
-  electric: SPRITE_IMGS.player_electric0,
-  wolf: SPRITE_IMGS.player_wolf0,
-  lion: SPRITE_IMGS.player_lion0,
+  fire: SPRITE_IMGS.player_fire2,
+  water: SPRITE_IMGS.player_water2,
+  grass: SPRITE_IMGS.player_grass2,
+  electric: SPRITE_IMGS.player_electric2,
+  wolf: SPRITE_IMGS.player_wolf2,
+  tiger: SPRITE_IMGS.player_tiger2,
+  lion: SPRITE_IMGS.player_lion2,
 };
+
+const SHOWCASE_ROW_1 = ['fire', 'water', 'grass', 'electric'] as const;
+const SHOWCASE_ROW_2 = ['wolf', 'tiger', 'lion'] as const;
 
 const SLOT_ROLE_KEY_BY_IDX = [
   'howto.skill.role.idx0',
@@ -32,8 +35,28 @@ const SLOT_ROLE_KEY_BY_IDX = [
   'howto.skill.role.idx3',
 ] as const;
 
+type StarterShowcaseEntry = {
+  id: string;
+  name: string;
+  src: string;
+};
+
 function formatRange(min: number, max: number): string {
   return min === max ? String(min) : `${min}~${max}`;
+}
+
+function clampDifficulty(value: unknown): number {
+  const num = Number(value || 0);
+  if (!Number.isFinite(num)) return 0;
+  return Math.max(1, Math.min(5, Math.round(num)));
+}
+
+function formatDifficultyStars(value: number): string {
+  return `${'★'.repeat(value)}${'☆'.repeat(Math.max(0, 5 - value))}`;
+}
+
+function isStarterShowcaseEntry(value: StarterShowcaseEntry | undefined): value is StarterShowcaseEntry {
+  return Boolean(value);
 }
 
 export default function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
@@ -58,7 +81,8 @@ export default function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
     () => localizeStarterList(STARTERS, locale),
     [locale],
   );
-  const starterShowcase = useMemo(
+  const [selectedStarterId, setSelectedStarterId] = useState<string>('fire');
+  const starterShowcase = useMemo<StarterShowcaseEntry[]>(
     () => localizedStarters
       .filter((starter) => typeof starter.id === 'string' && Boolean(STARTER_IMAGE_BY_ID[starter.id]))
       .map((starter) => ({
@@ -68,6 +92,46 @@ export default function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
       })),
     [localizedStarters],
   );
+  const starterShowcaseMap = useMemo(
+    () => new Map(starterShowcase.map((starter) => [starter.id, starter])),
+    [starterShowcase],
+  );
+  const starterRow1 = useMemo(
+    () => SHOWCASE_ROW_1.map((id) => starterShowcaseMap.get(id)).filter(isStarterShowcaseEntry),
+    [starterShowcaseMap],
+  );
+  const starterRow2 = useMemo(
+    () => SHOWCASE_ROW_2.map((id) => starterShowcaseMap.get(id)).filter(isStarterShowcaseEntry),
+    [starterShowcaseMap],
+  );
+  const selectedStarter = useMemo(
+    () => localizedStarters.find((starter) => String(starter.id || '') === selectedStarterId) || localizedStarters[0] || null,
+    [localizedStarters, selectedStarterId],
+  );
+  const selectedStarterDifficulty = clampDifficulty(selectedStarter?.difficulty);
+  const selectedStarterTopic = selectedStarter
+    ? t(selectedStarter.mathTopicKey || 'selection.topic.generic', selectedStarter.mathTopicFallback || t('selection.topic.generic', 'General Math'))
+    : t('selection.topic.generic', 'General Math');
+  const selectedGradeRange = Array.isArray(selectedStarter?.gradeRange)
+    ? selectedStarter?.gradeRange
+    : null;
+  const selectedGradeText = selectedGradeRange
+    ? (
+      selectedGradeRange[0] === selectedGradeRange[1]
+        ? t('selection.difficulty.gradeSingle', 'Suitable for grade {grade} ({topic})', {
+          grade: selectedGradeRange[0],
+          topic: selectedStarterTopic,
+        })
+        : t('selection.difficulty.gradeRange', 'Suitable for grades {from}-{to} ({topic})', {
+          from: selectedGradeRange[0],
+          to: selectedGradeRange[1],
+          topic: selectedStarterTopic,
+        })
+    )
+    : selectedStarterTopic;
+  const selectedStarterDesc = selectedStarter
+    ? t(`selection.${String(selectedStarter.id)}.desc`, selectedStarter.mathTopicFallback || selectedStarterTopic)
+    : '';
   const slotSummaries = useMemo(
     () => [0, 1, 2, 3].map((idx) => {
       const defs = Object.values(SKILL_SETS).map((set) => set[idx]).filter(Boolean);
@@ -115,9 +179,18 @@ export default function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
         <p className="howto-card-desc">
           {t('howto.starters.note', 'Each starter represents one math topic. Choose one that matches the learner level.')}
         </p>
-        <div className="howto-starter-grid">
-          {starterShowcase.map((starter) => (
-            <article className="howto-starter-card" key={starter.id}>
+        <p className="howto-card-desc howto-card-desc-subtle">
+          {t('howto.starters.tapHint', 'Tap a character to view skills, difficulty, attribute, and description.')}
+        </p>
+        <div className="howto-starter-row howto-starter-row-four">
+          {starterRow1.map((starter) => (
+            <button
+              type="button"
+              className={`howto-starter-card touch-btn${selectedStarterId === starter.id ? ' is-active' : ''}`}
+              key={starter.id}
+              onClick={() => setSelectedStarterId(starter.id)}
+              aria-label={t('howto.starters.pick', 'View {name} details', { name: starter.name })}
+            >
               <img
                 src={starter.src}
                 alt={starter.name}
@@ -125,9 +198,55 @@ export default function HowToPlayScreen({ onBack }: HowToPlayScreenProps) {
                 loading="lazy"
               />
               <div className="howto-starter-name">{starter.name}</div>
-            </article>
+            </button>
           ))}
         </div>
+        <div className="howto-starter-row howto-starter-row-three">
+          {starterRow2.map((starter) => (
+            <button
+              type="button"
+              className={`howto-starter-card touch-btn${selectedStarterId === starter.id ? ' is-active' : ''}`}
+              key={starter.id}
+              onClick={() => setSelectedStarterId(starter.id)}
+              aria-label={t('howto.starters.pick', 'View {name} details', { name: starter.name })}
+            >
+              <img
+                src={starter.src}
+                alt={starter.name}
+                className="howto-starter-img"
+                loading="lazy"
+              />
+              <div className="howto-starter-name">{starter.name}</div>
+            </button>
+          ))}
+        </div>
+        {selectedStarter && (
+          <article className="howto-starter-detail">
+            <div className="howto-starter-detail-name">
+              {selectedStarter.typeIcon || '🧩'} {selectedStarter.name}
+              <span className="howto-starter-type">
+                {t('howto.starter.type', 'Attribute')}：{selectedStarter.typeName || selectedStarter.type || '-'}
+              </span>
+            </div>
+            <div className="howto-starter-detail-meta">
+              {selectedStarterDifficulty > 0
+                ? `${t('howto.starter.difficulty', 'Difficulty')}：${formatDifficultyStars(selectedStarterDifficulty)}`
+                : ''}
+              {selectedStarterDifficulty > 0 ? ' · ' : ''}
+              {selectedGradeText}
+            </div>
+            <div className="howto-starter-detail-desc">{selectedStarterDesc}</div>
+            <ul className="howto-starter-move-list">
+              {(selectedStarter.moves || []).map((move, idx) => (
+                <li key={`${selectedStarter.id}-move-${idx}`}>
+                  <b>{move.icon} {move.name}</b>
+                  {' '}
+                  <span>{move.desc}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        )}
       </section>
 
       <section className="howto-card">

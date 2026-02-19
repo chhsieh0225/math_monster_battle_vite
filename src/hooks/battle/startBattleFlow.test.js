@@ -152,3 +152,34 @@ test('runStartBattleFlow prepends campaign node context when provided', () => {
   assert.equal(text.includes('Elite node'), true);
   assert.equal(text.includes('Ambush Trap'), true);
 });
+
+test('runStartBattleFlow enters boss intro when coop sub enemy is a boss', () => {
+  const roster = [
+    createEnemy('前衛史萊姆', { id: 'slime' }),
+    createEnemy('暗黑龍王', { id: 'boss' }),
+  ];
+  let phase = '';
+
+  runStartBattleFlow({
+    idx: 0,
+    roster,
+    enemies: roster,
+    locale: 'zh-TW',
+    battleMode: 'coop',
+    allySub: { name: '雷喵' },
+    starter: { name: '火狐', moves: [] },
+    sceneNames: { fire: '火焰谷' },
+    localizeEnemy: (enemy) => enemy,
+    localizeSceneName: (_sceneType, defaultName) => defaultName,
+    dispatchBattle: () => {},
+    updateEnc: () => {},
+    setPhase: (next) => { phase = next; },
+    setBText: () => {},
+    setScreen: () => {},
+    finishGame: () => { throw new Error('finishGame should not be called'); },
+    resetFrozen: () => {},
+    playBattleIntro: () => {},
+  });
+
+  assert.equal(phase, 'bossIntro');
+});

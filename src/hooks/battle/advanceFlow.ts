@@ -1,5 +1,6 @@
 import { buildNextEvolvedAlly, isCoopBattleMode } from './coopFlow.ts';
 import { processPvpTurnStart } from './pvpFlow.ts';
+import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import type { ScreenName, StarterVm } from '../../types/battle';
 import type { AchievementId } from '../../types/game';
 
@@ -7,6 +8,7 @@ type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 
 type EnemyLite = {
+  id?: string;
   name?: string;
 };
 
@@ -104,7 +106,7 @@ export function continueFromVictoryFlow({
     setBText(tr(t, 'battle.enemySub.promote', '💥 {enemy} steps in!', {
       enemy: promotedEnemy?.name || state.enemySub.name || tr(t, 'battle.enemy.unknown', 'Enemy'),
     }));
-    setPhase('text');
+    setPhase(BOSS_IDS.has(promotedEnemy?.id ?? state.enemySub.id ?? '') ? 'bossIntro' : 'text');
     return;
   }
 

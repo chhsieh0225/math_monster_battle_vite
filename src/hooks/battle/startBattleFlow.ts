@@ -105,6 +105,7 @@ export function runStartBattleFlow({
 
   // Boss first-move intimidation: seal a random move at battle start
   const isBoss = BOSS_IDS.has(enemy.id ?? '');
+  const isBossEncounter = isBoss || BOSS_IDS.has(enemySub?.id ?? '');
   const sealPool = BALANCE_CONFIG.traits.boss.sealMovePool;
   const sealIdx = isBoss
     ? sealPool[(pickIndex && sealPool.length > 0)
@@ -164,7 +165,7 @@ export function runStartBattleFlow({
 
   // Boss encounters start with a cinematic intro phase;
   // the overlay's onComplete callback will transition to 'text'.
-  setPhase(isBoss ? 'bossIntro' : 'text');
+  setPhase(isBossEncounter ? 'bossIntro' : 'text');
   if (enemySub) {
     if (allySub) {
       const intro = tr(

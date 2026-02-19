@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useMemo, useRef } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { useBattleParallax } from '../../hooks/useBattleParallax';
@@ -92,13 +92,6 @@ function BattleScreenComponent({
     enemySpriteRef,
     playerSpriteRef,
   });
-
-  // Low-perf / reduced-motion: skip boss intro overlay immediately
-  useEffect(() => {
-    if (S.phase === 'bossIntro' && UX.lowPerfMode) {
-      A.advance();
-    }
-  }, [S.phase, UX.lowPerfMode, A]);
 
   const {
     starter: stateStarter,
@@ -526,7 +519,7 @@ function BattleScreenComponent({
       onClick={canTapAdvance ? handleAdvance : undefined}
     >
       {/* Boss intro cinematic overlay */}
-      {S.phase === 'bossIntro' && !UX.lowPerfMode && (
+      {S.phase === 'bossIntro' && (
         <BossIntroOverlay
           enemyName={enemy.name}
           enemySvg={eSvg}

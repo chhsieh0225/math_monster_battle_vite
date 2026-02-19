@@ -39,6 +39,33 @@ test('continueFromVictoryFlow promotes enemy sub in coop battle', () => {
   assert.equal(texts[0].includes('副將史萊姆'), true);
 });
 
+test('continueFromVictoryFlow promotes boss sub into boss intro phase', () => {
+  const phases = [];
+
+  continueFromVictoryFlow({
+    state: {
+      battleMode: 'coop',
+      enemySub: { id: 'boss', name: '暗黑龍王' },
+      round: 0,
+    },
+    enemiesLength: 5,
+    setScreen: () => {},
+    dispatchBattle: () => {},
+    localizeEnemy: (enemy) => enemy,
+    locale: 'zh-TW',
+    setBText: () => {},
+    setPhase: (value) => { phases.push(value); },
+    finishGame: () => { throw new Error('finishGame should not be called'); },
+    setPHp: () => {},
+    setPHpSub: () => {},
+    getStageMaxHp: () => 0,
+    getStarterMaxHp: () => 0,
+    startBattle: () => { throw new Error('startBattle should not be called'); },
+  });
+
+  assert.equal(phases[0], 'bossIntro');
+});
+
 test('continueFromVictoryFlow finishes game when no rounds remain', () => {
   let finished = false;
 

@@ -88,3 +88,25 @@ test('campaign branch weighting biases left route to fire resources', () => {
   assert.equal(leftBranch.drop, '🔥');
 });
 
+test('logs warning once when resolver falls back without weighted table', () => {
+  globalThis.localStorage = createStorageMock();
+  resetDropPityState();
+
+  const originalWarn = console.warn;
+  const warnCalls = [];
+  console.warn = (...args) => { warnCalls.push(args); };
+  try {
+    const args = {
+      enemyId: 'unknown_monster_for_fallback',
+      enemyDrops: ['🧩', '🎲'],
+      randInt: fixedRoll(1),
+    };
+    const first = resolveBattleDrop(args);
+    const second = resolveBattleDrop(args);
+    assert.equal(first.drop.length > 0, true);
+    assert.equal(second.drop.length > 0, true);
+    assert.equal(warnCalls.length, 1);
+  } finally {
+    console.warn = originalWarn;
+  }
+});

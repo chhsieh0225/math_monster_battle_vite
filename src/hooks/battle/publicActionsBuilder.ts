@@ -4,6 +4,7 @@ import type { DailyChallengePlan, StreakTowerPlan } from '../../types/challenges
 
 export type BuildUseBattleActionsArgs = {
   dismissAch: () => void;
+  dismissCollectionPopup: () => void;
   setTimedMode: (next: boolean) => void;
   setBattleMode: (mode: BattleMode) => void;
   setScreen: (screen: ScreenName) => void;
@@ -36,6 +37,7 @@ export type BuildUseBattleActionsArgs = {
 export function buildUseBattleActions(args: BuildUseBattleActionsArgs): UseBattleActions {
   return {
     dismissAch: args.dismissAch,
+    dismissCollectionPopup: args.dismissCollectionPopup,
     setTimedMode: args.setTimedMode,
     setBattleMode: args.setBattleMode,
     setScreen: args.setScreen,

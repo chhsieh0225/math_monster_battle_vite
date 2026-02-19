@@ -176,6 +176,13 @@ export type SfxApi = {
   bgmTrack: string | null;
 };
 
+export type CollectionPopupVm = {
+  id: number;
+  icon: string;
+  title: string;
+  desc: string;
+};
+
 export type UseBattleState = {
   screen: ScreenName;
   timedMode: boolean;
@@ -258,11 +265,13 @@ export type UseBattleState = {
   inventory: InventoryData;
   achUnlocked: AchievementId[];
   achPopup: AchievementId | null;
+  collectionPopup: CollectionPopupVm | null;
   encData: EncyclopediaData;
 };
 
 export type UseBattleActions = {
   dismissAch: () => void;
+  dismissCollectionPopup: () => void;
   setTimedMode: (next: boolean) => void;
   setBattleMode: (mode: BattleMode) => void;
   setScreen: (screen: ScreenName) => void;

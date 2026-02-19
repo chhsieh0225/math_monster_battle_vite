@@ -68,6 +68,7 @@ const SCENE_WEIGHT_BONUS: Record<string, Record<string, number>> = {
 const DROP_TABLE_KEY_BY_POOL_SIGNATURE = Object.fromEntries(
   Object.entries(DROP_TABLES).map(([key, pool]) => [poolSignature(pool), key]),
 ) as Record<string, string>;
+const WARNED_DROP_FALLBACK_KEYS = new Set<string>();
 
 function poolSignature(pool: readonly string[]): string {
   return [...pool].sort().join('|');
@@ -144,6 +145,24 @@ function pickFallbackDrop(enemyDrops: string[] | null | undefined, randInt: Reso
   return enemyDrops[idx] || '';
 }
 
+function warnDropFallbackOnce(reason: string, context: {
+  enemyId?: string | null;
+  tableKey?: string | null;
+  enemyDrops?: string[] | null;
+}): void {
+  if (typeof console === 'undefined' || typeof console.warn !== 'function') return;
+  const normalizedEnemyId = normalizeEnemyId(context.enemyId);
+  const key = `${reason}|${normalizedEnemyId}|${context.tableKey || ''}|${poolSignature(context.enemyDrops || [])}`;
+  if (WARNED_DROP_FALLBACK_KEYS.has(key)) return;
+  WARNED_DROP_FALLBACK_KEYS.add(key);
+  console.warn('[dropResolver] fallback drop used:', {
+    reason,
+    enemyId: normalizedEnemyId || null,
+    tableKey: context.tableKey || null,
+    fallbackPoolSize: Array.isArray(context.enemyDrops) ? context.enemyDrops.length : 0,
+  });
+}
+
 function loadDropPityState(): DropPityState {
   return readJson<DropPityState>(DROP_PITY_KEY, {});
 }
@@ -165,6 +184,11 @@ export function resolveBattleDrop({
 }: ResolveBattleDropArgs): BattleDropResult {
   const tableKey = resolveDropTableKey(enemyId, enemyDrops);
   if (!tableKey) {
+    warnDropFallbackOnce('missing_table_key', {
+      enemyId,
+      tableKey: null,
+      enemyDrops,
+    });
     return {
       drop: pickFallbackDrop(enemyDrops, randInt),
       tableKey: null,
@@ -176,6 +200,11 @@ export function resolveBattleDrop({
 
   const table = WEIGHTED_DROP_TABLES[tableKey];
   if (!table || !Array.isArray(table.entries) || table.entries.length <= 0) {
+    warnDropFallbackOnce('missing_weighted_table', {
+      enemyId,
+      tableKey,
+      enemyDrops,
+    });
     return {
       drop: pickFallbackDrop(enemyDrops, randInt),
       tableKey,

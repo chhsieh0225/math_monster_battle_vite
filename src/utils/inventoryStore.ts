@@ -1,4 +1,8 @@
-import { BATTLE_ITEM_ORDER, DROP_TO_ITEM_GRANTS } from '../data/itemCatalog.ts';
+import {
+  BATTLE_ITEM_ORDER,
+  DROP_TO_ITEM_GRANTS,
+  INVENTORY_CAP_BY_ITEM,
+} from '../data/itemCatalog.ts';
 import type { InventoryData, ItemId } from '../types/game';
 import { readJson, writeJson } from './storage.ts';
 
@@ -29,11 +33,20 @@ function createEmptyInventory(): InventoryData {
   };
 }
 
+function clampInventoryCount(itemId: ItemId, count: number): number {
+  const cap = Number.isFinite(INVENTORY_CAP_BY_ITEM[itemId])
+    ? Number(INVENTORY_CAP_BY_ITEM[itemId])
+    : Number.MAX_SAFE_INTEGER;
+  return Math.max(0, Math.min(Math.floor(count), cap));
+}
+
 export function normalizeInventory(raw: Partial<Record<ItemId, unknown>> | null | undefined): InventoryData {
   const inventory = createEmptyInventory();
   for (const itemId of BATTLE_ITEM_ORDER) {
     const count = Number(raw?.[itemId] || 0);
-    inventory[itemId] = Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+    inventory[itemId] = Number.isFinite(count) && count > 0
+      ? clampInventoryCount(itemId, count)
+      : 0;
   }
   return inventory;
 }
@@ -59,8 +72,12 @@ export function applyDropsToInventory(
     for (const itemId of BATTLE_ITEM_ORDER) {
       const amount = Math.max(0, Math.floor(Number(grantMap[itemId] || 0)));
       if (amount <= 0) continue;
-      nextInventory[itemId] += amount;
-      grants.push({ id: itemId, amount, sourceDrop: drop });
+      const current = nextInventory[itemId];
+      const next = clampInventoryCount(itemId, current + amount);
+      const granted = Math.max(0, next - current);
+      if (granted <= 0) continue;
+      nextInventory[itemId] = next;
+      grants.push({ id: itemId, amount: granted, sourceDrop: drop });
     }
   }
   return {

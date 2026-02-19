@@ -568,6 +568,7 @@ function BattleScreenComponent({
         moveLvls={S.mLvls}
         getPow={V.getPow}
         achPopup={S.achPopup}
+        collectionPopup={S.collectionPopup}
         phase={S.phase}
         enemyDrops={enemy.drops}
         defAnim={S.defAnim}
@@ -575,6 +576,7 @@ function BattleScreenComponent({
         onRemoveDamage={A.rmD}
         onRemoveParticle={A.rmP}
         onDismissAchievement={A.dismissAch}
+        onDismissCollectionPopup={A.dismissCollectionPopup}
       />
 
       {/* ═══ Battle arena ═══ */}

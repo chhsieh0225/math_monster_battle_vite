@@ -12,6 +12,7 @@ test('buildUseBattleActions maps localized starter setters into public action na
   const calls = [];
   const deps = {
     dismissAch: createFn('dismissAch', calls),
+    dismissCollectionPopup: createFn('dismissCollectionPopup', calls),
     setTimedMode: createFn('setTimedMode', calls),
     setBattleMode: createFn('setBattleMode', calls),
     setScreen: createFn('setScreen', calls),
@@ -47,6 +48,7 @@ test('buildUseBattleActions exposes full expected public action surface', () => 
   const noop = () => {};
   const actions = buildUseBattleActions({
     dismissAch: noop,
+    dismissCollectionPopup: noop,
     setTimedMode: noop,
     setBattleMode: noop,
     setScreen: noop,
@@ -74,6 +76,7 @@ test('buildUseBattleActions exposes full expected public action surface', () => 
     'clearChallengeRun',
     'continueAfterEvolve',
     'dismissAch',
+    'dismissCollectionPopup',
     'onAns',
     'queueDailyChallenge',
     'queueTowerChallenge',

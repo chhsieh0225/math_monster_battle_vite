@@ -34,9 +34,9 @@ test('applyDropsToInventory converts supported drops into item grants', () => {
 
   assert.equal(result.changed, true);
   assert.equal(result.inventory.potion, 2);
-  assert.equal(result.inventory.candy, 1);
+  assert.equal(result.inventory.candy, 2);
   assert.equal(result.inventory.shield, 2);
-  assert.equal(result.grants.length, 5);
+  assert.equal(result.grants.length, 6);
 });
 
 test('addDropsToInventory persists inventory gains', () => {
@@ -69,4 +69,25 @@ test('consumeInventory and consumeInventoryItem avoid negative counts', () => {
   const secondTry = consumeInventoryItem('potion');
   assert.equal(secondTry.consumed, false);
   assert.equal(secondTry.inventory.potion, 0);
+});
+
+test('applyDropsToInventory respects per-item caps', () => {
+  const result = applyDropsToInventory(
+    { potion: 4, candy: 11, shield: 2 },
+    ['🧪', '🏆', '🍬', '🔥', '🛡️', '👑'],
+  );
+
+  assert.equal(result.inventory.potion, 5);
+  assert.equal(result.inventory.candy, 12);
+  assert.equal(result.inventory.shield, 3);
+  assert.deepEqual(
+    result.grants
+      .map((entry) => [entry.id, entry.amount])
+      .sort(([a], [b]) => String(a).localeCompare(String(b))),
+    [
+      ['candy', 1],
+      ['potion', 1],
+      ['shield', 1],
+    ],
+  );
 });

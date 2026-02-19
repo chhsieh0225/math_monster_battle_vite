@@ -119,6 +119,7 @@ const REQUIRED_STATE_KEYS = [
   'inventory',
   'achUnlocked',
   'achPopup',
+  'collectionPopup',
   'encData',
 ] as const satisfies ReadonlyArray<keyof UseBattleState>;
 
@@ -127,6 +128,7 @@ const _assertStateCoverage: MissingStateKey extends never ? true : never = true;
 
 const REQUIRED_ACTION_KEYS = [
   'dismissAch',
+  'dismissCollectionPopup',
   'setTimedMode',
   'setBattleMode',
   'setScreen',

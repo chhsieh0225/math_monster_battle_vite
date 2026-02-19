@@ -829,6 +829,41 @@
   box-shadow:0 4px 16px rgba(245,158,11,.4);
   white-space:nowrap;
 }
+.battle-collection-popup{
+  position:absolute;
+  top:126px;
+  right:12px;
+  z-index:250;
+  width:220px;
+  border-radius:14px;
+  padding:10px 12px;
+  color:#fff;
+  background:linear-gradient(135deg,rgba(16,185,129,.9),rgba(59,130,246,.9));
+  box-shadow:0 6px 24px rgba(14,116,144,.42);
+  animation:popIn .35s ease,fadeSlide .45s ease reverse 3.6s forwards;
+  pointer-events:none;
+}
+.battle-collection-popup-head{
+  font-size:11px;
+  font-weight:800;
+  opacity:.84;
+  margin-bottom:6px;
+  letter-spacing:.2px;
+}
+.battle-collection-popup-body{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.battle-collection-popup-icon{
+  font-size:24px;
+  line-height:1;
+}
+.battle-collection-popup-desc{
+  font-size:12px;
+  font-weight:600;
+  line-height:1.35;
+}
 
 .battle-status-row{
   display:flex;

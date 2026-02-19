@@ -86,10 +86,12 @@ function createValidPublicApi() {
       inventory: { potion: 0, candy: 0, shield: 0 },
       achUnlocked: [],
       achPopup: null,
+      collectionPopup: null,
       encData: { encountered: {}, defeated: {} },
     },
     actions: {
       dismissAch: () => {},
+      dismissCollectionPopup: () => {},
       setTimedMode: () => {},
       setBattleMode: () => {},
       setScreen: () => {},

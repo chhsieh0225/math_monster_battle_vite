@@ -7,6 +7,7 @@ import DamagePopup from '../../ui/DamagePopup';
 import Particle from '../../ui/Particle';
 import AttackEffect from '../../effects/AttackEffect';
 import AchievementPopup from '../../ui/AchievementPopup';
+import CollectionMilestonePopup from '../../ui/CollectionMilestonePopup';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -28,6 +29,7 @@ type BattleFxLayerProps = {
   moveLvls: number[];
   getPow: (idx: number) => number;
   achPopup: UseBattleState['achPopup'];
+  collectionPopup: UseBattleState['collectionPopup'];
   phase: UseBattleState['phase'];
   enemyDrops?: string[];
   defAnim: UseBattleState['defAnim'];
@@ -35,6 +37,7 @@ type BattleFxLayerProps = {
   onRemoveDamage: (id: number) => void;
   onRemoveParticle: (id: number) => void;
   onDismissAchievement: () => void;
+  onDismissCollectionPopup: () => void;
 };
 
 /** Scenes whose backgrounds are bright enough to wash out warm-coloured FX. */
@@ -65,6 +68,7 @@ export const BattleFxLayer = memo(function BattleFxLayer({
   moveLvls,
   getPow,
   achPopup,
+  collectionPopup,
   phase,
   enemyDrops,
   defAnim,
@@ -72,6 +76,7 @@ export const BattleFxLayer = memo(function BattleFxLayer({
   onRemoveDamage,
   onRemoveParticle,
   onDismissAchievement,
+  onDismissCollectionPopup,
 }: BattleFxLayerProps) {
   const isUltimateEffect = Boolean(atkEffect && atkEffect.idx >= 3);
   const ultimateToneClass = resolveUltimateTone(atkEffect?.type);
@@ -128,6 +133,9 @@ export const BattleFxLayer = memo(function BattleFxLayer({
       {/* Achievement popup */}
       {achPopup && ACH_MAP[achPopup] && (
         <AchievementPopup achievement={ACH_MAP[achPopup]} onDone={onDismissAchievement} />
+      )}
+      {collectionPopup && (
+        <CollectionMilestonePopup popup={collectionPopup} onDone={onDismissCollectionPopup} />
       )}
 
       {/* Attack effects */}

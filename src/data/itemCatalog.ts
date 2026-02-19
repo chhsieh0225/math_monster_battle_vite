@@ -17,7 +17,7 @@ export const ITEM_CATALOG: Record<ItemId, ItemDef> = {
     nameFallback: 'Candy',
     descKey: 'battle.item.candy.desc',
     descFallback: 'Restore a small amount of HP',
-    sourceDrops: ['🍬'],
+    sourceDrops: ['🍬', '🔥', '💧', '⚡', '💀', '👻', '⭐', '🐉', '☠️', '⚔️', '🪨'],
   },
   shield: {
     id: 'shield',
@@ -32,10 +32,26 @@ export const ITEM_CATALOG: Record<ItemId, ItemDef> = {
 
 export const BATTLE_ITEM_ORDER: readonly ItemId[] = ['potion', 'candy', 'shield'];
 
+export const INVENTORY_CAP_BY_ITEM: Record<ItemId, number> = {
+  potion: 5,
+  candy: 12,
+  shield: 3,
+};
+
 export const DROP_TO_ITEM_GRANTS: Partial<Record<string, Partial<Record<ItemId, number>>>> = {
   '🧪': { potion: 1 },
   '💎': { potion: 1 },
   '🍬': { candy: 1 },
+  '🔥': { candy: 1 },
+  '💧': { candy: 1 },
+  '⚡': { candy: 1 },
+  '💀': { candy: 1 },
+  '👻': { candy: 1 },
+  '⭐': { candy: 1 },
+  '🐉': { candy: 2 },
+  '☠️': { candy: 2 },
+  '⚔️': { candy: 2 },
+  '🪨': { candy: 1 },
   '🛡️': { shield: 1 },
   '👑': { shield: 1 },
   '🏆': { potion: 1, shield: 1 },

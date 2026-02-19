@@ -23,6 +23,7 @@ import { useState, useEffect, useRef, useCallback, useMemo, useReducer } from 'r
 import { useI18n } from '../i18n';
 import type {
   BattleMode,
+  CollectionPopupVm,
   EnemyVm,
   MoveVm,
   ScreenName,
@@ -114,6 +115,7 @@ import {
   resolveTowerBattleRule,
 } from './battle/challengeRuntime.ts';
 import { DIFF_MODS, pickPartnerStarter } from './battle/partnerStarter.ts';
+import { COLLECTION_MILESTONES } from '../data/collectionMilestones.ts';
 import { resolveBattleQuestionConfig } from './battle/questionConfig.ts';
 import {
   runBattleStart,
@@ -155,6 +157,7 @@ export function useBattle() {
   const { rand, randInt, chance, pickIndex, reseed } = useBattleRng();
   const UI = useBattleUIState({ rand, randInt });
   const [collectionPerks, setCollectionPerks] = useState<CollectionPerks>(() => getCollectionPerks(loadCollection()));
+  const [collectionPopup, setCollectionPopup] = useState<CollectionPopupVm | null>(null);
   const [inventory, setInventory] = useState(() => loadInventory());
 
   // ──── Screen & mode ────
@@ -459,6 +462,9 @@ export function useBattle() {
       return true;
     });
   }, [pauseTimer, resumeTimer]);
+  const dismissCollectionPopup = useCallback(() => {
+    setCollectionPopup(null);
+  }, []);
 
   // Cleanup timer when leaving question phase
   useEffect(() => { if (phase !== "question") clearTimer(); }, [phase, clearTimer]);
@@ -567,6 +573,7 @@ export function useBattle() {
     modeOverride: BattleMode | null = null,
     allyOverride: StarterVm | null = null,
   ) => {
+    setCollectionPopup(null);
     runStartGameWithContext({
       setDailyChallengeFeedback,
       setTowerChallengeFeedback,
@@ -726,7 +733,34 @@ export function useBattle() {
             });
           },
           onCollectionUpdated: (result) => {
-            if (result && result.perks) setCollectionPerks(result.perks);
+            if (!result) return;
+            if (result.perks) setCollectionPerks(result.perks);
+            const unlockedMilestones = Array.isArray(result.newlyUnlockedMilestoneIds)
+              ? result.newlyUnlockedMilestoneIds
+              : [];
+            const unlockedTitles = Array.isArray(result.newlyUnlockedTitles)
+              ? result.newlyUnlockedTitles
+              : [];
+            const unlockedCount = unlockedMilestones.length + unlockedTitles.length;
+            if (unlockedCount <= 0) return;
+            const firstMilestone = COLLECTION_MILESTONES.find(
+              (milestone) => milestone.id === unlockedMilestones[0],
+            );
+            const firstTitle = unlockedTitles[0];
+            const localizedTitle = firstTitle
+              ? t(firstTitle.nameKey, firstTitle.nameFallback)
+              : '';
+            const desc = firstTitle
+              ? t('collection.popup.desc.title', 'Unlocked title: {title}', { title: localizedTitle })
+              : unlockedCount > 1
+                ? t('collection.popup.desc.multi', 'Unlocked {count} new collection rewards.', { count: unlockedCount })
+                : t('collection.popup.desc.single', 'Unlocked 1 new collection reward.');
+            setCollectionPopup({
+              id: Date.now(),
+              icon: firstMilestone?.emoji || (firstTitle ? '🏅' : '🎁'),
+              title: t('collection.popup.title', 'Collection Milestone!'),
+              desc,
+            });
           },
           sfx,
           t,
@@ -1096,12 +1130,13 @@ export function useBattle() {
     towerChallengeFeedback,
     expNext, chargeReady,
     inventory,
-    achUnlocked, achPopup, encData,
+    achUnlocked, achPopup, collectionPopup, encData,
   });
 
   // eslint-disable-next-line react-hooks/refs
   const actions = buildUseBattleActions({
     dismissAch,
+    dismissCollectionPopup,
     setTimedMode,
     setBattleMode,
     setScreen,

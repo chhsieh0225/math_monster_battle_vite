@@ -85,6 +85,7 @@ export function resolveBattleLayout({
   const isWildStarter = visualEnemyId.startsWith("wild_starter_");
   const isEvolvedWildStarter = isWildStarter && Boolean(enemyIsEvolved);
   const isGolumn = visualEnemyId === "golumn" || visualEnemyId === "golumn_mud";
+  const isGhostLantern = visualEnemyId === "ghost_lantern";
   const isCrazyDragon = visualEnemyId === "boss_crazy_dragon";
   const isSwordGod = visualEnemyId === "boss_sword_god";
   const isHydra = visualEnemyId === "boss_hydra";
@@ -99,6 +100,7 @@ export function resolveBattleLayout({
     : isHydra ? 260
     : isBoss ? 230
       : isGolumn ? 230
+        : isGhostLantern ? 182
         : isEvolvedWildStarter ? 172
         : (isDragonOrFire || isEvolvedSlime) ? 190
           : enemyIsEvolved ? 155 : 120;

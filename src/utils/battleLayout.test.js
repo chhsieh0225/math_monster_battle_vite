@@ -196,6 +196,32 @@ test('evolved wild starter enemies render larger than base wild starter enemies'
   assert.equal(evolvedWildStarterLayout.enemySize, 172);
 });
 
+test('ghost lantern variant gets larger in-battle render size for readability', () => {
+  const baseGhostLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'ghost',
+    enemySceneType: 'ghost',
+    enemyIsEvolved: false,
+  });
+  const lanternLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'ghost_lantern',
+    enemySceneType: 'ghost',
+    enemyIsEvolved: false,
+  });
+
+  assert.ok(lanternLayout.enemySize > baseGhostLayout.enemySize);
+  assert.equal(lanternLayout.enemySize, 182);
+});
+
 test('compact UI shifts crazy dragon enemy position to the right', () => {
   const compactCrazyDragon = resolveBattleLayout({
     battleMode: 'single',

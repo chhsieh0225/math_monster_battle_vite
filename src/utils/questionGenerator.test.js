@@ -3,6 +3,31 @@ import test from 'node:test';
 import { genQ } from './questionGenerator.ts';
 import { withRandomSource } from './prng.ts';
 
+function gcd(a, b) {
+  let x = Math.abs(Math.trunc(a));
+  let y = Math.abs(Math.trunc(b));
+  while (y !== 0) {
+    const t = x % y;
+    x = y;
+    y = t;
+  }
+  return x || 1;
+}
+
+function normalizeFractionLabel(label) {
+  const text = String(label).trim();
+  const m = /^(-?\d+)\s*\/\s*(-?\d+)$/.exec(text);
+  if (!m) return text;
+  const n = Number(m[1]);
+  const d = Number(m[2]);
+  if (!Number.isFinite(n) || !Number.isFinite(d) || d === 0) return text;
+  const g = gcd(n, d);
+  const nn = n / g;
+  const dd = d / g;
+  if (dd === 1) return String(nn);
+  return `${nn}/${dd}`;
+}
+
 test('genQ returns 4 choices and includes the answer', () => {
   const move = { range: [2, 10], ops: ["+"] };
   const q = genQ(move, 1);
@@ -87,6 +112,20 @@ test('genQ fraction arithmetic question returns readable fraction labels', () =>
   assert.equal(q.choiceLabels.length, 4);
   assert.equal(typeof q.answerLabel, "string");
   assert.equal(q.choiceLabels[q.answer], q.answerLabel);
+});
+
+test('genQ fraction arithmetic labels stay in simplest form', () => {
+  const move = { range: [2, 12], ops: ["frac_same", "frac_diff", "frac_muldiv"] };
+  for (let i = 0; i < 160; i += 1) {
+    const q = genQ(move, 1);
+    if (!Array.isArray(q.choiceLabels)) continue;
+    for (const label of q.choiceLabels) {
+      assert.equal(normalizeFractionLabel(label), String(label).trim());
+    }
+    if (typeof q.answerLabel === 'string') {
+      assert.equal(normalizeFractionLabel(q.answerLabel), q.answerLabel);
+    }
+  }
 });
 
 test('genQ frac_same subtraction avoids zero-result shortcuts', () => {

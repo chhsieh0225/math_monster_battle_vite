@@ -1,4 +1,5 @@
 import { memo, useSyncExternalStore } from 'react';
+import type { ReactNode } from 'react';
 import type { CSSProperties } from 'react';
 import type {
   FeedbackVm,
@@ -14,6 +15,37 @@ const ZERO_SNAPSHOT = (): number => 0;
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
+const FRACTION_TOKEN_RE = /(-?\d+)\s*\/\s*(-?\d+)/g;
+
+function renderMathText(value: string | number): ReactNode {
+  const text = String(value ?? '');
+  if (!text.includes('/')) return text;
+  const parts: ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null = null;
+  FRACTION_TOKEN_RE.lastIndex = 0;
+
+  while ((match = FRACTION_TOKEN_RE.exec(text)) !== null) {
+    const idx = match.index;
+    if (idx > lastIndex) parts.push(text.slice(lastIndex, idx));
+    const numerator = match[1];
+    const denominator = match[2];
+    parts.push(
+      <span
+        key={`frac-${idx}-${numerator}-${denominator}`}
+        className="battle-math-frac"
+        aria-label={`${numerator}/${denominator}`}
+      >
+        <span className="battle-math-frac-top">{numerator}</span>
+        <span className="battle-math-frac-line" />
+        <span className="battle-math-frac-bottom">{denominator}</span>
+      </span>,
+    );
+    lastIndex = idx + match[0].length;
+  }
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
+  return parts;
+}
 
 type QuestionTimerHudProps = {
   timerSec: number;
@@ -77,6 +109,12 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
   getTimerSnapshot,
   onAnswer,
 }: BattleQuestionPanelProps) {
+  const answerLabel = question.answerLabel ?? feedback?.answer ?? '?';
+  const answerUsesFraction = typeof answerLabel === 'string' && answerLabel.includes('/');
+  const hideEqualPrompt = Boolean(
+    question.op && (question.op.startsWith('unknown') || question.op === 'frac_cmp'),
+  );
+
   return (
     <div className="battle-question-wrap">
       <div className="battle-question-head">
@@ -100,8 +138,8 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
         )}
         <div className="battle-question-type">{questionTypeLabel}</div>
         <div className="question-expression battle-question-expression">
-          {question.display}
-          {(question.op && (question.op.startsWith('unknown') || question.op === 'frac_cmp')) ? '' : ' = ?'}
+          {renderMathText(question.display)}
+          {!hideEqualPrompt ? ' = ?' : ''}
         </div>
       </div>
 
@@ -109,9 +147,15 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
         <div className={`battle-feedback ${feedback.correct ? 'is-correct' : 'is-wrong'}`}>
           {feedback.correct
             ? t('battle.feedback.hit', '✅ Hit!')
-            : t('battle.feedback.answer', '❌ Answer is {answer}', {
-              answer: question.answerLabel ?? feedback.answer ?? '?',
-            })}
+            : answerUsesFraction
+              ? (
+                <>
+                  {t('battle.feedback.answerPrefix', '❌ Answer is')} {renderMathText(answerLabel)}
+                </>
+              )
+              : t('battle.feedback.answer', '❌ Answer is {answer}', {
+                answer: answerLabel,
+              })}
         </div>
       )}
 
@@ -125,7 +169,7 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
                   {t('battle.feedback.step', 'Step {index}.', { index: i + 1 })}
                 </span>
               )}
-              {step}
+              {renderMathText(step)}
             </div>
           ))}
         </div>
@@ -143,7 +187,7 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
               onClick={() => onAnswer(choice)}
               disabled={answered}
             >
-              {label}
+              {typeof label === 'string' ? renderMathText(label) : label}
             </button>
           );
         })}

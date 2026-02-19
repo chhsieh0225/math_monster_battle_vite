@@ -86,6 +86,19 @@ function fractionText(frac: Fraction): string {
   return `${frac.n}/${frac.d}`;
 }
 
+const FRACTION_LABEL_RE = /^\s*(-?\d+)\s*\/\s*(-?\d+)\s*$/;
+
+function normalizeFractionLabel(label: string): string {
+  const text = String(label || '').trim();
+  if (!text) return text;
+  const match = FRACTION_LABEL_RE.exec(text);
+  if (!match) return text;
+  const numerator = Number(match[1]);
+  const denominator = Number(match[2]);
+  if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator === 0) return text;
+  return fractionText(simplifyFraction(numerator, denominator));
+}
+
 function randomFractionLabel(range: [number, number]): string {
   const dMin = Math.max(2, Math.min(range[0], range[1]));
   const dMax = Math.max(dMin, Math.min(12, Math.max(range[0], range[1]) + 2));
@@ -102,7 +115,7 @@ function buildFractionChoiceLabels(
 ): string[] {
   const labels: string[] = [];
   const pushUnique = (value: string): void => {
-    const normalized = String(value || "").trim();
+    const normalized = normalizeFractionLabel(String(value || "").trim());
     if (!normalized) return;
     if (!labels.includes(normalized)) labels.push(normalized);
   };
@@ -145,10 +158,11 @@ function makeLabeledChoices(args: {
   answerLabel: string;
   choiceLabels: string[];
 }): GeneratedQuestion {
-  const labels = [...args.choiceLabels];
-  if (!labels.includes(args.answerLabel)) labels.unshift(args.answerLabel);
+  const normalizedAnswerLabel = normalizeFractionLabel(args.answerLabel);
+  const labels = args.choiceLabels.map((label) => normalizeFractionLabel(label));
+  if (!labels.includes(normalizedAnswerLabel)) labels.unshift(normalizedAnswerLabel);
   shuffleInPlace(labels);
-  const answer = Math.max(0, labels.indexOf(args.answerLabel));
+  const answer = Math.max(0, labels.indexOf(normalizedAnswerLabel));
   return {
     display: args.display,
     answer,
@@ -156,7 +170,7 @@ function makeLabeledChoices(args: {
     steps: args.steps || [],
     choices: Array.from({ length: labels.length }, (_unused, idx) => idx),
     choiceLabels: labels,
-    answerLabel: args.answerLabel,
+    answerLabel: normalizedAnswerLabel,
   };
 }
 

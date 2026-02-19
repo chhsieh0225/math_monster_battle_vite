@@ -79,7 +79,7 @@ export const BALANCE_CONFIG = {
         { monsterId: 'slime', slimeType: 'dark', sceneType: 'dark' },
         { monsterId: 'fire', sceneType: 'dark' },
 
-        { monsterId: 'ghost', sceneType: 'dark' },
+        { monsterId: 'boss', sceneType: 'dark' },
         { monsterId: 'boss', sceneType: 'dark' },
       ],
     },

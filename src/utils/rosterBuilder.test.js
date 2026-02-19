@@ -95,6 +95,20 @@ test('buildRoster final wave boss is selected from config-driven boss list', () 
   assert.deepEqual(new Set(BOSS_ID_LIST), seen);
 });
 
+test('buildRoster double mode locks final battle to double-boss pair', () => {
+  const pickLast = (length) => Math.max(0, length - 1);
+  const roster = buildRoster(pickLast, 'double');
+  const finalMain = roster[roster.length - 2];
+  const finalSub = roster[roster.length - 1];
+  const preFinalMain = roster[roster.length - 4];
+  const preFinalSub = roster[roster.length - 3];
+
+  assert.equal(BOSS_ID_LIST.includes(finalMain.id), true);
+  assert.equal(BOSS_ID_LIST.includes(finalSub.id), true);
+  assert.equal(BOSS_ID_LIST.includes(preFinalMain.id), false);
+  assert.equal(BOSS_ID_LIST.includes(preFinalSub.id), false);
+});
+
 test('buildRoster applies boss scene override mapping from config', () => {
   const bossSceneMap = BALANCE_CONFIG.monsters.bossSceneById;
 

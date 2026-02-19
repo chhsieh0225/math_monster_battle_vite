@@ -158,13 +158,16 @@ export function buildRoster(
 
   // Deep-copy waves so we can mutate safely
   const waves: StageWave[] = baseWaves.map(w => ({ ...w }));
+  const protectedTailWaves = mode === 'double'
+    ? STAGE_RANDOM_SWAP_END_INDEX_EXCLUSIVE_FROM_TAIL + 1
+    : STAGE_RANDOM_SWAP_END_INDEX_EXCLUSIVE_FROM_TAIL;
 
   // Randomly inject one swap candidate into a mid-game slot (indices 1..8)
   if (!options.disableRandomSwap && STAGE_RANDOM_SWAP_CANDIDATES.length > 0) {
     const candidate = STAGE_RANDOM_SWAP_CANDIDATES[pickIndex(STAGE_RANDOM_SWAP_CANDIDATES.length)];
     const swappableUpperExclusive = Math.max(
       STAGE_RANDOM_SWAP_START_INDEX,
-      waves.length - STAGE_RANDOM_SWAP_END_INDEX_EXCLUSIVE_FROM_TAIL,
+      waves.length - protectedTailWaves,
     );
     const swappable = waves
       .map((w, idx) => ({ w, idx }))
@@ -181,7 +184,7 @@ export function buildRoster(
     if (starterCandidates.length > 0) {
       const swappableUpperExclusive = Math.max(
         STAGE_RANDOM_SWAP_START_INDEX,
-        waves.length - STAGE_RANDOM_SWAP_END_INDEX_EXCLUSIVE_FROM_TAIL,
+        waves.length - protectedTailWaves,
       );
       const swappable = waves
         .map((w, idx) => ({ w, idx }))

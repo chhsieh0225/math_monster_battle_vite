@@ -17,28 +17,11 @@
   position: absolute;
 }
 
-.title-star-one {
-  top: 8%;
-  left: 12%;
-  font-size: 40px;
-  opacity: 0.1;
-  animation: sparkle 3s ease infinite;
-}
-
-.title-star-two {
-  top: 18%;
-  right: 18%;
+.title-star-main {
+  top: 12%;
+  right: 14%;
   font-size: 30px;
-  opacity: 0.06;
-  animation: sparkle 4s ease 1s infinite;
-}
-
-.title-star-three {
-  bottom: 15%;
-  left: 8%;
-  font-size: 24px;
-  opacity: 0.05;
-  animation: sparkle 5s ease 2s infinite;
+  opacity: 0.12;
 }
 
 .title-hero {

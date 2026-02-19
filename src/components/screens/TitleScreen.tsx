@@ -167,9 +167,7 @@ export default function TitleScreen({
 
   return (
     <main className={`title-screen${lowPerfMode ? ' is-low-perf' : ''}`} style={titleStyle}>
-      <div className="title-star title-star-one">⭐</div>
-      <div className="title-star title-star-two">✨</div>
-      <div className="title-star title-star-three">⭐</div>
+      <div className="title-star title-star-main">✨</div>
 
       <div className="title-hero">
         <div className="title-sprite-row title-sprite-row-top">

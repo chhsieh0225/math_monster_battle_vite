@@ -930,6 +930,7 @@ type BgmTrack =
   | 'battle'
   | 'volcano'
   | 'ironclad'
+  | 'graveyard'
   | 'boss'
   | 'boss_hydra'
   | 'boss_crazy_dragon'
@@ -941,6 +942,7 @@ const BGM_FILE_BY_TRACK: Partial<Record<BgmTrack, string>> = {
   battle: `${PUBLIC_BASE_URL}musics/Titan_s_Fury.mp3`,
   volcano: `${PUBLIC_BASE_URL}musics/Inferno_s_Fury.mp3`,
   ironclad: `${PUBLIC_BASE_URL}musics/Ironclad_Dominion.mp3`,
+  graveyard: `${PUBLIC_BASE_URL}musics/Spectral_Dirge.mp3`,
   boss_hydra: `${PUBLIC_BASE_URL}musics/Hydra_s_Unholy_Dominion.mp3`,
   boss_crazy_dragon: `${PUBLIC_BASE_URL}musics/Wrath_of_the_Azure_Wyrm.mp3`,
   boss_sword_god: `${PUBLIC_BASE_URL}musics/Wrath_of_the_Celestial_Blade.mp3`,
@@ -951,6 +953,7 @@ const SYNTH_FALLBACK_BY_TRACK: Record<BgmTrack, SynthBgmTrack> = {
   battle: 'battle',
   volcano: 'battle',
   ironclad: 'battle',
+  graveyard: 'battle',
   boss: 'boss',
   boss_hydra: 'boss',
   boss_crazy_dragon: 'boss',

@@ -161,6 +161,7 @@ export type SfxApi = {
       | 'battle'
       | 'volcano'
       | 'ironclad'
+      | 'graveyard'
       | 'boss'
       | 'boss_hydra'
       | 'boss_crazy_dragon'

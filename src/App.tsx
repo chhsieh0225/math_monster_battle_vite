@@ -31,6 +31,7 @@ type BattleBgmTrack =
   | 'battle'
   | 'volcano'
   | 'ironclad'
+  | 'graveyard'
   | 'boss'
   | 'boss_hydra'
   | 'boss_crazy_dragon'
@@ -48,6 +49,7 @@ function resolveBossTrack(starterId: string | undefined | null): BattleBgmTrack 
 function resolveSceneTrack(sceneType: string): BattleBgmTrack | null {
   if (sceneType === 'fire') return 'volcano';
   if (sceneType === 'steel') return 'ironclad';
+  if (sceneType === 'ghost') return 'graveyard';
   return null;
 }
 

@@ -2,6 +2,8 @@
  * Single source of truth for gameplay tuning knobs.
  * Keep numeric balance values centralized here to simplify future tuning.
  */
+import { validateBalanceConfigSchema } from './balanceConfigSchema.ts';
+
 const CRIT_BY_TYPE = {
   fire: { critChanceBonus: 0.01, critDamageBonus: 0.06, antiCritRate: 0.01, antiCritDamage: 0.03 },
   water: { critChanceBonus: 0.0, critDamageBonus: 0.02, antiCritRate: 0.03, antiCritDamage: 0.1 },
@@ -381,3 +383,5 @@ export const BALANCE_CONFIG = {
     },
   },
 } as const;
+
+validateBalanceConfigSchema(BALANCE_CONFIG);

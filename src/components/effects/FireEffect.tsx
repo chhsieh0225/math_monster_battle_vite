@@ -1,16 +1,25 @@
-import { seedRange } from '../../utils/prng';
 import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
+import { createEffectTemplate } from './createEffectTemplate.ts';
 
 const FLAME = "M10,28 C10,28 2,18 2,12 C2,5 5.5,0 10,0 C14.5,0 18,5 18,12 C18,18 10,28 10,28Z";
 
-export default function FireEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
-  const fxLvl = Math.max(1, Math.min(12, lvl));
-  const dur = 680 + idx * 120 + fxLvl * 24;
-  const glow = 5 + fxLvl * 1.8;
-  const T = target;
-  const rr = (slot: string, i: number, min: number, max: number): number =>
-    seedRange(`fire-${idx}-${fxLvl}-${slot}-${i}`, min, max);
-  const uid = `${idx}-${fxLvl}-${Math.round((T.flyRight || 0) * 10)}-${Math.round((T.flyTop || 0) * 10)}`;
+const fireEffectTemplate = createEffectTemplate({
+  elementKey: 'fire',
+  seedMode: 'clamped',
+  duration: ({ idx, fxLvl }) => 680 + idx * 120 + fxLvl * 24,
+  glow: ({ fxLvl }) => 5 + fxLvl * 1.8,
+});
+
+export default function FireEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
+  const {
+    idx,
+    fxLvl,
+    dur,
+    glow,
+    T,
+    rr,
+    uid,
+  } = fireEffectTemplate({ idx: moveIdx, lvl, target });
 
   if (idx === 0) {
     const n = 1 + Math.floor(fxLvl / 2);

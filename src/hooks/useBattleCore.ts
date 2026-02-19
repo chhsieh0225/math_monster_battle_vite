@@ -28,7 +28,6 @@ import type {
   ScreenName,
   StarterVm,
 } from '../types/battle';
-import type { ItemId } from '../types/game';
 import type { DailyChallengePlan, StreakTowerPlan } from '../types/challenges';
 
 import { SCENE_NAMES } from '../data/scenes';
@@ -56,7 +55,6 @@ import {
 import {
   getLevelMaxHp,
   getStarterMaxHp,
-  getStarterLevelMaxHp,
   getStarterStageIdx,
 } from '../utils/playerHp';
 import { useTimer } from './useTimer';
@@ -66,11 +64,9 @@ import { useSessionLog } from './useSessionLog';
 import { getCollectionPerks, loadCollection, type CollectionPerks } from '../utils/collectionStore.ts';
 import {
   applyDropsToInventory,
-  consumeInventory,
   loadInventory,
   saveInventory,
 } from '../utils/inventoryStore.ts';
-import { ITEM_CATALOG } from '../data/itemCatalog.ts';
 import { useBattleRng } from './useBattleRng';
 import { useBattleUIState } from './useBattleUIState';
 import { useDailyChallengeRun } from './useDailyChallengeRun';
@@ -82,9 +78,7 @@ import { buildRoster, type BattleRosterMonster } from '../utils/rosterBuilder';
 import { applyCampaignPlanToRoster, buildCampaignRunPlan } from '../utils/campaignPlanner.ts';
 import {
   createAbilityModel,
-  getDifficultyLevelForOps,
   resolveLevelProgress,
-  updateAbilityModel,
 } from '../utils/battleEngine';
 import {
   battleReducer,
@@ -149,6 +143,8 @@ import {
   runQuitGameWithContext,
   runToggleCoopActiveWithContext,
 } from './battle/lifecycleActionDelegates.ts';
+import { useBattleAbilityModel } from './battle/useBattleAbilityModel.ts';
+import { useBattleItemActions } from './battle/useBattleItemActions.ts';
 
 // ═══════════════════════════════════════════════════════════════════
 /** @returns {import('../types/battle').UseBattlePublicApi} */
@@ -292,22 +288,14 @@ export function useBattle() {
   const frozenR = useRef(false);
 
   // ──── Learning model 2.0: per-question-type adaptive difficulty ────
-  const abilityModelRef = useRef(createAbilityModel(2));
-
-  const _updateAbility = useCallback((op: string | undefined, correct: boolean): void => {
-    if (!op) return;
-    const { nextModel, nextLevel } = updateAbilityModel({
-      model: abilityModelRef.current,
-      op,
-      correct,
-    });
-    abilityModelRef.current = nextModel;
-    setDiffLevel(nextLevel);
-  }, [setDiffLevel]);
-
-  const _getMoveDiffLevel = useCallback((move: MoveVm | undefined): number => (
-    getDifficultyLevelForOps(abilityModelRef.current, move?.ops, 2)
-  ), []);
+  const {
+    abilityModelRef,
+    updateAbility: _updateAbility,
+    getMoveDiffLevel: _getMoveDiffLevel,
+  } = useBattleAbilityModel({
+    baselineLevel: 2,
+    onLevelChange: setDiffLevel,
+  });
 
   const getActingStarter = resolveActingStarter;
   const getPvpTurnName = useCallback(
@@ -605,7 +593,7 @@ export function useBattle() {
       pendingEvolveRef: pendingEvolve,
       pendingTextAdvanceActionRef,
     });
-  }, [setDmgs, setParts, setAtkEffect, setEffMsg]);
+  }, [setDmgs, setParts, setAtkEffect, setEffMsg, abilityModelRef]);
 
   const startGame = useCallback((
     starterOverride?: StarterVm | null,
@@ -1083,172 +1071,8 @@ export function useBattle() {
     });
   }, [sr, setCoopActiveSlot]);
 
-  const useItem = useCallback((itemId: ItemId) => {
-    if (phase !== 'menu') return;
-
-    const itemDef = ITEM_CATALOG[itemId];
-    const activeStarterType = getActingStarter(sr.current)?.type || starter?.type || 'grass';
-    const specDefItemName = activeStarterType === 'fire'
-      ? t('battle.specDef.fire', '🛡️ Shield')
-      : activeStarterType === 'water'
-        ? t('battle.specDef.water', '💨 Perfect Dodge')
-        : activeStarterType === 'electric'
-          ? t('battle.specDef.electric', '⚡ Paralysis')
-          : activeStarterType === 'light'
-            ? t('battle.specDef.light', '✨ Lion Roar')
-            : t('battle.specDef.grass', '🌿 Reflect');
-    const itemName = itemId === 'shield'
-      ? specDefItemName
-      : t(itemDef.nameKey, itemDef.nameFallback);
-    const spendItem = (): boolean => {
-      const result = consumeInventory(inventory, itemId, 1);
-      if (!result.consumed) return false;
-      setInventory(result.inventory);
-      saveInventory(result.inventory);
-      return true;
-    };
-
-    if (battleMode === 'pvp') {
-      setEffMsg({
-        text: t('battle.item.use.disabledPvp', '{item} is disabled in PvP.', { item: itemName }),
-        color: '#ef4444',
-      });
-      return;
-    }
-
-    if (itemId === 'potion') {
-      const isCoopSubActive = (battleMode === 'coop' || battleMode === 'double')
-        && coopActiveSlot === 'sub'
-        && Boolean(allySub)
-        && pHpSub > 0;
-      const currentHp = isCoopSubActive ? pHpSub : pHp;
-      const maxHp = isCoopSubActive && allySub
-        ? getStarterLevelMaxHp(allySub, pLvl, pStg)
-        : getPlayerMaxHp(pStg, pLvl);
-
-      if (currentHp >= maxHp) {
-        setEffMsg({
-          text: t('battle.item.use.potion.full', '{item} failed: HP already full.', { item: itemName }),
-          color: '#f97316',
-        });
-        return;
-      }
-      if (!spendItem()) {
-        setEffMsg({
-          text: t('battle.item.use.none', 'No {item} left.', { item: itemName }),
-          color: '#ef4444',
-        });
-        return;
-      }
-
-      const heal = Math.max(12, Math.round(maxHp * 0.32));
-      const restored = Math.max(1, Math.min(maxHp, currentHp + heal) - currentHp);
-      if (isCoopSubActive) {
-        setPHpSub((prev) => Math.min(maxHp, prev + restored));
-      } else {
-        setPHp((prev) => Math.min(maxHp, prev + restored));
-      }
-      setBText(t('battle.item.use.potion.heal', '{item} restored {hp} HP!', {
-        item: itemName,
-        hp: restored,
-      }));
-      setEffMsg({
-        text: t('battle.item.use.potion.heal', '{item} restored {hp} HP!', {
-          item: itemName,
-          hp: restored,
-        }),
-        color: '#22c55e',
-      });
-      sfx.play('heal');
-      return;
-    }
-
-    if (itemId === 'candy') {
-      const isCoopSubActive = (battleMode === 'coop' || battleMode === 'double')
-        && coopActiveSlot === 'sub'
-        && Boolean(allySub)
-        && pHpSub > 0;
-      const currentHp = isCoopSubActive ? pHpSub : pHp;
-      const maxHp = isCoopSubActive && allySub
-        ? getStarterLevelMaxHp(allySub, pLvl, pStg)
-        : getPlayerMaxHp(pStg, pLvl);
-
-      if (currentHp >= maxHp) {
-        setEffMsg({
-          text: t('battle.item.use.candy.full', '{item} failed: HP already full.', { item: itemName }),
-          color: '#f97316',
-        });
-        return;
-      }
-      if (!spendItem()) {
-        setEffMsg({
-          text: t('battle.item.use.none', 'No {item} left.', { item: itemName }),
-          color: '#ef4444',
-        });
-        return;
-      }
-
-      const heal = Math.max(6, Math.round(maxHp * 0.14));
-      const restored = Math.max(1, Math.min(maxHp, currentHp + heal) - currentHp);
-      if (isCoopSubActive) {
-        setPHpSub((prev) => Math.min(maxHp, prev + restored));
-      } else {
-        setPHp((prev) => Math.min(maxHp, prev + restored));
-      }
-      setBText(t('battle.item.use.candy.heal', '{item} restored {hp} HP!', {
-        item: itemName,
-        hp: restored,
-      }));
-      setEffMsg({
-        text: t('battle.item.use.candy.heal', '{item} restored {hp} HP!', {
-          item: itemName,
-          hp: restored,
-        }),
-        color: '#22c55e',
-      });
-      sfx.play('heal');
-      return;
-    }
-
-    if (itemId === 'shield') {
-      if (specDef) {
-        setEffMsg({
-          text: t('battle.item.use.shield.active', 'Counter shield already active.'),
-          color: '#f97316',
-        });
-        return;
-      }
-      if (!spendItem()) {
-        setEffMsg({
-          text: t('battle.item.use.none', 'No {item} left.', { item: itemName }),
-          color: '#ef4444',
-        });
-        return;
-      }
-      setSpecDef(true);
-      setDefAnim(activeStarterType);
-      safeTo(() => setDefAnim(null), 280);
-      setBText(t('battle.item.use.shield.ready', '{item} activated! Next hit will be blocked.', {
-        item: itemName,
-      }));
-      setEffMsg({
-        text: t('battle.item.use.shield.ready', '{item} activated! Next hit will be blocked.', {
-          item: itemName,
-        }),
-        color: '#22c55e',
-      });
-      sfx.play('specDef');
-      return;
-    }
-
-    setEffMsg({
-      text: t('battle.item.use.none', 'No {item} left.', { item: itemName }),
-      color: '#ef4444',
-    });
-  }, [
+  const useItem = useBattleItemActions({
     phase,
-    t,
-    inventory,
     battleMode,
     coopActiveSlot,
     allySub,
@@ -1256,19 +1080,23 @@ export function useBattle() {
     pHp,
     pLvl,
     pStg,
+    inventory,
+    specDef,
     starter,
+    sr,
+    getActingStarter,
     getPlayerMaxHp,
     setPHpSub,
     setPHp,
     setBText,
     setEffMsg,
-    specDef,
     setSpecDef,
-    getActingStarter,
-    sr,
     setDefAnim,
     safeTo,
-  ]);
+    setInventory,
+    t,
+    sfx,
+  });
 
   const setStarterLocalized = useCallback((nextStarter: StarterVm | null) => {
     setStarter(localizeStarter(nextStarter, locale));

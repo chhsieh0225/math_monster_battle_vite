@@ -16,7 +16,7 @@ type StarterLike = {
   [key: string]: unknown;
 };
 
-type TurnState = {
+export type TurnState = {
   battleMode?: string;
   pvpTurn?: 'p1' | 'p2';
   starter?: StarterLike | null;

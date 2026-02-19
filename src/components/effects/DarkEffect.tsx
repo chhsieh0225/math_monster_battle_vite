@@ -1,16 +1,27 @@
-import { seedRange } from '../../utils/prng';
 import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
+import { createEffectTemplate } from './createEffectTemplate.ts';
 
 // SVG 8-pointed star
 const STAR = "M0,-8 L2,-2 L8,0 L2,2 L0,8 L-2,2 L-8,0 L-2,-2Z";
 // SVG 4-pointed spark (smaller)
 const SPARK4 = "M0,-5 L1,-1 L5,0 L1,1 L0,5 L-1,1 L-5,0 L-1,-1Z";
-export default function DarkEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
-  const dur = 800 + idx * 120 + lvl * 30;
-  const glow = 4 + lvl * 2;
-  const T = target;
-  const rr = (slot: string, i: number, min: number, max: number): number =>
-    seedRange(`dark-${idx}-${lvl}-${slot}-${i}`, min, max);
+const darkEffectTemplate = createEffectTemplate({
+  elementKey: 'dark',
+  uidPrefix: 'd-',
+  duration: ({ idx, lvl }) => 800 + idx * 120 + lvl * 30,
+  glow: ({ lvl }) => 4 + lvl * 2,
+});
+
+export default function DarkEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
+  const {
+    idx,
+    fxLvl,
+    dur,
+    glow,
+    T,
+    rr,
+    uid,
+  } = darkEffectTemplate({ idx: moveIdx, lvl, target });
 
   // --- idx 0: 暗影彈 (Shadow Bolt) ---
   if (idx === 0) {
@@ -164,8 +175,6 @@ export default function DarkEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_T
   }
 
   // --- idx 3: 終極爆破 — softened void core + dark stars ---
-  const fxLvl = Math.max(1, Math.min(12, lvl));
-  const uid = `d-${idx}-${fxLvl}-${Math.round((T.flyRight || 0) * 10)}-${Math.round((T.flyTop || 0) * 10)}`;
   const D = 0.34;
   const ringN = Math.min(12, 3 + fxLvl);
   const rayN = Math.min(20, 8 + fxLvl * 2);

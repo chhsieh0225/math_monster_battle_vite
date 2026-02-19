@@ -1,5 +1,5 @@
-import { seedRange } from '../../utils/prng';
 import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
+import { createEffectTemplate } from './createEffectTemplate.ts';
 
 // Primary bolt paths (jagged lightning shapes)
 const BOLT_A = "M60,0 L55,30 L70,32 L50,65 L62,42 L48,40 L60,0";
@@ -9,12 +9,23 @@ const BOLT_C = "M52,0 L48,18 L60,20 L44,48 L55,30 L43,28 L52,0";
 // Small spark polygon (6-pointed star)
 const SPARK = "M0,-6 L1.5,-1.5 L6,0 L1.5,1.5 L0,6 L-1.5,1.5 L-6,0 L-1.5,-1.5Z";
 
-export default function ElecEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
-  const dur = 600 + idx * 120 + lvl * 30;
-  const glow = 4 + lvl * 2;
-  const T = target;
-  const rr = (slot: string, i: number, min: number, max: number): number =>
-    seedRange(`elec-${idx}-${lvl}-${slot}-${i}`, min, max);
+const elecEffectTemplate = createEffectTemplate({
+  elementKey: 'elec',
+  uidPrefix: 'e-',
+  duration: ({ idx, lvl }) => 600 + idx * 120 + lvl * 30,
+  glow: ({ lvl }) => 4 + lvl * 2,
+});
+
+export default function ElecEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
+  const {
+    idx,
+    fxLvl,
+    dur,
+    glow,
+    T,
+    rr,
+    uid,
+  } = elecEffectTemplate({ idx: moveIdx, lvl, target });
 
   // --- idx 0: 基礎電擊 (Basic Bolt) — bolts strike near enemy ---
   if (idx === 0) {
@@ -188,8 +199,6 @@ export default function ElecEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_T
   }
 
   // --- idx 3: 暗雷獄鏈 — dark thunder prison + chain lightning ---
-  const fxLvl = Math.max(1, Math.min(12, lvl));
-  const uid = `e-${idx}-${fxLvl}-${Math.round((T.flyRight || 0) * 10)}-${Math.round((T.flyTop || 0) * 10)}`;
   const D = 0.3;
   const boltN = Math.min(14, 5 + fxLvl);
   const arcN = Math.min(7, 2 + Math.floor(fxLvl / 2));

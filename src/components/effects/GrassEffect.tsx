@@ -1,15 +1,26 @@
-import { seedRange } from '../../utils/prng';
 import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
+import { createEffectTemplate } from './createEffectTemplate.ts';
 
 // SVG paths
 const LEAF = "M0,-10 C5,-10 10,-4 10,0 C10,4 5,10 0,10 C-2,6 -3,2 -3,0 C-3,-2 -2,-6 0,-10Z";
 const VEIN = "M0,-8 Q1,-3 0,0 Q-1,3 0,8";
-export default function GrassEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
-  const dur = 700 + idx * 120 + lvl * 30;
-  const glow = 4 + lvl * 2;
-  const T = target;
-  const rr = (slot: string, i: number, min: number, max: number): number =>
-    seedRange(`grass-${idx}-${lvl}-${slot}-${i}`, min, max);
+const grassEffectTemplate = createEffectTemplate({
+  elementKey: 'grass',
+  uidPrefix: 'g-',
+  duration: ({ idx, lvl }) => 700 + idx * 120 + lvl * 30,
+  glow: ({ lvl }) => 4 + lvl * 2,
+});
+
+export default function GrassEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
+  const {
+    idx,
+    fxLvl,
+    dur,
+    glow,
+    T,
+    rr,
+    uid,
+  } = grassEffectTemplate({ idx: moveIdx, lvl, target });
 
   // --- idx 0: 葉刃切 (Leaf Blade) ---
   if (idx === 0) {
@@ -150,8 +161,6 @@ export default function GrassEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_
   }
 
   // --- idx 3: 暗棘森崩 — abyss bramble collapse ---
-  const fxLvl = Math.max(1, Math.min(12, lvl));
-  const uid = `g-${idx}-${fxLvl}-${Math.round((T.flyRight || 0) * 10)}-${Math.round((T.flyTop || 0) * 10)}`;
   const D = 0.3;
   const ringN = Math.min(6, 2 + Math.floor(fxLvl / 2));
   const vineN = Math.min(10, 3 + fxLvl);

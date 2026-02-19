@@ -1,12 +1,23 @@
-import { seedRange } from '../../utils/prng';
 import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
+import { createEffectTemplate } from './createEffectTemplate.ts';
 
-export default function WaterEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
-  const dur = 800 + idx * 120 + lvl * 30;
-  const glow = 4 + lvl * 2;
-  const T = target;
-  const rr = (slot: string, i: number, min: number, max: number): number =>
-    seedRange(`water-${idx}-${lvl}-${slot}-${i}`, min, max);
+const waterEffectTemplate = createEffectTemplate({
+  elementKey: 'water',
+  uidPrefix: 'w-',
+  duration: ({ idx, lvl }) => 800 + idx * 120 + lvl * 30,
+  glow: ({ lvl }) => 4 + lvl * 2,
+});
+
+export default function WaterEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
+  const {
+    idx,
+    fxLvl,
+    dur,
+    glow,
+    T,
+    rr,
+    uid,
+  } = waterEffectTemplate({ idx: moveIdx, lvl, target });
 
   // --- idx 0: 水泡攻擊 (Bubble Attack) ---
   if (idx === 0) {
@@ -140,8 +151,6 @@ export default function WaterEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_
   }
 
   // --- idx 3: 暗潮渦葬 — abyss tide vortex + pressure crash ---
-  const fxLvl = Math.max(1, Math.min(12, lvl));
-  const uid = `w-${idx}-${fxLvl}-${Math.round((T.flyRight || 0) * 10)}-${Math.round((T.flyTop || 0) * 10)}`;
   const D = 0.3;
   const ringN = Math.min(6, 2 + Math.floor(fxLvl / 2));
   const currentN = Math.min(9, 2 + fxLvl);

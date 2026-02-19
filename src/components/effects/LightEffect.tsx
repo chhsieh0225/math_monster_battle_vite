@@ -1,15 +1,26 @@
-import { seedRange } from '../../utils/prng';
 import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
+import { createEffectTemplate } from './createEffectTemplate.ts';
 
 // Golden light orb shape
 const ORB = "M12,2 C6,2 2,6 2,12 C2,18 6,22 12,22 C18,22 22,18 22,12 C22,6 18,2 12,2Z";
 
-export default function LightEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
-  const dur = 700 + idx * 120 + lvl * 30;
-  const glow = 4 + lvl * 2;
-  const T = target;
-  const rr = (slot: string, i: number, min: number, max: number): number =>
-    seedRange(`light-${idx}-${lvl}-${slot}-${i}`, min, max);
+const lightEffectTemplate = createEffectTemplate({
+  elementKey: 'light',
+  uidPrefix: 'l-',
+  duration: ({ idx, lvl }) => 700 + idx * 120 + lvl * 30,
+  glow: ({ lvl }) => 4 + lvl * 2,
+});
+
+export default function LightEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
+  const {
+    idx,
+    fxLvl,
+    dur,
+    glow,
+    T,
+    rr,
+    uid,
+  } = lightEffectTemplate({ idx: moveIdx, lvl, target });
 
   // --- idx 0: 獵爪撲 (Light Claw) — golden orbs fly toward enemy ---
   if (idx === 0) {
@@ -147,8 +158,6 @@ export default function LightEffect({ idx = 0, lvl = 1, target = DEFAULT_EFFECT_
   }
 
   // --- idx 3: 日蝕獅吼 — eclipse lion roar ---
-  const fxLvl = Math.max(1, Math.min(12, lvl));
-  const uid = `l-${idx}-${fxLvl}-${Math.round((T.flyRight || 0) * 10)}-${Math.round((T.flyTop || 0) * 10)}`;
   const D = 0.3;
   const ringN = Math.min(6, 2 + Math.floor(fxLvl / 2));
   const roarN = Math.min(9, 2 + fxLvl);

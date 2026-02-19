@@ -55,7 +55,7 @@ export const SKILL_SETS: Record<SkillSetKey, SkillDef[]> = {
     { name: '分數判勢', icon: '⚔️', type: 'steel', desc: '分數比大小（> < =）', basePower: 12, growth: 6, range: [2, 9], ops: ['frac_cmp'], color: '#64748b', bg: '#f8fafc' },
     { name: '同分斬', icon: '🛡️', type: 'steel', desc: '同分母加減', basePower: 20, growth: 5, range: [2, 10], ops: ['frac_same'], color: '#475569', bg: '#f1f5f9' },
     { name: '通分裂鋒', icon: '⚙️', type: 'steel', desc: '異分母加減（通分）', basePower: 30, growth: 3, range: [2, 12], ops: ['frac_diff'], color: '#334155', bg: '#e2e8f0' },
-    { name: '鋼域終式', icon: '💥', type: 'steel', desc: '分數乘除（高階）', basePower: 40, growth: 3, range: [2, 12], ops: ['frac_muldiv'], color: '#1f2937', bg: '#e5e7eb', risky: true },
+    { name: '鋼域終式', icon: '💥', type: 'steel', desc: '分數乘除（高階）', basePower: 42, growth: 3, range: [2, 12], ops: ['frac_muldiv'], color: '#1f2937', bg: '#e5e7eb', risky: true },
   ],
   tiger: [
     { name: '冰晶彈', icon: '❄️', type: 'ice', desc: '一位小數加減', basePower: 12, growth: 6, range: [2, 12], ops: ['dec_add'], color: '#67e8f9', bg: '#ecfeff' },

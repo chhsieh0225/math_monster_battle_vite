@@ -13,6 +13,8 @@ const CRIT_BY_TYPE = {
   dark: { critChanceBonus: 0.03, critDamageBonus: 0.08, antiCritRate: 0.0, antiCritDamage: 0.0 },
   poison: { critChanceBonus: 0.02, critDamageBonus: 0.04, antiCritRate: 0.01, antiCritDamage: 0.02 },
   rock: { critChanceBonus: 0.0, critDamageBonus: 0.02, antiCritRate: 0.03, antiCritDamage: 0.12 },
+  steel: { critChanceBonus: 0.0, critDamageBonus: 0.0, antiCritRate: 0.02, antiCritDamage: 0.10 },
+  ice: { critChanceBonus: 0.0, critDamageBonus: 0.0, antiCritRate: 0.01, antiCritDamage: 0.06 },
 } as const;
 
 export const BALANCE_CONFIG = {
@@ -47,6 +49,7 @@ export const BALANCE_CONFIG = {
     freezeChance: {
       base: 0.25,
       perMoveLevel: 0.03,
+      riskyBonus: 0.12,
     },
   },
 

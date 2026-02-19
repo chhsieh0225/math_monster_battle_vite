@@ -86,8 +86,10 @@ export function calcEnemyDamage(atkStat: number, defEff: number): number {
 }
 
 /**
- * Calculate freeze chance for water-type player.
+ * Calculate freeze chance for water/ice-type player.
+ * Risky moves get a flat bonus (rewards ice-tiger for not having dark coverage).
  */
-export function freezeChance(moveLvl: number): number {
-  return DAMAGE_BALANCE.freezeChance.base + moveLvl * DAMAGE_BALANCE.freezeChance.perMoveLevel;
+export function freezeChance(moveLvl: number, risky?: boolean): number {
+  const base = DAMAGE_BALANCE.freezeChance.base + moveLvl * DAMAGE_BALANCE.freezeChance.perMoveLevel;
+  return risky ? base + DAMAGE_BALANCE.freezeChance.riskyBonus : base;
 }

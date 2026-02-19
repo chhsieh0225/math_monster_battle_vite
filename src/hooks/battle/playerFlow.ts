@@ -581,7 +581,7 @@ export function runPlayerAnswer({
 
           let willFreeze = false;
           if ((starter.type === 'water' || starter.type === 'ice') && afterHp > 0) {
-            if (chance(freezeChance(s3.mLvls[moveIdx]))) {
+            if (chance(freezeChance(s3.mLvls[moveIdx], move.risky))) {
               willFreeze = true;
               setFrozen(true);
               frozenR.current = true;

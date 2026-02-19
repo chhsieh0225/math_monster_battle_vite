@@ -100,7 +100,7 @@ export function resolveBattleLayout({
     : 0;
   const enemyMainRightPct = Math.max(3, baseEnemyMainRightPct + crazyDragonRightAdjust);
   const enemyBaseSize = isSwordGod ? 270
-    : isCrazyDragon ? 260
+    : isCrazyDragon ? 280
     : isHydra ? 260
     : isBoss ? 230
       : isGolumn ? 230

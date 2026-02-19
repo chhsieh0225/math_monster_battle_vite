@@ -15,7 +15,13 @@ import {
   STAGE_WAVES,
   type StageWave,
 } from '../data/stageConfigs.ts';
-import type { HydratedMonster, HydratedSlimeVariant } from '../types/game';
+import { STARTERS } from '../data/starters.ts';
+import type {
+  HydratedMonster,
+  HydratedSlimeVariant,
+  MonsterType,
+  PlayerStarterId,
+} from '../types/game';
 
 type MonsterBase = HydratedMonster;
 type SlimeVariant = HydratedSlimeVariant;
@@ -31,9 +37,79 @@ type PickIndex = (length: number) => number;
 type BuildRosterOptions = {
   singleWaves?: StageWave[];
   disableRandomSwap?: boolean;
+  enableStarterEncounters?: boolean;
+  excludedStarterIds?: readonly string[];
 };
 
 const MONSTER_BY_ID = new Map<string, MonsterBase>(MONSTERS.map((mon) => [mon.id, mon]));
+const STARTER_MIRROR_WAVE_PREFIX = 'starter_mirror:';
+const STARTER_IDS: readonly PlayerStarterId[] = ['fire', 'water', 'grass', 'electric', 'lion'];
+const STARTER_ENCOUNTER_SCENE_BY_ID: Readonly<Record<PlayerStarterId, string>> = {
+  fire: 'fire',
+  water: 'grass',
+  grass: 'grass',
+  electric: 'steel',
+  lion: 'grass',
+};
+const STARTER_BASE_STATS_BY_ID: Readonly<Record<PlayerStarterId, { hp: number; atk: number }>> = {
+  fire: { hp: 54, atk: 9 },
+  water: { hp: 50, atk: 8 },
+  grass: { hp: 49, atk: 8 },
+  electric: { hp: 51, atk: 9 },
+  lion: { hp: 56, atk: 9 },
+};
+const STARTER_DROPS_BY_ID: Readonly<Record<PlayerStarterId, readonly string[]>> = {
+  fire: ['🔥', '💎'],
+  water: ['💧', '🍬'],
+  grass: ['🍬', '🧪'],
+  electric: ['⚡', '🍬'],
+  lion: ['⭐', '👑'],
+};
+const STARTER_TYPE_NAME_FALLBACK: Readonly<Record<PlayerStarterId, string>> = {
+  fire: '火',
+  water: '水',
+  grass: '草',
+  electric: '雷',
+  lion: '光',
+};
+const STARTER_MONSTER_TYPE_BY_ID: Readonly<Record<PlayerStarterId, MonsterType>> = {
+  fire: 'fire',
+  water: 'water',
+  grass: 'grass',
+  electric: 'electric',
+  lion: 'light',
+};
+const STARTER_BY_ID = new Map<PlayerStarterId, (typeof STARTERS)[number]>(
+  STARTERS
+    .map((starter) => {
+      const id = toPlayerStarterId(starter.id);
+      return id ? [id, starter] as const : null;
+    })
+    .filter((entry): entry is readonly [PlayerStarterId, (typeof STARTERS)[number]] => entry !== null),
+);
+
+function toPlayerStarterId(id: string | undefined | null): PlayerStarterId | null {
+  if (!id) return null;
+  if ((STARTER_IDS as readonly string[]).includes(id)) return id as PlayerStarterId;
+  return null;
+}
+
+function buildStarterEncounterWaves(excludedStarterIds: ReadonlySet<string>): StageWave[] {
+  const candidates: StageWave[] = [];
+  for (const starterId of STARTER_IDS) {
+    if (excludedStarterIds.has(starterId)) continue;
+    candidates.push({
+      monsterId: `${STARTER_MIRROR_WAVE_PREFIX}${starterId}`,
+      sceneType: STARTER_ENCOUNTER_SCENE_BY_ID[starterId] || 'grass',
+    });
+  }
+  return candidates;
+}
+
+function resolveStarterMirrorId(monsterId: string): PlayerStarterId | null {
+  if (typeof monsterId !== 'string' || !monsterId.startsWith(STARTER_MIRROR_WAVE_PREFIX)) return null;
+  return toPlayerStarterId(monsterId.slice(STARTER_MIRROR_WAVE_PREFIX.length));
+}
 
 function pickSlimeVariant({
   pool,
@@ -69,6 +145,11 @@ export function buildRoster(
   mode: 'single' | 'double' = 'single',
   options: BuildRosterOptions = {},
 ): BattleRosterMonster[] {
+  const excludedStarterIds = new Set(
+    (options.excludedStarterIds || [])
+      .map((id) => String(id || '').trim())
+      .filter(Boolean),
+  );
   const pick = (arr: SlimeVariant[]): SlimeVariant => arr[pickIndex(arr.length)];
   const useSingleWaveOverride = mode === 'single' && Array.isArray(options.singleWaves) && options.singleWaves.length > 0;
   const baseWaves: StageWave[] = useSingleWaveOverride
@@ -94,7 +175,60 @@ export function buildRoster(
     }
   }
 
+  // Optional: spawn one "wild starter" encounter (unselected player characters only).
+  if (options.enableStarterEncounters) {
+    const starterCandidates = buildStarterEncounterWaves(excludedStarterIds);
+    if (starterCandidates.length > 0) {
+      const swappableUpperExclusive = Math.max(
+        STAGE_RANDOM_SWAP_START_INDEX,
+        waves.length - STAGE_RANDOM_SWAP_END_INDEX_EXCLUSIVE_FROM_TAIL,
+      );
+      const swappable = waves
+        .map((w, idx) => ({ w, idx }))
+        .filter(({ idx }) => idx >= STAGE_RANDOM_SWAP_START_INDEX && idx < swappableUpperExclusive);
+      // Not every run has a starter encounter; this keeps variety.
+      const shouldInjectStarterEncounter = Number(pickIndex(100)) < 65;
+      if (swappable.length > 0 && shouldInjectStarterEncounter) {
+        const chosenSlot = swappable[pickIndex(swappable.length)];
+        const chosenStarter = starterCandidates[pickIndex(starterCandidates.length)];
+        waves[chosenSlot.idx] = { ...chosenStarter };
+      }
+    }
+  }
+
   return waves.map((wave, i) => {
+    const starterMirrorId = resolveStarterMirrorId(wave.monsterId);
+    if (starterMirrorId) {
+      const starter = STARTER_BY_ID.get(starterMirrorId);
+      if (starter) {
+        const sc = STAGE_SCALE_BASE + i * STAGE_SCALE_STEP;
+        const baseStats = STARTER_BASE_STATS_BY_ID[starterMirrorId] || { hp: 50, atk: 8 };
+        const sceneMType = wave.sceneType || STARTER_ENCOUNTER_SCENE_BY_ID[starterMirrorId] || 'grass';
+        const starterType = STARTER_MONSTER_TYPE_BY_ID[starterMirrorId];
+        const starterSvgFn = starter.stages?.[0]?.svgFn;
+        if (typeof starterSvgFn !== 'function') {
+          throw new Error(`[rosterBuilder] starter ${starterMirrorId} missing stage[0] svgFn`);
+        }
+        return {
+          id: `wild_starter_${starterMirrorId}`,
+          name: starter.name,
+          hp: Math.round(baseStats.hp * sc),
+          maxHp: Math.round(baseStats.hp * sc),
+          atk: Math.round(baseStats.atk * sc),
+          c1: starter.c1,
+          c2: starter.c2,
+          svgFn: starterSvgFn,
+          drops: [...(STARTER_DROPS_BY_ID[starterMirrorId] || ['🍬', '🧪'])],
+          mType: starterType,
+          typeIcon: starter.typeIcon || '✨',
+          typeName: starter.typeName || STARTER_TYPE_NAME_FALLBACK[starterMirrorId] || '屬性',
+          sceneMType,
+          lvl: i + 1,
+          isEvolved: false,
+        };
+      }
+    }
+
     // If wave requests a boss, randomly pick from the boss pool
     const bossOrBaseId = BOSS_IDS.has(wave.monsterId)
       ? BOSS_ID_LIST[pickIndex(BOSS_ID_LIST.length)]

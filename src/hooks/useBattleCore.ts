@@ -186,20 +186,31 @@ export function useBattle() {
   } = useDailyChallengeRun();
   const hasChallengeRun = Boolean(queuedChallenge || activeChallenge);
   const buildNewRoster = useCallback(
-    (mode: BattleMode = 'single'): EnemyVm[] => {
+    (
+      mode: BattleMode = 'single',
+      options: { excludeStarterIds?: readonly string[] } = {},
+    ): EnemyVm[] => {
       const rosterMode = mode === 'coop' || mode === 'double' ? 'double' : 'single';
+      const starterRosterOptions = {
+        enableStarterEncounters: !hasChallengeRun,
+        excludedStarterIds: options.excludeStarterIds || [],
+      };
       if (rosterMode === 'single' && !hasChallengeRun) {
         const campaignPlan = buildCampaignRunPlan(pickIndex);
         campaignPlanRef.current = campaignPlan;
         const campaignWaves = campaignPlan.nodes.map((node) => node.wave);
         const roster = buildRoster(pickIndex, 'single', {
+          ...starterRosterOptions,
           singleWaves: campaignWaves,
           disableRandomSwap: true,
         });
         return localizeEnemyRoster(applyCampaignPlanToRoster(roster, campaignPlan), locale);
       }
       campaignPlanRef.current = null;
-      return localizeEnemyRoster(buildRoster(pickIndex, rosterMode), locale);
+      return localizeEnemyRoster(
+        buildRoster(pickIndex, rosterMode, starterRosterOptions),
+        locale,
+      );
     },
     [pickIndex, locale, hasChallengeRun],
   );

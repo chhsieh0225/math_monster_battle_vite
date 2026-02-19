@@ -40,7 +40,10 @@ type RunStandardStartFlowArgs = {
   leaderMaxHp: number;
   leaderStageIdx: number;
   currentTimedMode: boolean;
-  buildNewRoster: (mode: BattleMode) => EnemyVm[];
+  buildNewRoster: (
+    mode: BattleMode,
+    options?: { excludeStarterIds?: readonly string[] },
+  ) => EnemyVm[];
   getStarterMaxHp: (starter: StarterLite) => number;
   setEnemies: (value: EnemyVm[]) => void;
   setCoopActiveSlot: (value: 'main' | 'sub') => void;
@@ -161,7 +164,10 @@ export function runStandardStartFlow({
   setScreen,
   startBattle,
 }: RunStandardStartFlowArgs): void {
-  const newRoster = buildNewRoster(mode);
+  const excludeStarterIds = [leader?.id, partner?.id]
+    .map((id) => String(id || '').trim())
+    .filter(Boolean);
+  const newRoster = buildNewRoster(mode, { excludeStarterIds });
   setEnemies(newRoster);
   setCoopActiveSlot('main');
   resetPvpRuntime();

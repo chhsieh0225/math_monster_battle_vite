@@ -265,6 +265,11 @@ const MONSTER_NAME_EN: Dict<string> = {
   boss_sword_god: "Kusanagi Sword God",
   golumn: "Stone Golem",
   golumn_mud: "Mudstone Golem",
+  wild_starter_fire: "Wild Fire Cub",
+  wild_starter_water: "Wild Water Cub",
+  wild_starter_grass: "Wild Grass Cub",
+  wild_starter_electric: "Wild Thunder Cub",
+  wild_starter_lion: "Wild Lion Cub",
 };
 
 const MONSTER_NAME_EN_BY_ZH: Dict<string> = {
@@ -282,11 +287,16 @@ const MONSTER_NAME_EN_BY_ZH: Dict<string> = {
   鋼鐵巨魔: "Titan Ogre",
   深淵巨魔: "Void Ogre",
   火焰蜥: "Flame Lizard",
+  小火獸: "Fire Cub",
   烈焰巨龍: "Inferno Dragon",
   幽靈魔: "Phantom Fiend",
   提燈幽魂: "Lantern Wraith",
   冥界死神: "Nether Reaper",
   鋼鐵龍: "Iron Dragon",
+  小水獸: "Water Cub",
+  小草獸: "Grass Cub",
+  小雷獸: "Thunder Cub",
+  小獅獸: "Lion Cub",
   鐵甲天龍: "Aegis Skywyrm",
   岩石高崙: "Stone Golem",
   泥岩高崙: "Mudstone Golem",

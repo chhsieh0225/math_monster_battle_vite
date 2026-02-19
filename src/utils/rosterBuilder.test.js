@@ -107,3 +107,27 @@ test('buildRoster applies boss scene override mapping from config', () => {
     assert.equal(boss.sceneMType, expectedScene);
   }
 });
+
+test('buildRoster can inject wild starter encounters and respect excluded starter ids', () => {
+  const roster = buildRoster(pickFirst, 'single', {
+    disableRandomSwap: true,
+    enableStarterEncounters: true,
+    excludedStarterIds: ['fire'],
+  });
+  const wildStarters = roster.filter((mon) => String(mon.id || '').startsWith('wild_starter_'));
+
+  assert.equal(wildStarters.length > 0, true);
+  assert.equal(wildStarters.some((mon) => mon.id === 'wild_starter_fire'), false);
+  assert.equal(wildStarters.some((mon) => mon.id === 'wild_starter_water'), true);
+  assert.equal(wildStarters.some((mon) => mon.sceneMType === 'grass'), true);
+});
+
+test('buildRoster skips wild starter encounters when all starters are excluded', () => {
+  const roster = buildRoster(pickFirst, 'single', {
+    disableRandomSwap: true,
+    enableStarterEncounters: true,
+    excludedStarterIds: ['fire', 'water', 'grass', 'electric', 'lion'],
+  });
+  const wildStarters = roster.filter((mon) => String(mon.id || '').startsWith('wild_starter_'));
+  assert.equal(wildStarters.length, 0);
+});

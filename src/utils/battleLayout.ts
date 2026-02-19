@@ -60,6 +60,7 @@ export function resolveBattleLayout({
 
   const normalizedPlayerId = normalizeEnemyVisualId(playerStarterId);
   const isBossPlayer = BOSS_IDS.has(normalizedPlayerId);
+  const isLionOrWolfFinal = (normalizedPlayerId === "lion" || normalizedPlayerId === "wolf") && playerStageIdx >= 2;
   const isLionFinalInTeam = dualUnits && normalizedPlayerId === "lion" && playerStageIdx >= 2;
   const isWolfFinalInTeam = dualUnits && normalizedPlayerId === "wolf" && playerStageIdx >= 2;
   const mainPlayerBaseSize = isBossPlayer
@@ -68,11 +69,13 @@ export function resolveBattleLayout({
       ? 188
       : playerStageIdx >= 2
         ? 200
-        : playerStageIdx >= 1
+      : playerStageIdx >= 1
           ? 170
           : 120;
   const mainPlayerScale = dualUnits ? (compactDual ? 0.9 : 0.96) : 1;
-  const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale);
+  // Slightly reduce lion/wolf final forms on compact (mobile) viewports.
+  const compactFinalStarterScale = compactUI && isLionOrWolfFinal ? 0.97 : 1;
+  const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale * compactFinalStarterScale);
   const subPlayerSize = Math.round((compactDual ? 104 : 112) * (dualUnits ? (compactDual ? 0.9 : 0.95) : 1));
 
   const visualEnemyId = normalizeEnemyVisualId(enemyId);

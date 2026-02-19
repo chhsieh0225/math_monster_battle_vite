@@ -54,6 +54,44 @@ test('coop wolf final evolution follows lion sizing profile', () => {
   assert.equal(wolfLayout.mainPlayerSize, 180);
 });
 
+test('compact UI slightly reduces lion/wolf final evolution size', () => {
+  const lionDesktop = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 2,
+    playerStarterId: 'lion',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+  });
+  const lionCompact = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 2,
+    playerStarterId: 'lion',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+  });
+  const wolfCompact = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 2,
+    playerStarterId: 'wolf',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+  });
+
+  assert.ok(lionCompact.mainPlayerSize < lionDesktop.mainPlayerSize);
+  assert.equal(lionDesktop.mainPlayerSize, 200);
+  assert.equal(lionCompact.mainPlayerSize, 194);
+  assert.equal(wolfCompact.mainPlayerSize, lionCompact.mainPlayerSize);
+});
+
 test('hydra gets coop-only size boost to avoid looking undersized', () => {
   const coopHydra = resolveBattleLayout({
     battleMode: 'coop',

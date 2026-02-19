@@ -102,6 +102,18 @@ test('genQ decimal add route generates labeled decimal choices', () => {
   assert.equal(q.display.includes('.'), true);
 });
 
+test('genQ decimal add stays one-digit at low difficulty and upgrades at higher difficulty', () => {
+  const move = { range: [2, 12], ops: ["dec_add"] };
+
+  const low = genQ(move, 1);
+  assert.equal(low.op, "dec_add");
+  assert.match(low.display, /\d+\.\d\s*[+-]\s*\d+\.\d/);
+
+  const high = genQ(move, 1.15);
+  assert.equal(high.op, "dec_add");
+  assert.match(high.display, /\d+\.\d{2}\s*[+-]\s*\d+\.\d{2}/);
+});
+
 test('genQ decimal fraction-convert route supports both conversion directions', () => {
   const move = { range: [2, 12], ops: ["dec_frac"] };
   for (let i = 0; i < 40; i += 1) {

@@ -463,8 +463,15 @@ function genFractionMulDiv(range: [number, number], tr: Translator): GeneratedQu
   });
 }
 
-function genDecimalAdd(range: [number, number], tr: Translator): GeneratedQuestion {
-  const digits = chance(0.34) ? 2 : 1;
+function resolveDecimalAddDigits(diffMod: number): 1 | 2 {
+  // Keep Ice starter move-1 beginner friendly:
+  // start with one decimal place and upgrade to two only after difficulty increases.
+  if (diffMod >= 1.15) return 2;
+  return 1;
+}
+
+function genDecimalAdd(range: [number, number], tr: Translator, diffMod: number): GeneratedQuestion {
+  const digits = resolveDecimalAddDigits(diffMod);
   let a = randomDecimalValue(range, digits);
   let b = randomDecimalValue(range, digits);
   const op: '+' | '-' = chance(0.5) ? '+' : '-';
@@ -1056,7 +1063,7 @@ export function genQ(
   const op = pickOne(ops) ?? "+";
 
   // ── Decimal operations (ice starter) ──
-  if (op === "dec_add") return genDecimalAdd(range, tr);
+  if (op === "dec_add") return genDecimalAdd(range, tr, diffMod);
   if (op === "dec_frac") return genDecimalFrac(range, tr);
   if (op === "dec_mul") return genDecimalMul(range, tr);
   if (op === "dec_div") return genDecimalDiv(range, tr);

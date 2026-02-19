@@ -36,18 +36,6 @@ function normalizeBossVisualId(id?: string | null): string {
   return id.startsWith('pvp_') ? id.slice(4) : id;
 }
 
-function normalizeStarterVisualId(id?: string | null): string {
-  if (!id) return '';
-  return id.startsWith('pvp_') ? id.slice(4) : id;
-}
-
-function requiresWolfFinalFacingFix(id?: string | null, stageIdx?: number | null): boolean {
-  const normalizedId = normalizeStarterVisualId(id);
-  if (normalizedId !== 'wolf' && normalizedId !== 'wild_starter_wolf') return false;
-  const stage = Number.isFinite(stageIdx) ? Number(stageIdx) : 0;
-  return stage >= 2;
-}
-
 type BattleScreenProps = {
   state: UseBattleState;
   actions: UseBattleActions;
@@ -520,10 +508,6 @@ function BattleScreenComponent({
     playerMainShadowStyle,
     enemySubSize,
   } = memoSpriteStyles!;
-  const playerMainFacingFix = requiresWolfFinalFacingFix(starter.id, S.pStg);
-  const playerSubFacingFix = requiresWolfFinalFacingFix(S.allySub?.id, S.allySub?.selectedStageIdx);
-  const enemyMainFacingFix = requiresWolfFinalFacingFix(enemy.id, enemy.selectedStageIdx);
-  const enemySubFacingFix = requiresWolfFinalFacingFix(S.enemySub?.id, S.enemySub?.selectedStageIdx);
   const coOpBossSubIntro = isCoopBattle
     && showEnemySub
     && Boolean(S.enemySub?.name)
@@ -658,10 +642,6 @@ function BattleScreenComponent({
           playerMainSpriteStyle={playerMainSpriteStyle}
           playerSubSpriteStyle={playerSubSpriteStyle}
           playerMainShadowStyle={playerMainShadowStyle}
-          enemyMainFacingFix={enemyMainFacingFix}
-          enemySubFacingFix={enemySubFacingFix}
-          playerMainFacingFix={playerMainFacingFix}
-          playerSubFacingFix={playerSubFacingFix}
           showEnemyShadow={!S.eAnim && !UX.lowPerfMode}
           showPlayerShadow={!S.pAnim && !UX.lowPerfMode}
         />

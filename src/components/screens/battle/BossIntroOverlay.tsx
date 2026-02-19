@@ -21,8 +21,9 @@ type BossIntroOverlayProps = {
  *   1.2 s  – flash peak, boss silhouette fades in (brightness 0 → 1)
  *   2.0 s  – boss name pops in
  *   2.8 s  – fully visible
- *   3.2 s  – overlay fades out
- *   3.5 s  – onComplete() fires → phase transitions to 'text'
+ *   3.6~4.1 s – hold for emphasis
+ *   4.1 s  – overlay fades out
+ *   4.6 s  – onComplete() fires → phase transitions to 'text'
  */
 export const BossIntroOverlay = memo(function BossIntroOverlay({
   enemyName,
@@ -44,7 +45,7 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
   }, [onComplete]);
 
   useEffect(() => {
-    const id = window.setTimeout(finish, 3500);
+    const id = window.setTimeout(finish, 4600);
     return () => clearTimeout(id);
   }, [finish]);
 

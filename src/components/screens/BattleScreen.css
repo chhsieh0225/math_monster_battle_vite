@@ -1704,6 +1704,11 @@
   overflow:hidden;
   cursor:pointer;
 }
+.battle-root.boss-intro-active .battle-arena,
+.battle-root.boss-intro-active .battle-panel,
+.battle-root.boss-intro-active .battle-hit-react-layer{
+  visibility:hidden;
+}
 
 /* Phase 1 – full black, fades at 1.2 s */
 .boss-intro-black{
@@ -1860,7 +1865,7 @@
   inset:0;
   opacity:0;
   background:#000;
-  animation:bossIntroFadeOut .5s ease 3.0s both;
+  animation:bossIntroFadeOut .5s ease 4.1s both;
 }
 @keyframes bossIntroFadeOut{
   0%{opacity:0}

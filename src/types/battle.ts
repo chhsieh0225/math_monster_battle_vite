@@ -161,6 +161,7 @@ export type SfxApi = {
       | 'battle'
       | 'boss'
       | 'boss_hydra'
+      | 'boss_crazy_dragon'
       | 'boss_sword_god'
       | 'boss_dark_king'
   ) => void;

@@ -249,6 +249,8 @@ function App() {
       const enemyId = S.enemy?.id ?? '';
       if (enemyId === 'boss_hydra') {
         V.sfx.startBgm('boss_hydra');
+      } else if (enemyId === 'boss_crazy_dragon') {
+        V.sfx.startBgm('boss_crazy_dragon');
       } else if (enemyId === 'boss_sword_god') {
         V.sfx.startBgm('boss_sword_god');
       } else if (enemyId === 'boss') {

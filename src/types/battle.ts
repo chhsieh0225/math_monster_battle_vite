@@ -266,6 +266,7 @@ export type UseBattleState = {
   effMsg: EffectMsgVm | null;
   burnStack: number;
   frozen: boolean;
+  shattered: boolean;
   staticStack: number;
   specDef: boolean;
   defAnim: string | null;

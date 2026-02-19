@@ -65,6 +65,7 @@ function createValidPublicApi() {
       effMsg: null,
       burnStack: 0,
       frozen: false,
+      shattered: false,
       staticStack: 0,
       specDef: false,
       defAnim: null,

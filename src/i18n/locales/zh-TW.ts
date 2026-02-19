@@ -494,6 +494,7 @@ const zhTW = {
   "battle.tag.chargeInterrupted": "💥打斷蓄力！",
   "battle.effect.chargeCounter": "⚠️ 蓄力反擊！",
   "battle.tag.freeze": "❄️凍結",
+  "battle.tag.shatter": "💎碎冰",
   "battle.effect.counterArmor": "🛡️ 反擊裝甲！",
   "battle.ko.chargeCounter": "{name} 被蓄力反擊擊倒了...",
   "battle.ko.counter": "{name} 被反擊傷害打倒了...",

@@ -494,6 +494,7 @@ const enUS = {
   "battle.tag.chargeInterrupted": "💥Charge Interrupted!",
   "battle.effect.chargeCounter": "⚠️ Charge Counter!",
   "battle.tag.freeze": "❄️Frozen",
+  "battle.tag.shatter": "💎Shatter",
   "battle.effect.counterArmor": "🛡️ Counter Armor!",
   "battle.ko.chargeCounter": "{name} was knocked out by charge retaliation...",
   "battle.ko.counter": "{name} was knocked out by counter damage...",

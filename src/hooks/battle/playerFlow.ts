@@ -74,6 +74,7 @@ type BattleRuntimeState = {
   furyRegenUsed: boolean;
   eHp: number;
   burnStack: number;
+  shattered: boolean;
   staticStack: number;
   q: BattleQuestion | null;
   phase?: string;
@@ -152,6 +153,7 @@ type RunPlayerAnswerArgs = {
   setPHp: NumberSetter;
   setPHpSub?: NumberSetter;
   setFrozen: BoolSetter;
+  setShattered: BoolSetter;
   frozenR: { current: boolean };
   setStaticStack: NumberSetter;
   setEHp: NumberSetter;
@@ -250,6 +252,7 @@ export function runPlayerAnswer({
   setPHp,
   setPHpSub,
   setFrozen,
+  setShattered,
   frozenR,
   setStaticStack,
   setEHp,
@@ -560,7 +563,19 @@ export function runPlayerAnswer({
           }
 
           const appliedHitDmg = applyBossDamageReduction(finalDmg, s3.enemy.id);
-          let afterHp = Math.max(0, s3.eHp - appliedHitDmg);
+
+          // Ice shatter: bonus damage when attacking a shattered (previously frozen) enemy
+          let shatterDmg = 0;
+          if (s3.shattered) {
+            const rawShatter = Math.min(
+              Math.round(appliedHitDmg * TRAIT_BALANCE.player.iceShatterBonusRatio),
+              TRAIT_BALANCE.player.iceShatterBonusCap,
+            );
+            shatterDmg = applyBossDamageReduction(rawShatter, s3.enemy.id);
+            setShattered(false);
+            safeToIfBattleActive(() => addD(tr(t, 'battle.tag.shatter', '💎Shatter'), 155, 30, '#22d3ee'), 400);
+          }
+          let afterHp = Math.max(0, s3.eHp - appliedHitDmg - shatterDmg);
 
           let newBurn = s3.burnStack;
           if (starter.type === 'fire' && afterHp > 0) {
@@ -581,10 +596,12 @@ export function runPlayerAnswer({
 
           let willFreeze = false;
           if ((starter.type === 'water' || starter.type === 'ice') && afterHp > 0) {
-            if (chance(freezeChance(s3.mLvls[moveIdx], move.risky))) {
+            const isIce = starter.type === 'ice';
+            if (chance(freezeChance(s3.mLvls[moveIdx], isIce && move.risky))) {
               willFreeze = true;
               setFrozen(true);
               frozenR.current = true;
+              if (isIce) setShattered(true);
               sfx.play('freeze');
               safeToIfBattleActive(() => addD(tr(t, 'battle.tag.freeze', '❄️Frozen'), 155, 50, '#38bdf8'), 600);
             }

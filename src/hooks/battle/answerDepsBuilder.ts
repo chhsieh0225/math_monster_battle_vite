@@ -131,6 +131,7 @@ export function buildPlayerAnswerHandlerDeps({
     setPHp: battleFields.setPHp,
     setPHpSub: battleFields.setPHpSub,
     setFrozen: battleFields.setFrozen,
+    setShattered: battleFields.setShattered,
     frozenR: callbacks.frozenR,
     setStaticStack: battleFields.setStaticStack,
     setEHp: battleFields.setEHp,

@@ -56,6 +56,7 @@ type RunVictoryFlowArgs = {
   setBurnStack: NumberSetter;
   setStaticStack: NumberSetter;
   setFrozen: BoolSetter;
+  setShattered: BoolSetter;
   frozenRef: { current: boolean };
   setCursed: BoolSetter;
   setBossPhase: NumberSetter;
@@ -103,6 +104,7 @@ export function runVictoryFlow({
   setBurnStack,
   setStaticStack,
   setFrozen,
+  setShattered,
   frozenRef,
   setCursed,
   setBossPhase,
@@ -129,6 +131,7 @@ export function runVictoryFlow({
   setBurnStack(0);
   setStaticStack(0);
   setFrozen(false);
+  setShattered(false);
   frozenRef.current = false;
   setCursed(false);
   setBossPhase(0);

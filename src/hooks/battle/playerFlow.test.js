@@ -115,6 +115,7 @@ function createTestContext(stateOverrides = {}) {
     setPHp: pHp.setter,
     setPHpSub: pHpSub.setter,
     setFrozen: frozen.setter,
+    setShattered: () => {},
     frozenR: { current: false },
     setStaticStack: staticStack.setter,
     setEHp: eHp.setter,

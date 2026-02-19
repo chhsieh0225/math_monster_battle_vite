@@ -370,6 +370,8 @@ export const BALANCE_CONFIG = {
       steelCounterChance: 0.3,
       steelCounterScale: 0.45,
       steelCounterCap: 18,
+      iceShatterBonusRatio: 0.25,
+      iceShatterBonusCap: 16,
     },
     specDef: {
       grassReflectScale: 1.2,

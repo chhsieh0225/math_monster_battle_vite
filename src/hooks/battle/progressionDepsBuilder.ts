@@ -30,6 +30,7 @@ type BuildVictoryFlowArgsArgs = {
     | 'setBurnStack'
     | 'setStaticStack'
     | 'setFrozen'
+    | 'setShattered'
     | 'setCursed'
     | 'setBossPhase'
     | 'setBossTurn'
@@ -87,6 +88,7 @@ export function buildVictoryFlowArgs({
     setBurnStack: battleFields.setBurnStack,
     setStaticStack: battleFields.setStaticStack,
     setFrozen: battleFields.setFrozen,
+    setShattered: battleFields.setShattered,
     frozenRef,
     setCursed: battleFields.setCursed,
     setBossPhase: battleFields.setBossPhase,

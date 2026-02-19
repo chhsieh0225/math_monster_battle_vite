@@ -33,6 +33,7 @@ export type BattleState = {
   // Status effects
   burnStack: number;
   frozen: boolean;
+  shattered: boolean;
   staticStack: number;
   specDef: boolean;
   defAnim: string | null;
@@ -125,6 +126,7 @@ const BASE_STATE: BattleState = {
   // Status effects
   burnStack: 0,
   frozen: false,
+  shattered: false,
   staticStack: 0,
   specDef: false,
   defAnim: null,
@@ -223,6 +225,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         burnStack: 0,
         staticStack: 0,
         frozen: false,
+        shattered: false,
         specDef: false,
         defAnim: null,
         bossPhase: BOSS_IDS.has(enemy?.id ?? '') ? 1 : 0,
@@ -248,6 +251,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         burnStack: 0,
         staticStack: 0,
         frozen: false,
+        shattered: false,
         specDef: false,
         defAnim: null,
         bossPhase: BOSS_IDS.has(promoted?.id ?? '') ? 1 : 0,

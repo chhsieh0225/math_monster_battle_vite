@@ -20,6 +20,7 @@ type FieldKey =
   | 'mLvlUp'
   | 'burnStack'
   | 'frozen'
+  | 'shattered'
   | 'staticStack'
   | 'specDef'
   | 'defAnim'
@@ -66,6 +67,7 @@ type BattleFieldSetters = {
   setMLvlUp: FieldSetter<'mLvlUp'>;
   setBurnStack: FieldSetter<'burnStack'>;
   setFrozen: FieldSetter<'frozen'>;
+  setShattered: FieldSetter<'shattered'>;
   setStaticStack: FieldSetter<'staticStack'>;
   setSpecDef: FieldSetter<'specDef'>;
   setDefAnim: FieldSetter<'defAnim'>;
@@ -114,6 +116,7 @@ export function createBattleFieldSetters(dispatchBattle: DispatchBattle): Battle
     setMLvlUp: createFieldSetter(setBattleField, 'mLvlUp'),
     setBurnStack: createFieldSetter(setBattleField, 'burnStack'),
     setFrozen: createFieldSetter(setBattleField, 'frozen'),
+    setShattered: createFieldSetter(setBattleField, 'shattered'),
     setStaticStack: createFieldSetter(setBattleField, 'staticStack'),
     setSpecDef: createFieldSetter(setBattleField, 'specDef'),
     setDefAnim: createFieldSetter(setBattleField, 'defAnim'),

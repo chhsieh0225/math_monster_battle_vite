@@ -114,6 +114,7 @@ export function createPlayerAnswerHandlers(deps: PlayerAnswerHandlers): PlayerAn
     setPHp: deps.setPHp,
     setPHpSub: deps.setPHpSub,
     setFrozen: deps.setFrozen,
+    setShattered: deps.setShattered,
     frozenR: deps.frozenR,
     setStaticStack: deps.setStaticStack,
     setEHp: deps.setEHp,

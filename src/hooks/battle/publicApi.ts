@@ -98,6 +98,7 @@ const REQUIRED_STATE_KEYS = [
   'effMsg',
   'burnStack',
   'frozen',
+  'shattered',
   'staticStack',
   'specDef',
   'defAnim',

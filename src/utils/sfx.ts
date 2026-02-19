@@ -1999,9 +1999,14 @@ function armBgmUnlockRetry(track: BgmTrack): void {
 }
 
 function onBgmUnlockRetryGesture(): void {
-  disarmBgmUnlockRetry();
-  if (!pendingBgmTrack || bgmMuted || !ready) return;
+  if (!pendingBgmTrack || bgmMuted) {
+    disarmBgmUnlockRetry();
+    return;
+  }
   const track = pendingBgmTrack;
+  const hasMediaTrack = Boolean(BGM_FILE_BY_TRACK[track]);
+  if (!ready && !hasMediaTrack) return;
+  disarmBgmUnlockRetry();
   const retry = () => {
     if (bgmMuted || pendingBgmTrack !== track) return;
     try { startBgmLoop(track); } catch { /* best-effort */ }
@@ -2202,7 +2207,7 @@ const sfx = {
     } else if (wasMuted && !bgmMuted) {
       // Unmuting: restart the last track immediately
       const track = lastBgmTrack || pendingBgmTrack;
-      if (track && ready) {
+      if (track && (ready || Boolean(BGM_FILE_BY_TRACK[track]))) {
         try { startBgmLoop(track); } catch { /* best-effort */ }
       }
     }
@@ -2260,7 +2265,9 @@ const sfx = {
   },
   startBgm(track: BgmTrack): void {
     lastBgmTrack = track;  // always remember intent for mute→unmute
-    if (!ready || bgmMuted) return;
+    if (bgmMuted) return;
+    const hasMediaTrack = Boolean(BGM_FILE_BY_TRACK[track]);
+    if (!ready && !hasMediaTrack) return;
     if (bgmCurrent === track) return;
     pendingBgmTrack = track;
     const boot = () => {

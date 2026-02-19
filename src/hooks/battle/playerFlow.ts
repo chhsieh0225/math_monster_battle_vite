@@ -4,6 +4,7 @@ import {
   POWER_CAPS,
 } from '../../data/constants.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
+import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { bestAttackType, freezeChance } from '../../utils/damageCalc.ts';
 import { getLevelMaxHp, getStarterLevelMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import {
@@ -460,27 +461,6 @@ export function runPlayerAnswer({
             return;
           }
 
-          // Dark Lord shadow shield: every 3rd player attack is absorbed
-          if (s3.shadowShieldCD >= 0) {
-            const cd = s3.shadowShieldCD - 1;
-            if (cd <= 0) {
-              // Shield activates — negate this attack
-              setShadowShieldCD(3);
-              sfx.play('specDef');
-              setEAnim('shieldPulse 0.8s ease');
-              setEffMsg({ text: tr(t, 'battle.effect.shadowShield', '🛡️ Shadow Shield absorbed the attack!'), color: '#7c3aed' });
-              safeToIfBattleActive(() => setEffMsg(null), 1500);
-              addD(tr(t, 'battle.tag.shielded', '🛡️BLOCKED'), 155, 50, '#7c3aed');
-              safeToIfBattleActive(() => {
-                setEAnim('');
-                setAtkEffect(null);
-              }, effectTimeline.clearDelay);
-              safeToIfBattleActive(() => doEnemyTurn(), effectTimeline.nextDelay);
-              return;
-            }
-            setShadowShieldCD(cd);
-          }
-
           if (wasCursed) setCursed(false);
 
           if (isCrit) {
@@ -506,13 +486,69 @@ export function runPlayerAnswer({
             safeToIfBattleActive(() => setEffMsg(null), 1500);
           }
 
-          if (s3.bossCharging) {
+          const wasBossCharging = Boolean(s3.bossCharging && BOSS_IDS.has(s3.enemy.id ?? ''));
+          if (wasBossCharging) {
             setBossCharging(false);
             safeToIfBattleActive(() => addD(tr(t, 'battle.tag.chargeInterrupted', '💥Charge Interrupted!'), 155, 30, '#fbbf24'), 400);
           }
 
-          // Sword God parry: 20% chance to halve incoming damage
+          const runChargeCounter = (baseDamage: number): boolean => {
+            if (!wasBossCharging) return false;
+            const counterRatio = Math.max(0, TRAIT_BALANCE.boss.chargeCounterRatio || 0);
+            if (counterRatio <= 0 || baseDamage <= 0) return false;
+            const counterDmg = Math.max(1, Math.round(baseDamage * counterRatio));
+            const nextAttackerHp = applyDamageToAttacker({
+              state: s3,
+              damage: counterDmg,
+              popupText: `⚠️-${counterDmg}`,
+              color: '#fb923c',
+            });
+            sfx.play('specDef');
+            setEffMsg({ text: tr(t, 'battle.effect.chargeCounter', '⚠️ Charge Counter!'), color: '#fb923c' });
+            safeToIfBattleActive(() => setEffMsg(null), 1500);
+            if (nextAttackerHp <= 0) {
+              safeToIfBattleActive(() => {
+                sfx.play('ko');
+                resolveActiveKo(tr(t, 'battle.ko.chargeCounter', '{name} was knocked out by charge retaliation...', { name: attackerName }));
+              }, 800);
+              return true;
+            }
+            return false;
+          };
+
+          // Dark Dragon King shadow shield: 20% full block, 50% reduce by 40%
           let finalDmg = dmg;
+          if (s3.enemy.id === 'boss') {
+            const fullBlock = chance(TRAIT_BALANCE.boss.shadowShieldFullBlockChance || 0);
+            const partialBlock = !fullBlock && chance(TRAIT_BALANCE.boss.shadowShieldPartialBlockChance || 0);
+            if (fullBlock) {
+              setShadowShieldCD(0);
+              sfx.play('specDef');
+              setEAnim('shieldPulse 0.8s ease');
+              setEffMsg({ text: tr(t, 'battle.effect.shadowShield', '🛡️ Shadow Shield absorbed the attack!'), color: '#7c3aed' });
+              safeToIfBattleActive(() => setEffMsg(null), 1500);
+              addD(tr(t, 'battle.tag.shielded', '🛡️BLOCKED'), 155, 50, '#7c3aed');
+              const chargeCounterKo = runChargeCounter(dmg);
+              safeToIfBattleActive(() => {
+                setEAnim('');
+                setAtkEffect(null);
+              }, effectTimeline.clearDelay);
+              if (!chargeCounterKo) safeToIfBattleActive(() => doEnemyTurn(), effectTimeline.nextDelay);
+              return;
+            }
+            if (partialBlock) {
+              setShadowShieldCD(1);
+              finalDmg = Math.max(1, Math.round(dmg * (TRAIT_BALANCE.boss.shadowShieldPartialDamageScale || 1)));
+              sfx.play('specDef');
+              setEffMsg({ text: tr(t, 'battle.effect.shadowShieldPartial', '🛡️ Shadow Shield reduced damage!'), color: '#a78bfa' });
+              safeToIfBattleActive(() => setEffMsg(null), 1500);
+              addD(tr(t, 'battle.tag.parry', '⚔️PARRY'), 155, 30, '#a78bfa');
+            } else {
+              setShadowShieldCD(-1);
+            }
+          }
+
+          // Sword God parry: 50% chance to halve incoming damage
           if (s3.enemy.id === 'boss_sword_god' && chance(TRAIT_BALANCE.boss.swordParryChance)) {
             finalDmg = Math.max(1, Math.round(dmg * TRAIT_BALANCE.boss.swordParryScale));
             sfx.play('specDef');
@@ -591,6 +627,9 @@ export function runPlayerAnswer({
             setEAnim('');
             setAtkEffect(null);
           }, effectTimeline.clearDelay);
+
+          const chargeCounterKo = runChargeCounter(appliedHitDmg);
+          if (chargeCounterKo) return;
 
           if (s3.enemy.trait === 'counter' && afterHp > 0) {
             const refDmg = Math.round(dmg * TRAIT_BALANCE.player.counterReflectRatio);

@@ -12,9 +12,9 @@ test('applyBossDamageReduction keeps non-boss damage unchanged', () => {
   assert.equal(applyBossDamageReduction(40, 'slime'), 40);
 });
 
-test('applyBossDamageReduction applies 25% reduction to bosses by default', () => {
-  assert.equal(applyBossDamageReduction(40, 'boss'), 30);
-  assert.equal(applyBossDamageReduction(40, 'pvp_boss_sword_god'), 30);
+test('applyBossDamageReduction applies 30% reduction to bosses by default', () => {
+  assert.equal(applyBossDamageReduction(40, 'boss'), 28);
+  assert.equal(applyBossDamageReduction(40, 'pvp_boss_sword_god'), 28);
 });
 
 test('applyBossDamageReduction keeps minimum damage of 1 for boss targets', () => {

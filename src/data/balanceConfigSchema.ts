@@ -102,6 +102,22 @@ export function validateBalanceConfigSchema(config: unknown): void {
   checkNumber(config, 'traits.boss.phase3AttackMultiplier', issues, { min: 1 });
   checkNumber(config, 'traits.boss.releaseAttackScale', issues, { min: 1 });
   checkNumber(config, 'traits.boss.incomingDamageScale', issues, { min: 0.7, max: 0.8 });
+  checkNumber(config, 'traits.boss.chargeCounterRatio', issues, { min: 0, max: 1 });
+  checkNumber(config, 'traits.boss.furyRegenThreshold', issues, { min: 0, max: 1 });
+  checkNumber(config, 'traits.boss.furyRegenHealRatio', issues, { min: 0, max: 1 });
+  checkNumber(config, 'traits.boss.hydraTurnRegenRatio', issues, { min: 0, max: 1 });
+  checkNumber(config, 'traits.boss.swordParryChance', issues, { min: 0, max: 1 });
+  checkNumber(config, 'traits.boss.swordParryScale', issues, { min: 0, max: 1 });
+  const shadowFullBlock = checkNumber(config, 'traits.boss.shadowShieldFullBlockChance', issues, { min: 0, max: 1 });
+  const shadowPartialBlock = checkNumber(config, 'traits.boss.shadowShieldPartialBlockChance', issues, { min: 0, max: 1 });
+  checkNumber(config, 'traits.boss.shadowShieldPartialDamageScale', issues, { min: 0, max: 1 });
+  if (
+    shadowFullBlock != null
+    && shadowPartialBlock != null
+    && shadowFullBlock + shadowPartialBlock > 1
+  ) {
+    issues.push('traits.boss.shadowShieldFullBlockChance + traits.boss.shadowShieldPartialBlockChance must be <= 1');
+  }
 
   const pressureFloors = checkNonEmptyArray(config, 'challenges.tower.pressureBands.floors', issues);
   const pressureHp = checkNonEmptyArray(config, 'challenges.tower.pressureBands.hpBonus', issues);

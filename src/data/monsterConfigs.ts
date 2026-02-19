@@ -164,7 +164,7 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     typeName2: "電",
     trait: "tyrant",
     traitName: "霸王",
-    traitDesc: "操控暗雷之力的多階段王者。能蓄力釋放毀滅大招、封印對手技能。每三次攻擊會展開暗影護盾抵消一次傷害。暗/電雙屬性讓水系與電系攻擊大幅削弱。",
+    traitDesc: "操控暗雷之力的多階段王者。能蓄力釋放毀滅大招、封印對手技能。暗影護盾有20%機率完全格擋，並有50%機率額外減傷。暗/電雙屬性讓水系與電系攻擊大幅削弱。",
   },
   {
     id: "boss_hydra",
@@ -183,7 +183,7 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     typeName2: "暗",
     trait: "venom",
     traitName: "毒霧",
-    traitDesc: "散發致命毒霧，每回合持續侵蝕對手生命。擁有多階段戰鬥形態，能蓄力釋放劇毒吐息，還能封印對手技能。",
+    traitDesc: "散發致命毒霧，每回合持續侵蝕對手生命，同時每回合恢復10%最大生命。擁有多階段戰鬥形態，能蓄力釋放劇毒吐息，還能封印對手技能。",
   },
   {
     id: "boss_crazy_dragon",
@@ -202,7 +202,7 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     typeName2: "火",
     trait: "tyrant",
     traitName: "狂怒",
-    traitDesc: "失去一翼後陷入永恆狂怒。擁有多階段戰鬥形態，能蓄力釋放暗焰吐息，還能封印對手技能。攻擊力冠絕三大Boss。生命值低於30%時會觸發一次狂怒再生，恢復15%最大HP。",
+    traitDesc: "失去一翼後陷入永恆狂怒。擁有多階段戰鬥形態，能蓄力釋放暗焰吐息，還能封印對手技能。攻擊力冠絕三大Boss。生命值低於30%時會觸發一次狂怒再生，恢復50%最大HP。",
   },
   {
     id: "boss_sword_god",
@@ -221,7 +221,7 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     typeName2: "劍",
     trait: "tyrant",
     traitName: "神裁",
-    traitDesc: "掌握神聖與劍意的多階段王者。可蓄力斬擊、封印技能，並以神罰壓制全場。劍意格擋可隨機將受到的傷害減半。",
+    traitDesc: "掌握神聖與劍意的多階段王者。可蓄力斬擊、封印技能，並以神罰壓制全場。劍意格擋有50%機率將受到的傷害減半。",
   },
 ];
 

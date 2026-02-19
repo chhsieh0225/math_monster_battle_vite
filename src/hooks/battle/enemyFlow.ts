@@ -736,6 +736,28 @@ export function runEnemyTurn({
     }
   }
 
+  // Hydra passive: regenerate 10% max HP every enemy turn.
+  if (
+    s.enemy.id === 'boss_hydra'
+    && (s.enemy.maxHp || 0) > 0
+    && (s.eHp || 0) > 0
+    && (s.eHp || 0) < (s.enemy.maxHp || 0)
+  ) {
+    const regenRatio = Math.max(0, TRAIT_BALANCE.boss.hydraTurnRegenRatio || 0);
+    if (regenRatio > 0) {
+      const regenRaw = Math.max(1, Math.round((s.enemy.maxHp || 0) * regenRatio));
+      const regenApplied = Math.max(0, Math.min((s.enemy.maxHp || 0), (s.eHp || 0) + regenRaw) - (s.eHp || 0));
+      if (regenApplied > 0) {
+        const maxHp = s.enemy.maxHp || 0;
+        setEHp((current) => Math.min(maxHp, (current || 0) + regenApplied));
+        addD(`+${regenApplied}`, 155, 30, '#22c55e');
+        sfx.play('heal');
+        setEffMsg({ text: tr(t, 'battle.effect.hydraRegen', '☠️ Hydra Regeneration!'), color: '#22c55e' });
+        safeToIfBattleActive(() => setEffMsg(null), 1500);
+      }
+    }
+  }
+
   // Venom DOT: apply poison damage at the start of the enemy turn
   if (s.enemy.trait === 'venom') {
     const currentBossPhase = isBoss ? computeBossPhase(s.eHp, s.enemy.maxHp || 1) : 0;

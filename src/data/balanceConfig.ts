@@ -374,7 +374,7 @@ export const BALANCE_CONFIG = {
     },
     boss: {
       // All bosses take reduced incoming damage (0.7~0.8 => 20~30% DR)
-      incomingDamageScale: 0.75,
+      incomingDamageScale: 0.7,
       phase2AttackMultiplier: 1.5,
       phase3AttackMultiplier: 1.7,
       releaseAttackScale: 1.8,
@@ -383,11 +383,19 @@ export const BALANCE_CONFIG = {
       chargeEveryTurns: 4,
       sealEveryTurns: 3,
       sealStartsAtPhase: 2,
+      // Bosses retaliate while charging when hit
+      chargeCounterRatio: 0.2,
       /** Crazy Dragon: one-time heal when HP falls below this threshold */
       furyRegenThreshold: 0.3,
-      furyRegenHealRatio: 0.15,
+      furyRegenHealRatio: 0.5,
+      /** Hydra: passive regeneration every enemy turn */
+      hydraTurnRegenRatio: 0.1,
+      /** Dark Dragon King shadow shield */
+      shadowShieldFullBlockChance: 0.2,
+      shadowShieldPartialBlockChance: 0.5,
+      shadowShieldPartialDamageScale: 0.6,
       /** Sword God: chance to halve incoming damage */
-      swordParryChance: 0.2,
+      swordParryChance: 0.5,
       swordParryScale: 0.5,
       /** Sword God: faster charge cycle + weaker release */
       swordGodChargeEveryTurns: 2,

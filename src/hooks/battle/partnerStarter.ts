@@ -6,6 +6,7 @@ const PARTNER_BY_STARTER: Record<string, string> = {
   fire: 'water',
   water: 'electric',
   grass: 'fire',
+  tiger: 'fire',
   electric: 'grass',
   lion: 'water',
 };

@@ -18,7 +18,7 @@ type SkillDef = {
   risky?: boolean;
 };
 
-type SkillSetKey = 'fire' | 'water' | 'grass' | 'electric' | 'lion' | 'wolf';
+type SkillSetKey = 'fire' | 'water' | 'grass' | 'electric' | 'lion' | 'wolf' | 'tiger';
 
 export const SKILL_SETS: Record<SkillSetKey, SkillDef[]> = {
   fire: [
@@ -56,5 +56,11 @@ export const SKILL_SETS: Record<SkillSetKey, SkillDef[]> = {
     { name: '同分斬', icon: '🛡️', type: 'steel', desc: '同分母加減', basePower: 20, growth: 5, range: [2, 10], ops: ['frac_same'], color: '#475569', bg: '#f1f5f9' },
     { name: '通分裂鋒', icon: '⚙️', type: 'steel', desc: '異分母加減（通分）', basePower: 30, growth: 3, range: [2, 12], ops: ['frac_diff'], color: '#334155', bg: '#e2e8f0' },
     { name: '鋼域終式', icon: '💥', type: 'steel', desc: '分數乘除（高階）', basePower: 40, growth: 3, range: [2, 12], ops: ['frac_muldiv'], color: '#1f2937', bg: '#e5e7eb', risky: true },
+  ],
+  tiger: [
+    { name: '冰晶彈', icon: '❄️', type: 'ice', desc: '一位小數加減', basePower: 12, growth: 6, range: [2, 12], ops: ['dec_add'], color: '#67e8f9', bg: '#ecfeff' },
+    { name: '霜鏡轉換', icon: '🧊', type: 'ice', desc: '小數與分數互換', basePower: 20, growth: 5, range: [2, 12], ops: ['dec_frac'], color: '#22d3ee', bg: '#e0f2fe' },
+    { name: '極寒裂爪', icon: '🧊', type: 'ice', desc: '小數乘法', basePower: 30, growth: 3, range: [2, 12], ops: ['dec_mul'], color: '#06b6d4', bg: '#dbeafe' },
+    { name: '永凍審判', icon: '💥', type: 'ice', desc: '小數除法（高階）', basePower: 40, growth: 3, range: [2, 12], ops: ['dec_div'], color: '#0e7490', bg: '#cffafe', risky: true },
   ],
 };

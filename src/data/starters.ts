@@ -5,6 +5,7 @@ import {
   playerelectric0SVG, playerelectric1SVG, playerelectric2SVG,
   playerlion0SVG, playerlion1SVG, playerlion2SVG,
   playerwolf0SVG, playerwolf1SVG, playerwolf2SVG,
+  playertiger0SVG, playertiger1SVG, playertiger2SVG,
 } from './sprites.ts';
 import type { StarterConfig } from '../types/game';
 import { SKILL_SETS } from './skillSets.ts';
@@ -47,6 +48,17 @@ export const STARTERS: StarterConfig[] = [
    mathTopicKey:'selection.topic.water',
    mathTopicFallback:'除法',
    moves: SKILL_SETS.water},
+  {id:"tiger",name:"小冰虎",type:"ice",typeIcon:"❄️",typeName:"冰",c1:"#67e8f9",c2:"#0e7490",
+   stages:[
+     {name:"小冰虎",emoji:"❄️",svgFn:playertiger0SVG},
+     {name:"霜牙虎",emoji:"❄️",svgFn:playertiger1SVG},
+     {name:"冰晶虎王",emoji:"❄️",svgFn:playertiger2SVG},
+   ],
+   difficulty:3,
+   gradeRange:[3,5],
+   mathTopicKey:'selection.topic.tiger',
+   mathTopicFallback:'小數運算',
+   moves: SKILL_SETS.tiger},
   {id:"electric",name:"小雷獸",type:"electric",typeIcon:"⚡",typeName:"雷",c1:"#facc15",c2:"#ca8a04",
    stages:[
      {name:"小雷獸",emoji:"⚡",svgFn:playerelectric0SVG},

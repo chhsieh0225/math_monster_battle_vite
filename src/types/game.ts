@@ -15,6 +15,7 @@ export type AchievementId =
   | "electric_clear"
   | "lion_clear"
   | "wolf_clear"
+  | "tiger_clear"
   | "boss_kill"
   | "low_hp"
   | "no_damage"
@@ -48,7 +49,7 @@ export type StarterStage = {
   svgFn: (c1: string, c2: string) => string;
 };
 
-export type PlayerStarterId = "fire" | "water" | "grass" | "electric" | "lion" | "wolf";
+export type PlayerStarterId = "fire" | "water" | "grass" | "electric" | "lion" | "wolf" | "tiger";
 export type BossStarterId = "boss" | "boss_hydra" | "boss_crazy_dragon" | "boss_sword_god";
 export type StarterId = PlayerStarterId | BossStarterId;
 
@@ -165,6 +166,7 @@ export type MonsterType =
   | "grass"
   | "fire"
   | "water"
+  | "ice"
   | "electric"
   | "ghost"
   | "steel"

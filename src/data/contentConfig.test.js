@@ -23,7 +23,7 @@ import { BALANCE_CONFIG } from './balanceConfig.ts';
 test('stage config references valid monster ids', () => {
   const knownIds = new Set(MONSTER_CONFIGS.map(mon => mon.id));
   const knownTypes = new Set([
-    "grass", "fire", "water", "electric", "ghost", "steel", "dark",
+    "grass", "fire", "water", "ice", "electric", "ghost", "steel", "dark",
   ]);
   const knownSceneTypes = new Set(["grass", "fire", "water", "electric", "ghost", "steel", "dark", "rock", "poison", "light", "heaven", "burnt_warplace"]);
   assert.ok(STAGE_SCALE_BASE > 0);
@@ -94,7 +94,7 @@ test('weighted drop tables cover every configured drop table with valid weights'
 });
 
 test('skill sets have required structure for all starters', () => {
-  const starterIds = ["fire", "water", "grass", "electric", "lion", "wolf"];
+  const starterIds = ["fire", "water", "grass", "tiger", "electric", "lion", "wolf"];
   for (const id of starterIds) {
     const moves = SKILL_SETS[id];
     assert.ok(Array.isArray(moves), `missing skill set for starter: ${id}`);

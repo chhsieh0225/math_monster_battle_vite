@@ -148,7 +148,7 @@ test('buildRoster can spawn mid-stage wild starter encounters in later waves', (
     enableStarterEncounters: true,
   });
   const wildStarters = roster.filter((mon) => String(mon.id || '').startsWith('wild_starter_'));
-  const baseStarterNames = new Set(['小火獸', '小水獸', '小草獸', '小雷獸', '小獅獸', '小鋼狼']);
+  const baseStarterNames = new Set(['小火獸', '小水獸', '小草獸', '小冰虎', '小雷獸', '小獅獸', '小鋼狼']);
 
   assert.equal(wildStarters.length > 0, true);
   assert.equal(wildStarters.some((mon) => !baseStarterNames.has(mon.name)), true);
@@ -159,7 +159,7 @@ test('buildRoster skips wild starter encounters when all starters are excluded',
   const roster = buildRoster(pickFirst, 'single', {
     disableRandomSwap: true,
     enableStarterEncounters: true,
-    excludedStarterIds: ['fire', 'water', 'grass', 'electric', 'lion', 'wolf'],
+    excludedStarterIds: ['fire', 'water', 'grass', 'tiger', 'electric', 'lion', 'wolf'],
   });
   const wildStarters = roster.filter((mon) => String(mon.id || '').startsWith('wild_starter_'));
   assert.equal(wildStarters.length, 0);

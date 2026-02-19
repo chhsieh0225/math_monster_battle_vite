@@ -89,6 +89,7 @@ type EncyclopediaStarterLike = {
 const TYPE_NAME_EN_BY_ID: Dict<string> = {
   fire: "Fire",
   water: "Water",
+  ice: "Ice",
   grass: "Grass",
   electric: "Electric",
   dark: "Dark",
@@ -102,6 +103,7 @@ const TYPE_NAME_EN_BY_ID: Dict<string> = {
 const TYPE_NAME_EN_BY_ZH: Dict<string> = {
   火: "Fire",
   水: "Water",
+  冰: "Ice",
   草: "Grass",
   電: "Electric",
   暗: "Dark",
@@ -201,6 +203,18 @@ const STARTER_TEXT_EN: Dict<StarterText> = {
       { name: "Iron Ratio Finale", desc: "Fraction multiply/divide" },
     ],
   },
+  tiger: {
+    name: "Frostcub",
+    typeName: "Ice",
+    stages: ["Frostcub", "Rimefang Tiger", "Glacier Tiger King"],
+    skill: "❄️ Ice · Decimals",
+    moves: [
+      { name: "Crystal Bolt", desc: "One-decimal add/subtract" },
+      { name: "Frost Conversion", desc: "Decimal/fraction conversion" },
+      { name: "Polar Claw", desc: "Decimal multiplication" },
+      { name: "Absolute Zero Verdict", desc: "Decimal division" },
+    ],
+  },
   boss: {
     name: "Dark Dragon King",
     typeName: "Dark",
@@ -281,6 +295,7 @@ const MONSTER_NAME_EN: Dict<string> = {
   wild_starter_water: "Wild Water Cub",
   wild_starter_grass: "Wild Grass Cub",
   wild_starter_electric: "Wild Thunder Cub",
+  wild_starter_tiger: "Wild Frostcub",
   wild_starter_lion: "Wild Lion Cub",
   wild_starter_wolf: "Wild Steel Pup",
 };
@@ -309,6 +324,9 @@ const MONSTER_NAME_EN_BY_ZH: Dict<string> = {
   小水獸: "Water Cub",
   小草獸: "Grass Cub",
   小雷獸: "Thunder Cub",
+  小冰虎: "Frostcub",
+  霜牙虎: "Rimefang Tiger",
+  冰晶虎王: "Glacier Tiger King",
   小獅獸: "Lion Cub",
   小鋼狼: "Steel Pup",
   鋼刃狼: "Bladewolf",
@@ -391,6 +409,9 @@ const STARTER_DESC_EN: Dict<string> = {
   electric_0: "A thunder-born cub storing static electricity in its fluffy fur.",
   electric_1: "An evolved lightning form with higher speed and flexible mixed operations.",
   electric_2: "A fully awakened storm form powered by complete mastery of four operations.",
+  tiger_0: "A frost-born cub that trains one-decimal add/sub precision with steady focus.",
+  tiger_1: "An evolved ice tiger that converts between decimals and fractions in a blink.",
+  tiger_2: "A final glacier king that handles decimal multiply/divide under absolute control.",
   lion_0: "A brave plains cub with instinct for unknown variables in simple equations.",
   lion_1: "An evolved hunter with sharper claws and stronger unknown-solving power.",
   lion_2: "A final sacred lion wrapped in golden flames, revealing any hidden variable.",
@@ -414,6 +435,9 @@ const STARTER_NAME_EN_BY_ZH: Dict<string> = {
   小雷獸: "Voltkit",
   雷電獸: "Thundra",
   雷龍王: "Stormdrake",
+  小冰虎: "Frostcub",
+  霜牙虎: "Rimefang Tiger",
+  冰晶虎王: "Glacier Tiger King",
   小獅獸: "Lioncub",
   獅鬃獸: "Manelion",
   獅焰王: "Solar King",
@@ -446,6 +470,10 @@ const STARTER_TEXT_ZH: Dict<StarterText> = {
   electric: {
     name: "小雷獸",
     stages: ["小雷獸", "雷電獸", "雷龍王"],
+  },
+  tiger: {
+    name: "小冰虎",
+    stages: ["小冰虎", "霜牙虎", "冰晶虎王"],
   },
   lion: {
     name: "小獅獸",
@@ -710,6 +738,7 @@ const STARTERS_FALLBACK_ZH: Dict<string> = {
   water: "小水獸",
   grass: "小草獸",
   electric: "小雷獸",
+  tiger: "小冰虎",
   lion: "小獅獸",
   wolf: "小鋼狼",
   boss: "暗黑龍王",

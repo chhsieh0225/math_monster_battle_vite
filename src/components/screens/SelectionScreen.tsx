@@ -55,6 +55,11 @@ function buildStarterDescs(t: TranslateFn): Record<string, StarterDesc> {
       passive: t('selection.wolf.passive', '⚙️ Steel Wall/Counter: reduces incoming damage and can strike back when hit.'),
       specDef: t('selection.wolf.specDef', '🛡️ Iron Guard: blocks and counters with reinforced armor.'),
     },
+    tiger: {
+      desc: t('selection.tiger.desc', 'An ice tactician from frozen valleys. Excels at decimal arithmetic with precise timing.'),
+      passive: t('selection.tiger.passive', '❄️ Frostbite: attacks can freeze enemies and delay their turn.'),
+      specDef: t('selection.tiger.specDef', '🧊 Ice Shift: at 8-combo, evades an incoming hit with icy mirage.'),
+    },
     boss: {
       desc: t('selection.boss.desc', 'A final boss from the abyss. Heavy dark-thunder pressure with ruthless finishers.'),
       passive: t('selection.boss.passive', '💀 Tyrant: controls battle pace with overwhelming pressure.'),
@@ -112,6 +117,7 @@ const STARTER_ID_SET: ReadonlySet<StarterId> = new Set([
   'water',
   'grass',
   'electric',
+  'tiger',
   'lion',
   'wolf',
   'boss',

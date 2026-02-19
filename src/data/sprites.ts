@@ -42,6 +42,9 @@ export const SPRITE_IMGS = {
   player_wolf0: `${BASE}sprites/player_wolf0.png`,
   player_wolf1: `${BASE}sprites/player_wolf1.png`,
   player_wolf2: `${BASE}sprites/player_wolf2.png`,
+  player_tiger0: `${BASE}sprites/player_tiger0.png`,
+  player_tiger1: `${BASE}sprites/player_tiger1.png`,
+  player_tiger2: `${BASE}sprites/player_tiger2.png`,
   boss_hydra: `${BASE}sprites/boss_hydra.png`,
   boss_crazy_dragon: `${BASE}sprites/boss_crazy_dragon.png`,
   boss_sword_god: `${BASE}sprites/boss_sword_god.png`,
@@ -157,6 +160,9 @@ export const playerlion2SVG = makeSvgFnFill('player_lion2', 677, 369);
 export const playerwolf0SVG = makeSvgFnFill('player_wolf0', 677, 369);
 export const playerwolf1SVG = makeSvgFnFill('player_wolf1', 677, 369);
 export const playerwolf2SVG = makeSvgFnFill('player_wolf2', 677, 369);
+export const playertiger0SVG = makeSvgFnFill('player_tiger0', 677, 369);
+export const playertiger1SVG = makeSvgFnFill('player_tiger1', 677, 369);
+export const playertiger2SVG = makeSvgFnFill('player_tiger2', 677, 369);
 export const bossHydraSVG = makeSvgFnFit('boss_hydra', 677, 369);
 export const bossCrazyDragonSVG = makeSvgFnFitFlip('boss_crazy_dragon', 677, 369);
 export const bossSwordGodSVG = makeSvgFnFill('boss_sword_god', 409, 610);

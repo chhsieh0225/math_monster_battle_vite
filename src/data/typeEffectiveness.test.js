@@ -18,6 +18,13 @@ test('dual effectiveness still respects global cap', () => {
   assert.equal(getDualEff('steel', 'rock', 'ghost'), BALANCE_CONFIG.dualTypeEffCap);
 });
 
+test('ice attacker and defender have configured effectiveness values', () => {
+  assert.equal(getEff('ice', 'grass'), 1.5);
+  assert.equal(getEff('ice', 'fire'), 0.6);
+  assert.equal(getEff('fire', 'ice'), 1.5);
+  assert.equal(getEff('water', 'ice'), 0.6);
+});
+
 test('unknown attacker type stays neutral', () => {
   assert.equal(getEff('unknown_type', 'fire'), 1.0);
 });

@@ -87,6 +87,7 @@ function fractionText(frac: Fraction): string {
 }
 
 const FRACTION_LABEL_RE = /^\s*(-?\d+)\s*\/\s*(-?\d+)\s*$/;
+const DECIMAL_LABEL_RE = /^\s*-?\d+(?:\.\d+)?\s*$/;
 
 function normalizeFractionLabel(label: string): string {
   const text = String(label || '').trim();
@@ -97,6 +98,59 @@ function normalizeFractionLabel(label: string): string {
   const denominator = Number(match[2]);
   if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator === 0) return text;
   return fractionText(simplifyFraction(numerator, denominator));
+}
+
+function formatDecimal(value: number, digits: number, keepTrailingZero = false): string {
+  const safe = Number.isFinite(value) ? value : 0;
+  const fixed = safe.toFixed(Math.max(0, digits));
+  if (keepTrailingZero) return fixed;
+  return fixed.replace(/\.?0+$/, '');
+}
+
+function normalizeDecimalLabel(label: string, digits = 2): string {
+  const text = String(label || '').trim();
+  if (!text) return text;
+  if (!DECIMAL_LABEL_RE.test(text)) return text;
+  const parsed = Number(text);
+  if (!Number.isFinite(parsed)) return text;
+  return formatDecimal(parsed, digits, false);
+}
+
+function randomDecimalLabel(range: [number, number], digits = 1): string {
+  const lo = Math.max(1, Math.min(range[0], range[1]));
+  const hi = Math.max(lo + 1, Math.max(range[0], range[1]));
+  const n = rr(lo * 10, hi * 10);
+  return formatDecimal(n / 10, digits, digits === 1);
+}
+
+function buildDecimalChoiceLabels(
+  correctLabel: string,
+  candidateLabels: string[],
+  range: [number, number],
+  digits = 1,
+  targetCount = 4,
+): string[] {
+  const labels: string[] = [];
+  const pushUnique = (value: string): void => {
+    const normalized = normalizeDecimalLabel(String(value || '').trim(), digits);
+    if (!normalized) return;
+    if (!labels.includes(normalized)) labels.push(normalized);
+  };
+  pushUnique(correctLabel);
+  for (const label of candidateLabels) pushUnique(label);
+  let randomGuard = 0;
+  while (labels.length < targetCount && randomGuard < 64) {
+    pushUnique(randomDecimalLabel(range, digits));
+    randomGuard += 1;
+  }
+  if (labels.length < targetCount) {
+    let fallback = 1;
+    while (labels.length < targetCount && fallback < 48) {
+      pushUnique(formatDecimal(fallback / 10, digits, digits === 1));
+      fallback += 1;
+    }
+  }
+  return labels.slice(0, targetCount);
 }
 
 function randomFractionLabel(range: [number, number]): string {

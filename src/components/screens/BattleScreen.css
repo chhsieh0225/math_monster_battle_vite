@@ -433,7 +433,7 @@
   right:var(--enemy-main-right,10%);
   top:var(--enemy-main-top,26%);
   z-index:6;
-  transform:scale(var(--battle-enemy-main-scale,1)) rotate(-2.5deg);
+  transform:scale(calc(var(--battle-enemy-main-scale,1) * var(--battle-device-scale,1))) rotate(-2.5deg);
   transform-origin:top right;
   animation:var(--enemy-main-anim,none);
 }
@@ -443,7 +443,7 @@
   top:var(--enemy-sub-top,23%);
   z-index:4;
   opacity:.78;
-  transform:scale(calc(var(--enemy-sub-scale,.8) * var(--battle-enemy-sub-scale,1))) rotate(-2deg);
+  transform:scale(calc(var(--enemy-sub-scale,.8) * var(--battle-enemy-sub-scale,1) * var(--battle-device-scale,1))) rotate(-2deg);
   transform-origin:top right;
   filter:saturate(.9);
   animation:var(--enemy-sub-anim,none);
@@ -457,13 +457,15 @@
   background:radial-gradient(ellipse,rgba(0,0,0,.6),transparent);
   border-radius:50%;
   z-index:4;
+  transform:scaleX(var(--battle-device-scale,1));
+  transform-origin:center;
   animation:var(--enemy-shadow-anim,shadowPulse 3s ease-in-out infinite);
 }
 .battle-sprite-player-main{
   position:absolute;
   left:var(--player-main-left,6%);
   bottom:var(--player-main-bottom,14%);
-  transform:scaleX(-1) scale(var(--battle-player-main-scale,1)) rotate(-2.5deg);
+  transform:scaleX(-1) scale(calc(var(--battle-player-main-scale,1) * var(--battle-device-scale,1))) rotate(-2.5deg);
   transform-origin:center bottom;
   z-index:var(--player-main-z,6);
   opacity:var(--player-main-opacity,1);
@@ -475,7 +477,7 @@
   position:absolute;
   left:var(--player-sub-left,23%);
   bottom:var(--player-sub-bottom,15%);
-  transform:scaleX(-1) scale(var(--battle-player-sub-scale,1)) rotate(-2deg);
+  transform:scaleX(-1) scale(calc(var(--battle-player-sub-scale,1) * var(--battle-device-scale,1))) rotate(-2deg);
   transform-origin:center bottom;
   z-index:var(--player-sub-z,4);
   opacity:var(--player-sub-opacity,.84);
@@ -492,6 +494,8 @@
   background:radial-gradient(ellipse,rgba(0,0,0,.55),transparent);
   border-radius:50%;
   z-index:4;
+  transform:scaleX(var(--battle-device-scale,1));
+  transform-origin:center;
   animation:shadowPulse 3s ease-in-out infinite;
   transition:left .35s ease, bottom .35s ease;
 }
@@ -633,11 +637,31 @@
   pointer-events:none;
   isolation:isolate;
 }
+/* Momentary dark vignette to boost effect contrast on bright scenes */
+.battle-attack-fx-layer.fx-bright-scene::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse 80% 70% at 50% 50%,rgba(0,0,0,.18) 0%,rgba(0,0,0,.08) 40%,transparent 72%);
+  pointer-events:none;
+  animation:fxBrightDim .65s ease-out both;
+  z-index:-1;
+}
+@keyframes fxBrightDim{
+  0%{opacity:0}
+  18%{opacity:1}
+  70%{opacity:.85}
+  100%{opacity:0}
+}
+/* Boost drop-shadow glow on bright scenes so warm FX pop */
+.battle-attack-fx-layer.fx-bright-scene{
+  filter:contrast(1.12) drop-shadow(0 0 2px rgba(0,0,0,.22));
+}
 .battle-ult-sync.is-fire{
-  --ult-sync-core-1:rgba(251,146,60,.7);
-  --ult-sync-core-2:rgba(157,23,77,.45);
-  --ult-sync-flash:rgba(127,29,29,.35);
-  --ult-sync-ring:rgba(251,191,36,.55);
+  --ult-sync-core-1:rgba(251,146,60,.82);
+  --ult-sync-core-2:rgba(157,23,77,.56);
+  --ult-sync-flash:rgba(127,29,29,.46);
+  --ult-sync-ring:rgba(251,191,36,.65);
 }
 .battle-ult-sync.is-water{
   --ult-sync-core-1:rgba(56,189,248,.72);
@@ -652,16 +676,16 @@
   --ult-sync-ring:rgba(254,240,138,.55);
 }
 .battle-ult-sync.is-grass{
-  --ult-sync-core-1:rgba(74,222,128,.7);
-  --ult-sync-core-2:rgba(6,78,59,.42);
-  --ult-sync-flash:rgba(22,163,74,.34);
-  --ult-sync-ring:rgba(134,239,172,.52);
+  --ult-sync-core-1:rgba(74,222,128,.82);
+  --ult-sync-core-2:rgba(6,78,59,.54);
+  --ult-sync-flash:rgba(22,163,74,.46);
+  --ult-sync-ring:rgba(134,239,172,.62);
 }
 .battle-ult-sync.is-light{
-  --ult-sync-core-1:rgba(251,191,36,.75);
-  --ult-sync-core-2:rgba(147,51,234,.36);
-  --ult-sync-flash:rgba(245,158,11,.3);
-  --ult-sync-ring:rgba(254,240,138,.58);
+  --ult-sync-core-1:rgba(251,191,36,.84);
+  --ult-sync-core-2:rgba(147,51,234,.48);
+  --ult-sync-flash:rgba(245,158,11,.42);
+  --ult-sync-ring:rgba(254,240,138,.66);
 }
 .battle-ult-sync-flash{
   position:absolute;

@@ -20,7 +20,7 @@ const WEATHER_BY_SCENE: Record<string, BattleWeatherType> = {
   electric: 'storm',
   dark: 'storm',
   poison: 'fog',
-  ghost: 'fog',
+  ghost: 'none',
   heaven: 'snow',
   light: 'snow',
   rock: 'dust',

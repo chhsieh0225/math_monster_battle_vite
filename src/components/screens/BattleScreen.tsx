@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { useBattleParallax } from '../../hooks/useBattleParallax';
+import { useBattleArenaScale } from '../../hooks/useBattleArenaScale.ts';
 import { SCENES } from '../../data/scenes';
 import { PVP_BALANCE } from '../../data/pvpBalance';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
@@ -64,6 +65,13 @@ export default function BattleScreen({
   const battleArenaRef = useRef<HTMLDivElement | null>(null);
   const enemySpriteRef = useRef<HTMLDivElement | null>(null);
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
+  const arenaScale = useBattleArenaScale({
+    arenaRef: battleArenaRef,
+    enabled: S.screen === 'battle',
+  });
+  const arenaScaleStyle = useMemo(() => ({
+    '--battle-device-scale': arenaScale.toFixed(3),
+  }) as BattleCssVars, [arenaScale]);
   useBattleParallax({
     hostRef: battleArenaRef,
     // Disable on compact/mobile layout to reduce input/render jitter on lower-end devices.
@@ -484,6 +492,7 @@ export default function BattleScreen({
         showHeavyFx={showHeavyFx}
         lowPerfMode={UX.lowPerfMode}
         impactPhase={impactPhase}
+        sceneType={sceneKey}
         atkEffect={S.atkEffect}
         effectTarget={effectTarget}
         dmgs={S.dmgs}
@@ -504,7 +513,7 @@ export default function BattleScreen({
       />
 
       {/* ═══ Battle arena ═══ */}
-      <div className="battle-arena" ref={battleArenaRef}>
+      <div className="battle-arena" ref={battleArenaRef} style={arenaScaleStyle}>
         <BattleSceneLayers
           showHeavyFx={showHeavyFx}
           bgStyle={sceneBgStyle}

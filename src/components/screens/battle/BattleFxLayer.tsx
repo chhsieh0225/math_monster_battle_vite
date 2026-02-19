@@ -17,6 +17,7 @@ type BattleFxLayerProps = {
   showHeavyFx: boolean;
   lowPerfMode: boolean;
   impactPhase: string;
+  sceneType: string;
   atkEffect: UseBattleState['atkEffect'];
   effectTarget: SpriteTarget;
   dmgs: UseBattleState['dmgs'];
@@ -36,6 +37,9 @@ type BattleFxLayerProps = {
   onDismissAchievement: () => void;
 };
 
+/** Scenes whose backgrounds are bright enough to wash out warm-coloured FX. */
+const BRIGHT_SCENES = new Set(['grass', 'fire', 'rock', 'light', 'heaven', 'burnt_warplace']);
+
 function resolveUltimateTone(type?: string): string {
   if (type === 'fire') return 'is-fire';
   if (type === 'water') return 'is-water';
@@ -50,6 +54,7 @@ export const BattleFxLayer = memo(function BattleFxLayer({
   showHeavyFx,
   lowPerfMode,
   impactPhase,
+  sceneType,
   atkEffect,
   effectTarget,
   dmgs,
@@ -127,7 +132,7 @@ export const BattleFxLayer = memo(function BattleFxLayer({
 
       {/* Attack effects */}
       {showHeavyFx && (isUltimateEffect || atkEffect) && (
-        <div className="battle-attack-fx-layer" aria-hidden="true">
+        <div className={`battle-attack-fx-layer${BRIGHT_SCENES.has(sceneType) ? ' fx-bright-scene' : ''}`} aria-hidden="true">
           {isUltimateEffect && (
             <div className={`battle-ult-sync ${ultimateToneClass}`} style={ultimateSyncStyle}>
               <div className="battle-ult-sync-flash" />

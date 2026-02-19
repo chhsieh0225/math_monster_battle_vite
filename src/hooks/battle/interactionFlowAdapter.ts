@@ -59,6 +59,7 @@ type RunBattleAdvanceArgs = {
   setPhase: RunAdvanceControllerArgs['setPhase'];
   setBText: RunAdvanceControllerArgs['setBText'];
   continueFromVictory: RunAdvanceControllerArgs['continueFromVictory'];
+  consumePendingTextAdvanceAction?: RunAdvanceControllerArgs['consumePendingTextAdvanceAction'];
   advancePvpDepsInput: BuildAdvancePvpTurnStartDepsArgs;
   pendingEvolutionInput: BuildPendingEvolutionArgsArgs;
   buildAdvancePvpTurnStartDepsFn?: typeof buildAdvancePvpTurnStartDeps;
@@ -72,6 +73,7 @@ export function runBattleAdvance({
   setPhase,
   setBText,
   continueFromVictory,
+  consumePendingTextAdvanceAction,
   advancePvpDepsInput,
   pendingEvolutionInput,
   buildAdvancePvpTurnStartDepsFn = buildAdvancePvpTurnStartDeps,
@@ -89,5 +91,6 @@ export function runBattleAdvance({
     setBText,
     pendingEvolutionArgs,
     continueFromVictory,
+    consumePendingTextAdvanceAction,
   });
 }

@@ -31,6 +31,7 @@ type PlayerCallbackDeps = Pick<
   | 'setScreen'
   | 'handlePlayerPartyKo'
   | 'runAllySupportTurn'
+  | 'setPendingTextAdvanceAction'
 >;
 
 type BuildPvpAnswerHandlerDepsArgs = {
@@ -145,6 +146,7 @@ export function buildPlayerAnswerHandlerDeps({
     setBText: ui.setBText,
     handlePlayerPartyKo: callbacks.handlePlayerPartyKo,
     runAllySupportTurn: callbacks.runAllySupportTurn,
+    setPendingTextAdvanceAction: callbacks.setPendingTextAdvanceAction,
     t: runtime.t,
   };
 }

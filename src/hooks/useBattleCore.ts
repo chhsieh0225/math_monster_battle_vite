@@ -321,6 +321,15 @@ export function useBattle() {
   // ──── Internal refs ────
   const doEnemyTurnRef = useRef(() => {});
   const pendingEvolve = useRef(false);   // ← Bug #2 fix
+  const pendingTextAdvanceActionRef = useRef<(() => void) | null>(null);
+  const setPendingTextAdvanceAction = useCallback((action: (() => void) | null) => {
+    pendingTextAdvanceActionRef.current = action;
+  }, []);
+  const consumePendingTextAdvanceAction = useCallback(() => {
+    const action = pendingTextAdvanceActionRef.current;
+    pendingTextAdvanceActionRef.current = null;
+    return action;
+  }, []);
 
   // ──── State ref — always points at latest committed values ────
   const sr = useBattleStateRef({
@@ -461,6 +470,7 @@ export function useBattle() {
     if (nextScreen === 'title') {
       clearChallengeRun();
     }
+    pendingTextAdvanceActionRef.current = null;
     runScreenTransition({
       prevScreen: sr.current.screen,
       nextScreen,
@@ -593,6 +603,7 @@ export function useBattle() {
       createAbilityModel,
       abilityBaselineLevel: 2,
       pendingEvolveRef: pendingEvolve,
+      pendingTextAdvanceActionRef,
     });
   }, [setDmgs, setParts, setAtkEffect, setEffMsg]);
 
@@ -849,6 +860,7 @@ export function useBattle() {
           setScreen: setScreenFromString,
           handlePlayerPartyKo,
           runAllySupportTurn,
+          setPendingTextAdvanceAction,
         },
       },
       answerControllerArgsInput: {
@@ -894,6 +906,7 @@ export function useBattle() {
       setPhase,
       setBText,
       continueFromVictory,
+      consumePendingTextAdvanceAction,
       advancePvpDepsInput: {
         runtime: {
           sr,

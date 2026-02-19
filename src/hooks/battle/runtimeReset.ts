@@ -5,6 +5,10 @@ type MutableFlagRef = {
   current: boolean;
 };
 
+type MutableCallbackRef = {
+  current: (() => void) | null;
+};
+
 type MutableModelRef<TModel> = {
   current: TModel;
 };
@@ -19,6 +23,7 @@ type RunResetRuntimeStateArgs<TModel> = {
   createAbilityModel: (baselineLevel: number) => TModel;
   abilityBaselineLevel?: number;
   pendingEvolveRef: MutableFlagRef;
+  pendingTextAdvanceActionRef?: MutableCallbackRef;
 };
 
 export function runResetRuntimeState<TModel>({
@@ -31,6 +36,7 @@ export function runResetRuntimeState<TModel>({
   createAbilityModel,
   abilityBaselineLevel = 2,
   pendingEvolveRef,
+  pendingTextAdvanceActionRef,
 }: RunResetRuntimeStateArgs<TModel>): void {
   setDmgs([]);
   setParts([]);
@@ -39,4 +45,7 @@ export function runResetRuntimeState<TModel>({
   frozenRef.current = false;
   abilityModelRef.current = createAbilityModel(abilityBaselineLevel);
   pendingEvolveRef.current = false;
+  if (pendingTextAdvanceActionRef) {
+    pendingTextAdvanceActionRef.current = null;
+  }
 }

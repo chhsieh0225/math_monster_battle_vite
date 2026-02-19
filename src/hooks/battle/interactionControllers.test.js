@@ -133,6 +133,39 @@ test('runAdvanceController text phase falls back to menu when not pvp turn-start
   assert.equal(continueCalls, 0);
 });
 
+test('runAdvanceController text phase executes pending text action before default fallback', () => {
+  const phases = [];
+  const texts = [];
+  let pendingActionCalls = 0;
+
+  runAdvanceController({
+    phase: 'text',
+    sr: { current: { battleMode: 'single' } },
+    pvpTurnStartHandlerDeps: {},
+    setPhase: (value) => { phases.push(value); },
+    setBText: (value) => { texts.push(value); },
+    pendingEvolutionArgs: {
+      pendingEvolveRef: { current: false },
+      setPStg: () => {},
+      tryUnlock: () => {},
+      getStageMaxHp: () => 100,
+      setPHp: () => {},
+      setAllySub: () => {},
+      setPHpSub: () => {},
+      getStarterMaxHp: () => 100,
+      setMLvls: () => {},
+      maxMoveLvl: 10,
+      setScreen: () => {},
+    },
+    continueFromVictory: () => {},
+    consumePendingTextAdvanceAction: () => () => { pendingActionCalls += 1; },
+  });
+
+  assert.equal(pendingActionCalls, 1);
+  assert.deepEqual(phases, []);
+  assert.deepEqual(texts, []);
+});
+
 test('runAdvanceController victory phase continues when no pending evolution', () => {
   let continueCalls = 0;
   let phaseCalls = 0;

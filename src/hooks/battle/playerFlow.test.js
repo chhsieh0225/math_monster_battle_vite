@@ -68,7 +68,9 @@ function createTestContext(stateOverrides = {}) {
     ko: [],
     endSession: [],
     screen: [],
+    pendingTextActionSet: 0,
   };
+  let pendingTextAdvanceAction = null;
 
   const tc = createNumberSetter(0);
   const tw = createNumberSetter(0);
@@ -124,6 +126,10 @@ function createTestContext(stateOverrides = {}) {
     _endSession: (completed, reason) => { calls.endSession.push({ completed, reason }); },
     setScreen: (value) => { calls.screen.push(value); },
     setBText: (value) => { calls.bText.push(value); },
+    setPendingTextAdvanceAction: (action) => {
+      pendingTextAdvanceAction = action;
+      calls.pendingTextActionSet += 1;
+    },
     handlePlayerPartyKo: (args) => { calls.ko.push(args); return 'handled'; },
   };
 
@@ -131,6 +137,14 @@ function createTestContext(stateOverrides = {}) {
     state,
     calls,
     deps,
+    runPendingTextAdvanceAction: () => {
+      if (typeof pendingTextAdvanceAction !== 'function') return false;
+      const fn = pendingTextAdvanceAction;
+      pendingTextAdvanceAction = null;
+      fn();
+      return true;
+    },
+    hasPendingTextAdvanceAction: () => typeof pendingTextAdvanceAction === 'function',
     counters: { tc, tw, streak, passive, charge, maxStreak, pHp, pHpSub, eHp, burn, frozen, staticStack, mHits, mLvls, mlvlUp },
   };
 }
@@ -171,7 +185,7 @@ test('runPlayerAnswer correct path performs attack and continues enemy turn', ()
 });
 
 test('runPlayerAnswer wrong non-risky path resets streak and calls enemy turn', () => {
-  const { calls, deps, counters } = createTestContext({
+  const { calls, deps, counters, hasPendingTextAdvanceAction, runPendingTextAdvanceAction } = createTestContext({
     streak: 4,
     passiveCount: 3,
     burnStack: 0,
@@ -190,11 +204,14 @@ test('runPlayerAnswer wrong non-risky path resets streak and calls enemy turn', 
   assert.equal(calls.sfx.includes('wrong'), true);
   assert.equal(calls.bText.includes('Attack missed!'), true);
   assert.equal(calls.phase.includes('text'), true);
+  assert.equal(calls.doEnemyTurn, 0);
+  assert.equal(hasPendingTextAdvanceAction(), true);
+  assert.equal(runPendingTextAdvanceAction(), true);
   assert.equal(calls.doEnemyTurn, 1);
 });
 
 test('runPlayerAnswer wrong risky sub attack can trigger sub ko handling', () => {
-  const { calls, deps, counters } = createTestContext({
+  const { calls, deps, counters, hasPendingTextAdvanceAction, runPendingTextAdvanceAction } = createTestContext({
     allySub: { name: '雷喵', selectedStageIdx: 0 },
     pHpSub: 5,
     starter: { name: '火狐', type: 'fire' },
@@ -209,13 +226,16 @@ test('runPlayerAnswer wrong risky sub attack can trigger sub ko handling', () =>
 
   assert.equal(counters.pHpSub.getValue(), 0);
   assert.equal(calls.bText.some((text) => text.includes('went out of control')), true);
+  assert.equal(calls.ko.length, 0);
+  assert.equal(hasPendingTextAdvanceAction(), true);
+  assert.equal(runPendingTextAdvanceAction(), true);
   assert.equal(calls.ko.length, 1);
   assert.equal(calls.ko[0].target, 'sub');
   assert.equal(calls.doEnemyTurn, 0);
 });
 
 test('runPlayerAnswer wrong path tolerates missing question payload', () => {
-  const { calls, deps, counters } = createTestContext({
+  const { calls, deps, counters, hasPendingTextAdvanceAction, runPendingTextAdvanceAction } = createTestContext({
     q: null,
     streak: 2,
     passiveCount: 1,
@@ -231,12 +251,15 @@ test('runPlayerAnswer wrong path tolerates missing question payload', () => {
   assert.deepEqual(calls.fb[0], { correct: false, answer: undefined, steps: [] });
   assert.equal(counters.tw.getValue(), 1);
   assert.equal(calls.phase.includes('text'), true);
+  assert.equal(calls.doEnemyTurn, 0);
+  assert.equal(hasPendingTextAdvanceAction(), true);
+  assert.equal(runPendingTextAdvanceAction(), true);
   assert.equal(calls.doEnemyTurn, 1);
 });
 
 test('runPlayerAnswer wrong path ignores stale delayed callback after battle ended', () => {
   const queue = [];
-  const { state, calls, deps, counters } = createTestContext({
+  const { state, calls, deps, counters, hasPendingTextAdvanceAction, runPendingTextAdvanceAction } = createTestContext({
     phase: 'question',
     screen: 'battle',
   });
@@ -262,6 +285,8 @@ test('runPlayerAnswer wrong path ignores stale delayed callback after battle end
   assert.equal(calls.doEnemyTurn, 0);
   assert.equal(calls.phase.includes('text'), false);
   assert.equal(calls.bText.length, 0);
+  assert.equal(hasPendingTextAdvanceAction(), false);
+  assert.equal(runPendingTextAdvanceAction(), false);
 });
 
 test('runPlayerAnswer correct path ignores stale strike callback after battle ended', () => {

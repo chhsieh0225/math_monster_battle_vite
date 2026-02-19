@@ -129,6 +129,7 @@ export function createPlayerAnswerHandlers(deps: PlayerAnswerHandlers): PlayerAn
     setBText: deps.setBText,
     handlePlayerPartyKo: deps.handlePlayerPartyKo,
     runAllySupportTurn: deps.runAllySupportTurn,
+    setPendingTextAdvanceAction: deps.setPendingTextAdvanceAction,
     t: deps.t,
   };
 }

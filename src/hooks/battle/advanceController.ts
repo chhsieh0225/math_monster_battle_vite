@@ -16,6 +16,7 @@ type RunAdvanceControllerArgs = {
   setBText: (value: string) => void;
   pendingEvolutionArgs: Omit<HandlePendingEvolutionArgs, 'state'>;
   continueFromVictory: () => void;
+  consumePendingTextAdvanceAction?: () => (() => void) | null;
 };
 
 /**
@@ -32,8 +33,15 @@ export function runAdvanceController({
   setBText,
   pendingEvolutionArgs,
   continueFromVictory,
+  consumePendingTextAdvanceAction,
 }: RunAdvanceControllerArgs): void {
   if (phase === 'text') {
+    const pendingAction = consumePendingTextAdvanceAction?.() || null;
+    if (pendingAction) {
+      pendingAction();
+      return;
+    }
+
     const handlers = createPvpTurnStartHandlers(pvpTurnStartHandlerDeps);
     if (tryProcessPvpTextAdvance({
       state: sr.current,

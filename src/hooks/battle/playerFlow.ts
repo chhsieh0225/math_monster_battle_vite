@@ -108,6 +108,7 @@ type EffectMessage = {
 
 type SafeTo = (fn: () => void, ms: number) => void;
 type ChanceFn = (probability: number) => boolean;
+type PendingTextAdvanceSetter = (action: (() => void) | null) => void;
 
 type KoTarget = 'main' | 'sub';
 
@@ -165,6 +166,7 @@ type RunPlayerAnswerArgs = {
   handlePlayerPartyKo?: PlayerPartyKoHandler;
   runAllySupportTurn?: AllySupportTurnRunner;
   getCollectionDamageScale?: (attackType: string) => number;
+  setPendingTextAdvanceAction?: PendingTextAdvanceSetter;
   t?: Translator;
 };
 
@@ -260,6 +262,7 @@ export function runPlayerAnswer({
   handlePlayerPartyKo,
   runAllySupportTurn,
   getCollectionDamageScale,
+  setPendingTextAdvanceAction,
   t,
 }: RunPlayerAnswerArgs): void {
   try {
@@ -340,6 +343,7 @@ export function runPlayerAnswer({
     loseToGameOver(message);
     return 'gameover';
   };
+  setPendingTextAdvanceAction?.(null);
 
   if (correct) {
     setFb({ correct: true });
@@ -654,11 +658,12 @@ export function runPlayerAnswer({
         damage: sd,
       }));
       setPhase('text');
-      safeToIfBattleActive(() => {
+      setPendingTextAdvanceAction?.(() => {
+        if (!isBattleActive()) return;
         if (nh2 <= 0) resolveActiveKo(tr(t, 'battle.ko.fallen', '{name} has fallen...', { name: attackerName }));
         else if (frozenR.current) handleFreeze();
         else doEnemyTurn();
-      }, 1500);
+      });
     } else {
       let mt = tr(t, 'battle.attack.miss', 'Attack missed!');
       if (s2.burnStack > 0) {
@@ -670,14 +675,20 @@ export function runPlayerAnswer({
         if (nh3 <= 0) {
           setBText(mt);
           setPhase('text');
-          safeToIfBattleActive(() => handleVictory(tr(t, 'battle.victory.verb.burned', 'was burned down')), 1200);
+          setPendingTextAdvanceAction?.(() => {
+            if (!isBattleActive()) return;
+            handleVictory(tr(t, 'battle.victory.verb.burned', 'was burned down'));
+          });
           return;
         }
       }
       setBText(mt);
       setPhase('text');
-      if (frozenR.current) safeToIfBattleActive(() => handleFreeze(), 1200);
-      else safeToIfBattleActive(() => doEnemyTurn(), 1200);
+      setPendingTextAdvanceAction?.(() => {
+        if (!isBattleActive()) return;
+        if (frozenR.current) handleFreeze();
+        else doEnemyTurn();
+      });
     }
   }, 2500);
   } catch (err) {

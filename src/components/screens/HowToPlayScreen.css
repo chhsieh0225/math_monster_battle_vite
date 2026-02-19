@@ -55,6 +55,13 @@
   font-weight: 800;
 }
 
+.howto-card-desc {
+  margin: 7px 0 0;
+  font-size: 11px;
+  opacity: 0.82;
+  line-height: 1.5;
+}
+
 .howto-list {
   margin: 8px 0 0 16px;
   padding: 0;
@@ -62,6 +69,117 @@
   gap: 4px;
   font-size: 12px;
   line-height: 1.45;
+}
+
+.howto-starter-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.howto-starter-card {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.45);
+  padding: 8px 6px 6px;
+  text-align: center;
+}
+
+.howto-starter-img {
+  width: 100%;
+  max-width: 72px;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.howto-starter-name {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.howto-skill-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.howto-skill-card {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.5);
+  padding: 8px 10px;
+}
+
+.howto-skill-id {
+  font-size: 10px;
+  opacity: 0.75;
+}
+
+.howto-skill-role {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.howto-skill-power {
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0.92;
+}
+
+.howto-item-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.howto-item-card {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.5);
+  padding: 8px 10px;
+}
+
+.howto-item-title {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.howto-item-desc {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.88;
+  line-height: 1.4;
+}
+
+.howto-item-source-row {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.howto-drop-cloud {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.howto-drop-badge {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(2, 6, 23, 0.4);
+  padding: 2px 7px;
+  font-size: 13px;
+  line-height: 1.1;
 }
 
 .howto-card-tip {
@@ -73,4 +191,10 @@
   font-size: 12px;
   line-height: 1.55;
   color: rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 520px) {
+  .howto-starter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }

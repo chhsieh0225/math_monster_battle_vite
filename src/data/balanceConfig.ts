@@ -373,6 +373,8 @@ export const BALANCE_CONFIG = {
       steelCounterDamage: 14,
     },
     boss: {
+      // All bosses take reduced incoming damage (0.7~0.8 => 20~30% DR)
+      incomingDamageScale: 0.75,
       phase2AttackMultiplier: 1.5,
       phase3AttackMultiplier: 1.7,
       releaseAttackScale: 1.8,

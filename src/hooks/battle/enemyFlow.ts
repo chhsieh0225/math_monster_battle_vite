@@ -1,6 +1,7 @@
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { getEff } from '../../data/typeEffectiveness.ts';
+import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { calcEnemyDamage } from '../../utils/damageCalc.ts';
 import { computeBossPhase } from '../../utils/turnFlow.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
@@ -335,7 +336,8 @@ export function runEnemyTurn({
               }, 1500);
             }, 1800);
           } else if (st === 'steel') {
-            const steelCounterDmg = Math.max(1, Math.round(TRAIT_BALANCE.specDef.steelCounterDamage || 14));
+            const steelCounterRaw = Math.max(1, Math.round(TRAIT_BALANCE.specDef.steelCounterDamage || 14));
+            const steelCounterDmg = applyBossDamageReduction(steelCounterRaw, sr.current.enemy?.id);
             const nh = Math.max(0, sr.current.eHp - steelCounterDmg);
             setEHp(nh);
             setBText(tr(t, 'battle.specdef.steel.counter', '⚙️ Iron Guard! Blocked and countered!'));
@@ -355,7 +357,7 @@ export function runEnemyTurn({
               }
             }, 1800);
           } else if (st === 'light') {
-            const roarDmg = 15;
+            const roarDmg = applyBossDamageReduction(15, sr.current.enemy?.id);
             const nh = Math.max(0, sr.current.eHp - roarDmg);
             setEHp(nh);
             setBText(tr(t, 'battle.specdef.light.roarCounter', "✨ Lion's roar! Blocked and countered!"));
@@ -380,7 +382,8 @@ export function runEnemyTurn({
               DAMAGE_BALANCE.enemyAttackVariance.min
               + rand() * (DAMAGE_BALANCE.enemyAttackVariance.max - DAMAGE_BALANCE.enemyAttackVariance.min)
             ));
-            const refDmg = Math.round(rawDmg * TRAIT_BALANCE.specDef.grassReflectScale);
+            const refRawDmg = Math.round(rawDmg * TRAIT_BALANCE.specDef.grassReflectScale);
+            const refDmg = applyBossDamageReduction(refRawDmg, sr.current.enemy?.id);
             const nh = Math.max(0, sr.current.eHp - refDmg);
             setEHp(nh);
             setBText(tr(t, 'battle.specdef.grass.reflect', '🌿 Reflected attack!'));
@@ -466,7 +469,8 @@ export function runEnemyTurn({
         if (defenderType === 'steel' && chance(TRAIT_BALANCE.player.steelCounterChance || 0)) {
           const counterRaw = Math.round(finalDmg * (TRAIT_BALANCE.player.steelCounterScale || 0));
           const counterCap = Math.max(0, Math.round(TRAIT_BALANCE.player.steelCounterCap || 0));
-          const counterDmg = Math.max(0, Math.min(counterCap || counterRaw, counterRaw));
+          const rawCounterDmg = Math.max(0, Math.min(counterCap || counterRaw, counterRaw));
+          const counterDmg = applyBossDamageReduction(rawCounterDmg, s2.enemy?.id);
           if (counterDmg > 0) {
             const enemyHpAfterCounter = Math.max(0, (s2.eHp || 0) - counterDmg);
             setEHp(enemyHpAfterCounter);

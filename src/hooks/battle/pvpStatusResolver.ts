@@ -1,4 +1,5 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
+import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { createBattleActiveScheduler, declarePvpWinner } from './pvpTurnPrimitives.ts';
 
 type TranslatorParams = Record<string, string | number>;
@@ -22,6 +23,8 @@ type PvpBalanceConfig = {
 
 type PvpTurnStartState = {
   pvpTurn: PvpTurn;
+  starter?: { id?: string } | null;
+  pvpStarter2?: { id?: string } | null;
   pHp: number;
   pvpHp2: number;
   pvpBurnP1: number;
@@ -110,8 +113,10 @@ export function resolvePvpTurnStartStatus<TState extends PvpTurnStartState>({
 
   const burnStack = isP1 ? (state.pvpBurnP1 || 0) : (state.pvpBurnP2 || 0);
   if (burnStack > 0) {
-    const burnDmg = (PVP.passive.fireBurnTickBase || 0)
+    const burnRawDmg = (PVP.passive.fireBurnTickBase || 0)
       + burnStack * (PVP.passive.fireBurnTickPerStack || 0);
+    const burnTargetId = isP1 ? state.starter?.id : state.pvpStarter2?.id;
+    const burnDmg = applyBossDamageReduction(burnRawDmg, burnTargetId);
     if (isP1) {
       const nh = Math.max(0, state.pHp - burnDmg);
       setPHp(nh);

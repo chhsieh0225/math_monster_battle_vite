@@ -1,4 +1,5 @@
 import { getStarterStageIdx } from '../../utils/playerHp.ts';
+import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { isBattleActiveState, scheduleIfBattleActive, tryReturnToMenu } from './menuResetGuard.ts';
 import type { StarterVm } from '../../types/battle';
 
@@ -13,7 +14,7 @@ type BattleState = {
   pHpSub?: number;
   pLvl?: number;
   allySub?: StarterLite | null;
-  enemy?: { name?: string } | null;
+  enemy?: { id?: string; name?: string } | null;
   eHp?: number;
   phase?: string;
   screen?: string;
@@ -225,7 +226,8 @@ export function runCoopAllySupportTurn({
     }
 
     const base = 16 + Math.max(0, (s2.pLvl || 1) - 1) * 2;
-    const dmg = Math.min(28, Math.max(6, Math.round(base * (0.85 + rand() * 0.3))));
+    const rawDmg = Math.min(28, Math.max(6, Math.round(base * (0.85 + rand() * 0.3))));
+    const dmg = applyBossDamageReduction(rawDmg, s2.enemy?.id);
     const nh = Math.max(0, (s2.eHp || 0) - dmg);
     setBText(tr(t, 'battle.coop.supportAttack', '🤝 {name} launches a support attack!', { name: s2.allySub.name }));
     setPhase('playerAtk');

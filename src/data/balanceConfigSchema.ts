@@ -101,6 +101,7 @@ export function validateBalanceConfigSchema(config: unknown): void {
   checkNumber(config, 'traits.boss.phase2AttackMultiplier', issues, { min: 1 });
   checkNumber(config, 'traits.boss.phase3AttackMultiplier', issues, { min: 1 });
   checkNumber(config, 'traits.boss.releaseAttackScale', issues, { min: 1 });
+  checkNumber(config, 'traits.boss.incomingDamageScale', issues, { min: 0.7, max: 0.8 });
 
   const pressureFloors = checkNonEmptyArray(config, 'challenges.tower.pressureBands.floors', issues);
   const pressureHp = checkNonEmptyArray(config, 'challenges.tower.pressureBands.hpBonus', issues);

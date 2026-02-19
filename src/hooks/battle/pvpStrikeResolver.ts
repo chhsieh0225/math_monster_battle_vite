@@ -1,4 +1,5 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
+import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { getLevelMaxHp, getStarterLevelMaxHp } from '../../utils/playerHp.ts';
 import { declarePvpWinner, swapPvpTurnToText } from './pvpTurnPrimitives.ts';
 
@@ -30,6 +31,7 @@ type StarterMove = {
 };
 
 type StarterLike = {
+  id?: string;
   name: string;
   type: string;
   selectedStageIdx?: number | null;
@@ -254,19 +256,20 @@ export function executePvpStrikeTurn({
     }
 
     const applyCounterToAttacker = (dmg: number, color: string, anim: string): boolean => {
+      const appliedDmg = applyBossDamageReduction(dmg, attacker.id);
       if (currentTurn === 'p1') {
-        const nextHp = Math.max(0, s2.pHp - dmg);
+        const nextHp = Math.max(0, s2.pHp - appliedDmg);
         setPHp(nextHp);
         setPAnim('playerHit 0.45s ease');
-        addD(`-${dmg}`, attackerMainX, attackerMainY, color);
+        addD(`-${appliedDmg}`, attackerMainX, attackerMainY, color);
         safeToIfBattleActive(() => setPAnim(''), 520);
         return nextHp <= 0;
       }
-      const nextHp = Math.max(0, s2.pvpHp2 - dmg);
+      const nextHp = Math.max(0, s2.pvpHp2 - appliedDmg);
       setPvpHp2(nextHp);
       setEHp(nextHp);
       setEAnim(anim);
-      addD(`-${dmg}`, attackerMainX, attackerMainY, color);
+      addD(`-${appliedDmg}`, attackerMainX, attackerMainY, color);
       safeToIfBattleActive(() => setEAnim(''), 520);
       return nextHp <= 0;
     };
@@ -383,15 +386,16 @@ export function executePvpStrikeTurn({
       passiveNotes.push(tr(t, 'battle.pvp.note.steelWall', '🛡️Steel Wall'));
     }
   }
+  const mitigatedHitDmg = applyBossDamageReduction(totalDmg, defender.id);
 
   let defenderHpAfterHit = 0;
   if (currentTurn === 'p1') {
-    const nextHp = Math.max(0, s2.pvpHp2 - totalDmg);
+    const nextHp = Math.max(0, s2.pvpHp2 - mitigatedHitDmg);
     setPvpHp2(nextHp);
     setEHp(nextHp);
     setEAnim(hitAnim);
     defenderHpAfterHit = nextHp;
-    addD(strike.isCrit ? `💥-${totalDmg}` : `-${totalDmg}`, 140, 55, '#ef4444');
+    addD(strike.isCrit ? `💥-${mitigatedHitDmg}` : `-${mitigatedHitDmg}`, 140, 55, '#ef4444');
 
     if (strike.heal > 0) {
       setPHp((hp) => Math.min(getLevelMaxHp(s2.pLvl || 1, s2.pStg), hp + strike.heal));
@@ -412,11 +416,11 @@ export function executePvpStrikeTurn({
       return;
     }
   } else {
-    const nextHp = Math.max(0, s2.pHp - totalDmg);
+    const nextHp = Math.max(0, s2.pHp - mitigatedHitDmg);
     setPHp(nextHp);
     setPAnim('playerHit 0.45s ease');
     defenderHpAfterHit = nextHp;
-    addD(strike.isCrit ? `💥-${totalDmg}` : `-${totalDmg}`, 60, 170, '#ef4444');
+    addD(strike.isCrit ? `💥-${mitigatedHitDmg}` : `-${mitigatedHitDmg}`, 60, 170, '#ef4444');
 
     if (strike.heal > 0) {
       const healed = Math.min(
@@ -444,9 +448,10 @@ export function executePvpStrikeTurn({
   }
 
   if (defender.type === 'steel' && defenderHpAfterHit > 0 && chance(PVP.passive.steelCounterChance || 0)) {
-    const counterRaw = Math.round(totalDmg * (PVP.passive.steelCounterScale || 0));
+    const counterRaw = Math.round(mitigatedHitDmg * (PVP.passive.steelCounterScale || 0));
     const counterCap = Math.max(0, Math.round(PVP.passive.steelCounterCap || 0));
-    const counterDmg = Math.max(0, Math.min(counterCap || counterRaw, counterRaw));
+    const rawCounterDmg = Math.max(0, Math.min(counterCap || counterRaw, counterRaw));
+    const counterDmg = applyBossDamageReduction(rawCounterDmg, attacker.id);
     if (counterDmg > 0) {
       passiveNotes.push(tr(t, 'battle.pvp.note.steelCounter', '⚙️Steel Counter'));
       if (currentTurn === 'p1') {

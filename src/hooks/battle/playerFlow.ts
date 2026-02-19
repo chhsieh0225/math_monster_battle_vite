@@ -11,6 +11,7 @@ import {
   getAttackEffectHitDelay,
   getAttackEffectNextStepDelay,
 } from '../../utils/effectTiming.ts';
+import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import type { AchievementId } from '../../types/game';
 import { effectOrchestrator } from './effectOrchestrator.ts';
 import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
@@ -520,15 +521,17 @@ export function runPlayerAnswer({
             addD(tr(t, 'battle.tag.parry', '⚔️PARRY'), 155, 30, '#94a3b8');
           }
 
-          let afterHp = Math.max(0, s3.eHp - finalDmg);
+          const appliedHitDmg = applyBossDamageReduction(finalDmg, s3.enemy.id);
+          let afterHp = Math.max(0, s3.eHp - appliedHitDmg);
 
           let newBurn = s3.burnStack;
           if (starter.type === 'fire' && afterHp > 0) {
             newBurn = Math.min(s3.burnStack + 1, TRAIT_BALANCE.player.burnMaxStacks);
             setBurnStack(newBurn);
-            const bd = newBurn * TRAIT_BALANCE.player.burnPerStackDamage;
-            afterHp = Math.max(0, afterHp - bd);
-            safeToIfBattleActive(() => addD(`🔥-${bd}`, 155, 50, '#f97316'), 500);
+            const burnRawDmg = newBurn * TRAIT_BALANCE.player.burnPerStackDamage;
+            const burnDmg = applyBossDamageReduction(burnRawDmg, s3.enemy.id);
+            afterHp = Math.max(0, afterHp - burnDmg);
+            safeToIfBattleActive(() => addD(`🔥-${burnDmg}`, 155, 50, '#f97316'), 500);
           }
 
           if (starter.type === 'grass') {
@@ -553,11 +556,12 @@ export function runPlayerAnswer({
             const newStatic = Math.min(s3.staticStack + 1, TRAIT_BALANCE.player.staticMaxStacks);
             setStaticStack(newStatic);
             if (newStatic >= TRAIT_BALANCE.player.staticMaxStacks) {
-              const sd = TRAIT_BALANCE.player.staticDischargeDamage;
-              afterHp = Math.max(0, afterHp - sd);
+              const staticRawDmg = TRAIT_BALANCE.player.staticDischargeDamage;
+              const staticDmg = applyBossDamageReduction(staticRawDmg, s3.enemy.id);
+              afterHp = Math.max(0, afterHp - staticDmg);
               setStaticStack(0);
               sfx.play('staticDischarge');
-              safeToIfBattleActive(() => addD(`⚡-${sd}`, 155, 50, '#fbbf24'), 500);
+              safeToIfBattleActive(() => addD(`⚡-${staticDmg}`, 155, 50, '#fbbf24'), 500);
             }
           }
 
@@ -582,7 +586,7 @@ export function runPlayerAnswer({
           setEHp(afterHp);
           setEAnim(HIT_ANIMS[vfxType] || 'enemyHit 0.5s ease');
           const dmgColor = HIT_COLORS[vfxType] || '#ef4444';
-          addD(isCrit ? `💥-${finalDmg}` : `-${finalDmg}`, 140, 55, isCrit ? '#ff6b00' : dmgColor);
+          addD(isCrit ? `💥-${appliedHitDmg}` : `-${appliedHitDmg}`, 140, 55, isCrit ? '#ff6b00' : dmgColor);
           safeToIfBattleActive(() => {
             setEAnim('');
             setAtkEffect(null);
@@ -611,7 +615,7 @@ export function runPlayerAnswer({
             }
           }
 
-          if (afterHp <= 0 && finalDmg >= s3.enemy.maxHp) tryUnlock('one_hit');
+          if (afterHp <= 0 && appliedHitDmg >= s3.enemy.maxHp) tryUnlock('one_hit');
           if (afterHp <= 0) {
             safeToIfBattleActive(() => handleVictory(), effectTimeline.nextDelay);
           } else {

@@ -942,6 +942,13 @@ let lastBgmTrack: BgmTrack | null = null;   // remember track for mute→unmute 
 let resumePromise: Promise<void> | null = null;
 const BGM_SCHEDULE_INTERVAL_MS = 50;
 const BGM_LOOKAHEAD_SEC = 0.12;
+const BGM_FADE_IN_MS = 420;
+const BGM_MEDIA_STOP_FADE_MS = 220;
+const BGM_MEDIA_LOOP_FADE_SEC = 0.55;
+const BGM_MEDIA_LOOP_POLL_MS = 120;
+let bgmMediaFadeTimer: ReturnType<typeof setInterval> | null = null;
+let bgmMediaLoopTimer: ReturnType<typeof setInterval> | null = null;
+let bgmMediaLoopRestarting = false;
 
 type BgmNote = [string, string, number, number?]; // [noteName, durKey, offsetMs, velocity]
 type BgmDrumKind = 'kick' | 'snare' | 'hat' | 'rim';
@@ -1807,7 +1814,81 @@ function scheduleBgmLookAhead(track: BgmTrack, pattern: BgmPattern): void {
   }
 }
 
+function clearBgmMediaFadeTimer(): void {
+  if (bgmMediaFadeTimer) {
+    clearInterval(bgmMediaFadeTimer);
+    bgmMediaFadeTimer = null;
+  }
+}
+
+function clearBgmMediaLoopTimer(): void {
+  if (bgmMediaLoopTimer) {
+    clearInterval(bgmMediaLoopTimer);
+    bgmMediaLoopTimer = null;
+  }
+  bgmMediaLoopRestarting = false;
+}
+
+function clampUnit(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function rampMediaVolume(
+  el: HTMLAudioElement,
+  from: number,
+  to: number,
+  durationMs: number,
+  onDone?: () => void,
+): void {
+  clearBgmMediaFadeTimer();
+  const start = Date.now();
+  const startVol = clampUnit(from);
+  const endVol = clampUnit(to);
+  try { el.volume = startVol; } catch { /* best-effort */ }
+  const safeDur = Math.max(1, Math.floor(durationMs));
+  bgmMediaFadeTimer = setInterval(() => {
+    const progress = Math.min(1, (Date.now() - start) / safeDur);
+    const vol = startVol + (endVol - startVol) * progress;
+    try { el.volume = clampUnit(vol); } catch { /* best-effort */ }
+    if (progress >= 1) {
+      clearBgmMediaFadeTimer();
+      if (onDone) {
+        try { onDone(); } catch { /* best-effort */ }
+      }
+    }
+  }, 16);
+}
+
+function startBgmMediaLoopMonitor(el: HTMLAudioElement, token: number): void {
+  clearBgmMediaLoopTimer();
+  bgmMediaLoopTimer = setInterval(() => {
+    if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) return;
+    const dur = Number.isFinite(el.duration) ? el.duration : 0;
+    if (!dur || dur <= BGM_MEDIA_LOOP_FADE_SEC + 0.08) return;
+    const remain = dur - el.currentTime;
+    if (remain > BGM_MEDIA_LOOP_FADE_SEC || bgmMediaLoopRestarting) return;
+    bgmMediaLoopRestarting = true;
+    const from = Number.isFinite(el.volume) ? el.volume : bgmVolume;
+    rampMediaVolume(el, from, 0, Math.round(BGM_MEDIA_LOOP_FADE_SEC * 1000), () => {
+      if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) {
+        bgmMediaLoopRestarting = false;
+        return;
+      }
+      try { el.currentTime = 0; } catch { /* best-effort */ }
+      const replay = el.play();
+      replay.catch(() => {
+        bgmMediaLoopRestarting = false;
+      });
+      rampMediaVolume(el, 0, bgmVolume, BGM_FADE_IN_MS, () => {
+        bgmMediaLoopRestarting = false;
+      });
+    });
+  }, BGM_MEDIA_LOOP_POLL_MS);
+}
+
 function stopBgmMedia(immediate = false): void {
+  clearBgmMediaLoopTimer();
+  clearBgmMediaFadeTimer();
   const el = bgmMediaEl;
   bgmMediaEl = null;
   if (!el) return;
@@ -1817,22 +1898,23 @@ function stopBgmMedia(immediate = false): void {
       el.currentTime = 0;
       return;
     }
-    const startVol = Number.isFinite(el.volume) ? el.volume : bgmVolume;
-    const steps = 8;
+    const startVol = Number.isFinite(el.volume) ? el.volume : clampUnit(bgmVolume);
+    const stepMs = 24;
+    const steps = Math.max(1, Math.round(BGM_MEDIA_STOP_FADE_MS / stepMs));
     let step = 0;
-    const timer = setInterval(() => {
+    const stopTimer = setInterval(() => {
       step += 1;
       const ratio = Math.max(0, 1 - step / steps);
-      try { el.volume = startVol * ratio; } catch { /* best-effort */ }
+      try { el.volume = clampUnit(startVol * ratio); } catch { /* best-effort */ }
       if (step >= steps) {
-        clearInterval(timer);
+        clearInterval(stopTimer);
         try {
           el.pause();
           el.currentTime = 0;
-          el.volume = Math.max(0, Math.min(1, bgmVolume));
+          el.volume = clampUnit(bgmVolume);
         } catch { /* best-effort */ }
       }
-    }, 24);
+    }, stepMs);
   } catch {
     try {
       el.pause();
@@ -1843,7 +1925,6 @@ function stopBgmMedia(immediate = false): void {
 
 function startSynthBgmLoop(track: BgmTrack): void {
   if (!ctx || bgmMuted) return;
-  stopBgmLoop(true);
   bgmGain = ctx.createGain();
   bgmGain.gain.setValueAtTime(0.0001, ctx.currentTime);
   bgmGain.gain.linearRampToValueAtTime(bgmVolume, ctx.currentTime + 0.5);
@@ -1872,26 +1953,29 @@ function startBgmMedia(track: BgmTrack): boolean {
   const src = BGM_FILE_BY_TRACK[track];
   if (!src || typeof Audio === 'undefined') return false;
   const el = new Audio(src);
-  el.loop = true;
+  el.loop = false;
   el.preload = 'auto';
-  el.volume = Math.max(0, Math.min(1, bgmVolume));
+  el.volume = 0;
   const token = ++bgmMediaToken;
   bgmMediaEl = el;
   bgmCurrent = track;
   const playPromise = el.play();
-  if (playPromise && typeof playPromise.catch === 'function') {
-    playPromise.catch(() => {
-      // If autoplay policy blocks the file playback, fallback to synth.
-      if (bgmMediaToken !== token) return;
-      stopBgmMedia(true);
-      startSynthBgmLoop(track);
-    });
-  }
+  const onReady = () => {
+    if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) return;
+    rampMediaVolume(el, 0, bgmVolume, BGM_FADE_IN_MS);
+    startBgmMediaLoopMonitor(el, token);
+  };
+  playPromise.then(onReady).catch(() => {
+    // If autoplay policy blocks the file playback, fallback to synth.
+    if (bgmMediaToken !== token) return;
+    stopBgmMedia(true);
+    startSynthBgmLoop(track);
+  });
   return true;
 }
 
 function startBgmLoop(track: BgmTrack): void {
-  stopBgmLoop(true);
+  stopBgmLoop(false);
   if (startBgmMedia(track)) return;
   startSynthBgmLoop(track);
 }

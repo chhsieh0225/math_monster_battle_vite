@@ -142,6 +142,28 @@ function normalizeStarterList(value: unknown): StarterSelectable[] {
   return value.filter(isStarterSelectable);
 }
 
+function clampDifficulty(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  const rounded = Math.round(value);
+  return Math.max(1, Math.min(5, rounded));
+}
+
+function normalizeGradeRange(value: unknown): [number, number] | null {
+  if (!Array.isArray(value) || value.length < 2) return null;
+  const fromRaw = Number(value[0]);
+  const toRaw = Number(value[1]);
+  if (!Number.isFinite(fromRaw) || !Number.isFinite(toRaw)) return null;
+  const from = Math.max(1, Math.round(fromRaw));
+  const to = Math.max(from, Math.round(toRaw));
+  return [from, to];
+}
+
+function formatDifficultyStars(value: number): string {
+  const filled = '★'.repeat(Math.max(0, Math.min(5, value)));
+  const empty = '☆'.repeat(Math.max(0, 5 - value));
+  return `${filled}${empty}`;
+}
+
 type SelectionScreenProps = {
   mode?: SelectionMode;
   encData?: EncyclopediaData;
@@ -323,6 +345,26 @@ export default function SelectionScreen({
           const descText = info?.desc || t('selection.generic.desc', 'A versatile combatant with unique battle rhythm.');
           const passiveText = info?.passive || t('selection.generic.passive', 'Passive effects change battle tempo as the fight unfolds.');
           const specDefText = info?.specDef || t('selection.generic.specDef', 'Build combo to unlock a strong defensive response.');
+          const difficulty = clampDifficulty(starter.difficulty);
+          const difficultyStars = difficulty ? formatDifficultyStars(difficulty) : '';
+          const gradeRange = normalizeGradeRange(starter.gradeRange);
+          const mathTopic = starter.mathTopicKey
+            ? t(starter.mathTopicKey, starter.mathTopicFallback || t('selection.topic.generic', 'Math'))
+            : (starter.mathTopicFallback || t('selection.topic.generic', 'Math'));
+          const gradeHint = gradeRange
+            ? (
+              gradeRange[0] === gradeRange[1]
+                ? t('selection.difficulty.gradeSingle', 'Suitable for grade {grade} ({topic})', {
+                    grade: gradeRange[0],
+                    topic: mathTopic,
+                  })
+                : t('selection.difficulty.gradeRange', 'Suitable for grades {from}-{to} ({topic})', {
+                    from: gradeRange[0],
+                    to: gradeRange[1],
+                    topic: mathTopic,
+                  })
+            )
+            : '';
           const cardVars = {
             '--sel-c1': starter.c1,
             '--sel-c2': starter.c2,
@@ -376,6 +418,14 @@ export default function SelectionScreen({
                         {t('selection.typeTag', '{type} type', { type: starter.typeName })}
                       </span>
                     )}
+                    {!locked && difficulty && (
+                      <span
+                        className="selection-card-difficulty-tag"
+                        aria-label={t('selection.difficulty.aria', 'Difficulty {value}/5', { value: difficulty })}
+                      >
+                        {difficultyStars}
+                      </span>
+                    )}
                     {isDual && isP1 && <span className="selection-role-tag is-p1">{t('selection.slot.p1', 'Player 1')}</span>}
                     {isDual && isP2 && <span className="selection-role-tag is-p2">{t('selection.slot.p2', 'Player 2')}</span>}
                   </div>
@@ -384,11 +434,18 @@ export default function SelectionScreen({
                       {t('selection.locked.hint', 'Defeat this boss in non-PvP modes to unlock selection.')}
                     </div>
                   ) : (
-                    <div className="selection-card-moves-brief">
-                      {starter.moves.slice(0, 3).map((move, idx) => (
-                        <span key={idx}>{move.icon} {move.name}{idx < 2 ? '　' : ''}</span>
-                      ))}
-                    </div>
+                    <>
+                      {gradeHint && (
+                        <div className="selection-card-grade-hint">
+                          {gradeHint}
+                        </div>
+                      )}
+                      <div className="selection-card-moves-brief">
+                        {starter.moves.slice(0, 3).map((move, idx) => (
+                          <span key={idx}>{move.icon} {move.name}{idx < 2 ? '　' : ''}</span>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               </div>

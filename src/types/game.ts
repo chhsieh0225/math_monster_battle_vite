@@ -100,6 +100,10 @@ export type StarterSelectable = StarterLite & {
   typeName: string;
   moves: StarterMoveDef[];
   selectedStageIdx?: number;
+  difficulty?: number;
+  gradeRange?: [number, number];
+  mathTopicKey?: string;
+  mathTopicFallback?: string;
 };
 
 export type StarterConfig = StarterSelectable;

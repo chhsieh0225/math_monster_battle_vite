@@ -11,6 +11,7 @@ import {
   SLIME_VARIANT_CONFIGS,
 } from './monsterConfigs.ts';
 import { SKILL_SETS } from './skillSets.ts';
+import { STARTERS } from './starters.ts';
 import {
   DOUBLE_STAGE_WAVES,
   STAGE_SCALE_BASE,
@@ -108,6 +109,17 @@ test('skill sets have required structure for all starters', () => {
       assert.ok(move.basePower > 0, `${id}/${move.name} basePower should be positive`);
       assert.ok(move.growth > 0, `${id}/${move.name} growth should be positive`);
     }
+  }
+});
+
+test('starter learning metadata has valid difficulty and grade ranges', () => {
+  for (const starter of STARTERS) {
+    assert.equal(typeof starter.difficulty, 'number', `missing difficulty for ${starter.id}`);
+    assert.ok(starter.difficulty >= 1 && starter.difficulty <= 5, `invalid difficulty for ${starter.id}`);
+    assert.ok(Array.isArray(starter.gradeRange), `missing gradeRange for ${starter.id}`);
+    assert.equal(starter.gradeRange.length, 2, `invalid gradeRange length for ${starter.id}`);
+    assert.ok(starter.gradeRange[0] >= 1, `invalid gradeRange start for ${starter.id}`);
+    assert.ok(starter.gradeRange[1] >= starter.gradeRange[0], `invalid gradeRange ordering for ${starter.id}`);
   }
 });
 

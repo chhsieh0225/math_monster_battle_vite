@@ -198,6 +198,14 @@
   margin-left:5px;
 }
 
+.selection-card-difficulty-tag{
+  font-size:10px;
+  margin-left:6px;
+  letter-spacing:.5px;
+  color:rgba(250,204,21,0.95);
+  text-shadow:0 0 8px rgba(250,204,21,0.24);
+}
+
 .selection-card-locked-tag{
   font-size:10px;
   margin-left:5px;
@@ -230,6 +238,13 @@
   font-size:10px;
   opacity:.5;
   line-height:1.4;
+}
+
+.selection-card-grade-hint{
+  font-size:10px;
+  opacity:.72;
+  line-height:1.45;
+  margin-bottom:2px;
 }
 
 .selection-card-locked-hint{

@@ -130,6 +130,7 @@ function createValidPublicApi() {
         setMuted: () => false,
         startBgm: () => {},
         stopBgm: () => {},
+        prefetchBgm: () => {},
         bgmTrack: null,
       },
     },

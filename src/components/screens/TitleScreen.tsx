@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters.ts';
 import { VERSION } from '../../data/constants';
-import { BG_IMGS } from '../../data/sprites.ts';
+import { BG_IMGS, BG_IMGS_LOW } from '../../data/sprites.ts';
 import type { StarterId, StarterStage } from '../../types/game';
 import { useI18n } from '../../i18n';
 import { localizeStarterList } from '../../utils/contentLocalization.ts';
@@ -32,6 +32,16 @@ const TITLE_BG_POOL: readonly string[] = [
   BG_IMGS.steel,
   BG_IMGS.dark,
   BG_IMGS.rock,
+];
+const TITLE_BG_POOL_LOW: readonly string[] = [
+  BG_IMGS_LOW.grass,
+  BG_IMGS_LOW.fire,
+  BG_IMGS_LOW.water,
+  BG_IMGS_LOW.electric,
+  BG_IMGS_LOW.ghost,
+  BG_IMGS_LOW.steel,
+  BG_IMGS_LOW.dark,
+  BG_IMGS_LOW.rock,
 ];
 const TITLE_STARTER_IDS: readonly TitleStarterId[] = STARTERS
   .map((starter) => starter.id)
@@ -111,12 +121,13 @@ export default function TitleScreen({
     [locale],
   );
   const titleRandomConfig = useMemo(() => {
-    const bgIdx = TITLE_BG_POOL.length > 1 ? randomInt(0, TITLE_BG_POOL.length - 1) : 0;
+    const pool = lowPerfMode ? TITLE_BG_POOL_LOW : TITLE_BG_POOL;
+    const bgIdx = pool.length > 1 ? randomInt(0, pool.length - 1) : 0;
     return {
-      titleBgImage: TITLE_BG_POOL[bgIdx] || '',
+      titleBgImage: pool[bgIdx] || '',
       spriteRandomConfig: buildRandomTitleSpriteConfig(TITLE_STARTER_IDS),
     };
-  }, []);
+  }, [lowPerfMode]);
   const titleBgImage = titleRandomConfig.titleBgImage;
   const spriteRandomConfig = titleRandomConfig.spriteRandomConfig;
   const titleStyle = useMemo<CSSProperties>(() => ({

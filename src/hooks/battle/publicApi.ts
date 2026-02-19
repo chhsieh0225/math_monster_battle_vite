@@ -177,6 +177,7 @@ const REQUIRED_SFX_KEYS = [
   'setMuted',
   'startBgm',
   'stopBgm',
+  'prefetchBgm',
   'bgmTrack',
 ] as const satisfies ReadonlyArray<keyof SfxApi>;
 
@@ -191,6 +192,7 @@ const REQUIRED_SFX_FUNCTION_KEYS = [
   'setMuted',
   'startBgm',
   'stopBgm',
+  'prefetchBgm',
 ] as const satisfies ReadonlyArray<keyof SfxApi>;
 
 /**

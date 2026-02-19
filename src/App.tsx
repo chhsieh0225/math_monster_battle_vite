@@ -18,7 +18,7 @@ import enUS from './i18n/locales/en-US';
 import { useBattle } from './hooks/useBattle';
 import { useMobileExperience } from './hooks/useMobileExperience';
 import { BOSS_IDS } from './data/monsterConfigs.ts';
-import { BG_IMGS } from './data/sprites.ts';
+import { BG_IMGS, BG_IMGS_LOW } from './data/sprites.ts';
 
 // Screens
 import AppScreenRouter from './components/AppScreenRouter';
@@ -41,6 +41,8 @@ type BattleBgmTrack =
   | 'boss_sword_god'
   | 'boss_dark_king';
 
+type BgmTier = 'full' | 'core';
+
 function resolveBossTrack(starterId: string | undefined | null): BattleBgmTrack | null {
   if (starterId === 'boss_hydra') return 'boss_hydra';
   if (starterId === 'boss_crazy_dragon') return 'boss_crazy_dragon';
@@ -57,6 +59,13 @@ function resolveSceneTrack(sceneType: string): BattleBgmTrack | null {
   if (sceneType === 'ghost') return 'graveyard';
   if (sceneType === 'rock') return 'canyon';
   return null;
+}
+
+function toTieredTrack(track: BattleBgmTrack | null, tier: BgmTier): BattleBgmTrack | null {
+  if (!track || tier === 'full') return track;
+  if (track === 'menu') return 'menu';
+  if (track.startsWith('boss')) return 'boss';
+  return 'battle';
 }
 
 type StaticLocaleCode = "zh-TW" | "en-US";
@@ -85,6 +94,18 @@ function staticT(key: string, fallback: string): string {
 
 const preloadedSceneBackgrounds = new Set<string>();
 
+const TITLE_SCENE_KEYS = ['grass', 'fire', 'water', 'electric', 'ghost', 'steel', 'dark', 'rock'] as const;
+const LATE_SCENE_KEYS = ['poison', 'heaven', 'burnt_warplace'] as const;
+
+function shouldConserveNetwork(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const connection = Reflect.get(navigator, 'connection') as { saveData?: boolean; effectiveType?: string } | undefined;
+  if (!connection) return false;
+  if (connection.saveData) return true;
+  const effectiveType = String(connection.effectiveType || '').toLowerCase();
+  return effectiveType.includes('2g') || effectiveType.includes('3g');
+}
+
 function preloadSceneBackground(src: string): void {
   if (typeof window === "undefined" || !src || preloadedSceneBackgrounds.has(src)) return;
   preloadedSceneBackgrounds.add(src);
@@ -96,10 +117,11 @@ function preloadSceneBackground(src: string): void {
   }
 }
 
-function resolveSceneBackground(sceneType: string | null | undefined): string | null {
+function resolveSceneBackground(sceneType: string | null | undefined, preferLowQuality = false): string | null {
   if (!sceneType) return null;
   const key = sceneType as keyof typeof BG_IMGS;
-  const src = BG_IMGS[key];
+  const sourceMap = preferLowQuality ? BG_IMGS_LOW : BG_IMGS;
+  const src = sourceMap[key] || BG_IMGS[key];
   return typeof src === 'string' ? src : null;
 }
 
@@ -218,11 +240,24 @@ function App() {
   const [sfxMuted, setSfxMuted] = useState<boolean>(() => Boolean(V.sfx.sfxMuted));
   const settingsReturnRef = useRef<ScreenName>("title");
   const resumeBattleAfterSettingsRef = useRef(false);
+  const conserveNetwork = UX.lowPerfMode || shouldConserveNetwork();
 
-  // Preload all scene backgrounds once to avoid visible flash on scene switch.
+  // Tiered background preload:
+  // 1) title pool first, 2) non-critical scenes later on non-constrained devices.
   useEffect(() => {
-    Object.values(BG_IMGS).forEach((src) => preloadSceneBackground(src));
-  }, []);
+    TITLE_SCENE_KEYS.forEach((sceneKey) => {
+      const src = resolveSceneBackground(sceneKey, conserveNetwork);
+      if (src) preloadSceneBackground(src);
+    });
+    if (conserveNetwork) return;
+    const timer = window.setTimeout(() => {
+      LATE_SCENE_KEYS.forEach((sceneKey) => {
+        const src = resolveSceneBackground(sceneKey, false);
+        if (src) preloadSceneBackground(src);
+      });
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [conserveNetwork]);
 
   // Explicitly preload current + next battle scene backgrounds to smooth transitions.
   useEffect(() => {
@@ -239,7 +274,7 @@ function App() {
     if (nextSceneType) sceneTypes.add(nextSceneType);
 
     sceneTypes.forEach((sceneType) => {
-      const src = resolveSceneBackground(sceneType);
+      const src = resolveSceneBackground(sceneType, conserveNetwork);
       if (src) preloadSceneBackground(src);
     });
   }, [
@@ -250,6 +285,55 @@ function App() {
     S.enemy?.mType,
     S.enemySub?.sceneMType,
     S.enemySub?.mType,
+    conserveNetwork,
+  ]);
+
+  // Tiered BGM prefetch:
+  // metadata on constrained devices, aggressive warmup on stable devices.
+  useEffect(() => {
+    const bgmTier: BgmTier = conserveNetwork ? 'core' : 'full';
+    const nextTracks = new Set<BattleBgmTrack>();
+    if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge') {
+      nextTracks.add('menu');
+      nextTracks.add('battle');
+    } else if (S.screen === 'battle') {
+      const p1BossTrack = resolveBossTrack(S.starter?.id);
+      const p2BossTrack = resolveBossTrack(S.pvpStarter2?.id);
+      const enemyId = S.enemy?.id ?? '';
+      const sceneType = S.enemy?.sceneMType || S.enemy?.mType || '';
+      const enemyBossTrack = resolveBossTrack(enemyId);
+      const sceneTrack = resolveSceneTrack(sceneType);
+      const currentBaseTrack = S.battleMode === 'pvp'
+        ? (p1BossTrack || p2BossTrack || sceneTrack || 'battle')
+        : (enemyBossTrack || sceneTrack || (BOSS_IDS.has(enemyId) ? 'boss' : 'battle'));
+      const currentTrack = toTieredTrack(currentBaseTrack, bgmTier) || 'battle';
+      nextTracks.add(currentTrack);
+
+      const nextEnemy = S.enemies?.[(S.round || 0) + 1] || null;
+      const nextEnemyId = nextEnemy?.id || '';
+      const nextSceneType = nextEnemy?.sceneMType || nextEnemy?.mType || '';
+      const nextBaseTrack = resolveBossTrack(nextEnemyId) || resolveSceneTrack(nextSceneType) || (BOSS_IDS.has(nextEnemyId) ? 'boss' : null);
+      const nextTrack = toTieredTrack(nextBaseTrack, bgmTier);
+      if (nextTrack) nextTracks.add(nextTrack);
+    }
+    if (nextTracks.size > 0) {
+      V.sfx.prefetchBgm(
+        Array.from(nextTracks),
+        conserveNetwork ? 'metadata' : 'auto',
+      );
+    }
+  }, [
+    S.screen,
+    S.battleMode,
+    S.round,
+    S.enemies,
+    S.enemy?.id,
+    S.enemy?.sceneMType,
+    S.enemy?.mType,
+    S.starter?.id,
+    S.pvpStarter2?.id,
+    V.sfx,
+    conserveNetwork,
   ]);
 
   const handleSetBgmMuted = (next: boolean) => {
@@ -310,9 +394,11 @@ function App() {
 
   // ── BGM driver ──
   useEffect(() => {
+    const bgmTier: BgmTier = conserveNetwork ? 'core' : 'full';
     if (bgmMuted) { V.sfx.stopBgm(); return; }
     if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge') {
-      V.sfx.startBgm('menu');
+      const track = toTieredTrack('menu', bgmTier) || 'menu';
+      V.sfx.startBgm(track);
     } else if (S.screen === 'battle') {
       const p1BossTrack = resolveBossTrack(S.starter?.id);
       const p2BossTrack = resolveBossTrack(S.pvpStarter2?.id);
@@ -323,9 +409,14 @@ function App() {
 
       // PvP/Double-player: lock to one theme (P1 priority), never mix two boss themes.
       if (S.battleMode === 'pvp') {
-        V.sfx.startBgm(p1BossTrack || p2BossTrack || sceneTrack || 'battle');
+        const track = toTieredTrack(p1BossTrack || p2BossTrack || sceneTrack || 'battle', bgmTier) || 'battle';
+        V.sfx.startBgm(track);
       } else {
-        V.sfx.startBgm(enemyBossTrack || sceneTrack || (BOSS_IDS.has(enemyId) ? 'boss' : 'battle'));
+        const track = toTieredTrack(
+          enemyBossTrack || sceneTrack || (BOSS_IDS.has(enemyId) ? 'boss' : 'battle'),
+          bgmTier,
+        ) || 'battle';
+        V.sfx.startBgm(track);
       }
     } else {
       V.sfx.stopBgm();
@@ -341,6 +432,7 @@ function App() {
     bgmMuted,
     V.sfx,
     sfxReady,
+    conserveNetwork,
   ]);
 
   if (S.screen !== "battle") {

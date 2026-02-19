@@ -4,6 +4,7 @@ import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { useBattleParallax } from '../../hooks/useBattleParallax';
 import { useBattleArenaScale } from '../../hooks/useBattleArenaScale.ts';
 import { SCENES } from '../../data/scenes';
+import { BG_IMGS_LOW } from '../../data/sprites.ts';
 import { PVP_BALANCE } from '../../data/pvpBalance';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import TextBox from '../ui/TextBox';
@@ -141,9 +142,13 @@ function BattleScreenComponent({
 
   const memoSceneStyles = useMemo(() => {
     if (!coreStatic) return null;
-    const { scene, layout } = coreStatic;
-    const bgStyle: CSSProperties | undefined = scene.bgImg
-      ? { backgroundImage: `url(${scene.bgImg})` }
+    const { scene, sceneKey, layout } = coreStatic;
+    const lowBg = Object.prototype.hasOwnProperty.call(BG_IMGS_LOW, sceneKey)
+      ? BG_IMGS_LOW[sceneKey as keyof typeof BG_IMGS_LOW]
+      : null;
+    const resolvedBg = UX.lowPerfMode && lowBg ? lowBg : scene.bgImg;
+    const bgStyle: CSSProperties | undefined = resolvedBg
+      ? { backgroundImage: `url(${resolvedBg})` }
       : undefined;
     return {
       sceneBgStyle: bgStyle,
@@ -154,7 +159,7 @@ function BattleScreenComponent({
       enemyInfoStyle: { "--battle-enemy-info-right": layout.enemyInfoRight } as BattleCssVars,
       playerInfoStyle: { "--battle-player-info-left": layout.playerInfoLeft } as BattleCssVars,
     };
-  }, [coreStatic]);
+  }, [coreStatic, UX.lowPerfMode]);
 
   const memoEffectTarget = useMemo(() => {
     if (!coreStatic) return null;

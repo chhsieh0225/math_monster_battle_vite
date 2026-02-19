@@ -66,6 +66,13 @@ export const BG_IMGS = {
   burnt_warplace: `${BASE}backgrounds/burnt_warplace.jpg`,
 } as const;
 
+export const BG_IMGS_LOW = {
+  ...BG_IMGS,
+  water: `${BASE}backgrounds/water_breach_low.jpg`,
+  electric: `${BASE}backgrounds/lighting_platou_low.jpg`,
+  poison: `${BASE}backgrounds/poison_swamp_low.jpg`,
+} as const;
+
 type SpriteKey = keyof typeof SPRITE_IMGS;
 type SvgFactory = () => string;
 

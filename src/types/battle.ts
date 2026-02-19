@@ -175,6 +175,24 @@ export type SfxApi = {
       | 'boss_sword_god'
       | 'boss_dark_king'
   ) => void;
+  prefetchBgm: (
+    tracks: ReadonlyArray<
+      | 'menu'
+      | 'battle'
+      | 'volcano'
+      | 'coast'
+      | 'thunder'
+      | 'ironclad'
+      | 'graveyard'
+      | 'canyon'
+      | 'boss'
+      | 'boss_hydra'
+      | 'boss_crazy_dragon'
+      | 'boss_sword_god'
+      | 'boss_dark_king'
+    >,
+    mode?: 'metadata' | 'auto',
+  ) => void;
   stopBgm: () => void;
   bgmTrack: string | null;
 };

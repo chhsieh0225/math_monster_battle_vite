@@ -939,6 +939,7 @@ type BgmTrack =
   | 'boss_crazy_dragon'
   | 'boss_sword_god'
   | 'boss_dark_king';
+type BgmPreloadMode = 'metadata' | 'auto';
 type SynthBgmTrack = 'menu' | 'battle' | 'boss';
 const BGM_FILE_BY_TRACK: Partial<Record<BgmTrack, string>> = {
   menu: `${PUBLIC_BASE_URL}musics/Chronicles_of_the_Verdant_Peak.mp3`,
@@ -992,6 +993,8 @@ const bgmMediaRampTimers = new Set<ReturnType<typeof setInterval>>();
 const bgmMediaElements = new Set<HTMLAudioElement>();
 let bgmMediaLoopTimer: ReturnType<typeof setInterval> | null = null;
 let bgmMediaLoopRestarting = false;
+const bgmWarmupCache = new Map<string, HTMLAudioElement>();
+const BGM_WARMUP_CACHE_LIMIT = 6;
 
 type BgmNote = [string, string, number, number?]; // [noteName, durKey, offsetMs, velocity]
 type BgmDrumKind = 'kick' | 'snare' | 'hat' | 'rim';
@@ -1020,6 +1023,75 @@ type BgmPattern = {
   form: BgmSectionKey[];
   sections: Record<BgmSectionKey, BgmSection | undefined>;
 };
+
+function isBgmTrack(value: unknown): value is BgmTrack {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(SYNTH_FALLBACK_BY_TRACK, value);
+}
+
+function trimBgmWarmupCache(): void {
+  while (bgmWarmupCache.size > BGM_WARMUP_CACHE_LIMIT) {
+    const first = bgmWarmupCache.entries().next().value;
+    if (!first) break;
+    const [src, el] = first;
+    bgmWarmupCache.delete(src);
+    try {
+      el.pause();
+      el.src = '';
+    } catch {
+      // best-effort cleanup
+    }
+  }
+}
+
+function prefetchBgmTrack(track: BgmTrack, mode: BgmPreloadMode = 'metadata'): void {
+  const src = BGM_FILE_BY_TRACK[track];
+  if (!src || typeof Audio === 'undefined') return;
+  const existing = bgmWarmupCache.get(src);
+  if (existing) {
+    // "auto" can upgrade a previously metadata-only warmup request.
+    if (mode === 'auto' && existing.preload !== 'auto') {
+      existing.preload = 'auto';
+      try { existing.load(); } catch { /* best-effort */ }
+    }
+    bgmWarmupCache.delete(src);
+    bgmWarmupCache.set(src, existing);
+    return;
+  }
+  const el = new Audio(src);
+  el.loop = false;
+  el.preload = mode;
+  el.volume = 0;
+  el.muted = true;
+  el.setAttribute('playsinline', 'true');
+  try { el.load(); } catch { /* best-effort */ }
+  bgmWarmupCache.set(src, el);
+  trimBgmWarmupCache();
+}
+
+function createBgmMediaElement(src: string, preload: BgmPreloadMode = 'auto'): HTMLAudioElement {
+  const warm = bgmWarmupCache.get(src);
+  if (warm) {
+    bgmWarmupCache.delete(src);
+    try {
+      warm.onended = null;
+      warm.pause();
+      warm.currentTime = 0;
+    } catch {
+      // best-effort reset
+    }
+    warm.loop = false;
+    warm.preload = preload;
+    warm.muted = false;
+    warm.volume = 0;
+    return warm;
+  }
+  const el = new Audio(src);
+  el.loop = false;
+  el.preload = preload;
+  el.volume = 0;
+  el.setAttribute('playsinline', 'true');
+  return el;
+}
 
 const BGM_PATTERNS: Record<SynthBgmTrack, BgmPattern> = {
   menu: {
@@ -1937,10 +2009,8 @@ function startBgmMediaLoopMonitor(el: HTMLAudioElement, token: number, track: Bg
     const remain = loopEnd - el.currentTime;
     if (remain > BGM_MEDIA_LOOP_CROSSFADE_SEC || bgmMediaLoopRestarting) return;
     bgmMediaLoopRestarting = true;
-    const nextEl = new Audio(src);
+    const nextEl = createBgmMediaElement(src, 'auto');
     bgmMediaElements.add(nextEl);
-    nextEl.loop = false;
-    nextEl.preload = 'auto';
     nextEl.volume = 0;
     const crossfadeMs = Math.round(BGM_MEDIA_LOOP_CROSSFADE_SEC * 1000);
     const beginCrossfade = () => {
@@ -2056,10 +2126,8 @@ function startBgmMedia(track: BgmTrack): boolean {
   const src = BGM_FILE_BY_TRACK[track];
   if (!src || typeof Audio === 'undefined') return false;
   disarmBgmUnlockRetry();
-  const el = new Audio(src);
+  const el = createBgmMediaElement(src, 'auto');
   bgmMediaElements.add(el);
-  el.loop = false;
-  el.preload = 'auto';
   el.volume = 0;
   const token = ++bgmMediaToken;
   bgmMediaEl = el;
@@ -2301,6 +2369,19 @@ const sfx = {
       return;
     }
     boot();
+  },
+  prefetchBgm(
+    tracks: ReadonlyArray<BgmTrack>,
+    mode: BgmPreloadMode = 'metadata',
+  ): void {
+    if (!Array.isArray(tracks) || tracks.length <= 0) return;
+    const preloadMode: BgmPreloadMode = mode === 'auto' ? 'auto' : 'metadata';
+    const uniqueTracks = new Set<BgmTrack>();
+    for (const track of tracks) {
+      if (!isBgmTrack(track) || uniqueTracks.has(track)) continue;
+      uniqueTracks.add(track);
+      prefetchBgmTrack(track, preloadMode);
+    }
   },
   stopBgm(immediate = false): void {
     pendingBgmTrack = null;

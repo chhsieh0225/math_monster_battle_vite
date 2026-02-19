@@ -258,6 +258,8 @@ function App() {
         V.sfx.startBgm('boss_dark_king');
       } else if (sceneType === 'fire') {
         V.sfx.startBgm('volcano');
+      } else if (sceneType === 'steel') {
+        V.sfx.startBgm('ironclad');
       } else {
         const isBoss = BOSS_IDS.has(enemyId);
         V.sfx.startBgm(isBoss ? 'boss' : 'battle');

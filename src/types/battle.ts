@@ -15,6 +15,7 @@ import type {
 export type BattleMode = "single" | "coop" | "pvp" | "double";
 export type ScreenName =
   | "title"
+  | "howto"
   | "daily_challenge"
   | "selection"
   | "battle"

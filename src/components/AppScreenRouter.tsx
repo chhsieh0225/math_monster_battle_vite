@@ -20,6 +20,7 @@ const DashboardScreen = lazy(() => import('./screens/DashboardScreen'));
 const SettingsScreen = lazy(() => import('./screens/SettingsScreen'));
 const PvpResultScreen = lazy(() => import('./screens/PvpResultScreen'));
 const DailyChallengeScreen = lazy(() => import('./screens/DailyChallengeScreen'));
+const HowToPlayScreen = lazy(() => import('./screens/HowToPlayScreen'));
 
 type SelectionPayload = Parameters<ComponentProps<typeof SelectionScreen>['onSelect']>[0];
 type DualSelectionPayload = Extract<SelectionPayload, { p1: unknown; p2: unknown }>;
@@ -124,6 +125,7 @@ export default function AppScreenRouter({
           A.setBattleMode('pvp');
           A.setScreen('selection');
         }}
+        onHowTo={() => A.setScreen('howto')}
         onLeaderboard={() => A.setScreen('leaderboard')}
         onAchievements={() => A.setScreen('achievements')}
         onEncyclopedia={() => A.setScreen('encyclopedia')}
@@ -132,6 +134,14 @@ export default function AppScreenRouter({
         onSettings={() => onOpenSettings('title')}
         lowPerfMode={mobile.lowPerfMode}
       />,
+    );
+  }
+
+  if (S.screen === 'howto') {
+    return wrapMain(
+      withScreenSuspense(
+        <HowToPlayScreen onBack={() => A.setScreen('title')} />,
+      ),
     );
   }
 

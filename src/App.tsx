@@ -293,7 +293,7 @@ function App() {
   useEffect(() => {
     const bgmTier: BgmTier = conserveNetwork ? 'core' : 'full';
     const nextTracks = new Set<BattleBgmTrack>();
-    if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge') {
+    if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge' || S.screen === 'howto') {
       nextTracks.add('menu');
       nextTracks.add('battle');
     } else if (S.screen === 'battle') {
@@ -396,7 +396,7 @@ function App() {
   useEffect(() => {
     const bgmTier: BgmTier = conserveNetwork ? 'core' : 'full';
     if (bgmMuted) { V.sfx.stopBgm(); return; }
-    if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge') {
+    if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge' || S.screen === 'howto') {
       const track = toTieredTrack('menu', bgmTier) || 'menu';
       V.sfx.startBgm(track);
     } else if (S.screen === 'battle') {

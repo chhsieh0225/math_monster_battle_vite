@@ -52,6 +52,7 @@ type TitleScreenProps = {
   onStartTimed: TitleAction;
   onStartCoop: TitleAction;
   onStartPvp: TitleAction;
+  onHowTo: TitleAction;
   onLeaderboard: TitleAction;
   onAchievements: TitleAction;
   onEncyclopedia: TitleAction;
@@ -107,6 +108,7 @@ export default function TitleScreen({
   onStartTimed,
   onStartCoop,
   onStartPvp,
+  onHowTo,
   onLeaderboard,
   onAchievements,
   onEncyclopedia,
@@ -168,6 +170,14 @@ export default function TitleScreen({
   return (
     <main className={`title-screen${lowPerfMode ? ' is-low-perf' : ''}`} style={titleStyle}>
       <div className="title-star title-star-main">✨</div>
+      <button
+        className="title-help-icon touch-btn"
+        onClick={onHowTo}
+        aria-label={t('a11y.title.openHowTo', 'Open game guide')}
+        title={t('title.feature.howto', 'How to Play')}
+      >
+        ℹ️
+      </button>
 
       <div className="title-hero">
         <div className="title-sprite-row title-sprite-row-top">

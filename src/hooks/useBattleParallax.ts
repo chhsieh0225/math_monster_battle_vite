@@ -12,6 +12,10 @@ const MAX_OFFSET_PX = 14;
 const SMOOTHING = 0.2;
 const STOP_DELTA = 0.16;
 const ORIENTATION_MAX_DEG = 18;
+/** Minimum ms between orientation-driven updates (~15 fps). */
+const ORIENTATION_THROTTLE_MS = 64;
+/** Ignore orientation changes smaller than this (dead-zone for sensor noise). */
+const ORIENTATION_DEAD_ZONE = 0.02;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -76,10 +80,27 @@ export function useBattleParallax({ hostRef, enabled }: UseBattleParallaxArgs): 
     host.addEventListener('pointermove', onPointerMove, { passive: true });
     host.addEventListener('pointerleave', onPointerLeave);
 
+    let lastOrientationTime = 0;
+    let lastOrientNx = 0;
+    let lastOrientNy = 0;
+
     const onDeviceOrientation = (event: DeviceOrientationEvent) => {
       if (typeof event.gamma !== 'number' || typeof event.beta !== 'number') return;
+      const now = performance.now();
+      if (now - lastOrientationTime < ORIENTATION_THROTTLE_MS) return;
+
       const nx = clamp(event.gamma / ORIENTATION_MAX_DEG, -1, 1);
       const ny = clamp(event.beta / ORIENTATION_MAX_DEG, -1, 1) * 0.72;
+
+      // Dead-zone: ignore sensor noise when device is ~still
+      if (
+        Math.abs(nx - lastOrientNx) < ORIENTATION_DEAD_ZONE &&
+        Math.abs(ny - lastOrientNy) < ORIENTATION_DEAD_ZONE
+      ) return;
+
+      lastOrientationTime = now;
+      lastOrientNx = nx;
+      lastOrientNy = ny;
       setTarget(nx, ny);
     };
 

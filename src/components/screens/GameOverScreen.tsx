@@ -12,7 +12,15 @@ type StarterMoveLite = {
   color: string;
 };
 
+type GameOverStarterStageLite = {
+  name: string;
+};
+
 type GameOverStarterLite = {
+  id?: string;
+  name?: string;
+  selectedStageIdx?: number;
+  stages?: GameOverStarterStageLite[];
   moves: StarterMoveLite[];
 };
 
@@ -22,6 +30,7 @@ type GameOverScreenProps = {
   tC: number;
   tW: number;
   pLvl: number;
+  pStg: number;
   timedMode: boolean;
   maxStreak?: number;
   starter: GameOverStarterLite | null;
@@ -40,6 +49,7 @@ export default function GameOverScreen({
   tC,
   tW,
   pLvl,
+  pStg,
   timedMode,
   maxStreak = 0,
   starter,
@@ -64,6 +74,16 @@ export default function GameOverScreen({
   const hasTowerFeedback = Boolean(towerChallengeFeedback);
   const towerSuccess = towerChallengeFeedback?.outcome === 'cleared';
   const towerStreakDeltaPrefix = (towerChallengeFeedback?.winStreakDelta || 0) > 0 ? '+' : '';
+  const resolvedStarterStageIdx = starter
+    ? Number.isFinite(pStg)
+      ? Math.max(0, Math.floor(Number(pStg)))
+      : Number.isFinite(starter.selectedStageIdx)
+        ? Math.max(0, Math.floor(Number(starter.selectedStageIdx)))
+        : 0
+    : null;
+  const resolvedStarterName = starter && resolvedStarterStageIdx !== null
+    ? (starter.stages?.[resolvedStarterStageIdx]?.name || starter.name || '')
+    : '';
 
   const handleSaveScore = () => {
     if (scoreSaved.current) return;
@@ -74,6 +94,9 @@ export default function GameOverScreen({
     const entry: LeaderboardEntry = {
       score: finalScore,
       name: nm,
+      starterId: starter?.id || undefined,
+      starterName: resolvedStarterName || undefined,
+      starterStageIdx: resolvedStarterStageIdx ?? undefined,
       defeated,
       correct: tC,
       wrong: tW,

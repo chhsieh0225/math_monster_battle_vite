@@ -1,6 +1,7 @@
 import { loadScores } from '../../utils/leaderboard.ts';
 import type { LeaderboardEntry } from '../../types/game';
 import { useI18n } from '../../i18n';
+import { localizeStarterDisplayName } from '../../utils/contentLocalization.ts';
 import './LeaderboardScreen.css';
 
 type LeaderboardScreenProps = {
@@ -9,7 +10,7 @@ type LeaderboardScreenProps = {
 };
 
 export default function LeaderboardScreen({ totalEnemies, onBack }: LeaderboardScreenProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const scores: LeaderboardEntry[] = loadScores();
   return (
     <div className="leaderboard-screen">
@@ -26,6 +27,12 @@ export default function LeaderboardScreen({ totalEnemies, onBack }: LeaderboardS
           : scores.map((s, i) => {
               const d = new Date(s.date);
               const ds = `${d.getMonth() + 1}/${d.getDate()}`;
+              const starterName = String(localizeStarterDisplayName(
+                s.starterName,
+                s.starterId,
+                locale,
+                s.starterStageIdx ?? null,
+              ) || '');
               const rowClass = i === 0 ? "leaderboard-row is-first" : i < 3 ? "leaderboard-row is-top" : "leaderboard-row";
               const rankClass = i === 0
                 ? "leaderboard-rank is-first"
@@ -48,6 +55,11 @@ export default function LeaderboardScreen({ totalEnemies, onBack }: LeaderboardS
                     </div>
                     <div className="leaderboard-stat-line">
                       {t("leaderboard.statLine", "Monsters {defeated}/{total} · Accuracy {accuracy}% · Lv.{level}", { defeated: s.defeated, total: totalEnemies, accuracy: s.accuracy, level: s.level })}
+                    </div>
+                    <div className="leaderboard-starter-line">
+                      {t("leaderboard.starterLine", "Starter: {name}", {
+                        name: starterName || t("leaderboard.starterUnknown", "Not recorded"),
+                      })}
                     </div>
                   </div>
                   <div className="leaderboard-date">{ds}</div>

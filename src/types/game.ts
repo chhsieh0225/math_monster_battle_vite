@@ -32,6 +32,9 @@ export type AchievementDef = {
 export type LeaderboardEntry = {
   score: number;
   name: string;
+  starterId?: string;
+  starterName?: string;
+  starterStageIdx?: number;
   defeated: number;
   correct: number;
   wrong: number;

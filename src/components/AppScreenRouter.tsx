@@ -267,6 +267,7 @@ export default function AppScreenRouter({
           tC={S.tC}
           tW={S.tW}
           pLvl={S.pLvl}
+          pStg={S.pStg}
           timedMode={S.timedMode}
           maxStreak={S.maxStreak}
           starter={S.starter}

@@ -69,6 +69,8 @@ const enUS = {
   "leaderboard.empty": "No records yet. Start a run!",
   "leaderboard.playerUnknown": "???",
   "leaderboard.statLine": "Monsters {defeated}/{total} · Accuracy {accuracy}% · Lv.{level}",
+  "leaderboard.starterLine": "Starter: {name}",
+  "leaderboard.starterUnknown": "Not recorded",
 
   "daily.title": "Daily Challenge",
   "daily.subtitle": "Fixed daily seed plus streak tower progression",

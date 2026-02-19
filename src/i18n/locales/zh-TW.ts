@@ -69,6 +69,8 @@ const zhTW = {
   "leaderboard.empty": "尚無紀錄，快去挑戰吧！",
   "leaderboard.playerUnknown": "???",
   "leaderboard.statLine": "怪獸 {defeated}/{total} · 正確率 {accuracy}% · Lv.{level}",
+  "leaderboard.starterLine": "角色：{name}",
+  "leaderboard.starterUnknown": "未記錄",
 
   "daily.title": "每日挑戰",
   "daily.subtitle": "每日固定題組 + 連勝塔進度",

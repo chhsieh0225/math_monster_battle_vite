@@ -169,24 +169,6 @@ export default function TitleScreen({
   return (
     <main className={`title-screen${lowPerfMode ? ' is-low-perf' : ''}`} style={titleStyle}>
       <div className="title-star title-star-main">✨</div>
-      <div className="title-quick-actions">
-        <button
-          className="title-quick-btn touch-btn"
-          onClick={onHowTo}
-          aria-label={t('a11y.title.openHowTo', 'Open game guide')}
-          title={t('title.feature.howto', 'How to Play')}
-        >
-          ℹ️
-        </button>
-        <button
-          className="title-quick-btn touch-btn"
-          onClick={onSettings}
-          aria-label={t('a11y.title.openSettings', 'Open settings')}
-          title={t('title.feature.settings', 'Settings')}
-        >
-          ⚙️
-        </button>
-      </div>
 
       <div className="title-hero">
         <div className="title-sprite-row title-sprite-row-top">
@@ -237,6 +219,24 @@ export default function TitleScreen({
               {b.icon} {b.label}
             </button>
           ))}
+          <div className="title-feature-quick-slot" aria-label={t('a11y.title.quickActions', 'Quick actions')}>
+            <button
+              className="title-feature-quick-btn touch-btn"
+              onClick={onHowTo}
+              aria-label={t('a11y.title.openHowTo', 'Open game guide')}
+              title={t('title.feature.howto', 'How to Play')}
+            >
+              ℹ️
+            </button>
+            <button
+              className="title-feature-quick-btn touch-btn"
+              onClick={onSettings}
+              aria-label={t('a11y.title.openSettings', 'Open settings')}
+              title={t('title.feature.settings', 'Settings')}
+            >
+              ⚙️
+            </button>
+          </div>
         </div>
       </section>
 

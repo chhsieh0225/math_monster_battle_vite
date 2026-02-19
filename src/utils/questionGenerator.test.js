@@ -64,3 +64,26 @@ test('genQ falls back to allowedOps when move ops do not overlap', () => {
     assert.equal(q.display.includes("?"), true);
   }
 });
+
+test('genQ fraction compare question exposes symbol choices', () => {
+  const move = { range: [2, 9], ops: ["frac_cmp"] };
+  const q = genQ(move, 1);
+
+  assert.equal(q.op, "frac_cmp");
+  assert.equal(Array.isArray(q.choiceLabels), true);
+  assert.equal(q.choiceLabels.length, 3);
+  assert.equal(typeof q.answerLabel, "string");
+  assert.equal(["<", ">", "="].includes(q.answerLabel), true);
+  assert.equal(q.choiceLabels[q.answer], q.answerLabel);
+});
+
+test('genQ fraction arithmetic question returns readable fraction labels', () => {
+  const move = { range: [2, 10], ops: ["frac_same", "frac_diff", "frac_muldiv"] };
+  const q = genQ(move, 1);
+
+  assert.equal(["frac_same", "frac_diff", "frac_muldiv"].includes(q.op), true);
+  assert.equal(Array.isArray(q.choiceLabels), true);
+  assert.equal(q.choiceLabels.length, 4);
+  assert.equal(typeof q.answerLabel, "string");
+  assert.equal(q.choiceLabels[q.answer], q.answerLabel);
+});

@@ -93,7 +93,7 @@ test('weighted drop tables cover every configured drop table with valid weights'
 });
 
 test('skill sets have required structure for all starters', () => {
-  const starterIds = ["fire", "water", "grass", "electric", "lion"];
+  const starterIds = ["fire", "water", "grass", "electric", "lion", "wolf"];
   for (const id of starterIds) {
     const moves = SKILL_SETS[id];
     assert.ok(Array.isArray(moves), `missing skill set for starter: ${id}`);

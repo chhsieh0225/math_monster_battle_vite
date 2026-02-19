@@ -44,12 +44,16 @@ const OP_TO_GROUP = {
   unknown2: 'unknown',
   unknown3: 'unknown',
   unknown4: 'unknown',
+  frac_cmp: 'fraction',
+  frac_same: 'fraction',
+  frac_diff: 'fraction',
+  frac_muldiv: 'fraction',
 } as const;
 
-export type AbilityGroup = 'add' | 'sub' | 'mul' | 'div' | 'unknown' | 'mixed';
+export type AbilityGroup = 'add' | 'sub' | 'mul' | 'div' | 'unknown' | 'mixed' | 'fraction';
 export type OperationKey = keyof typeof OP_TO_GROUP;
 
-export const ABILITY_GROUPS: AbilityGroup[] = ['add', 'sub', 'mul', 'div', 'unknown', 'mixed'];
+export const ABILITY_GROUPS: AbilityGroup[] = ['add', 'sub', 'mul', 'div', 'unknown', 'mixed', 'fraction'];
 
 export type AbilityBucket = {
   level: number;
@@ -77,6 +81,7 @@ export function createAbilityModel(initialLevel = 2): AbilityModel {
     div: { level: clamped, recent: [] },
     unknown: { level: clamped, recent: [] },
     mixed: { level: clamped, recent: [] },
+    fraction: { level: clamped, recent: [] },
   };
 }
 

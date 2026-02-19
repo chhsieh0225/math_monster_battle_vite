@@ -43,13 +43,14 @@ type BuildRosterOptions = {
 
 const MONSTER_BY_ID = new Map<string, MonsterBase>(MONSTERS.map((mon) => [mon.id, mon]));
 const STARTER_MIRROR_WAVE_PREFIX = 'starter_mirror:';
-const STARTER_IDS: readonly PlayerStarterId[] = ['fire', 'water', 'grass', 'electric', 'lion'];
+const STARTER_IDS: readonly PlayerStarterId[] = ['fire', 'water', 'grass', 'electric', 'lion', 'wolf'];
 const STARTER_ENCOUNTER_SCENE_BY_ID: Readonly<Record<PlayerStarterId, string>> = {
   fire: 'fire',
   water: 'water',
   grass: 'grass',
   electric: 'electric',
   lion: 'grass',
+  wolf: 'steel',
 };
 const STARTER_BASE_STATS_BY_ID: Readonly<Record<PlayerStarterId, { hp: number; atk: number }>> = {
   fire: { hp: 54, atk: 9 },
@@ -57,6 +58,7 @@ const STARTER_BASE_STATS_BY_ID: Readonly<Record<PlayerStarterId, { hp: number; a
   grass: { hp: 49, atk: 8 },
   electric: { hp: 51, atk: 9 },
   lion: { hp: 56, atk: 9 },
+  wolf: { hp: 58, atk: 9 },
 };
 const STARTER_DROPS_BY_ID: Readonly<Record<PlayerStarterId, readonly string[]>> = {
   fire: ['🔥', '💎'],
@@ -64,6 +66,7 @@ const STARTER_DROPS_BY_ID: Readonly<Record<PlayerStarterId, readonly string[]>> 
   grass: ['🍬', '🧪'],
   electric: ['⚡', '🍬'],
   lion: ['⭐', '👑'],
+  wolf: ['🛡️', '⚔️'],
 };
 const STARTER_TYPE_NAME_FALLBACK: Readonly<Record<PlayerStarterId, string>> = {
   fire: '火',
@@ -71,6 +74,7 @@ const STARTER_TYPE_NAME_FALLBACK: Readonly<Record<PlayerStarterId, string>> = {
   grass: '草',
   electric: '雷',
   lion: '光',
+  wolf: '鋼',
 };
 const STARTER_MONSTER_TYPE_BY_ID: Readonly<Record<PlayerStarterId, MonsterType>> = {
   fire: 'fire',
@@ -78,6 +82,7 @@ const STARTER_MONSTER_TYPE_BY_ID: Readonly<Record<PlayerStarterId, MonsterType>>
   grass: 'grass',
   electric: 'electric',
   lion: 'light',
+  wolf: 'steel',
 };
 const STARTER_BY_ID = new Map<PlayerStarterId, (typeof STARTERS)[number]>(
   STARTERS

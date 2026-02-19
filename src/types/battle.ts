@@ -107,6 +107,8 @@ export type QuestionVm = {
   op: string;
   answer: number;
   choices: number[];
+  choiceLabels?: string[];
+  answerLabel?: string;
   steps?: string[];
 };
 

@@ -14,7 +14,11 @@ export type QuestionFocusTag =
   | 'unknown1'
   | 'unknown2'
   | 'unknown3'
-  | 'unknown4';
+  | 'unknown4'
+  | 'frac_cmp'
+  | 'frac_same'
+  | 'frac_diff'
+  | 'frac_muldiv';
 
 export type ChallengeRewardType =
   | 'achievement_point'

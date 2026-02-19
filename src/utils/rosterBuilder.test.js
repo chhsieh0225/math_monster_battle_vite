@@ -140,7 +140,7 @@ test('buildRoster skips wild starter encounters when all starters are excluded',
   const roster = buildRoster(pickFirst, 'single', {
     disableRandomSwap: true,
     enableStarterEncounters: true,
-    excludedStarterIds: ['fire', 'water', 'grass', 'electric', 'lion'],
+    excludedStarterIds: ['fire', 'water', 'grass', 'electric', 'lion', 'wolf'],
   });
   const wildStarters = roster.filter((mon) => String(mon.id || '').startsWith('wild_starter_'));
   assert.equal(wildStarters.length, 0);

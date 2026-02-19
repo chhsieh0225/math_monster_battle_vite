@@ -16,7 +16,12 @@ import { randomToken } from './prng.ts';
 const SESSIONS_KEY = 'mathMonsterBattle_sessions';
 const PIN_KEY = 'mathMonsterBattle_dashPin';
 const MAX_SESSIONS = 100;
-const OPS = ['+', '-', '×', '÷', 'mixed2', 'mixed3', 'mixed4', 'unknown1', 'unknown2', 'unknown3', 'unknown4'] as const;
+const OPS = [
+  '+', '-', '×', '÷',
+  'mixed2', 'mixed3', 'mixed4',
+  'unknown1', 'unknown2', 'unknown3', 'unknown4',
+  'frac_cmp', 'frac_same', 'frac_diff', 'frac_muldiv',
+] as const;
 
 type SessionOp = (typeof OPS)[number];
 
@@ -125,6 +130,10 @@ function buildOpStats(): Record<SessionOp, SessionOpStat> {
     unknown2: newOpStat(),
     unknown3: newOpStat(),
     unknown4: newOpStat(),
+    frac_cmp: newOpStat(),
+    frac_same: newOpStat(),
+    frac_diff: newOpStat(),
+    frac_muldiv: newOpStat(),
   };
 }
 

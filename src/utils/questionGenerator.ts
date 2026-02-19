@@ -22,10 +22,17 @@ type QuestionDraft = {
   answer: number;
   op: string;
   steps: string[];
+  choiceLabels?: string[];
+  answerLabel?: string;
 };
 
 export type GeneratedQuestion = QuestionDraft & {
   choices: number[];
+};
+
+type Fraction = {
+  n: number;
+  d: number;
 };
 
 // Helper: random int in [lo, hi]
@@ -48,6 +55,251 @@ function createTranslator(options: QuestionGeneratorOptions = {}): Translator {
 
 function opWord(op: string, tr: Translator): string {
   return op === "+" ? tr("question.word.add", "addition") : tr("question.word.sub", "subtraction");
+}
+
+function gcd(a: number, b: number): number {
+  let x = Math.abs(a);
+  let y = Math.abs(b);
+  while (y !== 0) {
+    const temp = x % y;
+    x = y;
+    y = temp;
+  }
+  return x || 1;
+}
+
+function lcm(a: number, b: number): number {
+  return Math.abs(a * b) / gcd(a, b);
+}
+
+function simplifyFraction(numerator: number, denominator: number): Fraction {
+  const safeDen = denominator === 0 ? 1 : denominator;
+  if (numerator === 0) return { n: 0, d: 1 };
+  const sign = safeDen < 0 ? -1 : 1;
+  const g = gcd(numerator, safeDen);
+  return { n: (numerator / g) * sign, d: Math.abs(safeDen / g) };
+}
+
+function fractionText(frac: Fraction): string {
+  if (frac.d === 1) return String(frac.n);
+  return `${frac.n}/${frac.d}`;
+}
+
+function randomFractionLabel(range: [number, number]): string {
+  const dMin = Math.max(2, Math.min(range[0], range[1]));
+  const dMax = Math.max(dMin, Math.min(12, Math.max(range[0], range[1]) + 2));
+  const d = rr(dMin, dMax);
+  const n = rr(1, Math.max(1, d - 1));
+  return fractionText(simplifyFraction(n, d));
+}
+
+function buildFractionChoiceLabels(
+  correctLabel: string,
+  candidateLabels: string[],
+  range: [number, number],
+  targetCount = 4,
+): string[] {
+  const labels: string[] = [];
+  const pushUnique = (value: string): void => {
+    const normalized = String(value || "").trim();
+    if (!normalized) return;
+    if (!labels.includes(normalized)) labels.push(normalized);
+  };
+  pushUnique(correctLabel);
+  for (const label of candidateLabels) pushUnique(label);
+  while (labels.length < targetCount) {
+    pushUnique(randomFractionLabel(range));
+  }
+  return labels.slice(0, targetCount);
+}
+
+function makeLabeledChoices(args: {
+  display: string;
+  op: string;
+  steps: string[];
+  answerLabel: string;
+  choiceLabels: string[];
+}): GeneratedQuestion {
+  const labels = [...args.choiceLabels];
+  if (!labels.includes(args.answerLabel)) labels.unshift(args.answerLabel);
+  shuffleInPlace(labels);
+  const answer = Math.max(0, labels.indexOf(args.answerLabel));
+  return {
+    display: args.display,
+    answer,
+    op: args.op,
+    steps: args.steps || [],
+    choices: Array.from({ length: labels.length }, (_unused, idx) => idx),
+    choiceLabels: labels,
+    answerLabel: args.answerLabel,
+  };
+}
+
+function genFractionCompare(range: [number, number]): GeneratedQuestion {
+  const dMin = Math.max(2, Math.min(range[0], range[1]));
+  const dMax = Math.max(dMin, Math.min(12, Math.max(range[0], range[1]) + 2));
+  let a = rr(1, dMax - 1);
+  let b = rr(dMin, dMax);
+  let c = rr(1, dMax - 1);
+  let d = rr(dMin, dMax);
+
+  // Keep some equality cases so children practice "=" as well.
+  if (chance(0.22)) {
+    const baseNum = rr(1, Math.max(1, dMax - 1));
+    const baseDen = rr(dMin, dMax);
+    const k1 = rr(1, 3);
+    const k2 = rr(1, 3);
+    a = baseNum * k1;
+    b = baseDen * k1;
+    c = baseNum * k2;
+    d = baseDen * k2;
+  }
+
+  const leftCross = a * d;
+  const rightCross = c * b;
+  const answerLabel = leftCross > rightCross ? '>' : leftCross < rightCross ? '<' : '=';
+  const steps = [
+    `${a}/${b} ? ${c}/${d}`,
+    `交叉比較：${a}×${d} = ${leftCross}，${c}×${b} = ${rightCross}`,
+    leftCross > rightCross
+      ? `${leftCross} > ${rightCross}，所以 ${a}/${b} > ${c}/${d}`
+      : leftCross < rightCross
+        ? `${leftCross} < ${rightCross}，所以 ${a}/${b} < ${c}/${d}`
+        : `${leftCross} = ${rightCross}，所以 ${a}/${b} = ${c}/${d}`,
+  ];
+
+  return makeLabeledChoices({
+    display: `${a}/${b} ? ${c}/${d}`,
+    op: 'frac_cmp',
+    steps,
+    answerLabel,
+    choiceLabels: ['>', '<', '='],
+  });
+}
+
+function genFractionSameDen(range: [number, number]): GeneratedQuestion {
+  const dMin = Math.max(2, Math.min(range[0], range[1]));
+  const dMax = Math.max(dMin, Math.min(12, Math.max(range[0], range[1]) + 2));
+  const den = rr(dMin, dMax);
+  let n1 = rr(1, Math.max(1, den - 1));
+  let n2 = rr(1, Math.max(1, den - 1));
+  const op = chance(0.5) ? '+' : '-';
+  if (op === '-' && n1 < n2) [n1, n2] = [n2, n1];
+  const rawNumerator = op === '+' ? n1 + n2 : n1 - n2;
+  const raw = { n: rawNumerator, d: den };
+  const simplified = simplifyFraction(raw.n, raw.d);
+  const answerLabel = fractionText(simplified);
+  const rawLabel = fractionText(raw);
+  const oppositeNumerator = op === '+' ? Math.max(0, n1 - n2) : n1 + n2;
+  const candidates = [
+    rawLabel,
+    `${oppositeNumerator}/${den}`,
+    `${Math.max(1, raw.n)}/${Math.max(2, den + 1)}`,
+    `${Math.max(1, raw.n + 1)}/${den}`,
+  ];
+  const choiceLabels = buildFractionChoiceLabels(answerLabel, candidates, range, 4);
+  const steps = [
+    `同分母直接運算分子：${n1} ${op} ${n2} = ${raw.n}`,
+    `${n1}/${den} ${op} ${n2}/${den} = ${raw.n}/${den}`,
+    rawLabel === answerLabel ? `答案：${answerLabel}` : `約分：${rawLabel} = ${answerLabel}`,
+  ];
+
+  return makeLabeledChoices({
+    display: `${n1}/${den} ${op} ${n2}/${den}`,
+    op: 'frac_same',
+    steps,
+    answerLabel,
+    choiceLabels,
+  });
+}
+
+function genFractionDiffDen(range: [number, number], depth = 0): GeneratedQuestion {
+  if (depth > 20) return genFractionSameDen(range);
+  const dMin = Math.max(2, Math.min(range[0], range[1]));
+  const dMax = Math.max(dMin + 1, Math.min(12, Math.max(range[0], range[1]) + 3));
+  const d1 = rr(dMin, dMax);
+  let d2 = rr(dMin, dMax);
+  if (d1 === d2) d2 = Math.min(dMax, d2 + 1);
+  const n1 = rr(1, Math.max(1, d1 - 1));
+  const n2 = rr(1, Math.max(1, d2 - 1));
+  const op = chance(0.5) ? '+' : '-';
+  const commonDen = lcm(d1, d2);
+  const scaledN1 = n1 * (commonDen / d1);
+  const scaledN2 = n2 * (commonDen / d2);
+  const rawNumerator = op === '+' ? scaledN1 + scaledN2 : scaledN1 - scaledN2;
+  if (rawNumerator < 0) return genFractionDiffDen(range, depth + 1);
+  const raw = { n: rawNumerator, d: commonDen };
+  const simplified = simplifyFraction(raw.n, raw.d);
+  const answerLabel = fractionText(simplified);
+  const rawLabel = fractionText(raw);
+  const wrongNoCommon = simplifyFraction(op === '+' ? n1 + n2 : Math.max(0, n1 - n2), commonDen);
+  const wrongProductDen = simplifyFraction(op === '+' ? n1 + n2 : Math.max(0, n1 - n2), d1 * d2);
+  const candidates = [
+    rawLabel,
+    fractionText(wrongNoCommon),
+    fractionText(wrongProductDen),
+    `${Math.max(1, simplified.n + 1)}/${simplified.d}`,
+  ];
+  const choiceLabels = buildFractionChoiceLabels(answerLabel, candidates, range, 4);
+  const steps = [
+    `通分到 ${commonDen}：${n1}/${d1} = ${scaledN1}/${commonDen}，${n2}/${d2} = ${scaledN2}/${commonDen}`,
+    `${scaledN1}/${commonDen} ${op} ${scaledN2}/${commonDen} = ${raw.n}/${commonDen}`,
+    rawLabel === answerLabel ? `答案：${answerLabel}` : `約分：${rawLabel} = ${answerLabel}`,
+  ];
+
+  return makeLabeledChoices({
+    display: `${n1}/${d1} ${op} ${n2}/${d2}`,
+    op: 'frac_diff',
+    steps,
+    answerLabel,
+    choiceLabels,
+  });
+}
+
+function genFractionMulDiv(range: [number, number]): GeneratedQuestion {
+  const dMin = Math.max(2, Math.min(range[0], range[1]));
+  const dMax = Math.max(dMin + 1, Math.min(12, Math.max(range[0], range[1]) + 3));
+  const n1 = rr(1, dMax - 1);
+  const d1 = rr(dMin, dMax);
+  const n2 = rr(1, dMax - 1);
+  const d2 = rr(dMin, dMax);
+  const op = chance(0.5) ? '×' : '÷';
+
+  const raw = op === '×'
+    ? simplifyFraction(n1 * n2, d1 * d2)
+    : simplifyFraction(n1 * d2, d1 * n2);
+  const answerLabel = fractionText(raw);
+
+  const wrongMultiply = simplifyFraction(n1 * n2, d1 * d2);
+  const wrongCross = simplifyFraction(n1 * d2, d1 * n2);
+  const swapped = simplifyFraction(raw.d, raw.n || 1);
+  const candidates = [
+    fractionText(op === '×' ? wrongCross : wrongMultiply),
+    fractionText(swapped),
+    `${Math.max(1, raw.n + 1)}/${raw.d}`,
+    `${raw.n}/${Math.max(1, raw.d + 1)}`,
+  ];
+  const choiceLabels = buildFractionChoiceLabels(answerLabel, candidates, range, 4);
+
+  const steps = op === '×'
+    ? [
+      `分子乘分子、分母乘分母：(${n1}×${n2})/(${d1}×${d2})`,
+      `得到 ${n1 * n2}/${d1 * d2}`,
+      `約分後：${answerLabel}`,
+    ]
+    : [
+      `除以分數要乘倒數：${n1}/${d1} ÷ ${n2}/${d2} = ${n1}/${d1} × ${d2}/${n2}`,
+      `分子乘分子、分母乘分母：(${n1}×${d2})/(${d1}×${n2})`,
+      `約分後：${answerLabel}`,
+    ];
+
+  return makeLabeledChoices({
+    display: `${n1}/${d1} ${op} ${n2}/${d2}`,
+    op: 'frac_muldiv',
+    steps,
+    answerLabel,
+    choiceLabels,
+  });
 }
 
 // ── Mixed-operation question generators (for electric starter) ──
@@ -450,6 +702,12 @@ export function genQ(
   if (op === "unknown3") return makeChoices(genUnknown3(range));
   if (op === "unknown4") return makeChoices(genUnknown4(range));
 
+  // ── Fraction operations (steel starter) ──
+  if (op === "frac_cmp") return genFractionCompare(range);
+  if (op === "frac_same") return genFractionSameDen(range);
+  if (op === "frac_diff") return genFractionDiffDen(range);
+  if (op === "frac_muldiv") return genFractionMulDiv(range);
+
   // ── Single operations (original starters) ──
   let draft: QuestionDraft;
   switch (op) {
@@ -517,7 +775,7 @@ export function genQ(
 /**
  * Wrap a {display, answer, op, steps} object with 4 shuffled answer choices.
  */
-function makeChoices({ display, answer, op, steps }: QuestionDraft): GeneratedQuestion {
+function makeChoices({ display, answer, op, steps, choiceLabels, answerLabel }: QuestionDraft): GeneratedQuestion {
   const spread = Math.max(5, Math.ceil(Math.abs(answer) * 0.2));
   const ch = new Set<number>([answer]);
   let guard = 0;
@@ -532,5 +790,13 @@ function makeChoices({ display, answer, op, steps }: QuestionDraft): GeneratedQu
   }
   const arr = Array.from(ch);
   shuffleInPlace(arr);
-  return { display, answer, choices: arr, op, steps: steps || [] };
+  return {
+    display,
+    answer,
+    choices: arr,
+    op,
+    steps: steps || [],
+    choiceLabels,
+    answerLabel,
+  };
 }

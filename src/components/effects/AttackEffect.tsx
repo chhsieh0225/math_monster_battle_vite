@@ -7,6 +7,7 @@ const WaterEffect = lazy(() => import('./WaterEffect'));
 const GrassEffect = lazy(() => import('./GrassEffect'));
 const DarkEffect = lazy(() => import('./DarkEffect'));
 const LightEffect = lazy(() => import('./LightEffect'));
+const SteelEffect = lazy(() => import('./SteelEffect'));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const EFFECT_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
@@ -16,6 +17,7 @@ const EFFECT_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<a
   grass: GrassEffect,
   dark: DarkEffect,
   light: LightEffect,
+  steel: SteelEffect,
 };
 
 interface AttackEffectProps {

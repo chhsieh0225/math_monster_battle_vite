@@ -18,7 +18,7 @@ type SkillDef = {
   risky?: boolean;
 };
 
-type SkillSetKey = 'fire' | 'water' | 'grass' | 'electric' | 'lion';
+type SkillSetKey = 'fire' | 'water' | 'grass' | 'electric' | 'lion' | 'wolf';
 
 export const SKILL_SETS: Record<SkillSetKey, SkillDef[]> = {
   fire: [
@@ -50,5 +50,11 @@ export const SKILL_SETS: Record<SkillSetKey, SkillDef[]> = {
     { name: '獅吼破', icon: '✨', type: 'light', desc: '乘除求未知', basePower: 20, growth: 5, range: [2, 9], ops: ['unknown2'], color: '#d97706', bg: '#fef3c7' },
     { name: '烈焰獵擊', icon: '✨', type: 'light', desc: '大數求未知', basePower: 30, growth: 3, range: [4, 50], ops: ['unknown3'], color: '#b45309', bg: '#fde68a' },
     { name: '日蝕獅吼', icon: '💥', type: 'dark', type2: 'light', desc: '暗光·混合求未知', basePower: 40, growth: 3, range: [2, 12], ops: ['unknown4'], color: '#a855f7', bg: '#faf5ff', risky: true },
+  ],
+  wolf: [
+    { name: '分數判勢', icon: '⚔️', type: 'steel', desc: '分數比大小（> < =）', basePower: 12, growth: 6, range: [2, 9], ops: ['frac_cmp'], color: '#64748b', bg: '#f8fafc' },
+    { name: '同分斬', icon: '🛡️', type: 'steel', desc: '同分母加減', basePower: 20, growth: 5, range: [2, 10], ops: ['frac_same'], color: '#475569', bg: '#f1f5f9' },
+    { name: '通分裂鋒', icon: '⚙️', type: 'steel', desc: '異分母加減（通分）', basePower: 30, growth: 3, range: [2, 12], ops: ['frac_diff'], color: '#334155', bg: '#e2e8f0' },
+    { name: '鋼域終式', icon: '💥', type: 'steel', desc: '分數乘除（高階）', basePower: 40, growth: 3, range: [2, 12], ops: ['frac_muldiv'], color: '#1f2937', bg: '#e5e7eb', risky: true },
   ],
 };

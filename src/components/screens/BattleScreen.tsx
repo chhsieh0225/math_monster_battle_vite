@@ -389,6 +389,10 @@ function BattleScreenComponent({
     : question.op === "unknown2" ? t("battle.qtype.unknown2", "Unknown Mul/Div")
     : question.op === "unknown3" ? t("battle.qtype.unknown3", "Unknown Large Number")
     : question.op === "unknown4" ? t("battle.qtype.unknown4", "Unknown Mixed")
+    : question.op === "frac_cmp" ? t("battle.qtype.fracCmp", "Fraction Compare")
+    : question.op === "frac_same" ? t("battle.qtype.fracSame", "Same Denominator")
+    : question.op === "frac_diff" ? t("battle.qtype.fracDiff", "Different Denominator")
+    : question.op === "frac_muldiv" ? t("battle.qtype.fracMulDiv", "Fraction Mul/Div")
     : t("battle.qtype.mixed", "Mixed")), [question, t]);
   const impactPhaseClass = showHeavyFx ? `battle-impact-${impactPhase}` : "battle-impact-idle";
   const battleRootClassName = useMemo(() => (
@@ -470,6 +474,8 @@ function BattleScreenComponent({
       ? t("battle.specDef.water", "💨 Perfect Dodge")
       : starter.type === "electric"
         ? t("battle.specDef.electric", "⚡ Paralysis")
+        : starter.type === "steel"
+          ? t("battle.specDef.steel", "🛡️ Iron Guard")
         : starter.type === "light"
           ? t("battle.specDef.light", "✨ Lion Roar")
           : t("battle.specDef.grass", "🌿 Reflect");

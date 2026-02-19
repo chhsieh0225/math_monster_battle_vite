@@ -101,7 +101,7 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
         <div className="battle-question-type">{questionTypeLabel}</div>
         <div className="question-expression battle-question-expression">
           {question.display}
-          {question.op && question.op.startsWith('unknown') ? '' : ' = ?'}
+          {(question.op && (question.op.startsWith('unknown') || question.op === 'frac_cmp')) ? '' : ' = ?'}
         </div>
       </div>
 
@@ -109,7 +109,9 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
         <div className={`battle-feedback ${feedback.correct ? 'is-correct' : 'is-wrong'}`}>
           {feedback.correct
             ? t('battle.feedback.hit', '✅ Hit!')
-            : t('battle.feedback.answer', '❌ Answer is {answer}', { answer: feedback.answer ?? '?' })}
+            : t('battle.feedback.answer', '❌ Answer is {answer}', {
+              answer: question.answerLabel ?? feedback.answer ?? '?',
+            })}
         </div>
       )}
 
@@ -133,6 +135,7 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
         {question.choices.map((choice: number, i: number) => {
           let answerState = '';
           if (feedback) answerState = choice === question.answer ? 'is-correct' : 'is-dim';
+          const label = question.choiceLabels?.[i] ?? choice;
           return (
             <button
               className={`answer-btn battle-answer-btn ${answerState}`}
@@ -140,7 +143,7 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
               onClick={() => onAnswer(choice)}
               disabled={answered}
             >
-              {choice}
+              {label}
             </button>
           );
         })}

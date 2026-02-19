@@ -14,6 +14,7 @@ export const OPS = [
   '+', '-', '×', '÷',
   'mixed2', 'mixed3', 'mixed4',
   'unknown1', 'unknown2', 'unknown3', 'unknown4',
+  'frac_cmp', 'frac_same', 'frac_diff', 'frac_muldiv',
  ] as const;
 
 type OpId = (typeof OPS)[number];
@@ -132,6 +133,7 @@ const OP_GROUPS_BASE: GroupBase[] = [
   { id: 'div', icon: '➗', ops: ['÷'] },
   { id: 'unknown', icon: '🦁', ops: ['unknown1', 'unknown2', 'unknown3', 'unknown4'] },
   { id: 'mixed', icon: '⚡', ops: ['mixed2', 'mixed3', 'mixed4'] },
+  { id: 'fraction', icon: '🧩', ops: ['frac_cmp', 'frac_same', 'frac_diff', 'frac_muldiv'] },
 ];
 
 const GROUP_LABEL_FALLBACKS: Record<string, string> = {
@@ -141,6 +143,7 @@ const GROUP_LABEL_FALLBACKS: Record<string, string> = {
   div: 'Division',
   unknown: 'Unknown',
   mixed: 'Mixed Ops',
+  fraction: 'Fractions',
 };
 
 const GROUP_LABEL_KEYS: Record<string, string> = {
@@ -150,6 +153,7 @@ const GROUP_LABEL_KEYS: Record<string, string> = {
   div: 'dashboard.op.group.div',
   unknown: 'dashboard.op.group.unknown',
   mixed: 'dashboard.op.group.mixed',
+  fraction: 'dashboard.op.group.fraction',
 };
 
 export const OP_GROUPS: Array<GroupBase & { label: string }> = OP_GROUPS_BASE.map((group) => ({
@@ -169,6 +173,10 @@ const OP_ICONS: Record<string, string> = {
   unknown2: '🦁',
   unknown3: '🦁',
   unknown4: '🦁',
+  frac_cmp: '🧩',
+  frac_same: '🧩',
+  frac_diff: '🧩',
+  frac_muldiv: '🧩',
 };
 
 const OP_NAME_FALLBACKS: Record<string, string> = {
@@ -183,6 +191,10 @@ const OP_NAME_FALLBACKS: Record<string, string> = {
   unknown2: 'Unknown Mul/Div',
   unknown3: 'Unknown Large Number',
   unknown4: 'Unknown Mixed',
+  frac_cmp: 'Fraction Compare',
+  frac_same: 'Same Denominator',
+  frac_diff: 'Different Denominator',
+  frac_muldiv: 'Fraction Mul/Div',
 };
 
 const OP_NAME_KEYS: Record<string, string> = {
@@ -197,6 +209,10 @@ const OP_NAME_KEYS: Record<string, string> = {
   unknown2: 'dashboard.op.name.unknown2',
   unknown3: 'dashboard.op.name.unknown3',
   unknown4: 'dashboard.op.name.unknown4',
+  frac_cmp: 'dashboard.op.name.fracCmp',
+  frac_same: 'dashboard.op.name.fracSame',
+  frac_diff: 'dashboard.op.name.fracDiff',
+  frac_muldiv: 'dashboard.op.name.fracMulDiv',
 };
 
 const WEAK_ACTIONS: Record<string, string> = {
@@ -206,6 +222,7 @@ const WEAK_ACTIONS: Record<string, string> = {
   div: 'Practice exact division first, then remainder judgement and quotient checks.',
   unknown: 'Write equations first, verify by substitution, then scale from unknown1/2 to large numbers.',
   mixed: 'Mark operation order per question: multiply/divide before add/subtract.',
+  fraction: 'Compare fractions with cross-multiplication first, then practice common-denominator transforms before mul/div.',
   default: 'Use segmented practice and increase pace gradually while keeping accuracy.',
 };
 
@@ -216,6 +233,7 @@ const WEAK_ACTION_KEYS: Record<string, string> = {
   div: 'dashboard.weak.action.div',
   unknown: 'dashboard.weak.action.unknown',
   mixed: 'dashboard.weak.action.mixed',
+  fraction: 'dashboard.weak.action.fraction',
 };
 
 function toNum(v: unknown): number {
@@ -265,6 +283,10 @@ function createOpAgg(): OpAgg {
     unknown2: { a: 0, c: 0, ms: 0 },
     unknown3: { a: 0, c: 0, ms: 0 },
     unknown4: { a: 0, c: 0, ms: 0 },
+    frac_cmp: { a: 0, c: 0, ms: 0 },
+    frac_same: { a: 0, c: 0, ms: 0 },
+    frac_diff: { a: 0, c: 0, ms: 0 },
+    frac_muldiv: { a: 0, c: 0, ms: 0 },
   };
 }
 
@@ -293,6 +315,10 @@ function createOpData(): OpData {
     unknown2: createOpDataEntry(),
     unknown3: createOpDataEntry(),
     unknown4: createOpDataEntry(),
+    frac_cmp: createOpDataEntry(),
+    frac_same: createOpDataEntry(),
+    frac_diff: createOpDataEntry(),
+    frac_muldiv: createOpDataEntry(),
   };
 }
 

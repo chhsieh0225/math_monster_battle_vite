@@ -189,6 +189,18 @@ const STARTER_TEXT_EN: Dict<StarterText> = {
       { name: "Eclipse Roar", desc: "Darklight · mixed unknowns" },
     ],
   },
+  wolf: {
+    name: "Steelpup",
+    typeName: "Steel",
+    stages: ["Steelpup", "Bladewolf", "Aegis Wolf King"],
+    skill: "⚙️ Steel · Fractions",
+    moves: [
+      { name: "Fraction Gauge", desc: "Compare fractions (> < =)" },
+      { name: "Common-Denom Slash", desc: "Same-denominator add/subtract" },
+      { name: "LCM Breakfang", desc: "Different-denominator add/subtract" },
+      { name: "Iron Ratio Finale", desc: "Fraction multiply/divide" },
+    ],
+  },
   boss: {
     name: "Dark Dragon King",
     typeName: "Dark",
@@ -270,6 +282,7 @@ const MONSTER_NAME_EN: Dict<string> = {
   wild_starter_grass: "Wild Grass Cub",
   wild_starter_electric: "Wild Thunder Cub",
   wild_starter_lion: "Wild Lion Cub",
+  wild_starter_wolf: "Wild Steel Pup",
 };
 
 const MONSTER_NAME_EN_BY_ZH: Dict<string> = {
@@ -297,6 +310,9 @@ const MONSTER_NAME_EN_BY_ZH: Dict<string> = {
   小草獸: "Grass Cub",
   小雷獸: "Thunder Cub",
   小獅獸: "Lion Cub",
+  小鋼狼: "Steel Pup",
+  鋼刃狼: "Bladewolf",
+  蒼鋼狼王: "Aegis Wolf King",
   鐵甲天龍: "Aegis Skywyrm",
   岩石高崙: "Stone Golem",
   泥岩高崙: "Mudstone Golem",
@@ -378,6 +394,9 @@ const STARTER_DESC_EN: Dict<string> = {
   lion_0: "A brave plains cub with instinct for unknown variables in simple equations.",
   lion_1: "An evolved hunter with sharper claws and stronger unknown-solving power.",
   lion_2: "A final sacred lion wrapped in golden flames, revealing any hidden variable.",
+  wolf_0: "A steel-born wolf pup that learns to compare fractions before striking.",
+  wolf_1: "An evolved blade wolf that excels at same- and different-denominator operations.",
+  wolf_2: "A final steel king that executes fraction multiply/divide with precision.",
 };
 
 const STAGE_LABEL_EN: string[] = ["Base", "Evolved", "Final"];
@@ -398,6 +417,9 @@ const STARTER_NAME_EN_BY_ZH: Dict<string> = {
   小獅獸: "Lioncub",
   獅鬃獸: "Manelion",
   獅焰王: "Solar King",
+  小鋼狼: "Steelpup",
+  鋼刃狼: "Bladewolf",
+  蒼鋼狼王: "Aegis Wolf King",
   暗黑龍王: "Dark Dragon King",
   深淵九頭蛇: "Abyss Hydra",
   單翼狂龍: "One-Winged Frenzy Dragon",
@@ -428,6 +450,10 @@ const STARTER_TEXT_ZH: Dict<StarterText> = {
   lion: {
     name: "小獅獸",
     stages: ["小獅獸", "獅鬃獸", "獅焰王"],
+  },
+  wolf: {
+    name: "小鋼狼",
+    stages: ["小鋼狼", "鋼刃狼", "蒼鋼狼王"],
   },
   boss: {
     name: "暗黑龍王",
@@ -685,6 +711,7 @@ const STARTERS_FALLBACK_ZH: Dict<string> = {
   grass: "小草獸",
   electric: "小雷獸",
   lion: "小獅獸",
+  wolf: "小鋼狼",
   boss: "暗黑龍王",
   boss_hydra: "深淵九頭蛇",
   boss_crazy_dragon: "單翼狂龍",

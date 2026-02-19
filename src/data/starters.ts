@@ -4,6 +4,7 @@ import {
   playergrass0SVG, playergrass1SVG, playergrass2SVG,
   playerelectric0SVG, playerelectric1SVG, playerelectric2SVG,
   playerlion0SVG, playerlion1SVG, playerlion2SVG,
+  playerwolf0SVG, playerwolf1SVG, playerwolf2SVG,
 } from './sprites.ts';
 import type { StarterConfig } from '../types/game';
 import { SKILL_SETS } from './skillSets.ts';
@@ -48,4 +49,11 @@ export const STARTERS: StarterConfig[] = [
      {name:"獅焰王",emoji:"✨",svgFn:playerlion2SVG},
    ],
    moves: SKILL_SETS.lion},
+  {id:"wolf",name:"小鋼狼",type:"steel",typeIcon:"⚙️",typeName:"鋼",c1:"#94a3b8",c2:"#334155",
+   stages:[
+     {name:"小鋼狼",emoji:"⚙️",svgFn:playerwolf0SVG},
+     {name:"鋼刃狼",emoji:"⚙️",svgFn:playerwolf1SVG},
+     {name:"蒼鋼狼王",emoji:"⚙️",svgFn:playerwolf2SVG},
+   ],
+   moves: SKILL_SETS.wolf},
 ];

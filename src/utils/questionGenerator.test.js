@@ -89,6 +89,34 @@ test('genQ fraction arithmetic question returns readable fraction labels', () =>
   assert.equal(q.choiceLabels[q.answer], q.answerLabel);
 });
 
+test('genQ frac_same subtraction avoids zero-result shortcuts', () => {
+  const move = { range: [2, 9], ops: ["frac_same"] };
+  let minusSeen = 0;
+  for (let i = 0; i < 120; i += 1) {
+    const q = genQ(move, 1);
+    if (!q.display.includes('-')) continue;
+    minusSeen += 1;
+    assert.notEqual(q.answerLabel, "0");
+  }
+  assert.equal(minusSeen > 0, true);
+});
+
+test('genQ fraction labels remain finite and fill choices for narrow range', () => {
+  const move = { range: [2, 2], ops: ["frac_same"] };
+  const q = genQ(move, 1);
+  assert.equal(Array.isArray(q.choiceLabels), true);
+  assert.equal(q.choiceLabels.length, 4);
+  assert.equal(new Set(q.choiceLabels).size, 4);
+});
+
+test('genQ fraction steps can be localized through translator', () => {
+  const move = { range: [2, 9], ops: ["frac_diff"] };
+  const q = genQ(move, 1, {
+    t: (key, fallback) => (key.startsWith("question.step.frac") ? `LOC ${key}` : fallback),
+  });
+  assert.equal(q.steps.some((step) => String(step).startsWith("LOC question.step.frac")), true);
+});
+
 test('genQ multiplication distractors prioritize neighboring table values', () => {
   const move = { range: [7, 8], ops: ["×"] };
   const randomSeq = [0.2, 0.8, 0.15, 0.65, 0.35, 0.55, 0.75, 0.95];

@@ -108,8 +108,32 @@ function buildFractionChoiceLabels(
   };
   pushUnique(correctLabel);
   for (const label of candidateLabels) pushUnique(label);
-  while (labels.length < targetCount) {
+  let randomGuard = 0;
+  while (labels.length < targetCount && randomGuard < 64) {
     pushUnique(randomFractionLabel(range));
+    randomGuard += 1;
+  }
+  if (labels.length < targetCount) {
+    // Deterministic fallback to avoid theoretical infinite loops on very narrow ranges.
+    let fallbackDen = Math.max(2, Math.min(range[0], range[1]));
+    let fallbackNum = 1;
+    let fallbackGuard = 0;
+    while (labels.length < targetCount && fallbackGuard < 256) {
+      pushUnique(fractionText(simplifyFraction(fallbackNum, fallbackDen)));
+      fallbackNum += 1;
+      if (fallbackNum >= fallbackDen) {
+        fallbackDen += 1;
+        fallbackNum = 1;
+      }
+      fallbackGuard += 1;
+    }
+  }
+  if (labels.length < targetCount) {
+    let numericFallback = 1;
+    while (labels.length < targetCount && numericFallback < 32) {
+      pushUnique(`${numericFallback}/${numericFallback + 1}`);
+      numericFallback += 1;
+    }
   }
   return labels.slice(0, targetCount);
 }
@@ -136,7 +160,7 @@ function makeLabeledChoices(args: {
   };
 }
 
-function genFractionCompare(range: [number, number]): GeneratedQuestion {
+function genFractionCompare(range: [number, number], tr: Translator): GeneratedQuestion {
   const dMin = Math.max(2, Math.min(range[0], range[1]));
   const dMax = Math.max(dMin, Math.min(12, Math.max(range[0], range[1]) + 2));
   let a = rr(1, dMax - 1);
@@ -159,14 +183,19 @@ function genFractionCompare(range: [number, number]): GeneratedQuestion {
   const leftCross = a * d;
   const rightCross = c * b;
   const answerLabel = leftCross > rightCross ? '>' : leftCross < rightCross ? '<' : '=';
+  const relation = leftCross > rightCross ? '>' : leftCross < rightCross ? '<' : '=';
   const steps = [
     `${a}/${b} ? ${c}/${d}`,
-    `交叉比較：${a}×${d} = ${leftCross}，${c}×${b} = ${rightCross}`,
-    leftCross > rightCross
-      ? `${leftCross} > ${rightCross}，所以 ${a}/${b} > ${c}/${d}`
-      : leftCross < rightCross
-        ? `${leftCross} < ${rightCross}，所以 ${a}/${b} < ${c}/${d}`
-        : `${leftCross} = ${rightCross}，所以 ${a}/${b} = ${c}/${d}`,
+    tr(
+      "question.step.fracCompareCross",
+      "Cross-multiply: {a}×{d} = {left}, {c}×{b} = {right}",
+      { a, d, left: leftCross, c, b, right: rightCross },
+    ),
+    tr(
+      "question.step.fracCompareResult",
+      "{left} {relation} {right}, so {a}/{b} {relation} {c}/{d}",
+      { left: leftCross, relation, right: rightCross, a, b, c, d },
+    ),
   ];
 
   return makeLabeledChoices({
@@ -178,15 +207,29 @@ function genFractionCompare(range: [number, number]): GeneratedQuestion {
   });
 }
 
-function genFractionSameDen(range: [number, number]): GeneratedQuestion {
+function genFractionSameDen(range: [number, number], tr: Translator, depth = 0): GeneratedQuestion {
+  if (depth > 20) {
+    return genFractionCompare(range, tr);
+  }
   const dMin = Math.max(2, Math.min(range[0], range[1]));
   const dMax = Math.max(dMin, Math.min(12, Math.max(range[0], range[1]) + 2));
   const den = rr(dMin, dMax);
   let n1 = rr(1, Math.max(1, den - 1));
   let n2 = rr(1, Math.max(1, den - 1));
-  const op = chance(0.5) ? '+' : '-';
-  if (op === '-' && n1 < n2) [n1, n2] = [n2, n1];
+  let op: '+' | '-' = chance(0.5) ? '+' : '-';
+  if (op === '-') {
+    if (n1 === n2) {
+      // Denominator=2 only has 1/2; subtraction would always be zero.
+      if (den <= 2) op = '+';
+      else if (n2 > 1) n2 -= 1;
+      else n1 += 1;
+    }
+    if (op === '-' && n1 < n2) [n1, n2] = [n2, n1];
+  }
   const rawNumerator = op === '+' ? n1 + n2 : n1 - n2;
+  if (op === '-' && rawNumerator <= 0) {
+    return genFractionSameDen(range, tr, depth + 1);
+  }
   const raw = { n: rawNumerator, d: den };
   const simplified = simplifyFraction(raw.n, raw.d);
   const answerLabel = fractionText(simplified);
@@ -200,9 +243,19 @@ function genFractionSameDen(range: [number, number]): GeneratedQuestion {
   ];
   const choiceLabels = buildFractionChoiceLabels(answerLabel, candidates, range, 4);
   const steps = [
-    `同分母直接運算分子：${n1} ${op} ${n2} = ${raw.n}`,
-    `${n1}/${den} ${op} ${n2}/${den} = ${raw.n}/${den}`,
-    rawLabel === answerLabel ? `答案：${answerLabel}` : `約分：${rawLabel} = ${answerLabel}`,
+    tr(
+      "question.step.fracSameNumerator",
+      "Same denominator: {n1} {op} {n2} = {result}",
+      { n1, op, n2, result: raw.n },
+    ),
+    tr(
+      "question.step.fracSameCompose",
+      "{n1}/{den} {op} {n2}/{den} = {result}/{den}",
+      { n1, den, op, n2, result: raw.n },
+    ),
+    rawLabel === answerLabel
+      ? tr("question.step.fracAnswer", "Answer: {answer}", { answer: answerLabel })
+      : tr("question.step.fracSimplify", "Simplify: {raw} = {answer}", { raw: rawLabel, answer: answerLabel }),
   ];
 
   return makeLabeledChoices({
@@ -214,8 +267,8 @@ function genFractionSameDen(range: [number, number]): GeneratedQuestion {
   });
 }
 
-function genFractionDiffDen(range: [number, number], depth = 0): GeneratedQuestion {
-  if (depth > 20) return genFractionSameDen(range);
+function genFractionDiffDen(range: [number, number], tr: Translator, depth = 0): GeneratedQuestion {
+  if (depth > 20) return genFractionSameDen(range, tr);
   const dMin = Math.max(2, Math.min(range[0], range[1]));
   const dMax = Math.max(dMin + 1, Math.min(12, Math.max(range[0], range[1]) + 3));
   const d1 = rr(dMin, dMax);
@@ -228,7 +281,7 @@ function genFractionDiffDen(range: [number, number], depth = 0): GeneratedQuesti
   const scaledN1 = n1 * (commonDen / d1);
   const scaledN2 = n2 * (commonDen / d2);
   const rawNumerator = op === '+' ? scaledN1 + scaledN2 : scaledN1 - scaledN2;
-  if (rawNumerator < 0) return genFractionDiffDen(range, depth + 1);
+  if (rawNumerator < 0) return genFractionDiffDen(range, tr, depth + 1);
   const raw = { n: rawNumerator, d: commonDen };
   const simplified = simplifyFraction(raw.n, raw.d);
   const answerLabel = fractionText(simplified);
@@ -243,9 +296,19 @@ function genFractionDiffDen(range: [number, number], depth = 0): GeneratedQuesti
   ];
   const choiceLabels = buildFractionChoiceLabels(answerLabel, candidates, range, 4);
   const steps = [
-    `通分到 ${commonDen}：${n1}/${d1} = ${scaledN1}/${commonDen}，${n2}/${d2} = ${scaledN2}/${commonDen}`,
-    `${scaledN1}/${commonDen} ${op} ${scaledN2}/${commonDen} = ${raw.n}/${commonDen}`,
-    rawLabel === answerLabel ? `答案：${answerLabel}` : `約分：${rawLabel} = ${answerLabel}`,
+    tr(
+      "question.step.fracCommonDen",
+      "Convert to denominator {commonDen}: {n1}/{d1} = {scaledN1}/{commonDen}, {n2}/{d2} = {scaledN2}/{commonDen}",
+      { commonDen, n1, d1, scaledN1, n2, d2, scaledN2 },
+    ),
+    tr(
+      "question.step.fracDiffCompose",
+      "{scaledN1}/{commonDen} {op} {scaledN2}/{commonDen} = {raw}/{commonDen}",
+      { scaledN1, commonDen, op, scaledN2, raw: raw.n },
+    ),
+    rawLabel === answerLabel
+      ? tr("question.step.fracAnswer", "Answer: {answer}", { answer: answerLabel })
+      : tr("question.step.fracSimplify", "Simplify: {raw} = {answer}", { raw: rawLabel, answer: answerLabel }),
   ];
 
   return makeLabeledChoices({
@@ -257,7 +320,7 @@ function genFractionDiffDen(range: [number, number], depth = 0): GeneratedQuesti
   });
 }
 
-function genFractionMulDiv(range: [number, number]): GeneratedQuestion {
+function genFractionMulDiv(range: [number, number], tr: Translator): GeneratedQuestion {
   const dMin = Math.max(2, Math.min(range[0], range[1]));
   const dMax = Math.max(dMin + 1, Math.min(12, Math.max(range[0], range[1]) + 3));
   const n1 = rr(1, dMax - 1);
@@ -284,14 +347,30 @@ function genFractionMulDiv(range: [number, number]): GeneratedQuestion {
 
   const steps = op === '×'
     ? [
-      `分子乘分子、分母乘分母：(${n1}×${n2})/(${d1}×${d2})`,
-      `得到 ${n1 * n2}/${d1 * d2}`,
-      `約分後：${answerLabel}`,
+      tr(
+        "question.step.fracMulRule",
+        "Multiply numerators and denominators: ({n1}×{n2})/({d1}×{d2})",
+        { n1, n2, d1, d2 },
+      ),
+      tr(
+        "question.step.fracMulRaw",
+        "Get {n}/{d}",
+        { n: n1 * n2, d: d1 * d2 },
+      ),
+      tr("question.step.fracSimplifiedFinal", "After simplify: {answer}", { answer: answerLabel }),
     ]
     : [
-      `除以分數要乘倒數：${n1}/${d1} ÷ ${n2}/${d2} = ${n1}/${d1} × ${d2}/${n2}`,
-      `分子乘分子、分母乘分母：(${n1}×${d2})/(${d1}×${n2})`,
-      `約分後：${answerLabel}`,
+      tr(
+        "question.step.fracDivInvert",
+        "Divide by a fraction means multiply by reciprocal: {n1}/{d1} ÷ {n2}/{d2} = {n1}/{d1} × {d2}/{n2}",
+        { n1, d1, n2, d2 },
+      ),
+      tr(
+        "question.step.fracDivRule",
+        "Multiply numerators and denominators: ({n1}×{d2})/({d1}×{n2})",
+        { n1, d2, d1, n2 },
+      ),
+      tr("question.step.fracSimplifiedFinal", "After simplify: {answer}", { answer: answerLabel }),
     ];
 
   return makeLabeledChoices({
@@ -738,10 +817,10 @@ export function genQ(
   if (op === "unknown4") return makeChoices(genUnknown4(range));
 
   // ── Fraction operations (steel starter) ──
-  if (op === "frac_cmp") return genFractionCompare(range);
-  if (op === "frac_same") return genFractionSameDen(range);
-  if (op === "frac_diff") return genFractionDiffDen(range);
-  if (op === "frac_muldiv") return genFractionMulDiv(range);
+  if (op === "frac_cmp") return genFractionCompare(range, tr);
+  if (op === "frac_same") return genFractionSameDen(range, tr);
+  if (op === "frac_diff") return genFractionDiffDen(range, tr);
+  if (op === "frac_muldiv") return genFractionMulDiv(range, tr);
 
   // ── Single operations (original starters) ──
   let draft: QuestionDraft;

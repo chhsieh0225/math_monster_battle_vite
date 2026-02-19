@@ -9,6 +9,7 @@ export const TYPE_EFF = {
   light: { grass: 1.0, fire: 1.0, water: 1.0, electric: 1.0, ghost: 1.5, steel: 0.6, dark: 1.5, light: 0.6, poison: 1.5, rock: 1.0 },
   poison: { grass: 1.5, fire: 1.0, water: 1.5, electric: 1.0, ghost: 0.6, steel: 0.6, dark: 1.0, light: 0.6, poison: 0.6, rock: 0.6 },
   rock: { grass: 0.6, fire: 1.5, water: 0.6, electric: 1.5, ghost: 1.0, steel: 0.6, dark: 1.0, light: 1.0, poison: 1.5, rock: 0.6 },
+  steel: { grass: 1.0, fire: 0.6, water: 0.6, electric: 0.6, ghost: 1.5, steel: 0.6, dark: 1.0, light: 1.0, poison: 1.0, rock: 1.5 },
 } as const;
 
 type AttackType = keyof typeof TYPE_EFF;

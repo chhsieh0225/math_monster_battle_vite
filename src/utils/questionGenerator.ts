@@ -107,6 +107,49 @@ function formatDecimal(value: number, digits: number, keepTrailingZero = false):
   return fixed.replace(/\.?0+$/, '');
 }
 
+function formatScaledInteger(value: number, digits: number, keepTrailingZero = false): string {
+  const safeDigits = Math.max(0, Math.trunc(digits));
+  const sign = value < 0 ? '-' : '';
+  const abs = Math.abs(Math.trunc(value));
+  if (safeDigits === 0) return `${sign}${abs}`;
+  const raw = String(abs).padStart(safeDigits + 1, '0');
+  const whole = raw.slice(0, -safeDigits) || '0';
+  const fracRaw = raw.slice(-safeDigits);
+  const frac = keepTrailingZero ? fracRaw : fracRaw.replace(/0+$/, '');
+  if (!frac) return `${sign}${whole}`;
+  return `${sign}${whole}.${frac}`;
+}
+
+function exactDecimalFromFraction(
+  numerator: number,
+  denominator: number,
+): { label: string; digits: number } | null {
+  const simplified = simplifyFraction(numerator, denominator);
+  let reducedDen = Math.abs(simplified.d);
+  if (reducedDen === 0) return null;
+  let count2 = 0;
+  let count5 = 0;
+  while (reducedDen % 2 === 0) {
+    reducedDen /= 2;
+    count2 += 1;
+  }
+  while (reducedDen % 5 === 0) {
+    reducedDen /= 5;
+    count5 += 1;
+  }
+  if (reducedDen !== 1) return null;
+
+  const digits = Math.max(count2, count5);
+  const scale = Math.pow(10, digits);
+  const scaled = (simplified.n * scale) / simplified.d;
+  if (!Number.isFinite(scaled)) return null;
+  const scaledInt = Math.round(scaled);
+  return {
+    label: formatScaledInteger(scaledInt, digits, false),
+    digits,
+  };
+}
+
 function normalizeDecimalLabel(label: string, digits = 2): string {
   const text = String(label || '').trim();
   if (!text) return text;
@@ -516,8 +559,9 @@ function genDecimalFrac(range: [number, number], tr: Translator): GeneratedQuest
 
   // decimal -> fraction
   if (chance(0.55)) {
-    const decimalDigits = den >= 20 ? 2 : 1;
-    const decimalLabel = normalizeDecimalLabel(formatDecimal(n / den, decimalDigits, false), decimalDigits);
+    const exact = exactDecimalFromFraction(n, den);
+    if (!exact) return genDecimalFrac(range, tr);
+    const decimalLabel = exact.label;
     const answerLabel = fractionText(simplified);
     const candidates = [
       `${n}/${den}`,
@@ -545,9 +589,10 @@ function genDecimalFrac(range: [number, number], tr: Translator): GeneratedQuest
   // fraction -> decimal
   const numerator = simplified.n;
   const denominator = simplified.d;
-  const decimalValue = numerator / denominator;
-  const decimalDigits = denominator >= 20 ? 2 : 1;
-  const answerLabel = normalizeDecimalLabel(formatDecimal(decimalValue, decimalDigits, false), decimalDigits);
+  const exact = exactDecimalFromFraction(numerator, denominator);
+  if (!exact) return genDecimalFrac(range, tr);
+  const answerLabel = exact.label;
+  const decimalDigits = Math.max(1, exact.digits);
   const answer = Number(answerLabel);
   const step = 1 / Math.pow(10, decimalDigits);
   const candidateLabels = [
@@ -576,7 +621,7 @@ function genDecimalFrac(range: [number, number], tr: Translator): GeneratedQuest
 
 function genDecimalMul(range: [number, number], tr: Translator): GeneratedQuestion {
   const a = randomDecimalValue(range, 1);
-  const b = randomDecimalValue(range, chance(0.28) ? 2 : 1);
+  const b = randomDecimalValue(range, 1);
   const answerRaw = a * b;
   const answerLabel = normalizeDecimalLabel(formatDecimal(answerRaw, 2, false), 2);
   const answer = Number(answerLabel);
@@ -588,8 +633,7 @@ function genDecimalMul(range: [number, number], tr: Translator): GeneratedQuesti
   ];
   const choiceLabels = buildDecimalChoiceLabels(answerLabel, candidateLabels, range, 2, 4);
   const aLabel = formatDecimal(a, 1, true);
-  const bDigits = Number.isInteger(b * 10) ? 1 : 2;
-  const bLabel = formatDecimal(b, bDigits, true);
+  const bLabel = formatDecimal(b, 1, true);
   const steps = [
     tr("question.step.decMulCompute", "Decimal multiplication: {a} × {b} = {answer}", {
       a: aLabel,
@@ -608,20 +652,39 @@ function genDecimalMul(range: [number, number], tr: Translator): GeneratedQuesti
 }
 
 function genDecimalDiv(range: [number, number], tr: Translator): GeneratedQuestion {
-  const quotient = randomDecimalValue(range, chance(0.3) ? 2 : 1);
-  const divisor = randomDecimalValue([1, Math.max(2, Math.min(range[1], 9))], 1);
-  const dividend = Number(formatDecimal(quotient * divisor, 2, false));
-  const answerLabel = normalizeDecimalLabel(formatDecimal(quotient, 2, false), 2);
+  const answerDigits = chance(0.3) ? 2 : 1;
+  const answerScale = Math.pow(10, answerDigits);
+  const lo = Math.max(1, Math.min(range[0], range[1]));
+  const hi = Math.max(lo + 1, Math.max(range[0], range[1]));
+  const answerInt = rr(lo * answerScale, hi * answerScale);
+
+  const divisorDigits = chance(0.45) ? 1 : 0;
+  const divisorScale = Math.pow(10, divisorDigits);
+  const divisorBaseMax = Math.max(2, Math.min(9, hi));
+  let divisorInt = rr(2 * divisorScale, divisorBaseMax * divisorScale);
+  if (divisorDigits === 1) {
+    if (divisorInt < 11) divisorInt = 11;
+    if (divisorInt % 10 === 0) divisorInt += 1;
+  }
+
+  const dividendInt = answerInt * divisorInt;
+  const dividendDigits = answerDigits + divisorDigits;
+  const answerLabel = formatScaledInteger(answerInt, answerDigits, false);
+  const dividendLabel = formatScaledInteger(dividendInt, dividendDigits, false);
+  const divisorLabel = formatScaledInteger(divisorInt, divisorDigits, divisorDigits > 0);
   const answer = Number(answerLabel);
+  const step = 1 / answerScale;
   const candidateLabels = [
-    formatDecimal(Math.max(0, answer + 0.1), 2, false),
-    formatDecimal(Math.max(0, answer - 0.1), 2, false),
-    formatDecimal(Math.max(0, answer + 1), 2, false),
-    formatDecimal(Math.max(0, dividend / Math.max(0.2, divisor + 0.1)), 2, false),
+    formatDecimal(Math.max(0, answer + step), answerDigits, false),
+    formatDecimal(Math.max(0, answer - step), answerDigits, false),
+    formatDecimal(Math.max(0, answer + 1), answerDigits, false),
+    formatDecimal(
+      Math.max(0, divisorDigits > 0 ? answer / 10 : answer + step * 2),
+      answerDigits,
+      false,
+    ),
   ];
-  const choiceLabels = buildDecimalChoiceLabels(answerLabel, candidateLabels, range, 2, 4);
-  const dividendLabel = formatDecimal(dividend, 2, false);
-  const divisorLabel = formatDecimal(divisor, 1, true);
+  const choiceLabels = buildDecimalChoiceLabels(answerLabel, candidateLabels, range, answerDigits, 4);
   const steps = [
     tr("question.step.decDivCompute", "Decimal division: {a} ÷ {b} = {answer}", {
       a: dividendLabel,
@@ -635,7 +698,7 @@ function genDecimalDiv(range: [number, number], tr: Translator): GeneratedQuesti
     steps,
     answerLabel,
     choiceLabels,
-    normalizeLabel: (label: string) => normalizeDecimalLabel(label, 2),
+    normalizeLabel: (label: string) => normalizeDecimalLabel(label, answerDigits),
   });
 }
 

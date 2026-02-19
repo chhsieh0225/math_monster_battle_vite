@@ -28,6 +28,36 @@ function normalizeFractionLabel(label) {
   return `${nn}/${dd}`;
 }
 
+function simplifyFrac(n, d) {
+  const safeD = d === 0 ? 1 : d;
+  const sign = safeD < 0 ? -1 : 1;
+  const g = gcd(n, safeD);
+  return { n: (n / g) * sign, d: Math.abs(safeD / g) };
+}
+
+function decimalLabelToFraction(label) {
+  const text = String(label).trim();
+  const m = /^(-?\d+)(?:\.(\d+))?$/.exec(text);
+  if (!m) return null;
+  const whole = Number(m[1]);
+  const frac = m[2] || '';
+  if (!Number.isFinite(whole)) return null;
+  if (!frac) return { n: whole, d: 1 };
+  const denom = 10 ** frac.length;
+  const absWhole = Math.abs(whole);
+  const num = absWhole * denom + Number(frac);
+  const signedNum = whole < 0 ? -num : num;
+  return simplifyFrac(signedNum, denom);
+}
+
+function divideFractions(a, b) {
+  return simplifyFrac(a.n * b.d, a.d * b.n);
+}
+
+function equalFractions(a, b) {
+  return a.n * b.d === b.n * a.d;
+}
+
 test('genQ returns 4 choices and includes the answer', () => {
   const move = { range: [2, 10], ops: ["+"] };
   const q = genQ(move, 1);
@@ -126,11 +156,44 @@ test('genQ decimal fraction-convert route supports both conversion directions', 
   }
 });
 
+test('genQ decimal fraction->decimal keeps exact value (no rounded recurring answers)', () => {
+  const move = { range: [2, 12], ops: ["dec_frac"] };
+  let checked = 0;
+  for (let i = 0; i < 240; i += 1) {
+    const q = genQ(move, 1);
+    const m = /^(-?\d+)\s*\/\s*(-?\d+)\s*=\s*\?$/.exec(String(q.display).trim());
+    if (!m) continue;
+    const frac = simplifyFrac(Number(m[1]), Number(m[2]));
+    const answerFrac = decimalLabelToFraction(q.answerLabel);
+    assert.notEqual(answerFrac, null);
+    assert.equal(equalFractions(frac, answerFrac), true);
+    checked += 1;
+  }
+  assert.equal(checked > 0, true);
+});
+
 test('genQ decimal mul/div routes no longer fall through to addition', () => {
   const move = { range: [2, 12], ops: ["dec_mul", "dec_div"] };
   for (let i = 0; i < 60; i += 1) {
     const q = genQ(move, 1);
     assert.equal(["dec_mul", "dec_div"].includes(q.op), true);
+  }
+});
+
+test('genQ decimal division produces exact quotient for displayed operands', () => {
+  const move = { range: [2, 12], ops: ["dec_div"] };
+  for (let i = 0; i < 120; i += 1) {
+    const q = genQ(move, 1);
+    const m = /^([0-9]+(?:\.[0-9]+)?)\s*÷\s*([0-9]+(?:\.[0-9]+)?)$/.exec(String(q.display).trim());
+    assert.notEqual(m, null);
+    const left = decimalLabelToFraction(m[1]);
+    const right = decimalLabelToFraction(m[2]);
+    const answer = decimalLabelToFraction(q.answerLabel);
+    assert.notEqual(left, null);
+    assert.notEqual(right, null);
+    assert.notEqual(answer, null);
+    const exact = divideFractions(left, right);
+    assert.equal(equalFractions(exact, answer), true);
   }
 });
 

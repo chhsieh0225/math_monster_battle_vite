@@ -96,6 +96,13 @@ function preloadSceneBackground(src: string): void {
   }
 }
 
+function resolveSceneBackground(sceneType: string | null | undefined): string | null {
+  if (!sceneType) return null;
+  const key = sceneType as keyof typeof BG_IMGS;
+  const src = BG_IMGS[key];
+  return typeof src === 'string' ? src : null;
+}
+
 // ─── ErrorBoundary: catches render crashes to show error instead of black screen ───
 type ErrorBoundaryProps = {
   children?: ReactNode;
@@ -216,6 +223,34 @@ function App() {
   useEffect(() => {
     Object.values(BG_IMGS).forEach((src) => preloadSceneBackground(src));
   }, []);
+
+  // Explicitly preload current + next battle scene backgrounds to smooth transitions.
+  useEffect(() => {
+    if (S.screen !== 'battle') return;
+
+    const sceneTypes = new Set<string>();
+    const currentSceneType = S.enemy?.sceneMType || S.enemy?.mType;
+    const subSceneType = S.enemySub?.sceneMType || S.enemySub?.mType;
+    const nextEnemy = S.enemies?.[(S.round || 0) + 1] || null;
+    const nextSceneType = nextEnemy?.sceneMType || nextEnemy?.mType;
+
+    if (currentSceneType) sceneTypes.add(currentSceneType);
+    if (subSceneType) sceneTypes.add(subSceneType);
+    if (nextSceneType) sceneTypes.add(nextSceneType);
+
+    sceneTypes.forEach((sceneType) => {
+      const src = resolveSceneBackground(sceneType);
+      if (src) preloadSceneBackground(src);
+    });
+  }, [
+    S.screen,
+    S.round,
+    S.enemies,
+    S.enemy?.sceneMType,
+    S.enemy?.mType,
+    S.enemySub?.sceneMType,
+    S.enemySub?.mType,
+  ]);
 
   const handleSetBgmMuted = (next: boolean) => {
     const m = V.sfx.setBgmMuted(next);

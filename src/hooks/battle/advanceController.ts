@@ -35,6 +35,12 @@ export function runAdvanceController({
   continueFromVictory,
   consumePendingTextAdvanceAction,
 }: RunAdvanceControllerArgs): void {
+  // Boss intro overlay completed → reveal text phase
+  if (phase === 'bossIntro') {
+    setPhase('text');
+    return;
+  }
+
   if (phase === 'text') {
     const pendingAction = consumePendingTextAdvanceAction?.() || null;
     if (pendingAction) {

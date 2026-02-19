@@ -162,7 +162,9 @@ export function runStartBattleFlow({
     }
   }
 
-  setPhase('text');
+  // Boss encounters start with a cinematic intro phase;
+  // the overlay's onComplete callback will transition to 'text'.
+  setPhase(isBoss ? 'bossIntro' : 'text');
   if (enemySub) {
     if (allySub) {
       const intro = tr(

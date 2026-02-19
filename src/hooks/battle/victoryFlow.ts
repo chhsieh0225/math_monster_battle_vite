@@ -1,6 +1,7 @@
 import type { AchievementId } from '../../types/game';
 import type { CollectionAddResult } from '../../utils/collectionStore.ts';
 import { resolveBattleDrop } from '../../utils/dropResolver.ts';
+import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -186,7 +187,7 @@ export function runVictoryFlow({
       .catch(() => { /* non-critical */ });
   }
 
-  setBText(tr(
+  const victoryGainText = tr(
     t,
     'battle.victory.gain',
     '{enemy} {verb}! Gained {xp} EXP {drop}',
@@ -196,7 +197,21 @@ export function runVictoryFlow({
       xp,
       drop,
     },
-  ));
+  );
+  const isBossVictory = BOSS_IDS.has(enemy.id ?? '');
+  const bossRewardText = isBossVictory
+    ? tr(
+      t,
+      'battle.victory.bossReward',
+      '🏆 Boss reward acquired: {drop}',
+      { drop: drop || '🎁' },
+    )
+    : '';
+  const finalVictoryText = bossRewardText
+    ? `${victoryGainText}\n${bossRewardText}`
+    : victoryGainText;
+
+  setBText(finalVictoryText);
   setPhase('victory');
   sfx.play('victory');
 }

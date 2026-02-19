@@ -1876,6 +1876,7 @@ function clearBgmMediaRampTimers(): void {
 
 function stopAndResetMediaElement(el: HTMLAudioElement): void {
   try {
+    el.onended = null;
     el.pause();
     el.currentTime = 0;
     el.volume = clampUnit(bgmVolume);
@@ -2063,6 +2064,19 @@ function startBgmMedia(track: BgmTrack): boolean {
   const token = ++bgmMediaToken;
   bgmMediaEl = el;
   bgmCurrent = track;
+  // Fallback loop guard: if interval/crossfade misses (e.g. throttled tab), keep looping.
+  el.onended = () => {
+    if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) return;
+    try {
+      tuneLoopStartOffset(el);
+      const retry = el.play();
+      retry.catch(() => {
+        armBgmUnlockRetry(track);
+      });
+    } catch {
+      armBgmUnlockRetry(track);
+    }
+  };
   const playPromise = el.play();
   const onReady = () => {
     if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) return;
@@ -2277,7 +2291,8 @@ const sfx = {
     if (bgmCurrent === track) return;
     pendingBgmTrack = track;
     const boot = () => {
-      if (!ready || bgmMuted || pendingBgmTrack !== track) return;
+      const canStartMedia = Boolean(BGM_FILE_BY_TRACK[track]);
+      if ((!ready && !canStartMedia) || bgmMuted || pendingBgmTrack !== track) return;
       try { startBgmLoop(track); } catch { /* best-effort */ }
       if (bgmCurrent === track) pendingBgmTrack = null;
     };

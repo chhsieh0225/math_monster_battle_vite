@@ -29,6 +29,7 @@ export type ScreenName =
 
 export type BattlePhase =
   | "menu"
+  | "bossIntro"
   | "question"
   | "text"
   | "playerAtk"

@@ -294,7 +294,7 @@ export function useBattle() {
   // ──── Learning model 2.0: per-question-type adaptive difficulty ────
   const abilityModelRef = useRef(createAbilityModel(2));
 
-  const _updateAbility = (op: string | undefined, correct: boolean): void => {
+  const _updateAbility = useCallback((op: string | undefined, correct: boolean): void => {
     if (!op) return;
     const { nextModel, nextLevel } = updateAbilityModel({
       model: abilityModelRef.current,
@@ -303,11 +303,11 @@ export function useBattle() {
     });
     abilityModelRef.current = nextModel;
     setDiffLevel(nextLevel);
-  };
+  }, [setDiffLevel]);
 
-  const _getMoveDiffLevel = (move: MoveVm | undefined): number => (
+  const _getMoveDiffLevel = useCallback((move: MoveVm | undefined): number => (
     getDifficultyLevelForOps(abilityModelRef.current, move?.ops, 2)
-  );
+  ), []);
 
   const getActingStarter = resolveActingStarter;
   const getPvpTurnName = useCallback(
@@ -607,7 +607,7 @@ export function useBattle() {
     });
   }, [setDmgs, setParts, setAtkEffect, setEffMsg]);
 
-  const startGame = (
+  const startGame = useCallback((
     starterOverride?: StarterVm | null,
     modeOverride: BattleMode | null = null,
     allyOverride: StarterVm | null = null,
@@ -669,9 +669,40 @@ export function useBattle() {
       },
       activateQueuedChallenge,
     }, starterOverride, modeOverride, allyOverride);
-  };
+  }, [
+    setDailyChallengeFeedback,
+    setTowerChallengeFeedback,
+    queuedChallenge,
+    activeChallenge,
+    buildNewRoster,
+    invalidateAsyncWork,
+    beginRun,
+    clearTimer,
+    resetCoopRotatePending,
+    chance,
+    t,
+    setEnemies,
+    setTimedMode,
+    setCoopActiveSlot,
+    dispatchBattle,
+    appendSessionEvent,
+    initSession,
+    setScreenFromString,
+    playBattleIntro,
+    pvpState,
+    UI,
+    resetRunRuntimeState,
+    startBattle,
+    sr,
+    battleMode,
+    pvpStarter2,
+    locale,
+    pickIndex,
+    getPlayerMaxHp,
+    activateQueuedChallenge,
+  ]);
 
-  const quitGame = () => {
+  const quitGame = useCallback(() => {
     runQuitGameWithContext({
       clearTimer,
       appendQuitEventIfOpen,
@@ -679,9 +710,9 @@ export function useBattle() {
       endSession: _endSession,
       setScreen: setScreenFromString,
     });
-  };
+  }, [clearTimer, appendQuitEventIfOpen, sr, _endSession, setScreenFromString]);
 
-  const handlePlayerPartyKo = ({
+  const handlePlayerPartyKo = useCallback(({
     target = 'main',
     reason = t('battle.ally.ko', 'Your partner has fallen...'),
   }: { target?: 'main' | 'sub'; reason?: string } = {}) => {
@@ -700,28 +731,24 @@ export function useBattle() {
       setScreen: setScreenFromString,
       t,
     }, { target, reason });
-  };
-
-  const runAllySupportTurn = ({ delayMs = 850, onDone }: { delayMs?: number; onDone?: () => void } = {}) => {
-    return runAllySupportTurnWithContext({
-      sr,
-      safeTo,
-      chance,
-      rand,
-      setBText,
-      setPhase,
-      setEAnim,
-      setEHp,
-      addD,
-      addP,
-      sfx,
-      handleVictory,
-      t,
-    }, { delayMs, onDone });
-  };
+  }, [
+    sr,
+    setStarter,
+    setPStg,
+    setPHp,
+    setAllySub,
+    setPHpSub,
+    setCoopActiveSlot,
+    setPhase,
+    setBText,
+    safeTo,
+    _endSession,
+    setScreenFromString,
+    t,
+  ]);
 
   // --- Handle a defeated enemy ---
-  const handleVictory = (verb = t("battle.victory.verb.defeated", "was defeated")) => {
+  const handleVictory = useCallback((verb = t("battle.victory.verb.defeated", "was defeated")) => {
     runBattleVictory({
       victoryInput: {
         verb,
@@ -755,10 +782,37 @@ export function useBattle() {
         pendingEvolveRef: pendingEvolve,
       },
     });
-  };
+  }, [
+    t,
+    sr,
+    randInt,
+    getPlayerMaxHp,
+    tryUnlock,
+    updateEncDefeated,
+    battleFieldSetters,
+    UI,
+  ]);
+
+  const runAllySupportTurn = useCallback(({ delayMs = 850, onDone }: { delayMs?: number; onDone?: () => void } = {}) => {
+    return runAllySupportTurnWithContext({
+      sr,
+      safeTo,
+      chance,
+      rand,
+      setBText,
+      setPhase,
+      setEAnim,
+      setEHp,
+      addD,
+      addP,
+      sfx,
+      handleVictory,
+      t,
+    }, { delayMs, onDone });
+  }, [sr, safeTo, chance, rand, setBText, setPhase, setEAnim, setEHp, addD, addP, handleVictory, t]);
 
   // --- Frozen enemy skips turn ---
-  const handleFreeze = () => {
+  const handleFreeze = useCallback(() => {
     runHandleFreezeWithContext({
       sr,
       frozenRef: frozenR,
@@ -768,10 +822,10 @@ export function useBattle() {
       safeTo,
       t,
     });
-  };
+  }, [sr, setFrozen, setBText, setPhase, safeTo, t]);
 
   // --- Player selects a move ---
-  const selectMove = (i: number) => {
+  const selectMove = useCallback((i: number) => {
     runSelectMoveWithContext({
       sr,
       runtime: {
@@ -790,10 +844,23 @@ export function useBattle() {
       ui: UI,
       battleFields: battleFieldSetters,
     }, i);
-  };
+  }, [
+    sr,
+    timedMode,
+    questionTimerSec,
+    questionAllowedOps,
+    t,
+    getActingStarter,
+    _getMoveDiffLevel,
+    genBattleQuestion,
+    startTimer,
+    markQStart,
+    UI,
+    battleFieldSetters,
+  ]);
 
   // --- Enemy turn logic (reads from stateRef) ---
-  function doEnemyTurn() {
+  const doEnemyTurn = useCallback(() => {
     runBattleEnemyTurn({
       enemyTurnInput: {
         sr,
@@ -815,11 +882,24 @@ export function useBattle() {
         },
       },
     });
-  }
-  useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; });
+  }, [
+    sr,
+    safeTo,
+    rand,
+    randInt,
+    chance,
+    setScreenFromString,
+    t,
+    battleFieldSetters,
+    UI,
+    _endSession,
+    handleVictory,
+    handlePlayerPartyKo,
+  ]);
+  useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; }, [doEnemyTurn]);
 
   // --- Player answers a question ---
-  const onAns = (choice: number) => {
+  const onAns = useCallback((choice: number) => {
     runAnswerWithContext({
       answered,
       setAnswered,
@@ -872,10 +952,38 @@ export function useBattle() {
         markCoopRotatePending,
       },
     }, choice);
-  };
+  }, [
+    answered,
+    setAnswered,
+    clearTimer,
+    sr,
+    rand,
+    chance,
+    safeTo,
+    setScreenFromString,
+    t,
+    UI,
+    pvpState,
+    battleFieldSetters,
+    getCollectionDamageScale,
+    tryUnlock,
+    frozenR,
+    doEnemyTurn,
+    handleVictory,
+    handleFreeze,
+    _endSession,
+    handlePlayerPartyKo,
+    runAllySupportTurn,
+    setPendingTextAdvanceAction,
+    getActingStarter,
+    logAns,
+    appendSessionEvent,
+    _updateAbility,
+    markCoopRotatePending,
+  ]);
 
   // --- Advance from text / victory phase ---
-  const continueFromVictory = () => {
+  const continueFromVictory = useCallback(() => {
     runContinueWithContext({
       continueFromVictoryInput: {
         sr,
@@ -897,9 +1005,21 @@ export function useBattle() {
         },
       },
     });
-  };
+  }, [
+    sr,
+    enemies.length,
+    setScreenFromString,
+    dispatchBattle,
+    locale,
+    getPlayerMaxHp,
+    t,
+    battleFieldSetters,
+    UI,
+    _finishGame,
+    startBattle,
+  ]);
 
-  const advance = () => {
+  const advance = useCallback(() => {
     runAdvanceWithContext({
       phase,
       sr,
@@ -930,26 +1050,56 @@ export function useBattle() {
           maxMoveLvl: MAX_MOVE_LVL,
         },
     });
-  };
+  }, [
+    phase,
+    sr,
+    setPhase,
+    setBText,
+    continueFromVictory,
+    consumePendingTextAdvanceAction,
+    safeTo,
+    getPvpTurnName,
+    setScreenFromString,
+    t,
+    UI,
+    pvpState,
+    battleFieldSetters,
+    pendingEvolve,
+    setScreen,
+    tryUnlock,
+    getPlayerMaxHp,
+  ]);
 
   // --- Continue from evolve screen → start next battle ---
-  const continueAfterEvolve = () => {
+  const continueAfterEvolve = useCallback(() => {
     continueFromVictory();
-  };
+  }, [continueFromVictory]);
 
-  const toggleCoopActive = () => {
+  const toggleCoopActive = useCallback(() => {
     runToggleCoopActiveWithContext({
       sr,
       canSwitchCoopActiveSlot,
       setCoopActiveSlot,
     });
-  };
+  }, [sr, setCoopActiveSlot]);
 
   const useItem = useCallback((itemId: ItemId) => {
     if (phase !== 'menu') return;
 
     const itemDef = ITEM_CATALOG[itemId];
-    const itemName = t(itemDef.nameKey, itemDef.nameFallback);
+    const activeStarterType = getActingStarter(sr.current)?.type || starter?.type || 'grass';
+    const specDefItemName = activeStarterType === 'fire'
+      ? t('battle.specDef.fire', '🛡️ Shield')
+      : activeStarterType === 'water'
+        ? t('battle.specDef.water', '💨 Perfect Dodge')
+        : activeStarterType === 'electric'
+          ? t('battle.specDef.electric', '⚡ Paralysis')
+          : activeStarterType === 'light'
+            ? t('battle.specDef.light', '✨ Lion Roar')
+            : t('battle.specDef.grass', '🌿 Reflect');
+    const itemName = itemId === 'shield'
+      ? specDefItemName
+      : t(itemDef.nameKey, itemDef.nameFallback);
     const spendItem = (): boolean => {
       const result = consumeInventory(inventory, itemId, 1);
       if (!result.consumed) return false;
@@ -1013,6 +1163,53 @@ export function useBattle() {
       return;
     }
 
+    if (itemId === 'candy') {
+      const isCoopSubActive = (battleMode === 'coop' || battleMode === 'double')
+        && coopActiveSlot === 'sub'
+        && Boolean(allySub)
+        && pHpSub > 0;
+      const currentHp = isCoopSubActive ? pHpSub : pHp;
+      const maxHp = isCoopSubActive && allySub
+        ? getStarterLevelMaxHp(allySub, pLvl, pStg)
+        : getPlayerMaxHp(pStg, pLvl);
+
+      if (currentHp >= maxHp) {
+        setEffMsg({
+          text: t('battle.item.use.candy.full', '{item} failed: HP already full.', { item: itemName }),
+          color: '#f97316',
+        });
+        return;
+      }
+      if (!spendItem()) {
+        setEffMsg({
+          text: t('battle.item.use.none', 'No {item} left.', { item: itemName }),
+          color: '#ef4444',
+        });
+        return;
+      }
+
+      const heal = Math.max(6, Math.round(maxHp * 0.14));
+      const restored = Math.max(1, Math.min(maxHp, currentHp + heal) - currentHp);
+      if (isCoopSubActive) {
+        setPHpSub((prev) => Math.min(maxHp, prev + restored));
+      } else {
+        setPHp((prev) => Math.min(maxHp, prev + restored));
+      }
+      setBText(t('battle.item.use.candy.heal', '{item} restored {hp} HP!', {
+        item: itemName,
+        hp: restored,
+      }));
+      setEffMsg({
+        text: t('battle.item.use.candy.heal', '{item} restored {hp} HP!', {
+          item: itemName,
+          hp: restored,
+        }),
+        color: '#22c55e',
+      });
+      sfx.play('heal');
+      return;
+    }
+
     if (itemId === 'shield') {
       if (specDef) {
         setEffMsg({
@@ -1029,7 +1226,6 @@ export function useBattle() {
         return;
       }
       setSpecDef(true);
-      const activeStarterType = getActingStarter(sr.current)?.type || 'fire';
       setDefAnim(activeStarterType);
       safeTo(() => setDefAnim(null), 280);
       setBText(t('battle.item.use.shield.ready', '{item} activated! Next hit will be blocked.', {
@@ -1060,6 +1256,7 @@ export function useBattle() {
     pHp,
     pLvl,
     pStg,
+    starter,
     getPlayerMaxHp,
     setPHpSub,
     setPHp,
@@ -1131,12 +1328,12 @@ export function useBattle() {
     rmP,
   });
 
-  const view = buildUseBattleView({
+  const view = useMemo(() => buildUseBattleView({
     timerSubscribe: subscribeTimerLeft,
     getTimerLeft,
     getPow, dualEff,
     sfx,
-  });
+  }), [subscribeTimerLeft, getTimerLeft, getPow, dualEff]);
 
   const publicApi = buildUseBattlePublicApi({
     state,

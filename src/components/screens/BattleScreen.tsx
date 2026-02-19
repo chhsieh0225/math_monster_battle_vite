@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react';
-import type { CSSProperties } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
+import type { CSSProperties, KeyboardEvent } from 'react';
 import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { useBattleParallax } from '../../hooks/useBattleParallax';
 import { useBattleArenaScale } from '../../hooks/useBattleArenaScale.ts';
@@ -24,6 +24,7 @@ import { BattleFxLayer } from './battle/BattleFxLayer.tsx';
 import { BattleArenaSprites } from './battle/BattleArenaSprites.tsx';
 import { BattleSceneLayers } from './battle/BattleSceneLayers.tsx';
 import { BattleWeatherLayer } from './battle/BattleWeatherLayer.tsx';
+import { BossIntroOverlay } from './battle/BossIntroOverlay.tsx';
 import './BattleScreen.css';
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
 
@@ -44,7 +45,7 @@ type BattleScreenProps = {
   t: Translator;
 };
 
-export default function BattleScreen({
+function BattleScreenComponent({
   state,
   actions,
   view,
@@ -91,6 +92,14 @@ export default function BattleScreen({
     enemySpriteRef,
     playerSpriteRef,
   });
+
+  // Low-perf / reduced-motion: skip boss intro overlay immediately
+  useEffect(() => {
+    if (S.phase === 'bossIntro' && UX.lowPerfMode) {
+      A.advance();
+    }
+  }, [S.phase, UX.lowPerfMode, A]);
+
   const {
     starter: stateStarter,
     enemy: stateEnemy,
@@ -382,6 +391,17 @@ export default function BattleScreen({
   } = coreRuntime;
 
   const canTapAdvance = S.phase === "text" || S.phase === "victory";
+  const handleAdvance = A.advance;
+  const handleAdvanceKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (!canTapAdvance) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleAdvance();
+    }
+  };
+  const handleOpenBattleSettings = () => {
+    onOpenSettings('battle');
+  };
   const pvpComboTrigger = PVP_BALANCE.passive.specDefComboTrigger || 4;
   const {
     mainPlayerSize: rawMainSize,
@@ -459,15 +479,19 @@ export default function BattleScreen({
       role={canTapAdvance ? "button" : undefined}
       tabIndex={canTapAdvance ? 0 : -1}
       aria-label={canTapAdvance ? t("a11y.battle.advance", "Advance to next step") : undefined}
-      onKeyDown={(e) => {
-        if (!canTapAdvance) return;
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          A.advance();
-        }
-      }}
-      onClick={canTapAdvance ? A.advance : undefined}
+      onKeyDown={handleAdvanceKeyDown}
+      onClick={canTapAdvance ? handleAdvance : undefined}
     >
+      {/* Boss intro cinematic overlay */}
+      {S.phase === 'bossIntro' && !UX.lowPerfMode && (
+        <BossIntroOverlay
+          enemyName={enemy.name}
+          enemySvg={eSvg}
+          enemySize={eSize}
+          onComplete={handleAdvance}
+        />
+      )}
+
       {/* Pause overlay */}
       {S.gamePaused && <div
         role="button"
@@ -653,7 +677,7 @@ export default function BattleScreen({
             onUseItem={A.useItem}
             onToggleCoopActive={A.toggleCoopActive}
             onTogglePause={A.togglePause}
-            onOpenSettings={() => onOpenSettings('battle')}
+            onOpenSettings={handleOpenBattleSettings}
             onQuitGame={A.quitGame}
           />
         )}
@@ -677,8 +701,11 @@ export default function BattleScreen({
         )}
 
         {/* Text box */}
-        {(S.phase === "text" || S.phase === "playerAtk" || S.phase === "enemyAtk" || S.phase === "victory" || S.phase === "ko") && <TextBox text={S.bText} onClick={A.advance} />}
+        {(S.phase === "text" || S.phase === "playerAtk" || S.phase === "enemyAtk" || S.phase === "victory" || S.phase === "ko")
+          && <TextBox text={S.bText} onClick={canTapAdvance ? handleAdvance : undefined} />}
       </div>
     </div>
   );
 }
+
+export default memo(BattleScreenComponent);

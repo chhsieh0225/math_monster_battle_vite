@@ -1,4 +1,4 @@
-# Math Monster Battle (Vite + React)
+# Math Monster Brawl (Vite + React)
 
 ## Commands
 

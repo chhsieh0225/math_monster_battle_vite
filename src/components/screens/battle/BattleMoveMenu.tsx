@@ -34,6 +34,14 @@ type BattleMoveMenuProps = {
   onQuitGame: () => void;
 };
 
+function resolveSpecDefItemName(starterType: string, t: Translator): string {
+  if (starterType === 'fire') return t('battle.specDef.fire', '🛡️ Shield');
+  if (starterType === 'water') return t('battle.specDef.water', '💨 Perfect Dodge');
+  if (starterType === 'electric') return t('battle.specDef.electric', '⚡ Paralysis');
+  if (starterType === 'light') return t('battle.specDef.light', '✨ Lion Roar');
+  return t('battle.specDef.grass', '🌿 Reflect');
+}
+
 export const BattleMoveMenu = memo(function BattleMoveMenu({
   t,
   activeStarter,
@@ -58,6 +66,8 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
   onOpenSettings,
   onQuitGame,
 }: BattleMoveMenuProps) {
+  const specDefItemName = resolveSpecDefItemName(activeStarter.type, t);
+
   return (
     <div className="battle-menu-wrap">
       {isCoopBattle && (
@@ -165,6 +175,10 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
           const item = ITEM_CATALOG[itemId];
           const count = inventory[itemId] || 0;
           const disabled = battleMode === 'pvp' || count <= 0;
+          const itemDisplayName = itemId === 'shield'
+            ? specDefItemName
+            : t(item.nameKey, item.nameFallback);
+          const itemDisplayIcon = itemId === 'shield' ? '✨' : item.icon;
           return (
             <button
               key={itemId}
@@ -172,11 +186,11 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
               onClick={() => onUseItem(itemId)}
               disabled={disabled}
               aria-label={t('a11y.battle.useItem', 'Use {item}', {
-                item: t(item.nameKey, item.nameFallback),
+                item: itemDisplayName,
               })}
             >
-              <span className="battle-item-btn-icon">{item.icon}</span>
-              <span className="battle-item-btn-name">{t(item.nameKey, item.nameFallback)}</span>
+              <span className="battle-item-btn-icon">{itemDisplayIcon}</span>
+              <span className="battle-item-btn-name">{itemDisplayName}</span>
               <span className="battle-item-btn-count">x{count}</span>
             </button>
           );

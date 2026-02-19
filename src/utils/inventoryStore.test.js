@@ -28,25 +28,28 @@ function createStorageMock() {
 
 test('applyDropsToInventory converts supported drops into item grants', () => {
   const result = applyDropsToInventory(
-    { potion: 0, shield: 0 },
-    ['🧪', '👑', '🔥', '🏆'],
+    { potion: 0, candy: 0, shield: 0 },
+    ['🧪', '🍬', '👑', '🔥', '🏆'],
   );
 
   assert.equal(result.changed, true);
   assert.equal(result.inventory.potion, 2);
+  assert.equal(result.inventory.candy, 1);
   assert.equal(result.inventory.shield, 2);
-  assert.equal(result.grants.length, 4);
+  assert.equal(result.grants.length, 5);
 });
 
 test('addDropsToInventory persists inventory gains', () => {
   globalThis.localStorage = createStorageMock();
 
-  const first = addDropsToInventory(['🧪', '🛡️']);
+  const first = addDropsToInventory(['🧪', '🍬', '🛡️']);
   assert.equal(first.inventory.potion, 1);
+  assert.equal(first.inventory.candy, 1);
   assert.equal(first.inventory.shield, 1);
 
-  const second = addDropsToInventory(['💎']);
+  const second = addDropsToInventory(['💎', '🍬']);
   assert.equal(second.inventory.potion, 2);
+  assert.equal(second.inventory.candy, 2);
   assert.equal(second.inventory.shield, 1);
   assert.deepEqual(loadInventory(), second.inventory);
 });
@@ -55,7 +58,7 @@ test('consumeInventory and consumeInventoryItem avoid negative counts', () => {
   globalThis.localStorage = createStorageMock();
   addDropsToInventory(['🧪']);
 
-  const fail = consumeInventory({ potion: 0, shield: 0 }, 'potion');
+  const fail = consumeInventory({ potion: 0, candy: 0, shield: 0 }, 'potion');
   assert.equal(fail.consumed, false);
   assert.equal(fail.inventory.potion, 0);
 

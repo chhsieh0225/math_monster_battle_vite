@@ -83,7 +83,7 @@ function createValidPublicApi() {
       towerChallengeFeedback: null,
       expNext: 30,
       chargeReady: false,
-      inventory: { potion: 0, shield: 0 },
+      inventory: { potion: 0, candy: 0, shield: 0 },
       achUnlocked: [],
       achPopup: null,
       encData: { encountered: {}, defeated: {} },

@@ -24,6 +24,7 @@ export type InventoryConsumeResult = {
 function createEmptyInventory(): InventoryData {
   return {
     potion: 0,
+    candy: 0,
     shield: 0,
   };
 }

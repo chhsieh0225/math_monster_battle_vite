@@ -49,6 +49,8 @@ export const SPRITE_IMGS = {
 export const BG_IMGS = {
   grass: `${BASE}backgrounds/grass.jpg`,
   fire: `${BASE}backgrounds/fire.jpg`,
+  water: `${BASE}backgrounds/water_breach.jpg`,
+  electric: `${BASE}backgrounds/lighting_platou.jpg`,
   ghost: `${BASE}backgrounds/ghost.jpg`,
   poison: `${BASE}backgrounds/poison_swamp.jpg`,
   steel: `${BASE}backgrounds/steel.jpg`,

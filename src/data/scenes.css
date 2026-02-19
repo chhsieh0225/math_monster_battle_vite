@@ -75,6 +75,90 @@
   animation: float 5s ease-in-out infinite;
 }
 
+.scn-water-spray {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: rgba(191, 219, 254, var(--op));
+  box-shadow: 0 0 6px rgba(125, 211, 252, 0.8);
+  animation: waterDrift var(--dur) ease-in-out var(--del) infinite;
+}
+
+.scn-water-wave {
+  position: absolute;
+  left: -8%;
+  width: 116%;
+  border-radius: 50%;
+  filter: blur(4px);
+}
+
+.scn-water-wave-a {
+  bottom: 8%;
+  height: 24px;
+  background: radial-gradient(ellipse, rgba(125, 211, 252, 0.28), transparent 72%);
+  animation: waterWave 5s ease-in-out infinite;
+}
+
+.scn-water-wave-b {
+  bottom: 1%;
+  height: 28px;
+  background: radial-gradient(ellipse, rgba(56, 189, 248, 0.26), transparent 75%);
+  animation: waterWave 6.8s ease-in-out 0.8s infinite;
+}
+
+.scn-water-glow {
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  width: 100%;
+  height: 24%;
+  background: linear-gradient(180deg, rgba(186, 230, 253, 0.16), rgba(125, 211, 252, 0));
+}
+
+.scn-electric-spark {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: var(--w);
+  height: var(--h);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(250, 250, 210, 0.95), rgba(59, 130, 246, 0.2));
+  opacity: var(--op);
+  transform: rotate(var(--rot));
+  box-shadow: 0 0 10px rgba(147, 197, 253, 0.85);
+  animation: electricPulse var(--dur) ease-in-out var(--del) infinite;
+}
+
+.scn-electric-arc {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(191, 219, 254, 0), rgba(191, 219, 254, 0.6), rgba(191, 219, 254, 0));
+  filter: blur(1px);
+}
+
+.scn-electric-arc-a {
+  top: 28%;
+  left: 8%;
+  width: 84%;
+  animation: windSweep 4.5s ease-in-out infinite;
+}
+
+.scn-electric-arc-b {
+  top: 62%;
+  left: 5%;
+  width: 90%;
+  animation: windSweep 5.2s ease-in-out 0.9s infinite;
+}
+
+.scn-electric-haze {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 24%, rgba(125, 211, 252, 0.12), transparent 50%);
+}
+
 .scn-ghost-firefly {
   position: absolute;
   top: var(--top);
@@ -479,5 +563,41 @@
   }
   50% {
     transform: translate3d(10px, -5px, 0);
+  }
+}
+
+@keyframes waterDrift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(0.8);
+    opacity: 0;
+  }
+  30% {
+    opacity: var(--op);
+  }
+  60% {
+    transform: translate3d(10px, -6px, 0) scale(1);
+    opacity: calc(var(--op) * 0.8);
+  }
+}
+
+@keyframes waterWave {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scaleX(1);
+    opacity: 0.72;
+  }
+  50% {
+    transform: translate3d(0, -3px, 0) scaleX(1.04);
+    opacity: 0.95;
+  }
+}
+
+@keyframes electricPulse {
+  0%, 100% {
+    opacity: calc(var(--op) * 0.5);
+    transform: rotate(var(--rot)) scaleY(0.8);
+  }
+  45% {
+    opacity: var(--op);
+    transform: rotate(var(--rot)) scaleY(1.08);
   }
 }

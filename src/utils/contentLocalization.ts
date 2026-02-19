@@ -117,7 +117,7 @@ const TYPE_NAME_EN_BY_ZH: Dict<string> = {
 const SCENE_NAME_EN: Dict<string> = {
   grass: "🌿 Verdant Plains",
   fire: "🌋 Blazing Volcano",
-  water: "💧 Azure Waters",
+  water: "💧 Azure Coast",
   electric: "⚡ Thunder Wasteland",
   ghost: "🌙 Gloom Graveyard",
   steel: "⚙️ Iron Fortress",

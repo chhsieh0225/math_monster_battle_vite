@@ -30,6 +30,8 @@ type BattleBgmTrack =
   | 'menu'
   | 'battle'
   | 'volcano'
+  | 'coast'
+  | 'thunder'
   | 'ironclad'
   | 'graveyard'
   | 'canyon'
@@ -49,6 +51,8 @@ function resolveBossTrack(starterId: string | undefined | null): BattleBgmTrack 
 
 function resolveSceneTrack(sceneType: string): BattleBgmTrack | null {
   if (sceneType === 'fire') return 'volcano';
+  if (sceneType === 'water') return 'coast';
+  if (sceneType === 'electric') return 'thunder';
   if (sceneType === 'steel') return 'ironclad';
   if (sceneType === 'ghost') return 'graveyard';
   if (sceneType === 'rock') return 'canyon';

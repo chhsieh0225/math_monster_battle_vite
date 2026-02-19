@@ -24,7 +24,7 @@ test('stage config references valid monster ids', () => {
   const knownTypes = new Set([
     "grass", "fire", "water", "electric", "ghost", "steel", "dark",
   ]);
-  const knownSceneTypes = new Set(["grass", "fire", "ghost", "steel", "dark"]);
+  const knownSceneTypes = new Set(["grass", "fire", "water", "electric", "ghost", "steel", "dark", "rock", "poison", "light", "heaven", "burnt_warplace"]);
   assert.ok(STAGE_SCALE_BASE > 0);
   assert.ok(STAGE_SCALE_STEP > 0);
   assert.ok(STAGE_WAVES.length > 0);

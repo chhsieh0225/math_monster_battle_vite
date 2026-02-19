@@ -160,6 +160,8 @@ export type SfxApi = {
       | 'menu'
       | 'battle'
       | 'volcano'
+      | 'coast'
+      | 'thunder'
       | 'ironclad'
       | 'graveyard'
       | 'canyon'

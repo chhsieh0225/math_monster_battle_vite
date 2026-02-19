@@ -46,9 +46,9 @@ const STARTER_MIRROR_WAVE_PREFIX = 'starter_mirror:';
 const STARTER_IDS: readonly PlayerStarterId[] = ['fire', 'water', 'grass', 'electric', 'lion'];
 const STARTER_ENCOUNTER_SCENE_BY_ID: Readonly<Record<PlayerStarterId, string>> = {
   fire: 'fire',
-  water: 'grass',
+  water: 'water',
   grass: 'grass',
-  electric: 'steel',
+  electric: 'electric',
   lion: 'grass',
 };
 const STARTER_BASE_STATS_BY_ID: Readonly<Record<PlayerStarterId, { hp: number; atk: number }>> = {

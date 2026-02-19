@@ -66,7 +66,7 @@ export const BALANCE_CONFIG = {
       ],
       double: [
         { monsterId: 'slime', slimeType: 'grass', sceneType: 'grass' },
-        { monsterId: 'slime', slimeType: 'water', sceneType: 'grass' },
+        { monsterId: 'slime', slimeType: 'water', sceneType: 'water' },
 
         { monsterId: 'fire', sceneType: 'fire' },
         { monsterId: 'ghost', sceneType: 'fire' },
@@ -85,7 +85,7 @@ export const BALANCE_CONFIG = {
       branchChoices: [
         {
           left: { monsterId: 'slime', slimeType: 'grass', sceneType: 'grass' },
-          right: { monsterId: 'slime', slimeType: 'water', sceneType: 'grass' },
+          right: { monsterId: 'slime', slimeType: 'water', sceneType: 'water' },
         },
         {
           left: { monsterId: 'fire', sceneType: 'fire' },

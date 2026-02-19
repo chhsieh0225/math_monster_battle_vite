@@ -90,6 +90,26 @@ const FIRE_EMBER_R = Array.from({ length: 8 }, (_, i) => ({
   del: i * 0.35,
 }));
 
+const WATER_SPRAY_R = Array.from({ length: 10 }, (_, i) => ({
+  top: 18 + ((i * 9) % 56),
+  left: 4 + ((i * 10) % 88),
+  size: 3 + (i % 3),
+  op: 0.35 + (i % 4) * 0.1,
+  dur: 3 + i * 0.45,
+  del: i * 0.25,
+}));
+
+const ELECTRIC_SPARK_R = Array.from({ length: 12 }, (_, i) => ({
+  top: 10 + ((i * 7) % 68),
+  left: 6 + ((i * 9) % 84),
+  width: 2 + (i % 2),
+  height: 10 + (i % 3) * 4,
+  op: 0.3 + (i % 4) * 0.12,
+  dur: 1.6 + i * 0.2,
+  del: i * 0.12,
+  rot: -15 + (i % 5) * 9,
+}));
+
 const ROCK_DUST_R = Array.from({ length: 8 }, (_, i) => ({
   top: 10 + ((i * 11) % 60),
   left: (i * 13) % 85,
@@ -198,6 +218,62 @@ export const SCENES = {
       <div className="scn-fire-lava scn-fire-lava-right" />
       {/* Heat haze overlay */}
       <div className="scn-fire-haze" />
+    </>)
+  },
+
+  /* ═══ Water — spray droplets + tide sheen ═══ */
+  water:{
+    bgImg:BG_IMGS.water,
+    sky:"linear-gradient(180deg,#0f4c81 0%,#1d6fa5 28%,#38bdf8 62%,#a5f3fc 100%)",
+    ground:"linear-gradient(180deg,transparent,rgba(56,189,248,0.12) 45%,rgba(14,116,144,0.22))",
+    platform1:"rgba(56,189,248,0.28)",platform2:"rgba(14,116,144,0.2)",
+    Deco:memo(()=><>
+      {WATER_SPRAY_R.map((r, i) => (
+        <div
+          key={`ws${i}`}
+          className="scn-water-spray"
+          style={withVars({
+            '--top': `${r.top}%`,
+            '--left': `${r.left}%`,
+            '--size': `${r.size}px`,
+            '--op': `${r.op}`,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
+      <div className="scn-water-wave scn-water-wave-a" />
+      <div className="scn-water-wave scn-water-wave-b" />
+      <div className="scn-water-glow" />
+    </>)
+  },
+
+  /* ═══ Electric — arc sparks + ion glow ═══ */
+  electric:{
+    bgImg:BG_IMGS.electric,
+    sky:"linear-gradient(180deg,#111827 0%,#1e293b 24%,#312e81 54%,#2563eb 100%)",
+    ground:"linear-gradient(180deg,transparent,rgba(56,189,248,0.08) 42%,rgba(37,99,235,0.22))",
+    platform1:"rgba(59,130,246,0.3)",platform2:"rgba(96,165,250,0.2)",
+    Deco:memo(()=><>
+      {ELECTRIC_SPARK_R.map((r, i) => (
+        <div
+          key={`el${i}`}
+          className="scn-electric-spark"
+          style={withVars({
+            '--top': `${r.top}%`,
+            '--left': `${r.left}%`,
+            '--w': `${r.width}px`,
+            '--h': `${r.height}px`,
+            '--op': `${r.op}`,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+            '--rot': `${r.rot}deg`,
+          })}
+        />
+      ))}
+      <div className="scn-electric-arc scn-electric-arc-a" />
+      <div className="scn-electric-arc scn-electric-arc-b" />
+      <div className="scn-electric-haze" />
     </>)
   },
 
@@ -510,7 +586,7 @@ export const SCENES = {
 export const SCENE_NAMES = {
   grass:"🌿 綠意草原",
   fire:"🌋 炎熱火山",
-  water:"💧 湛藍水域",
+  water:"💧 湛藍海岸",
   electric:"⚡ 雷電荒原",
   ghost:"🌙 幽暗墓地",
   steel:"⚙️ 鋼鐵要塞",

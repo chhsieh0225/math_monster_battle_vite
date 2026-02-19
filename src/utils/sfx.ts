@@ -929,6 +929,8 @@ type BgmTrack =
   | 'menu'
   | 'battle'
   | 'volcano'
+  | 'coast'
+  | 'thunder'
   | 'ironclad'
   | 'graveyard'
   | 'canyon'
@@ -942,6 +944,8 @@ const BGM_FILE_BY_TRACK: Partial<Record<BgmTrack, string>> = {
   menu: `${PUBLIC_BASE_URL}musics/Chronicles_of_the_Verdant_Peak.mp3`,
   battle: `${PUBLIC_BASE_URL}musics/Titan_s_Fury.mp3`,
   volcano: `${PUBLIC_BASE_URL}musics/Inferno_s_Fury.mp3`,
+  coast: `${PUBLIC_BASE_URL}musics/Leviathan_s_Fury.mp3`,
+  thunder: `${PUBLIC_BASE_URL}musics/Thunderclap_Dynasty.mp3`,
   ironclad: `${PUBLIC_BASE_URL}musics/Ironclad_Dominion.mp3`,
   graveyard: `${PUBLIC_BASE_URL}musics/Spectral_Dirge.mp3`,
   canyon: `${PUBLIC_BASE_URL}musics/Canyon_of_Titans.mp3`,
@@ -954,6 +958,8 @@ const SYNTH_FALLBACK_BY_TRACK: Record<BgmTrack, SynthBgmTrack> = {
   menu: 'menu',
   battle: 'battle',
   volcano: 'battle',
+  coast: 'battle',
+  thunder: 'battle',
   ironclad: 'battle',
   graveyard: 'battle',
   canyon: 'battle',

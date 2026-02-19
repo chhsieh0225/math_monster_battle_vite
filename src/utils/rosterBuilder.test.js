@@ -119,7 +119,7 @@ test('buildRoster can inject wild starter encounters and respect excluded starte
   assert.equal(wildStarters.length > 0, true);
   assert.equal(wildStarters.some((mon) => mon.id === 'wild_starter_fire'), false);
   assert.equal(wildStarters.some((mon) => mon.id === 'wild_starter_water'), true);
-  assert.equal(wildStarters.some((mon) => mon.sceneMType === 'grass'), true);
+  assert.equal(wildStarters.some((mon) => mon.sceneMType === 'water'), true);
 });
 
 test('buildRoster skips wild starter encounters when all starters are excluded', () => {

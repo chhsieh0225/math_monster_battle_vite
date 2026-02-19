@@ -1,105 +1,51 @@
-# Math Monster Brawl (Vite + React)
+# 數學怪獸大亂鬥 (Math Monster Brawl)
 
-## Commands
+React + Vite 教育對戰遊戲專案。  
+目前已整合單人、計時、Co-op、PvP、每日挑戰、連勝塔、圖鑑、收藏/道具、家長儀表板與雙語系（`zh-TW` / `en-US`）。
 
-- `npm run dev` : start local dev server
-- `npm run build` : production build
+## 開發指令
+
+- `npm run dev` : 啟動開發伺服器
+- `npm run build` : 產生 production build
 - `npm run lint` : ESLint
-- `npm test` : node test suite
-- `npm run test:coverage` : run tests with coverage report
-- `npm run test:coverage:gate` : run tests with coverage thresholds (lines 80%, branches 60%, functions 70%)
-- `npm run typecheck` : TypeScript type check (`tsc --noEmit`)
+- `npm run typecheck` : TypeScript 型別檢查（`tsc --noEmit`）
+- `npm test` : Node 測試（`node --test`）
+- `npm run test:coverage` : 輸出 coverage 報告
+- `npm run test:coverage:gate` : coverage 門檻檢查（lines 80% / branches 60% / functions 70%）
 
-## TypeScript Migration (Incremental)
+## 目前架構（2026-02）
 
-This project is migrating from JS/JSX to TypeScript gradually.
-
-- `tsconfig.json` is added with strict mode and `allowJs: true`.
-- Mixed codebase is supported (`.js/.jsx` + `.ts/.tsx`).
-- New/edited leaf UI modules should prefer `.tsx` first.
-- Core battle logic migration should be done module-by-module to reduce risk.
-
-Current migrated files:
-
-- `src/types/game.ts`
-- `src/types/battle.ts`
-- `src/main.tsx`
 - `src/App.tsx`
-- `src/hooks/useBattle.ts` (typed wrapper)
-- `src/hooks/useMobileExperience.ts`
-- `src/hooks/useBattleRng.ts`
-- `src/hooks/useTimer.ts`
-- `src/utils/prng.ts`
-- `src/utils/playerHp.ts`
-- `src/utils/effectTiming.ts`
-- `src/utils/turnFlow.ts`
-- `src/utils/storage.ts`
-- `src/utils/leaderboard.ts`
-- `src/utils/time.ts`
-- `src/utils/achievementStore.ts`
-- `src/utils/sessionLogger.ts`
-- `src/utils/eventLogger.ts`
-- `src/utils/sfx.ts`
-- `src/utils/battleEngine.ts`
-- `src/utils/rosterBuilder.ts`
-- `src/utils/damageCalc.ts`
-- `src/utils/questionGenerator.ts`
-- `src/utils/dashboardInsights.ts`
-- `src/data/constants.ts`
-- `src/data/typeEffectiveness.ts`
-- `src/data/stageConfigs.ts`
-- `src/data/dropTables.ts`
-- `src/data/skillSets.ts`
-- `src/data/achievements.ts`
-- `src/data/pvpBalance.ts`
-- `src/data/monsterConfigs.ts`
-- `src/data/monsters.ts`
-- `src/data/starters.ts`
-- `src/data/encyclopedia.ts`
-- `src/data/scenes.tsx`
-- `src/hooks/useAchievements.ts`
-- `src/hooks/useEncyclopedia.ts`
-- `src/hooks/useSessionLog.ts`
-- `src/hooks/useBattleRuntime.ts`
-- `src/hooks/useBattleSessionLifecycle.ts`
-- `src/hooks/useCoopTurnRotation.ts`
-- `src/hooks/useBattleUIState.ts`
-- `src/hooks/usePvpState.ts`
-- `src/hooks/battle/battleReducer.ts`
-- `src/hooks/battle/turnResolver.ts`
-- `src/hooks/battle/effectOrchestrator.ts`
-- `src/hooks/battle/playerFlow.ts`
-- `src/hooks/battle/enemyFlow.ts`
-- `src/hooks/battle/pvpFlow.ts`
-- `src/hooks/battle/coopFlow.ts`
-- `src/hooks/battle/achievementFlow.ts`
-- `src/hooks/battle/timeoutFlow.ts`
-- `src/hooks/battle/startGameFlow.ts`
-- `src/hooks/battle/turnHelpers.ts`
-- `src/hooks/battle/victoryFlow.ts`
-- `src/hooks/battle/advanceFlow.ts`
-- `src/hooks/battle/answerFlow.ts`
-- `src/components/ui/HPBar.tsx`
-- `src/components/ui/XPBar.tsx`
-- `src/components/ui/DamagePopup.tsx`
-- `src/components/ui/Particle.tsx`
-- `src/components/ui/TextBox.tsx`
-- `src/components/ui/MonsterSprite.tsx`
-- `src/components/ui/AchievementPopup.tsx`
-- `src/components/screens/EvolveScreen.tsx`
-- `src/components/screens/LeaderboardScreen.tsx`
-- `src/components/screens/AchievementScreen.tsx`
-- `src/components/screens/GameOverScreen.tsx`
-- `src/components/screens/TitleScreen.tsx`
-- `src/components/screens/PvpResultScreen.tsx`
-- `src/components/screens/SettingsScreen.tsx`
-- `src/components/screens/SelectionScreen.tsx`
-- `src/components/screens/DashboardScreen.tsx`
-- `src/components/screens/EncyclopediaScreen.tsx`
-- `src/components/effects/index.ts`
+  - 僅負責跨畫面 shell：路由 handoff、設定畫面進出、音樂切換與 preload。
+  - `BattleScreen` 使用 lazy loading。
+- `src/hooks/useBattle.ts`
+  - 對外 typed public API（`state / actions / view`）。
+- `src/hooks/useBattleCore.ts`
+  - 戰鬥主協調器（已拆出大量 battle 子模組）。
+- `src/hooks/battle/*`
+  - reducer / flow / resolver / orchestrator 分層。
+  - 目前新增 `useBattleOrchestrationState.ts`、`useBattleFlowState.ts` 收斂 orchestration state。
 
-## Next Recommended TS Steps
+> battle 領域分層說明：`src/hooks/battle/README.md`
 
-1. Migrate `src/hooks/useBattle.js` to `src/hooks/useBattle.ts` (remove wrapper indirection).
-2. Introduce type-aware ESLint rules for TS files only (`@typescript-eslint` typed config).
-3. Keep `lint + typecheck + test + build` green after each migration batch.
+## 品質現況（最新本機基線）
+
+- 測試數量：`289` tests（全綠）
+- Coverage（最新 gate run）：  
+  - Lines: `86.35%`
+  - Branches: `67.39%`
+  - Functions: `77.95%`
+- 型別遷移現況（src）：  
+  - `*.ts/*.tsx`：`185` 檔  
+  - `*.js/*.jsx`：`63` 檔
+
+## 文檔與追蹤
+
+- 進度紀錄：`PROGRESS.md`
+- battle 子層設計：`src/hooks/battle/README.md`
+
+## 近期優先方向
+
+1. 持續縮減 `*.js/*.jsx` 檔案（優先 battle 相關高耦合區塊）。
+2. 針對低覆蓋模組補測（先從 `enemyFlow`、`pvpStrikeResolver`、deps builders）。
+3. 持續整理畫面層樣式與響應式細節（避免 inline style 回流）。

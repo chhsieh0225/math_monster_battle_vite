@@ -199,7 +199,7 @@ const zhTW = {
   "selection.wolf.passive": "⚙️ 鋼壁反擊：受到攻擊時可減傷，並有機率立刻反擊。",
   "selection.wolf.specDef": "🛡️ 鋼壁守勢：連擊達標時擋下攻擊並進行鋼系反打。",
   "selection.tiger.desc": "來自凍原山谷的精準夥伴。專精小數運算，節奏穩定且輸出凌厲。",
-  "selection.tiger.passive": "❄️ 霜凍：攻擊有機率凍結敵人，使其行動延後。",
+  "selection.tiger.passive": "❄️ 霜凍＋碎冰：攻擊有機率凍結敵人，下一擊碎冰造成額外傷害。",
   "selection.tiger.specDef": "🧊 冰鏡位移：連擊達標時化出冰影，完全迴避攻擊。",
   "selection.boss.desc": "終局王者「暗黑龍王」。以暗雷壓制節奏，擅長高爆發終結。",
   "selection.boss.passive": "💀 霸王：王域威壓持續壓制對手節奏。",

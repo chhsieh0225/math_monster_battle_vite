@@ -80,7 +80,7 @@ function buildStarterDescs(t: TranslateFn): Record<string, StarterDesc> {
     },
     tiger: {
       desc: t('selection.tiger.desc', 'An ice tactician from frozen valleys. Excels at decimal arithmetic with precise timing.'),
-      passive: t('selection.tiger.passive', '❄️ Frostbite: attacks can freeze enemies and delay their turn.'),
+      passive: t('selection.tiger.passive', '❄️ Frostbite + Shatter: attacks can freeze enemies; the next hit shatters ice for bonus damage.'),
       specDef: t('selection.tiger.specDef', '🧊 Ice Shift: at 8-combo, evades an incoming hit with icy mirage.'),
     },
     boss: {

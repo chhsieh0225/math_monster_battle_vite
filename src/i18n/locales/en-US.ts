@@ -199,7 +199,7 @@ const enUS = {
   "selection.wolf.passive": "⚙️ Steel Wall/Counter: reduces incoming damage and can retaliate on hit.",
   "selection.wolf.specDef": "🛡️ Iron Guard: blocks an incoming hit and launches a steel counter.",
   "selection.tiger.desc": "An icy partner from frozen valleys. Excels at decimal arithmetic with precise tempo.",
-  "selection.tiger.passive": "❄️ Frostbite: attacks can freeze enemies and delay their action.",
+  "selection.tiger.passive": "❄️ Frostbite + Shatter: attacks can freeze enemies; the next hit shatters ice for bonus damage.",
   "selection.tiger.specDef": "🧊 Ice Shift: at combo threshold, creates an icy mirage to evade damage.",
   "selection.boss.desc": "Final tyrant Dark Dragon King. Dominates tempo with dark-thunder pressure and explosive finishers.",
   "selection.boss.passive": "💀 Tyrant: battlefield pressure constantly disrupts enemy rhythm.",

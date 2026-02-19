@@ -93,6 +93,7 @@ export type EnemyVm = {
   traitName?: string;
   traitDesc?: string;
   drops?: string[];
+  selectedStageIdx?: number;
   svgFn: (...args: string[]) => string;
   campaignNodeIndex?: number;
   campaignNodeTotal?: number;

@@ -36,19 +36,16 @@ function normalizeBossVisualId(id?: string | null): string {
   return id.startsWith('pvp_') ? id.slice(4) : id;
 }
 
-const WOLF_FINAL_NAME_SET = new Set(['蒼鋼狼王', 'Aegis Wolf King']);
-
 function normalizeStarterVisualId(id?: string | null): string {
   if (!id) return '';
   return id.startsWith('pvp_') ? id.slice(4) : id;
 }
 
-function requiresWolfFinalFacingFix(id?: string | null, name?: string | null): boolean {
+function requiresWolfFinalFacingFix(id?: string | null, stageIdx?: number | null): boolean {
   const normalizedId = normalizeStarterVisualId(id);
-  const isWolfFamily = normalizedId === 'wolf' || normalizedId === 'wild_starter_wolf';
-  if (!isWolfFamily) return false;
-  const normalizedName = String(name || '').trim();
-  return WOLF_FINAL_NAME_SET.has(normalizedName);
+  if (normalizedId !== 'wolf' && normalizedId !== 'wild_starter_wolf') return false;
+  const stage = Number.isFinite(stageIdx) ? Number(stageIdx) : 0;
+  return stage >= 2;
 }
 
 type BattleScreenProps = {
@@ -411,8 +408,8 @@ function BattleScreenComponent({
     : t("battle.qtype.mixed", "Mixed")), [question, t]);
   const impactPhaseClass = showHeavyFx ? `battle-impact-${impactPhase}` : "battle-impact-idle";
   const battleRootClassName = useMemo(() => (
-    `battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""} ${canTapAdvance ? "battle-root-advance" : ""} ${impactPhaseClass}`
-  ), [UX.compactUI, UX.lowPerfMode, canTapAdvance, impactPhaseClass]);
+    `battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""} ${canTapAdvance ? "battle-root-advance" : ""} ${S.phase === "bossIntro" ? "boss-intro-active" : ""} ${impactPhaseClass}`
+  ), [UX.compactUI, UX.lowPerfMode, canTapAdvance, impactPhaseClass, S.phase]);
   const battlePanelClassName = useMemo(
     () => `battle-panel ${S.phase === "question" ? "is-question" : "is-normal"}`,
     [S.phase],
@@ -523,10 +520,10 @@ function BattleScreenComponent({
     playerMainShadowStyle,
     enemySubSize,
   } = memoSpriteStyles!;
-  const playerMainFacingFix = starter.id === 'wolf' && S.pStg >= 2;
-  const playerSubFacingFix = Boolean(S.allySub?.id === 'wolf' && (S.allySub?.selectedStageIdx || 0) >= 2);
-  const enemyMainFacingFix = requiresWolfFinalFacingFix(enemy.id, enemy.name);
-  const enemySubFacingFix = requiresWolfFinalFacingFix(S.enemySub?.id, S.enemySub?.name);
+  const playerMainFacingFix = requiresWolfFinalFacingFix(starter.id, S.pStg);
+  const playerSubFacingFix = requiresWolfFinalFacingFix(S.allySub?.id, S.allySub?.selectedStageIdx);
+  const enemyMainFacingFix = requiresWolfFinalFacingFix(enemy.id, enemy.selectedStageIdx);
+  const enemySubFacingFix = requiresWolfFinalFacingFix(S.enemySub?.id, S.enemySub?.selectedStageIdx);
   const coOpBossSubIntro = isCoopBattle
     && showEnemySub
     && Boolean(S.enemySub?.name)

@@ -282,6 +282,7 @@ export function buildRoster(
           sceneMType,
           lvl: i + 1,
           isEvolved: stageIdx > 0,
+          selectedStageIdx: stageIdx,
         };
       }
     }

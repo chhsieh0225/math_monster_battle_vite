@@ -164,20 +164,29 @@ export default function TitleScreen({
     { icon: '📚', label: t('title.feature.encyclopedia', 'Encyclopedia'), fn: onEncyclopedia, aria: t('a11y.title.openEncyclopedia', 'Open encyclopedia') },
     { icon: '📊', label: t('title.feature.dashboard', 'Parent Dashboard'), fn: onDashboard, aria: t('a11y.title.openDashboard', 'Open parent dashboard') },
     { icon: '🗓️', label: t('title.feature.daily', 'Daily Challenge'), fn: onDailyChallenge, aria: t('a11y.title.openDailyChallenge', 'Open daily challenge') },
-    { icon: '⚙️', label: t('title.feature.settings', 'Settings'), fn: onSettings, aria: t('a11y.title.openSettings', 'Open settings') },
   ];
 
   return (
     <main className={`title-screen${lowPerfMode ? ' is-low-perf' : ''}`} style={titleStyle}>
       <div className="title-star title-star-main">✨</div>
-      <button
-        className="title-help-icon touch-btn"
-        onClick={onHowTo}
-        aria-label={t('a11y.title.openHowTo', 'Open game guide')}
-        title={t('title.feature.howto', 'How to Play')}
-      >
-        ℹ️
-      </button>
+      <div className="title-quick-actions">
+        <button
+          className="title-quick-btn touch-btn"
+          onClick={onHowTo}
+          aria-label={t('a11y.title.openHowTo', 'Open game guide')}
+          title={t('title.feature.howto', 'How to Play')}
+        >
+          ℹ️
+        </button>
+        <button
+          className="title-quick-btn touch-btn"
+          onClick={onSettings}
+          aria-label={t('a11y.title.openSettings', 'Open settings')}
+          title={t('title.feature.settings', 'Settings')}
+        >
+          ⚙️
+        </button>
+      </div>
 
       <div className="title-hero">
         <div className="title-sprite-row title-sprite-row-top">

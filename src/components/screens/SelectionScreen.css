@@ -181,6 +181,15 @@
 
 .selection-card-sprite.is-selected{animation:spinSelect .7s ease-in-out}
 
+.selection-card-sprite-inner{
+  transform:scaleX(1);
+  transform-origin:center center;
+}
+
+.selection-card-sprite-inner.is-evolved-flip{
+  animation:selectionHorizontalFlip .55s cubic-bezier(.24,.8,.22,1) both;
+}
+
 .selection-card-main{
   flex:1;
   min-width:0;
@@ -336,4 +345,19 @@
 .selection-confirm-btn-dual.is-coop{
   background:linear-gradient(135deg,#0ea5e9,#22d3ee);
   box-shadow:0 4px 20px rgba(14,165,233,0.32);
+}
+
+@keyframes selectionHorizontalFlip{
+  0%{
+    transform:scaleX(1);
+    filter:brightness(1);
+  }
+  48%{
+    transform:scaleX(0.05);
+    filter:brightness(1.18);
+  }
+  100%{
+    transform:scaleX(-1);
+    filter:brightness(1);
+  }
 }

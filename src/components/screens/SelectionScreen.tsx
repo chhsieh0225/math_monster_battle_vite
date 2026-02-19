@@ -396,13 +396,18 @@ export default function SelectionScreen({
             >
               <div className="selection-card-top">
                 <div className={`selection-card-sprite ${selected ? 'is-selected' : ''}`}>
-                  <MonsterSprite
-                    svgStr={selectedStage.svgFn(starter.c1, starter.c2)}
-                    size={selected ? 72 : 56}
-                    ariaLabel={locked
-                      ? t('selection.a11y.lockedStarter', 'Locked boss. Defeat it in other modes first.')
-                      : t('selection.a11y.starterSprite', '{name} sprite', { name: starter.name })}
-                  />
+                  <div
+                    key={`${starter.id}_stage_${selectedStageIdx}_${selected ? 'selected' : 'idle'}`}
+                    className={`selection-card-sprite-inner ${selected && selectedStageIdx > 0 ? 'is-evolved-flip' : ''}`}
+                  >
+                    <MonsterSprite
+                      svgStr={selectedStage.svgFn(starter.c1, starter.c2)}
+                      size={selected ? 72 : 56}
+                      ariaLabel={locked
+                        ? t('selection.a11y.lockedStarter', 'Locked boss. Defeat it in other modes first.')
+                        : t('selection.a11y.starterSprite', '{name} sprite', { name: starter.name })}
+                    />
+                  </div>
                 </div>
                 <div className="selection-card-main">
                   <div className="selection-card-name">

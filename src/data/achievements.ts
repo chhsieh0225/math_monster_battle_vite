@@ -20,6 +20,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'grass_clear', name: '森林大師', icon: '🌿', desc: '使用草系通關' },
   { id: 'electric_clear', name: '雷電大師', icon: '⚡', desc: '使用雷系通關' },
   { id: 'lion_clear', name: '光輝大師', icon: '✨', desc: '使用光系通關' },
+  { id: 'wolf_clear', name: '鋼刃大師', icon: '⚙️', desc: '使用鋼系通關' },
   { id: 'boss_kill', name: '暗黑終結者', icon: '👑', desc: '擊敗暗黑龍王' },
   { id: 'low_hp', name: '不死鳥', icon: '🦅', desc: 'HP ≤ 5 時擊敗敵人' },
   { id: 'no_damage', name: '完美戰役', icon: '✨', desc: '滿血通關' },
@@ -33,7 +34,7 @@ function assertAchievementMapComplete(
   const ids: AchievementId[] = [
     'first_win', 'streak_5', 'streak_10', 'perfect', 'timed_clear',
     'one_hit', 'spec_def', 'evolve_max', 'move_max', 'all_moves_max',
-    'fire_clear', 'water_clear', 'grass_clear', 'electric_clear', 'lion_clear',
+    'fire_clear', 'water_clear', 'grass_clear', 'electric_clear', 'lion_clear', 'wolf_clear',
     'boss_kill', 'low_hp', 'no_damage', 'enc_all', 'enc_defeat',
   ];
   for (const id of ids) {

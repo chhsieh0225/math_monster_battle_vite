@@ -88,6 +88,16 @@ export function validateBalanceConfigSchema(config: unknown): void {
   checkNumber(config, 'crit.pve.enemy.chance', issues, { min: 0, max: 1 });
 
   checkNumber(config, 'traits.player.specDefComboTrigger', issues, { min: 1 });
+  checkNumber(config, 'traits.player.steelWallDamageScale', issues, { min: 0.1, max: 1 });
+  checkNumber(config, 'traits.player.steelCounterChance', issues, { min: 0, max: 1 });
+  checkNumber(config, 'traits.player.steelCounterScale', issues, { min: 0, max: 3 });
+  checkNumber(config, 'traits.player.steelCounterCap', issues, { min: 0 });
+  checkNumber(config, 'traits.specDef.steelCounterDamage', issues, { min: 0 });
+  checkNumber(config, 'pvp.passive.steelWallDamageScale', issues, { min: 0.1, max: 1 });
+  checkNumber(config, 'pvp.passive.steelCounterChance', issues, { min: 0, max: 1 });
+  checkNumber(config, 'pvp.passive.steelCounterScale', issues, { min: 0, max: 3 });
+  checkNumber(config, 'pvp.passive.steelCounterCap', issues, { min: 0 });
+  checkNumber(config, 'pvp.passive.steelSpecCounterDamage', issues, { min: 0 });
   checkNumber(config, 'traits.boss.phase2AttackMultiplier', issues, { min: 1 });
   checkNumber(config, 'traits.boss.phase3AttackMultiplier', issues, { min: 1 });
   checkNumber(config, 'traits.boss.releaseAttackScale', issues, { min: 1 });

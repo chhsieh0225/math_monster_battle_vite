@@ -28,6 +28,32 @@ test('coop lion final evolution is slightly reduced for screen fit', () => {
   assert.equal(lionLayout.mainPlayerSize, 180);
 });
 
+test('coop wolf final evolution follows lion sizing profile', () => {
+  const wolfLayout = resolveBattleLayout({
+    battleMode: 'coop',
+    hasDualUnits: true,
+    compactUI: false,
+    playerStageIdx: 2,
+    playerStarterId: 'wolf',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+  });
+  const lionLayout = resolveBattleLayout({
+    battleMode: 'coop',
+    hasDualUnits: true,
+    compactUI: false,
+    playerStageIdx: 2,
+    playerStarterId: 'lion',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+  });
+
+  assert.equal(wolfLayout.mainPlayerSize, lionLayout.mainPlayerSize);
+  assert.equal(wolfLayout.mainPlayerSize, 180);
+});
+
 test('hydra gets coop-only size boost to avoid looking undersized', () => {
   const coopHydra = resolveBattleLayout({
     battleMode: 'coop',

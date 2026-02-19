@@ -290,6 +290,25 @@ export function executePvpStrikeTurn({
       return;
     }
 
+    if (defender.type === 'steel') {
+      const counterDmg = Math.max(1, Math.round(PVP.passive.steelSpecCounterDamage || 12));
+      addD('🛡️BLOCK', defenderMainX, defenderMainY, '#94a3b8');
+      const killed = applyCounterToAttacker(counterDmg, '#94a3b8', 'enemyHit 0.45s ease');
+      sfx.play('specDef');
+      setBText(tr(t, 'battle.pvp.specdef.steel', '⚙️ {name} triggered Iron Guard and countered!', { name: defender.name }));
+      safeToIfBattleActive(() => setAtkEffect(null), 420);
+      if (killed) {
+        declarePvpWinner({
+          winner: currentTurn === 'p1' ? 'p2' : 'p1',
+          setPvpWinner,
+          setScreen,
+        });
+        return;
+      }
+      finishWithTurnSwap();
+      return;
+    }
+
     const reflectRaw = Math.round(strike.dmg * (PVP.passive.grassReflectRatio || 0.32));
     const reflectDmg = Math.min(
       PVP.passive.grassReflectCap || 18,
@@ -356,11 +375,22 @@ export function executePvpStrikeTurn({
 
   totalDmg += bonusDmg;
 
+  if (defender.type === 'steel') {
+    const steelWallScale = PVP.passive.steelWallDamageScale || 1;
+    const reduced = Math.max(1, Math.round(totalDmg * steelWallScale));
+    if (reduced < totalDmg) {
+      totalDmg = reduced;
+      passiveNotes.push(tr(t, 'battle.pvp.note.steelWall', '🛡️Steel Wall'));
+    }
+  }
+
+  let defenderHpAfterHit = 0;
   if (currentTurn === 'p1') {
     const nextHp = Math.max(0, s2.pvpHp2 - totalDmg);
     setPvpHp2(nextHp);
     setEHp(nextHp);
     setEAnim(hitAnim);
+    defenderHpAfterHit = nextHp;
     addD(strike.isCrit ? `💥-${totalDmg}` : `-${totalDmg}`, 140, 55, '#ef4444');
 
     if (strike.heal > 0) {
@@ -385,6 +415,7 @@ export function executePvpStrikeTurn({
     const nextHp = Math.max(0, s2.pHp - totalDmg);
     setPHp(nextHp);
     setPAnim('playerHit 0.45s ease');
+    defenderHpAfterHit = nextHp;
     addD(strike.isCrit ? `💥-${totalDmg}` : `-${totalDmg}`, 60, 170, '#ef4444');
 
     if (strike.heal > 0) {
@@ -409,6 +440,46 @@ export function executePvpStrikeTurn({
         setScreen,
       });
       return;
+    }
+  }
+
+  if (defender.type === 'steel' && defenderHpAfterHit > 0 && chance(PVP.passive.steelCounterChance || 0)) {
+    const counterRaw = Math.round(totalDmg * (PVP.passive.steelCounterScale || 0));
+    const counterCap = Math.max(0, Math.round(PVP.passive.steelCounterCap || 0));
+    const counterDmg = Math.max(0, Math.min(counterCap || counterRaw, counterRaw));
+    if (counterDmg > 0) {
+      passiveNotes.push(tr(t, 'battle.pvp.note.steelCounter', '⚙️Steel Counter'));
+      if (currentTurn === 'p1') {
+        const attackerNextHp = Math.max(0, s2.pHp - counterDmg);
+        setPHp(attackerNextHp);
+        addD(`⚙️-${counterDmg}`, 60, 170, '#94a3b8');
+        setPAnim('playerHit 0.45s ease');
+        safeToIfBattleActive(() => setPAnim(''), 520);
+        if (attackerNextHp <= 0) {
+          declarePvpWinner({
+            winner: 'p2',
+            setPvpWinner,
+            setScreen,
+          });
+          return;
+        }
+      } else {
+        const attackerNextHp = Math.max(0, s2.pvpHp2 - counterDmg);
+        setPvpHp2(attackerNextHp);
+        setEHp(attackerNextHp);
+        addD(`⚙️-${counterDmg}`, 140, 55, '#94a3b8');
+        setEAnim('enemyHit 0.45s ease');
+        safeToIfBattleActive(() => setEAnim(''), 520);
+        if (attackerNextHp <= 0) {
+          declarePvpWinner({
+            winner: 'p1',
+            setPvpWinner,
+            setScreen,
+          });
+          return;
+        }
+      }
+      sfx.play('specDef');
     }
   }
 

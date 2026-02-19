@@ -334,6 +334,26 @@ export function runEnemyTurn({
                 tryReturnToBattleMenu();
               }, 1500);
             }, 1800);
+          } else if (st === 'steel') {
+            const steelCounterDmg = Math.max(1, Math.round(TRAIT_BALANCE.specDef.steelCounterDamage || 14));
+            const nh = Math.max(0, sr.current.eHp - steelCounterDmg);
+            setEHp(nh);
+            setBText(tr(t, 'battle.specdef.steel.counter', '⚙️ Iron Guard! Blocked and countered!'));
+            addD('🛡️BLOCK', 60, 170, '#94a3b8');
+            addP('starter', 50, 170, 5);
+            sfx.play('specDef');
+            safeToIfBattleActive(() => {
+              addD(`⚙️-${steelCounterDmg}`, 155, 50, '#94a3b8');
+              setEAnim('enemyHit 0.55s ease');
+            }, 500);
+            safeToIfBattleActive(() => {
+              setEAnim('');
+              setDefAnim(null);
+              if (nh <= 0) safeToIfBattleActive(() => handleVictory(tr(t, 'battle.victory.verb.steelCounter', 'was defeated by steel counter')), 500);
+              else {
+                tryReturnToBattleMenu();
+              }
+            }, 1800);
           } else if (st === 'light') {
             const roarDmg = 15;
             const nh = Math.max(0, sr.current.eHp - roarDmg);
@@ -396,11 +416,21 @@ export function runEnemyTurn({
           bossPhase: bp,
           chance,
         });
+        let finalDmg = dmg;
+        if (defenderType === 'steel') {
+          const steelWallScale = TRAIT_BALANCE.player.steelWallDamageScale || 1;
+          const reducedDmg = Math.max(1, Math.round(dmg * steelWallScale));
+          if (reducedDmg < dmg) {
+            finalDmg = reducedDmg;
+            setEffMsg({ text: tr(t, 'battle.effect.steelWall', '🛡️ Steel Wall reduced damage!'), color: '#94a3b8' });
+            safeToIfBattleActive(() => setEffMsg(null), 1500);
+          }
+        }
         const nh = applyDamageToTarget({
           s: s2,
           target,
-          dmg,
-          label: isCrit ? `💥-${dmg}` : `-${dmg}`,
+          dmg: finalDmg,
+          label: isCrit ? `💥-${finalDmg}` : `-${finalDmg}`,
           color: isCrit ? '#ff6b00' : '#ef4444',
         });
         sfx.play('playerHit');
@@ -431,6 +461,24 @@ export function runEnemyTurn({
             }
           }, 800);
           return;
+        }
+
+        if (defenderType === 'steel' && chance(TRAIT_BALANCE.player.steelCounterChance || 0)) {
+          const counterRaw = Math.round(finalDmg * (TRAIT_BALANCE.player.steelCounterScale || 0));
+          const counterCap = Math.max(0, Math.round(TRAIT_BALANCE.player.steelCounterCap || 0));
+          const counterDmg = Math.max(0, Math.min(counterCap || counterRaw, counterRaw));
+          if (counterDmg > 0) {
+            const enemyHpAfterCounter = Math.max(0, (s2.eHp || 0) - counterDmg);
+            setEHp(enemyHpAfterCounter);
+            addD(`⚙️-${counterDmg}`, 155, 50, '#94a3b8');
+            setEffMsg({ text: tr(t, 'battle.effect.steelCounter', '⚙️ Steel Counter!'), color: '#94a3b8' });
+            safeToIfBattleActive(() => setEffMsg(null), 1500);
+            sfx.play('specDef');
+            if (enemyHpAfterCounter <= 0) {
+              safeToIfBattleActive(() => handleVictory(tr(t, 'battle.victory.verb.steelCounter', 'was defeated by steel counter')), 800);
+              return;
+            }
+          }
         }
 
         if (trait === 'tenacity') {

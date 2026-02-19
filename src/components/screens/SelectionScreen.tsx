@@ -50,6 +50,11 @@ function buildStarterDescs(t: TranslateFn): Record<string, StarterDesc> {
       passive: t('selection.lion.passive', '🦁 Courage: lower HP grants higher damage (up to +50%).'),
       specDef: t('selection.lion.specDef', '✨ Roar: at 8-combo, blocks a hit and deals fixed counter damage.'),
     },
+    wolf: {
+      desc: t('selection.wolf.desc', 'A steel tactician from iron ruins. Excels at fraction calculations with precise punish tools.'),
+      passive: t('selection.wolf.passive', '⚙️ Steel Wall/Counter: reduces incoming damage and can strike back when hit.'),
+      specDef: t('selection.wolf.specDef', '🛡️ Iron Guard: blocks and counters with reinforced armor.'),
+    },
     boss: {
       desc: t('selection.boss.desc', 'A final boss from the abyss. Heavy dark-thunder pressure with ruthless finishers.'),
       passive: t('selection.boss.passive', '💀 Tyrant: controls battle pace with overwhelming pressure.'),
@@ -108,6 +113,7 @@ const STARTER_ID_SET: ReadonlySet<StarterId> = new Set([
   'grass',
   'electric',
   'lion',
+  'wolf',
   'boss',
   'boss_hydra',
   'boss_crazy_dragon',

@@ -316,6 +316,11 @@ export const BALANCE_CONFIG = {
       grassReflectRatio: 0.32,
       grassReflectMin: 8,
       grassReflectCap: 18,
+      steelWallDamageScale: 0.84,
+      steelCounterChance: 0.28,
+      steelCounterScale: 0.45,
+      steelCounterCap: 16,
+      steelSpecCounterDamage: 12,
     },
     firstStrikeScale: 0.88,
     effectScale: {
@@ -357,10 +362,15 @@ export const BALANCE_CONFIG = {
       staticDischargeDamage: 12,
       counterReflectRatio: 0.2,
       specDefComboTrigger: 8,
+      steelWallDamageScale: 0.82,
+      steelCounterChance: 0.3,
+      steelCounterScale: 0.45,
+      steelCounterCap: 18,
     },
     specDef: {
       grassReflectScale: 1.2,
       lightCounterDamage: 15,
+      steelCounterDamage: 14,
     },
     boss: {
       phase2AttackMultiplier: 1.5,

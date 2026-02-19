@@ -50,3 +50,22 @@ test('applyGameCompletionAchievements unlocks run and encyclopedia milestones', 
   assert.ok(unlocked.includes("enc_all"));
   assert.ok(unlocked.includes("enc_defeat"));
 });
+
+test('applyGameCompletionAchievements unlocks wolf clear achievement', () => {
+  const unlocked = [];
+  applyGameCompletionAchievements({
+    state: {
+      tW: 1,
+      timedMode: false,
+      pHp: 10,
+      pLvl: 1,
+      pStg: 0,
+      starter: { id: 'wolf' },
+    },
+    tryUnlock: (id) => unlocked.push(id),
+    setEncData: () => {},
+    encTotal: 99,
+  });
+
+  assert.ok(unlocked.includes('wolf_clear'));
+});

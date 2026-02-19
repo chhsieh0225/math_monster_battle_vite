@@ -14,6 +14,7 @@ export type AchievementId =
   | "grass_clear"
   | "electric_clear"
   | "lion_clear"
+  | "wolf_clear"
   | "boss_kill"
   | "low_hp"
   | "no_damage"

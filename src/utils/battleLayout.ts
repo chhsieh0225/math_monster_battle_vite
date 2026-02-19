@@ -61,9 +61,10 @@ export function resolveBattleLayout({
   const normalizedPlayerId = normalizeEnemyVisualId(playerStarterId);
   const isBossPlayer = BOSS_IDS.has(normalizedPlayerId);
   const isLionFinalInTeam = dualUnits && normalizedPlayerId === "lion" && playerStageIdx >= 2;
+  const isWolfFinalInTeam = dualUnits && normalizedPlayerId === "wolf" && playerStageIdx >= 2;
   const mainPlayerBaseSize = isBossPlayer
     ? 230
-    : isLionFinalInTeam
+    : (isLionFinalInTeam || isWolfFinalInTeam)
       ? 188
       : playerStageIdx >= 2
         ? 200

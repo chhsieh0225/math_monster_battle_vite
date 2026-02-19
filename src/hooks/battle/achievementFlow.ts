@@ -40,6 +40,7 @@ const STARTER_CLEAR_ACHIEVEMENTS: Partial<Record<string, AchievementId>> = {
   grass: 'grass_clear',
   electric: 'electric_clear',
   lion: 'lion_clear',
+  wolf: 'wolf_clear',
 };
 
 function unlockStarterClearAchievement(starterId: string | undefined, tryUnlock: TryUnlock): void {

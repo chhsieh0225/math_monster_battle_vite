@@ -21,7 +21,6 @@ type TitleStarter = {
 
 type UnknownRecord = Record<string, unknown>;
 type TitleAction = () => void;
-type TitleStyleVars = CSSProperties & Record<'--title-bg-image', string>;
 type TitleStarterId = TitleStarter['id'];
 
 const TITLE_BG_POOL: readonly string[] = [
@@ -120,8 +119,13 @@ export default function TitleScreen({
   }, []);
   const titleBgImage = titleRandomConfig.titleBgImage;
   const spriteRandomConfig = titleRandomConfig.spriteRandomConfig;
-  const titleStyle = useMemo<TitleStyleVars>(() => ({
-    '--title-bg-image': titleBgImage ? `url("${titleBgImage}")` : 'none',
+  const titleStyle = useMemo<CSSProperties>(() => ({
+    backgroundImage: titleBgImage
+      ? `linear-gradient(180deg, rgba(7, 12, 26, 0.86) 0%, rgba(17, 24, 39, 0.8) 42%, rgba(30, 27, 75, 0.82) 100%), radial-gradient(140% 120% at 20% 10%, rgba(59, 130, 246, 0.18), rgba(15, 23, 42, 0) 55%), url("${titleBgImage}")`
+      : 'linear-gradient(180deg, #0f172a 0%, #1e1b4b 40%, #312e81 100%)',
+    backgroundSize: 'cover, cover, cover',
+    backgroundPosition: 'center, center, center',
+    backgroundRepeat: 'no-repeat, no-repeat, no-repeat',
   }), [titleBgImage]);
   const startersById = useMemo(() => new Map(starters.map((starter) => [starter.id, starter])), [starters]);
   const randomizedStarters = useMemo(

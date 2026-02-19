@@ -24,6 +24,11 @@ type EncyclopediaCssVars = CSSProperties & Record<`--${string}`, string | number
 const LARGE_MONSTER_IDS: ReadonlySet<string> = new Set([...BOSS_IDS, 'golumn', 'golumn_mud', 'ghost_lantern']);
 function encCardSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 64 : 48; }
 function encModalSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 200 : 160; }
+const WOLF_LEFT_FACING_STYLE: CSSProperties = { transform: 'scaleX(-1)' };
+
+function starterFacingStyle(entry: EncyclopediaStarterEntry): CSSProperties | undefined {
+  return entry.starterId === 'wolf' ? WOLF_LEFT_FACING_STYLE : undefined;
+}
 
 const DROP_CATALOG: { emoji: string; name: string; rarity: 'common' | 'rare' | 'epic' | 'legendary' }[] = [
   { emoji: '🍬', name: 'Candy', rarity: 'common' },
@@ -222,7 +227,12 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                   style={{ borderColor: `${TYPE_COLORS[e.mType] || '#6366f1'}22` }}
                 >
                   <div className="enc-card-sprite-wrap">
-                    <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={48} ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: e.name })} />
+                    <MonsterSprite
+                      svgStr={e.svgFn(e.c1, e.c2)}
+                      size={48}
+                      style={starterFacingStyle(e)}
+                      ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: e.name })}
+                    />
                   </div>
                   <div className="enc-card-name">{e.name}</div>
                   <div className="enc-card-meta">{e.typeIcon} {e.typeName}</div>
@@ -487,7 +497,12 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
           </div>
 
           <div className="enc-modal-sprite-wrap">
-            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={160} ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: entry.name })} />
+            <MonsterSprite
+              svgStr={entry.svgFn(entry.c1, entry.c2)}
+              size={160}
+              style={starterFacingStyle(entry)}
+              ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: entry.name })}
+            />
           </div>
 
           <div className="enc-modal-name-wrap">

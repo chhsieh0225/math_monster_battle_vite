@@ -37,7 +37,6 @@ import {
 } from '../data/constants';
 import {
   localizeEnemy,
-  localizeEnemyRoster,
   localizeSceneName,
   localizeStarter,
 } from '../utils/contentLocalization.ts';
@@ -74,8 +73,7 @@ import { usePvpState } from './usePvpState';
 import { useBattleSessionLifecycle } from './useBattleSessionLifecycle';
 import { ENC_TOTAL } from '../data/encyclopedia.ts';
 import sfx from '../utils/sfx.ts';
-import { buildRoster, type BattleRosterMonster } from '../utils/rosterBuilder';
-import { applyCampaignPlanToRoster, buildCampaignRunPlan } from '../utils/campaignPlanner.ts';
+import { useBattleRosterState } from './battle/useBattleRosterState.ts';
 import {
   createAbilityModel,
   resolveLevelProgress,
@@ -156,7 +154,6 @@ export function useBattle() {
   const { initSession, markQStart, logAns, endSession } = useSessionLog();
   const { rand, randInt, chance, pickIndex, reseed } = useBattleRng();
   const UI = useBattleUIState({ rand, randInt });
-  const campaignPlanRef = useRef<ReturnType<typeof buildCampaignRunPlan> | null>(null);
   const [collectionPerks, setCollectionPerks] = useState<CollectionPerks>(() => getCollectionPerks(loadCollection()));
   const [inventory, setInventory] = useState(() => loadInventory());
 
@@ -181,39 +178,18 @@ export function useBattle() {
     settleRunAsCleared,
   } = useDailyChallengeRun();
   const hasChallengeRun = Boolean(queuedChallenge || activeChallenge);
-  const buildNewRoster = useCallback(
-    (
-      mode: BattleMode = 'single',
-      options: { excludeStarterIds?: readonly string[] } = {},
-    ): EnemyVm[] => {
-      const rosterMode = mode === 'coop' || mode === 'double' ? 'double' : 'single';
-      const starterRosterOptions = {
-        enableStarterEncounters: !hasChallengeRun,
-        excludedStarterIds: options.excludeStarterIds || [],
-      };
-      if (rosterMode === 'single' && !hasChallengeRun) {
-        const campaignPlan = buildCampaignRunPlan(pickIndex);
-        campaignPlanRef.current = campaignPlan;
-        const campaignWaves = campaignPlan.nodes.map((node) => node.wave);
-        const roster = buildRoster(pickIndex, 'single', {
-          ...starterRosterOptions,
-          singleWaves: campaignWaves,
-          disableRandomSwap: true,
-        });
-        return localizeEnemyRoster(applyCampaignPlanToRoster(roster, campaignPlan), locale);
-      }
-      campaignPlanRef.current = null;
-      return localizeEnemyRoster(
-        buildRoster(pickIndex, rosterMode, starterRosterOptions),
-        locale,
-      );
-    },
-    [pickIndex, locale, hasChallengeRun],
-  );
-  const [enemies, setEnemies] = useState<EnemyVm[]>(
-    () => localizeEnemyRoster(buildRoster(pickIndex, 'single'), locale),
-  );
-  const [coopActiveSlot, setCoopActiveSlot] = useState<'main' | 'sub'>('main');
+  const {
+    buildNewRoster,
+    enemies,
+    setEnemies,
+    coopActiveSlot,
+    setCoopActiveSlot,
+    getCampaignNodeMeta,
+  } = useBattleRosterState({
+    pickIndex,
+    locale,
+    hasChallengeRun,
+  });
   const pvpState = usePvpState();
   const {
     pvpStarter2, setPvpStarter2,
@@ -547,17 +523,7 @@ export function useBattle() {
         resetFrozen: () => { frozenR.current = false; },
         playBattleIntro,
         pickIndex,
-        getCampaignNodeMeta: (roundIndex) => {
-          const node = campaignPlanRef.current?.nodes?.[roundIndex];
-          if (!node) return null;
-          return {
-            roundIndex: node.roundIndex,
-            totalNodes: node.totalNodes,
-            branch: node.branch,
-            tier: node.tier,
-            eventTag: node.eventTag,
-          };
-        },
+        getCampaignNodeMeta,
       },
     });
   }, [
@@ -577,6 +543,7 @@ export function useBattle() {
     setScreen,
     _finishGame,
     playBattleIntro,
+    getCampaignNodeMeta,
   ]);
 
   // --- Full game reset (starterOverride used on first game when setStarter hasn't rendered yet) ---

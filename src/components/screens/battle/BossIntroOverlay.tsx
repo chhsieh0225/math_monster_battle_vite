@@ -74,19 +74,41 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
       {/* Phase 3: boss silhouette → fully visible (1.2–2.8 s) */}
       <div className={`boss-intro-silhouette-wrap ${hasDualSilhouette ? 'is-dual' : ''}`}>
         <div className="boss-intro-silhouette boss-intro-silhouette-main">
-          <MonsterSprite
-            svgStr={enemySvg}
-            size={enemySize}
-            decorative
-          />
+          <div className="boss-intro-sprite-stack">
+            <div className="boss-intro-sprite boss-intro-sprite-shadow">
+              <MonsterSprite
+                svgStr={enemySvg}
+                size={enemySize}
+                decorative
+              />
+            </div>
+            <div className="boss-intro-sprite boss-intro-sprite-color">
+              <MonsterSprite
+                svgStr={enemySvg}
+                size={enemySize}
+                decorative
+              />
+            </div>
+          </div>
         </div>
         {enemySubName && enemySubSvg && (
           <div className="boss-intro-silhouette boss-intro-silhouette-sub">
-            <MonsterSprite
-              svgStr={enemySubSvg}
-              size={enemySubSize ?? enemySize}
-              decorative
-            />
+            <div className="boss-intro-sprite-stack">
+              <div className="boss-intro-sprite boss-intro-sprite-shadow">
+                <MonsterSprite
+                  svgStr={enemySubSvg}
+                  size={enemySubSize ?? enemySize}
+                  decorative
+                />
+              </div>
+              <div className="boss-intro-sprite boss-intro-sprite-color">
+                <MonsterSprite
+                  svgStr={enemySubSvg}
+                  size={enemySubSize ?? enemySize}
+                  decorative
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>

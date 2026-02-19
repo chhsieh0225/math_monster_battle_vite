@@ -331,6 +331,14 @@
   filter:drop-shadow(0 0 2px rgba(245,158,11,.3));
   animation:weatherDustFlow var(--wd) linear var(--wdelay) infinite;
 }
+/* Poison-scene dust: purple/green toxic spore palette */
+.battle-weather-layer.scene-poison .battle-weather-dust-haze{
+  background:linear-gradient(180deg,rgba(168,85,247,.08),rgba(107,33,168,.16) 55%,rgba(88,28,135,.24));
+}
+.battle-weather-layer.scene-poison .battle-weather-dust-dot{
+  background:radial-gradient(circle,rgba(192,38,211,.88),rgba(126,34,206,.32) 68%,rgba(0,0,0,0) 100%);
+  filter:drop-shadow(0 0 2px rgba(168,85,247,.3));
+}
 .battle-weather-lightning{
   --wdelay:4s;
   position:absolute;

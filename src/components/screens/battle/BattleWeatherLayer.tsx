@@ -19,7 +19,7 @@ const WEATHER_BY_SCENE: Record<string, BattleWeatherType> = {
   steel: 'none',
   electric: 'storm',
   dark: 'storm',
-  poison: 'fog',
+  poison: 'dust',
   ghost: 'none',
   heaven: 'snow',
   light: 'snow',
@@ -180,7 +180,7 @@ export const BattleWeatherLayer = memo(function BattleWeatherLayer({
   if (!weatherActive) return null;
 
   return (
-    <div className={`battle-weather-layer weather-${weather}`} aria-hidden="true">
+    <div className={`battle-weather-layer weather-${weather} scene-${sceneType}`} aria-hidden="true">
       {(weather === 'rain' || weather === 'storm') && rainDrops.map((drop) => (
         <div key={drop.key} className="battle-weather-rain-drop" style={drop.style} />
       ))}
@@ -189,9 +189,8 @@ export const BattleWeatherLayer = memo(function BattleWeatherLayer({
         <div key={flake.key} className="battle-weather-snow-flake" style={flake.style} />
       ))}
 
-      {(weather === 'fog' || weather === 'storm') && fogBands.map((fog) => (
-        <div key={fog.key} className="battle-weather-fog-band" style={fog.style} />
-      ))}
+      {/* Fog bands removed — blur(10px) on large elements is too expensive on mobile GPUs.
+         buildFog() and CSS class are kept so fog can be restored if a cheaper blur alternative is added. */}
 
       {weather === 'dust' && (
         <>

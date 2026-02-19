@@ -470,6 +470,10 @@ function BattleScreenComponent({
     enemySubSize,
   } = memoSpriteStyles!;
   const impactPhaseClass = showHeavyFx ? `battle-impact-${impactPhase}` : "battle-impact-idle";
+  const coOpBossSubIntro = isCoopBattle
+    && showEnemySub
+    && Boolean(S.enemySub?.name)
+    && Boolean(eSubSvg);
 
   return (
     <div
@@ -488,6 +492,9 @@ function BattleScreenComponent({
           enemyName={enemy.name}
           enemySvg={eSvg}
           enemySize={eSize}
+          enemySubName={coOpBossSubIntro ? S.enemySub?.name : undefined}
+          enemySubSvg={coOpBossSubIntro ? (eSubSvg ?? undefined) : undefined}
+          enemySubSize={coOpBossSubIntro ? enemySubSize : undefined}
           onComplete={handleAdvance}
         />
       )}

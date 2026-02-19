@@ -1662,20 +1662,36 @@
 }
 
 /* Phase 3 – boss silhouette → full colour */
-.boss-intro-silhouette{
+.boss-intro-silhouette-wrap{
   position:absolute;
   top:18%;
   left:50%;
-  transform:translateX(-50%) scale(1.5);
+  transform:translateX(-50%);
+  width:min(84vw,720px);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  gap:clamp(20px,5vw,52px);
+  pointer-events:none;
+}
+.boss-intro-silhouette{
+  position:relative;
+  transform:scale(1.5);
   filter:brightness(0) drop-shadow(0 0 24px rgba(120,40,80,.7));
   opacity:0;
   animation:bossIntroSilhouette 2.2s cubic-bezier(.22,.68,.36,1) 1.1s both;
 }
+.boss-intro-silhouette-wrap.is-dual .boss-intro-silhouette-main{
+  animation-delay:1.04s;
+}
+.boss-intro-silhouette-wrap.is-dual .boss-intro-silhouette-sub{
+  animation-delay:1.18s;
+}
 @keyframes bossIntroSilhouette{
-  0%{opacity:0;filter:brightness(0) drop-shadow(0 0 24px rgba(120,40,80,.7));transform:translateX(-50%) scale(1.3)}
-  20%{opacity:1;filter:brightness(0) drop-shadow(0 0 28px rgba(180,60,100,.8));transform:translateX(-50%) scale(1.5)}
-  55%{filter:brightness(.35) drop-shadow(0 0 18px rgba(180,60,100,.5));transform:translateX(-50%) scale(1.45)}
-  100%{opacity:1;filter:brightness(1) drop-shadow(0 0 8px rgba(120,40,80,.3));transform:translateX(-50%) scale(1.4)}
+  0%{opacity:0;filter:brightness(0) drop-shadow(0 0 24px rgba(120,40,80,.7));transform:scale(1.28)}
+  20%{opacity:1;filter:brightness(0) drop-shadow(0 0 28px rgba(180,60,100,.8));transform:scale(1.5)}
+  55%{filter:brightness(.35) drop-shadow(0 0 18px rgba(180,60,100,.5));transform:scale(1.45)}
+  100%{opacity:1;filter:brightness(1) drop-shadow(0 0 8px rgba(120,40,80,.3));transform:scale(1.4)}
 }
 
 /* Phase 4 – boss name text pop */
@@ -1695,6 +1711,21 @@
   white-space:nowrap;
   opacity:0;
   animation:bossIntroNamePop .8s cubic-bezier(.16,.84,.44,1) 1.9s both;
+}
+.boss-intro-name.is-dual{
+  white-space:normal;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  text-align:center;
+  max-width:min(94vw,860px);
+  padding:0 14px;
+}
+.boss-intro-name-separator{
+  opacity:.9;
+  font-size:.7em;
+  letter-spacing:.12em;
 }
 @keyframes bossIntroSkipGlow{
   0%,100%{opacity:.46}
@@ -1734,6 +1765,25 @@
 
 /* Low-perf: skip the overlay entirely (handled in JS) */
 .battle-root.low-perf .boss-intro-overlay{display:none}
+
+@media (max-width: 640px) {
+  .boss-intro-silhouette-wrap{
+    top:21%;
+    width:min(92vw,540px);
+    gap:clamp(10px,4vw,22px);
+  }
+  .boss-intro-silhouette{
+    transform:scale(1.26);
+  }
+  .boss-intro-name{
+    bottom:24%;
+    letter-spacing:1.6px;
+  }
+  .boss-intro-name.is-dual{
+    gap:5px;
+    font-size:clamp(16px,4.2vw,24px);
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .scene-bg,

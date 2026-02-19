@@ -6,6 +6,9 @@ type BossIntroOverlayProps = {
   enemyName: string;
   enemySvg: string;
   enemySize: number;
+  enemySubName?: string;
+  enemySubSvg?: string;
+  enemySubSize?: number;
   onComplete: () => void;
 };
 
@@ -25,10 +28,14 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
   enemyName,
   enemySvg,
   enemySize,
+  enemySubName,
+  enemySubSvg,
+  enemySubSize,
   onComplete,
 }: BossIntroOverlayProps) {
   const { t } = useI18n();
   const completedRef = useRef(false);
+  const hasDualSilhouette = Boolean(enemySubName && enemySubSvg);
 
   const finish = useCallback(() => {
     if (completedRef.current) return;
@@ -47,7 +54,9 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
       role="button"
       tabIndex={0}
       aria-live="assertive"
-      aria-label={t('a11y.bossIntro.skip', 'Tap to skip boss intro cinematic')}
+      aria-label={hasDualSilhouette
+        ? t('a11y.bossIntro.skipDual', 'Tap to skip dual boss intro cinematic')
+        : t('a11y.bossIntro.skip', 'Tap to skip boss intro cinematic')}
       onClick={finish}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
@@ -63,16 +72,38 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
       <div className="boss-intro-flash" />
 
       {/* Phase 3: boss silhouette → fully visible (1.2–2.8 s) */}
-      <div className="boss-intro-silhouette">
-        <MonsterSprite
-          svgStr={enemySvg}
-          size={enemySize}
-          decorative
-        />
+      <div className={`boss-intro-silhouette-wrap ${hasDualSilhouette ? 'is-dual' : ''}`}>
+        <div className="boss-intro-silhouette boss-intro-silhouette-main">
+          <MonsterSprite
+            svgStr={enemySvg}
+            size={enemySize}
+            decorative
+          />
+        </div>
+        {enemySubName && enemySubSvg && (
+          <div className="boss-intro-silhouette boss-intro-silhouette-sub">
+            <MonsterSprite
+              svgStr={enemySubSvg}
+              size={enemySubSize ?? enemySize}
+              decorative
+            />
+          </div>
+        )}
       </div>
 
       {/* Phase 4: boss name pop (2.0–3.2 s) */}
-      <div className="boss-intro-name">{enemyName}</div>
+      <div className={`boss-intro-name ${hasDualSilhouette ? 'is-dual' : ''}`}>
+        {!hasDualSilhouette && enemyName}
+        {hasDualSilhouette && (
+          <>
+            <span>{enemyName}</span>
+            <span className="boss-intro-name-separator">
+              {t('battle.boss.intro.dualSeparator', ' + ')}
+            </span>
+            <span>{enemySubName}</span>
+          </>
+        )}
+      </div>
 
       <div className="boss-intro-skip-hint">{t('battle.boss.introSkip', 'Tap to skip')}</div>
 

@@ -72,6 +72,12 @@
   align-items:center;
   justify-content:center;
 }
+.enc-starter-sprite-inner{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  transform-origin:center bottom;
+}
 .enc-card-sprite-wrap.is-large{
   width:72px;
   height:60px;
@@ -305,4 +311,5 @@
   .enc-drop-panel{flex-direction:column;align-items:flex-start}
   .enc-modal-tag-row{flex-wrap:wrap;justify-content:center}
   .enc-move-grid{grid-template-columns:1fr}
+  .enc-starter-sprite-inner.is-bladewolf{transform:scale(.92)}
 }

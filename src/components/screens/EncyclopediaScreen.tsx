@@ -27,7 +27,12 @@ function encModalSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(
 const WOLF_LEFT_FACING_STYLE: CSSProperties = { transform: 'scaleX(-1)' };
 
 function starterFacingStyle(entry: EncyclopediaStarterEntry): CSSProperties | undefined {
-  return entry.starterId === 'wolf' ? WOLF_LEFT_FACING_STYLE : undefined;
+  // Wolf stage 0/1 source images already face left, so only flip stage 2 if needed.
+  return entry.starterId === 'wolf' && entry.stageIdx >= 2 ? WOLF_LEFT_FACING_STYLE : undefined;
+}
+
+function isBladewolfEntry(entry: EncyclopediaStarterEntry): boolean {
+  return entry.starterId === 'wolf' && entry.stageIdx === 1;
 }
 
 const DROP_CATALOG: { emoji: string; name: string; rarity: 'common' | 'rare' | 'epic' | 'legendary' }[] = [
@@ -227,12 +232,14 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                   style={{ borderColor: `${TYPE_COLORS[e.mType] || '#6366f1'}22` }}
                 >
                   <div className="enc-card-sprite-wrap">
-                    <MonsterSprite
-                      svgStr={e.svgFn(e.c1, e.c2)}
-                      size={48}
-                      style={starterFacingStyle(e)}
-                      ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: e.name })}
-                    />
+                    <div className={`enc-starter-sprite-inner ${isBladewolfEntry(e) ? 'is-bladewolf' : ''}`}>
+                      <MonsterSprite
+                        svgStr={e.svgFn(e.c1, e.c2)}
+                        size={48}
+                        style={starterFacingStyle(e)}
+                        ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: e.name })}
+                      />
+                    </div>
                   </div>
                   <div className="enc-card-name">{e.name}</div>
                   <div className="enc-card-meta">{e.typeIcon} {e.typeName}</div>
@@ -497,12 +504,14 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
           </div>
 
           <div className="enc-modal-sprite-wrap">
-            <MonsterSprite
-              svgStr={entry.svgFn(entry.c1, entry.c2)}
-              size={160}
-              style={starterFacingStyle(entry)}
-              ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: entry.name })}
-            />
+            <div className={`enc-starter-sprite-inner ${isBladewolfEntry(entry) ? 'is-bladewolf' : ''}`}>
+              <MonsterSprite
+                svgStr={entry.svgFn(entry.c1, entry.c2)}
+                size={160}
+                style={starterFacingStyle(entry)}
+                ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: entry.name })}
+              />
+            </div>
           </div>
 
           <div className="enc-modal-name-wrap">

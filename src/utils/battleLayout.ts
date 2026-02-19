@@ -50,7 +50,7 @@ export function resolveBattleLayout({
   const compactDual = dualUnits && compactUI;
   const enemyInfoRight = dualUnits ? "44%" : "42%";
   const playerInfoLeft = dualUnits ? "44%" : "42%";
-  const enemyMainRightPct = dualUnits ? (compactDual ? 5 : 8) : 10;
+  const baseEnemyMainRightPct = dualUnits ? (compactDual ? 5 : 8) : 10;
   const enemySubRightPct = dualUnits ? (compactDual ? 25 : 24) : 24;
   const enemySubTopPct = dualUnits ? (compactDual ? 27 : 23) : 14;
   const playerMainLeftPct = dualUnits ? (compactDual ? 4 : 6) : 6;
@@ -88,6 +88,12 @@ export function resolveBattleLayout({
   const isCrazyDragon = visualEnemyId === "boss_crazy_dragon";
   const isSwordGod = visualEnemyId === "boss_sword_god";
   const isHydra = visualEnemyId === "boss_hydra";
+  // Mobile compact viewport: move Crazy Dragon slightly to the right so it doesn't
+  // feel too close to player-side due to its large body width.
+  const crazyDragonRightAdjust = compactUI && isCrazyDragon
+    ? (dualUnits ? -1.5 : -3)
+    : 0;
+  const enemyMainRightPct = Math.max(3, baseEnemyMainRightPct + crazyDragonRightAdjust);
   const enemyBaseSize = isSwordGod ? 270
     : isCrazyDragon ? 260
     : isHydra ? 260

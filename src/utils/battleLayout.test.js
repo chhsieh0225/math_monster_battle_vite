@@ -195,3 +195,29 @@ test('evolved wild starter enemies render larger than base wild starter enemies'
   assert.ok(evolvedWildStarterLayout.enemySize > baseWildStarterLayout.enemySize);
   assert.equal(evolvedWildStarterLayout.enemySize, 172);
 });
+
+test('compact UI shifts crazy dragon enemy position to the right', () => {
+  const compactCrazyDragon = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss_crazy_dragon',
+    enemySceneType: 'burnt_warplace',
+    enemyIsEvolved: true,
+  });
+  const compactHydra = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss_hydra',
+    enemySceneType: 'poison',
+    enemyIsEvolved: true,
+  });
+
+  assert.ok(compactCrazyDragon.enemyMainRightPct < compactHydra.enemyMainRightPct);
+  assert.equal(compactCrazyDragon.enemyMainRightPct, 7);
+});

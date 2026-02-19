@@ -98,10 +98,18 @@
 
 .howto-starter-img {
   width: 100%;
-  max-width: 112px;
+  max-width: 104px;
   aspect-ratio: 1 / 1;
   object-fit: contain;
   image-rendering: pixelated;
+}
+
+.howto-starter-row-four .howto-starter-img {
+  max-width: 96px;
+}
+
+.howto-starter-row-three .howto-starter-img {
+  max-width: 118px;
 }
 
 .howto-starter-name {
@@ -268,6 +276,14 @@
   }
 
   .howto-starter-img {
-    max-width: 100px;
+    max-width: 96px;
+  }
+
+  .howto-starter-row-four .howto-starter-img {
+    max-width: 86px;
+  }
+
+  .howto-starter-row-three .howto-starter-img {
+    max-width: 108px;
   }
 }

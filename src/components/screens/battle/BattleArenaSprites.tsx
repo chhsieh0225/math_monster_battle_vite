@@ -30,6 +30,17 @@ type BattleArenaSpritesProps = {
   showPlayerShadow: boolean;
 };
 
+const FACING_MAIN_STYLE: CSSProperties = {
+  // Keep a subtle inward-facing posture without touching outer attack/hit transforms.
+  transform: 'translate3d(var(--battle-face-shift-main, -2px), 0, 0) rotate(var(--battle-face-tilt-main, -1.6deg))',
+  transformOrigin: '50% 62%',
+};
+
+const FACING_SUB_STYLE: CSSProperties = {
+  transform: 'translate3d(var(--battle-face-shift-sub, -1px), 0, 0) rotate(var(--battle-face-tilt-sub, -1deg))',
+  transformOrigin: '50% 64%',
+};
+
 export const BattleArenaSprites = memo(function BattleArenaSprites({
   showHeavyFx,
   enemy,
@@ -55,22 +66,12 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
   showEnemyShadow,
   showPlayerShadow,
 }: BattleArenaSpritesProps) {
-  const facingMainStyle: CSSProperties = {
-    // Keep a subtle inward-facing posture without touching outer attack/hit transforms.
-    transform: 'translate3d(var(--battle-face-shift-main, -2px), 0, 0) rotate(var(--battle-face-tilt-main, -1.6deg))',
-    transformOrigin: '50% 62%',
-  };
-  const facingSubStyle: CSSProperties = {
-    transform: 'translate3d(var(--battle-face-shift-sub, -1px), 0, 0) rotate(var(--battle-face-tilt-sub, -1deg))',
-    transformOrigin: '50% 64%',
-  };
-
   return (
     <>
       {/* Enemy sprite */}
       <div ref={enemySpriteRef} className="battle-sprite-enemy-main" style={enemyMainSpriteStyle}>
         <div className="battle-sprite-core battle-sprite-core-main battle-sprite-core-enemy">
-          <MonsterSprite svgStr={eSvg} size={eSize} style={facingMainStyle} />
+          <MonsterSprite svgStr={eSvg} size={eSize} style={FACING_MAIN_STYLE} />
         </div>
         {showHeavyFx && (
           <AmbientParticles
@@ -84,7 +85,7 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
       {showEnemySub && eSubSvg && (
         <div className="battle-sprite-enemy-sub" style={enemySubSpriteStyle}>
           <div className="battle-sprite-core battle-sprite-core-sub battle-sprite-core-enemy">
-            <MonsterSprite svgStr={eSubSvg} size={enemySubSize} style={facingSubStyle} />
+            <MonsterSprite svgStr={eSubSvg} size={enemySubSize} style={FACING_SUB_STYLE} />
           </div>
         </div>
       )}
@@ -93,7 +94,7 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
       {/* Player sprite */}
       <div ref={playerSpriteRef} className="battle-sprite-player-main" style={playerMainSpriteStyle}>
         <div className="battle-sprite-core battle-sprite-core-main battle-sprite-core-player">
-          <MonsterSprite svgStr={pSvg} size={mainPlayerSize} style={facingMainStyle} />
+          <MonsterSprite svgStr={pSvg} size={mainPlayerSize} style={FACING_MAIN_STYLE} />
         </div>
         {showHeavyFx && (
           <AmbientParticles
@@ -107,7 +108,7 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
       {showAllySub && pSubSvg && (
         <div className="battle-sprite-player-sub" style={playerSubSpriteStyle}>
           <div className="battle-sprite-core battle-sprite-core-sub battle-sprite-core-player">
-            <MonsterSprite svgStr={pSubSvg} size={subPlayerSize} style={facingSubStyle} />
+            <MonsterSprite svgStr={pSubSvg} size={subPlayerSize} style={FACING_SUB_STYLE} />
           </div>
         </div>
       )}

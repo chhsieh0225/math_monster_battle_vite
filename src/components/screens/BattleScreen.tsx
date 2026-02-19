@@ -308,15 +308,8 @@ function BattleScreenComponent({
     };
   }, [coreStatic, S.eHp, S.eAnim, S.enemySub?.id, S.enemySub?.isEvolved, S.pAnim, S.phase, UX.lowPerfMode]);
 
-  if (!coreStatic) return (
-    <div className="battle-loading-wrap">
-      <div className="battle-loading-icon">⚔️</div>
-      <div className="battle-loading-text">{t("app.loading.battle", "Preparing battle...")}</div>
-    </div>
-  );
-
   // ─── Battle screen locals ───
-  const coreRuntime = buildBattleRuntimeCore({
+  const coreRuntime = useMemo(() => buildBattleRuntimeCore({
     state: {
       battleMode,
       pvpTurn,
@@ -340,10 +333,42 @@ function BattleScreenComponent({
       mLvls: S.mLvls,
       mHits: S.mHits,
     },
-    activeStarter: coreStatic.activeStarter,
+    activeStarter: coreStatic?.activeStarter || null,
     getPow,
     dualEff,
-  });
+  }), [
+    battleMode,
+    pvpTurn,
+    S.pvpChargeP1,
+    S.pvpChargeP2,
+    S.pvpComboP1,
+    S.pvpComboP2,
+    S.pvpSpecDefP1,
+    S.pvpSpecDefP2,
+    S.pvpBurnP1,
+    S.pvpBurnP2,
+    S.pvpFreezeP1,
+    S.pvpFreezeP2,
+    S.pvpParalyzeP1,
+    S.pvpParalyzeP2,
+    S.pvpStaticP1,
+    S.pvpStaticP2,
+    S.charge,
+    S.chargeReady,
+    S.sealedMove,
+    S.mLvls,
+    S.mHits,
+    coreStatic?.activeStarter,
+    getPow,
+    dualEff,
+  ]);
+
+  if (!coreStatic) return (
+    <div className="battle-loading-wrap">
+      <div className="battle-loading-icon">⚔️</div>
+      <div className="battle-loading-text">{t("app.loading.battle", "Preparing battle...")}</div>
+    </div>
+  );
 
   const {
     starter,

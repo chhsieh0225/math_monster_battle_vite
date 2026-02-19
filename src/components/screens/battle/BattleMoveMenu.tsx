@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import type { StarterVm } from '../../../types/battle';
 import type { InventoryData, ItemId } from '../../../types/game';
@@ -67,6 +67,50 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
   onQuitGame,
 }: BattleMoveMenuProps) {
   const specDefItemName = resolveSpecDefItemName(activeStarter.type, t);
+  const moveVisuals = useMemo(() => moveRuntime.map(({ m, i, sealed, locked, lv, pw, atCap, eff, moveProgressPct }) => {
+    const moveBtnStyle: BattleCssVars = {
+      '--move-bg': locked
+        ? 'rgba(255,255,255,0.03)'
+        : eff > 1
+          ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))`
+          : eff < 1
+            ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))`
+            : m.bg,
+      '--move-border': sealed
+        ? 'rgba(168,85,247,0.4)'
+        : locked
+          ? 'rgba(255,255,255,0.08)'
+          : eff > 1
+            ? '#22c55e66'
+            : `${m.color}44`,
+      '--move-opacity': locked ? '0.4' : '1',
+      '--move-cursor': locked ? 'default' : 'pointer',
+      '--move-enter-delay': `${i * 0.05}s`,
+      '--move-name-color': locked ? '#94a3b8' : m.color,
+      '--move-desc-color': locked ? '#64748b' : '#94a3b8',
+      '--move-power-color': lv > 1 ? m.color : 'inherit',
+    };
+    const moveLevelBadgeStyle: BattleCssVars | undefined = atCap
+      ? undefined
+      : { '--move-level-bg': m.color };
+    const moveProgressStyle: BattleCssVars = {
+      '--move-progress-width': `${moveProgressPct}%`,
+      '--move-progress-color': m.color,
+    };
+    return {
+      m,
+      i,
+      sealed,
+      locked,
+      lv,
+      pw,
+      atCap,
+      eff,
+      moveBtnStyle,
+      moveLevelBadgeStyle,
+      moveProgressStyle,
+    };
+  }), [moveRuntime]);
 
   return (
     <div className="battle-menu-wrap">
@@ -90,36 +134,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
       )}
 
       <div className="battle-menu-grid">
-        {moveRuntime.map(({ m, i, sealed, locked, lv, pw, atCap, eff, moveProgressPct }) => {
-          const moveBtnStyle: BattleCssVars = {
-            '--move-bg': locked
-              ? 'rgba(255,255,255,0.03)'
-              : eff > 1
-                ? `linear-gradient(135deg,${m.bg},rgba(34,197,94,0.08))`
-                : eff < 1
-                  ? `linear-gradient(135deg,${m.bg},rgba(148,163,184,0.08))`
-                  : m.bg,
-            '--move-border': sealed
-              ? 'rgba(168,85,247,0.4)'
-              : locked
-                ? 'rgba(255,255,255,0.08)'
-                : eff > 1
-                  ? '#22c55e66'
-                  : `${m.color}44`,
-            '--move-opacity': locked ? '0.4' : '1',
-            '--move-cursor': locked ? 'default' : 'pointer',
-            '--move-enter-delay': `${i * 0.05}s`,
-            '--move-name-color': locked ? '#94a3b8' : m.color,
-            '--move-desc-color': locked ? '#64748b' : '#94a3b8',
-            '--move-power-color': lv > 1 ? m.color : 'inherit',
-          };
-          const moveLevelBadgeStyle: BattleCssVars | undefined = atCap
-            ? undefined
-            : { '--move-level-bg': m.color };
-          const moveProgressStyle: BattleCssVars = {
-            '--move-progress-width': `${moveProgressPct}%`,
-            '--move-progress-color': m.color,
-          };
+        {moveVisuals.map(({ m, i, sealed, locked, lv, pw, atCap, eff, moveBtnStyle, moveLevelBadgeStyle, moveProgressStyle }) => {
           return (
             <button
               className={`battle-menu-btn ${locked ? 'is-locked' : ''}`}

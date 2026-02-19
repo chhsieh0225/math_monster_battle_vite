@@ -1,20 +1,42 @@
 import { useMemo } from 'react';
+import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters.ts';
 import { VERSION } from '../../data/constants';
-import type { StarterLite, StarterStage } from '../../types/game';
+import { BG_IMGS } from '../../data/sprites.ts';
+import type { StarterId, StarterStage } from '../../types/game';
 import { useI18n } from '../../i18n';
 import { localizeStarterList } from '../../utils/contentLocalization.ts';
 import { getCollectionPerks, loadCollection } from '../../utils/collectionStore.ts';
+import { randomInt, shuffled } from '../../utils/prng.ts';
 import './TitleScreen.css';
 
-type TitleStarter = StarterLite & {
-  id: string;
+type TitleStarter = {
+  id: StarterId;
+  name: string;
+  c1: string;
+  c2: string;
   stages: StarterStage[];
 };
 
 type UnknownRecord = Record<string, unknown>;
 type TitleAction = () => void;
+type TitleStyleVars = CSSProperties & Record<'--title-bg-image', string>;
+type TitleStarterId = TitleStarter['id'];
+
+const TITLE_BG_POOL: readonly string[] = [
+  BG_IMGS.grass,
+  BG_IMGS.fire,
+  BG_IMGS.water,
+  BG_IMGS.electric,
+  BG_IMGS.ghost,
+  BG_IMGS.steel,
+  BG_IMGS.dark,
+  BG_IMGS.rock,
+];
+const TITLE_STARTER_IDS: readonly TitleStarterId[] = STARTERS
+  .map((starter) => starter.id)
+  .filter((id): id is TitleStarterId => typeof id === 'string');
 
 type TitleScreenProps = {
   onStartNormal: TitleAction;
@@ -57,6 +79,20 @@ function normalizeTitleStarters(value: unknown): TitleStarter[] {
   return value.filter(isTitleStarter);
 }
 
+type TitleSpriteRandomConfig = {
+  order: TitleStarterId[];
+  flipById: Record<TitleStarterId, boolean>;
+};
+
+function buildRandomTitleSpriteConfig(ids: readonly TitleStarterId[]): TitleSpriteRandomConfig {
+  const order = shuffled(ids);
+  const flipById = Object.fromEntries(order.map((id) => [id, randomInt(0, 1) === 1])) as Record<TitleStarterId, boolean>;
+  return {
+    order,
+    flipById,
+  };
+}
+
 export default function TitleScreen({
   onStartNormal,
   onStartTimed,
@@ -75,8 +111,27 @@ export default function TitleScreen({
     () => normalizeTitleStarters(localizeStarterList(STARTERS, locale)),
     [locale],
   );
-  const row1 = starters.slice(0, 3);
-  const row2 = starters.slice(3);
+  const titleRandomConfig = useMemo(() => {
+    const bgIdx = TITLE_BG_POOL.length > 1 ? randomInt(0, TITLE_BG_POOL.length - 1) : 0;
+    return {
+      titleBgImage: TITLE_BG_POOL[bgIdx] || '',
+      spriteRandomConfig: buildRandomTitleSpriteConfig(TITLE_STARTER_IDS),
+    };
+  }, []);
+  const titleBgImage = titleRandomConfig.titleBgImage;
+  const spriteRandomConfig = titleRandomConfig.spriteRandomConfig;
+  const titleStyle = useMemo<TitleStyleVars>(() => ({
+    '--title-bg-image': titleBgImage ? `url("${titleBgImage}")` : 'none',
+  }), [titleBgImage]);
+  const startersById = useMemo(() => new Map(starters.map((starter) => [starter.id, starter])), [starters]);
+  const randomizedStarters = useMemo(
+    () => spriteRandomConfig.order
+      .map((id) => startersById.get(id))
+      .filter((starter): starter is TitleStarter => Boolean(starter)),
+    [spriteRandomConfig.order, startersById],
+  );
+  const row1 = randomizedStarters.slice(0, 3);
+  const row2 = randomizedStarters.slice(3);
   const collectionPerks = useMemo(() => getCollectionPerks(loadCollection()), []);
   const activeTitle = collectionPerks.unlockedTitles.length > 0
     ? collectionPerks.unlockedTitles[collectionPerks.unlockedTitles.length - 1]
@@ -96,7 +151,7 @@ export default function TitleScreen({
   ];
 
   return (
-    <main className={`title-screen${lowPerfMode ? ' is-low-perf' : ''}`}>
+    <main className={`title-screen${lowPerfMode ? ' is-low-perf' : ''}`} style={titleStyle}>
       <div className="title-star title-star-one">⭐</div>
       <div className="title-star title-star-two">✨</div>
       <div className="title-star title-star-three">⭐</div>
@@ -105,14 +160,18 @@ export default function TitleScreen({
         <div className="title-sprite-row title-sprite-row-top">
           {row1.map((s, i) => (
             <div key={s.id} className={`title-monster-float title-monster-float-${i}`}>
-              <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={60} ariaLabel={`${s.name} ${t('a11y.sprite.default', 'Monster sprite')}`} />
+              <div className={`title-monster-face${spriteRandomConfig.flipById[s.id] ? ' is-flipped' : ''}`}>
+                <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={60} ariaLabel={`${s.name} ${t('a11y.sprite.default', 'Monster sprite')}`} />
+              </div>
             </div>
           ))}
         </div>
         <div className="title-sprite-row title-sprite-row-bottom">
           {row2.map((s, i) => (
             <div key={s.id} className={`title-monster-float title-monster-float-${i + 3}`}>
-              <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={60} ariaLabel={`${s.name} ${t('a11y.sprite.default', 'Monster sprite')}`} />
+              <div className={`title-monster-face${spriteRandomConfig.flipById[s.id] ? ' is-flipped' : ''}`}>
+                <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={60} ariaLabel={`${s.name} ${t('a11y.sprite.default', 'Monster sprite')}`} />
+              </div>
             </div>
           ))}
         </div>

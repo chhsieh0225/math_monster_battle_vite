@@ -37,6 +37,7 @@ type BattleMoveMenuProps = {
 function resolveSpecDefItemName(starterType: string, t: Translator): string {
   if (starterType === 'fire') return t('battle.specDef.fire', '🛡️ Shield');
   if (starterType === 'water') return t('battle.specDef.water', '💨 Perfect Dodge');
+  if (starterType === 'ice') return t('battle.specDef.ice', '🧊 Ice Shift');
   if (starterType === 'electric') return t('battle.specDef.electric', '⚡ Paralysis');
   if (starterType === 'steel') return t('battle.specDef.steel', '🛡️ Iron Guard');
   if (starterType === 'light') return t('battle.specDef.light', '✨ Lion Roar');

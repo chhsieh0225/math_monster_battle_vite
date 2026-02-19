@@ -83,6 +83,8 @@ export function useBattleItemActions({
       ? t('battle.specDef.fire', '🛡️ Shield')
       : activeStarterType === 'water'
         ? t('battle.specDef.water', '💨 Perfect Dodge')
+        : activeStarterType === 'ice'
+          ? t('battle.specDef.ice', '🧊 Ice Shift')
         : activeStarterType === 'electric'
           ? t('battle.specDef.electric', '⚡ Paralysis')
           : activeStarterType === 'light'

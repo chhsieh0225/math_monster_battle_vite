@@ -114,6 +114,7 @@ const PVP_HIT_ANIMS: Record<string, string> = {
   fire: 'enemyFireHit 0.55s ease',
   electric: 'enemyElecHit 0.55s ease',
   water: 'enemyWaterHit 0.6s ease',
+  ice: 'enemyWaterHit 0.6s ease',
   grass: 'enemyGrassHit 0.55s ease',
   dark: 'enemyDarkHit 0.7s ease',
   light: 'enemyFireHit 0.55s ease',
@@ -220,12 +221,16 @@ export function executePvpStrikeTurn({
       return;
     }
 
-    if (defender.type === 'water') {
+    if (defender.type === 'water' || defender.type === 'ice') {
       if (currentTurn === 'p1') setEAnim('dodgeSlide 0.9s ease');
       else setPAnim('dodgeSlide 0.9s ease');
       addD('MISS!', defenderMainX, defenderMainY, '#38bdf8');
       sfx.play('specDef');
-      setBText(tr(t, 'battle.pvp.specdef.water', '💨 {name} dodged perfectly!', { name: defender.name }));
+      setBText(
+        defender.type === 'ice'
+          ? tr(t, 'battle.pvp.specdef.ice', '🧊 {name} shifted with an ice mirage and dodged!', { name: defender.name })
+          : tr(t, 'battle.pvp.specdef.water', '💨 {name} dodged perfectly!', { name: defender.name }),
+      );
       safeToIfBattleActive(() => {
         setEAnim('');
         setPAnim('');
@@ -344,7 +349,7 @@ export function executePvpStrikeTurn({
     passiveNotes.push(tr(t, 'battle.pvp.note.burn', '🔥Burn'));
   }
 
-  if (attacker.type === 'water' && chance(PVP.passive.waterFreezeChance)) {
+  if ((attacker.type === 'water' || attacker.type === 'ice') && chance(PVP.passive.waterFreezeChance)) {
     if (currentTurn === 'p1') setPvpFreezeP2(true);
     else setPvpFreezeP1(true);
     passiveNotes.push(tr(t, 'battle.pvp.note.freeze', '❄️Freeze'));

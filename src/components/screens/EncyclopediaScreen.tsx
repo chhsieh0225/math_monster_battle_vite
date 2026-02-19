@@ -60,6 +60,7 @@ const TYPE_COLORS: Record<string, string> = {
   grass: '#22c55e',
   fire: '#ef4444',
   water: '#3b82f6',
+  ice: '#67e8f9',
   electric: '#eab308',
   ghost: '#a855f7',
   steel: '#94a3b8',

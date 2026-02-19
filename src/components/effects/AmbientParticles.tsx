@@ -7,7 +7,7 @@ import type { ReactElement } from 'react';
 import { useMemo } from 'react';
 import { seedRange } from '../../utils/prng';
 
-type ElementType = 'fire' | 'water' | 'electric' | 'grass' | 'dark' | 'light'
+type ElementType = 'fire' | 'water' | 'electric' | 'grass' | 'dark' | 'light' | 'ice'
   | 'ghost' | 'steel' | 'rock' | 'poison';
 
 type Props = {
@@ -42,6 +42,13 @@ const TYPE_THEMES: Record<string, {
     colors: ['#60a5fa', '#38bdf8', '#93c5fd', '#e0f2fe'],
     shape: 'circle',
     glow: 'rgba(59,130,246,0.6)',
+    drift: 'float',
+    sizeRange: [6, 10],
+  },
+  ice: {
+    colors: ['#bae6fd', '#7dd3fc', '#67e8f9', '#e0f2fe'],
+    shape: 'diamond',
+    glow: 'rgba(125,211,252,0.7)',
     drift: 'float',
     sizeRange: [6, 10],
   },

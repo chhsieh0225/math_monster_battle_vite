@@ -188,6 +188,7 @@ const HIT_ANIMS: Record<string, string> = {
   fire: 'enemyFireHit 0.6s ease',
   electric: 'enemyElecHit 0.6s ease',
   water: 'enemyWaterHit 0.7s ease',
+  ice: 'enemyWaterHit 0.7s ease',
   grass: 'enemyGrassHit 0.6s ease',
   dark: 'enemyDarkHit 0.8s ease',
   light: 'enemyFireHit 0.6s ease',
@@ -197,6 +198,7 @@ const HIT_COLORS: Record<string, string> = {
   fire: '#ef4444',
   electric: '#fbbf24',
   water: '#3b82f6',
+  ice: '#67e8f9',
   grass: '#22c55e',
   dark: '#a855f7',
   light: '#f59e0b',
@@ -578,7 +580,7 @@ export function runPlayerAnswer({
           }
 
           let willFreeze = false;
-          if (starter.type === 'water' && afterHp > 0) {
+          if ((starter.type === 'water' || starter.type === 'ice') && afterHp > 0) {
             if (chance(freezeChance(s3.mLvls[moveIdx]))) {
               willFreeze = true;
               setFrozen(true);

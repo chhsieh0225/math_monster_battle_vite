@@ -43,6 +43,7 @@ const TYPE_LABEL: Record<string, string> = {
   light: '光',
   poison: '毒',
   rock: '岩',
+  ice: '冰',
 };
 
 // ── Monster descriptions ──
@@ -278,6 +279,10 @@ const STARTER_DESCS: Record<string, string> = {
   wolf_0: '從鋼鐵要塞誕生的幼狼。前爪覆有金屬護片，擅長以分數比大小判斷最佳攻擊時機。',
   wolf_1: '小鋼狼進化後化為鋼刃狼。牠能精準處理同分母與異分母運算，劍般利爪會沿著最短計算路徑出擊。',
   wolf_2: '鋼刃狼最終覺醒成蒼鋼狼王。掌握分數乘除與高壓連段，出招時如齒輪咬合般精準無誤。',
+  // ── Tiger (Ice / Decimals) ──
+  tiger_0: '誕生於極地冰谷的幼虎。每一步都像在刻度線上移動，擅長一位小數加減，出招節奏精準穩定。',
+  tiger_1: '霜牙虎進化後掌握霜鏡演算，能在小數與分數之間快速互換，常以冷靜反擊瓦解對手節奏。',
+  tiger_2: '冰晶虎王覺醒永凍之力後，能駕馭高壓小數乘除。牠的每一次撲擊都像精密計算後的絕對零度裁決。',
 };
 
 const STARTER_SKILLS: Record<string, string> = {
@@ -285,6 +290,7 @@ const STARTER_SKILLS: Record<string, string> = {
   water: '💧 水屬性·除法系',
   grass: '🌿 草屬性·加減法系',
   electric: '⚡ 雷屬性·四則運算系',
+  tiger: '❄️ 冰屬性·小數運算系',
   lion: '✨ 光屬性·求未知數系',
   wolf: '⚙️ 鋼屬性·分數運算系',
 };

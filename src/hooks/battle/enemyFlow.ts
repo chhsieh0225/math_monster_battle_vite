@@ -312,9 +312,13 @@ export function runEnemyTurn({
               setDefAnim(null);
               tryReturnToBattleMenu();
             }, 1800);
-          } else if (st === 'water') {
+          } else if (st === 'water' || st === 'ice') {
             setPAnim('dodgeSlide 0.9s ease');
-            setBText(tr(t, 'battle.specdef.water.dodge', '💨 Perfect dodge!'));
+            setBText(
+              st === 'ice'
+                ? tr(t, 'battle.specdef.ice.shift', '🧊 Ice Shift!')
+                : tr(t, 'battle.specdef.water.dodge', '💨 Perfect dodge!'),
+            );
             addD('MISS!', 60, 170, '#38bdf8');
             safeToIfBattleActive(() => {
               setPAnim('');

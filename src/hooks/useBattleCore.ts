@@ -172,9 +172,14 @@ function estimateOpCombinationSpace(op: string, span: number): number {
   const safeSpan = Math.max(1, Math.trunc(span));
   switch (op) {
     case '+':
+    case 'dec_add':
     case '×':
+    case 'dec_mul':
     case '÷':
+    case 'dec_div':
       return safeSpan * safeSpan;
+    case 'dec_frac':
+      return Math.max(14, safeSpan * safeSpan * 2);
     case '-':
       return safeSpan * Math.max(1, safeSpan - 1);
     case 'mixed2':

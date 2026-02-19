@@ -18,6 +18,7 @@ const PIN_KEY = 'mathMonsterBattle_dashPin';
 const MAX_SESSIONS = 100;
 const OPS = [
   '+', '-', '×', '÷',
+  'dec_add', 'dec_frac', 'dec_mul', 'dec_div',
   'mixed2', 'mixed3', 'mixed4',
   'unknown1', 'unknown2', 'unknown3', 'unknown4',
   'frac_cmp', 'frac_same', 'frac_diff', 'frac_muldiv',
@@ -123,6 +124,10 @@ function buildOpStats(): Record<SessionOp, SessionOpStat> {
     '-': newOpStat(),
     '×': newOpStat(),
     '÷': newOpStat(),
+    dec_add: newOpStat(),
+    dec_frac: newOpStat(),
+    dec_mul: newOpStat(),
+    dec_div: newOpStat(),
     mixed2: newOpStat(),
     mixed3: newOpStat(),
     mixed4: newOpStat(),

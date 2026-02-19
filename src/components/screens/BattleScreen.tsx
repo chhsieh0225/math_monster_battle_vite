@@ -393,6 +393,10 @@ function BattleScreenComponent({
     : question.op === "frac_same" ? t("battle.qtype.fracSame", "Same Denominator")
     : question.op === "frac_diff" ? t("battle.qtype.fracDiff", "Different Denominator")
     : question.op === "frac_muldiv" ? t("battle.qtype.fracMulDiv", "Fraction Mul/Div")
+    : question.op === "dec_add" ? t("battle.qtype.decAdd", "Decimal Add/Sub")
+    : question.op === "dec_frac" ? t("battle.qtype.decFrac", "Decimal/Fraction Convert")
+    : question.op === "dec_mul" ? t("battle.qtype.decMul", "Decimal Multiplication")
+    : question.op === "dec_div" ? t("battle.qtype.decDiv", "Decimal Division")
     : t("battle.qtype.mixed", "Mixed")), [question, t]);
   const impactPhaseClass = showHeavyFx ? `battle-impact-${impactPhase}` : "battle-impact-idle";
   const battleRootClassName = useMemo(() => (
@@ -472,6 +476,8 @@ function BattleScreenComponent({
     ? t("battle.specDef.fire", "🛡️ Shield")
     : starter.type === "water"
       ? t("battle.specDef.water", "💨 Perfect Dodge")
+      : starter.type === "ice"
+        ? t("battle.specDef.ice", "🧊 Ice Shift")
       : starter.type === "electric"
         ? t("battle.specDef.electric", "⚡ Paralysis")
         : starter.type === "steel"
@@ -483,6 +489,8 @@ function BattleScreenComponent({
     ? "battle-pill-specdef-fire"
     : starter.type === "water"
       ? "battle-pill-specdef-water"
+      : starter.type === "ice"
+        ? "battle-pill-specdef-water"
       : starter.type === "electric"
         ? "battle-pill-specdef-electric"
         : starter.type === "light"

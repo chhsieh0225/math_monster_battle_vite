@@ -91,6 +91,37 @@ test('genQ falls back to allowedOps when move ops do not overlap', () => {
   }
 });
 
+test('genQ decimal add route generates labeled decimal choices', () => {
+  const move = { range: [2, 12], ops: ["dec_add"] };
+  const q = genQ(move, 1);
+  assert.equal(q.op, "dec_add");
+  assert.equal(Array.isArray(q.choiceLabels), true);
+  assert.equal(q.choiceLabels.length, 4);
+  assert.equal(typeof q.answerLabel, "string");
+  assert.equal(q.choiceLabels[q.answer], q.answerLabel);
+  assert.equal(q.display.includes('.'), true);
+});
+
+test('genQ decimal fraction-convert route supports both conversion directions', () => {
+  const move = { range: [2, 12], ops: ["dec_frac"] };
+  for (let i = 0; i < 40; i += 1) {
+    const q = genQ(move, 1);
+    assert.equal(q.op, "dec_frac");
+    assert.equal(Array.isArray(q.choiceLabels), true);
+    assert.equal(q.choiceLabels.length, 4);
+    assert.equal(typeof q.answerLabel, "string");
+    assert.equal(q.choiceLabels[q.answer], q.answerLabel);
+  }
+});
+
+test('genQ decimal mul/div routes no longer fall through to addition', () => {
+  const move = { range: [2, 12], ops: ["dec_mul", "dec_div"] };
+  for (let i = 0; i < 60; i += 1) {
+    const q = genQ(move, 1);
+    assert.equal(["dec_mul", "dec_div"].includes(q.op), true);
+  }
+});
+
 test('genQ fraction compare question exposes symbol choices', () => {
   const move = { range: [2, 9], ops: ["frac_cmp"] };
   const q = genQ(move, 1);

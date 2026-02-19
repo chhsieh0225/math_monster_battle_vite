@@ -392,6 +392,9 @@ function App() {
     };
   }, [V.sfx]);
 
+  // ── Release audio resources on unmount ──
+  useEffect(() => () => { V.sfx.dispose(); }, [V.sfx]);
+
   // ── BGM driver ──
   useEffect(() => {
     const bgmTier: BgmTier = conserveNetwork ? 'core' : 'full';

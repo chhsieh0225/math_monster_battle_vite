@@ -979,6 +979,18 @@ const sfx = {
   get bgmTrack(): string | null {
     return bgm.getTrack();
   },
+  /** Release all audio resources (BGM cache, AudioContext). */
+  dispose(): void {
+    bgm.dispose();
+    pendingSfx.clear();
+    if (ctx) {
+      try { ctx.close(); } catch { /* best-effort */ }
+      ctx = null;
+    }
+    sfxDest = null;
+    reverbConvolver = null;
+    ready = false;
+  },
 };
 
 export default sfx;

@@ -133,6 +133,7 @@ function createValidPublicApi() {
         stopBgm: () => {},
         prefetchBgm: () => {},
         bgmTrack: null,
+        dispose: () => {},
       },
     },
   };

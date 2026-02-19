@@ -37,6 +37,7 @@ export type BgmController = {
   onMutedChanged: (wasMuted: boolean, nextMuted: boolean) => void;
   onVolumeChanged: () => void;
   getTrack: () => string | null;
+  dispose: () => void;
 };
 
 let depsRef: BgmControllerDeps | null = null;
@@ -1430,6 +1431,15 @@ function apiStopBgm(immediate = false): void {
   try { stopBgmLoop(immediate); } catch { /* ok */ }
 }
 
+function disposeBgm(): void {
+  try { stopBgmLoop(true); } catch { /* ok */ }
+  // Flush warmup cache
+  for (const [src, el] of bgmWarmupCache) {
+    try { el.pause(); el.src = ''; } catch { /* ok */ }
+  }
+  bgmWarmupCache.clear();
+}
+
 export function createBgmController(deps: BgmControllerDeps): BgmController {
   depsRef = deps;
   syncDepsState();
@@ -1440,5 +1450,6 @@ export function createBgmController(deps: BgmControllerDeps): BgmController {
     onMutedChanged: applyMutedChange,
     onVolumeChanged: applyVolumeChange,
     getTrack: () => bgmCurrent,
+    dispose: disposeBgm,
   };
 }

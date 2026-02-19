@@ -180,6 +180,7 @@ const REQUIRED_SFX_KEYS = [
   'stopBgm',
   'prefetchBgm',
   'bgmTrack',
+  'dispose',
 ] as const satisfies ReadonlyArray<keyof SfxApi>;
 
 type MissingSfxKey = Exclude<keyof SfxApi, (typeof REQUIRED_SFX_KEYS)[number]>;

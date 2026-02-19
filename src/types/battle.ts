@@ -196,6 +196,7 @@ export type SfxApi = {
   ) => void;
   stopBgm: () => void;
   bgmTrack: string | null;
+  dispose: () => void;
 };
 
 export type CollectionPopupVm = {

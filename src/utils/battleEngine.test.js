@@ -36,6 +36,17 @@ test('updateAdaptiveDifficulty keeps level when sample is too small', () => {
   assert.deepEqual(res.nextRecent, [true, false, true]);
 });
 
+test('updateAdaptiveDifficulty lowers immediately on wrong answer for frustration control', () => {
+  const res = updateAdaptiveDifficulty({
+    currentLevel: 2,
+    recentAnswers: [true],
+    correct: false,
+  });
+
+  assert.equal(res.nextLevel, 1);
+  assert.deepEqual(res.nextRecent, [true, false]);
+});
+
 test('ability model maps ops into grouped skills and updates only target group', () => {
   const model = createAbilityModel(2);
   const res = updateAbilityModel({
@@ -47,7 +58,7 @@ test('ability model maps ops into grouped skills and updates only target group',
 
   assert.equal(res.group, "unknown");
   assert.equal(mapOpToAbilityGroup("mixed4"), "mixed");
-  assert.equal(getDifficultyLevelForOp(res.nextModel, "unknown1"), 2);
+  assert.equal(getDifficultyLevelForOp(res.nextModel, "unknown1"), 1);
   assert.equal(getDifficultyLevelForOp(res.nextModel, "+"), 2);
 });
 
@@ -65,7 +76,7 @@ test('ability model raises and lowers per-op level independently', () => {
   for (const ans of [false, false, false, false]) {
     model = updateAbilityModel({ model, op: "unknown2", correct: ans, windowSize: 4 }).nextModel;
   }
-  assert.equal(getDifficultyLevelForOp(model, "unknown4"), 1);
+  assert.equal(getDifficultyLevelForOp(model, "unknown4"), 0);
   assert.equal(getDifficultyLevelForOp(model, "mixed2"), 2);
 });
 

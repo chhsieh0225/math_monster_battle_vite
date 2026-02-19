@@ -20,15 +20,25 @@ export function updateAdaptiveDifficulty({
   minLevel = 0,
   maxLevel = 4,
 }: AdaptiveDifficultyParams): AdaptiveDifficultyResult {
+  const clampedCurrentLevel = Math.max(minLevel, Math.min(maxLevel, currentLevel));
   const nextRecent = [...recentAnswers, correct].slice(-windowSize);
+
+  // Child-friendly easing: wrong answers immediately reduce difficulty by one step
+  // so the next question feels less punishing.
+  if (!correct) {
+    return {
+      nextLevel: Math.max(minLevel, clampedCurrentLevel - 1),
+      nextRecent,
+    };
+  }
+
   if (nextRecent.length < 4) {
-    return { nextLevel: currentLevel, nextRecent };
+    return { nextLevel: clampedCurrentLevel, nextRecent };
   }
 
   const rate = nextRecent.filter(Boolean).length / nextRecent.length;
-  let nextLevel = currentLevel;
+  let nextLevel = clampedCurrentLevel;
   if (rate >= 0.8 && nextLevel < maxLevel) nextLevel += 1;
-  else if (rate <= 0.35 && nextLevel > minLevel) nextLevel -= 1;
   return { nextLevel, nextRecent };
 }
 

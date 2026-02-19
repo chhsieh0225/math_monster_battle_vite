@@ -50,6 +50,7 @@ export const BG_IMGS = {
   grass: `${BASE}backgrounds/grass.jpg`,
   fire: `${BASE}backgrounds/fire.jpg`,
   ghost: `${BASE}backgrounds/ghost.jpg`,
+  poison: `${BASE}backgrounds/poison_swamp.jpg`,
   steel: `${BASE}backgrounds/steel.jpg`,
   dark: `${BASE}backgrounds/dark.jpg`,
   rock: `${BASE}backgrounds/rock.jpg`,

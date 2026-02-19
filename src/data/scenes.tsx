@@ -34,6 +34,26 @@ const FIREFLY_R = Array.from({ length: 12 }, (_, i) => ({
   del: i * 0.35,
 }));
 
+const POISON_BUBBLE_R = Array.from({ length: 12 }, (_, i) => ({
+  left: 6 + ((i * 9) % 82),
+  bottom: 3 + ((i * 7) % 28),
+  size: 4 + (i % 3) * 2,
+  hue: i % 2 === 0 ? '#84cc16' : '#22c55e',
+  dur: 3.2 + i * 0.35,
+  del: i * 0.28,
+  driftX: -14 + (i % 5) * 7,
+}));
+
+const POISON_MIST_R = Array.from({ length: 4 }, (_, i) => ({
+  left: 6 + i * 24,
+  bottom: 8 + (i % 2) * 14,
+  width: 110 + i * 22,
+  height: 38 + (i % 3) * 8,
+  alpha: 0.14 + (i % 3) * 0.04,
+  dur: 5.2 + i * 1.1,
+  del: i * 0.45,
+}));
+
 const SPARK_R = Array.from({ length: 4 }, (_, i) => ({
   top: 15 + ((i * 17) % 45),
   left: 10 + ((i * 20) % 70),
@@ -213,6 +233,48 @@ export const SCENES = {
       <div className="scn-ghost-mist scn-ghost-mist-top" />
       {/* Faint moonlight glow */}
       <div className="scn-ghost-moon" />
+    </>)
+  },
+
+  /* ═══ Poison — toxic swamp bubbles + venom mist ═══ */
+  poison:{
+    bgImg:BG_IMGS.poison,
+    sky:"linear-gradient(180deg,#1a2e1a 0%,#1f3b24 24%,#234f2f 50%,#1b3523 78%,#102014 100%)",
+    ground:"linear-gradient(180deg,transparent,rgba(74,222,128,0.08) 40%,rgba(22,101,52,0.2))",
+    platform1:"rgba(34,197,94,0.26)",platform2:"rgba(21,128,61,0.18)",
+    Deco:memo(()=><>
+      {POISON_BUBBLE_R.map((r, i) => (
+        <div
+          key={`pb${i}`}
+          className="scn-poison-bubble"
+          style={withVars({
+            '--left': `${r.left}%`,
+            '--bottom': `${r.bottom}%`,
+            '--size': `${r.size}px`,
+            '--color': r.hue,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+            '--dx': `${r.driftX}px`,
+          })}
+        />
+      ))}
+      {POISON_MIST_R.map((r, i) => (
+        <div
+          key={`pm${i}`}
+          className="scn-poison-mist"
+          style={withVars({
+            '--left': `${r.left}%`,
+            '--bottom': `${r.bottom}%`,
+            '--w': `${r.width}px`,
+            '--h': `${r.height}px`,
+            '--alpha': `${r.alpha}`,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
+      <div className="scn-poison-haze-main" />
+      <div className="scn-poison-haze-top" />
     </>)
   },
 
@@ -454,6 +516,7 @@ export const SCENE_NAMES = {
   steel:"⚙️ 鋼鐵要塞",
   light:"☁️ 天界聖域",
   dark:"💀 暗黑深淵",
+  poison:"☠️ 毒沼禁域",
   rock:"🪨 岩石峽谷",
   heaven:"☁️ 天界聖域",
   burnt_warplace:"🔥 焦土戰場"

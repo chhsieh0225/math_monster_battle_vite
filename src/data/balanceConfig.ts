@@ -105,7 +105,7 @@ export const BALANCE_CONFIG = {
         },
         {
           left: { monsterId: 'dragon', sceneType: 'dark' },
-          right: { monsterId: 'ghost', sceneType: 'poison' },
+          right: { monsterId: 'ghost', sceneType: 'ghost' },
         },
         {
           left: { monsterId: 'fire', sceneType: 'fire' },

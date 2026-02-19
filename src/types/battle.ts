@@ -155,7 +155,15 @@ export type SfxApi = {
   setBgmVolume: (next: number) => number;
   /** Legacy: mute both SFX + BGM. */
   setMuted: (next: boolean) => boolean;
-  startBgm: (track: 'menu' | 'battle' | 'boss') => void;
+  startBgm: (
+    track:
+      | 'menu'
+      | 'battle'
+      | 'boss'
+      | 'boss_hydra'
+      | 'boss_sword_god'
+      | 'boss_dark_king'
+  ) => void;
   stopBgm: () => void;
   bgmTrack: string | null;
 };

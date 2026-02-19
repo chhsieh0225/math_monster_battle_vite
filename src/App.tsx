@@ -246,8 +246,17 @@ function App() {
     if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge') {
       V.sfx.startBgm('menu');
     } else if (S.screen === 'battle') {
-      const isBoss = BOSS_IDS.has(S.enemy?.id ?? '');
-      V.sfx.startBgm(isBoss ? 'boss' : 'battle');
+      const enemyId = S.enemy?.id ?? '';
+      if (enemyId === 'boss_hydra') {
+        V.sfx.startBgm('boss_hydra');
+      } else if (enemyId === 'boss_sword_god') {
+        V.sfx.startBgm('boss_sword_god');
+      } else if (enemyId === 'boss') {
+        V.sfx.startBgm('boss_dark_king');
+      } else {
+        const isBoss = BOSS_IDS.has(enemyId);
+        V.sfx.startBgm(isBoss ? 'boss' : 'battle');
+      }
     } else {
       V.sfx.stopBgm();
     }

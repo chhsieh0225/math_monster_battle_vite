@@ -924,11 +924,29 @@ declare global {
   }
 }
 
-// ── BGM (procedural chiptune loops) ──────────────────────────────
-type BgmTrack = 'menu' | 'battle' | 'boss';
+// ── BGM (procedural chiptune loops + file tracks) ────────────────
+type BgmTrack =
+  | 'menu'
+  | 'battle'
+  | 'boss'
+  | 'boss_hydra'
+  | 'boss_sword_god'
+  | 'boss_dark_king';
+type SynthBgmTrack = 'menu' | 'battle' | 'boss';
 const BGM_FILE_BY_TRACK: Partial<Record<BgmTrack, string>> = {
   menu: `${PUBLIC_BASE_URL}musics/Chronicles_of_the_Verdant_Peak.mp3`,
   battle: `${PUBLIC_BASE_URL}musics/Titan_s_Fury.mp3`,
+  boss_hydra: `${PUBLIC_BASE_URL}musics/Hydra_s_Unholy_Dominion.mp3`,
+  boss_sword_god: `${PUBLIC_BASE_URL}musics/Wrath_of_the_Celestial_Blade.mp3`,
+  boss_dark_king: `${PUBLIC_BASE_URL}musics/Wrath_of_the_Crimson_Emperor.mp3`,
+};
+const SYNTH_FALLBACK_BY_TRACK: Record<BgmTrack, SynthBgmTrack> = {
+  menu: 'menu',
+  battle: 'battle',
+  boss: 'boss',
+  boss_hydra: 'boss',
+  boss_sword_god: 'boss',
+  boss_dark_king: 'boss',
 };
 let bgmGain: GainNode | null = null;
 let bgmInterval: ReturnType<typeof setInterval> | null = null;
@@ -978,7 +996,7 @@ type BgmPattern = {
   sections: Record<BgmSectionKey, BgmSection | undefined>;
 };
 
-const BGM_PATTERNS: Record<BgmTrack, BgmPattern> = {
+const BGM_PATTERNS: Record<SynthBgmTrack, BgmPattern> = {
   menu: {
     form: ['A', 'A', 'B', 'A'],
     sections: {
@@ -1925,6 +1943,7 @@ function stopBgmMedia(immediate = false): void {
 
 function startSynthBgmLoop(track: BgmTrack): void {
   if (!ctx || bgmMuted) return;
+  const synthTrack = SYNTH_FALLBACK_BY_TRACK[track];
   bgmGain = ctx.createGain();
   bgmGain.gain.setValueAtTime(0.0001, ctx.currentTime);
   bgmGain.gain.linearRampToValueAtTime(bgmVolume, ctx.currentTime + 0.5);
@@ -1939,7 +1958,7 @@ function startSynthBgmLoop(track: BgmTrack): void {
     } catch { /* reverb unavailable — fine */ }
   }
 
-  const pattern = BGM_PATTERNS[track];
+  const pattern = BGM_PATTERNS[synthTrack];
   bgmCurrent = track;
   bgmNextLoopTime = ctx.currentTime + 0.01;
   bgmFormIndex = 0;

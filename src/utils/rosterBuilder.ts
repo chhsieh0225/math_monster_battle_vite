@@ -281,7 +281,7 @@ export function buildRoster(
           typeName: starter.typeName || STARTER_TYPE_NAME_FALLBACK[starterMirrorId] || '屬性',
           sceneMType,
           lvl: i + 1,
-          isEvolved: false,
+          isEvolved: stageIdx > 0,
         };
       }
     }

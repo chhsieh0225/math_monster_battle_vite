@@ -169,3 +169,29 @@ test('boss selected as player starter uses boss-class sprite size', () => {
   assert.ok(bossStarterLayout.mainPlayerSize > normalStarterLayout.mainPlayerSize);
   assert.equal(bossStarterLayout.mainPlayerSize, 230);
 });
+
+test('evolved wild starter enemies render larger than base wild starter enemies', () => {
+  const baseWildStarterLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'wild_starter_wolf',
+    enemySceneType: 'steel',
+    enemyIsEvolved: false,
+  });
+  const evolvedWildStarterLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'wild_starter_wolf',
+    enemySceneType: 'steel',
+    enemyIsEvolved: true,
+  });
+
+  assert.ok(evolvedWildStarterLayout.enemySize > baseWildStarterLayout.enemySize);
+  assert.equal(evolvedWildStarterLayout.enemySize, 172);
+});

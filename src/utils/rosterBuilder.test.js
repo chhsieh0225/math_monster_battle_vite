@@ -152,6 +152,7 @@ test('buildRoster can spawn mid-stage wild starter encounters in later waves', (
 
   assert.equal(wildStarters.length > 0, true);
   assert.equal(wildStarters.some((mon) => !baseStarterNames.has(mon.name)), true);
+  assert.equal(wildStarters.some((mon) => mon.isEvolved), true);
 });
 
 test('buildRoster skips wild starter encounters when all starters are excluded', () => {

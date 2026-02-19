@@ -82,6 +82,8 @@ export function resolveBattleLayout({
   const isBoss = BOSS_IDS.has(visualEnemyId);
   const isDragonOrFire = visualEnemyId === "fire" || visualEnemyId === "dragon";
   const isEvolvedSlime = Boolean(visualEnemyId.startsWith("slime") && enemyIsEvolved);
+  const isWildStarter = visualEnemyId.startsWith("wild_starter_");
+  const isEvolvedWildStarter = isWildStarter && Boolean(enemyIsEvolved);
   const isGolumn = visualEnemyId === "golumn" || visualEnemyId === "golumn_mud";
   const isCrazyDragon = visualEnemyId === "boss_crazy_dragon";
   const isSwordGod = visualEnemyId === "boss_sword_god";
@@ -91,6 +93,7 @@ export function resolveBattleLayout({
     : isHydra ? 260
     : isBoss ? 230
       : isGolumn ? 230
+        : isEvolvedWildStarter ? 172
         : (isDragonOrFire || isEvolvedSlime) ? 190
           : enemyIsEvolved ? 155 : 120;
   const enemyScale = dualUnits ? (compactDual ? 0.92 : 0.98) : 1;

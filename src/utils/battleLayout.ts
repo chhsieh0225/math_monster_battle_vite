@@ -63,12 +63,15 @@ export function resolveBattleLayout({
   const isLionOrWolfFinal = (normalizedPlayerId === "lion" || normalizedPlayerId === "wolf") && playerStageIdx >= 2;
   const isLionFinalInTeam = dualUnits && normalizedPlayerId === "lion" && playerStageIdx >= 2;
   const isWolfFinalInTeam = dualUnits && normalizedPlayerId === "wolf" && playerStageIdx >= 2;
+  const isWolfMid = normalizedPlayerId === "wolf" && playerStageIdx === 1;
   const mainPlayerBaseSize = isBossPlayer
     ? 230
     : (isLionFinalInTeam || isWolfFinalInTeam)
       ? 188
       : playerStageIdx >= 2
         ? 200
+      : isWolfMid
+          ? 150
       : playerStageIdx >= 1
           ? 170
           : 120;

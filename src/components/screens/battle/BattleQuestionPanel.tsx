@@ -111,8 +111,10 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
 }: BattleQuestionPanelProps) {
   const answerLabel = question.answerLabel ?? feedback?.answer ?? '?';
   const answerUsesFraction = typeof answerLabel === 'string' && answerLabel.includes('/');
+  const questionDisplayText = String(question.display ?? '');
   const hideEqualPrompt = Boolean(
-    question.op && (question.op.startsWith('unknown') || question.op === 'frac_cmp'),
+    questionDisplayText.includes('=') || questionDisplayText.includes('?')
+      || (question.op && (question.op.startsWith('unknown') || question.op === 'frac_cmp')),
   );
 
   return (

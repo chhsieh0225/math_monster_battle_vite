@@ -19,7 +19,7 @@
  * • Achievements, Encyclopedia, and SessionLog are extracted into sub-hooks
  *   (useAchievements, useEncyclopedia, useSessionLog) to keep this file focused.
  */
-import { useState, useEffect, useRef, useCallback, useMemo, useReducer } from 'react';
+import { useState, useEffect, useCallback, useMemo, useReducer } from 'react';
 import { useI18n } from '../i18n';
 import type {
   BattleMode,
@@ -29,7 +29,6 @@ import type {
   ScreenName,
   StarterVm,
 } from '../types/battle';
-import type { DailyChallengePlan, StreakTowerPlan } from '../types/challenges';
 
 import { SCENE_NAMES } from '../data/scenes';
 import {
@@ -145,6 +144,11 @@ import {
 } from './battle/lifecycleActionDelegates.ts';
 import { useBattleAbilityModel } from './battle/useBattleAbilityModel.ts';
 import { useBattleItemActions } from './battle/useBattleItemActions.ts';
+import {
+  useBattleOrchestrationState,
+  useBattlePauseState,
+} from './battle/useBattleOrchestrationState.ts';
+import { useBattleFlowState } from './battle/useBattleFlowState.ts';
 
 const MAX_RECENT_QUESTION_WINDOW = 8;
 
@@ -254,10 +258,6 @@ export function useBattle() {
   const [collectionPopup, setCollectionPopup] = useState<CollectionPopupVm | null>(null);
   const [inventory, setInventory] = useState(() => loadInventory());
 
-  // ──── Screen & mode ────
-  const [screen, setScreenState] = useState<ScreenName>('title');
-  const [timedMode, setTimedMode] = useState(false);
-  const [battleMode, setBattleMode] = useState<BattleMode>('single');
   const {
     queuedChallenge,
     activeChallenge,
@@ -274,6 +274,19 @@ export function useBattle() {
     settleRunAsFailed,
     settleRunAsCleared,
   } = useDailyChallengeRun();
+  const {
+    screen,
+    timedMode,
+    battleMode,
+    setScreenState,
+    setTimedMode,
+    setBattleMode,
+    queueDailyChallenge,
+    queueTowerChallenge,
+  } = useBattleFlowState({
+    queueDailyChallengePlan,
+    queueTowerChallengePlan,
+  });
   const hasChallengeRun = Boolean(queuedChallenge || activeChallenge);
   const {
     buildNewRoster,
@@ -357,8 +370,16 @@ export function useBattle() {
     addP, rmP,
   } = UI;
 
-  // ──── Status refs ────
-  const frozenR = useRef(false);
+  const {
+    frozenRef: frozenR,
+    doEnemyTurnRef,
+    pendingEvolveRef: pendingEvolve,
+    pendingTextAdvanceActionRef,
+    recentQuestionDisplaysRef,
+    setPendingTextAdvanceAction,
+    consumePendingTextAdvanceAction,
+    clearRecentQuestionDisplays,
+  } = useBattleOrchestrationState();
 
   // ──── Learning model 2.0: per-question-type adaptive difficulty ────
   const {
@@ -378,23 +399,6 @@ export function useBattle() {
     ) => resolvePvpTurnName(state, turn, t),
     [t],
   );
-
-  // ──── Internal refs ────
-  const doEnemyTurnRef = useRef(() => {});
-  const pendingEvolve = useRef(false);   // ← Bug #2 fix
-  const pendingTextAdvanceActionRef = useRef<(() => void) | null>(null);
-  const recentQuestionDisplaysRef = useRef<Map<string, string[]>>(new Map());
-  const setPendingTextAdvanceAction = useCallback((action: (() => void) | null) => {
-    pendingTextAdvanceActionRef.current = action;
-  }, []);
-  const consumePendingTextAdvanceAction = useCallback(() => {
-    const action = pendingTextAdvanceActionRef.current;
-    pendingTextAdvanceActionRef.current = null;
-    return action;
-  }, []);
-  const clearRecentQuestionDisplays = useCallback(() => {
-    recentQuestionDisplaysRef.current.clear();
-  }, []);
 
   // ──── State ref — always points at latest committed values ────
   const sr = useBattleStateRef({
@@ -444,18 +448,6 @@ export function useBattle() {
     const typeBonus = Number(collectionPerks.damageBonusByType[normalizedType] || 0);
     return 1 + allBonus + typeBonus;
   }, [collectionPerks]);
-
-  const queueDailyChallenge = useCallback((plan: DailyChallengePlan) => {
-    queueDailyChallengePlan(plan);
-    setTimedMode(true);
-    setBattleMode('single');
-  }, [queueDailyChallengePlan]);
-
-  const queueTowerChallenge = useCallback((plan: StreakTowerPlan) => {
-    queueTowerChallengePlan(plan);
-    setTimedMode(true);
-    setBattleMode('single');
-  }, [queueTowerChallengePlan]);
 
   const currentDailyBattleRule = useMemo(
     () => resolveDailyBattleRule(dailyPlan, round),
@@ -511,7 +503,7 @@ export function useBattle() {
 
       return question;
     },
-    [rand],
+    [rand, recentQuestionDisplaysRef],
   );
 
   // ──── Safe timeout (cancelled on async-gate change or unmount) ────
@@ -563,7 +555,7 @@ export function useBattle() {
       clearChallengeRun();
       clearRecentQuestionDisplays();
     }
-    pendingTextAdvanceActionRef.current = null;
+    setPendingTextAdvanceAction(null);
     runScreenTransition({
       prevScreen: sr.current.screen,
       nextScreen,
@@ -571,23 +563,23 @@ export function useBattle() {
       invalidateAsyncWork,
       setScreenState,
     });
-  }, [clearChallengeRun, clearRecentQuestionDisplays, clearTimer, invalidateAsyncWork, sr]);
+  }, [
+    clearChallengeRun,
+    clearRecentQuestionDisplays,
+    clearTimer,
+    invalidateAsyncWork,
+    setPendingTextAdvanceAction,
+    setScreenState,
+    sr,
+  ]);
   const setScreenFromString = useCallback((nextScreen: string) => {
     setScreen(nextScreen as ScreenName);
   }, [setScreen]);
 
-  const [gamePaused, setGamePaused] = useState(false);
-
-  const togglePause = useCallback(() => {
-    setGamePaused((prevPaused) => {
-      if (prevPaused) {
-        resumeTimer();
-        return false;
-      }
-      pauseTimer();
-      return true;
-    });
-  }, [pauseTimer, resumeTimer]);
+  const { gamePaused, togglePause } = useBattlePauseState({
+    pauseTimer,
+    resumeTimer,
+  });
   const dismissCollectionPopup = useCallback(() => {
     setCollectionPopup(null);
   }, []);
@@ -676,6 +668,7 @@ export function useBattle() {
     _finishGame,
     playBattleIntro,
     getCampaignNodeMeta,
+    frozenR,
   ]);
 
   // --- Full game reset (starterOverride used on first game when setStarter hasn't rendered yet) ---
@@ -692,7 +685,7 @@ export function useBattle() {
       pendingEvolveRef: pendingEvolve,
       pendingTextAdvanceActionRef,
     });
-  }, [setDmgs, setParts, setAtkEffect, setEffMsg, abilityModelRef]);
+  }, [setDmgs, setParts, setAtkEffect, setEffMsg, abilityModelRef, frozenR, pendingEvolve, pendingTextAdvanceActionRef]);
 
   const startGame = useCallback((
     starterOverride?: StarterVm | null,
@@ -908,6 +901,8 @@ export function useBattle() {
     updateEncDefeated,
     battleFieldSetters,
     UI,
+    frozenR,
+    pendingEvolve,
   ]);
 
   const runAllySupportTurn = useCallback(({ delayMs = 850, onDone }: { delayMs?: number; onDone?: () => void } = {}) => {
@@ -939,7 +934,7 @@ export function useBattle() {
       safeTo,
       t,
     });
-  }, [sr, setFrozen, setBText, setPhase, safeTo, t]);
+  }, [sr, frozenR, setFrozen, setBText, setPhase, safeTo, t]);
 
   // --- Player selects a move ---
   const selectMove = useCallback((i: number) => {
@@ -1013,7 +1008,7 @@ export function useBattle() {
     handleVictory,
     handlePlayerPartyKo,
   ]);
-  useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; }, [doEnemyTurn]);
+  useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; }, [doEnemyTurn, doEnemyTurnRef]);
 
   // --- Player answers a question ---
   const onAns = useCallback((choice: number) => {

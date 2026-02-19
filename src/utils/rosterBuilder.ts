@@ -84,6 +84,9 @@ const STARTER_MONSTER_TYPE_BY_ID: Readonly<Record<PlayerStarterId, MonsterType>>
   lion: 'light',
   wolf: 'steel',
 };
+const STARTER_ENCOUNTER_STAGE_STAT_SCALE = [1, 1.12, 1.24] as const;
+const STARTER_ENCOUNTER_MID_STAGE_MIN_LEVEL = 4;
+const STARTER_ENCOUNTER_FINAL_STAGE_MIN_LEVEL = 8;
 const STARTER_BY_ID = new Map<PlayerStarterId, (typeof STARTERS)[number]>(
   STARTERS
     .map((starter) => {
@@ -97,6 +100,49 @@ function toPlayerStarterId(id: string | undefined | null): PlayerStarterId | nul
   if (!id) return null;
   if ((STARTER_IDS as readonly string[]).includes(id)) return id as PlayerStarterId;
   return null;
+}
+
+function resolveStarterEncounterStageIdx(
+  starter: (typeof STARTERS)[number],
+  waveIndex: number,
+  pickIndex: PickIndex,
+): number {
+  const maxStage = Math.max(0, (starter.stages?.length || 1) - 1);
+  if (maxStage <= 0) return 0;
+
+  const level = waveIndex + 1;
+  let stageWeights: number[] = [4, 1, 0];
+
+  if (level >= STARTER_ENCOUNTER_FINAL_STAGE_MIN_LEVEL) {
+    stageWeights = [0, 2, 3];
+  } else if (level >= STARTER_ENCOUNTER_MID_STAGE_MIN_LEVEL) {
+    stageWeights = [1, 3, 1];
+  }
+
+  stageWeights = stageWeights.slice(0, maxStage + 1);
+  const totalWeight = stageWeights.reduce((sum, value) => sum + Math.max(0, value), 0);
+  if (totalWeight <= 0) return 0;
+
+  const rawRoll = Number(pickIndex(totalWeight));
+  const roll = Number.isFinite(rawRoll)
+    ? Math.max(0, Math.min(totalWeight - 1, Math.trunc(rawRoll)))
+    : 0;
+
+  let cursor = 0;
+  for (let stageIdx = 0; stageIdx < stageWeights.length; stageIdx += 1) {
+    cursor += Math.max(0, stageWeights[stageIdx] || 0);
+    if (roll < cursor) return stageIdx;
+  }
+
+  return 0;
+}
+
+function resolveStarterStageStatScale(stageIdx: number): number {
+  const normalized = Math.max(
+    0,
+    Math.min(STARTER_ENCOUNTER_STAGE_STAT_SCALE.length - 1, Math.trunc(stageIdx)),
+  );
+  return STARTER_ENCOUNTER_STAGE_STAT_SCALE[normalized] || 1;
 }
 
 function buildStarterEncounterWaves(excludedStarterIds: ReadonlySet<string>): StageWave[] {
@@ -213,16 +259,19 @@ export function buildRoster(
         const baseStats = STARTER_BASE_STATS_BY_ID[starterMirrorId] || { hp: 50, atk: 8 };
         const sceneMType = wave.sceneType || STARTER_ENCOUNTER_SCENE_BY_ID[starterMirrorId] || 'grass';
         const starterType = STARTER_MONSTER_TYPE_BY_ID[starterMirrorId];
-        const starterSvgFn = starter.stages?.[0]?.svgFn;
+        const stageIdx = resolveStarterEncounterStageIdx(starter, i, pickIndex);
+        const stage = starter.stages?.[stageIdx] || starter.stages?.[0];
+        const stageScale = resolveStarterStageStatScale(stageIdx);
+        const starterSvgFn = stage?.svgFn;
         if (typeof starterSvgFn !== 'function') {
-          throw new Error(`[rosterBuilder] starter ${starterMirrorId} missing stage[0] svgFn`);
+          throw new Error(`[rosterBuilder] starter ${starterMirrorId} missing stage svgFn`);
         }
         return {
           id: `wild_starter_${starterMirrorId}`,
-          name: starter.name,
-          hp: Math.round(baseStats.hp * sc),
-          maxHp: Math.round(baseStats.hp * sc),
-          atk: Math.round(baseStats.atk * sc),
+          name: stage?.name || starter.name,
+          hp: Math.round(baseStats.hp * sc * stageScale),
+          maxHp: Math.round(baseStats.hp * sc * stageScale),
+          atk: Math.round(baseStats.atk * sc * stageScale),
           c1: starter.c1,
           c2: starter.c2,
           svgFn: starterSvgFn,

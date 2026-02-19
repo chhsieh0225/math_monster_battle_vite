@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { genQ } from './questionGenerator.ts';
+import { withRandomSource } from './prng.ts';
 
 test('genQ returns 4 choices and includes the answer', () => {
   const move = { range: [2, 10], ops: ["+"] };
@@ -86,4 +87,23 @@ test('genQ fraction arithmetic question returns readable fraction labels', () =>
   assert.equal(q.choiceLabels.length, 4);
   assert.equal(typeof q.answerLabel, "string");
   assert.equal(q.choiceLabels[q.answer], q.answerLabel);
+});
+
+test('genQ multiplication distractors prioritize neighboring table values', () => {
+  const move = { range: [7, 8], ops: ["×"] };
+  const randomSeq = [0.2, 0.8, 0.15, 0.65, 0.35, 0.55, 0.75, 0.95];
+  let cursor = 0;
+  const q = withRandomSource(
+    () => {
+      const value = randomSeq[cursor] ?? 0.42;
+      cursor += 1;
+      return value;
+    },
+    () => genQ(move, 1),
+  );
+
+  assert.equal(q.op, "×");
+  assert.equal(q.answer, 56);
+  const distractors = q.choices.filter((value) => value !== q.answer).sort((a, b) => a - b);
+  assert.deepEqual(distractors, [48, 54, 63]);
 });

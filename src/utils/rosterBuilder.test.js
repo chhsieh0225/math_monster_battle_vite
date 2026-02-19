@@ -13,6 +13,12 @@ import { buildRoster } from './rosterBuilder.ts';
 
 const pickFirst = () => 0;
 const pickSecond = (length) => (length > 1 ? 1 : 0);
+const pickStarterMidStage = (length) => {
+  if (length >= 100) return 0;
+  if (length >= 8) return 4;
+  if (length === 3) return 1;
+  return length > 1 ? 1 : 0;
+};
 
 test('buildRoster creates stage roster with expected length and level sequence', () => {
   const roster = buildRoster(pickFirst, 'single');
@@ -134,6 +140,18 @@ test('buildRoster can inject wild starter encounters and respect excluded starte
   assert.equal(wildStarters.some((mon) => mon.id === 'wild_starter_fire'), false);
   assert.equal(wildStarters.some((mon) => mon.id === 'wild_starter_water'), true);
   assert.equal(wildStarters.some((mon) => mon.sceneMType === 'water'), true);
+});
+
+test('buildRoster can spawn mid-stage wild starter encounters in later waves', () => {
+  const roster = buildRoster(pickStarterMidStage, 'single', {
+    disableRandomSwap: true,
+    enableStarterEncounters: true,
+  });
+  const wildStarters = roster.filter((mon) => String(mon.id || '').startsWith('wild_starter_'));
+  const baseStarterNames = new Set(['小火獸', '小水獸', '小草獸', '小雷獸', '小獅獸', '小鋼狼']);
+
+  assert.equal(wildStarters.length > 0, true);
+  assert.equal(wildStarters.some((mon) => !baseStarterNames.has(mon.name)), true);
 });
 
 test('buildRoster skips wild starter encounters when all starters are excluded', () => {

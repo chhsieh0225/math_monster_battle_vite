@@ -22,6 +22,7 @@ type QuestionDraft = {
   answer: number;
   op: string;
   steps: string[];
+  distractorCandidates?: number[];
   choiceLabels?: string[];
   answerLabel?: string;
 };
@@ -300,6 +301,40 @@ function genFractionMulDiv(range: [number, number]): GeneratedQuestion {
     answerLabel,
     choiceLabels,
   });
+}
+
+function buildMultiplicationDistractors(a: number, b: number, answer: number): number[] {
+  const out: number[] = [];
+  const pushProduct = (left: number, right: number): void => {
+    const safeLeft = Math.max(1, Math.round(left));
+    const safeRight = Math.max(1, Math.round(right));
+    const value = safeLeft * safeRight;
+    if (!Number.isFinite(value) || value === answer) return;
+    if (!out.includes(value)) out.push(value);
+  };
+
+  // Prioritize neighboring multiplication-table values.
+  pushProduct(a - 1, b);
+  pushProduct(a - 1, b + 1);
+  pushProduct(a, b + 1);
+  pushProduct(a + 1, b);
+  pushProduct(a, b - 1);
+  pushProduct(a + 1, b - 1);
+  pushProduct(a - 1, b - 1);
+  pushProduct(a + 1, b + 1);
+
+  // Extra near-product distractors for larger ranges.
+  pushProduct(a - 2, b);
+  pushProduct(a, b - 2);
+  const nearByOffsets = [a, b, a + b];
+  for (const offset of nearByOffsets) {
+    const lower = answer - Math.max(1, Math.round(offset));
+    const upper = answer + Math.max(1, Math.round(offset));
+    if (lower > 0 && !out.includes(lower) && lower !== answer) out.push(lower);
+    if (upper > 0 && !out.includes(upper) && upper !== answer) out.push(upper);
+  }
+
+  return out;
 }
 
 // ── Mixed-operation question generators (for electric starter) ──
@@ -720,6 +755,7 @@ export function genQ(
         answer: ans,
         op,
         steps: [`${a} × ${b} = ${ans}`],
+        distractorCandidates: buildMultiplicationDistractors(a, b, ans),
       };
       break;
     }
@@ -775,9 +811,28 @@ export function genQ(
 /**
  * Wrap a {display, answer, op, steps} object with 4 shuffled answer choices.
  */
-function makeChoices({ display, answer, op, steps, choiceLabels, answerLabel }: QuestionDraft): GeneratedQuestion {
+function makeChoices({
+  display,
+  answer,
+  op,
+  steps,
+  distractorCandidates,
+  choiceLabels,
+  answerLabel,
+}: QuestionDraft): GeneratedQuestion {
   const spread = Math.max(5, Math.ceil(Math.abs(answer) * 0.2));
   const ch = new Set<number>([answer]);
+
+  if (Array.isArray(distractorCandidates) && distractorCandidates.length > 0) {
+    for (const value of distractorCandidates) {
+      if (!Number.isFinite(value)) continue;
+      const normalized = Math.max(0, Math.round(value));
+      if (normalized === answer) continue;
+      ch.add(normalized);
+      if (ch.size >= 4) break;
+    }
+  }
+
   let guard = 0;
   while (ch.size < 4 && guard++ < 50) {
     const w = answer + randomInt(-spread, spread);

@@ -4,6 +4,7 @@ import { MAX_MOVE_LVL, POWER_CAPS } from '../../data/constants.ts';
 import { DROP_TABLES } from '../../data/dropTables.ts';
 import { BATTLE_ITEM_ORDER, ITEM_CATALOG } from '../../data/itemCatalog.ts';
 import { SKILL_SETS } from '../../data/skillSets.ts';
+import { SPRITE_IMGS } from '../../data/sprites.ts';
 import { STARTERS } from '../../data/starters.ts';
 import { useI18n } from '../../i18n';
 import { localizeStarterList } from '../../utils/contentLocalization.ts';
@@ -15,13 +16,13 @@ type HowToPlayScreenProps = {
 };
 
 const STARTER_IMAGE_BY_ID: Record<string, string> = {
-  grass: '/sprites/player_grass0.png',
-  fire: '/sprites/player_fire0.png',
-  water: '/sprites/player_water0.png',
-  tiger: '/sprites/player_tiger0.png',
-  electric: '/sprites/player_electric0.png',
-  wolf: '/sprites/player_wolf0.png',
-  lion: '/sprites/player_lion0.png',
+  grass: SPRITE_IMGS.player_grass0,
+  fire: SPRITE_IMGS.player_fire0,
+  water: SPRITE_IMGS.player_water0,
+  tiger: SPRITE_IMGS.player_tiger0,
+  electric: SPRITE_IMGS.player_electric0,
+  wolf: SPRITE_IMGS.player_wolf0,
+  lion: SPRITE_IMGS.player_lion0,
 };
 
 const SLOT_ROLE_KEY_BY_IDX = [

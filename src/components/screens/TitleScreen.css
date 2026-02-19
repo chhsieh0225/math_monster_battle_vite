@@ -214,15 +214,22 @@
 .title-feature-quick-btn {
   width: 30px;
   height: 30px;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0;
   border-radius: 8px;
-  border: none;
+  border: none !important;
   background: transparent;
   color: #fff;
   font-size: 18px;
+  line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   opacity: 0.92;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .title-feature-quick-btn:active {

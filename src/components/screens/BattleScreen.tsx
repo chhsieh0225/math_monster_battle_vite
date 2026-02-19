@@ -36,6 +36,21 @@ function normalizeBossVisualId(id?: string | null): string {
   return id.startsWith('pvp_') ? id.slice(4) : id;
 }
 
+const WOLF_FINAL_NAME_SET = new Set(['蒼鋼狼王', 'Aegis Wolf King']);
+
+function normalizeStarterVisualId(id?: string | null): string {
+  if (!id) return '';
+  return id.startsWith('pvp_') ? id.slice(4) : id;
+}
+
+function requiresWolfFinalFacingFix(id?: string | null, name?: string | null): boolean {
+  const normalizedId = normalizeStarterVisualId(id);
+  const isWolfFamily = normalizedId === 'wolf' || normalizedId === 'wild_starter_wolf';
+  if (!isWolfFamily) return false;
+  const normalizedName = String(name || '').trim();
+  return WOLF_FINAL_NAME_SET.has(normalizedName);
+}
+
 type BattleScreenProps = {
   state: UseBattleState;
   actions: UseBattleActions;
@@ -508,6 +523,10 @@ function BattleScreenComponent({
     playerMainShadowStyle,
     enemySubSize,
   } = memoSpriteStyles!;
+  const playerMainFacingFix = starter.id === 'wolf' && S.pStg >= 2;
+  const playerSubFacingFix = Boolean(S.allySub?.id === 'wolf' && (S.allySub?.selectedStageIdx || 0) >= 2);
+  const enemyMainFacingFix = requiresWolfFinalFacingFix(enemy.id, enemy.name);
+  const enemySubFacingFix = requiresWolfFinalFacingFix(S.enemySub?.id, S.enemySub?.name);
   const coOpBossSubIntro = isCoopBattle
     && showEnemySub
     && Boolean(S.enemySub?.name)
@@ -642,6 +661,10 @@ function BattleScreenComponent({
           playerMainSpriteStyle={playerMainSpriteStyle}
           playerSubSpriteStyle={playerSubSpriteStyle}
           playerMainShadowStyle={playerMainShadowStyle}
+          enemyMainFacingFix={enemyMainFacingFix}
+          enemySubFacingFix={enemySubFacingFix}
+          playerMainFacingFix={playerMainFacingFix}
+          playerSubFacingFix={playerSubFacingFix}
           showEnemyShadow={!S.eAnim && !UX.lowPerfMode}
           showPlayerShadow={!S.pAnim && !UX.lowPerfMode}
         />

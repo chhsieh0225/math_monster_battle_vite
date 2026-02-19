@@ -8,6 +8,7 @@ export const SPRITE_IMGS = {
   fire: `${BASE}sprites/fire.png`,
   ghost: `${BASE}sprites/ghost.png`,
   ghost_lantern: `${BASE}sprites/ghost_lantern.png`,
+  mushroom: `${BASE}sprites/mushroom.png`,
   dragon: `${BASE}sprites/dragon.png`,
   boss: `${BASE}sprites/boss.png`,
   player_fire0: `${BASE}sprites/player_fire0.png`,
@@ -138,6 +139,7 @@ export const slimeSteelSVG  = makeSvgFn('slime_steel', 'pixelated');
 export const fireLizardSVG = makeSvgFn('fire');
 export const ghostSVG = makeSvgFn('ghost');
 export const ghostLanternSVG = makeSvgFnFill('ghost_lantern', 677, 369);
+export const mushroomSVG = makeSvgFnFill('mushroom', 677, 369);
 export const dragonSVG = makeSvgFn('dragon', 'pixelated');
 export const darkLordSVG = makeSvgFn('boss');
 export const slimeEvolvedSVG = makeSvgFn('slime_evolved');

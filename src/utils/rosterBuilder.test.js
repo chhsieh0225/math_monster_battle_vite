@@ -13,6 +13,7 @@ import { buildRoster } from './rosterBuilder.ts';
 
 const pickFirst = () => 0;
 const pickSecond = (length) => (length > 1 ? 1 : 0);
+const pickThird = (length) => (length > 2 ? 2 : 0);
 const pickStarterMidStage = (length) => {
   if (length >= 100) return 0;
   if (length >= 8) return 4;
@@ -86,6 +87,15 @@ test('buildRoster can roll ghost and golumn variant encounters', () => {
   assert.equal(ghostVariants.length > 0, true);
   assert.equal(ghostVariants.some((mon) => mon.id === 'ghost_lantern'), true);
   assert.equal(roster.some((mon) => mon.id === 'golumn_mud'), true);
+});
+
+test('buildRoster can roll mushroom poison variant from ghost encounter pool', () => {
+  const roster = buildRoster(pickThird, 'single');
+  const mushrooms = roster.filter((mon) => mon.id === 'mushroom');
+
+  assert.equal(mushrooms.length > 0, true);
+  assert.equal(mushrooms.every((mon) => mon.mType === 'poison'), true);
+  assert.equal(mushrooms.every((mon) => mon.sceneMType === 'poison'), true);
 });
 
 test('buildRoster final wave boss is selected from config-driven boss list', () => {

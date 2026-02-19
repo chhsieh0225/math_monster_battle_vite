@@ -39,6 +39,15 @@ test('localizeEnemy maps new monster variants to English names', () => {
   }, EN);
   assert.equal(lantern.name, "Lantern Wraith");
   assert.equal(lantern.typeName, "Ghost");
+
+  const mushroom = localizeEnemy({
+    id: "mushroom",
+    name: "毒沼菇妖",
+    mType: "poison",
+    typeName: "毒",
+  }, EN);
+  assert.equal(mushroom.name, "Bog Myconid");
+  assert.equal(mushroom.typeName, "Poison");
 });
 
 test('localizeEnemy localizes dual-type labels and evolved lantern name', () => {

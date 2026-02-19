@@ -22,7 +22,7 @@ import type {
 const PAGE_BG = 'linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)';
 type EncyclopediaCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
 
-const LARGE_MONSTER_IDS: ReadonlySet<string> = new Set([...BOSS_IDS, 'golumn', 'golumn_mud', 'ghost_lantern']);
+const LARGE_MONSTER_IDS: ReadonlySet<string> = new Set([...BOSS_IDS, 'golumn', 'golumn_mud', 'ghost_lantern', 'mushroom']);
 function encCardSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 64 : 48; }
 function encModalSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 200 : 160; }
 const WOLF_LEFT_FACING_STYLE: CSSProperties = { transform: 'scaleX(-1)' };

@@ -1,5 +1,5 @@
 import {
-  slimeSVG, fireLizardSVG, ghostSVG, ghostLanternSVG, dragonSVG, darkLordSVG, bossHydraSVG, bossCrazyDragonSVG, bossSwordGodSVG, golumnSVG, golumnMudSVG,
+  slimeSVG, fireLizardSVG, ghostSVG, ghostLanternSVG, mushroomSVG, dragonSVG, darkLordSVG, bossHydraSVG, bossCrazyDragonSVG, bossSwordGodSVG, golumnSVG, golumnMudSVG,
   slimeEvolvedSVG, slimeElectricEvolvedSVG, slimeFireEvolvedSVG, slimeWaterEvolvedSVG, slimeSteelEvolvedSVG, slimeDarkEvolvedSVG,
   fireEvolvedSVG, ghostEvolvedSVG, dragonEvolvedSVG,
   slimeRedSVG, slimeBlueSVG, slimeYellowSVG, slimeDarkSVG, slimeSteelSVG,
@@ -25,6 +25,7 @@ const SPRITE_MAP: Record<string, SpriteFn> = {
   fireLizardSVG,
   ghostSVG,
   ghostLanternSVG,
+  mushroomSVG,
   dragonSVG,
   darkLordSVG,
   bossHydraSVG,

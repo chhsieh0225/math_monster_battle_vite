@@ -222,6 +222,32 @@ test('ghost lantern variant gets larger in-battle render size for readability', 
   assert.equal(lanternLayout.enemySize, 182);
 });
 
+test('mushroom variant uses enlarged in-battle render size', () => {
+  const baseGhostLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'ghost',
+    enemySceneType: 'ghost',
+    enemyIsEvolved: false,
+  });
+  const mushroomLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'mushroom',
+    enemySceneType: 'poison',
+    enemyIsEvolved: false,
+  });
+
+  assert.ok(mushroomLayout.enemySize > baseGhostLayout.enemySize);
+  assert.equal(mushroomLayout.enemySize, 176);
+});
+
 test('compact UI shifts crazy dragon enemy position to the right', () => {
   const compactCrazyDragon = resolveBattleLayout({
     battleMode: 'single',

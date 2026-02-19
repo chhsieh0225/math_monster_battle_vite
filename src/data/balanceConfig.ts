@@ -157,13 +157,14 @@ export const BALANCE_CONFIG = {
       boss_sword_god: 'heaven',
     },
     randomEncounterVariantsByBaseId: {
-      ghost: ['ghost', 'ghost_lantern'],
+      ghost: ['ghost', 'ghost_lantern', 'mushroom'],
       golumn: ['golumn', 'golumn_mud'],
     },
     baseStatsById: {
       slime: { hp: 40, atk: 6 },
       fire: { hp: 55, atk: 9 },
       ghost: { hp: 50, atk: 8 },
+      mushroom: { hp: 52, atk: 8 },
       dragon: { hp: 80, atk: 12 },
       golumn: { hp: 65, atk: 10 },
       boss: { hp: 120, atk: 15 },

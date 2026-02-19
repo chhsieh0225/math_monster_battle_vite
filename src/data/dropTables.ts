@@ -20,6 +20,7 @@ export const DROP_TABLES: Record<string, string[]> = {
   golumn: ['🪨', '💎'],
   fire: ['🔥', '💎'],
   ghost: ['👻', '⭐'],
+  mushroom: ['🧪', '🍬'],
   dragon: ['🐉', '👑'],
   boss: ['👑', '🏆'],
   boss_hydra: ['☠️', '💎'],
@@ -138,6 +139,12 @@ export const WEIGHTED_DROP_TABLES: Record<string, WeightedDropTable> = {
     entries: [
       { emoji: '👻', weight: 72, rarity: 'epic' },
       { emoji: '⭐', weight: 28, rarity: 'epic' },
+    ],
+  },
+  mushroom: {
+    entries: [
+      { emoji: '🧪', weight: 68, rarity: 'rare' },
+      { emoji: '🍬', weight: 32, rarity: 'common' },
     ],
   },
   dragon: {

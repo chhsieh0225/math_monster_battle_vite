@@ -246,7 +246,7 @@ function BattleScreenComponent({
     const playerSubBottomPct = coopUsingSub ? rawMainBottomPct : rawSubBottomPct;
     const mainPlayerSize = coopUsingSub ? rawSubSize : rawMainSize;
 
-    const isLargeEnemySub = enemySubId === "golumn" || enemySubId === "golumn_mud";
+    const isLargeEnemySub = enemySubId === "golumn" || enemySubId === "golumn_mud" || enemySubId === "mushroom";
     const enemySubScale = isLargeEnemySub
       ? (compactDual ? "0.86" : "0.94")
       : (compactDual ? "0.72" : "0.8");

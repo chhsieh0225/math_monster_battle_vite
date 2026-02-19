@@ -1,6 +1,6 @@
 /**
  * sfx.ts — Sound effects using native Web Audio API.
- * All sounds are generated programmatically, no audio files.
+ * SFX are generated programmatically; BGM can use uploaded music files.
  * Replaces Tone.js (~300KB) with zero-dependency Web Audio (~3KB).
  *
  * Call sfx.init() once after user gesture to unlock AudioContext.
@@ -8,6 +8,8 @@
  */
 import { readText, writeText } from './storage.ts';
 import { randomFloat } from './prng.ts';
+
+const PUBLIC_BASE_URL = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL || '/';
 
 let ctx: AudioContext | null = null;
 let ready = false;
@@ -924,11 +926,17 @@ declare global {
 
 // ── BGM (procedural chiptune loops) ──────────────────────────────
 type BgmTrack = 'menu' | 'battle' | 'boss';
+const BGM_FILE_BY_TRACK: Partial<Record<BgmTrack, string>> = {
+  menu: `${PUBLIC_BASE_URL}musics/Chronicles_of_the_Verdant_Peak.mp3`,
+  battle: `${PUBLIC_BASE_URL}musics/Titan_s_Fury.mp3`,
+};
 let bgmGain: GainNode | null = null;
 let bgmInterval: ReturnType<typeof setInterval> | null = null;
 let bgmCurrent: BgmTrack | null = null;
 let bgmNextLoopTime = 0;
 let bgmFormIndex = 0;
+let bgmMediaEl: HTMLAudioElement | null = null;
+let bgmMediaToken = 0;
 let pendingBgmTrack: BgmTrack | null = null;
 let lastBgmTrack: BgmTrack | null = null;   // remember track for mute→unmute resume
 let resumePromise: Promise<void> | null = null;
@@ -1799,9 +1807,43 @@ function scheduleBgmLookAhead(track: BgmTrack, pattern: BgmPattern): void {
   }
 }
 
-function startBgmLoop(track: BgmTrack): void {
+function stopBgmMedia(immediate = false): void {
+  const el = bgmMediaEl;
+  bgmMediaEl = null;
+  if (!el) return;
+  try {
+    if (immediate) {
+      el.pause();
+      el.currentTime = 0;
+      return;
+    }
+    const startVol = Number.isFinite(el.volume) ? el.volume : bgmVolume;
+    const steps = 8;
+    let step = 0;
+    const timer = setInterval(() => {
+      step += 1;
+      const ratio = Math.max(0, 1 - step / steps);
+      try { el.volume = startVol * ratio; } catch { /* best-effort */ }
+      if (step >= steps) {
+        clearInterval(timer);
+        try {
+          el.pause();
+          el.currentTime = 0;
+          el.volume = Math.max(0, Math.min(1, bgmVolume));
+        } catch { /* best-effort */ }
+      }
+    }, 24);
+  } catch {
+    try {
+      el.pause();
+      el.currentTime = 0;
+    } catch { /* best-effort */ }
+  }
+}
+
+function startSynthBgmLoop(track: BgmTrack): void {
   if (!ctx || bgmMuted) return;
-  stopBgmLoop();
+  stopBgmLoop(true);
   bgmGain = ctx.createGain();
   bgmGain.gain.setValueAtTime(0.0001, ctx.currentTime);
   bgmGain.gain.linearRampToValueAtTime(bgmVolume, ctx.currentTime + 0.5);
@@ -1826,7 +1868,37 @@ function startBgmLoop(track: BgmTrack): void {
   }, BGM_SCHEDULE_INTERVAL_MS);
 }
 
+function startBgmMedia(track: BgmTrack): boolean {
+  const src = BGM_FILE_BY_TRACK[track];
+  if (!src || typeof Audio === 'undefined') return false;
+  const el = new Audio(src);
+  el.loop = true;
+  el.preload = 'auto';
+  el.volume = Math.max(0, Math.min(1, bgmVolume));
+  const token = ++bgmMediaToken;
+  bgmMediaEl = el;
+  bgmCurrent = track;
+  const playPromise = el.play();
+  if (playPromise && typeof playPromise.catch === 'function') {
+    playPromise.catch(() => {
+      // If autoplay policy blocks the file playback, fallback to synth.
+      if (bgmMediaToken !== token) return;
+      stopBgmMedia(true);
+      startSynthBgmLoop(track);
+    });
+  }
+  return true;
+}
+
+function startBgmLoop(track: BgmTrack): void {
+  stopBgmLoop(true);
+  if (startBgmMedia(track)) return;
+  startSynthBgmLoop(track);
+}
+
 function stopBgmLoop(immediate = false): void {
+  bgmMediaToken += 1;
+  stopBgmMedia(immediate);
   if (bgmInterval) {
     clearInterval(bgmInterval);
     bgmInterval = null;
@@ -1952,6 +2024,13 @@ const sfx = {
   setBgmVolume(next: number): number {
     bgmVolume = clampBgmVolume(next);
     writeText(BGM_VOLUME_KEY, bgmVolume.toFixed(3));
+    if (bgmMediaEl && !bgmMuted) {
+      try {
+        bgmMediaEl.volume = Math.max(0, Math.min(1, bgmVolume));
+      } catch {
+        // best-effort media element volume update
+      }
+    }
     if (bgmGain && ctx && !bgmMuted) {
       try {
         bgmGain.gain.cancelScheduledValues(ctx.currentTime);

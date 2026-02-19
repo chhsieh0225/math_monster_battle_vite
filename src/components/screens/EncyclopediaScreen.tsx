@@ -16,6 +16,7 @@ import type {
   EncyclopediaData,
   EncyclopediaEnemyEntry,
   EncyclopediaStarterEntry,
+  StarterId,
 } from '../../types/game';
 
 const PAGE_BG = 'linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)';
@@ -66,6 +67,37 @@ const TYPE_COLORS: Record<string, string> = {
   steel: '#94a3b8',
   dark: '#6b7280',
 };
+
+const STARTER_DISPLAY_ORDER: Readonly<Record<StarterId, number>> = {
+  grass: 0,
+  fire: 1,
+  water: 2,
+  electric: 3,
+  tiger: 4,
+  wolf: 5,
+  lion: 6,
+  boss: 100,
+  boss_hydra: 101,
+  boss_crazy_dragon: 102,
+  boss_sword_god: 103,
+};
+
+function sortStarterEntriesForDisplay(entries: EncyclopediaStarterEntry[]): EncyclopediaStarterEntry[] {
+  const getStarterOrder = (starterId: EncyclopediaStarterEntry['starterId']): number => {
+    if (typeof starterId !== 'string') return 999;
+    return (STARTER_DISPLAY_ORDER as Record<string, number>)[starterId] ?? 999;
+  };
+
+  return [...entries].sort((a, b) => {
+    const aOrder = getStarterOrder(a.starterId);
+    const bOrder = getStarterOrder(b.starterId);
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    const aStageIdx = Number.isFinite(a.stageIdx) ? a.stageIdx : 0;
+    const bStageIdx = Number.isFinite(b.stageIdx) ? b.stageIdx : 0;
+    if (aStageIdx !== bStageIdx) return aStageIdx - bStageIdx;
+    return a.name.localeCompare(b.name, 'zh-Hant');
+  });
+}
 
 type SelectedEntry =
   | { kind: 'enemy'; entry: EncyclopediaEnemyEntry }
@@ -119,7 +151,9 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
     [locale],
   );
   const starterEntries = useMemo(
-    () => normalizeStarterEntries(localizeEncyclopediaStarterEntries(STARTER_ENTRIES, locale)),
+    () => sortStarterEntriesForDisplay(
+      normalizeStarterEntries(localizeEncyclopediaStarterEntries(STARTER_ENTRIES, locale)),
+    ),
     [locale],
   );
   const enc: EncyclopediaCounts = encData.encountered || {};

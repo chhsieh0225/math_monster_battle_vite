@@ -23,6 +23,29 @@ type StarterDesc = {
 type TranslateParams = Record<string, string | number>;
 type TranslateFn = (key: string, fallback?: string, params?: TranslateParams) => string;
 
+const STARTER_DISPLAY_ORDER: Readonly<Record<StarterId, number>> = {
+  grass: 0,
+  fire: 1,
+  water: 2,
+  electric: 3,
+  tiger: 4,
+  wolf: 5,
+  lion: 6,
+  boss: 100,
+  boss_hydra: 101,
+  boss_crazy_dragon: 102,
+  boss_sword_god: 103,
+};
+
+function sortStartersForDisplay(starters: StarterSelectable[]): StarterSelectable[] {
+  return [...starters].sort((a, b) => {
+    const aOrder = STARTER_DISPLAY_ORDER[a.id] ?? 999;
+    const bOrder = STARTER_DISPLAY_ORDER[b.id] ?? 999;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    return a.name.localeCompare(b.name, 'zh-Hant');
+  });
+}
+
 function buildStarterDescs(t: TranslateFn): Record<string, StarterDesc> {
   return {
     fire: {
@@ -186,7 +209,9 @@ export default function SelectionScreen({
   const { t, locale } = useI18n();
   const DESCS = buildStarterDescs(t);
   const starters = useMemo(
-    () => normalizeStarterList(localizeStarterList(mode === 'pvp' ? PVP_SELECTABLE_ROSTER : STARTERS, locale)),
+    () => sortStartersForDisplay(
+      normalizeStarterList(localizeStarterList(mode === 'pvp' ? PVP_SELECTABLE_ROSTER : STARTERS, locale)),
+    ),
     [locale, mode],
   );
   const isDual = mode === 'coop' || mode === 'pvp' || mode === 'double';

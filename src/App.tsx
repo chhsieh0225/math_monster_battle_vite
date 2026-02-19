@@ -247,6 +247,7 @@ function App() {
       V.sfx.startBgm('menu');
     } else if (S.screen === 'battle') {
       const enemyId = S.enemy?.id ?? '';
+      const sceneType = S.enemy?.sceneMType || S.enemy?.mType || '';
       if (enemyId === 'boss_hydra') {
         V.sfx.startBgm('boss_hydra');
       } else if (enemyId === 'boss_crazy_dragon') {
@@ -255,6 +256,8 @@ function App() {
         V.sfx.startBgm('boss_sword_god');
       } else if (enemyId === 'boss') {
         V.sfx.startBgm('boss_dark_king');
+      } else if (sceneType === 'fire') {
+        V.sfx.startBgm('volcano');
       } else {
         const isBoss = BOSS_IDS.has(enemyId);
         V.sfx.startBgm(isBoss ? 'boss' : 'battle');
@@ -262,7 +265,7 @@ function App() {
     } else {
       V.sfx.stopBgm();
     }
-  }, [S.screen, S.enemy?.id, bgmMuted, V.sfx, sfxReady]);
+  }, [S.screen, S.enemy?.id, S.enemy?.sceneMType, S.enemy?.mType, bgmMuted, V.sfx, sfxReady]);
 
   if (S.screen !== "battle") {
     return (

@@ -159,6 +159,7 @@ export type SfxApi = {
     track:
       | 'menu'
       | 'battle'
+      | 'volcano'
       | 'boss'
       | 'boss_hydra'
       | 'boss_crazy_dragon'

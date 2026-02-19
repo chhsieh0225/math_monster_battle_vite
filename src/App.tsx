@@ -26,6 +26,31 @@ import type { ScreenName } from './types/battle';
 
 const BattleScreen = lazy(() => import('./components/screens/BattleScreen'));
 
+type BattleBgmTrack =
+  | 'menu'
+  | 'battle'
+  | 'volcano'
+  | 'ironclad'
+  | 'boss'
+  | 'boss_hydra'
+  | 'boss_crazy_dragon'
+  | 'boss_sword_god'
+  | 'boss_dark_king';
+
+function resolveBossTrack(starterId: string | undefined | null): BattleBgmTrack | null {
+  if (starterId === 'boss_hydra') return 'boss_hydra';
+  if (starterId === 'boss_crazy_dragon') return 'boss_crazy_dragon';
+  if (starterId === 'boss_sword_god') return 'boss_sword_god';
+  if (starterId === 'boss') return 'boss_dark_king';
+  return null;
+}
+
+function resolveSceneTrack(sceneType: string): BattleBgmTrack | null {
+  if (sceneType === 'fire') return 'volcano';
+  if (sceneType === 'steel') return 'ironclad';
+  return null;
+}
+
 type StaticLocaleCode = "zh-TW" | "en-US";
 
 function resolveStaticLocale(): StaticLocaleCode {
@@ -246,28 +271,34 @@ function App() {
     if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge') {
       V.sfx.startBgm('menu');
     } else if (S.screen === 'battle') {
+      const p1BossTrack = resolveBossTrack(S.starter?.id);
+      const p2BossTrack = resolveBossTrack(S.pvpStarter2?.id);
       const enemyId = S.enemy?.id ?? '';
       const sceneType = S.enemy?.sceneMType || S.enemy?.mType || '';
-      if (enemyId === 'boss_hydra') {
-        V.sfx.startBgm('boss_hydra');
-      } else if (enemyId === 'boss_crazy_dragon') {
-        V.sfx.startBgm('boss_crazy_dragon');
-      } else if (enemyId === 'boss_sword_god') {
-        V.sfx.startBgm('boss_sword_god');
-      } else if (enemyId === 'boss') {
-        V.sfx.startBgm('boss_dark_king');
-      } else if (sceneType === 'fire') {
-        V.sfx.startBgm('volcano');
-      } else if (sceneType === 'steel') {
-        V.sfx.startBgm('ironclad');
+      const enemyBossTrack = resolveBossTrack(enemyId);
+      const sceneTrack = resolveSceneTrack(sceneType);
+
+      // PvP/Double-player: lock to one theme (P1 priority), never mix two boss themes.
+      if (S.battleMode === 'pvp') {
+        V.sfx.startBgm(p1BossTrack || p2BossTrack || sceneTrack || 'battle');
       } else {
-        const isBoss = BOSS_IDS.has(enemyId);
-        V.sfx.startBgm(isBoss ? 'boss' : 'battle');
+        V.sfx.startBgm(enemyBossTrack || sceneTrack || (BOSS_IDS.has(enemyId) ? 'boss' : 'battle'));
       }
     } else {
       V.sfx.stopBgm();
     }
-  }, [S.screen, S.enemy?.id, S.enemy?.sceneMType, S.enemy?.mType, bgmMuted, V.sfx, sfxReady]);
+  }, [
+    S.screen,
+    S.battleMode,
+    S.starter?.id,
+    S.pvpStarter2?.id,
+    S.enemy?.id,
+    S.enemy?.sceneMType,
+    S.enemy?.mType,
+    bgmMuted,
+    V.sfx,
+    sfxReady,
+  ]);
 
   if (S.screen !== "battle") {
     return (

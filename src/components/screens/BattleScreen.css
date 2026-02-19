@@ -249,32 +249,6 @@
   transform:translate3d(calc(var(--battle-parallax-x) * .34),calc(var(--battle-parallax-y) * .2),0);
   will-change:transform;
 }
-.battle-scene-platform-top{
-  position:absolute;
-  right:5%;
-  top:8%;
-  width:55%;
-  height:12px;
-  background:var(--scene-platform-top,rgba(255,255,255,.2));
-  border-radius:50%;
-  filter:blur(2px);
-  z-index:3;
-  transform:translate3d(calc(var(--battle-parallax-x) * .48),calc(var(--battle-parallax-y) * .26),0);
-  will-change:transform;
-}
-.battle-scene-platform-bottom{
-  position:absolute;
-  left:2%;
-  bottom:12%;
-  width:50%;
-  height:10px;
-  background:var(--scene-platform-bottom,rgba(255,255,255,.2));
-  border-radius:50%;
-  filter:blur(2px);
-  z-index:3;
-  transform:translate3d(calc(var(--battle-parallax-x) * .56),calc(var(--battle-parallax-y) * .3),0);
-  will-change:transform;
-}
 .battle-scene-deco{
   position:absolute;
   inset:0;
@@ -1470,8 +1444,6 @@
 .battle-root.low-perf .scene-bg,
 .battle-root.low-perf .battle-scene-sky,
 .battle-root.low-perf .battle-scene-ground,
-.battle-root.low-perf .battle-scene-platform-top,
-.battle-root.low-perf .battle-scene-platform-bottom,
 .battle-root.low-perf .battle-scene-deco,
 .battle-root.low-perf .battle-weather-layer{
   transform:none!important;
@@ -1899,8 +1871,6 @@
   .scene-bg,
   .battle-scene-sky,
   .battle-scene-ground,
-  .battle-scene-platform-top,
-  .battle-scene-platform-bottom,
   .battle-scene-deco,
   .battle-weather-layer{
     transform:none!important;

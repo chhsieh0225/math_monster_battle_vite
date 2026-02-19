@@ -154,8 +154,6 @@ function BattleScreenComponent({
       sceneBgStyle: bgStyle,
       sceneSkyStyle: { "--scene-sky": scene.sky } as BattleCssVars,
       sceneGroundStyle: { "--scene-ground": scene.ground } as BattleCssVars,
-      sceneTopPlatformStyle: { "--scene-platform-top": scene.platform2 } as BattleCssVars,
-      sceneBottomPlatformStyle: { "--scene-platform-bottom": scene.platform1 } as BattleCssVars,
       enemyInfoStyle: { "--battle-enemy-info-right": layout.enemyInfoRight } as BattleCssVars,
       playerInfoStyle: { "--battle-player-info-left": layout.playerInfoLeft } as BattleCssVars,
     };
@@ -505,8 +503,6 @@ function BattleScreenComponent({
     sceneBgStyle,
     sceneSkyStyle,
     sceneGroundStyle,
-    sceneTopPlatformStyle,
-    sceneBottomPlatformStyle,
     enemyInfoStyle,
     playerInfoStyle,
   } = memoSceneStyles!;
@@ -598,7 +594,6 @@ function BattleScreenComponent({
           bgStyle={sceneBgStyle}
           skyStyle={sceneSkyStyle}
           groundStyle={sceneGroundStyle}
-          platformTopStyle={sceneTopPlatformStyle}
           Deco={scene.Deco}
         />
         <BattleWeatherLayer
@@ -659,8 +654,7 @@ function BattleScreenComponent({
           showPlayerShadow={!S.pAnim && !UX.lowPerfMode}
         />
 
-        {/* Player platform & info */}
-        <div className="battle-scene-platform-bottom" style={sceneBottomPlatformStyle} />
+        {/* Player info */}
         <BattlePlayerInfoPanel
           t={t}
           style={playerInfoStyle}

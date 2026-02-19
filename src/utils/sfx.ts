@@ -960,11 +960,14 @@ let lastBgmTrack: BgmTrack | null = null;   // remember track for mute→unmute 
 let resumePromise: Promise<void> | null = null;
 const BGM_SCHEDULE_INTERVAL_MS = 50;
 const BGM_LOOKAHEAD_SEC = 0.12;
-const BGM_FADE_IN_MS = 420;
-const BGM_MEDIA_STOP_FADE_MS = 220;
-const BGM_MEDIA_LOOP_FADE_SEC = 0.55;
-const BGM_MEDIA_LOOP_POLL_MS = 120;
-let bgmMediaFadeTimer: ReturnType<typeof setInterval> | null = null;
+const BGM_FADE_IN_MS = 900;
+const BGM_MEDIA_STOP_FADE_MS = 650;
+const BGM_MEDIA_LOOP_CROSSFADE_SEC = 1.25;
+const BGM_MEDIA_LOOP_START_SEC = 0.05;
+const BGM_MEDIA_LOOP_END_PAD_SEC = 0.08;
+const BGM_MEDIA_LOOP_POLL_MS = 90;
+const bgmMediaRampTimers = new Set<ReturnType<typeof setInterval>>();
+const bgmMediaElements = new Set<HTMLAudioElement>();
 let bgmMediaLoopTimer: ReturnType<typeof setInterval> | null = null;
 let bgmMediaLoopRestarting = false;
 
@@ -1832,13 +1835,6 @@ function scheduleBgmLookAhead(track: BgmTrack, pattern: BgmPattern): void {
   }
 }
 
-function clearBgmMediaFadeTimer(): void {
-  if (bgmMediaFadeTimer) {
-    clearInterval(bgmMediaFadeTimer);
-    bgmMediaFadeTimer = null;
-  }
-}
-
 function clearBgmMediaLoopTimer(): void {
   if (bgmMediaLoopTimer) {
     clearInterval(bgmMediaLoopTimer);
@@ -1851,6 +1847,23 @@ function clampUnit(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
+function clearBgmMediaRampTimers(): void {
+  for (const timer of bgmMediaRampTimers) clearInterval(timer);
+  bgmMediaRampTimers.clear();
+}
+
+function stopAndResetMediaElement(el: HTMLAudioElement): void {
+  try {
+    el.pause();
+    el.currentTime = 0;
+    el.volume = clampUnit(bgmVolume);
+  } catch {
+    // best-effort reset
+  } finally {
+    bgmMediaElements.delete(el);
+  }
+}
+
 function rampMediaVolume(
   el: HTMLAudioElement,
   from: number,
@@ -1858,86 +1871,97 @@ function rampMediaVolume(
   durationMs: number,
   onDone?: () => void,
 ): void {
-  clearBgmMediaFadeTimer();
   const start = Date.now();
   const startVol = clampUnit(from);
   const endVol = clampUnit(to);
   try { el.volume = startVol; } catch { /* best-effort */ }
   const safeDur = Math.max(1, Math.floor(durationMs));
-  bgmMediaFadeTimer = setInterval(() => {
+  const timer = setInterval(() => {
     const progress = Math.min(1, (Date.now() - start) / safeDur);
     const vol = startVol + (endVol - startVol) * progress;
     try { el.volume = clampUnit(vol); } catch { /* best-effort */ }
     if (progress >= 1) {
-      clearBgmMediaFadeTimer();
+      clearInterval(timer);
+      bgmMediaRampTimers.delete(timer);
       if (onDone) {
         try { onDone(); } catch { /* best-effort */ }
       }
     }
   }, 16);
+  bgmMediaRampTimers.add(timer);
 }
 
-function startBgmMediaLoopMonitor(el: HTMLAudioElement, token: number): void {
+function tuneLoopStartOffset(el: HTMLAudioElement): void {
+  try {
+    const dur = Number.isFinite(el.duration) ? el.duration : 0;
+    if (dur > BGM_MEDIA_LOOP_START_SEC + 0.2) {
+      el.currentTime = BGM_MEDIA_LOOP_START_SEC;
+    }
+  } catch {
+    // best-effort offset seek
+  }
+}
+
+function startBgmMediaLoopMonitor(el: HTMLAudioElement, token: number, track: BgmTrack): void {
   clearBgmMediaLoopTimer();
+  const src = BGM_FILE_BY_TRACK[track];
+  if (!src) return;
   bgmMediaLoopTimer = setInterval(() => {
     if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) return;
     const dur = Number.isFinite(el.duration) ? el.duration : 0;
-    if (!dur || dur <= BGM_MEDIA_LOOP_FADE_SEC + 0.08) return;
-    const remain = dur - el.currentTime;
-    if (remain > BGM_MEDIA_LOOP_FADE_SEC || bgmMediaLoopRestarting) return;
+    if (!dur) return;
+    const loopEnd = Math.max(BGM_MEDIA_LOOP_START_SEC + 0.2, dur - BGM_MEDIA_LOOP_END_PAD_SEC);
+    const remain = loopEnd - el.currentTime;
+    if (remain > BGM_MEDIA_LOOP_CROSSFADE_SEC || bgmMediaLoopRestarting) return;
     bgmMediaLoopRestarting = true;
-    const from = Number.isFinite(el.volume) ? el.volume : bgmVolume;
-    rampMediaVolume(el, from, 0, Math.round(BGM_MEDIA_LOOP_FADE_SEC * 1000), () => {
+    const nextEl = new Audio(src);
+    bgmMediaElements.add(nextEl);
+    nextEl.loop = false;
+    nextEl.preload = 'auto';
+    nextEl.volume = 0;
+    const crossfadeMs = Math.round(BGM_MEDIA_LOOP_CROSSFADE_SEC * 1000);
+    const beginCrossfade = () => {
       if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) {
+        stopAndResetMediaElement(nextEl);
         bgmMediaLoopRestarting = false;
         return;
       }
-      try { el.currentTime = 0; } catch { /* best-effort */ }
-      const replay = el.play();
-      replay.catch(() => {
+      const from = Number.isFinite(el.volume) ? el.volume : clampUnit(bgmVolume);
+      bgmMediaEl = nextEl;
+      rampMediaVolume(el, from, 0, crossfadeMs, () => {
+        stopAndResetMediaElement(el);
+      });
+      rampMediaVolume(nextEl, 0, bgmVolume, crossfadeMs, () => {
         bgmMediaLoopRestarting = false;
       });
-      rampMediaVolume(el, 0, bgmVolume, BGM_FADE_IN_MS, () => {
-        bgmMediaLoopRestarting = false;
-      });
+      startBgmMediaLoopMonitor(nextEl, token, track);
+    };
+    nextEl.addEventListener('loadedmetadata', () => {
+      tuneLoopStartOffset(nextEl);
+    }, { once: true });
+    const playPromise = nextEl.play();
+    playPromise.then(beginCrossfade).catch(() => {
+      stopAndResetMediaElement(nextEl);
+      bgmMediaLoopRestarting = false;
     });
   }, BGM_MEDIA_LOOP_POLL_MS);
 }
 
 function stopBgmMedia(immediate = false): void {
   clearBgmMediaLoopTimer();
-  clearBgmMediaFadeTimer();
-  const el = bgmMediaEl;
+  clearBgmMediaRampTimers();
+  const elements = [...bgmMediaElements];
   bgmMediaEl = null;
-  if (!el) return;
-  try {
-    if (immediate) {
-      el.pause();
-      el.currentTime = 0;
-      return;
-    }
+  if (!elements.length) return;
+  if (immediate) {
+    for (const el of elements) stopAndResetMediaElement(el);
+    return;
+  }
+  for (const el of elements) {
     const startVol = Number.isFinite(el.volume) ? el.volume : clampUnit(bgmVolume);
-    const stepMs = 24;
-    const steps = Math.max(1, Math.round(BGM_MEDIA_STOP_FADE_MS / stepMs));
-    let step = 0;
-    const stopTimer = setInterval(() => {
-      step += 1;
-      const ratio = Math.max(0, 1 - step / steps);
-      try { el.volume = clampUnit(startVol * ratio); } catch { /* best-effort */ }
-      if (step >= steps) {
-        clearInterval(stopTimer);
-        try {
-          el.pause();
-          el.currentTime = 0;
-          el.volume = clampUnit(bgmVolume);
-        } catch { /* best-effort */ }
-      }
-    }, stepMs);
-  } catch {
-    try {
-      el.pause();
-      el.currentTime = 0;
-    } catch { /* best-effort */ }
+    rampMediaVolume(el, startVol, 0, BGM_MEDIA_STOP_FADE_MS, () => {
+      stopAndResetMediaElement(el);
+    });
   }
 }
 
@@ -1972,6 +1996,7 @@ function startBgmMedia(track: BgmTrack): boolean {
   const src = BGM_FILE_BY_TRACK[track];
   if (!src || typeof Audio === 'undefined') return false;
   const el = new Audio(src);
+  bgmMediaElements.add(el);
   el.loop = false;
   el.preload = 'auto';
   el.volume = 0;
@@ -1982,7 +2007,7 @@ function startBgmMedia(track: BgmTrack): boolean {
   const onReady = () => {
     if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) return;
     rampMediaVolume(el, 0, bgmVolume, BGM_FADE_IN_MS);
-    startBgmMediaLoopMonitor(el, token);
+    startBgmMediaLoopMonitor(el, token, track);
   };
   playPromise.then(onReady).catch(() => {
     // If autoplay policy blocks the file playback, fallback to synth.
@@ -2127,11 +2152,13 @@ const sfx = {
   setBgmVolume(next: number): number {
     bgmVolume = clampBgmVolume(next);
     writeText(BGM_VOLUME_KEY, bgmVolume.toFixed(3));
-    if (bgmMediaEl && !bgmMuted) {
-      try {
-        bgmMediaEl.volume = Math.max(0, Math.min(1, bgmVolume));
-      } catch {
-        // best-effort media element volume update
+    if (!bgmMuted && bgmMediaElements.size > 0) {
+      for (const el of bgmMediaElements) {
+        try {
+          el.volume = clampUnit(bgmVolume);
+        } catch {
+          // best-effort media element volume update
+        }
       }
     }
     if (bgmGain && ctx && !bgmMuted) {

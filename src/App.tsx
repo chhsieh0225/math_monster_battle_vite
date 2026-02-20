@@ -17,6 +17,7 @@ import enUS from './i18n/locales/en-US';
 // Hooks
 import { useBattle } from './hooks/useBattle';
 import { useMobileExperience } from './hooks/useMobileExperience';
+import { useAudioState } from './hooks/useAudioState';
 import { BOSS_IDS } from './data/monsterConfigs.ts';
 import { BG_IMGS, BG_IMGS_LOW } from './data/sprites.ts';
 
@@ -235,9 +236,7 @@ function App() {
   const A = B.actions;
   const V = B.view;
   const UX = useMobileExperience();
-  const [bgmMuted, setBgmMuted] = useState<boolean>(() => Boolean(V.sfx.bgmMuted));
-  const [bgmVolume, setBgmVolume] = useState<number>(() => Number(V.sfx.bgmVolume ?? 0.24));
-  const [sfxMuted, setSfxMuted] = useState<boolean>(() => Boolean(V.sfx.sfxMuted));
+  const { bgmMuted, bgmVolume, sfxMuted } = useAudioState();
   const settingsReturnRef = useRef<ScreenName>("title");
   const resumeBattleAfterSettingsRef = useRef(false);
   const conserveNetwork = UX.lowPerfMode || shouldConserveNetwork();
@@ -336,18 +335,9 @@ function App() {
     conserveNetwork,
   ]);
 
-  const handleSetBgmMuted = (next: boolean) => {
-    const m = V.sfx.setBgmMuted(next);
-    setBgmMuted(m);
-  };
-  const handleSetSfxMuted = (next: boolean) => {
-    const m = V.sfx.setSfxMuted(next);
-    setSfxMuted(m);
-  };
-  const handleSetBgmVolume = (next: number) => {
-    const v = V.sfx.setBgmVolume(next);
-    setBgmVolume(v);
-  };
+  const handleSetBgmMuted = (next: boolean) => { V.sfx.setBgmMuted(next); };
+  const handleSetSfxMuted = (next: boolean) => { V.sfx.setSfxMuted(next); };
+  const handleSetBgmVolume = (next: number) => { V.sfx.setBgmVolume(next); };
   const openSettings = (fromScreen: ScreenName) => {
     settingsReturnRef.current = fromScreen;
     if (fromScreen === "battle" && !S.gamePaused) {

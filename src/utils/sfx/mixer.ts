@@ -22,6 +22,8 @@ export type MixerState = {
   setBgmVolume: (next: number) => number;
   setMuted: (next: boolean) => boolean;
   isMuted: () => boolean;
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => MixerSnapshot;
 };
 
 export type MixerBus = {
@@ -34,10 +36,25 @@ function clampBgmVolume(next: number): number {
   return Math.max(MIN_BGM_VOLUME, Math.min(MAX_BGM_VOLUME, next));
 }
 
+export type MixerSnapshot = Readonly<{
+  sfxMuted: boolean;
+  bgmMuted: boolean;
+  bgmVolume: number;
+}>;
+
 export function createMixerState(): MixerState {
   let sfxMuted = readText(SFX_MUTED_KEY, '0') === '1';
   let bgmMuted = readText(BGM_MUTED_KEY, '0') === '1';
   let bgmVolume = clampBgmVolume(Number.parseFloat(readText(BGM_VOLUME_KEY, String(DEFAULT_BGM_VOLUME))));
+
+  // ── useSyncExternalStore support ──
+  const listeners = new Set<() => void>();
+  let snapshot: MixerSnapshot = Object.freeze({ sfxMuted, bgmMuted, bgmVolume });
+
+  function notify(): void {
+    snapshot = Object.freeze({ sfxMuted, bgmMuted, bgmVolume });
+    for (const fn of listeners) fn();
+  }
 
   return {
     getSfxMuted: () => sfxMuted,
@@ -46,16 +63,19 @@ export function createMixerState(): MixerState {
     setSfxMuted(next: boolean): boolean {
       sfxMuted = !!next;
       writeText(SFX_MUTED_KEY, sfxMuted ? '1' : '0');
+      notify();
       return sfxMuted;
     },
     setBgmMuted(next: boolean): boolean {
       bgmMuted = !!next;
       writeText(BGM_MUTED_KEY, bgmMuted ? '1' : '0');
+      notify();
       return bgmMuted;
     },
     setBgmVolume(next: number): number {
       bgmVolume = clampBgmVolume(next);
       writeText(BGM_VOLUME_KEY, bgmVolume.toFixed(3));
+      notify();
       return bgmVolume;
     },
     setMuted(next: boolean): boolean {
@@ -63,9 +83,17 @@ export function createMixerState(): MixerState {
       bgmMuted = !!next;
       writeText(SFX_MUTED_KEY, sfxMuted ? '1' : '0');
       writeText(BGM_MUTED_KEY, bgmMuted ? '1' : '0');
+      notify();
       return next;
     },
     isMuted: () => sfxMuted && bgmMuted,
+    subscribe(listener: () => void): () => void {
+      listeners.add(listener);
+      return () => { listeners.delete(listener); };
+    },
+    getSnapshot(): MixerSnapshot {
+      return snapshot;
+    },
   };
 }
 

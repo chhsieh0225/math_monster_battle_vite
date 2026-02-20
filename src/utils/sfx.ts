@@ -1080,3 +1080,8 @@ const sfx = {
 };
 
 export default sfx;
+
+// ── React useSyncExternalStore bridge ──
+export const subscribeAudioState = mixer.subscribe;
+export const getAudioSnapshot = mixer.getSnapshot;
+export type { MixerSnapshot } from './sfx/mixer.ts';

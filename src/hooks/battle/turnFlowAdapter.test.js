@@ -1,6 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { runBattleSelectMove } from './turnFlowAdapter.ts';
+import { runBattleSelectMove, runBattleEnemyTurn } from './turnFlowAdapter.ts';
+
+test('runBattleEnemyTurn delegates to build + controller fns', () => {
+  const log = [];
+  const fakeInput = { sr: { current: {} } };
+  runBattleEnemyTurn({
+    enemyTurnInput: fakeInput,
+    buildEnemyTurnArgsFn: (input) => { log.push('build'); return { ...input, built: true }; },
+    runEnemyTurnControllerFn: (args) => { log.push('run'); log.push(args.built); },
+  });
+  assert.deepEqual(log, ['build', 'run', true]);
+});
 
 const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3];
 

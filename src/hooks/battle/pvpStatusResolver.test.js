@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolvePvpTurnStartStatus } from './pvpStatusResolver.ts';
+import { noop } from './__testStubs.js';
 
 function createState(overrides = {}) {
   return {
@@ -32,22 +33,22 @@ test('resolvePvpTurnStartStatus applies lethal burn and declares winner', () => 
     getOtherPvpTurn: () => 'p2',
     getPvpTurnName: () => 'P1',
     setPHp: (value) => { hp = typeof value === 'function' ? value(hp) : value; },
-    setPvpBurnP1: () => {},
-    setPAnim: () => {},
-    addD: () => {},
+    setPvpBurnP1: noop,
+    setPAnim: noop,
+    addD: noop,
     setPvpWinner: (value) => { winner = value; },
     setScreen: (value) => { screen = value; },
-    setPvpHp2: () => {},
-    setEHp: () => {},
-    setPvpBurnP2: () => {},
-    setEAnim: () => {},
-    setBText: () => {},
-    setPhase: () => {},
-    setPvpParalyzeP1: () => {},
-    setPvpParalyzeP2: () => {},
-    setPvpTurn: () => {},
-    setPvpFreezeP1: () => {},
-    setPvpFreezeP2: () => {},
+    setPvpHp2: noop,
+    setEHp: noop,
+    setPvpBurnP2: noop,
+    setEAnim: noop,
+    setBText: noop,
+    setPhase: noop,
+    setPvpParalyzeP1: noop,
+    setPvpParalyzeP2: noop,
+    setPvpTurn: noop,
+    setPvpFreezeP1: noop,
+    setPvpFreezeP2: noop,
   });
 
   assert.equal(out, true);
@@ -63,26 +64,26 @@ test('resolvePvpTurnStartStatus handles paralyze skip and turn swap', () => {
 
   const out = resolvePvpTurnStartStatus({
     state,
-    safeTo: () => {},
+    safeTo: noop,
     getOtherPvpTurn: () => 'p1',
     getPvpTurnName: () => 'P2',
-    setPHp: () => {},
-    setPvpBurnP1: () => {},
-    setPAnim: () => {},
-    addD: () => {},
-    setPvpWinner: () => {},
-    setScreen: () => {},
-    setPvpHp2: () => {},
-    setEHp: () => {},
-    setPvpBurnP2: () => {},
-    setEAnim: () => {},
-    setBText: () => {},
+    setPHp: noop,
+    setPvpBurnP1: noop,
+    setPAnim: noop,
+    addD: noop,
+    setPvpWinner: noop,
+    setScreen: noop,
+    setPvpHp2: noop,
+    setEHp: noop,
+    setPvpBurnP2: noop,
+    setEAnim: noop,
+    setBText: noop,
     setPhase: (value) => { phase = value; },
-    setPvpParalyzeP1: () => {},
-    setPvpParalyzeP2: () => {},
+    setPvpParalyzeP1: noop,
+    setPvpParalyzeP2: noop,
     setPvpTurn: (value) => { turn = value; },
-    setPvpFreezeP1: () => {},
-    setPvpFreezeP2: () => {},
+    setPvpFreezeP1: noop,
+    setPvpFreezeP2: noop,
   });
 
   assert.equal(out, true);

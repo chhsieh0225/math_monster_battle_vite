@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runAnswerOrchestrator } from './answerOrchestrator.ts';
+import { noop, noopNum } from './__testStubs.js';
 
 test('runAnswerOrchestrator builds player deps and forwards to answer controller', () => {
   const calls = [];
@@ -18,10 +19,10 @@ test('runAnswerOrchestrator builds player deps and forwards to answer controller
     sr: { current: {} },
     pvpHandlerDeps: { pvp: true },
     getActingStarter: () => null,
-    logAns: () => 0,
-    appendSessionEvent: () => {},
-    updateAbility: () => {},
-    markCoopRotatePending: () => {},
+    logAns: noopNum,
+    appendSessionEvent: noop,
+    updateAbility: noop,
+    markCoopRotatePending: noop,
   };
 
   runAnswerOrchestrator({

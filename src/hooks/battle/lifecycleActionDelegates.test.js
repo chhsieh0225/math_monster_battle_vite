@@ -7,15 +7,16 @@ import {
   runQuitGameWithContext,
   runToggleCoopActiveWithContext,
 } from './lifecycleActionDelegates.ts';
+import { noop } from './__testStubs.js';
 
 test('runQuitGameWithContext proxies args to quit controller', () => {
   let received = null;
   const args = {
-    clearTimer: () => {},
-    appendQuitEventIfOpen: () => {},
+    clearTimer: noop,
+    appendQuitEventIfOpen: noop,
     sr: { current: {} },
-    endSession: () => {},
-    setScreen: () => {},
+    endSession: noop,
+    setScreen: noop,
   };
 
   runQuitGameWithContext(args, (next) => { received = next; });
@@ -27,7 +28,7 @@ test('runToggleCoopActiveWithContext proxies args to toggle controller', () => {
   const args = {
     sr: { current: {} },
     canSwitchCoopActiveSlot: () => true,
-    setCoopActiveSlot: () => {},
+    setCoopActiveSlot: noop,
   };
 
   runToggleCoopActiveWithContext(args, (next) => { received = next; });
@@ -39,10 +40,10 @@ test('runHandleFreezeWithContext proxies args to freeze controller', () => {
   const args = {
     sr: { current: {} },
     frozenRef: { current: true },
-    setFrozen: () => {},
-    setBText: () => {},
-    setPhase: () => {},
-    safeTo: () => {},
+    setFrozen: noop,
+    setBText: noop,
+    setPhase: noop,
+    safeTo: noop,
     t: undefined,
   };
 
@@ -55,17 +56,17 @@ test('runPlayerPartyKoWithContext merges base args with options', () => {
   const resultToken = { ok: true };
   const base = {
     sr: { current: {} },
-    setStarter: () => {},
-    setPStg: () => {},
-    setPHp: () => {},
-    setAllySub: () => {},
-    setPHpSub: () => {},
-    setCoopActiveSlot: () => {},
-    setPhase: () => {},
-    setBText: () => {},
-    safeTo: () => {},
-    endSession: () => {},
-    setScreen: () => {},
+    setStarter: noop,
+    setPStg: noop,
+    setPHp: noop,
+    setAllySub: noop,
+    setPHpSub: noop,
+    setCoopActiveSlot: noop,
+    setPhase: noop,
+    setBText: noop,
+    safeTo: noop,
+    endSession: noop,
+    setScreen: noop,
     t: undefined,
   };
   const options = { target: 'sub', reason: 'partner down' };
@@ -84,20 +85,20 @@ test('runAllySupportTurnWithContext applies options and returns runner value', (
   let received = null;
   const base = {
     sr: { current: {} },
-    safeTo: () => {},
+    safeTo: noop,
     chance: () => false,
     rand: () => 0,
-    setBText: () => {},
-    setPhase: () => {},
-    setEAnim: () => {},
-    setEHp: () => {},
-    addD: () => {},
-    addP: () => {},
-    sfx: { play: () => {} },
-    handleVictory: () => {},
+    setBText: noop,
+    setPhase: noop,
+    setEAnim: noop,
+    setEHp: noop,
+    addD: noop,
+    addP: noop,
+    sfx: { play: noop },
+    handleVictory: noop,
     t: undefined,
   };
-  const onDone = () => {};
+  const onDone = noop;
   const out = runAllySupportTurnWithContext(base, { delayMs: 1200, onDone }, (next) => {
     received = next;
     return true;

@@ -65,3 +65,24 @@ test('battleReducer promote_enemy_sub moves sub enemy to active slot', () => {
   assert.equal(state.round, 5);
   assert.equal(state.bossPhase, 1);
 });
+
+test('battleReducer patch applies partial state updates', () => {
+  let state = createInitialBattleState();
+  state = battleReducer(state, { type: "patch", patch: { pHp: 42, streak: 5 } });
+  assert.equal(state.pHp, 42);
+  assert.equal(state.streak, 5);
+});
+
+test('battleReducer patch returns same ref when no changes', () => {
+  const state = createInitialBattleState();
+  const next = battleReducer(state, { type: "patch", patch: null });
+  assert.equal(next, state);
+});
+
+test('battleReducer promote_enemy_sub is no-op without sub', () => {
+  let state = createInitialBattleState();
+  state = battleReducer(state, { type: "start_battle", enemy: { id: "slime", maxHp: 40 }, round: 1 });
+  const before = state;
+  state = battleReducer(state, { type: "promote_enemy_sub" });
+  assert.equal(state, before);
+});

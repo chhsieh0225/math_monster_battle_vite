@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runStartBattleController } from './startBattleController.ts';
+import { noop } from './__testStubs.js';
 
 test('runStartBattleController invalidates async work, clears timer, and starts battle flow', () => {
   const calls = [];
@@ -21,14 +22,14 @@ test('runStartBattleController invalidates async work, clears timer, and starts 
       sceneNames: [],
       localizeEnemy: (enemy) => enemy,
       localizeSceneName: () => '',
-      dispatchBattle: () => {},
-      updateEnc: () => {},
-      setPhase: () => {},
-      setBText: () => {},
-      setScreen: () => {},
-      finishGame: () => {},
-      resetFrozen: () => {},
-      playBattleIntro: () => {},
+      dispatchBattle: noop,
+      updateEnc: noop,
+      setPhase: noop,
+      setBText: noop,
+      setScreen: noop,
+      finishGame: noop,
+      resetFrozen: noop,
+      playBattleIntro: noop,
     },
     runStartBattleFlow: (args) => {
       calls.push('runFlow');

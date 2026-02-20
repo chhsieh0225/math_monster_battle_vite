@@ -5,6 +5,7 @@ import {
   handlePendingEvolution,
   tryProcessPvpTextAdvance,
 } from './advanceFlow.ts';
+import { noop } from './__testStubs.js';
 
 test('continueFromVictoryFlow promotes enemy sub in coop battle', () => {
   const actions = [];
@@ -49,15 +50,15 @@ test('continueFromVictoryFlow promotes boss sub into boss intro phase', () => {
       round: 0,
     },
     enemiesLength: 5,
-    setScreen: () => {},
-    dispatchBattle: () => {},
+    setScreen: noop,
+    dispatchBattle: noop,
     localizeEnemy: (enemy) => enemy,
     locale: 'zh-TW',
-    setBText: () => {},
+    setBText: noop,
     setPhase: (value) => { phases.push(value); },
     finishGame: () => { throw new Error('finishGame should not be called'); },
-    setPHp: () => {},
-    setPHpSub: () => {},
+    setPHp: noop,
+    setPHpSub: noop,
     getStageMaxHp: () => 0,
     getStarterMaxHp: () => 0,
     startBattle: () => { throw new Error('startBattle should not be called'); },
@@ -72,11 +73,11 @@ test('continueFromVictoryFlow finishes game when no rounds remain', () => {
   continueFromVictoryFlow({
     state: { battleMode: 'single', round: 1 },
     enemiesLength: 2,
-    setScreen: () => {},
-    dispatchBattle: () => {},
+    setScreen: noop,
+    dispatchBattle: noop,
     localizeEnemy: (enemy) => enemy,
-    setBText: () => {},
-    setPhase: () => {},
+    setBText: noop,
+    setPhase: noop,
     finishGame: () => { finished = true; },
     setPHp: () => { throw new Error('setPHp should not be called'); },
     setPHpSub: () => { throw new Error('setPHpSub should not be called'); },
@@ -102,11 +103,11 @@ test('continueFromVictoryFlow heals party and starts next round', () => {
       pHpSub: 20,
     },
     enemiesLength: 4,
-    setScreen: () => {},
-    dispatchBattle: () => {},
+    setScreen: noop,
+    dispatchBattle: noop,
     localizeEnemy: (enemy) => enemy,
-    setBText: () => {},
-    setPhase: () => {},
+    setBText: noop,
+    setPhase: noop,
     finishGame: () => { throw new Error('finishGame should not be called'); },
     setPHp: (value) => {
       mainHp = typeof value === 'function' ? value(mainHp) : value;

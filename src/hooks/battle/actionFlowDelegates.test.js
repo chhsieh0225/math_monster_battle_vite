@@ -7,18 +7,19 @@ import {
   runContinueWithContext,
   runAdvanceWithContext,
 } from './actionFlowDelegates.ts';
+import { noop } from './__testStubs.js';
 
 test('runStartGameWithContext injects overrides into adapter args', () => {
   let received = null;
   const runner = (args) => { received = args; };
   const base = {
-    setDailyChallengeFeedback: () => {},
-    setTowerChallengeFeedback: () => {},
+    setDailyChallengeFeedback: noop,
+    setTowerChallengeFeedback: noop,
     queuedChallenge: null,
     activeChallenge: null,
     buildNewRoster: () => [],
     startGameOrchestratorArgs: {},
-    activateQueuedChallenge: () => {},
+    activateQueuedChallenge: noop,
   };
 
   runStartGameWithContext(base, { id: 'fire' }, 'pvp', { id: 'water' }, runner);

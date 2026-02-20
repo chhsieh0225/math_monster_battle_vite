@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildTimeoutControllerArgs } from './timeoutDepsBuilder.ts';
+import { noop, noopNum } from './__testStubs.js';
 
 test('buildTimeoutControllerArgs maps timeout deps from proper domains', () => {
   const runtime = {
@@ -8,37 +9,37 @@ test('buildTimeoutControllerArgs maps timeout deps from proper domains', () => {
     t: undefined,
     getPvpTurnName: () => 'P1',
     getOtherPvpTurn: () => 'p2',
-    sfx: { play: () => {} },
-    logAns: () => 0,
-    updateAbility: () => {},
+    sfx: { play: noop },
+    logAns: noopNum,
+    updateAbility: noop,
     getActingStarter: () => null,
-    appendSessionEvent: () => {},
-    markCoopRotatePending: () => {},
-    safeTo: () => {},
-    doEnemyTurnRef: { current: () => {} },
+    appendSessionEvent: noop,
+    markCoopRotatePending: noop,
+    safeTo: noop,
+    doEnemyTurnRef: { current: noop },
   };
 
   const ui = {
-    setAnswered: () => {},
-    setFb: () => {},
-    setBText: () => {},
-    setPhase: () => {},
+    setAnswered: noop,
+    setFb: noop,
+    setBText: noop,
+    setPhase: noop,
   };
 
   const pvp = {
-    setPvpChargeP1: () => {},
-    setPvpChargeP2: () => {},
-    setPvpComboP1: () => {},
-    setPvpComboP2: () => {},
-    setPvpTurn: () => {},
-    setPvpActionCount: () => {},
+    setPvpChargeP1: noop,
+    setPvpChargeP2: noop,
+    setPvpComboP1: noop,
+    setPvpComboP2: noop,
+    setPvpTurn: noop,
+    setPvpActionCount: noop,
   };
 
   const battleFields = {
-    setTW: () => {},
-    setStreak: () => {},
-    setPassiveCount: () => {},
-    setCharge: () => {},
+    setTW: noop,
+    setStreak: noop,
+    setPassiveCount: noop,
+    setCharge: noop,
   };
 
   const args = buildTimeoutControllerArgs({

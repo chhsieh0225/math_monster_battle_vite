@@ -42,11 +42,6 @@ type SnowFlakeVm = {
   style: WeatherCssVars;
 };
 
-type FogBandVm = {
-  key: string;
-  style: WeatherCssVars;
-};
-
 type DustVm = {
   key: string;
   style: WeatherCssVars;
@@ -98,30 +93,8 @@ function buildSnow(seed: string, reduced: boolean): SnowFlakeVm[] {
   });
 }
 
-function buildFog(seed: string, reduced: boolean): FogBandVm[] {
-  const count = reduced ? 3 : 5;
-  return Array.from({ length: count }, (_, i) => {
-    const top = seedRange(`weather-fog-top-${seed}-${i}`, 6 + i * 10, 22 + i * 12);
-    const left = seedRange(`weather-fog-left-${seed}-${i}`, -26, 72);
-    const width = seedRange(`weather-fog-w-${seed}-${i}`, 42, 72);
-    const height = seedRange(`weather-fog-h-${seed}-${i}`, 14, 28);
-    const opacity = seedRange(`weather-fog-op-${seed}-${i}`, 0.22, 0.42);
-    const duration = seedRange(`weather-fog-d-${seed}-${i}`, 8, 15);
-    const delay = seedRange(`weather-fog-delay-${seed}-${i}`, 0, 2.4);
-    return {
-      key: `fog-${i}`,
-      style: {
-        '--wtop': `${top.toFixed(2)}%`,
-        '--wleft': `${left.toFixed(2)}%`,
-        '--ww': `${width.toFixed(2)}%`,
-        '--wh': `${height.toFixed(2)}%`,
-        '--wop': opacity.toFixed(3),
-        '--wd': `${duration.toFixed(3)}s`,
-        '--wdelay': `${delay.toFixed(3)}s`,
-      },
-    };
-  });
-}
+/* buildFog removed — blur(10px) on large elements is too expensive on mobile GPUs.
+   CSS class .weather-fog-band is kept so fog can be restored with a cheaper blur alternative. */
 
 function buildDust(seed: string, reduced: boolean): DustVm[] {
   const count = reduced ? 22 : 32;
@@ -164,10 +137,6 @@ export const BattleWeatherLayer = memo(function BattleWeatherLayer({
     () => (!weatherActive || weather !== 'snow' ? [] : buildSnow(seed, reducedWeather)),
     [weatherActive, weather, seed, reducedWeather],
   );
-  const fogBands = useMemo(
-    () => (!weatherActive || (weather !== 'fog' && weather !== 'storm') ? [] : buildFog(seed, reducedWeather)),
-    [weatherActive, weather, seed, reducedWeather],
-  );
   const dustParticles = useMemo(
     () => (!weatherActive || weather !== 'dust' ? [] : buildDust(seed, reducedWeather)),
     [weatherActive, weather, seed, reducedWeather],
@@ -189,8 +158,7 @@ export const BattleWeatherLayer = memo(function BattleWeatherLayer({
         <div key={flake.key} className="battle-weather-snow-flake" style={flake.style} />
       ))}
 
-      {/* Fog bands removed — blur(10px) on large elements is too expensive on mobile GPUs.
-         buildFog() and CSS class are kept so fog can be restored if a cheaper blur alternative is added. */}
+      {/* Fog bands removed — blur(10px) too expensive on mobile GPUs. CSS class kept for future use. */}
 
       {weather === 'dust' && (
         <>

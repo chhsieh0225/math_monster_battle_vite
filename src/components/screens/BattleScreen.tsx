@@ -207,20 +207,21 @@ function BattleScreenComponent({
   // Animation CSS variables are separated from layout styles so that frequent
   // state changes (eHp, phase) don't cause the browser to re-assign identical
   // animation strings, which would restart running CSS animations mid-cycle.
+  const enemyDefeatedFlag = S.eHp === 0 && (S.phase === "ko" || S.phase === "victory");
+  const enemyLowHpFlag = Boolean(
+    coreStatic && coreStatic.enemy.maxHp > 0 && S.eHp > 0 && S.eHp / coreStatic.enemy.maxHp < 0.25,
+  );
   const memoSpriteAnims = useMemo(() => {
     if (!coreStatic) return null;
     const { enemy } = coreStatic;
     const enemyIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemy.id));
-    const isKoPhase = S.phase === "ko" || S.phase === "victory";
-    const enemyDefeated = isKoPhase && S.eHp === 0;
-    const enemyLowHp = enemy.maxHp > 0 && S.eHp > 0 && S.eHp / enemy.maxHp < 0.25;
     const enemyIdleAnim = enemyIsBossVisual
       ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
-      : enemyLowHp
+      : enemyLowHpFlag
         ? "float 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite"
         : "float 3s ease-in-out infinite";
     return {
-      enemyMain: (enemyDefeated
+      enemyMain: (enemyDefeatedFlag
         ? "enemyDissolve .9s ease-out forwards"
         : S.eAnim || (UX.lowPerfMode ? "none" : enemyIdleAnim)),
       enemySub: UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite",
@@ -228,15 +229,12 @@ function BattleScreenComponent({
       playerMain: S.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite"),
       playerSub: UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite",
     };
-  }, [coreStatic, S.eAnim, S.pAnim, S.eHp === 0 && (S.phase === "ko" || S.phase === "victory"), UX.lowPerfMode,
-      // enemyLowHp threshold — only react when crossing the 25% boundary
-      coreStatic && coreStatic.enemy.maxHp > 0 && S.eHp > 0 && S.eHp / coreStatic.enemy.maxHp < 0.25]);
+  }, [coreStatic, S.eAnim, S.pAnim, enemyDefeatedFlag, UX.lowPerfMode, enemyLowHpFlag]);
 
   // ── Sprite layout styles (position, size, filter — no animation strings) ──
   const memoSpriteStyles = useMemo(() => {
     if (!coreStatic || !memoSpriteAnims) return null;
     const {
-      enemy,
       isCoopBattle,
       coopUsingSub,
       layout: {
@@ -257,7 +255,6 @@ function BattleScreenComponent({
 
     const enemySubId = S.enemySub?.id ?? '';
     const enemySubIsEvolved = Boolean(S.enemySub?.isEvolved);
-    const enemyIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemy.id));
     const enemySubIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemySubId));
 
     const playerMainLeftPct = coopUsingSub ? rawSubLeftPct : rawMainLeftPct;

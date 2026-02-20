@@ -984,7 +984,7 @@ const sfx = {
     bgm.dispose();
     pendingSfx.clear();
     if (ctx) {
-      try { ctx.close(); } catch { /* best-effort */ }
+      try { void ctx.close(); } catch { /* best-effort */ }
       ctx = null;
     }
     sfxDest = null;

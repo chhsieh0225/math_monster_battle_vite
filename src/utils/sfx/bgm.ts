@@ -1434,7 +1434,7 @@ function apiStopBgm(immediate = false): void {
 function disposeBgm(): void {
   try { stopBgmLoop(true); } catch { /* ok */ }
   // Flush warmup cache
-  for (const [src, el] of bgmWarmupCache) {
+  for (const [_Src, el] of bgmWarmupCache) {
     try { el.pause(); el.src = ''; } catch { /* ok */ }
   }
   bgmWarmupCache.clear();

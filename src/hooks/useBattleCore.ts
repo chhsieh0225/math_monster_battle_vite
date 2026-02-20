@@ -348,7 +348,7 @@ export function useBattle() {
     setPStg,
     setEHp,
     setFrozen,
-    setShattered,
+    setShattered: _SetShattered,
     setDiffLevel,
     setSpecDef,
     setDefAnim,
@@ -1102,6 +1102,8 @@ export function useBattle() {
     appendSessionEvent,
     _updateAbility,
     markCoopRotatePending,
+    challengeComboMult,
+    challengeDamageMult,
   ]);
 
   // --- Advance from text / victory phase ---

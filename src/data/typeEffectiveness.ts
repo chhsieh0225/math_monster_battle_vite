@@ -20,16 +20,23 @@ function isAttackType(value: string): value is AttackType {
   return value in TYPE_EFF;
 }
 
+function normalizeLegacyType(type: string): string {
+  // Backward compatibility: historical "sweet" was renamed to "dream".
+  return type === 'sweet' ? 'dream' : type;
+}
+
 function hasOwnKey<T extends object>(obj: T, key: string): key is Extract<keyof T, string> {
   return Object.prototype.hasOwnProperty.call(obj, key);
 }
 
 export function getEff(moveType: string | null | undefined, monType: string | null | undefined): number {
   if (!moveType || !monType) return 1.0;
-  if (!isAttackType(moveType)) return 1.0;
-  const row = TYPE_EFF[moveType];
-  if (!hasOwnKey(row, monType)) return 1.0;
-  const eff = row[monType];
+  const normalizedMoveType = normalizeLegacyType(moveType);
+  const normalizedMonType = normalizeLegacyType(monType);
+  if (!isAttackType(normalizedMoveType)) return 1.0;
+  const row = TYPE_EFF[normalizedMoveType];
+  if (!hasOwnKey(row, normalizedMonType)) return 1.0;
+  const eff = row[normalizedMonType];
   return typeof eff === 'number' ? eff : 1.0;
 }
 

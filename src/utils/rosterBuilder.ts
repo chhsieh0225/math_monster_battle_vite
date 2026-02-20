@@ -332,8 +332,8 @@ export function buildRoster(
       : (isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn));
     const resolvedMonsterType = evolvedVariant?.mType || variant?.mType || b.mType;
     const bossSceneType = BOSS_SCENE_BY_ID[resolvedId];
-    // Scene should follow the actual spawned monster type after random replacement.
-    const resolvedSceneType = bossSceneType || resolvedMonsterType;
+    // Priority: wave-level override > boss scene map > monster type fallback.
+    const resolvedSceneType = wave.sceneType || bossSceneType || resolvedMonsterType;
 
     return {
       ...b,

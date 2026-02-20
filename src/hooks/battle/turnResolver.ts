@@ -201,6 +201,11 @@ function hasOwnKey<T extends object>(obj: T, key: string): key is Extract<keyof 
   return Object.prototype.hasOwnProperty.call(obj, key);
 }
 
+function normalizeLegacyTypeKey(typeKey: string): string {
+  // Backward compatibility: historical "sweet" was renamed to "dream".
+  return typeKey === 'sweet' ? 'dream' : typeKey;
+}
+
 function getBestMoveType(move: MoveLike, defenderType?: string, defenderType2?: string): string {
   if (!move.type2 || !defenderType) return move.type;
   const eff1 = getDualEff(move.type, defenderType, defenderType2);
@@ -234,8 +239,8 @@ function resolveCritOutcome({
   chanceBonus = 0,
   damageBonus = 0,
 }: ResolveCritOutcomeParams): CritOutcome {
-  const attackerTypeKey = attackerType ?? '';
-  const defenderTypeKey = defenderType ?? '';
+  const attackerTypeKey = normalizeLegacyTypeKey(attackerType ?? '');
+  const defenderTypeKey = normalizeLegacyTypeKey(defenderType ?? '');
   const attackerCritProfile = byType?.[attackerTypeKey] || {};
   const defenderCritProfile = byType?.[defenderTypeKey] || {};
 

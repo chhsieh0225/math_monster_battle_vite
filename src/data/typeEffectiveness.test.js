@@ -25,6 +25,20 @@ test('ice attacker and defender have configured effectiveness values', () => {
   assert.equal(getEff('water', 'ice'), 0.6);
 });
 
+test('dream attacker and defender have configured effectiveness values', () => {
+  assert.equal(getEff('dream', 'ghost'), 1.5);
+  assert.equal(getEff('dream', 'dark'), 1.5);
+  assert.equal(getEff('dream', 'light'), 0.6);
+  assert.equal(getEff('fire', 'dream'), 1.5);
+  assert.equal(getEff('poison', 'dream'), 1.5);
+});
+
+test('legacy sweet type alias resolves to dream effectiveness', () => {
+  assert.equal(getEff('sweet', 'ghost'), getEff('dream', 'ghost'));
+  assert.equal(getEff('dream', 'sweet'), getEff('dream', 'dream'));
+  assert.equal(getEff('sweet', 'sweet'), getEff('dream', 'dream'));
+});
+
 test('unknown attacker type stays neutral', () => {
   assert.equal(getEff('unknown_type', 'fire'), 1.0);
 });

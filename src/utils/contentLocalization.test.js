@@ -50,6 +50,16 @@ test('localizeEnemy maps new monster variants to English names', () => {
   assert.equal(mushroom.typeName, "Poison");
 });
 
+test('localizeEnemy keeps legacy sweet labels compatible after dream rename', () => {
+  const legacy = localizeEnemy({
+    id: "candy_monster",
+    name: "棉花糖怪",
+    mType: "sweet",
+    typeName: "甜蜜",
+  }, EN);
+  assert.equal(legacy.typeName, "Dream");
+});
+
 test('localizeEnemy localizes dual-type labels and evolved lantern name', () => {
   const hydra = localizeEnemy({
     id: "boss_hydra",

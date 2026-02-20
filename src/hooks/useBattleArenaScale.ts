@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import type { RefObject } from 'react';
 
 type UseBattleArenaScaleArgs = {
@@ -6,13 +6,30 @@ type UseBattleArenaScaleArgs = {
   enabled?: boolean;
 };
 
+const BASE_WIDTH = 430;
+const BASE_HEIGHT = 320;
+const MIN_SCALE = 0.9;
+const MAX_SCALE = 1.16;
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
+}
+
+function computeScale(arena: HTMLElement | null): number {
+  if (!arena) return 1;
+  const rect = arena.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return 1;
+  const byWidth = rect.width / BASE_WIDTH;
+  const byHeight = rect.height / BASE_HEIGHT;
+  return clamp(Math.min(byWidth, byHeight), MIN_SCALE, MAX_SCALE);
 }
 
 /**
  * Compute a stable, device-aware sprite scale factor from arena size.
  * Keeps player/enemy proportions consistent across phone/tablet/desktop.
+ *
+ * Uses useLayoutEffect so the first computed scale is applied before the
+ * browser paints, eliminating the visible snap from default → actual scale.
  */
 export function useBattleArenaScale({
   arenaRef,
@@ -20,32 +37,23 @@ export function useBattleArenaScale({
 }: UseBattleArenaScaleArgs): number {
   const [scale, setScale] = useState(1);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!enabled) return;
 
-    let rafId = 0;
-    const BASE_WIDTH = 430;
-    const BASE_HEIGHT = 320;
-    const MIN_SCALE = 0.9;
-    const MAX_SCALE = 1.16;
-
     const updateScale = () => {
-      const arena = arenaRef.current;
-      if (!arena) return;
-      const rect = arena.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
-      const byWidth = rect.width / BASE_WIDTH;
-      const byHeight = rect.height / BASE_HEIGHT;
-      const next = clamp(Math.min(byWidth, byHeight), MIN_SCALE, MAX_SCALE);
+      const next = computeScale(arenaRef.current);
       setScale((prev) => (Math.abs(prev - next) > 0.01 ? next : prev));
     };
 
+    // Synchronous first measurement — runs before paint.
+    updateScale();
+
+    let rafId = 0;
     const scheduleUpdate = () => {
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(updateScale);
     };
 
-    scheduleUpdate();
     window.addEventListener('resize', scheduleUpdate);
 
     let observer: ResizeObserver | null = null;

@@ -203,8 +203,38 @@ function BattleScreenComponent({
     return S.atkEffect?.targetSide === "player" ? playerTarget : enemyTarget;
   }, [coreStatic, measuredEnemyTarget, measuredPlayerTarget, S.atkEffect?.targetSide]);
 
-  const memoSpriteStyles = useMemo(() => {
+  // ── Sprite animation styles (isolated memo to prevent animation restarts) ──
+  // Animation CSS variables are separated from layout styles so that frequent
+  // state changes (eHp, phase) don't cause the browser to re-assign identical
+  // animation strings, which would restart running CSS animations mid-cycle.
+  const memoSpriteAnims = useMemo(() => {
     if (!coreStatic) return null;
+    const { enemy } = coreStatic;
+    const enemyIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemy.id));
+    const isKoPhase = S.phase === "ko" || S.phase === "victory";
+    const enemyDefeated = isKoPhase && S.eHp === 0;
+    const enemyLowHp = enemy.maxHp > 0 && S.eHp > 0 && S.eHp / enemy.maxHp < 0.25;
+    const enemyIdleAnim = enemyIsBossVisual
+      ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
+      : enemyLowHp
+        ? "float 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite"
+        : "float 3s ease-in-out infinite";
+    return {
+      enemyMain: (enemyDefeated
+        ? "enemyDissolve .9s ease-out forwards"
+        : S.eAnim || (UX.lowPerfMode ? "none" : enemyIdleAnim)),
+      enemySub: UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite",
+      enemyShadow: enemyIsBossVisual ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
+      playerMain: S.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite"),
+      playerSub: UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite",
+    };
+  }, [coreStatic, S.eAnim, S.pAnim, S.eHp === 0 && (S.phase === "ko" || S.phase === "victory"), UX.lowPerfMode,
+      // enemyLowHp threshold — only react when crossing the 25% boundary
+      coreStatic && coreStatic.enemy.maxHp > 0 && S.eHp > 0 && S.eHp / coreStatic.enemy.maxHp < 0.25]);
+
+  // ── Sprite layout styles (position, size, filter — no animation strings) ──
+  const memoSpriteStyles = useMemo(() => {
+    if (!coreStatic || !memoSpriteAnims) return null;
     const {
       enemy,
       isCoopBattle,
@@ -225,18 +255,10 @@ function BattleScreenComponent({
       },
     } = coreStatic;
 
-    const isKoPhase = S.phase === "ko" || S.phase === "victory";
-    const enemyDefeated = isKoPhase && S.eHp === 0;
     const enemySubId = S.enemySub?.id ?? '';
     const enemySubIsEvolved = Boolean(S.enemySub?.isEvolved);
-    const enemyLowHp = enemy.maxHp > 0 && S.eHp > 0 && S.eHp / enemy.maxHp < 0.25;
     const enemyIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemy.id));
     const enemySubIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemySubId));
-    const enemyIdleAnim = enemyIsBossVisual
-      ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
-      : enemyLowHp
-        ? "float 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite"
-        : "float 3s ease-in-out infinite";
 
     const playerMainLeftPct = coopUsingSub ? rawSubLeftPct : rawMainLeftPct;
     const playerMainBottomPct = coopUsingSub ? rawSubBottomPct : rawMainBottomPct;
@@ -264,21 +286,19 @@ function BattleScreenComponent({
       enemyMainSpriteStyle: {
         "--enemy-main-right": `${enemyMainRightPct}%`,
         "--enemy-main-top": `${enemyTopPct}%`,
-        "--enemy-main-anim": enemyDefeated
-          ? "enemyDissolve .9s ease-out forwards"
-          : S.eAnim || (UX.lowPerfMode ? "none" : enemyIdleAnim),
+        "--enemy-main-anim": memoSpriteAnims.enemyMain,
       } as BattleCssVars,
       enemySubSpriteStyle: {
         "--enemy-sub-right": `${enemySubRightPct}%`,
         "--enemy-sub-top": `${enemySubTopPct}%`,
         "--enemy-sub-scale": enemySubScale,
-        "--enemy-sub-anim": UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite",
+        "--enemy-sub-anim": memoSpriteAnims.enemySub,
       } as BattleCssVars,
       enemyMainShadowStyle: {
         "--enemy-shadow-right": `calc(${enemyMainRightPct}% + ${Math.round(enemySize * 0.18)}px)`,
         "--enemy-shadow-top": `calc(${enemyTopPct}% + ${Math.round(enemyHeight * 0.72)}px)`,
         "--enemy-shadow-width": `${Math.round(enemySize * 0.56)}px`,
-        "--enemy-shadow-anim": enemyIsBossVisual ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
+        "--enemy-shadow-anim": memoSpriteAnims.enemyShadow,
       } as BattleCssVars,
       playerMainSpriteStyle: {
         "--player-main-left": `${playerMainLeftPct}%`,
@@ -286,7 +306,7 @@ function BattleScreenComponent({
         "--player-main-filter": isCoopBattle && !coopUsingSub ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))" : "none",
         "--player-main-z": coopUsingSub ? "4" : "6",
         "--player-main-opacity": coopUsingSub ? ".84" : "1",
-        "--player-main-anim": S.pAnim || (UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite"),
+        "--player-main-anim": memoSpriteAnims.playerMain,
       } as BattleCssVars,
       playerSubSpriteStyle: {
         "--player-sub-left": `${playerSubLeftPct}%`,
@@ -294,7 +314,7 @@ function BattleScreenComponent({
         "--player-sub-filter": isCoopBattle && coopUsingSub ? "drop-shadow(0 0 12px rgba(34,197,94,0.75))" : "none",
         "--player-sub-z": coopUsingSub ? "6" : "4",
         "--player-sub-opacity": coopUsingSub ? "1" : ".84",
-        "--player-sub-anim": UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite",
+        "--player-sub-anim": memoSpriteAnims.playerSub,
       } as BattleCssVars,
       playerMainShadowStyle: {
         "--player-shadow-left": `calc(${playerMainLeftPct}% + ${Math.round(mainPlayerSize * 0.48)}px)`,
@@ -302,7 +322,7 @@ function BattleScreenComponent({
         "--player-shadow-width": `${Math.round(mainPlayerSize * 0.5)}px`,
       } as BattleCssVars,
     };
-  }, [coreStatic, S.eHp, S.eAnim, S.enemySub?.id, S.enemySub?.isEvolved, S.pAnim, S.phase, UX.lowPerfMode]);
+  }, [coreStatic, memoSpriteAnims, S.enemySub?.id, S.enemySub?.isEvolved]);
 
   // ─── Battle screen locals ───
   const coreRuntime = useMemo(() => buildBattleRuntimeCore({

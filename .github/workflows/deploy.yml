@@ -1,9 +1,11 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
-  workflow_dispatch:         # 也允許手動觸發部署
+  workflow_dispatch:         # 也允許手動觸發部署（預設仍建議 main）
 
 permissions:
   contents: read
@@ -16,6 +18,9 @@ concurrency:
 
 jobs:
   build-and-deploy:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     environment:
       name: github-pages

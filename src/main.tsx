@@ -1,13 +1,10 @@
 import { createRoot } from 'react-dom/client';
+import { registerSW } from 'virtual:pwa-register';
 import App from './App';
 import { I18nProvider } from './i18n';
 
-// Register service worker for PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
-}
+// vite-plugin-pwa: 自動更新 SW，使用者永遠取得最新版本
+registerSW({ immediate: true });
 
 const rootEl = document.getElementById('root');
 if (!rootEl) throw new Error('Missing #root element');

@@ -360,7 +360,7 @@ export function runPlayerAnswer({
     setFb({ correct: true });
     setTC((c) => c + 1);
     const ns = s.streak + 1;
-    sfx.play(ns >= 5 ? 'crit' : 'hit');
+    sfx.play(ns >= TRAIT_BALANCE.player.streaks.audioTrigger ? 'crit' : 'hit');
     setStreak(ns);
     setCharge((c) => Math.min(c + 1, 3));
     if (ns > s.maxStreak) setMaxStreak(ns);
@@ -377,8 +377,8 @@ export function runPlayerAnswer({
       setPassiveCount(np);
     }
 
-    if (ns >= 5) tryUnlock('streak_5');
-    if (ns >= 10) tryUnlock('streak_10');
+    if (ns >= TRAIT_BALANCE.player.streaks.unlock5) tryUnlock('streak_5');
+    if (ns >= TRAIT_BALANCE.player.streaks.unlock10) tryUnlock('streak_10');
 
     const nh = [...s.mHits];
     nh[moveIdx] += 1;
@@ -484,7 +484,7 @@ export function runPlayerAnswer({
           } else if (isFortress) {
             setEffMsg({ text: tr(t, 'battle.effect.fortressGuard', '🛡️ Fortress reduced damage!'), color: '#94a3b8' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
-          } else if (starter.type === 'light' && getAttackerHp(s3) < getAttackerMaxHp(s3) * 0.5) {
+          } else if (starter.type === 'light' && getAttackerHp(s3) < getAttackerMaxHp(s3) * TRAIT_BALANCE.player.lightCourageHpThreshold) {
             setEffMsg({ text: tr(t, 'battle.effect.lightCourage', '🦁 Courage Heart! ATK↑'), color: '#f59e0b' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
           } else if (eff > 1) {

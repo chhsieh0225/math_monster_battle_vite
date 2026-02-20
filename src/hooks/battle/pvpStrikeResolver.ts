@@ -280,7 +280,7 @@ export function executePvpStrikeTurn({
     };
 
     if (defender.type === 'light') {
-      const counterDmg = PVP.passive.lightCounterDamage || 14;
+      const counterDmg = PVP.passive.lightCounterDamage;
       addD('🛡️BLOCK', defenderMainX, defenderMainY, '#f59e0b');
       const killed = applyCounterToAttacker(counterDmg, '#f59e0b', 'enemyFireHit 0.55s ease');
       sfx.play('light');

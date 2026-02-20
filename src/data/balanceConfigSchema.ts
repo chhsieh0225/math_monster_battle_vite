@@ -92,7 +92,15 @@ export function validateBalanceConfigSchema(config: unknown): void {
   checkNumber(config, 'traits.player.steelCounterChance', issues, { min: 0, max: 1 });
   checkNumber(config, 'traits.player.steelCounterScale', issues, { min: 0, max: 3 });
   checkNumber(config, 'traits.player.steelCounterCap', issues, { min: 0 });
+  const streakAudio = checkNumber(config, 'traits.player.streaks.audioTrigger', issues, { min: 1 });
+  const streakUnlock5 = checkNumber(config, 'traits.player.streaks.unlock5', issues, { min: 1 });
+  const streakUnlock10 = checkNumber(config, 'traits.player.streaks.unlock10', issues, { min: 1 });
+  if (streakUnlock5 != null && streakUnlock10 != null && streakUnlock5 >= streakUnlock10) {
+    issues.push('traits.player.streaks.unlock5 must be < traits.player.streaks.unlock10');
+  }
+  checkNumber(config, 'traits.player.lightCourageHpThreshold', issues, { min: 0.1, max: 1 });
   checkNumber(config, 'traits.specDef.steelCounterDamage', issues, { min: 0 });
+  checkNumber(config, 'traits.specDef.lightCounterDamage', issues, { min: 0 });
   checkNumber(config, 'pvp.passive.steelWallDamageScale', issues, { min: 0.1, max: 1 });
   checkNumber(config, 'pvp.passive.steelCounterChance', issues, { min: 0, max: 1 });
   checkNumber(config, 'pvp.passive.steelCounterScale', issues, { min: 0, max: 3 });

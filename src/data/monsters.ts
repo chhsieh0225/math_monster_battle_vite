@@ -21,7 +21,7 @@ import {
 
 export { TYPE_EFF, getEff } from './typeEffectiveness.ts';
 
-const SPRITE_MAP: Record<string, SpriteFn> = {
+export const SPRITE_MAP: Record<string, SpriteFn> = {
   slimeSVG,
   fireLizardSVG,
   ghostSVG,

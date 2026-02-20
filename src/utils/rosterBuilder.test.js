@@ -64,7 +64,7 @@ test('buildRoster scene follows the spawned monster type', () => {
       ? !currentIsSlime
       : wave.monsterId !== mon.id;
     if (replaced) return;
-    const expectedScene = BALANCE_CONFIG.monsters.bossSceneById[mon.id] || mon.mType;
+    const expectedScene = wave.sceneType || BALANCE_CONFIG.monsters.bossSceneById[mon.id] || mon.mType;
     assert.equal(mon.sceneMType, expectedScene);
   });
 });

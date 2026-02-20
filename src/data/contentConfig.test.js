@@ -19,6 +19,13 @@ import {
   STAGE_WAVES,
 } from './stageConfigs.ts';
 import { BALANCE_CONFIG } from './balanceConfig.ts';
+import { SPRITE_MAP } from './monsters.ts';
+import { ENC_ENTRIES } from './encyclopedia.ts';
+import {
+  MONSTER_NAME_EN,
+  MONSTER_DESC_EN,
+  MONSTER_HABITAT_EN,
+} from '../utils/contentLocalization.ts';
 
 test('stage config references valid monster ids', () => {
   const knownIds = new Set(MONSTER_CONFIGS.map(mon => mon.id));
@@ -144,5 +151,50 @@ test('campaign branch choices reference valid monster ids and event tags', () =>
   assert.ok(Array.isArray(campaign.eventPool));
   for (const eventTag of campaign.eventPool) {
     assert.ok(validEvents.has(eventTag), `unknown campaign event tag: ${eventTag}`);
+  }
+});
+
+test('all monster/variant spriteKeys exist in SPRITE_MAP', () => {
+  const spriteKeys = new Set(Object.keys(SPRITE_MAP));
+  const allConfigs = [
+    ...MONSTER_CONFIGS,
+    ...SLIME_VARIANT_CONFIGS,
+    ...EVOLVED_SLIME_VARIANT_CONFIGS,
+  ];
+  for (const cfg of allConfigs) {
+    assert.ok(
+      spriteKeys.has(cfg.spriteKey),
+      `spriteKey "${cfg.spriteKey}" (monster ${cfg.id}) not found in SPRITE_MAP`,
+    );
+  }
+});
+
+test('all encyclopedia entries have EN name, description, and habitat', () => {
+  assert.ok(ENC_ENTRIES.length > 0, 'ENC_ENTRIES should not be empty');
+  for (const entry of ENC_ENTRIES) {
+    const key = entry.key;
+    assert.ok(
+      typeof MONSTER_NAME_EN[key] === 'string' && MONSTER_NAME_EN[key].length > 0,
+      `missing MONSTER_NAME_EN for encyclopedia key: ${key}`,
+    );
+    assert.ok(
+      typeof MONSTER_DESC_EN[key] === 'string' && MONSTER_DESC_EN[key].length > 0,
+      `missing MONSTER_DESC_EN for encyclopedia key: ${key}`,
+    );
+    assert.ok(
+      typeof MONSTER_HABITAT_EN[key] === 'string' && MONSTER_HABITAT_EN[key].length > 0,
+      `missing MONSTER_HABITAT_EN for encyclopedia key: ${key}`,
+    );
+  }
+});
+
+test('DROP_TABLES and WEIGHTED_DROP_TABLES key sets are identical', () => {
+  const dropKeys = new Set(Object.keys(DROP_TABLES));
+  const weightedKeys = new Set(Object.keys(WEIGHTED_DROP_TABLES));
+  for (const k of dropKeys) {
+    assert.ok(weightedKeys.has(k), `WEIGHTED_DROP_TABLES missing key present in DROP_TABLES: ${k}`);
+  }
+  for (const k of weightedKeys) {
+    assert.ok(dropKeys.has(k), `DROP_TABLES missing key present in WEIGHTED_DROP_TABLES: ${k}`);
   }
 });

@@ -385,6 +385,12 @@ export const BALANCE_CONFIG = {
       steelCounterCap: 18,
       iceShatterBonusRatio: 0.25,
       iceShatterBonusCap: 16,
+      streaks: {
+        audioTrigger: 5,
+        unlock5: 5,
+        unlock10: 10,
+      },
+      lightCourageHpThreshold: 0.5,
     },
     specDef: {
       grassReflectScale: 1.2,

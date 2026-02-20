@@ -340,7 +340,7 @@ export function runEnemyTurn({
               }, 1500);
             }, 1800);
           } else if (st === 'steel') {
-            const steelCounterRaw = Math.max(1, Math.round(TRAIT_BALANCE.specDef.steelCounterDamage || 14));
+            const steelCounterRaw = Math.max(1, Math.round(TRAIT_BALANCE.specDef.steelCounterDamage));
             const steelCounterDmg = applyBossDamageReduction(steelCounterRaw, sr.current.enemy?.id);
             const nh = Math.max(0, sr.current.eHp - steelCounterDmg);
             setEHp(nh);
@@ -361,7 +361,7 @@ export function runEnemyTurn({
               }
             }, 1800);
           } else if (st === 'light') {
-            const roarDmg = applyBossDamageReduction(15, sr.current.enemy?.id);
+            const roarDmg = applyBossDamageReduction(TRAIT_BALANCE.specDef.lightCounterDamage, sr.current.enemy?.id);
             const nh = Math.max(0, sr.current.eHp - roarDmg);
             setEHp(nh);
             setBText(tr(t, 'battle.specdef.light.roarCounter', "✨ Lion's roar! Blocked and countered!"));

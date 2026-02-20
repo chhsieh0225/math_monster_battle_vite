@@ -287,7 +287,7 @@ const STARTER_TEXT_EN: Dict<StarterText> = {
   },
 };
 
-const MONSTER_NAME_EN: Dict<string> = {
+export const MONSTER_NAME_EN: Dict<string> = {
   slime: "Green Slime",
   slime_red: "Crimson Slime",
   slime_blue: "Azure Slime",
@@ -370,7 +370,7 @@ const MONSTER_NAME_EN_BY_ZH: Dict<string> = {
   叢雲劍神: "Kusanagi Sword God",
 };
 
-const MONSTER_DESC_EN: Dict<string> = {
+export const MONSTER_DESC_EN: Dict<string> = {
   slime: "The most common monster on the plains. Soft and bouncy, but tougher than it looks.",
   slime_red: "A slime mutated near volcanoes. Its body burns hot and its temper is fierce.",
   slime_blue: "A water-rich slime variant from wetlands. It moves swiftly during rain.",
@@ -402,7 +402,7 @@ const MONSTER_DESC_EN: Dict<string> = {
   colorful_butterfly: "A dazzling butterfly on sunlit plains. Its iridescent wing scales create tiny cyclones, enabling rapid consecutive strikes.",
 };
 
-const MONSTER_HABITAT_EN: Dict<string> = {
+export const MONSTER_HABITAT_EN: Dict<string> = {
   slime: "🌿 Verdant Plains",
   slime_red: "🌿 Verdant Plains",
   slime_blue: "🌿 Verdant Plains",

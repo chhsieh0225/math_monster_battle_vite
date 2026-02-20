@@ -262,7 +262,7 @@ export function handlePvpAnswer({
   safeTo,
   sfx,
   getOtherPvpTurn,
-  pvpSpecDefTrigger = PVP.passive.specDefComboTrigger || 4,
+  pvpSpecDefTrigger = PVP.passive.specDefComboTrigger,
   setFb,
   setTC,
   setTW,

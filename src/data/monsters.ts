@@ -3,6 +3,7 @@ import {
   slimeEvolvedSVG, slimeElectricEvolvedSVG, slimeFireEvolvedSVG, slimeWaterEvolvedSVG, slimeSteelEvolvedSVG, slimeDarkEvolvedSVG,
   fireEvolvedSVG, ghostEvolvedSVG, dragonEvolvedSVG,
   slimeRedSVG, slimeBlueSVG, slimeYellowSVG, slimeDarkSVG, slimeSteelSVG,
+  candyKnightSVG, candyMonsterSVG, colorfulButterflySVG,
 } from './sprites.ts';
 import type {
   HydratedMonster,
@@ -33,6 +34,9 @@ const SPRITE_MAP: Record<string, SpriteFn> = {
   bossSwordGodSVG,
   golumnSVG,
   golumnMudSVG,
+  candyKnightSVG,
+  candyMonsterSVG,
+  colorfulButterflySVG,
   slimeEvolvedSVG,
   slimeElectricEvolvedSVG,
   slimeFireEvolvedSVG,

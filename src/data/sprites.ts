@@ -51,6 +51,9 @@ export const SPRITE_IMGS = {
   boss_sword_god: `${BASE}sprites/boss_sword_god.png`,
   golumn: `${BASE}sprites/golumn.png`,
   golumn_mud: `${BASE}sprites/golumn_mud.png`,
+  candy_knight: `${BASE}sprites/candy_knight.png`,
+  candy_monster: `${BASE}sprites/candy_monster.png`,
+  colorful_butterfly: `${BASE}sprites/colorful_butterfly.png`,
 } as const;
 
 export const BG_IMGS = {
@@ -65,6 +68,7 @@ export const BG_IMGS = {
   rock: `${BASE}backgrounds/rock.jpg`,
   heaven: `${BASE}backgrounds/heaven.jpg`,
   burnt_warplace: `${BASE}backgrounds/burnt_warplace.jpg`,
+  candy: `${BASE}backgrounds/candy.png`,
 } as const;
 
 export const BG_IMGS_LOW = {
@@ -177,3 +181,6 @@ export const bossCrazyDragonSVG = makeSvgFnFitFlip('boss_crazy_dragon', 677, 369
 export const bossSwordGodSVG = makeSvgFnFill('boss_sword_god', 409, 610);
 export const golumnSVG = makeSvgFn('golumn');
 export const golumnMudSVG = makeSvgFn('golumn_mud');
+export const candyKnightSVG = makeSvgFnFit('candy_knight', 590, 423);
+export const candyMonsterSVG = makeSvgFnFit('candy_monster', 530, 471);
+export const colorfulButterflySVG = makeSvgFnFill('colorful_butterfly', 676, 369);

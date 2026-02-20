@@ -79,6 +79,9 @@ export const BALANCE_CONFIG = {
         { monsterId: 'slime', slimeType: 'steel', sceneType: 'steel' },
         { monsterId: 'dragon', sceneType: 'steel' },
 
+        { monsterId: 'candy_knight', sceneType: 'candy' },
+        { monsterId: 'candy_monster', sceneType: 'candy' },
+
         { monsterId: 'slime', slimeType: 'dark', sceneType: 'dark' },
         { monsterId: 'fire', sceneType: 'dark' },
 
@@ -118,10 +121,10 @@ export const BALANCE_CONFIG = {
         },
         {
           left: { monsterId: 'golumn', sceneType: 'rock' },
-          right: { monsterId: 'ghost', sceneType: 'ghost' },
+          right: { monsterId: 'candy_knight', sceneType: 'candy' },
         },
         {
-          left: { monsterId: 'dragon', sceneType: 'steel' },
+          left: { monsterId: 'candy_monster', sceneType: 'candy' },
           right: { monsterId: 'fire', sceneType: 'dark' },
         },
         {
@@ -162,6 +165,7 @@ export const BALANCE_CONFIG = {
     randomEncounterVariantsByBaseId: {
       ghost: ['ghost', 'ghost_lantern', 'mushroom'],
       golumn: ['golumn', 'golumn_mud'],
+      slime: ['slime', 'colorful_butterfly'],
     },
     baseStatsById: {
       slime: { hp: 40, atk: 6 },
@@ -174,6 +178,9 @@ export const BALANCE_CONFIG = {
       boss_hydra: { hp: 140, atk: 13 },
       boss_crazy_dragon: { hp: 110, atk: 17 },
       boss_sword_god: { hp: 120, atk: 15 },
+      candy_knight: { hp: 58, atk: 9 },
+      candy_monster: { hp: 48, atk: 7 },
+      colorful_butterfly: { hp: 35, atk: 5 },
     },
     evolveLevelById: {
       slime: 5,

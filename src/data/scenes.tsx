@@ -547,6 +547,39 @@ export const SCENES = {
   },
 
   /* ═══ Burnt Warplace — scorched battlefield with lightning + lava cracks ═══ */
+  /* ═══ Candy — floating sweets + sparkle dust ═══ */
+  candy:{
+    bgImg:BG_IMGS.candy,
+    sky:"linear-gradient(180deg,#fce7f3 0%,#fbcfe8 28%,#f9a8d4 55%,#f472b6 85%,#ec4899 100%)",
+    ground:"linear-gradient(180deg,transparent,rgba(244,114,182,0.08) 40%,rgba(219,39,119,0.15))",
+    platform1:"rgba(244,114,182,0.25)",platform2:"rgba(219,39,119,0.2)",
+    Deco:memo(()=><>
+      {/* Floating candy particles */}
+      {LEAF_R.map((r, i) => (
+        <div
+          key={`cn${i}`}
+          className="scn-leaf"
+          style={withVars({
+            '--bottom': `${r.bottom}%`,
+            '--left': `${r.left}%`,
+            '--w': `${r.w}px`,
+            '--h': `${r.h}px`,
+            '--color': ["#f9a8d4","#c084fc","#fde68a","#a78bfa","#fb923c","#f472b6","#86efac","#fde68a","#c084fc","#f9a8d4"][i],
+            '--glow': `${r.w * 2}px`,
+            '--ldx': `${r.ldx}px`,
+            '--ldy': `${r.ldy}px`,
+            '--dur': `${r.dur}s`,
+            '--del': `${r.del}s`,
+          })}
+        />
+      ))}
+      {/* Soft sparkle streaks (reuse grass wind) */}
+      <div className="scn-grass-wind scn-grass-wind-top" />
+      <div className="scn-grass-wind scn-grass-wind-mid" />
+    </>)
+  },
+
+  /* ═══ Burnt Warplace — scorched battlefield with lightning + lava cracks ═══ */
   burnt_warplace:{
     bgImg:BG_IMGS.burnt_warplace,
     sky:"linear-gradient(180deg,#3b0a0a 0%,#7c1d1d 20%,#991b1b 40%,#7f1d1d 65%,#450a0a 100%)",
@@ -595,5 +628,6 @@ export const SCENE_NAMES = {
   poison:"☠️ 毒沼禁域",
   rock:"🪨 岩石峽谷",
   heaven:"☁️ 天界聖域",
+  candy:"🍬 糖果大地",
   burnt_warplace:"🔥 焦土戰場"
 };

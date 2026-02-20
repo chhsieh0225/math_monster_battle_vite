@@ -65,6 +65,9 @@ const DESCS: Record<string, string> = {
   boss_sword_god: '鎮守天界聖域的劍神。以神聖威壓與凌厲劍意裁決來者，出手如雷霆斬落。據說牠的每一次蓄力都能斷開戰場節奏，是最講究精準應對的終局Boss。',
   golumn: '棲息在荒涼峽谷深處的岩石巨人。全身由千年沉積的花崗岩構成，移動時地面都會震動。雖然行動遲緩，但防禦力驚人，普通攻擊幾乎無法穿透牠的岩石外殼。',
   golumn_mud: '泥岩層孕育出的高崙亞種。外層看似鬆散，實則能吸收衝擊並重新凝固。每一步都會留下沉重泥痕，難以被正面突破。',
+  candy_knight: '身披七彩糖衣鎧甲的神秘騎士。在糖果大地中守護甜蜜領域，看似可愛卻擁有堅硬的糖霜護甲。被攻擊時會反彈碎裂的糖晶傷害敵人。',
+  candy_monster: '由棉花糖凝聚而成的夢幻怪獸。柔軟的身體能吸收大部分衝擊，雖然攻擊力不強，但恢復力極佳。喜歡在糖果森林中緩緩漫步。',
+  colorful_butterfly: '棲息在陽光草原上的華麗蝴蝶。翅膀上的鱗粉能折射出七彩光芒，飛行速度極快。振翅時引發的小型氣旋能在瞬間發動連續攻擊。',
 };
 
 const HABITATS: Record<string, string> = {
@@ -94,6 +97,9 @@ const HABITATS: Record<string, string> = {
   boss_sword_god: '☁️ 天界聖域',
   golumn: '🪨 岩石峽谷',
   golumn_mud: '🪨 岩石峽谷',
+  candy_knight: '🍬 糖果大地',
+  candy_monster: '🍬 糖果大地',
+  colorful_butterfly: '🌿 綠意草原',
 };
 
 const RARITY: Record<string, string> = {
@@ -123,6 +129,9 @@ const RARITY: Record<string, string> = {
   boss_sword_god: '★★★★★',
   golumn: '★★',
   golumn_mud: '★★',
+  candy_knight: '★★',
+  candy_monster: '★',
+  colorful_butterfly: '★',
 };
 
 export const ENC_ENTRIES: EncyclopediaEnemyEntry[] = [];

@@ -143,6 +143,7 @@ const SCENE_NAME_EN: Dict<string> = {
   poison: "☠️ Toxic Mire",
   heaven: "☁️ Celestial Sanctum",
   burnt_warplace: "🔥 Scorched Battlefield",
+  candy: "🍬 Candy Land",
 };
 
 const STARTER_TEXT_EN: Dict<StarterText> = {
@@ -307,6 +308,9 @@ const MONSTER_NAME_EN: Dict<string> = {
   boss_sword_god: "Kusanagi Sword God",
   golumn: "Stone Golem",
   golumn_mud: "Mudstone Golem",
+  candy_knight: "Candy Knight",
+  candy_monster: "Marshmallow Beast",
+  colorful_butterfly: "Rainbow Butterfly",
   wild_starter_fire: "Wild Fire Cub",
   wild_starter_water: "Wild Water Cub",
   wild_starter_grass: "Wild Grass Cub",
@@ -351,6 +355,9 @@ const MONSTER_NAME_EN_BY_ZH: Dict<string> = {
   鐵甲天龍: "Aegis Skywyrm",
   岩石高崙: "Stone Golem",
   泥岩高崙: "Mudstone Golem",
+  糖果騎士: "Candy Knight",
+  棉花糖怪: "Marshmallow Beast",
+  彩翼蝶: "Rainbow Butterfly",
   暗黑龍王: "Dark Dragon King",
   深淵九頭蛇: "Abyss Hydra",
   單翼狂龍: "One-Winged Frenzy Dragon",
@@ -384,6 +391,9 @@ const MONSTER_DESC_EN: Dict<string> = {
   boss_sword_god: "A divine sword sovereign guarding the celestial court. It blends holy authority with blade precision and punishes mistakes with relentless judgment.",
   golumn: "A canyon-born stone giant with immense defense. Slow but crushing once it closes in.",
   golumn_mud: "A mudstone subspecies with a layered shell that absorbs impact before re-hardening.",
+  candy_knight: "A mysterious knight clad in rainbow sugar armor. Cute yet dangerous, its candy-crystal armor shatters on impact to damage attackers.",
+  candy_monster: "A dreamy beast formed from cotton candy. Its soft body absorbs most impacts, and though its attack power is low, its recovery is exceptional.",
+  colorful_butterfly: "A dazzling butterfly on sunlit plains. Its iridescent wing scales create tiny cyclones, enabling rapid consecutive strikes.",
 };
 
 const MONSTER_HABITAT_EN: Dict<string> = {
@@ -413,6 +423,9 @@ const MONSTER_HABITAT_EN: Dict<string> = {
   boss_sword_god: "☁️ Celestial Sanctum",
   golumn: "🪨 Rocky Canyon",
   golumn_mud: "🪨 Rocky Canyon",
+  candy_knight: "🍬 Candy Land",
+  candy_monster: "🍬 Candy Land",
+  colorful_butterfly: "🌿 Verdant Plains",
 };
 
 const STARTER_DESC_EN: Dict<string> = {

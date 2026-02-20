@@ -20,7 +20,9 @@
     "electron:build:mac": "vite build && electron-builder --mac",
     "electron:build:win": "vite build && electron-builder --win",
     "cap:sync": "vite build && cap sync",
-    "cap:open:ios": "cap open ios"
+    "cap:open:ios": "cap open ios",
+    "release:all": "vite build && electron-builder --mac && cap sync",
+    "ship": "git add -A && git commit -m \"update\" && git push && npm run release:all"
   },
   "dependencies": {
     "@capacitor/core": "^8.1.0",

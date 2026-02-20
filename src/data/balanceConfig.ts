@@ -15,7 +15,7 @@ const CRIT_BY_TYPE = {
   rock: { critChanceBonus: 0.0, critDamageBonus: 0.02, antiCritRate: 0.03, antiCritDamage: 0.12 },
   steel: { critChanceBonus: 0.0, critDamageBonus: 0.0, antiCritRate: 0.02, antiCritDamage: 0.10 },
   ice: { critChanceBonus: 0.0, critDamageBonus: 0.0, antiCritRate: 0.01, antiCritDamage: 0.06 },
-  sweet: { critChanceBonus: 0.01, critDamageBonus: 0.03, antiCritRate: 0.02, antiCritDamage: 0.08 },
+  dream: { critChanceBonus: 0.01, critDamageBonus: 0.03, antiCritRate: 0.02, antiCritDamage: 0.08 },
 } as const;
 
 export const BALANCE_CONFIG = {

@@ -171,6 +171,7 @@ export type MonsterType =
   | "water"
   | "ice"
   | "electric"
+  | "dream"
   | "ghost"
   | "steel"
   | "light"

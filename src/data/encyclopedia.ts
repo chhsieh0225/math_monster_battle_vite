@@ -12,8 +12,6 @@ import { getDualEff } from './typeEffectiveness.ts';
 import { STARTERS } from './starters.ts';
 import type { EncyclopediaEnemyEntry, EncyclopediaStarterEntry } from '../types/game';
 
-type TypeEffectMap = Record<string, number>;
-
 function weaknesses(mType: string, mType2?: string): string[] {
   const weak: string[] = [];
   for (const atkType of Object.keys(TYPE_EFF)) {
@@ -32,19 +30,12 @@ function resistances(mType: string, mType2?: string): string[] {
   return res;
 }
 
-const TYPE_LABEL: Record<string, string> = {
-  fire: '火',
-  water: '水',
-  grass: '草',
-  electric: '電',
-  dark: '暗',
-  ghost: '靈',
-  steel: '鋼',
-  light: '光',
-  poison: '毒',
-  rock: '岩',
-  ice: '冰',
-};
+/**
+ * weakAgainst / resistAgainst now store raw type IDs (e.g. "fire", "water").
+ * Translation to display labels is deferred to the render layer via
+ * contentLocalization.localizeTypeName() or i18n TYPE_LABEL lookups.
+ * This keeps data locale-agnostic.
+ */
 
 // ── Monster descriptions ──
 const DESCS: Record<string, string> = {
@@ -151,8 +142,8 @@ for (const m of MONSTERS) {
         svgFn: v.svgFn,
         c1: v.c1,
         c2: v.c2,
-        weakAgainst: weaknesses(v.mType).map((t) => TYPE_LABEL[t] || t),
-        resistAgainst: resistances(v.mType).map((t) => TYPE_LABEL[t] || t),
+        weakAgainst: weaknesses(v.mType),
+        resistAgainst: resistances(v.mType),
         isEvolved: false,
         desc: DESCS[v.id] || '',
         habitat: HABITATS[v.id] || '',
@@ -177,8 +168,8 @@ for (const m of MONSTERS) {
         svgFn: ev.svgFn,
         c1: ev.c1,
         c2: ev.c2,
-        weakAgainst: weaknesses(ev.mType).map((t) => TYPE_LABEL[t] || t),
-        resistAgainst: resistances(ev.mType).map((t) => TYPE_LABEL[t] || t),
+        weakAgainst: weaknesses(ev.mType),
+        resistAgainst: resistances(ev.mType),
         isEvolved: true,
         desc: DESCS[ev.id] || '',
         habitat: HABITATS[ev.id] || '',
@@ -207,8 +198,8 @@ for (const m of MONSTERS) {
     svgFn: m.svgFn,
     c1: m.c1,
     c2: m.c2,
-    weakAgainst: weaknesses(m.mType, m.mType2).map((t) => TYPE_LABEL[t] || t),
-    resistAgainst: resistances(m.mType, m.mType2).map((t) => TYPE_LABEL[t] || t),
+    weakAgainst: weaknesses(m.mType, m.mType2),
+    resistAgainst: resistances(m.mType, m.mType2),
     isEvolved: false,
     desc: DESCS[m.id] || '',
     habitat: HABITATS[m.id] || '',
@@ -236,8 +227,8 @@ for (const m of MONSTERS) {
       svgFn: m.evolvedSvgFn,
       c1: m.c1,
       c2: m.c2,
-      weakAgainst: weaknesses(m.mType, m.mType2).map((t) => TYPE_LABEL[t] || t),
-      resistAgainst: resistances(m.mType, m.mType2).map((t) => TYPE_LABEL[t] || t),
+      weakAgainst: weaknesses(m.mType, m.mType2),
+      resistAgainst: resistances(m.mType, m.mType2),
       isEvolved: true,
       desc: DESCS[ek] || '',
       habitat: HABITATS[ek] || '',
@@ -248,6 +239,16 @@ for (const m of MONSTERS) {
       traitDesc: m.traitDesc || null,
     });
   }
+}
+
+// ── Build-time integrity checks ──
+// Ensure every encyclopedia entry has desc, habitat, and rarity defined.
+// Catches missing data when new monsters are added to monsterConfigs
+// but not to the DESCS/HABITATS/RARITY maps above.
+for (const e of ENC_ENTRIES) {
+  if (!e.desc) throw new Error(`[encyclopedia] missing DESCS entry for key="${e.key}"`);
+  if (!e.habitat) throw new Error(`[encyclopedia] missing HABITATS entry for key="${e.key}"`);
+  if (!e.rarity) throw new Error(`[encyclopedia] missing RARITY entry for key="${e.key}"`);
 }
 
 // Total count for "collect all" achievement (enemy monsters only)

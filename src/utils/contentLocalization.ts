@@ -100,6 +100,20 @@ const TYPE_NAME_EN_BY_ID: Dict<string> = {
   rock: "Rock",
 };
 
+const TYPE_NAME_ZH_BY_ID: Dict<string> = {
+  fire: "火",
+  water: "水",
+  ice: "冰",
+  grass: "草",
+  electric: "電",
+  dark: "暗",
+  ghost: "靈",
+  steel: "鋼",
+  light: "光",
+  poison: "毒",
+  rock: "岩",
+};
+
 const TYPE_NAME_EN_BY_ZH: Dict<string> = {
   火: "Fire",
   水: "Water",
@@ -589,12 +603,17 @@ export function localizeTypeName(
   typeNameOrId: string | null | undefined,
   locale: LocaleCode,
 ): string | null | undefined {
-  if (!isEnglishLocale(locale) || !typeNameOrId) return typeNameOrId;
-  return (
-    TYPE_NAME_EN_BY_ID[typeNameOrId]
-    || TYPE_NAME_EN_BY_ZH[typeNameOrId]
-    || typeNameOrId
-  );
+  if (!typeNameOrId) return typeNameOrId;
+  if (isEnglishLocale(locale)) {
+    return (
+      TYPE_NAME_EN_BY_ID[typeNameOrId]
+      || TYPE_NAME_EN_BY_ZH[typeNameOrId]
+      || typeNameOrId
+    );
+  }
+  // zh-TW: resolve type IDs (e.g. "fire") to Chinese labels (e.g. "火").
+  // Already-Chinese values pass through via fallback.
+  return TYPE_NAME_ZH_BY_ID[typeNameOrId] || typeNameOrId;
 }
 
 export function localizeSceneName(
@@ -793,8 +812,21 @@ function parseStarterIdFromKey(
 }
 
 export function localizeEncyclopediaEnemyEntry<T>(entry: T, locale: LocaleCode): T {
-  if (!isObject(entry) || !isEnglishLocale(locale)) return entry;
+  if (!isObject(entry)) return entry;
   const enemyEntry = entry as EncyclopediaEnemyLike;
+
+  // weakAgainst / resistAgainst store raw type IDs — translate for ALL locales
+  const localizedWeak = Array.isArray(enemyEntry.weakAgainst)
+    ? enemyEntry.weakAgainst.map((id) => localizeTypeName(id, locale))
+    : enemyEntry.weakAgainst;
+  const localizedResist = Array.isArray(enemyEntry.resistAgainst)
+    ? enemyEntry.resistAgainst.map((id) => localizeTypeName(id, locale))
+    : enemyEntry.resistAgainst;
+
+  if (!isEnglishLocale(locale)) {
+    return { ...enemyEntry, weakAgainst: localizedWeak, resistAgainst: localizedResist } as T;
+  }
+
   const key = enemyEntry.key || enemyEntry.id || "";
   const fallbackName = (enemyEntry.name ? MONSTER_NAME_EN_BY_ZH[enemyEntry.name] : undefined) || enemyEntry.name;
   return {
@@ -802,12 +834,8 @@ export function localizeEncyclopediaEnemyEntry<T>(entry: T, locale: LocaleCode):
     name: MONSTER_NAME_EN[key] || (enemyEntry.id ? MONSTER_NAME_EN[enemyEntry.id] : undefined) || fallbackName,
     typeName: localizeTypeName(enemyEntry.typeName || enemyEntry.mType, locale),
     typeName2: localizeTypeName(enemyEntry.typeName2 || enemyEntry.mType2, locale),
-    weakAgainst: Array.isArray(enemyEntry.weakAgainst)
-      ? enemyEntry.weakAgainst.map((name) => localizeTypeName(name, locale))
-      : enemyEntry.weakAgainst,
-    resistAgainst: Array.isArray(enemyEntry.resistAgainst)
-      ? enemyEntry.resistAgainst.map((name) => localizeTypeName(name, locale))
-      : enemyEntry.resistAgainst,
+    weakAgainst: localizedWeak,
+    resistAgainst: localizedResist,
     desc: MONSTER_DESC_EN[key] || enemyEntry.desc,
     habitat: MONSTER_HABITAT_EN[key] || enemyEntry.habitat,
     traitName: localizeTraitName(enemyEntry.trait, enemyEntry.traitName, locale),

@@ -505,7 +505,7 @@ export function runPlayerAnswer({
 
           const runChargeCounter = (baseDamage: number): boolean => {
             if (!wasBossCharging) return false;
-            const counterRatio = Math.max(0, TRAIT_BALANCE.boss.chargeCounterRatio || 0);
+            const counterRatio = Math.max(0, TRAIT_BALANCE.boss.chargeCounterRatio);
             if (counterRatio <= 0 || baseDamage <= 0) return false;
             const counterDmg = Math.max(1, Math.round(baseDamage * counterRatio));
             const nextAttackerHp = applyDamageToAttacker({
@@ -530,8 +530,8 @@ export function runPlayerAnswer({
           // Dark Dragon King shadow shield: 20% full block, 50% reduce by 40%
           let finalDmg = dmg;
           if (s3.enemy.id === 'boss') {
-            const fullBlock = chance(TRAIT_BALANCE.boss.shadowShieldFullBlockChance || 0);
-            const partialBlock = !fullBlock && chance(TRAIT_BALANCE.boss.shadowShieldPartialBlockChance || 0);
+            const fullBlock = chance(TRAIT_BALANCE.boss.shadowShieldFullBlockChance);
+            const partialBlock = !fullBlock && chance(TRAIT_BALANCE.boss.shadowShieldPartialBlockChance);
             if (fullBlock) {
               setShadowShieldCD(0);
               sfx.play('specDef');
@@ -549,7 +549,7 @@ export function runPlayerAnswer({
             }
             if (partialBlock) {
               setShadowShieldCD(1);
-              finalDmg = Math.max(1, Math.round(dmg * (TRAIT_BALANCE.boss.shadowShieldPartialDamageScale || 1)));
+              finalDmg = Math.max(1, Math.round(dmg * TRAIT_BALANCE.boss.shadowShieldPartialDamageScale));
               sfx.play('specDef');
               setEffMsg({ text: tr(t, 'battle.effect.shadowShieldPartial', '🛡️ Shadow Shield reduced damage!'), color: '#a78bfa' });
               safeToIfBattleActive(() => setEffMsg(null), 1500);

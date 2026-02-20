@@ -92,7 +92,7 @@ export function validateBalanceConfigSchema(config: unknown): void {
   checkNumber(config, 'traits.player.steelCounterChance', issues, { min: 0, max: 1 });
   checkNumber(config, 'traits.player.steelCounterScale', issues, { min: 0, max: 3 });
   checkNumber(config, 'traits.player.steelCounterCap', issues, { min: 0 });
-  const streakAudio = checkNumber(config, 'traits.player.streaks.audioTrigger', issues, { min: 1 });
+  checkNumber(config, 'traits.player.streaks.audioTrigger', issues, { min: 1 });
   const streakUnlock5 = checkNumber(config, 'traits.player.streaks.unlock5', issues, { min: 1 });
   const streakUnlock10 = checkNumber(config, 'traits.player.streaks.unlock10', issues, { min: 1 });
   if (streakUnlock5 != null && streakUnlock10 != null && streakUnlock5 >= streakUnlock10) {
@@ -106,6 +106,11 @@ export function validateBalanceConfigSchema(config: unknown): void {
   checkNumber(config, 'pvp.passive.steelCounterScale', issues, { min: 0, max: 3 });
   checkNumber(config, 'pvp.passive.steelCounterCap', issues, { min: 0 });
   checkNumber(config, 'pvp.passive.steelSpecCounterDamage', issues, { min: 0 });
+  checkNumber(config, 'pvp.passive.fireBurnTickBase', issues, { min: 0 });
+  checkNumber(config, 'pvp.passive.fireBurnTickPerStack', issues, { min: 0 });
+  checkNumber(config, 'pvp.passive.grassReflectRatio', issues, { min: 0, max: 1 });
+  checkNumber(config, 'pvp.passive.grassReflectMin', issues, { min: 0 });
+  checkNumber(config, 'pvp.passive.grassReflectCap', issues, { min: 0 });
   checkNumber(config, 'traits.boss.phase2AttackMultiplier', issues, { min: 1 });
   checkNumber(config, 'traits.boss.phase3AttackMultiplier', issues, { min: 1 });
   checkNumber(config, 'traits.boss.releaseAttackScale', issues, { min: 1 });

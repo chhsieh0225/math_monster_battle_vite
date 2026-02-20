@@ -113,8 +113,8 @@ export function resolvePvpTurnStartStatus<TState extends PvpTurnStartState>({
 
   const burnStack = isP1 ? (state.pvpBurnP1 || 0) : (state.pvpBurnP2 || 0);
   if (burnStack > 0) {
-    const burnRawDmg = (PVP.passive.fireBurnTickBase || 0)
-      + burnStack * (PVP.passive.fireBurnTickPerStack || 0);
+    const burnRawDmg = PVP.passive.fireBurnTickBase
+      + burnStack * PVP.passive.fireBurnTickPerStack;
     const burnTargetId = isP1 ? state.starter?.id : state.pvpStarter2?.id;
     const burnDmg = applyBossDamageReduction(burnRawDmg, burnTargetId);
     if (isP1) {

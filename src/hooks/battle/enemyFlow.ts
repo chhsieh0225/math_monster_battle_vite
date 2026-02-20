@@ -425,7 +425,7 @@ export function runEnemyTurn({
         });
         let finalDmg = dmg;
         if (defenderType === 'steel') {
-          const steelWallScale = TRAIT_BALANCE.player.steelWallDamageScale || 1;
+          const steelWallScale = TRAIT_BALANCE.player.steelWallDamageScale;
           const reducedDmg = Math.max(1, Math.round(dmg * steelWallScale));
           if (reducedDmg < dmg) {
             finalDmg = reducedDmg;
@@ -470,9 +470,9 @@ export function runEnemyTurn({
           return;
         }
 
-        if (defenderType === 'steel' && chance(TRAIT_BALANCE.player.steelCounterChance || 0)) {
-          const counterRaw = Math.round(finalDmg * (TRAIT_BALANCE.player.steelCounterScale || 0));
-          const counterCap = Math.max(0, Math.round(TRAIT_BALANCE.player.steelCounterCap || 0));
+        if (defenderType === 'steel' && chance(TRAIT_BALANCE.player.steelCounterChance)) {
+          const counterRaw = Math.round(finalDmg * TRAIT_BALANCE.player.steelCounterScale);
+          const counterCap = Math.max(0, Math.round(TRAIT_BALANCE.player.steelCounterCap));
           const rawCounterDmg = Math.max(0, Math.min(counterCap || counterRaw, counterRaw));
           const counterDmg = applyBossDamageReduction(rawCounterDmg, s2.enemy?.id);
           if (counterDmg > 0) {
@@ -747,7 +747,7 @@ export function runEnemyTurn({
     && (s.eHp || 0) > 0
     && (s.eHp || 0) < (s.enemy.maxHp || 0)
   ) {
-    const regenRatio = Math.max(0, TRAIT_BALANCE.boss.hydraTurnRegenRatio || 0);
+    const regenRatio = Math.max(0, TRAIT_BALANCE.boss.hydraTurnRegenRatio);
     if (regenRatio > 0) {
       const regenRaw = Math.max(1, Math.round((s.enemy.maxHp || 0) * regenRatio));
       const regenApplied = Math.max(0, Math.min((s.enemy.maxHp || 0), (s.eHp || 0) + regenRaw) - (s.eHp || 0));

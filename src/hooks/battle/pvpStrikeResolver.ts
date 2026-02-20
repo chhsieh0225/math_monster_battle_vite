@@ -299,7 +299,7 @@ export function executePvpStrikeTurn({
     }
 
     if (defender.type === 'steel') {
-      const counterDmg = Math.max(1, Math.round(PVP.passive.steelSpecCounterDamage || 12));
+      const counterDmg = Math.max(1, Math.round(PVP.passive.steelSpecCounterDamage));
       addD('🛡️BLOCK', defenderMainX, defenderMainY, '#94a3b8');
       const killed = applyCounterToAttacker(counterDmg, '#94a3b8', 'enemyHit 0.45s ease');
       sfx.play('specDef');
@@ -317,10 +317,10 @@ export function executePvpStrikeTurn({
       return;
     }
 
-    const reflectRaw = Math.round(strike.dmg * (PVP.passive.grassReflectRatio || 0.32));
+    const reflectRaw = Math.round(strike.dmg * PVP.passive.grassReflectRatio);
     const reflectDmg = Math.min(
-      PVP.passive.grassReflectCap || 18,
-      Math.max(PVP.passive.grassReflectMin || 8, reflectRaw),
+      PVP.passive.grassReflectCap,
+      Math.max(PVP.passive.grassReflectMin, reflectRaw),
     );
     addD('🛡️BLOCK', defenderMainX, defenderMainY, '#22c55e');
     const killed = applyCounterToAttacker(reflectDmg, '#22c55e', 'enemyGrassHit 0.55s ease');
@@ -384,7 +384,7 @@ export function executePvpStrikeTurn({
   totalDmg += bonusDmg;
 
   if (defender.type === 'steel') {
-    const steelWallScale = PVP.passive.steelWallDamageScale || 1;
+    const steelWallScale = PVP.passive.steelWallDamageScale;
     const reduced = Math.max(1, Math.round(totalDmg * steelWallScale));
     if (reduced < totalDmg) {
       totalDmg = reduced;
@@ -452,9 +452,9 @@ export function executePvpStrikeTurn({
     }
   }
 
-  if (defender.type === 'steel' && defenderHpAfterHit > 0 && chance(PVP.passive.steelCounterChance || 0)) {
-    const counterRaw = Math.round(mitigatedHitDmg * (PVP.passive.steelCounterScale || 0));
-    const counterCap = Math.max(0, Math.round(PVP.passive.steelCounterCap || 0));
+  if (defender.type === 'steel' && defenderHpAfterHit > 0 && chance(PVP.passive.steelCounterChance)) {
+    const counterRaw = Math.round(mitigatedHitDmg * PVP.passive.steelCounterScale);
+    const counterCap = Math.max(0, Math.round(PVP.passive.steelCounterCap));
     const rawCounterDmg = Math.max(0, Math.min(counterCap || counterRaw, counterRaw));
     const counterDmg = applyBossDamageReduction(rawCounterDmg, attacker.id);
     if (counterDmg > 0) {

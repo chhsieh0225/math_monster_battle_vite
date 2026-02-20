@@ -602,6 +602,8 @@ const enUS = {
   "battle.boss.intimidate": "💀 {name} intimidates! Your \"{move}\" is sealed! ({turns} turns)",
   "battle.boss.introTitle": "⚠️ Boss Descends",
   "battle.boss.introSkip": "Tap to skip",
+  "battle.boss.defeated": "BOSS DEFEATED!",
+  "battle.boss.victorySkip": "Tap to skip",
   "battle.boss.phase2": "💀 {name} entered rage state! ATK increased!",
   "battle.boss.phase3": "💀 {name} awakened! Final stand!",
 
@@ -786,6 +788,7 @@ const enUS = {
   "a11y.battle.settings": "Open battle settings",
   "a11y.battle.run": "Run from battle",
   "a11y.bossIntro.skip": "Tap to skip boss intro cinematic",
+  "a11y.bossVictory.skip": "Tap to skip boss victory cinematic",
   "a11y.battle.items": "Battle items",
   "a11y.battle.useItem": "Use {item}",
 } as const;

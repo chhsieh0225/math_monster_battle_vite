@@ -26,6 +26,7 @@ import { BattleArenaSprites } from './battle/BattleArenaSprites.tsx';
 import { BattleSceneLayers } from './battle/BattleSceneLayers.tsx';
 import { BattleWeatherLayer } from './battle/BattleWeatherLayer.tsx';
 import { BossIntroOverlay } from './battle/BossIntroOverlay.tsx';
+import { BossVictoryOverlay } from './battle/BossVictoryOverlay.tsx';
 import './BattleScreen.css';
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
 
@@ -376,7 +377,7 @@ function BattleScreenComponent({
     dualEff,
   ]);
 
-  const canTapAdvance = S.phase === "text" || S.phase === "victory";
+  const canTapAdvance = S.phase === "text" || S.phase === "victory" || S.phase === "bossVictory";
   const handleAdvance = A.advance;
   const handleAdvanceKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
     if (!canTapAdvance) return;
@@ -420,7 +421,7 @@ function BattleScreenComponent({
     : t("battle.qtype.mixed", "Mixed")), [question, t]);
   const impactPhaseClass = showHeavyFx ? `battle-impact-${impactPhase}` : "battle-impact-idle";
   const battleRootClassName = useMemo(() => (
-    `battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""} ${canTapAdvance ? "battle-root-advance" : ""} ${S.phase === "bossIntro" ? "boss-intro-active" : ""} ${impactPhaseClass}`
+    `battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""} ${canTapAdvance ? "battle-root-advance" : ""} ${S.phase === "bossIntro" ? "boss-intro-active" : ""} ${S.phase === "bossVictory" ? "boss-victory-active" : ""} ${impactPhaseClass}`
   ), [UX.compactUI, UX.lowPerfMode, canTapAdvance, impactPhaseClass, S.phase]);
   const battlePanelClassName = useMemo(
     () => `battle-panel ${S.phase === "question" ? "is-question" : "is-normal"}`,
@@ -559,6 +560,14 @@ function BattleScreenComponent({
           enemySubName={coOpBossSubIntro ? S.enemySub?.name : undefined}
           enemySubSvg={coOpBossSubIntro ? (eSubSvg ?? undefined) : undefined}
           enemySubSize={coOpBossSubIntro ? enemySubSize : undefined}
+          onComplete={handleAdvance}
+        />
+      )}
+
+      {/* Boss victory cinematic overlay */}
+      {S.phase === 'bossVictory' && (
+        <BossVictoryOverlay
+          enemyName={enemy.name}
           onComplete={handleAdvance}
         />
       )}

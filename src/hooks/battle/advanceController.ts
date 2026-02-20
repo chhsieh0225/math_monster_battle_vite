@@ -41,6 +41,12 @@ export function runAdvanceController({
     return;
   }
 
+  // Boss victory cinematic completed → transition to normal victory phase
+  if (phase === 'bossVictory') {
+    setPhase('victory');
+    return;
+  }
+
   if (phase === 'text') {
     const pendingAction = consumePendingTextAdvanceAction?.() || null;
     if (pendingAction) {

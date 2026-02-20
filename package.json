@@ -69,7 +69,10 @@
     "win": {
       "icon": "dist/icon-512.png",
       "target": [
-        "nsis"
+        {
+          "target": "nsis",
+          "arch": ["x64", "arm64"]
+        }
       ]
     },
     "nsis": {

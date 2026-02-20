@@ -211,6 +211,11 @@ export function runVictoryFlow({
     : victoryGainText;
 
   setBText(finalVictoryText);
-  setPhase('victory');
-  sfx.play('victory');
+  if (isBossVictory) {
+    setPhase('bossVictory');
+    sfx.play('bossVictory');
+  } else {
+    setPhase('victory');
+    sfx.play('victory');
+  }
 }

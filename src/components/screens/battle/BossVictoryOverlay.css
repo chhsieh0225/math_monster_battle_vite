@@ -1,0 +1,211 @@
+/* ═══════════════════════════════════════════
+   BossVictoryOverlay — cinematic boss defeat
+   Timeline: flash→shake→shatter→burst→text→sparkles→fadeout
+   ═══════════════════════════════════════════ */
+
+.boss-victory-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* ── Phase 1: White flash (0–0.6s) ── */
+.boss-victory-flash {
+  position: absolute;
+  inset: 0;
+  background: white;
+  opacity: 0;
+  animation: bvFlash 0.6s ease-out forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes bvFlash {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  30%  { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+
+/* ── Phase 2: Screen shake (0–0.5s) ── */
+.boss-victory-shake {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: bvShake 0.5s ease-out forwards;
+}
+
+@keyframes bvShake {
+  0%   { transform: translate(0, 0); }
+  10%  { transform: translate(-6px, 4px); }
+  20%  { transform: translate(5px, -5px); }
+  30%  { transform: translate(-4px, 2px); }
+  40%  { transform: translate(3px, -3px); }
+  50%  { transform: translate(-2px, 3px); }
+  60%  { transform: translate(2px, -1px); }
+  70%  { transform: translate(-1px, 1px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ── Phase 3: Shatter particles (0.3–1.2s) ── */
+.boss-victory-shard {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--shard-size, 8px);
+  height: var(--shard-size, 8px);
+  margin-left: calc(var(--shard-size, 8px) / -2);
+  margin-top: calc(var(--shard-size, 8px) / -2);
+  background: hsl(var(--shard-hue, 0), 80%, 70%);
+  border-radius: 2px;
+  opacity: 0;
+  transform: rotate(0deg) translateY(0);
+  animation: bvShard 0.9s ease-out var(--shard-delay, 0.3s) forwards;
+  pointer-events: none;
+  z-index: 5;
+}
+
+@keyframes bvShard {
+  0%   { opacity: 1; transform: rotate(0deg) translateY(0); }
+  20%  { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--shard-angle, 0deg) + 180deg))
+               translateY(var(--shard-dist, 120px));
+  }
+}
+
+/* ── Phase 4: Radial light burst (0.8–2.0s) ── */
+.boss-victory-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  margin-top: -20px;
+  border-radius: 50%;
+  border: 3px solid rgba(251, 191, 36, 0.7);
+  opacity: 0;
+  animation: bvBurst 1.2s ease-out 0.8s forwards;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.boss-victory-burst-2 {
+  border-color: rgba(168, 85, 247, 0.5);
+  animation-delay: 1.0s;
+}
+
+@keyframes bvBurst {
+  0%   { opacity: 1; transform: scale(1); }
+  50%  { opacity: 0.6; }
+  100% { opacity: 0; transform: scale(12); }
+}
+
+/* ── Phase 5: Victory text (1.2–3.4s) ── */
+.boss-victory-text-wrap {
+  position: relative;
+  z-index: 8;
+  text-align: center;
+  pointer-events: none;
+}
+
+.boss-victory-title {
+  font-size: clamp(1.56rem, 2rem, 2.16rem);
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow:
+    0 0 20px rgba(251, 191, 36, 0.8),
+    0 0 40px rgba(251, 191, 36, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.6);
+  letter-spacing: 4px;
+  opacity: 0;
+  transform: scale(2.5) translateY(-10px);
+  animation: bvTitleSlam 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.2s forwards;
+}
+
+@keyframes bvTitleSlam {
+  0%   { opacity: 0; transform: scale(2.5) translateY(-10px); }
+  60%  { opacity: 1; transform: scale(0.95) translateY(2px); }
+  80%  { transform: scale(1.05) translateY(-1px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.boss-victory-enemy-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 10px;
+  opacity: 0;
+  animation: bvNameFade 0.5s ease 1.8s forwards;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  letter-spacing: 2px;
+}
+
+@keyframes bvNameFade {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 0.85; transform: translateY(0); }
+}
+
+/* ── Phase 6: Sparkle shower (2.4–3.4s) ── */
+.boss-victory-sparkle {
+  position: absolute;
+  left: var(--sparkle-x, 50%);
+  top: -10px;
+  width: var(--sparkle-size, 10px);
+  height: var(--sparkle-size, 10px);
+  background: radial-gradient(circle, #fbbf24, transparent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: bvSparkle var(--sparkle-dur, 1s) ease-out var(--sparkle-delay, 2.4s) forwards;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@keyframes bvSparkle {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  50%  { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(calc(100vh + 20px)) scale(0.3); }
+}
+
+/* ── Skip hint ── */
+.boss-victory-skip-hint {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.4);
+  z-index: 20;
+  opacity: 0;
+  animation: bvSkipHint 0.3s ease 2.8s forwards;
+  pointer-events: none;
+}
+
+@keyframes bvSkipHint {
+  to { opacity: 1; }
+}
+
+/* ── Fadeout veil (3.8–4.2s) ── */
+.boss-victory-fadeout {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  opacity: 0;
+  animation: bvFadeout 0.4s ease-in 3.8s forwards;
+  pointer-events: none;
+  z-index: 30;
+}
+
+@keyframes bvFadeout {
+  to { opacity: 1; }
+}

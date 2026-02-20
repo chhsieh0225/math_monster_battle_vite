@@ -743,7 +743,93 @@ const SOUNDS = {
     ['E5', 'G5', 'B5', 'E6'].forEach((n, i) => setTimeout(() => melodic(n, '8n'), i * 80));
   },
   evolve: () => {
-    ['C4', 'E4', 'G4', 'C5', 'E5', 'G5', 'C6'].forEach((n, i) => setTimeout(() => melodic(n, '8n'), i * 100));
+    // ── Phase 0 ms: Flash — deep bass rumble + metallic impact ──
+    bass('C2', '4n');
+    noiseBurst({ dur: 0.18, vol: 0.14, hp: 80, lp: 2200, lpSweepTo: 600 });
+    metalPing(0.15);
+
+    // ── Phase 100–350 ms: Burst rings — ascending sparkle wave ──
+    sparkleSeries({ count: 8, baseDelayMs: 28, jitterMs: 18, startMs: 100 });
+    setTimeout(() => sweepTone({ from: 220, to: 880, dur: 0.2, type: 'triangle', vol: 0.08, filterFrom: 800, filterTo: 3200 }), 120);
+
+    // ── Phase 400 ms: Sprite grow-in — warm rising chord (C–E–G) ──
+    setTimeout(() => {
+      playNote(NOTE_FREQ.C4, DUR['4n'], { type: 'triangle', vol: 0.2, attack: 0.01, decay: 0.15, release: 0.2, filterType: 'lowpass', filterFreq: 3200 });
+    }, 400);
+    setTimeout(() => {
+      playNote(NOTE_FREQ.E4, DUR['4n'], { type: 'triangle', vol: 0.18, attack: 0.01, decay: 0.15, release: 0.2, filterType: 'lowpass', filterFreq: 3600 });
+    }, 480);
+    setTimeout(() => {
+      playNote(NOTE_FREQ.G4, DUR['4n'], { type: 'triangle', vol: 0.16, attack: 0.01, decay: 0.15, release: 0.2, filterType: 'lowpass', filterFreq: 4000 });
+    }, 560);
+
+    // ── Phase 800 ms: Title reveal — bright octave leap ──
+    setTimeout(() => {
+      melodic('C5', '8n');
+      sparkleSeries({ count: 4, baseDelayMs: 22, jitterMs: 14 });
+    }, 800);
+    setTimeout(() => melodic('E5', '8n'), 900);
+
+    // ── Phase 1000 ms: Emoji pop — fanfare stab ──
+    setTimeout(() => {
+      playNote(NOTE_FREQ.G5, DUR['8n'], { type: 'sawtooth', vol: 0.14, attack: 0.003, decay: 0.1, release: 0.12, filterType: 'lowpass', filterFreq: 4800 });
+      noiseBurst({ dur: 0.04, vol: 0.06, hp: 2000, lp: 9000, lpSweepTo: 4000 });
+    }, 1000);
+
+    // ── Phase 1300 ms: Name reveal — triumphant C major resolution ──
+    setTimeout(() => {
+      playNote(NOTE_FREQ.C6, DUR['4n'], { type: 'triangle', vol: 0.18, attack: 0.005, decay: 0.2, release: 0.35, filterType: 'lowpass', filterFreq: 5600 });
+      playNote(NOTE_FREQ.E5, DUR['4n'], { type: 'sine', vol: 0.1, attack: 0.01, decay: 0.2, release: 0.3 });
+      playNote(NOTE_FREQ.G5, DUR['4n'], { type: 'sine', vol: 0.08, attack: 0.01, decay: 0.2, release: 0.3 });
+    }, 1300);
+    // Resonance tail
+    lightResonanceTail(NOTE_FREQ.C6, 1500, { vol: 0.032, release: 0.6, filterFreq: 3800 });
+    lightResonanceTail(NOTE_FREQ.E6, 1600, { vol: 0.024, release: 0.5, filterFreq: 3400 });
+
+    // ── Phase 1900 ms: Button appear — soft closing chime ──
+    setTimeout(() => {
+      playNote(NOTE_FREQ.G5, DUR['16n'], { type: 'triangle', vol: 0.06, attack: 0.003, decay: 0.06, release: 0.15, filterType: 'lowpass', filterFreq: 4200 });
+      playNote(NOTE_FREQ.C6, DUR['16n'], { type: 'triangle', vol: 0.05, attack: 0.003, decay: 0.06, release: 0.18, filterType: 'lowpass', filterFreq: 4600 });
+    }, 1900);
+  },
+  bossVictory: () => {
+    // ── 0 ms: Massive impact — bass slam + noise burst + metal ──
+    bass('C2', '2n');
+    noiseBurst({ dur: 0.25, vol: 0.2, hp: 60, lp: 3600, lpSweepTo: 600 });
+    metalPing(0.2);
+    shapedNoise({ dur: 0.3, vol: 0.15, hp: 40, lp: 1800, bp: 300, q: 1.1, bpSweepTo: 180, shape: 'impact' });
+
+    // ── 200 ms: Shatter crackles ──
+    crackleSeries({ count: 12, baseDelayMs: 16, jitterMs: 22, vol: 0.035, hp: 1800, lp: 6000, startMs: 200 });
+    arcZapSeries({ count: 6, baseDelayMs: 38, jitterMs: 16, startMs: 250 });
+
+    // ── 500 ms: Rising sweep — tension to triumph ──
+    setTimeout(() => sweepTone({ from: 120, to: 980, dur: 0.3, type: 'sawtooth', vol: 0.1, filterFrom: 400, filterTo: 3600 }), 500);
+    setTimeout(() => bass('E2', '4n'), 600);
+
+    // ── 800 ms: Fanfare — heroic brass-like stabs ──
+    setTimeout(() => {
+      playNote(NOTE_FREQ.C5, DUR['8n'], { type: 'sawtooth', vol: 0.16, attack: 0.005, decay: 0.12, release: 0.1, filterType: 'lowpass', filterFreq: 3200 });
+    }, 800);
+    setTimeout(() => {
+      playNote(NOTE_FREQ.E5, DUR['8n'], { type: 'sawtooth', vol: 0.14, attack: 0.005, decay: 0.12, release: 0.1, filterType: 'lowpass', filterFreq: 3600 });
+    }, 920);
+    setTimeout(() => {
+      playNote(NOTE_FREQ.G5, DUR['8n'], { type: 'sawtooth', vol: 0.13, attack: 0.005, decay: 0.12, release: 0.1, filterType: 'lowpass', filterFreq: 4000 });
+    }, 1040);
+
+    // ── 1200 ms: Victory chord — full major triad held ──
+    setTimeout(() => {
+      playNote(NOTE_FREQ.C6, DUR['2n'], { type: 'triangle', vol: 0.2, attack: 0.008, decay: 0.25, release: 0.4, filterType: 'lowpass', filterFreq: 5200 });
+      playNote(NOTE_FREQ.E5, DUR['2n'], { type: 'sine', vol: 0.12, attack: 0.01, decay: 0.2, release: 0.35 });
+      playNote(NOTE_FREQ.G5, DUR['2n'], { type: 'sine', vol: 0.1, attack: 0.01, decay: 0.2, release: 0.35 });
+      sparkleSeries({ count: 10, baseDelayMs: 18, jitterMs: 20 });
+    }, 1200);
+
+    // ── 1600 ms: Resonance tail — ethereal decay ──
+    lightResonanceTail(NOTE_FREQ.C6, 1600, { vol: 0.035, release: 0.7, filterFreq: 3600 });
+    lightResonanceTail(NOTE_FREQ.E6, 1750, { vol: 0.025, release: 0.6, filterFreq: 3200 });
+    lightResonanceTail(NOTE_FREQ.G5, 1900, { vol: 0.02, release: 0.5, filterFreq: 3000 });
   },
   select: () => { melodic('E5', '32n'); },
   fire0: playFire0,

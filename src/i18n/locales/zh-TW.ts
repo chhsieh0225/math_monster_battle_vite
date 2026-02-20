@@ -602,6 +602,8 @@ const zhTW = {
   "battle.boss.intimidate": "💀 {name} 先手威壓！你的「{move}」被封印了！（{turns}回合）",
   "battle.boss.introTitle": "⚠️ 首領降臨",
   "battle.boss.introSkip": "點一下可跳過",
+  "battle.boss.defeated": "首領擊破！",
+  "battle.boss.victorySkip": "點一下可跳過",
   "battle.boss.phase2": "💀 {name} 進入狂暴狀態！攻擊力上升！",
   "battle.boss.phase3": "💀 {name} 覺醒了！背水一戰！",
 
@@ -786,6 +788,7 @@ const zhTW = {
   "a11y.battle.settings": "開啟戰鬥設定",
   "a11y.battle.run": "逃離戰鬥",
   "a11y.bossIntro.skip": "點擊可跳過首領入場演出",
+  "a11y.bossVictory.skip": "點擊可跳過首領擊敗演出",
   "a11y.battle.items": "戰鬥道具",
   "a11y.battle.useItem": "使用 {item}",
 } as const;

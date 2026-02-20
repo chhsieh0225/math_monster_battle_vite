@@ -68,7 +68,7 @@ export const BG_IMGS = {
   rock: `${BASE}backgrounds/rock.jpg`,
   heaven: `${BASE}backgrounds/heaven.jpg`,
   burnt_warplace: `${BASE}backgrounds/burnt_warplace.jpg`,
-  candy: `${BASE}backgrounds/candy.png`,
+  candy: `${BASE}backgrounds/candy.jpg`,
 } as const;
 
 export const BG_IMGS_LOW = {
@@ -76,6 +76,7 @@ export const BG_IMGS_LOW = {
   water: `${BASE}backgrounds/water_breach_low.jpg`,
   electric: `${BASE}backgrounds/lighting_platou_low.jpg`,
   poison: `${BASE}backgrounds/poison_swamp_low.jpg`,
+  candy: `${BASE}backgrounds/candy_low.jpg`,
 } as const;
 
 type SpriteKey = keyof typeof SPRITE_IMGS;

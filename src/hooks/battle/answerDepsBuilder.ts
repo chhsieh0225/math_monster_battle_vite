@@ -17,7 +17,7 @@ type PvpRuntimeDeps = Pick<
 
 type PlayerRuntimeDeps = Pick<
   PlayerAnswerHandlers,
-  'sr' | 'safeTo' | 'chance' | 'sfx' | 'getCollectionDamageScale' | 't'
+  'sr' | 'safeTo' | 'chance' | 'sfx' | 'getCollectionDamageScale' | 'challengeDamageMult' | 'challengeComboMult' | 't'
 >;
 
 type PlayerCallbackDeps = Pick<
@@ -109,6 +109,8 @@ export function buildPlayerAnswerHandlerDeps({
     chance: runtime.chance,
     sfx: runtime.sfx,
     getCollectionDamageScale: runtime.getCollectionDamageScale,
+    challengeDamageMult: runtime.challengeDamageMult,
+    challengeComboMult: runtime.challengeComboMult,
     setFb: ui.setFb,
     setTC: battleFields.setTC,
     setTW: battleFields.setTW,

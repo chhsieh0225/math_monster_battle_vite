@@ -54,19 +54,26 @@ type AttackDamageParams = {
   streak: number;
   stageBonus: number;
   effMult: number;
+  /** Challenge modifier 的 combo 加成倍率（>1 讓連擊更有利） */
+  comboScaleMult?: number;
 };
 
 /**
  * Calculate raw damage for a correct-answer attack.
  */
-export function calcAttackDamage({ basePow, streak, stageBonus, effMult }: AttackDamageParams): number {
+export function calcAttackDamage({ basePow, streak, stageBonus, effMult, comboScaleMult = 1 }: AttackDamageParams): number {
   let dmg = Math.round(basePow * randomFloat(
     DAMAGE_BALANCE.playerAttackVariance.min,
     DAMAGE_BALANCE.playerAttackVariance.max,
   ));
-  // Streak bonus
-  if (streak >= DAMAGE_BALANCE.streak.high.threshold) dmg = Math.round(dmg * DAMAGE_BALANCE.streak.high.multiplier);
-  else if (streak >= DAMAGE_BALANCE.streak.medium.threshold) dmg = Math.round(dmg * DAMAGE_BALANCE.streak.medium.multiplier);
+  // Streak bonus (scaled by challenge modifier)
+  if (streak >= DAMAGE_BALANCE.streak.high.threshold) {
+    const highMult = 1 + (DAMAGE_BALANCE.streak.high.multiplier - 1) * comboScaleMult;
+    dmg = Math.round(dmg * highMult);
+  } else if (streak >= DAMAGE_BALANCE.streak.medium.threshold) {
+    const medMult = 1 + (DAMAGE_BALANCE.streak.medium.multiplier - 1) * comboScaleMult;
+    dmg = Math.round(dmg * medMult);
+  }
   // Evolution stage bonus
   dmg = Math.round(dmg * (1 + stageBonus * DAMAGE_BALANCE.stageBonusPerStage));
   // Type effectiveness

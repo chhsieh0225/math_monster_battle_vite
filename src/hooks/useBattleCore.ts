@@ -116,6 +116,7 @@ import {
 import { DIFF_MODS, pickPartnerStarter } from './battle/partnerStarter.ts';
 import { COLLECTION_MILESTONES } from '../data/collectionMilestones.ts';
 import { resolveBattleQuestionConfig } from './battle/questionConfig.ts';
+import { resolveModifiers } from '../utils/challengeModifiers.ts';
 import {
   runBattleStart,
 } from './battle/startFlowAdapter.ts';
@@ -459,6 +460,12 @@ export function useBattle() {
     [towerPlan, round],
   );
   const currentChallengeBattleRule = currentDailyBattleRule || currentTowerBattleRule;
+  const challengeModsResolved = useMemo(
+    () => resolveModifiers(currentChallengeBattleRule?.modifierTags),
+    [currentChallengeBattleRule],
+  );
+  const challengeDamageMult = challengeModsResolved.playerDamageMult;
+  const challengeComboMult = challengeModsResolved.comboScaleMult;
   const { questionTimerSec, questionAllowedOps } = useMemo(
     () => resolveBattleQuestionConfig(currentChallengeBattleRule, TIMER_SEC),
     [currentChallengeBattleRule],
@@ -1039,6 +1046,8 @@ export function useBattle() {
           chance,
           sfx,
           getCollectionDamageScale,
+          challengeDamageMult,
+          challengeComboMult,
           t,
         },
         ui: UI,

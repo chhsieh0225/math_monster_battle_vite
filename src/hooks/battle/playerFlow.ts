@@ -170,6 +170,8 @@ type RunPlayerAnswerArgs = {
   handlePlayerPartyKo?: PlayerPartyKoHandler;
   runAllySupportTurn?: AllySupportTurnRunner;
   getCollectionDamageScale?: (attackType: string) => number;
+  challengeDamageMult?: number;
+  challengeComboMult?: number;
   setPendingTextAdvanceAction?: PendingTextAdvanceSetter;
   t?: Translator;
 };
@@ -269,6 +271,8 @@ export function runPlayerAnswer({
   handlePlayerPartyKo,
   runAllySupportTurn,
   getCollectionDamageScale,
+  challengeDamageMult,
+  challengeComboMult,
   setPendingTextAdvanceAction,
   t,
 }: RunPlayerAnswerArgs): void {
@@ -442,6 +446,8 @@ export function runPlayerAnswer({
             attackerMaxHp: getAttackerMaxHp(s3),
             bossPhase: s3.bossPhase,
             collectionDamageScale,
+            challengeDamageMult,
+            challengeComboMult,
             chance,
           });
           const {

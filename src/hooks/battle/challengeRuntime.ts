@@ -9,6 +9,7 @@ import type {
   TowerChallengeFeedback,
   TowerProgress,
 } from '../../types/challenges.ts';
+import { resolveModifiers } from '../../utils/challengeModifiers.ts';
 
 type RosterEnemy = {
   lvl?: number;
@@ -53,8 +54,9 @@ function tuneChallengeEnemy<T extends RosterEnemy>(
   const offset = clampOffset(battle.enemyLevelOffset);
   const tierScale = ENEMY_TIER_SCALE[battle.enemyTier] || 1;
   const paceScale = 1 + Math.max(0, battle.index - 1) * 0.08 + Math.max(0, slotInBattle) * 0.03;
-  const hpScale = (1 + offset * 0.1) * tierScale * paceScale;
-  const atkScale = (1 + offset * 0.08) * tierScale * paceScale;
+  const mods = resolveModifiers(battle.modifierTags);
+  const hpScale = (1 + offset * 0.1) * tierScale * paceScale * mods.enemyHpMult;
+  const atkScale = (1 + offset * 0.08) * tierScale * paceScale * mods.enemyAtkMult;
 
   const baseMaxHp = Math.max(1, Number(enemy.maxHp || enemy.hp || 1));
   const baseAtk = Math.max(1, Number(enemy.atk || 1));
@@ -83,8 +85,9 @@ function tuneTowerEnemy<T extends RosterEnemy>(
   const offset = clampOffset(battle?.enemyLevelOffset);
   const tierScale = ENEMY_TIER_SCALE[battle?.enemyTier || 'normal'] || 1;
   const slotScale = 1 + Math.max(0, slotInBattle) * 0.03;
-  const hpScale = clampScale(floor?.levelScale, 1) * tierScale * slotScale;
-  const atkScale = clampScale(floor?.atkScale ?? floor?.levelScale, 1) * tierScale * slotScale;
+  const mods = resolveModifiers(battle?.modifierTags);
+  const hpScale = clampScale(floor?.levelScale, 1) * tierScale * slotScale * mods.enemyHpMult;
+  const atkScale = clampScale(floor?.atkScale ?? floor?.levelScale, 1) * tierScale * slotScale * mods.enemyAtkMult;
 
   const baseMaxHp = Math.max(1, Number(enemy.maxHp || enemy.hp || 1));
   const baseAtk = Math.max(1, Number(enemy.atk || 1));

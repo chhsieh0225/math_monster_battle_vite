@@ -113,6 +113,8 @@ type PlayerStrikeParams = {
   attackerMaxHp?: number;
   bossPhase: number;
   collectionDamageScale?: number;
+  challengeDamageMult?: number;
+  challengeComboMult?: number;
   chance?: ChanceFn | null;
 };
 
@@ -392,6 +394,8 @@ export function resolvePlayerStrike({
   attackerMaxHp = PLAYER_MAX_HP,
   bossPhase,
   collectionDamageScale = 1,
+  challengeDamageMult = 1,
+  challengeComboMult = 1,
   chance = null,
 }: PlayerStrikeParams): PlayerStrikeResult {
   const leveledPower = move.basePower + moveLvl * move.growth;
@@ -406,6 +410,7 @@ export function resolvePlayerStrike({
     streak,
     stageBonus,
     effMult: eff,
+    comboScaleMult: challengeComboMult,
   });
 
   const isFortress = enemy?.trait === 'fortress';
@@ -428,6 +433,13 @@ export function resolvePlayerStrike({
     : 1;
   if (clampedCollectionScale !== 1) {
     dmg = Math.round(dmg * clampedCollectionScale);
+  }
+
+  const clampedChallengeMult = Number.isFinite(challengeDamageMult) && challengeDamageMult > 0
+    ? challengeDamageMult
+    : 1;
+  if (clampedChallengeMult !== 1) {
+    dmg = Math.round(dmg * clampedChallengeMult);
   }
 
   if (bossPhase >= 3) dmg = Math.round(dmg * TRAIT_BALANCE.player.bossPhase3DamageScale);

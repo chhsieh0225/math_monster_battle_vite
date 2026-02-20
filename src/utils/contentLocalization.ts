@@ -142,6 +142,7 @@ const SCENE_NAME_EN: Dict<string> = {
   rock: "🪨 Rocky Canyon",
   poison: "☠️ Toxic Mire",
   heaven: "☁️ Celestial Sanctum",
+  burnt_warplace: "🔥 Scorched Battlefield",
 };
 
 const STARTER_TEXT_EN: Dict<StarterText> = {

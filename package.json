@@ -22,7 +22,8 @@
     "cap:sync": "vite build && cap sync",
     "cap:open:ios": "cap open ios",
     "release:all": "vite build && electron-builder --mac && cap sync",
-    "ship": "git add -A && git commit -m \"update\" && git push && npm run release:all"
+    "prerelease": "npm run lint && npm run typecheck && npm test",
+    "ship": "bash scripts/ship.sh"
   },
   "dependencies": {
     "@capacitor/core": "^8.1.0",

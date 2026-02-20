@@ -36,9 +36,9 @@ export default defineConfig({
       },
       // 把 manifest 設定搬進來，build 時自動產生 + 自動注入 <link rel="manifest">
       manifest: {
-        name: '數學怪獸大亂鬥',
-        short_name: '數學對戰',
-        description: '怪獸風格數學對戰遊戲 — 選擇招式、回答數學題、打倒怪獸！',
+        name: 'Math Monster Brawl — 數學怪獸大亂鬥',
+        short_name: 'MathBrawl',
+        description: 'Monster-style math battle game — pick moves, solve math, defeat monsters! 怪獸風格數學對戰遊戲',
         start_url: './',
         display: 'standalone',
         orientation: 'portrait',

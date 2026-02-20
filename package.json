@@ -2,7 +2,7 @@
   "name": "math-monster-battle-vite",
   "private": true,
   "version": "1.0.0",
-  "description": "怪獸風格數學對戰遊戲 — 選擇招式、回答數學題、打倒怪獸！",
+  "description": "Monster-style math battle game — pick moves, solve math, defeat monsters!",
   "author": "Chung-Han Hsieh",
   "type": "module",
   "main": "electron/main.cjs",
@@ -51,7 +51,7 @@
   },
   "build": {
     "appId": "com.mathmonster.battle",
-    "productName": "數學怪獸大亂鬥",
+    "productName": "Math Monster Brawl",
     "directories": {
       "output": "release"
     },

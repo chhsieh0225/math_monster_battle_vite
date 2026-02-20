@@ -6,7 +6,7 @@ function createWindow() {
     width: 480,
     height: 860,
     resizable: true,
-    title: '數學怪獸大亂鬥',
+    title: 'Math Monster Brawl',
     icon: path.join(__dirname, '..', 'dist', 'icon-512.png'),
     webPreferences: {
       // 不需要 Node.js 存取，保持安全

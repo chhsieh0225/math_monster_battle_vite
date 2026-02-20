@@ -1,3 +1,5 @@
+import * as MC from '../data/monsterConfigs.ts';
+
 const EN_LOCALE = "en-US";
 const ZH_LOCALE = "zh-TW";
 
@@ -288,35 +290,18 @@ const STARTER_TEXT_EN: Dict<StarterText> = {
 };
 
 export const MONSTER_NAME_EN: Dict<string> = {
-  slime: "Green Slime",
-  slime_red: "Crimson Slime",
-  slime_blue: "Azure Slime",
-  slime_yellow: "Volt Slime",
-  slime_dark: "Shadow Slime",
-  slime_steel: "Iron Slime",
-  slimeEvolved: "Jungle Ogre",
-  slimeElectricEvolved: "Thunder Ogre",
-  slimeFireEvolved: "Inferno Ogre",
-  slimeWaterEvolved: "Abyssal Ogre",
-  slimeSteelEvolved: "Titan Ogre",
-  slimeDarkEvolved: "Void Ogre",
-  fire: "Flame Lizard",
-  fireEvolved: "Inferno Dragon",
-  ghost: "Phantom Fiend",
-  ghost_lantern: "Lantern Wraith",
-  mushroom: "Bog Myconid",
-  ghostEvolved: "Nether Reaper",
-  dragon: "Iron Dragon",
-  dragonEvolved: "Aegis Skywyrm",
-  boss: "Dark Dragon King",
-  boss_hydra: "Abyss Hydra",
-  boss_crazy_dragon: "One-Winged Frenzy Dragon",
-  boss_sword_god: "Kusanagi Sword God",
-  golumn: "Stone Golem",
-  golumn_mud: "Mudstone Golem",
-  candy_knight: "Candy Knight",
-  candy_monster: "Marshmallow Beast",
-  colorful_butterfly: "Rainbow Butterfly",
+  // Computed from monsterConfigs (base + evolved forms)
+  ...Object.fromEntries(
+    [...MC.MONSTER_CONFIGS, ...MC.SLIME_VARIANT_CONFIGS, ...MC.EVOLVED_SLIME_VARIANT_CONFIGS]
+      .filter((c) => c.nameEn)
+      .map((c) => [c.id, c.nameEn!]),
+  ),
+  ...Object.fromEntries(
+    MC.MONSTER_CONFIGS
+      .filter((c) => c.evolvedNameEn && c.evolvedSpriteKey)
+      .map((c) => [c.id + "Evolved", c.evolvedNameEn!]),
+  ),
+  // Wild starters (no config object)
   wild_starter_fire: "Wild Fire Cub",
   wild_starter_water: "Wild Water Cub",
   wild_starter_grass: "Wild Grass Cub",
@@ -371,67 +356,31 @@ const MONSTER_NAME_EN_BY_ZH: Dict<string> = {
 };
 
 export const MONSTER_DESC_EN: Dict<string> = {
-  slime: "The most common monster on the plains. Soft and bouncy, but tougher than it looks.",
-  slime_red: "A slime mutated near volcanoes. Its body burns hot and its temper is fierce.",
-  slime_blue: "A water-rich slime variant from wetlands. It moves swiftly during rain.",
-  slime_yellow: "A slime adapted to thunder fields. Static energy constantly crackles around it.",
-  slime_dark: "A mysterious slime from deep shadows. It reflects almost no light.",
-  slime_steel: "A hardened slime formed by consuming metal ore. Tough shell, soft core.",
-  slimeEvolved: "Final evolution of slime that absorbed massive natural energy in ancient forests.",
-  slimeElectricEvolved: "An ultimate form born from countless lightning strikes, wrapped in electric arcs.",
-  slimeFireEvolved: "A magma-forged ultimate form that scorches everything in its path.",
-  slimeWaterEvolved: "An abyss-forged form that controls crushing deep-sea pressure.",
-  slimeSteelEvolved: "An ultimate alloy form reinforced by meteor iron, nearly unbreakable.",
-  slimeDarkEvolved: "A void-touched form surrounded by darkness said to swallow light itself.",
-  fire: "A lizard monster near volcanic vents. Its scales gather heat for flame attacks.",
-  fireEvolved: "The ultimate evolution of Flame Lizard, empowered by a volcanic core.",
-  ghost: "A spectral monster haunting ancient graves, drifting through walls and minds.",
-  ghost_lantern: "A lantern-bearing ghost variant. Its underworld flame distorts vision and misleads prey.",
-  mushroom: "A spore-born monster from toxic marsh edges. It weakens opponents with hallucinogenic fungal mist.",
-  ghostEvolved: "A transcendent spirit wielding reaper power from the underworld.",
-  dragon: "An ancient mechanical dragon with heavy alloy armor and strong defense.",
-  dragonEvolved: "An upgraded war-dragon with a sky engine, balancing speed and armor.",
-  boss: "The legendary ruler of the abyss. Only top trainers can challenge this tyrant.",
-  boss_hydra: "A triple-headed serpent from toxic marshes. It floods the battlefield with corrosive venom and relentless pressure.",
-  boss_crazy_dragon: "An ancient dragon driven mad after losing one wing. It cannot soar, but its grounded darkflame strikes are devastating.",
-  boss_sword_god: "A divine sword sovereign guarding the celestial court. It blends holy authority with blade precision and punishes mistakes with relentless judgment.",
-  golumn: "A canyon-born stone giant with immense defense. Slow but crushing once it closes in.",
-  golumn_mud: "A mudstone subspecies with a layered shell that absorbs impact before re-hardening.",
-  candy_knight: "A mysterious knight clad in rainbow sugar armor. Cute yet dangerous, its candy-crystal armor shatters on impact to damage attackers.",
-  candy_monster: "A dreamy beast formed from cotton candy. Its soft body absorbs most impacts, and though its attack power is low, its recovery is exceptional.",
-  colorful_butterfly: "A dazzling butterfly on sunlit plains. Its iridescent wing scales create tiny cyclones, enabling rapid consecutive strikes.",
+  // Computed from monsterConfigs (base + evolved forms)
+  ...Object.fromEntries(
+    [...MC.MONSTER_CONFIGS, ...MC.SLIME_VARIANT_CONFIGS, ...MC.EVOLVED_SLIME_VARIANT_CONFIGS]
+      .filter((c) => c.descEn)
+      .map((c) => [c.id, c.descEn!]),
+  ),
+  ...Object.fromEntries(
+    MC.MONSTER_CONFIGS
+      .filter((c) => c.evolvedDescEn)
+      .map((c) => [c.id + "Evolved", c.evolvedDescEn!]),
+  ),
 };
 
 export const MONSTER_HABITAT_EN: Dict<string> = {
-  slime: "🌿 Verdant Plains",
-  slime_red: "🌿 Verdant Plains",
-  slime_blue: "🌿 Verdant Plains",
-  slime_yellow: "🌿 Verdant Plains",
-  slime_dark: "🌿 Verdant Plains",
-  slime_steel: "🌿 Verdant Plains",
-  slimeEvolved: "🌿 Verdant Plains",
-  slimeElectricEvolved: "🌿 Verdant Plains",
-  slimeFireEvolved: "🌿 Verdant Plains",
-  slimeWaterEvolved: "🌿 Verdant Plains",
-  slimeSteelEvolved: "🌿 Verdant Plains",
-  slimeDarkEvolved: "🌿 Verdant Plains",
-  fire: "🌋 Blazing Volcano",
-  fireEvolved: "🌋 Blazing Volcano",
-  ghost: "🌙 Gloom Graveyard",
-  ghost_lantern: "🌙 Gloom Graveyard",
-  mushroom: "☠️ Toxic Mire",
-  ghostEvolved: "🌙 Gloom Graveyard",
-  dragon: "⚙️ Iron Fortress",
-  dragonEvolved: "⚙️ Iron Fortress",
-  boss: "💀 Abyssal Depths",
-  boss_hydra: "☠️ Toxic Mire",
-  boss_crazy_dragon: "🔥 Scorched Wasteland",
-  boss_sword_god: "☁️ Celestial Sanctum",
-  golumn: "🪨 Rocky Canyon",
-  golumn_mud: "🪨 Rocky Canyon",
-  candy_knight: "🍬 Candy Land",
-  candy_monster: "🍬 Candy Land",
-  colorful_butterfly: "🌿 Verdant Plains",
+  // Computed from monsterConfigs (base + evolved forms)
+  ...Object.fromEntries(
+    [...MC.MONSTER_CONFIGS, ...MC.SLIME_VARIANT_CONFIGS, ...MC.EVOLVED_SLIME_VARIANT_CONFIGS]
+      .filter((c) => c.habitatEn)
+      .map((c) => [c.id, c.habitatEn!]),
+  ),
+  ...Object.fromEntries(
+    MC.MONSTER_CONFIGS
+      .filter((c) => c.evolvedHabitatEn)
+      .map((c) => [c.id + "Evolved", c.evolvedHabitatEn!]),
+  ),
 };
 
 const STARTER_DESC_EN: Dict<string> = {

@@ -31,5 +31,5 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Build
-        run: npm run build
+      - name: Build + bundle budget
+        run: npm run build:budget

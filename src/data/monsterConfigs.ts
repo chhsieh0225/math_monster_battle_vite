@@ -41,6 +41,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     mType: "grass",
     typeIcon: "🌿",
     typeName: "草",
+    nameEn: "Green Slime",
+    descEn: "The most common monster on the plains. Soft and bouncy, but tougher than it looks.",
+    habitatEn: "🌿 Verdant Plains",
   },
   {
     id: "fire",
@@ -52,6 +55,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     spriteKey: "fireLizardSVG",
     evolvedSpriteKey: "fireEvolvedSVG",
     evolvedName: "烈焰巨龍",
+    evolvedNameEn: "Inferno Dragon",
+    evolvedDescEn: "The ultimate evolution of Flame Lizard, empowered by a volcanic core.",
+    evolvedHabitatEn: "🌋 Blazing Volcano",
     evolveLvl: MONSTER_EVOLVE_LEVEL.fire,
     dropTable: "fire",
     mType: "fire",
@@ -60,6 +66,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "blaze",
     traitName: "烈焰",
     traitDesc: "HP低於50%時攻擊力提升50%，越危險越兇猛！",
+    nameEn: "Flame Lizard",
+    descEn: "A lizard monster near volcanic vents. Its scales gather heat for flame attacks.",
+    habitatEn: "🌋 Blazing Volcano",
   },
   {
     id: "ghost",
@@ -71,6 +80,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     spriteKey: "ghostSVG",
     evolvedSpriteKey: "ghostEvolvedSVG",
     evolvedName: "冥界死神",
+    evolvedNameEn: "Nether Reaper",
+    evolvedDescEn: "A transcendent spirit wielding reaper power from the underworld.",
+    evolvedHabitatEn: "🌙 Gloom Graveyard",
     evolveLvl: MONSTER_EVOLVE_LEVEL.ghost,
     dropTable: "ghost",
     mType: "ghost",
@@ -79,6 +91,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "phantom",
     traitName: "幻影",
     traitDesc: "虛無的身軀讓牠有25%機率閃避攻擊，令人防不勝防。",
+    nameEn: "Phantom Fiend",
+    descEn: "A spectral monster haunting ancient graves, drifting through walls and minds.",
+    habitatEn: "🌙 Gloom Graveyard",
   },
   {
     id: "ghost_lantern",
@@ -95,6 +110,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "phantom",
     traitName: "幻影",
     traitDesc: "手中的冥燈會扭曲視線，讓牠有25%機率閃避攻擊。",
+    nameEn: "Lantern Wraith",
+    descEn: "A lantern-bearing ghost variant. Its underworld flame distorts vision and misleads prey.",
+    habitatEn: "🌙 Gloom Graveyard",
   },
   {
     id: "mushroom",
@@ -111,6 +129,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "curse",
     traitName: "詛咒",
     traitDesc: "會散佈孢子詛咒，攻擊時有機率弱化對手的下一次攻擊。",
+    nameEn: "Bog Myconid",
+    descEn: "A spore-born monster from toxic marsh edges. It weakens opponents with hallucinogenic fungal mist.",
+    habitatEn: "☠️ Toxic Mire",
   },
   {
     id: "dragon",
@@ -122,6 +143,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     spriteKey: "dragonSVG",
     evolvedSpriteKey: "dragonEvolvedSVG",
     evolvedName: "鐵甲天龍",
+    evolvedNameEn: "Aegis Skywyrm",
+    evolvedDescEn: "An upgraded war-dragon with a sky engine, balancing speed and armor.",
+    evolvedHabitatEn: "⚙️ Iron Fortress",
     evolveLvl: MONSTER_EVOLVE_LEVEL.dragon,
     dropTable: "dragon",
     mType: "steel",
@@ -130,6 +154,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "counter",
     traitName: "反擊裝甲",
     traitDesc: "堅硬的裝甲會反彈20%受到的傷害給攻擊者。",
+    nameEn: "Iron Dragon",
+    descEn: "An ancient mechanical dragon with heavy alloy armor and strong defense.",
+    habitatEn: "⚙️ Iron Fortress",
   },
   {
     id: "golumn",
@@ -146,6 +173,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "fortify",
     traitName: "堅岩",
     traitDesc: "全身由堅硬岩石構成，受到的傷害減少25%。但行動緩慢，攻擊力中等。",
+    nameEn: "Stone Golem",
+    descEn: "A canyon-born stone giant with immense defense. Slow but crushing once it closes in.",
+    habitatEn: "🪨 Rocky Canyon",
   },
   {
     id: "candy_knight",
@@ -162,6 +192,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "counter",
     traitName: "反擊裝甲",
     traitDesc: "糖衣鎧甲下暗藏回擊機關，被攻擊時會反彈20%傷害給攻擊者。",
+    nameEn: "Candy Knight",
+    descEn: "A mysterious knight clad in rainbow sugar armor. Cute yet dangerous, its candy-crystal armor shatters on impact to damage attackers.",
+    habitatEn: "🍬 Candy Land",
   },
   {
     id: "candy_monster",
@@ -178,6 +211,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "tenacity",
     traitName: "堅韌",
     traitDesc: "軟綿綿的身體能吸收衝擊，攻擊力較低但非常耐打，還能回復自身生命。",
+    nameEn: "Marshmallow Beast",
+    descEn: "A dreamy beast formed from cotton candy. Its soft body absorbs most impacts, and though its attack power is low, its recovery is exceptional.",
+    habitatEn: "🍬 Candy Land",
   },
   {
     id: "colorful_butterfly",
@@ -194,6 +230,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "swift",
     traitName: "迅捷",
     traitDesc: "色彩斑斕的翅膀能引發氣流加速，有機率在一回合內連續攻擊兩次！",
+    nameEn: "Rainbow Butterfly",
+    descEn: "A dazzling butterfly on sunlit plains. Its iridescent wing scales create tiny cyclones, enabling rapid consecutive strikes.",
+    habitatEn: "🌿 Verdant Plains",
   },
   {
     id: "golumn_mud",
@@ -210,6 +249,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "fortify",
     traitName: "堅岩",
     traitDesc: "泥岩混合外殼同樣能吸收衝擊，受到的傷害減少25%。",
+    nameEn: "Mudstone Golem",
+    descEn: "A mudstone subspecies with a layered shell that absorbs impact before re-hardening.",
+    habitatEn: "🪨 Rocky Canyon",
   },
   {
     id: "boss",
@@ -229,6 +271,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "tyrant",
     traitName: "霸王",
     traitDesc: "操控暗雷之力的多階段王者。能蓄力釋放毀滅大招、封印對手技能。暗影護盾有20%機率完全格擋，並有50%機率額外減傷。暗/電雙屬性讓水系與電系攻擊大幅削弱。",
+    nameEn: "Dark Dragon King",
+    descEn: "The legendary ruler of the abyss. Only top trainers can challenge this tyrant.",
+    habitatEn: "💀 Abyssal Depths",
   },
   {
     id: "boss_hydra",
@@ -248,6 +293,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "venom",
     traitName: "毒霧",
     traitDesc: "散發致命毒霧，每回合持續侵蝕對手生命，同時每回合恢復10%最大生命。擁有多階段戰鬥形態，能蓄力釋放劇毒吐息，還能封印對手技能。",
+    nameEn: "Abyss Hydra",
+    descEn: "A triple-headed serpent from toxic marshes. It floods the battlefield with corrosive venom and relentless pressure.",
+    habitatEn: "☠️ Toxic Mire",
   },
   {
     id: "boss_crazy_dragon",
@@ -267,6 +315,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "tyrant",
     traitName: "狂怒",
     traitDesc: "失去一翼後陷入永恆狂怒。擁有多階段戰鬥形態，能蓄力釋放暗焰吐息，還能封印對手技能。攻擊力冠絕三大Boss。生命值低於30%時會觸發一次狂怒再生，恢復50%最大HP。",
+    nameEn: "One-Winged Frenzy Dragon",
+    descEn: "An ancient dragon driven mad after losing one wing. It cannot soar, but its grounded darkflame strikes are devastating.",
+    habitatEn: "🔥 Scorched Wasteland",
   },
   {
     id: "boss_sword_god",
@@ -286,6 +337,9 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     trait: "tyrant",
     traitName: "神裁",
     traitDesc: "掌握神聖與劍意的多階段王者。可蓄力斬擊、封印技能，並以神罰壓制全場。劍意格擋有50%機率將受到的傷害減半。",
+    nameEn: "Kusanagi Sword God",
+    descEn: "A divine sword sovereign guarding the celestial court. It blends holy authority with blade precision and punishes mistakes with relentless judgment.",
+    habitatEn: "☁️ Celestial Sanctum",
   },
 ];
 
@@ -305,6 +359,9 @@ export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     traitDesc: "最基本的史萊姆，沒有特殊能力。",
     hpMult: SLIME_VARIANT_MULTIPLIERS.slime.hpMult,
     atkMult: SLIME_VARIANT_MULTIPLIERS.slime.atkMult,
+    nameEn: "Green Slime",
+    descEn: "The most common monster on the plains. Soft and bouncy, but tougher than it looks.",
+    habitatEn: "🌿 Verdant Plains",
   },
   {
     id: "slime_red",
@@ -321,6 +378,9 @@ export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     traitDesc: "血量較低但攻擊兇猛，有機率發動暴擊造成1.5倍傷害！",
     hpMult: SLIME_VARIANT_MULTIPLIERS.slime_red.hpMult,
     atkMult: SLIME_VARIANT_MULTIPLIERS.slime_red.atkMult,
+    nameEn: "Crimson Slime",
+    descEn: "A slime mutated near volcanoes. Its body burns hot and its temper is fierce.",
+    habitatEn: "🌿 Verdant Plains",
   },
   {
     id: "slime_blue",
@@ -337,6 +397,9 @@ export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     traitDesc: "攻擊力較低但非常耐打，攻擊時還能回復自身生命值。",
     hpMult: SLIME_VARIANT_MULTIPLIERS.slime_blue.hpMult,
     atkMult: SLIME_VARIANT_MULTIPLIERS.slime_blue.atkMult,
+    nameEn: "Azure Slime",
+    descEn: "A water-rich slime variant from wetlands. It moves swiftly during rain.",
+    habitatEn: "🌿 Verdant Plains",
   },
   {
     id: "slime_yellow",
@@ -353,6 +416,9 @@ export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     traitDesc: "行動速度極快，有機率在一回合內連續攻擊兩次！",
     hpMult: SLIME_VARIANT_MULTIPLIERS.slime_yellow.hpMult,
     atkMult: SLIME_VARIANT_MULTIPLIERS.slime_yellow.atkMult,
+    nameEn: "Volt Slime",
+    descEn: "A slime adapted to thunder fields. Static energy constantly crackles around it.",
+    habitatEn: "🌿 Verdant Plains",
   },
   {
     id: "slime_dark",
@@ -369,6 +435,9 @@ export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     traitDesc: "散發不祥氣息，攻擊時有機率弱化對手的下一次攻擊。",
     hpMult: SLIME_VARIANT_MULTIPLIERS.slime_dark.hpMult,
     atkMult: SLIME_VARIANT_MULTIPLIERS.slime_dark.atkMult,
+    nameEn: "Shadow Slime",
+    descEn: "A mysterious slime from deep shadows. It reflects almost no light.",
+    habitatEn: "🌿 Verdant Plains",
   },
   {
     id: "slime_steel",
@@ -385,6 +454,9 @@ export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     traitDesc: "全身覆蓋金屬外殼，攻擊力低但受到的傷害減少30%。",
     hpMult: SLIME_VARIANT_MULTIPLIERS.slime_steel.hpMult,
     atkMult: SLIME_VARIANT_MULTIPLIERS.slime_steel.atkMult,
+    nameEn: "Iron Slime",
+    descEn: "A hardened slime formed by consuming metal ore. Tough shell, soft core.",
+    habitatEn: "🌿 Verdant Plains",
   },
 ];
 
@@ -404,6 +476,9 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     traitDesc: "最基本的史萊姆，沒有特殊能力。",
     hpMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeEvolved.hpMult,
     atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeEvolved.atkMult,
+    nameEn: "Jungle Ogre",
+    descEn: "Final evolution of slime that absorbed massive natural energy in ancient forests.",
+    habitatEn: "🌿 Verdant Plains",
   },
   {
     id: "slimeElectricEvolved",
@@ -420,6 +495,9 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     traitDesc: "行動速度極快，有機率在一回合內連續攻擊兩次！",
     hpMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeElectricEvolved.hpMult,
     atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeElectricEvolved.atkMult,
+    nameEn: "Thunder Ogre",
+    descEn: "An ultimate form born from countless lightning strikes, wrapped in electric arcs.",
+    habitatEn: "🌿 Verdant Plains",
   },
   {
     id: "slimeFireEvolved",
@@ -436,6 +514,9 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     traitDesc: "血量較低但攻擊兇猛，有機率發動暴擊造成1.5倍傷害！",
     hpMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeFireEvolved.hpMult,
     atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeFireEvolved.atkMult,
+    nameEn: "Inferno Ogre",
+    descEn: "A magma-forged ultimate form that scorches everything in its path.",
+    habitatEn: "🌿 Verdant Plains",
   },
   {
     id: "slimeWaterEvolved",
@@ -452,6 +533,9 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     traitDesc: "攻擊力較低但非常耐打，攻擊時還能回復自身生命值。",
     hpMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeWaterEvolved.hpMult,
     atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeWaterEvolved.atkMult,
+    nameEn: "Abyssal Ogre",
+    descEn: "An abyss-forged form that controls crushing deep-sea pressure.",
+    habitatEn: "🌿 Verdant Plains",
   },
   {
     id: "slimeSteelEvolved",
@@ -468,6 +552,9 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     traitDesc: "全身覆蓋金屬外殼，攻擊力低但受到的傷害減少30%。",
     hpMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeSteelEvolved.hpMult,
     atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeSteelEvolved.atkMult,
+    nameEn: "Titan Ogre",
+    descEn: "An ultimate alloy form reinforced by meteor iron, nearly unbreakable.",
+    habitatEn: "🌿 Verdant Plains",
   },
   {
     id: "slimeDarkEvolved",
@@ -484,6 +571,9 @@ export const EVOLVED_SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [
     traitDesc: "散發不祥氣息，攻擊時有機率弱化對手的下一次攻擊。",
     hpMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeDarkEvolved.hpMult,
     atkMult: EVOLVED_SLIME_VARIANT_MULTIPLIERS.slimeDarkEvolved.atkMult,
+    nameEn: "Void Ogre",
+    descEn: "A void-touched form surrounded by darkness said to swallow light itself.",
+    habitatEn: "🌿 Verdant Plains",
   },
 ];
 

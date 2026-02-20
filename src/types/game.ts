@@ -195,6 +195,9 @@ export type MonsterConfig = MonsterTraitFields & {
   spriteKey: string;
   evolvedSpriteKey?: string;
   evolvedName?: string;
+  evolvedNameEn?: string;
+  evolvedDescEn?: string;
+  evolvedHabitatEn?: string;
   evolveLvl?: number;
   dropTable: string;
   mType: MonsterType;
@@ -203,6 +206,12 @@ export type MonsterConfig = MonsterTraitFields & {
   mType2?: MonsterType;
   typeIcon2?: string;
   typeName2?: string;
+  /** English display name (for localization). */
+  nameEn?: string;
+  /** English description (for encyclopedia). */
+  descEn?: string;
+  /** English habitat label (for encyclopedia). */
+  habitatEn?: string;
 };
 
 export type SlimeVariantConfig = MonsterTraitFields & {
@@ -217,6 +226,12 @@ export type SlimeVariantConfig = MonsterTraitFields & {
   dropTable: string;
   hpMult: number;
   atkMult: number;
+  /** English display name (for localization). */
+  nameEn?: string;
+  /** English description (for encyclopedia). */
+  descEn?: string;
+  /** English habitat label (for encyclopedia). */
+  habitatEn?: string;
 };
 
 export type SpriteFn = (c1: string, c2: string) => string;

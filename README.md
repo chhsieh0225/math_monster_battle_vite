@@ -28,24 +28,4 @@ React + Vite 教育對戰遊戲專案。
 
 > battle 領域分層說明：`src/hooks/battle/README.md`
 
-## 品質現況（最新本機基線）
 
-- 測試數量：`289` tests（全綠）
-- Coverage（最新 gate run）：  
-  - Lines: `86.35%`
-  - Branches: `67.39%`
-  - Functions: `77.95%`
-- 型別遷移現況（src）：  
-  - `*.ts/*.tsx`：`185` 檔  
-  - `*.js/*.jsx`：`63` 檔
-
-## 文檔與追蹤
-
-- 進度紀錄：`PROGRESS.md`
-- battle 子層設計：`src/hooks/battle/README.md`
-
-## 近期優先方向
-
-1. 持續縮減 `*.js/*.jsx` 檔案（優先 battle 相關高耦合區塊）。
-2. 針對低覆蓋模組補測（先從 `enemyFlow`、`pvpStrikeResolver`、deps builders）。
-3. 持續整理畫面層樣式與響應式細節（避免 inline style 回流）。

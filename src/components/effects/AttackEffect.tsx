@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import type { SpriteTarget } from '../../hooks/useSpriteTargets';
+import type { AttackElementEffectProps } from './effectTypes.ts';
 
 const FireEffect = lazy(() => import('./FireEffect'));
 const ElecEffect = lazy(() => import('./ElecEffect'));
@@ -10,8 +11,7 @@ const LightEffect = lazy(() => import('./LightEffect'));
 const SteelEffect = lazy(() => import('./SteelEffect'));
 const IceEffect = lazy(() => import('./IceEffect'));
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const EFFECT_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
+const EFFECT_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<AttackElementEffectProps>>> = {
   fire: FireEffect,
   electric: ElecEffect,
   water: WaterEffect,

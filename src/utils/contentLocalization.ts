@@ -312,27 +312,19 @@ export const MONSTER_NAME_EN: Dict<string> = {
 };
 
 const MONSTER_NAME_EN_BY_ZH: Dict<string> = {
-  史萊姆: "Green Slime",
-  綠史萊姆: "Green Slime",
-  紅史萊姆: "Crimson Slime",
-  藍史萊姆: "Azure Slime",
-  黃史萊姆: "Volt Slime",
-  黑史萊姆: "Shadow Slime",
-  鋼史萊姆: "Iron Slime",
-  叢林巨魔: "Jungle Ogre",
-  雷霆巨魔: "Thunder Ogre",
-  烈焰巨魔: "Inferno Ogre",
-  深海巨魔: "Abyssal Ogre",
-  鋼鐵巨魔: "Titan Ogre",
-  深淵巨魔: "Void Ogre",
-  火焰蜥: "Flame Lizard",
+  // Computed from monsterConfigs (name → nameEn, evolvedName → evolvedNameEn)
+  ...Object.fromEntries(
+    [...MC.MONSTER_CONFIGS, ...MC.SLIME_VARIANT_CONFIGS, ...MC.EVOLVED_SLIME_VARIANT_CONFIGS]
+      .filter((c) => c.nameEn)
+      .map((c) => [c.name, c.nameEn!]),
+  ),
+  ...Object.fromEntries(
+    MC.MONSTER_CONFIGS
+      .filter((c) => c.evolvedName && c.evolvedNameEn)
+      .map((c) => [c.evolvedName!, c.evolvedNameEn!]),
+  ),
+  // Starter stages (no config object)
   小火獸: "Fire Cub",
-  烈焰巨龍: "Inferno Dragon",
-  幽靈魔: "Phantom Fiend",
-  提燈幽魂: "Lantern Wraith",
-  毒沼菇妖: "Bog Myconid",
-  冥界死神: "Nether Reaper",
-  鋼鐵龍: "Iron Dragon",
   小水獸: "Water Cub",
   小草獸: "Grass Cub",
   小雷獸: "Thunder Cub",
@@ -343,16 +335,6 @@ const MONSTER_NAME_EN_BY_ZH: Dict<string> = {
   小鋼狼: "Steel Pup",
   鋼刃狼: "Bladewolf",
   蒼鋼狼王: "Aegis Wolf King",
-  鐵甲天龍: "Aegis Skywyrm",
-  岩石高崙: "Stone Golem",
-  泥岩高崙: "Mudstone Golem",
-  糖果騎士: "Candy Knight",
-  棉花糖怪: "Marshmallow Beast",
-  彩翼蝶: "Rainbow Butterfly",
-  暗黑龍王: "Dark Dragon King",
-  深淵九頭蛇: "Abyss Hydra",
-  單翼狂龍: "One-Winged Frenzy Dragon",
-  叢雲劍神: "Kusanagi Sword God",
 };
 
 export const MONSTER_DESC_EN: Dict<string> = {

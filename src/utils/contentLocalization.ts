@@ -98,6 +98,7 @@ const TYPE_NAME_EN_BY_ID: Dict<string> = {
   light: "Light",
   poison: "Poison",
   rock: "Rock",
+  sweet: "Sweet",
 };
 
 const TYPE_NAME_ZH_BY_ID: Dict<string> = {
@@ -112,6 +113,7 @@ const TYPE_NAME_ZH_BY_ID: Dict<string> = {
   light: "光",
   poison: "毒",
   rock: "岩",
+  sweet: "甜蜜",
 };
 
 const TYPE_NAME_EN_BY_ZH: Dict<string> = {
@@ -128,6 +130,7 @@ const TYPE_NAME_EN_BY_ZH: Dict<string> = {
   岩: "Rock",
   神聖: "Holy",
   劍: "Sword",
+  甜蜜: "Sweet",
 };
 
 const SCENE_NAME_EN: Dict<string> = {

@@ -18,7 +18,7 @@
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: white;
-  font-size: 16px;
+  font-size: 1.0rem;
   font-weight: 700;
   width: 36px;
   height: 36px;
@@ -31,7 +31,7 @@
 }
 
 .leaderboard-title {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 800;
   letter-spacing: 1px;
 }
@@ -45,7 +45,7 @@
 
 .leaderboard-empty {
   opacity: 0.4;
-  font-size: 13px;
+  font-size: 0.8125rem;
   margin-top: 60px;
   text-align: center;
 }
@@ -78,22 +78,22 @@
 }
 
 .leaderboard-rank.is-first {
-  font-size: 20px;
+  font-size: 1.25rem;
   color: #fbbf24;
 }
 
 .leaderboard-rank.is-second {
-  font-size: 20px;
+  font-size: 1.25rem;
   color: #c0c0c0;
 }
 
 .leaderboard-rank.is-third {
-  font-size: 20px;
+  font-size: 1.25rem;
   color: #cd7f32;
 }
 
 .leaderboard-rank.is-other {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.4);
 }
 
@@ -103,7 +103,7 @@
 }
 
 .leaderboard-name {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   margin-bottom: 2px;
 }
@@ -115,14 +115,14 @@
 }
 
 .leaderboard-score {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 900;
   color: #fbbf24;
   font-family: 'Press Start 2P', monospace;
 }
 
 .leaderboard-badge {
-  font-size: 9px;
+  font-size: 0.5625rem;
   padding: 1px 6px;
   border-radius: 8px;
   font-weight: 700;
@@ -137,19 +137,19 @@
 }
 
 .leaderboard-stat-line {
-  font-size: 10px;
+  font-size: 0.625rem;
   opacity: 0.45;
   margin-top: 2px;
 }
 
 .leaderboard-starter-line {
-  font-size: 10px;
+  font-size: 0.625rem;
   opacity: 0.68;
   margin-top: 2px;
 }
 
 .leaderboard-date {
-  font-size: 10px;
+  font-size: 0.625rem;
   opacity: 0.3;
   flex-shrink: 0;
 }

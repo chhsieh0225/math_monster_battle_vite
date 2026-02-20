@@ -425,7 +425,7 @@ export function handlePvpAnswer({
   });
   return true;
   } catch (err) {
-    console.error('[pvpFlow] handlePvpAnswer crashed:', err);
+    if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) console.error('[pvpFlow] handlePvpAnswer crashed:', err);
     try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch { /* last resort */ }
     return false;
   }
@@ -485,7 +485,7 @@ export function processPvpTurnStart({
     t,
   });
   } catch (err) {
-    console.error('[pvpFlow] processPvpTurnStart crashed:', err);
+    if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) console.error('[pvpFlow] processPvpTurnStart crashed:', err);
     try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch { /* last resort */ }
     return false;
   }

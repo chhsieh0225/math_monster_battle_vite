@@ -27,7 +27,7 @@ export default function GrassEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAUL
     const n = 1 + Math.floor(lvl / 2);
     const sz = 30 + lvl * 5;
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+      <div className="move-fx-overlay">
         {Array.from({ length: n }, (_, i) => (
           <svg key={i} width={sz} height={sz} viewBox="-12 -12 24 24"
             style={{
@@ -66,7 +66,7 @@ export default function GrassEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAUL
     const sw = 3 + lvl;
     const branches = Math.floor(lvl / 2);
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+      <div className="move-fx-overlay">
         <svg width="100%" height="100%" viewBox="0 0 200 160" preserveAspectRatio="none"
           style={{ position:"absolute", inset:0, filter:`drop-shadow(0 0 ${glow+2}px rgba(34,197,94,0.35)) blur(0.6px)` }}>
           <defs>
@@ -120,7 +120,7 @@ export default function GrassEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAUL
     const n = 8 + lvl * 3;
     const windN = 2 + Math.floor(lvl / 2);
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, animation:"grassScreenFlash 0.9s ease" }}>
+      <div className="move-fx-overlay" style={{ animation:"grassScreenFlash 0.9s ease" }}>
         {/* Wind streaks */}
         {Array.from({ length: windN }, (_, i) => (
           <svg key={`w${i}`} width="100%" height="30" viewBox="0 0 200 20" preserveAspectRatio="none"
@@ -172,7 +172,7 @@ export default function GrassEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAUL
   const coreSeed = Math.max(1, Math.floor(rr("ult-core-seed", 0, 2, 90)));
 
   return (
-    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+    <div className="move-fx-overlay">
       {/* Phase 1: Dark seed rush */}
       <svg width="36" height="36" viewBox="0 0 36 36"
         style={{

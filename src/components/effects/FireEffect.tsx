@@ -26,7 +26,7 @@ export default function FireEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
     const sz = 32 + fxLvl * 4;
     const impactSparkN = 2 + Math.floor(fxLvl / 2);
     return (
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 80 }}>
+      <div className="move-fx-overlay">
         <div
           style={{
             position: "absolute",
@@ -124,7 +124,7 @@ export default function FireEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
     const sz = 28 + fxLvl * 3;
     const pulseN = 2 + Math.floor(fxLvl / 3);
     return (
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 80 }}>
+      <div className="move-fx-overlay">
         {Array.from({ length: n }, (_, i) => {
           const wave = i % 3;
           const rank = Math.floor(i / 3);
@@ -211,7 +211,7 @@ export default function FireEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
     const expFilterId = `exp-filter-${uid}`;
     const expSeed = Math.max(1, Math.floor(rr("exp-seed", 0, 2, 80)));
     return (
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 80 }}>
+      <div className="move-fx-overlay">
         <div
           style={{
             position: "absolute",
@@ -326,7 +326,7 @@ export default function FireEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
   const darkSeed = Math.max(1, Math.floor(rr("dark-seed", 0, 3, 90)));
 
   return (
-    <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 80 }}>
+    <div className="move-fx-overlay">
       {Array.from({ length: meteorN }, (_, i) => {
         const startLeft = 10 + i * 7 + rr("meteor-left", i, -3, 4);
         const startTop = 7 + rr("meteor-top", i, -2, 8);

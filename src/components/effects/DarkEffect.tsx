@@ -28,7 +28,7 @@ export default function DarkEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
     const n = 1 + Math.floor(lvl / 2);
     const coreR = 14 + lvl * 3;
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, animation:"darkScreenFlash 1s ease" }}>
+      <div className="move-fx-overlay" style={{ animation:"darkScreenFlash 1s ease" }}>
         {/* Dark projectiles */}
         {Array.from({ length: n }, (_, i) => (
           <svg key={i} width={coreR*2+16} height={coreR*2+16}
@@ -72,7 +72,7 @@ export default function DarkEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
   if (idx === 1) {
     const clawN = 2 + Math.floor(lvl / 2);
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, animation:"darkScreenFlash 1s ease" }}>
+      <div className="move-fx-overlay" style={{ animation:"darkScreenFlash 1s ease" }}>
         {/* Claw slash marks */}
         {Array.from({ length: clawN }, (_, i) => (
           <svg key={i} width="100%" height="100%" viewBox="0 0 200 160"
@@ -117,7 +117,7 @@ export default function DarkEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
     const starN = 4 + lvl * 2;
     const coreR = 20 + lvl * 4;
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, animation:"darkScreenFlash 1s ease" }}>
+      <div className="move-fx-overlay" style={{ animation:"darkScreenFlash 1s ease" }}>
         {/* Expanding dark core */}
         <svg width="160" height="160" viewBox="0 0 160 160"
           style={{
@@ -184,7 +184,7 @@ export default function DarkEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
   const coreFilterId = `dVoidFilter-${uid}`;
   const coreSeed = Math.max(1, Math.floor(rr("ult-core-seed", 0, 2, 90)));
   return (
-    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+    <div className="move-fx-overlay">
       {/* Phase 1: Softened void orb approach */}
       <svg width="36" height="36" viewBox="0 0 36 36"
         style={{

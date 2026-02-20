@@ -27,7 +27,7 @@ export default function LightEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAUL
     const n = 1 + Math.floor(lvl / 2);
     const sz = 28 + lvl * 4;
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+      <div className="move-fx-overlay">
         {Array.from({ length: n }, (_, i) => (
           <svg key={i} width={sz} height={sz} viewBox="0 0 24 24"
             style={{
@@ -68,7 +68,7 @@ export default function LightEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAUL
     const n = 3 + lvl;
     const sz = 24 + lvl * 3;
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+      <div className="move-fx-overlay">
         {/* Main projectiles */}
         {Array.from({ length: n }, (_, i) => (
           <svg key={i} width={sz} height={sz} viewBox="0 0 24 24"
@@ -110,7 +110,7 @@ export default function LightEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAUL
     const rayN = 10 + Math.floor(lvl * 1.5);
     const coreR = 20 + lvl * 4;
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+      <div className="move-fx-overlay">
         {/* Golden core explosion */}
         <svg width="180" height="180" viewBox="0 0 180 180"
           style={{
@@ -168,7 +168,7 @@ export default function LightEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAUL
   const coreFilterId = `lCoreFilter-${uid}`;
   const coreSeed = Math.max(1, Math.floor(rr("ult-core-seed", 0, 2, 90)));
   return (
-    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+    <div className="move-fx-overlay">
       {/* Phase 1: Eclipse crest rush */}
       <svg width="40" height="40" viewBox="0 0 24 24"
         style={{

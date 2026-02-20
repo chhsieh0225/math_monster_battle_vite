@@ -19,7 +19,7 @@
   background:rgba(255,255,255,0.08);
   border:1px solid rgba(255,255,255,0.12);
   color:#fff;
-  font-size:16px;
+  font-size:1.0rem;
   font-weight:700;
   width:36px;
   height:36px;
@@ -31,13 +31,13 @@
 }
 
 .selection-title{
-  font-size:17px;
+  font-size:1.0625rem;
   font-weight:800;
   letter-spacing:1px;
 }
 
 .selection-subtitle{
-  font-size:10px;
+  font-size:0.625rem;
   opacity:.4;
   margin-top:1px;
 }
@@ -55,7 +55,7 @@
   border:1px solid rgba(255,255,255,0.12);
   background:rgba(255,255,255,0.04);
   color:#fff;
-  font-size:12px;
+  font-size:0.75rem;
   font-weight:700;
   padding:6px 8px;
 }
@@ -76,7 +76,7 @@
 }
 
 .selection-stage-caption{
-  font-size:10px;
+  font-size:0.625rem;
   opacity:.45;
   margin-bottom:4px;
 }
@@ -94,7 +94,7 @@
   border:1px solid rgba(255,255,255,0.12);
   background:rgba(255,255,255,0.04);
   color:#fff;
-  font-size:11px;
+  font-size:0.6875rem;
   font-weight:600;
   padding:6px 8px;
 }
@@ -196,19 +196,19 @@
 }
 
 .selection-card-name{
-  font-size:15px;
+  font-size:0.9375rem;
   font-weight:800;
   margin-bottom:2px;
 }
 
 .selection-card-type-tag{
-  font-size:10px;
+  font-size:0.625rem;
   opacity:.5;
   margin-left:5px;
 }
 
 .selection-card-difficulty-tag{
-  font-size:10px;
+  font-size:0.625rem;
   margin-left:6px;
   letter-spacing:.5px;
   color:rgba(250,204,21,0.95);
@@ -216,7 +216,7 @@
 }
 
 .selection-card-locked-tag{
-  font-size:10px;
+  font-size:0.625rem;
   margin-left:5px;
   padding:1px 6px;
   border-radius:8px;
@@ -226,7 +226,7 @@
 }
 
 .selection-role-tag{
-  font-size:10px;
+  font-size:0.625rem;
   margin-left:6px;
   padding:1px 6px;
   border-radius:8px;
@@ -244,20 +244,20 @@
 }
 
 .selection-card-moves-brief{
-  font-size:10px;
+  font-size:0.625rem;
   opacity:.5;
   line-height:1.4;
 }
 
 .selection-card-grade-hint{
-  font-size:10px;
+  font-size:0.625rem;
   opacity:.72;
   line-height:1.45;
   margin-bottom:2px;
 }
 
 .selection-card-locked-hint{
-  font-size:10px;
+  font-size:0.625rem;
   line-height:1.45;
   opacity:.72;
 }
@@ -270,7 +270,7 @@
 }
 
 .selection-card-desc{
-  font-size:11px;
+  font-size:0.6875rem;
   opacity:.8;
   line-height:1.6;
   margin-bottom:6px;
@@ -284,7 +284,7 @@
 }
 
 .selection-card-passive-item{
-  font-size:10px;
+  font-size:0.625rem;
   background:rgba(255,255,255,0.06);
   padding:4px 8px;
   border-radius:8px;
@@ -306,9 +306,9 @@
   text-align:center;
 }
 
-.selection-move-chip-icon{font-size:12px}
-.selection-move-chip-name{font-size:9px;font-weight:700;margin-top:1px}
-.selection-move-chip-desc{font-size:8px;opacity:.5;margin-top:1px}
+.selection-move-chip-icon{font-size:0.75rem}
+.selection-move-chip-name{font-size:0.5625rem;font-weight:700;margin-top:1px}
+.selection-move-chip-desc{font-size:0.5625rem;opacity:.5;margin-top:1px}
 
 .selection-confirm-wrap{
   padding:6px 14px 14px;
@@ -322,7 +322,7 @@
   border:none;
   border-radius:14px;
   color:#fff;
-  font-size:16px;
+  font-size:1.0rem;
   font-weight:800;
   cursor:pointer;
 }

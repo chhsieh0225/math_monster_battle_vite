@@ -23,7 +23,7 @@ export default function WaterEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAUL
   if (idx === 0) {
     const n = 2 + lvl;
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+      <div className="move-fx-overlay">
         {Array.from({ length: n }, (_, i) => {
           const r = 7 + lvl * 2 + rr("bubble-r", i, 0, 5);
           const sz = r * 2 + 12;
@@ -60,7 +60,7 @@ export default function WaterEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAUL
     const waveN = 1 + Math.floor(lvl / 2);
     const waveH = 16 + lvl * 3;
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, overflow:"hidden" }}>
+      <div className="move-fx-overlay" style={{ overflow:"hidden" }}>
         {Array.from({ length: waveN }, (_, i) => (
           <svg key={i} width="100%" height={waveH + 15} viewBox={`0 0 200 ${waveH+10}`}
             preserveAspectRatio="none"
@@ -91,7 +91,7 @@ export default function WaterEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAUL
   if (idx === 2) {
     const splashN = 4 + lvl * 2;
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, overflow:"hidden" }}>
+      <div className="move-fx-overlay" style={{ overflow:"hidden" }}>
         {/* Main tsunami wave */}
         <svg width="85%" height="55%" viewBox="0 0 200 120" preserveAspectRatio="none"
           style={{
@@ -162,7 +162,7 @@ export default function WaterEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAUL
   const vortexSeed = Math.max(1, Math.floor(rr("ult-vortex-seed", 0, 2, 90)));
 
   return (
-    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+    <div className="move-fx-overlay">
       {/* Phase 1: Abyss droplet rush */}
       <svg width="36" height="36" viewBox="0 0 36 36"
         style={{

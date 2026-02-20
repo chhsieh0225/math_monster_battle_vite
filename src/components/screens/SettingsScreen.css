@@ -22,7 +22,7 @@
   border:1px solid rgba(255,255,255,0.18);
   background:rgba(255,255,255,0.08);
   color:#fff;
-  font-size:17px;
+  font-size:1.0625rem;
   font-weight:800;
   flex-shrink:0;
 }
@@ -30,14 +30,14 @@
 .settings-header-text{text-align:left}
 
 .settings-title{
-  font-size:18px;
+  font-size:1.125rem;
   font-weight:900;
   letter-spacing:.6px;
   margin:0;
 }
 
 .settings-subtitle{
-  font-size:11px;
+  font-size:0.6875rem;
   opacity:.55;
 }
 
@@ -52,13 +52,13 @@
 }
 
 .settings-card-title{
-  font-size:14px;
+  font-size:0.875rem;
   font-weight:800;
   margin-bottom:3px;
 }
 
 .settings-card-subtitle{
-  font-size:11px;
+  font-size:0.6875rem;
   opacity:.65;
   margin-bottom:10px;
 }
@@ -77,7 +77,7 @@
   border:1px solid rgba(255,255,255,0.12);
   border-radius:12px;
   padding:10px 0;
-  font-size:13px;
+  font-size:0.8125rem;
   font-weight:800;
 }
 
@@ -93,7 +93,7 @@
 
 .settings-status-line{
   margin-top:10px;
-  font-size:11px;
+  font-size:0.6875rem;
   color:#cbd5e1;
   font-weight:700;
 }
@@ -110,7 +110,7 @@
   justify-content:space-between;
   align-items:center;
   margin-bottom:6px;
-  font-size:11px;
+  font-size:0.6875rem;
   opacity:.85;
 }
 
@@ -132,13 +132,13 @@
 }
 
 .settings-mode-title{
-  font-size:13px;
+  font-size:0.8125rem;
   font-weight:800;
   margin-bottom:2px;
 }
 
 .settings-mode-subtitle{
-  font-size:11px;
+  font-size:0.6875rem;
   opacity:.65;
   line-height:1.4;
 }
@@ -149,7 +149,7 @@
   border:1px solid rgba(255,255,255,0.12);
   border-radius:12px;
   padding:10px 0;
-  font-size:13px;
+  font-size:0.8125rem;
   font-weight:800;
 }
 
@@ -164,7 +164,7 @@
 }
 
 .settings-storage-lines{
-  font-size:10px;
+  font-size:0.625rem;
   line-height:1.8;
   opacity:.72;
 }

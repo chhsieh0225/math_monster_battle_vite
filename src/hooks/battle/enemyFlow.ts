@@ -781,7 +781,7 @@ export function runEnemyTurn({
 
   doEnemyTurnInner();
   } catch (err) {
-    console.error('[enemyFlow] runEnemyTurn crashed:', err);
+    if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) console.error('[enemyFlow] runEnemyTurn crashed:', err);
     try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch { /* last resort */ }
   }
 }

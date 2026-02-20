@@ -32,7 +32,7 @@ export default function SteelEffect({
     const n = 1 + Math.floor(fxLvl / 2);
     const size = 24 + fxLvl * 2;
     return (
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 80 }}>
+      <div className="move-fx-overlay">
         {Array.from({ length: n }, (_, i) => (
           <svg
             key={i}
@@ -87,7 +87,7 @@ export default function SteelEffect({
   if (idx === 1) {
     const arcN = 3 + Math.floor(fxLvl / 2);
     return (
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 80 }}>
+      <div className="move-fx-overlay">
         {Array.from({ length: arcN }, (_, i) => (
           <svg
             key={i}
@@ -128,7 +128,7 @@ export default function SteelEffect({
   if (idx === 2) {
     const rayN = 10 + Math.floor(fxLvl * 1.4);
     return (
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 80 }}>
+      <div className="move-fx-overlay">
         <svg
           width="170"
           height="170"
@@ -200,7 +200,7 @@ export default function SteelEffect({
   const shardN = Math.min(18, 8 + fxLvl * 2);
   const coreId = `steelUltCore-${uid}`;
   return (
-    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 80 }}>
+    <div className="move-fx-overlay">
       <svg
         width="40"
         height="40"

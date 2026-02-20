@@ -43,9 +43,9 @@ export default function AchievementScreen({ unlockedIds = [], onBack }: Achievem
               <div key={a.id} className={cardClass}>
                 <div className="achievement-card-head">
                   <span className="achievement-card-icon">{ok ? a.icon : "🔒"}</span>
-                  <span className="achievement-card-name">{a.name}</span>
+                  <span className="achievement-card-name">{t(`ach.${a.id}.name`, a.name)}</span>
                 </div>
-                <div className="achievement-card-desc">{a.desc}</div>
+                <div className="achievement-card-desc">{t(`ach.${a.id}.desc`, a.desc)}</div>
               </div>
             );
           })}

@@ -32,7 +32,7 @@ export default function ElecEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
     const n = 1 + Math.floor(lvl / 2);
     const sc = 0.8 + lvl * 0.1;
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, animation:"lightningFlash 0.8s ease" }}>
+      <div className="move-fx-overlay" style={{ animation:"lightningFlash 0.8s ease" }}>
         {Array.from({ length: n }, (_, i) => (
           <svg key={i} width="60" height="80" viewBox="0 0 80 70"
             style={{
@@ -72,7 +72,7 @@ export default function ElecEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
     const sc = 0.85 + lvl * 0.08;
     const bolts = [BOLT_A, BOLT_B, BOLT_C];
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, animation:"lightningFlash 0.8s ease" }}>
+      <div className="move-fx-overlay" style={{ animation:"lightningFlash 0.8s ease" }}>
         {/* Main bolts */}
         {Array.from({ length: n }, (_, i) => (
           <svg key={i} width="60" height="80" viewBox="0 0 80 70"
@@ -126,7 +126,7 @@ export default function ElecEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
     const bolts = [BOLT_A, BOLT_B, BOLT_C];
     const arcN = 1 + Math.floor(lvl / 2);
     return (
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80, animation:"lightningFlash 0.8s ease" }}>
+      <div className="move-fx-overlay" style={{ animation:"lightningFlash 0.8s ease" }}>
         {/* Main bolts from above enemy */}
         {Array.from({ length: n }, (_, i) => (
           <svg key={i} width="65" height="85" viewBox="0 0 80 70"
@@ -210,7 +210,7 @@ export default function ElecEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
   const coreSeed = Math.max(1, Math.floor(rr("ult-core-seed", 0, 2, 90)));
 
   return (
-    <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:80 }}>
+    <div className="move-fx-overlay">
       {/* Phase 1: Dark thunder cage forms around target */}
       <svg width="190" height="190" viewBox="0 0 190 190"
         style={{

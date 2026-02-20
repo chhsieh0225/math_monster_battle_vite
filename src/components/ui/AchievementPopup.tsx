@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useI18n } from '../../i18n';
 
 type AchievementPopupItem = {
+  id?: string;
   icon: string;
   name: string;
   desc: string;
@@ -22,9 +23,11 @@ export default function AchievementPopup({ achievement, onDone }: AchievementPop
   }, [onDone]);
 
   if (!achievement) return null;
+  const achName = achievement.id ? t(`ach.${achievement.id}.name`, achievement.name) : achievement.name;
+  const achDesc = achievement.id ? t(`ach.${achievement.id}.desc`, achievement.desc) : achievement.desc;
   const liveLabel = t("achievement.popup.announce", "Achievement unlocked: {name}. {desc}", {
-    name: achievement.name,
-    desc: achievement.desc,
+    name: achName,
+    desc: achDesc,
   });
   return (
     <div style={{
@@ -46,8 +49,8 @@ export default function AchievementPopup({ achievement, onDone }: AchievementPop
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <span style={{fontSize:28}}>{achievement.icon}</span>
         <div>
-          <div style={{fontSize:14,fontWeight:800}}>{achievement.name}</div>
-          <div style={{fontSize:11,opacity:0.75,marginTop:2}}>{achievement.desc}</div>
+          <div style={{fontSize:14,fontWeight:800}}>{achName}</div>
+          <div style={{fontSize:11,opacity:0.75,marginTop:2}}>{achDesc}</div>
         </div>
       </div>
     </div>

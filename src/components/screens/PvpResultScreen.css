@@ -80,7 +80,7 @@
 }
 
 .pvp-result-title {
-  font-size: 16px;
+  font-size: 1.0rem;
   font-weight: 800;
   opacity: 0.9;
   margin-bottom: 6px;
@@ -88,7 +88,7 @@
 }
 
 .pvp-result-winner-name {
-  font-size: 30px;
+  font-size: 1.875rem;
   font-weight: 900;
   letter-spacing: 2px;
   margin-bottom: 8px;
@@ -113,7 +113,7 @@
 }
 
 .pvp-result-loser-label {
-  font-size: 11px;
+  font-size: 0.6875rem;
   opacity: 0.65;
   margin-bottom: 2px;
 }
@@ -126,17 +126,17 @@
 }
 
 .pvp-result-loser-name {
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .pvp-result-line {
-  font-size: 15px;
+  font-size: 0.9375rem;
   opacity: 0.95;
   z-index: 6;
 }
 
 .pvp-result-subline {
-  font-size: 11px;
+  font-size: 0.6875rem;
   opacity: 0.45;
   z-index: 6;
 }
@@ -152,7 +152,7 @@
   background: linear-gradient(135deg, var(--winner-c1), var(--winner-c2));
   border: none;
   color: white;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   padding: 12px 24px;
   border-radius: 14px;
@@ -163,7 +163,7 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: white;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   padding: 12px 20px;
   border-radius: 14px;

@@ -25,11 +25,11 @@
   border-radius:10px;
   flex-shrink:0;
 }
-.dash-header-title{font-size:18px;font-weight:800;letter-spacing:1px}
+.dash-header-title{font-size:1.125rem;font-weight:800;letter-spacing:1px}
 
-.dash-pin-icon{font-size:48px;margin-bottom:12px}
-.dash-pin-title{font-size:18px;font-weight:800;margin-bottom:4px}
-.dash-pin-subtitle{font-size:12px;opacity:.5;margin-bottom:20px}
+.dash-pin-icon{font-size:clamp(2.34rem, 3.0rem, 3.24rem);margin-bottom:12px}
+.dash-pin-title{font-size:1.125rem;font-weight:800;margin-bottom:4px}
+.dash-pin-subtitle{font-size:0.75rem;opacity:.5;margin-bottom:20px}
 .dash-pin-row{
   display:flex;
   gap:8px;
@@ -49,19 +49,19 @@
 }
 .dash-pin-input{
   width:120px;
-  font-size:24px;
+  font-size:1.5rem;
   padding:8px 12px;
   letter-spacing:8px;
 }
 .dash-settings-pin-input{
   width:100px;
-  font-size:16px;
+  font-size:1.0rem;
   padding:8px 12px;
   letter-spacing:4px;
 }
 .dash-pin-input.is-error{border:2px solid #ef4444}
-.dash-pin-error{color:#ef4444;font-size:12px;margin-bottom:8px}
-.dash-pin-msg{font-size:12px;margin-bottom:12px}
+.dash-pin-error{color:#ef4444;font-size:0.75rem;margin-bottom:8px}
+.dash-pin-msg{font-size:0.75rem;margin-bottom:12px}
 .dash-pin-msg.is-success{color:#22c55e}
 .dash-pin-msg.is-error{color:#ef4444}
 
@@ -73,14 +73,14 @@
 .dash-btn-primary{
   border:none;
   color:#fff;
-  font-size:14px;
+  font-size:0.875rem;
   padding:10px 20px;
   background:linear-gradient(135deg,#6366f1,#a855f7);
 }
 .dash-btn-ghost{
   border:1px solid rgba(255,255,255,.12);
   color:#fff;
-  font-size:13px;
+  font-size:0.8125rem;
   padding:8px 18px;
   background:rgba(255,255,255,.08);
 }
@@ -96,7 +96,7 @@
 .dash-tab-btn{
   flex:1;
   border-radius:10px;
-  font-size:12px;
+  font-size:0.75rem;
   font-weight:700;
   padding:8px 0;
   color:#fff;
@@ -121,17 +121,17 @@
   padding:12px 8px;
   text-align:center;
 }
-.dash-card-value{font-size:24px;font-weight:900}
-.dash-card-label{font-size:11px;opacity:.5;margin-top:2px}
+.dash-card-value{font-size:1.5rem;font-weight:900}
+.dash-card-label{font-size:0.6875rem;opacity:.5;margin-top:2px}
 .dash-section-title{
   width:100%;
   text-align:left;
-  font-size:13px;
+  font-size:0.8125rem;
   font-weight:700;
   opacity:.6;
   margin-bottom:8px;
 }
-.dash-empty{margin-top:40px;text-align:center;opacity:.4;font-size:13px}
+.dash-empty{margin-top:40px;text-align:center;opacity:.4;font-size:0.8125rem}
 
 .dash-flex-cards{display:flex;gap:6px;margin-bottom:14px}
 .dash-op-card,
@@ -144,13 +144,13 @@
 }
 .dash-op-card{border:1px solid rgba(255,255,255,.08)}
 .dash-op-card.is-weak{border-color:#ef4444}
-.dash-op-icon{font-size:20px;margin-bottom:4px}
-.dash-op-name{font-size:11px;opacity:.5;margin-bottom:2px}
-.dash-op-acc{font-size:18px;font-weight:900}
-.dash-op-count{font-size:10px;opacity:.4}
-.dash-op-weak{font-size:10px;color:#ef4444;font-weight:700;margin-top:2px}
-.dash-time-card-icon{font-size:14px}
-.dash-time-card-value{font-size:16px;font-weight:800;color:#38bdf8}
+.dash-op-icon{font-size:1.25rem;margin-bottom:4px}
+.dash-op-name{font-size:0.6875rem;opacity:.5;margin-bottom:2px}
+.dash-op-acc{font-size:1.125rem;font-weight:900}
+.dash-op-count{font-size:0.625rem;opacity:.4}
+.dash-op-weak{font-size:0.625rem;color:#ef4444;font-weight:700;margin-top:2px}
+.dash-time-card-icon{font-size:0.875rem}
+.dash-time-card-value{font-size:1.0rem;font-weight:800;color:#38bdf8}
 
 .dash-stack-list{display:grid;gap:8px;margin-bottom:14px}
 .dash-text-panel,
@@ -161,13 +161,13 @@
   padding:10px 12px;
   text-align:left;
 }
-.dash-text-panel-title{font-size:13px;font-weight:800;margin-bottom:4px}
-.dash-text-panel-summary{font-size:11px;opacity:.65;margin-bottom:6px}
-.dash-text-panel-action{font-size:11px;color:#c4b5fd}
-.dash-task-index{font-size:11px;opacity:.45;margin-bottom:2px}
-.dash-task-goal{font-size:11px;color:#93c5fd;margin-bottom:8px}
+.dash-text-panel-title{font-size:0.8125rem;font-weight:800;margin-bottom:4px}
+.dash-text-panel-summary{font-size:0.6875rem;opacity:.65;margin-bottom:6px}
+.dash-text-panel-action{font-size:0.6875rem;color:#c4b5fd}
+.dash-task-index{font-size:0.6875rem;opacity:.45;margin-bottom:2px}
+.dash-task-goal{font-size:0.6875rem;color:#93c5fd;margin-bottom:8px}
 .dash-op-pill{
-  font-size:10px;
+  font-size:0.625rem;
   padding:2px 6px;
   border-radius:999px;
   background:rgba(255,255,255,.08);
@@ -175,8 +175,8 @@
 }
 
 .dash-report-panel{padding:12px;margin-bottom:14px}
-.dash-report-range{font-size:11px;opacity:.45;margin-bottom:6px}
-.dash-report-headline{font-size:12px;font-weight:700;margin-bottom:10px}
+.dash-report-range{font-size:0.6875rem;opacity:.45;margin-bottom:6px}
+.dash-report-headline{font-size:0.75rem;font-weight:700;margin-bottom:10px}
 .dash-report-mini-grid{margin-bottom:10px}
 
 .dash-mini-card{
@@ -186,12 +186,12 @@
   padding:8px 6px;
   text-align:center;
 }
-.dash-mini-card-value{font-size:16px;font-weight:800}
-.dash-mini-card-label{font-size:10px;opacity:.45}
+.dash-mini-card-value{font-size:1.0rem;font-weight:800}
+.dash-mini-card-label{font-size:0.625rem;opacity:.45}
 
 .dash-pill-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .dash-pill{
-  font-size:10px;
+  font-size:0.625rem;
   padding:4px 8px;
   border-radius:999px;
   border:1px solid rgba(255,255,255,.14);
@@ -201,7 +201,7 @@
 .dash-pill.is-down{background:rgba(239,68,68,.25)}
 .dash-pill-tag{background:rgba(148,163,184,.2)}
 
-.dash-history-total{font-size:11px;opacity:.4;margin-bottom:8px}
+.dash-history-total{font-size:0.6875rem;opacity:.4;margin-bottom:8px}
 .dash-history-item{
   background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.08);
@@ -216,19 +216,19 @@
   gap:8px;
   margin-bottom:4px;
 }
-.dash-history-headline{font-size:12px;font-weight:700}
-.dash-history-time{font-size:10px;opacity:.4;white-space:nowrap}
-.dash-history-stats{display:flex;gap:12px;font-size:11px;flex-wrap:wrap}
+.dash-history-headline{font-size:0.75rem;font-weight:700}
+.dash-history-time{font-size:0.625rem;opacity:.4;white-space:nowrap}
+.dash-history-stats{display:flex;gap:12px;font-size:0.6875rem;flex-wrap:wrap}
 .dash-history-op-row{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .dash-history-op-pill{
-  font-size:10px;
+  font-size:0.625rem;
   background:rgba(255,255,255,.05);
   padding:2px 6px;
   border-radius:6px;
 }
 .dash-streak{color:#f97316}
 
-.dash-note-list{margin-top:20px;font-size:10px;opacity:.3;line-height:1.8}
+.dash-note-list{margin-top:20px;font-size:0.625rem;opacity:.3;line-height:1.8}
 .dash-settings-row{display:flex;gap:8px;margin-bottom:6px}
 
 .dash-chart{
@@ -240,9 +240,9 @@
   padding:0 4px;
 }
 .dash-chart-col{flex:1;display:flex;flex-direction:column;align-items:center}
-.dash-chart-value{font-size:9px;font-weight:700;margin-bottom:2px}
+.dash-chart-value{font-size:0.5625rem;font-weight:700;margin-bottom:2px}
 .dash-chart-bar{width:100%;border-radius:4px;transition:height .3s}
-.dash-chart-label{font-size:8px;opacity:.3;margin-top:2px}
+.dash-chart-label{font-size:0.5625rem;opacity:.3;margin-top:2px}
 
 .dash-tone-good{color:#22c55e}
 .dash-tone-mid{color:#f59e0b}

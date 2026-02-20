@@ -30,7 +30,7 @@ export default function IceEffect({
   if (idx === 0) {
     const shardCount = 2 + Math.floor(fxLvl / 2);
     return (
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 80 }}>
+      <div className="move-fx-overlay">
         {Array.from({ length: shardCount }, (_unused, i) => (
           <svg
             key={`ice-bolt-${i}`}
@@ -68,7 +68,7 @@ export default function IceEffect({
     const ringCount = 2 + Math.floor(fxLvl / 3);
     const flakeCount = 6 + fxLvl;
     return (
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 80 }}>
+      <div className="move-fx-overlay">
         {Array.from({ length: ringCount }, (_unused, i) => (
           <svg
             key={`ice-ring-${i}`}
@@ -121,7 +121,7 @@ export default function IceEffect({
   if (idx === 2) {
     const slashCount = 3 + Math.floor(fxLvl / 2);
     return (
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 80 }}>
+      <div className="move-fx-overlay">
         {Array.from({ length: slashCount }, (_unused, i) => (
           <svg
             key={`ice-slash-${i}`}

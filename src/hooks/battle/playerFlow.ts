@@ -760,7 +760,7 @@ export function runPlayerAnswer({
     }
   }, 2500);
   } catch (err) {
-    console.error('[playerFlow] runPlayerAnswer crashed:', err);
+    if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) console.error('[playerFlow] runPlayerAnswer crashed:', err);
     try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch { /* last resort */ }
   }
 }

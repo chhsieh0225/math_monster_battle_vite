@@ -33,6 +33,10 @@ export type BattleLayoutConfig = {
   subPlayerSize: number;
   enemySize: number;
   enemyTopPct: number;
+  /** Sprite-profile height compensation applied to the player (1 = standard). */
+  playerComp: number;
+  /** Sprite-profile height compensation applied to the enemy (1 = standard). */
+  enemyComp: number;
 };
 
 function normalizeEnemyVisualId(enemyId?: string | null): string {
@@ -158,5 +162,7 @@ export function resolveBattleLayout({
     subPlayerSize,
     enemySize,
     enemyTopPct,
+    playerComp,
+    enemyComp,
   };
 }

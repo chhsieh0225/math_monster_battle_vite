@@ -251,6 +251,8 @@ function BattleScreenComponent({
         subPlayerSize: rawSubSize,
         enemySize,
         enemyTopPct,
+        playerComp,
+        enemyComp,
       },
     } = coreStatic;
 
@@ -278,6 +280,11 @@ function BattleScreenComponent({
             ? 120
             : 96;
 
+    // Shadow offset & width should reflect the *visual* creature footprint,
+    // not the inflated SVG element size. Dividing by compensation recovers
+    // the base size that matches the visible body area.
+    const pVisual = mainPlayerSize / (playerComp || 1);
+    const eVisual = enemySize / (enemyComp || 1);
     const enemyHeight = enemySize * 100 / 120;
     return {
       enemySubSize,
@@ -293,9 +300,9 @@ function BattleScreenComponent({
         "--enemy-sub-anim": memoSpriteAnims.enemySub,
       } as BattleCssVars,
       enemyMainShadowStyle: {
-        "--enemy-shadow-right": `calc(${enemyMainRightPct}% + ${Math.round(enemySize * 0.18)}px)`,
+        "--enemy-shadow-right": `calc(${enemyMainRightPct}% + ${Math.round(eVisual * 0.18)}px)`,
         "--enemy-shadow-top": `calc(${enemyTopPct}% + ${Math.round(enemyHeight * 0.72)}px)`,
-        "--enemy-shadow-width": `${Math.round(enemySize * 0.56)}px`,
+        "--enemy-shadow-width": `${Math.round(eVisual * 0.56)}px`,
         "--enemy-shadow-anim": memoSpriteAnims.enemyShadow,
       } as BattleCssVars,
       playerMainSpriteStyle: {
@@ -315,9 +322,9 @@ function BattleScreenComponent({
         "--player-sub-anim": memoSpriteAnims.playerSub,
       } as BattleCssVars,
       playerMainShadowStyle: {
-        "--player-shadow-left": `calc(${playerMainLeftPct}% + ${Math.round(mainPlayerSize * 0.48)}px)`,
+        "--player-shadow-left": `calc(${playerMainLeftPct}% + ${Math.round(pVisual * 0.48)}px)`,
         "--player-shadow-bottom": `${Math.max(8, playerMainBottomPct - 1)}%`,
-        "--player-shadow-width": `${Math.round(mainPlayerSize * 0.5)}px`,
+        "--player-shadow-width": `${Math.round(pVisual * 0.5)}px`,
       } as BattleCssVars,
     };
   }, [coreStatic, memoSpriteAnims, S.enemySub?.id, S.enemySub?.isEvolved]);

@@ -70,7 +70,7 @@ export function resolveBattleLayout({
   const enemyInfoRight = dualUnits ? "44%" : "42%";
   const playerInfoLeft = dualUnits ? "44%" : "42%";
   const baseEnemyMainRightPct = dualUnits ? (compactDual ? 5 : 8) : 10;
-  const enemySubRightPct = dualUnits ? (compactDual ? 25 : 24) : 24;
+  const enemySubRightPct = dualUnits ? (compactDual ? 16 : 20) : 24;
   const enemySubTopPct = dualUnits ? (compactDual ? 27 : 23) : 14;
   const normalizedPlayerId = normalizeEnemyVisualId(playerStarterId);
   // Beast starters (wolf/tiger/lion) have wide sprites (677×369, comp≈1.7)
@@ -150,13 +150,22 @@ export function resolveBattleLayout({
   const isHydra = visualEnemyId === "boss_hydra";
   // Mobile compact viewport: bosses should sit farther from player-side to avoid
   // crowding, with a tiny extra retreat for Crazy Dragon's wide silhouette.
+  const compactNonBossRightAdjust = compactDual && !isBoss ? -2 : 0;
   const compactBossRightAdjust = compactUI && isBoss
     ? (dualUnits ? -2 : -3)
     : 0;
+  const compactGhostLanternRightAdjust = compactDual && isGhostLantern ? -1 : 0;
   const crazyDragonExtraRightAdjust = compactUI && isCrazyDragon
     ? (dualUnits ? -0.5 : -0.5)
     : 0;
-  const enemyMainRightPct = Math.max(2, baseEnemyMainRightPct + compactBossRightAdjust + crazyDragonExtraRightAdjust);
+  const enemyMainRightPct = Math.max(
+    2,
+    baseEnemyMainRightPct
+      + compactNonBossRightAdjust
+      + compactBossRightAdjust
+      + compactGhostLanternRightAdjust
+      + crazyDragonExtraRightAdjust,
+  );
   const enemyBaseSize = isSwordGod ? 270
     : isCrazyDragon ? 280
     : isHydra ? 260
@@ -170,13 +179,20 @@ export function resolveBattleLayout({
   const compactBossScale = compactUI && isBoss
     ? (isHydra ? 0.76 : isCrazyDragon ? 0.8 : isSwordGod ? 0.84 : 0.86)
     : 1;
-  const enemyScale = (dualUnits ? (compactDual ? 0.92 : 0.98) : 1) * compactBossScale;
+  const compactGhostLanternScale = compactDual && isGhostLantern ? 0.78 : 1;
+  // Automatic height compensation from sprite profile (replaces hardcoded ×1.5).
+  const enemyComp = enemySpriteKey ? getCompensation(enemySpriteKey) : 1;
+  const coopWideEnemyScale = dualUnits && !isBoss && enemyComp > 1.35
+    ? (compactDual ? 0.82 : 0.9)
+    : 1;
+  const enemyScale = (dualUnits ? (compactDual ? 0.92 : 0.98) : 1)
+    * compactBossScale
+    * compactGhostLanternScale
+    * coopWideEnemyScale;
   const hydraCoopBoost = isHydra && dualUnits ? (compactDual ? 1.08 : 1.1) : 1;
   const pvpCrazyDragonEnemyBoost = battleMode === "pvp" && isCrazyDragon
     ? (compactUI ? 1 : 1.1)
     : 1;
-  // Automatic height compensation from sprite profile (replaces hardcoded ×1.5).
-  const enemyComp = enemySpriteKey ? getCompensation(enemySpriteKey) : 1;
   const enemySize = Math.round(enemyBaseSize * enemyScale * hydraCoopBoost * enemyComp * pvpCrazyDragonEnemyBoost);
 
   const enemyBaseTopPct = (enemySceneType === "ghost" || isBoss) ? 12

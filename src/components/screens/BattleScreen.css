@@ -525,7 +525,7 @@
   position:absolute;
   left:var(--player-main-left,6%);
   bottom:var(--player-main-bottom,14%);
-  transform:scaleX(-1) scale(calc(var(--battle-player-main-scale,1) * var(--battle-device-scale,1))) rotate(-2.5deg);
+  transform:scaleX(-1) scale(calc(var(--battle-player-main-scale,1) * var(--battle-player-main-dim-scale,1) * var(--battle-device-scale,1))) rotate(-2.5deg);
   transform-origin:center bottom;
   z-index:var(--player-main-z,6);
   opacity:var(--player-main-opacity,1);
@@ -537,7 +537,7 @@
   position:absolute;
   left:var(--player-sub-left,23%);
   bottom:var(--player-sub-bottom,15%);
-  transform:scaleX(-1) scale(calc(var(--battle-player-sub-scale,1) * var(--battle-device-scale,1))) rotate(-2deg);
+  transform:scaleX(-1) scale(calc(var(--battle-player-sub-scale,1) * var(--battle-player-sub-dim-scale,1) * var(--battle-device-scale,1))) rotate(-2deg);
   transform-origin:center bottom;
   z-index:var(--player-sub-z,4);
   opacity:var(--player-sub-opacity,.84);

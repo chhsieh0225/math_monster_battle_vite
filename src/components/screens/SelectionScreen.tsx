@@ -433,7 +433,9 @@ export default function SelectionScreen({
                   >
                     <MonsterSprite
                       svgStr={selectedStage.svgFn(starter.c1, starter.c2)}
-                      size={selected ? 72 : 56}
+                      size={(['wolf', 'tiger', 'lion'].includes(starter.race))
+                        ? (selected ? 92 : 72)
+                        : (selected ? 72 : 56)}
                       ariaLabel={locked
                         ? t('selection.a11y.lockedStarter', 'Locked boss. Defeat it in other modes first.')
                         : t('selection.a11y.starterSprite', '{name} sprite', { name: starter.name })}

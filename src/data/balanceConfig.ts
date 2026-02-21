@@ -61,11 +61,9 @@ export const BALANCE_CONFIG = {
       single: [
         { monsterId: 'slime' },
         { monsterId: 'fire' },
-        { monsterId: 'slime' },
         { monsterId: 'ghost' },
         { monsterId: 'candy_knight', sceneType: 'candy' },
         { monsterId: 'slime' },
-        { monsterId: 'fire' },
         { monsterId: 'candy_monster', sceneType: 'candy' },
         { monsterId: 'dragon' },
         { monsterId: 'ghost' },
@@ -77,7 +75,7 @@ export const BALANCE_CONFIG = {
         { monsterId: 'slime', slimeType: 'water', sceneType: 'water' },
 
         { monsterId: 'fire', sceneType: 'fire' },
-        { monsterId: 'ghost', sceneType: 'fire' },
+        { monsterId: 'ghost', sceneType: 'ghost' },
 
         { monsterId: 'slime', slimeType: 'electric', sceneType: 'electric' },
         { monsterId: 'fire', sceneType: 'fire' },
@@ -89,7 +87,7 @@ export const BALANCE_CONFIG = {
         { monsterId: 'candy_monster', sceneType: 'candy' },
 
         { monsterId: 'slime', slimeType: 'dark', sceneType: 'dark' },
-        { monsterId: 'fire', sceneType: 'dark' },
+        { monsterId: 'fire', sceneType: 'fire' },
 
         { monsterId: 'boss', sceneType: 'dark' },
         { monsterId: 'boss', sceneType: 'dark' },
@@ -111,19 +109,19 @@ export const BALANCE_CONFIG = {
         },
         {
           left: { monsterId: 'dragon', sceneType: 'steel' },
-          right: { monsterId: 'fire', sceneType: 'dark' },
+          right: { monsterId: 'fire', sceneType: 'fire' },
         },
         {
           left: { monsterId: 'slime', slimeType: 'electric', sceneType: 'electric' },
           right: { monsterId: 'golumn', sceneType: 'rock' },
         },
         {
-          left: { monsterId: 'dragon', sceneType: 'dark' },
+          left: { monsterId: 'dragon', sceneType: 'steel' },
           right: { monsterId: 'ghost', sceneType: 'ghost' },
         },
         {
           left: { monsterId: 'fire', sceneType: 'fire' },
-          right: { monsterId: 'dragon', sceneType: 'dark' },
+          right: { monsterId: 'dragon', sceneType: 'steel' },
         },
         {
           left: { monsterId: 'golumn', sceneType: 'rock' },
@@ -131,7 +129,7 @@ export const BALANCE_CONFIG = {
         },
         {
           left: { monsterId: 'candy_monster', sceneType: 'candy' },
-          right: { monsterId: 'fire', sceneType: 'dark' },
+          right: { monsterId: 'fire', sceneType: 'fire' },
         },
         {
           left: { monsterId: 'boss', sceneType: 'dark' },
@@ -149,6 +147,19 @@ export const BALANCE_CONFIG = {
         healing_spring: { hp: 0.9, atk: 0.92 },
         focus_surge: { hp: 0.95, atk: 0.95 },
         hazard_ambush: { hp: 1.1, atk: 1.08 },
+      },
+      enableRandomSwap: false,
+      enableStarterEncounters: true,
+      /**
+       * Timed-mode (計時模式) preset overrides.
+       * branchChoices are auto-derived from `waves.single` (left === right, no real branching).
+       * Elite / event rounds are disabled for a streamlined experience.
+       */
+      timed: {
+        eliteRounds: [] as number[],
+        eventRounds: [] as number[],
+        enableRandomSwap: true,
+        enableStarterEncounters: false,
       },
     },
     randomSwap: {

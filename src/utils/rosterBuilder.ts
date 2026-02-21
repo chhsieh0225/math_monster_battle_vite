@@ -181,18 +181,56 @@ function pickSlimeVariant({
   return pick(typedPool.length > 0 ? typedPool : pool);
 }
 
+/**
+ * Maps visual scene names to the MonsterType (mType) they correspond to.
+ * Used to filter random encounter variants so the spawned monster always
+ * matches the scene's intended element.
+ */
+const SCENE_MTYPE_MAP: Readonly<Record<string, string>> = {
+  grass: 'grass',
+  fire: 'fire',
+  water: 'water',
+  electric: 'electric',
+  ghost: 'ghost',
+  dark: 'dark',
+  steel: 'steel',
+  rock: 'rock',
+  candy: 'dream',
+  poison: 'poison',
+  burnt_warplace: 'fire',
+  heaven: 'light',
+};
+
 function getVariantPool(baseId: string): readonly string[] | null {
   return RANDOM_ENCOUNTER_VARIANTS_BY_BASE_ID[baseId] || null;
 }
 
-function resolveVariantMonsterId(baseId: string, pickIndex: PickIndex): string {
+/**
+ * When a wave specifies an explicit sceneType, only variants whose mType
+ * matches the scene's expected element are eligible.  This guarantees
+ * "monsters are bound to their type" — e.g. ghost scene → only ghost-type
+ * variants, never poison-type mushroom.
+ */
+function resolveVariantMonsterId(
+  baseId: string,
+  pickIndex: PickIndex,
+  requiredMType?: string,
+): string {
   const pool = getVariantPool(baseId);
   if (!pool || pool.length === 0) return baseId;
-  const rawIdx = Number(pickIndex(pool.length));
+  // Filter by requiredMType when the wave has an explicit scene constraint.
+  const candidates = requiredMType
+    ? pool.filter((id) => {
+      const m = MONSTER_BY_ID.get(id);
+      return m && m.mType === requiredMType;
+    })
+    : pool;
+  const effectivePool = candidates.length > 0 ? candidates : pool;
+  const rawIdx = Number(pickIndex(effectivePool.length));
   const idx = Number.isFinite(rawIdx)
-    ? Math.min(pool.length - 1, Math.max(0, Math.trunc(rawIdx)))
+    ? Math.min(effectivePool.length - 1, Math.max(0, Math.trunc(rawIdx)))
     : 0;
-  const picked = pool[idx];
+  const picked = effectivePool[idx];
   return typeof picked === 'string' ? picked : baseId;
 }
 
@@ -296,7 +334,9 @@ export function buildRoster(
     const bossOrBaseId = BOSS_IDS.has(wave.monsterId)
       ? BOSS_ID_LIST[pickIndex(BOSS_ID_LIST.length)]
       : wave.monsterId;
-    const resolvedId = resolveVariantMonsterId(bossOrBaseId, pickIndex);
+    // When the wave has an explicit sceneType, constrain variants to matching mType.
+    const sceneRequiredMType = wave.sceneType ? SCENE_MTYPE_MAP[wave.sceneType] : undefined;
+    const resolvedId = resolveVariantMonsterId(bossOrBaseId, pickIndex, sceneRequiredMType);
     const b = MONSTER_BY_ID.get(resolvedId);
     if (!b) throw new Error(`[rosterBuilder] unknown monsterId: ${resolvedId}`);
     const sc = STAGE_SCALE_BASE + i * STAGE_SCALE_STEP;

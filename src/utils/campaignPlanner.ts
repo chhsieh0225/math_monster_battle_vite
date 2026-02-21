@@ -2,6 +2,7 @@ import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
 import type { StageWave } from '../data/stageConfigs.ts';
 import type { EnemyVm } from '../types/battle';
 
+export type CampaignPreset = 'normal' | 'timed';
 export type CampaignBranch = 'left' | 'right';
 export type CampaignTier = 'normal' | 'elite' | 'boss';
 export type CampaignEventTag = 'healing_spring' | 'focus_surge' | 'hazard_ambush';
@@ -19,6 +20,12 @@ export type CampaignNodePlan = {
 export type CampaignRunPlan = {
   nodes: CampaignNodePlan[];
   pathKey: string;
+  preset: CampaignPreset;
+};
+
+export type CampaignPresetConfig = {
+  enableRandomSwap: boolean;
+  enableStarterEncounters: boolean;
 };
 
 type PickIndex = (length: number) => number;
@@ -66,7 +73,16 @@ function normalizeWave(raw: unknown, fallback: StageWave): StageWave {
   };
 }
 
-function resolveWaveChoices(): CampaignWaveChoice[] {
+function resolveWaveChoices(preset: CampaignPreset): CampaignWaveChoice[] {
+  if (preset === 'timed') {
+    // Timed mode: derive branchChoices from waves.single (left === right → no real branching)
+    const singleWaves = Array.isArray(BALANCE_CONFIG?.stage?.waves?.single)
+      ? BALANCE_CONFIG.stage.waves.single
+      : [];
+    if (singleWaves.length > 0) {
+      return singleWaves.map((wave) => ({ left: wave, right: wave }));
+    }
+  }
   const rawChoices = BALANCE_CONFIG?.stage?.campaign?.branchChoices;
   if (!Array.isArray(rawChoices) || rawChoices.length <= 0) {
     const fallbackSingleWaves = Array.isArray(BALANCE_CONFIG?.stage?.waves?.single)
@@ -77,8 +93,10 @@ function resolveWaveChoices(): CampaignWaveChoice[] {
   return rawChoices as CampaignWaveChoice[];
 }
 
-function resolveEliteRounds(totalNodes: number): Set<number> {
-  const raw = BALANCE_CONFIG?.stage?.campaign?.eliteRounds;
+function resolveEliteRounds(preset: CampaignPreset, totalNodes: number): Set<number> {
+  const raw = preset === 'timed'
+    ? BALANCE_CONFIG?.stage?.campaign?.timed?.eliteRounds
+    : BALANCE_CONFIG?.stage?.campaign?.eliteRounds;
   const result = new Set<number>();
   if (!Array.isArray(raw)) return result;
   for (const item of raw) {
@@ -90,8 +108,10 @@ function resolveEliteRounds(totalNodes: number): Set<number> {
   return result;
 }
 
-function resolveEventRounds(totalNodes: number): Set<number> {
-  const raw = BALANCE_CONFIG?.stage?.campaign?.eventRounds;
+function resolveEventRounds(preset: CampaignPreset, totalNodes: number): Set<number> {
+  const raw = preset === 'timed'
+    ? BALANCE_CONFIG?.stage?.campaign?.timed?.eventRounds
+    : BALANCE_CONFIG?.stage?.campaign?.eventRounds;
   const result = new Set<number>();
   if (!Array.isArray(raw)) return result;
   for (const item of raw) {
@@ -138,11 +158,32 @@ function resolveEventScale(eventTag: CampaignEventTag | null): ScalePair {
   };
 }
 
-export function buildCampaignRunPlan(pickIndex: PickIndex): CampaignRunPlan {
-  const choices = resolveWaveChoices();
+/**
+ * Resolve the per-preset flags that control random swap and starter encounters.
+ * Exported so the roster hook can use the same source of truth.
+ */
+export function resolveCampaignPresetConfig(preset: CampaignPreset): CampaignPresetConfig {
+  const campaign = BALANCE_CONFIG?.stage?.campaign;
+  if (preset === 'timed') {
+    return {
+      enableRandomSwap: Boolean(campaign?.timed?.enableRandomSwap ?? true),
+      enableStarterEncounters: Boolean(campaign?.timed?.enableStarterEncounters ?? false),
+    };
+  }
+  return {
+    enableRandomSwap: Boolean(campaign?.enableRandomSwap ?? false),
+    enableStarterEncounters: Boolean(campaign?.enableStarterEncounters ?? true),
+  };
+}
+
+export function buildCampaignRunPlan(
+  pickIndex: PickIndex,
+  preset: CampaignPreset = 'normal',
+): CampaignRunPlan {
+  const choices = resolveWaveChoices(preset);
   const totalNodes = Math.max(1, choices.length);
-  const eliteRounds = resolveEliteRounds(totalNodes);
-  const eventRounds = resolveEventRounds(totalNodes);
+  const eliteRounds = resolveEliteRounds(preset, totalNodes);
+  const eventRounds = resolveEventRounds(preset, totalNodes);
   const eventPool = resolveEventPool();
 
   const nodes: CampaignNodePlan[] = [];
@@ -178,6 +219,7 @@ export function buildCampaignRunPlan(pickIndex: PickIndex): CampaignRunPlan {
   return {
     nodes: nodes.map((node) => ({ ...node, pathKey })),
     pathKey,
+    preset,
   };
 }
 
@@ -216,4 +258,3 @@ export function applyCampaignPlanToRoster(
     };
   });
 }
-

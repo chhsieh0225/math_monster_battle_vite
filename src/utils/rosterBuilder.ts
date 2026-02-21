@@ -1,4 +1,5 @@
 import { EVOLVED_SLIME_VARIANTS, MONSTERS, SLIME_VARIANTS } from '../data/monsters.ts';
+import { applyEnemyPersonality, rollEnemyPersonality } from '../data/enemyPersonalities.ts';
 import {
   BOSS_IDS,
   BOSS_ID_LIST,
@@ -17,6 +18,7 @@ import {
 } from '../data/stageConfigs.ts';
 import { STARTERS } from '../data/starters.ts';
 import type {
+  EnemyPersonalityId,
   HydratedMonster,
   HydratedSlimeVariant,
   MonsterRace,
@@ -32,6 +34,20 @@ export type BattleRosterMonster = MonsterBase & {
   maxHp: number;
   lvl: number;
   isEvolved: boolean;
+  /** SVG export name of the currently active sprite (for size compensation). */
+  activeSpriteKey: string;
+  selectedStageIdx?: number;
+  personalityId?: EnemyPersonalityId;
+  personalityIcon?: string;
+  personalityName?: string;
+  personalityNameEn?: string;
+  personalityDesc?: string;
+  personalityDescEn?: string;
+  personalityHpScale?: number;
+  personalityAtkScale?: number;
+  personalityCritChanceBonus?: number;
+  personalityCritDamageBonus?: number;
+  personalityIncomingDamageScale?: number;
 };
 
 type PickIndex = (length: number) => number;
@@ -412,7 +428,8 @@ export function buildRoster(
           throw new Error(`[rosterBuilder] starter ${starterMirrorId} missing stage svgFn`);
         }
         previousRace = starter.race;
-        return {
+        const starterActiveSpriteKey = `player${starterMirrorId}${stageIdx}SVG`;
+        const starterEnemy: BattleRosterMonster = {
           id: `wild_starter_${starterMirrorId}`,
           name: stage?.name || starter.name,
           hp: Math.round(baseStats.hp * sc * stageScale),
@@ -421,6 +438,8 @@ export function buildRoster(
           c1: starter.c1,
           c2: starter.c2,
           svgFn: starterSvgFn,
+          spriteKey: starterActiveSpriteKey,
+          activeSpriteKey: starterActiveSpriteKey,
           drops: [...(STARTER_DROPS_BY_ID[starterMirrorId] || ['🍬', '🧪'])],
           race: starter.race,
           mType: starterType,
@@ -431,6 +450,7 @@ export function buildRoster(
           isEvolved: stageIdx > 0,
           selectedStageIdx: stageIdx,
         };
+        return applyEnemyPersonality(starterEnemy, rollEnemyPersonality(pickIndex));
       }
     }
     // When the wave has an explicit sceneType, constrain variants to matching mType.
@@ -471,6 +491,9 @@ export function buildRoster(
     const svgFn = evolvedVariant
       ? evolvedVariant.svgFn
       : (isEvolved && b.evolvedSvgFn ? b.evolvedSvgFn : (variant ? variant.svgFn : b.svgFn));
+    const activeSpriteKey = evolvedVariant
+      ? evolvedVariant.spriteKey
+      : (isEvolved && b.evolvedSpriteKey ? b.evolvedSpriteKey : (variant ? variant.spriteKey : b.spriteKey));
     const resolvedMonsterType = evolvedVariant?.mType || variant?.mType || b.mType;
     const bossSceneType = BOSS_SCENE_BY_ID[resolvedId];
     // Priority: wave-level override > boss scene map > monster type fallback.
@@ -478,7 +501,7 @@ export function buildRoster(
 
     previousRace = activeVariant?.race || b.race;
 
-    return {
+    const baseEnemy: BattleRosterMonster = {
       ...b,
       ...(variant && {
         id: variant.id,
@@ -510,6 +533,7 @@ export function buildRoster(
       }),
       name,
       svgFn,
+      activeSpriteKey,
       sceneMType: resolvedSceneType,
       hp: Math.round(b.hp * sc * hm),
       maxHp: Math.round(b.hp * sc * hm),
@@ -517,5 +541,8 @@ export function buildRoster(
       lvl: i + 1,
       isEvolved,
     };
+
+    if (BOSS_IDS.has(resolvedId)) return baseEnemy;
+    return applyEnemyPersonality(baseEnemy, rollEnemyPersonality(pickIndex));
   });
 }

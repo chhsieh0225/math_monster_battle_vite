@@ -55,6 +55,10 @@ type EnemyLike = {
   trait?: string | null;
   traitName?: string | null;
   traitDesc?: string | null;
+  personalityName?: string | null;
+  personalityNameEn?: string | null;
+  personalityDesc?: string | null;
+  personalityDescEn?: string | null;
 } & LooseObject;
 
 type EncyclopediaEnemyLike = {
@@ -731,6 +735,8 @@ export function localizeEnemy<T>(enemy: T, locale: LocaleCode): T {
       : enemyId
   );
   const fallbackName = (enemyData.name ? MONSTER_NAME_EN_BY_ZH[enemyData.name] : undefined) || enemyData.name;
+  const personalityName = enemyData.personalityNameEn || enemyData.personalityName || null;
+  const personalityDesc = enemyData.personalityDescEn || enemyData.personalityDesc || null;
   return {
     ...enemyData,
     name: MONSTER_NAME_EN[enemyKey] || MONSTER_NAME_EN[enemyId] || fallbackName,
@@ -738,6 +744,8 @@ export function localizeEnemy<T>(enemy: T, locale: LocaleCode): T {
     typeName2: localizeTypeName(enemyData.typeName2 || enemyData.mType2, locale),
     traitName: localizeTraitName(enemyData.trait, enemyData.traitName, locale),
     traitDesc: localizeTraitDesc(enemyData.trait, enemyData.traitDesc, locale),
+    personalityName,
+    personalityDesc,
   } as T;
 }
 

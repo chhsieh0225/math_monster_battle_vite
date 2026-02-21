@@ -22,6 +22,8 @@ type EntityLike = {
   mType?: string;
   mType2?: string;
   trait?: string;
+  personalityCritChanceBonus?: number;
+  personalityCritDamageBonus?: number;
 };
 
 type MoveLike = {
@@ -344,6 +346,8 @@ export function resolveEnemyPrimaryStrike({
     chanceFn: chance,
     chanceFloor: berserkChanceFloor,
     multiplierFloor: berserkMultiplierFloor,
+    chanceBonus: enemy?.personalityCritChanceBonus ?? 0,
+    damageBonus: enemy?.personalityCritDamageBonus ?? 0,
   });
   // For dual-type attackers, use the type with better effectiveness
   const eff1 = getEff(enemy?.mType, starterType);

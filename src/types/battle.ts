@@ -1,6 +1,7 @@
 import type {
   AchievementId,
   EncyclopediaData,
+  EnemyPersonalityId,
   InventoryData,
   ItemId,
   StarterId,
@@ -96,7 +97,24 @@ export type EnemyVm = {
   traitDesc?: string;
   drops?: string[];
   selectedStageIdx?: number;
+  personalityId?: EnemyPersonalityId;
+  personalityIcon?: string;
+  personalityName?: string;
+  personalityNameEn?: string;
+  personalityDesc?: string;
+  personalityDescEn?: string;
+  personalityHpScale?: number;
+  personalityAtkScale?: number;
+  personalityCritChanceBonus?: number;
+  personalityCritDamageBonus?: number;
+  personalityIncomingDamageScale?: number;
   svgFn: (...args: string[]) => string;
+  /** SVG export name of the base sprite (e.g. 'ghostLanternSVG'). */
+  spriteKey?: string;
+  /** SVG export name of the evolved sprite (if applicable). */
+  evolvedSpriteKey?: string;
+  /** SVG export name of the currently active sprite (for size compensation). */
+  activeSpriteKey?: string;
   campaignNodeIndex?: number;
   campaignNodeTotal?: number;
   campaignTier?: 'normal' | 'elite' | 'boss';

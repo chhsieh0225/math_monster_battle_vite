@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
-import { BOSS_ID_LIST } from '../data/monsterConfigs.ts';
+import { BOSS_ID_LIST, BOSS_IDS } from '../data/monsterConfigs.ts';
 import {
   DOUBLE_STAGE_WAVES,
   STAGE_RANDOM_SWAP_CANDIDATES,
@@ -216,4 +216,28 @@ test('buildRoster skips wild starter encounters when all starters are excluded',
   });
   const wildStarters = roster.filter((mon) => String(mon.id || '').startsWith('wild_starter_'));
   assert.equal(wildStarters.length, 0);
+});
+
+test('buildRoster assigns personality affix to non-boss enemies only', () => {
+  const roster = buildRoster(pickFirst, 'single', { disableRandomSwap: true });
+  for (const mon of roster) {
+    if (BOSS_IDS.has(mon.id)) {
+      assert.equal(mon.personalityId == null, true, `boss should not have personality: ${mon.id}`);
+      continue;
+    }
+    assert.equal(typeof mon.personalityId, 'string', `non-boss missing personalityId: ${mon.id}`);
+    assert.equal(typeof mon.personalityName, 'string', `non-boss missing personalityName: ${mon.id}`);
+    assert.equal(typeof mon.personalityIcon, 'string', `non-boss missing personalityIcon: ${mon.id}`);
+    assert.equal(typeof mon.personalityIncomingDamageScale, 'number', `non-boss missing incomingDamageScale: ${mon.id}`);
+  }
+});
+
+test('buildRoster double-mode final double-boss remains personality-free', () => {
+  const roster = buildRoster(pickFirst, 'double');
+  const finalMain = roster[roster.length - 2];
+  const finalSub = roster[roster.length - 1];
+  assert.equal(BOSS_IDS.has(finalMain.id), true);
+  assert.equal(BOSS_IDS.has(finalSub.id), true);
+  assert.equal(finalMain.personalityId == null, true);
+  assert.equal(finalSub.personalityId == null, true);
 });

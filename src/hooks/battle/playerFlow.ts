@@ -45,6 +45,7 @@ type BattleEnemy = {
   trait?: string;
   maxHp: number;
   mType?: string;
+  personalityIncomingDamageScale?: number;
 };
 
 type BattleQuestion = {
@@ -566,6 +567,13 @@ export function runPlayerAnswer({
             setEffMsg({ text: tr(t, 'battle.effect.swordParry', '⚔️ Sword Parry! Damage halved!'), color: '#94a3b8' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
             addD(tr(t, 'battle.tag.parry', '⚔️PARRY'), 155, 30, '#94a3b8');
+          }
+
+          const personalityIncomingScale = typeof s3.enemy.personalityIncomingDamageScale === 'number'
+            ? Math.min(1.35, Math.max(0.75, s3.enemy.personalityIncomingDamageScale))
+            : 1;
+          if (personalityIncomingScale !== 1) {
+            finalDmg = Math.max(1, Math.round(finalDmg * personalityIncomingScale));
           }
 
           const appliedHitDmg = applyBossDamageReduction(finalDmg, s3.enemy.id);

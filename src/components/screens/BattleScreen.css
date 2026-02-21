@@ -875,6 +875,7 @@
 .battle-status-chip.is-static{background:rgba(234,179,8,.85)}
 .battle-status-chip.is-counter{background:rgba(99,102,241,.85)}
 .battle-status-chip.is-counter-soft{background:rgba(99,102,241,.72)}
+.battle-status-chip.is-personality{background:rgba(14,116,144,.86)}
 .battle-status-chip.is-boss{background:rgba(168,85,247,.85)}
 .battle-status-chip.is-charge{background:rgba(251,191,36,.9);color:#000}
 .battle-status-chip.is-curse{background:rgba(168,85,247,.85)}

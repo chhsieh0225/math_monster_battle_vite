@@ -134,6 +134,8 @@ export type EncyclopediaEnemyEntry = {
   hp: number;
   atk: number;
   svgFn: (c1: string, c2: string) => string;
+  /** SVG export name — used for sprite size compensation lookup. */
+  spriteKey: string;
   c1: string;
   c2: string;
   weakAgainst: string[];
@@ -158,6 +160,8 @@ export type EncyclopediaStarterEntry = {
   typeIcon: string;
   typeName: string;
   svgFn: (c1: string, c2: string) => string;
+  /** SVG export name — used for sprite size compensation lookup. */
+  spriteKey: string;
   c1: string;
   c2: string;
   desc?: string;
@@ -179,6 +183,14 @@ export type MonsterType =
   | "dark"
   | "poison"
   | "rock";
+
+export type EnemyPersonalityId =
+  | "irritable"
+  | "timid"
+  | "impatient"
+  | "resilient"
+  | "crafty"
+  | "composed";
 
 /** 種族（species grouping）— 與屬性 (mType) 正交。 */
 export type MonsterRace =
@@ -258,7 +270,7 @@ export type SpriteFn = (c1: string, c2: string) => string;
 
 export type HydratedMonster = Omit<
   MonsterConfig,
-  "spriteKey" | "evolvedSpriteKey" | "dropTable"
+  "dropTable"
 > & {
   svgFn: SpriteFn;
   evolvedSvgFn?: SpriteFn;
@@ -267,7 +279,7 @@ export type HydratedMonster = Omit<
 
 export type HydratedSlimeVariant = Omit<
   SlimeVariantConfig,
-  "spriteKey" | "dropTable"
+  "dropTable"
 > & {
   svgFn: SpriteFn;
   drops: string[];

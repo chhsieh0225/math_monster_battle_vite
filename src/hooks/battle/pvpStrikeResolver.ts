@@ -1,6 +1,7 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { getLevelMaxHp, getStarterLevelMaxHp } from '../../utils/playerHp.ts';
+import { fxt } from './battleFxTargets.ts';
 import { declarePvpWinner, swapPvpTurnToText } from './pvpTurnPrimitives.ts';
 
 type TranslatorParams = Record<string, string | number>;
@@ -189,7 +190,7 @@ export function executePvpStrikeTurn({
     setAtkEffect({ type: vfxType, idx: moveIdx, lvl: 1, targetSide: 'enemy' });
   } else {
     setAtkEffect({ type: vfxType, idx: moveIdx, lvl: 1, targetSide: 'player' });
-    addP('enemy', 84, 186, 3);
+    addP('enemy', fxt().playerMain.x + 24, fxt().playerMain.y + 16, 3);
   }
 
   const hitAnim = PVP_HIT_ANIMS[vfxType] || 'enemyHit 0.45s ease';
@@ -198,10 +199,10 @@ export function executePvpStrikeTurn({
     if (currentTurn === 'p1') setPvpSpecDefP2(false);
     else setPvpSpecDefP1(false);
 
-    const defenderMainX = currentTurn === 'p1' ? 140 : 60;
-    const defenderMainY = currentTurn === 'p1' ? 55 : 170;
-    const attackerMainX = currentTurn === 'p1' ? 60 : 140;
-    const attackerMainY = currentTurn === 'p1' ? 170 : 55;
+    const defenderMainX = currentTurn === 'p1' ? fxt().enemyMain.x : fxt().playerMain.x;
+    const defenderMainY = currentTurn === 'p1' ? fxt().enemyMain.y : fxt().playerMain.y;
+    const attackerMainX = currentTurn === 'p1' ? fxt().playerMain.x : fxt().enemyMain.x;
+    const attackerMainY = currentTurn === 'p1' ? fxt().playerMain.y : fxt().enemyMain.y;
     const finishWithTurnSwap = () => {
       if (!isBattleActive()) return;
       swapPvpTurnToText({
@@ -362,7 +363,7 @@ export function executePvpStrikeTurn({
         bonusDmg += PVP.passive.electricDischargeDamage;
         setPvpStaticP1(0);
         passiveNotes.push(tr(t, 'battle.pvp.note.discharge', '⚡Discharge'));
-        addD(`⚡-${PVP.passive.electricDischargeDamage}`, 140, 55, '#fbbf24');
+        addD(`⚡-${PVP.passive.electricDischargeDamage}`, fxt().enemyMain.x, fxt().enemyMain.y, '#fbbf24');
         sfx.play('staticDischarge');
       } else {
         setPvpStaticP1(stack);
@@ -373,7 +374,7 @@ export function executePvpStrikeTurn({
         bonusDmg += PVP.passive.electricDischargeDamage;
         setPvpStaticP2(0);
         passiveNotes.push(tr(t, 'battle.pvp.note.discharge', '⚡Discharge'));
-        addD(`⚡-${PVP.passive.electricDischargeDamage}`, 60, 170, '#fbbf24');
+        addD(`⚡-${PVP.passive.electricDischargeDamage}`, fxt().playerMain.x, fxt().playerMain.y, '#fbbf24');
         sfx.play('staticDischarge');
       } else {
         setPvpStaticP2(stack);
@@ -400,11 +401,11 @@ export function executePvpStrikeTurn({
     setEHp(nextHp);
     setEAnim(hitAnim);
     defenderHpAfterHit = nextHp;
-    addD(strike.isCrit ? `💥-${mitigatedHitDmg}` : `-${mitigatedHitDmg}`, 140, 55, '#ef4444');
+    addD(strike.isCrit ? `💥-${mitigatedHitDmg}` : `-${mitigatedHitDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#ef4444');
 
     if (strike.heal > 0) {
       setPHp((hp) => Math.min(getLevelMaxHp(s2.pLvl || 1, s2.pStg), hp + strike.heal));
-      addD(`+${strike.heal}`, 52, 164, '#22c55e');
+      addD(`+${strike.heal}`, fxt().playerMain.x - 8, fxt().playerMain.y - 6, '#22c55e');
       passiveNotes.push(tr(t, 'battle.pvp.note.heal', '🌿Heal'));
     }
 
@@ -425,7 +426,7 @@ export function executePvpStrikeTurn({
     setPHp(nextHp);
     setPAnim('playerHit 0.45s ease');
     defenderHpAfterHit = nextHp;
-    addD(strike.isCrit ? `💥-${mitigatedHitDmg}` : `-${mitigatedHitDmg}`, 60, 170, '#ef4444');
+    addD(strike.isCrit ? `💥-${mitigatedHitDmg}` : `-${mitigatedHitDmg}`, fxt().playerMain.x, fxt().playerMain.y, '#ef4444');
 
     if (strike.heal > 0) {
       const healed = Math.min(
@@ -434,7 +435,7 @@ export function executePvpStrikeTurn({
       );
       setPvpHp2(healed);
       setEHp(healed);
-      addD(`+${strike.heal}`, 146, 54, '#22c55e');
+      addD(`+${strike.heal}`, fxt().enemyMain.x - 2, fxt().enemyMain.y - 1, '#22c55e');
       passiveNotes.push(tr(t, 'battle.pvp.note.heal', '🌿Heal'));
     }
 
@@ -462,7 +463,7 @@ export function executePvpStrikeTurn({
       if (currentTurn === 'p1') {
         const attackerNextHp = Math.max(0, s2.pHp - counterDmg);
         setPHp(attackerNextHp);
-        addD(`⚙️-${counterDmg}`, 60, 170, '#94a3b8');
+        addD(`⚙️-${counterDmg}`, fxt().playerMain.x, fxt().playerMain.y, '#94a3b8');
         setPAnim('playerHit 0.45s ease');
         safeToIfBattleActive(() => setPAnim(''), 520);
         if (attackerNextHp <= 0) {
@@ -477,7 +478,7 @@ export function executePvpStrikeTurn({
         const attackerNextHp = Math.max(0, s2.pvpHp2 - counterDmg);
         setPvpHp2(attackerNextHp);
         setEHp(attackerNextHp);
-        addD(`⚙️-${counterDmg}`, 140, 55, '#94a3b8');
+        addD(`⚙️-${counterDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#94a3b8');
         setEAnim('enemyHit 0.45s ease');
         safeToIfBattleActive(() => setEAnim(''), 520);
         if (attackerNextHp <= 0) {

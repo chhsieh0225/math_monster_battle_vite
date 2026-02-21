@@ -5,6 +5,7 @@ import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { calcEnemyDamage } from '../../utils/damageCalc.ts';
 import { computeBossPhase } from '../../utils/turnFlow.ts';
 import { effectOrchestrator } from './effectOrchestrator.ts';
+import { fxt } from './battleFxTargets.ts';
 import { isBattleActiveState, scheduleIfBattleActive, tryReturnToMenu } from './menuResetGuard.ts';
 import {
   resolveBossTurnState,
@@ -217,7 +218,7 @@ export function runEnemyTurn({
       setPAnim('playerHit 0.5s ease');
       safeToIfBattleActive(() => setPAnim(''), 500);
     }
-    addD(label || `-${dmg}`, isSub ? 112 : 60, isSub ? 146 : 170, color);
+    addD(label || `-${dmg}`, isSub ? fxt().playerSub.x : fxt().playerMain.x, isSub ? fxt().playerSub.y : fxt().playerMain.y, color);
     return nextHp;
   };
 
@@ -261,7 +262,7 @@ export function runEnemyTurn({
             color: '#f97316',
           });
           sfx.play('playerHit');
-          addP('enemy', 84, 186, 3);
+          addP('enemy', fxt().playerMain.x + 24, fxt().playerMain.y + 16, 3);
           if (nh <= 0) {
             safeToIfBattleActive(() => {
               sfx.play('ko');
@@ -306,8 +307,8 @@ export function runEnemyTurn({
           setDefAnim(st);
           if (st === 'fire') {
             setBText(tr(t, 'battle.specdef.fire.block', '🛡️ Barrier blocked the attack!'));
-            addD('🛡️BLOCK', 60, 170, '#fbbf24');
-            addP('starter', 50, 170, 6);
+            addD('🛡️BLOCK', fxt().playerMain.x, fxt().playerMain.y, '#fbbf24');
+            addP('starter', fxt().playerMain.x - 10, fxt().playerMain.y, 6);
             safeToIfBattleActive(() => {
               setDefAnim(null);
               tryReturnToBattleMenu();
@@ -319,7 +320,7 @@ export function runEnemyTurn({
                 ? tr(t, 'battle.specdef.ice.shift', '🧊 Ice Shift!')
                 : tr(t, 'battle.specdef.water.dodge', '💨 Perfect dodge!'),
             );
-            addD('MISS!', 60, 170, '#38bdf8');
+            addD('MISS!', fxt().playerMain.x, fxt().playerMain.y, '#38bdf8');
             safeToIfBattleActive(() => {
               setPAnim('');
               setDefAnim(null);
@@ -327,9 +328,9 @@ export function runEnemyTurn({
             }, 1800);
           } else if (st === 'electric') {
             setBText(tr(t, 'battle.specdef.electric.stun', '⚡ Electric stun! Enemy cannot move!'));
-            addD(tr(t, 'battle.pvp.tag.paralyze', '⚡Paralyzed'), 60, 170, '#fbbf24');
+            addD(tr(t, 'battle.pvp.tag.paralyze', '⚡Paralyzed'), fxt().playerMain.x, fxt().playerMain.y, '#fbbf24');
             setEAnim('enemyElecHit 0.6s ease');
-            addP('electric', 155, 80, 5);
+            addP('electric', fxt().enemyMain.x, fxt().enemyMain.y + 25, 5);
             safeToIfBattleActive(() => {
               setEAnim('');
               setDefAnim(null);
@@ -345,11 +346,11 @@ export function runEnemyTurn({
             const nh = Math.max(0, sr.current.eHp - steelCounterDmg);
             setEHp(nh);
             setBText(tr(t, 'battle.specdef.steel.counter', '⚙️ Iron Guard! Blocked and countered!'));
-            addD('🛡️BLOCK', 60, 170, '#94a3b8');
-            addP('starter', 50, 170, 5);
+            addD('🛡️BLOCK', fxt().playerMain.x, fxt().playerMain.y, '#94a3b8');
+            addP('starter', fxt().playerMain.x - 10, fxt().playerMain.y, 5);
             sfx.play('specDef');
             safeToIfBattleActive(() => {
-              addD(`⚙️-${steelCounterDmg}`, 155, 50, '#94a3b8');
+              addD(`⚙️-${steelCounterDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#94a3b8');
               setEAnim('enemyHit 0.55s ease');
             }, 500);
             safeToIfBattleActive(() => {
@@ -365,13 +366,13 @@ export function runEnemyTurn({
             const nh = Math.max(0, sr.current.eHp - roarDmg);
             setEHp(nh);
             setBText(tr(t, 'battle.specdef.light.roarCounter', "✨ Lion's roar! Blocked and countered!"));
-            addD('🛡️BLOCK', 60, 170, '#f59e0b');
-            addP('starter', 50, 170, 6);
+            addD('🛡️BLOCK', fxt().playerMain.x, fxt().playerMain.y, '#f59e0b');
+            addP('starter', fxt().playerMain.x - 10, fxt().playerMain.y, 6);
             sfx.play('light');
             safeToIfBattleActive(() => {
-              addD(`-${roarDmg}`, 155, 50, '#f59e0b');
+              addD(`-${roarDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#f59e0b');
               setEAnim('enemyFireHit 0.6s ease');
-              addP('starter', 155, 80, 5);
+              addP('starter', fxt().enemyMain.x, fxt().enemyMain.y + 25, 5);
             }, 500);
             safeToIfBattleActive(() => {
               setEAnim('');
@@ -391,11 +392,11 @@ export function runEnemyTurn({
             const nh = Math.max(0, sr.current.eHp - refDmg);
             setEHp(nh);
             setBText(tr(t, 'battle.specdef.grass.reflect', '🌿 Reflected attack!'));
-            addD('🛡️BLOCK', 60, 170, '#22c55e');
+            addD('🛡️BLOCK', fxt().playerMain.x, fxt().playerMain.y, '#22c55e');
             safeToIfBattleActive(() => {
-              addD(`-${refDmg}`, 155, 50, '#22c55e');
+              addD(`-${refDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#22c55e');
               setEAnim('enemyGrassHit 0.6s ease');
-              addP('starter', 155, 80, 5);
+              addP('starter', fxt().enemyMain.x, fxt().enemyMain.y + 25, 5);
             }, 500);
             safeToIfBattleActive(() => {
               setEAnim('');
@@ -441,7 +442,7 @@ export function runEnemyTurn({
           color: isCrit ? '#ff6b00' : '#ef4444',
         });
         sfx.play('playerHit');
-        addP('enemy', 80, 190, 4);
+        addP('enemy', fxt().playerMain.x + 20, fxt().playerMain.y + 20, 4);
         if (isCrit) {
           setEffMsg({ text: tr(t, 'battle.enemy.effect.crit', '🔥 Critical!'), color: '#ff6b00' });
           safeToIfBattleActive(() => setEffMsg(null), 1500);
@@ -478,7 +479,7 @@ export function runEnemyTurn({
           if (counterDmg > 0) {
             const enemyHpAfterCounter = Math.max(0, (s2.eHp || 0) - counterDmg);
             setEHp(enemyHpAfterCounter);
-            addD(`⚙️-${counterDmg}`, 155, 50, '#94a3b8');
+            addD(`⚙️-${counterDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#94a3b8');
             setEffMsg({ text: tr(t, 'battle.effect.steelCounter', '⚙️ Steel Counter!'), color: '#94a3b8' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
             sfx.play('specDef');
@@ -494,7 +495,7 @@ export function runEnemyTurn({
           const newEHp = Math.min(sr.current.eHp + heal, s2.enemy?.maxHp || sr.current.eHp + heal);
           safeToIfBattleActive(() => {
             setEHp(newEHp);
-            addD(`+${heal}`, 155, 50, '#3b82f6');
+            addD(`+${heal}`, fxt().enemyMain.x, fxt().enemyMain.y, '#3b82f6');
             setBText(tr(t, 'battle.enemy.tenacityHeal', '💧 {enemy} recovered HP!', { enemy: s2.enemy?.name || 'Enemy' }));
           }, 600);
         }
@@ -502,7 +503,7 @@ export function runEnemyTurn({
         if (trait === 'curse' && chance(TRAIT_BALANCE.enemy.curseApplyChance)) {
           setCursed(true);
           safeToIfBattleActive(() => {
-            addD(tr(t, 'battle.tag.curse', '💀Curse'), 60, 140, '#a855f7');
+            addD(tr(t, 'battle.tag.curse', '💀Curse'), fxt().playerAbove.x, fxt().playerAbove.y, '#a855f7');
             setBText(tr(t, 'battle.enemy.curseApplied', "💀 {enemy}'s curse weakens your next attack!", { enemy: s2.enemy?.name || 'Enemy' }));
           }, 600);
         }
@@ -531,7 +532,7 @@ export function runEnemyTurn({
                   color: '#eab308',
                 });
                 sfx.play('playerHit');
-                addP('enemy', 80, 190, 3);
+                addP('enemy', fxt().playerMain.x + 20, fxt().playerMain.y + 20, 3);
                 if (nh2 <= 0) {
                   safeToIfBattleActive(() => {
                     sfx.play('ko');
@@ -578,8 +579,8 @@ export function runEnemyTurn({
     } else {
       setPHp(nextHp);
     }
-    const tx = target === 'sub' ? 112 : 60;
-    const ty = target === 'sub' ? 146 : 170;
+    const tx = target === 'sub' ? fxt().playerSub.x : fxt().playerMain.x;
+    const ty = target === 'sub' ? fxt().playerSub.y : fxt().playerMain.y;
     addD(`☠️-${dotDmg}`, tx, ty, '#7c3aed');
     // Enhanced venom VFX: toxic cloud particles — three waves for dramatic effect
     addP('enemy', tx, ty, 6);
@@ -646,7 +647,7 @@ export function runEnemyTurn({
             label: `💀-${bigDmg}`,
             color: '#a855f7',
           });
-          addP('enemy', 80, 190, 6);
+          addP('enemy', fxt().playerMain.x + 20, fxt().playerMain.y + 20, 6);
           if (nh <= 0) {
             safeToIfBattleActive(() => {
               if (handlePlayerPartyKo) {
@@ -754,7 +755,7 @@ export function runEnemyTurn({
       if (regenApplied > 0) {
         const maxHp = s.enemy.maxHp || 0;
         setEHp((current) => Math.min(maxHp, (current || 0) + regenApplied));
-        addD(`+${regenApplied}`, 155, 30, '#22c55e');
+        addD(`+${regenApplied}`, fxt().enemyAbove.x, fxt().enemyAbove.y, '#22c55e');
         sfx.play('heal');
         setEffMsg({ text: tr(t, 'battle.effect.hydraRegen', '☠️ Hydra Regeneration!'), color: '#22c55e' });
         safeToIfBattleActive(() => setEffMsg(null), 1500);

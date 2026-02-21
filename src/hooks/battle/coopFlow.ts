@@ -1,5 +1,6 @@
 import { getStarterStageIdx } from '../../utils/playerHp.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
+import { fxt } from './battleFxTargets.ts';
 import { isBattleActiveState, scheduleIfBattleActive, tryReturnToMenu } from './menuResetGuard.ts';
 import type { StarterVm } from '../../types/battle';
 
@@ -233,8 +234,8 @@ export function runCoopAllySupportTurn({
     setPhase('playerAtk');
     setEAnim('enemyWaterHit 0.45s ease');
     setEHp(nh);
-    addD(`-${dmg}`, 140, 55, '#60a5fa');
-    addP('starter', 120, 130, 3);
+    addD(`-${dmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#60a5fa');
+    addP('starter', (fxt().playerSub.x + fxt().enemyMain.x) / 2, (fxt().playerSub.y + fxt().enemyMain.y) / 2, 3);
     if (typeof sfx.playMove === 'function') sfx.playMove('water', 1);
     else sfx.play('water');
 

@@ -20,6 +20,7 @@ type BattleArenaSpritesProps = {
   subPlayerSize: number;
   enemySpriteRef: RefObject<HTMLDivElement | null>;
   playerSpriteRef: RefObject<HTMLDivElement | null>;
+  playerSubSpriteRef?: RefObject<HTMLDivElement | null>;
   enemyMainSpriteStyle: CSSProperties;
   enemySubSpriteStyle: CSSProperties;
   enemyMainShadowStyle: CSSProperties;
@@ -57,6 +58,7 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
   subPlayerSize,
   enemySpriteRef,
   playerSpriteRef,
+  playerSubSpriteRef,
   enemyMainSpriteStyle,
   enemySubSpriteStyle,
   enemyMainShadowStyle,
@@ -112,7 +114,7 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
         )}
       </div>
       {showAllySub && pSubSvg && (
-        <div className="battle-sprite-player-sub" style={playerSubSpriteStyle}>
+        <div ref={playerSubSpriteRef} className="battle-sprite-player-sub" style={playerSubSpriteStyle}>
           <div className="battle-sprite-core battle-sprite-core-sub battle-sprite-core-player">
             <MonsterSprite svgStr={pSubSvg} size={subPlayerSize} style={playerSubFacingStyle} />
           </div>

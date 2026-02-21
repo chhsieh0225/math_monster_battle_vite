@@ -15,6 +15,7 @@ import {
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import type { AchievementId } from '../../types/game';
 import { effectOrchestrator } from './effectOrchestrator.ts';
+import { fxt } from './battleFxTargets.ts';
 import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
 import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
 
@@ -345,8 +346,8 @@ export function runPlayerAnswer({
     }
     addD(
       popupText || `-${damage}`,
-      isSubAttacker ? 112 : 60,
-      isSubAttacker ? 146 : 170,
+      isSubAttacker ? fxt().playerSub.x : fxt().playerMain.x,
+      isSubAttacker ? fxt().playerSub.y : fxt().playerMain.y,
       color,
     );
     return nextHp;
@@ -469,7 +470,7 @@ export function runPlayerAnswer({
             setEAnim('dodgeSlide 0.9s ease');
             setEffMsg({ text: tr(t, 'battle.effect.phantomDodge', '👻 Phantom Dodge!'), color: '#c084fc' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
-            addD('MISS!', 155, 50, '#c084fc');
+            addD('MISS!', fxt().enemyMain.x, fxt().enemyMain.y, '#c084fc');
             safeToIfBattleActive(() => {
               setEAnim('');
               setAtkEffect(null);
@@ -506,7 +507,7 @@ export function runPlayerAnswer({
           const wasBossCharging = Boolean(s3.bossCharging && BOSS_IDS.has(s3.enemy.id ?? ''));
           if (wasBossCharging) {
             setBossCharging(false);
-            safeToIfBattleActive(() => addD(tr(t, 'battle.tag.chargeInterrupted', '💥Charge Interrupted!'), 155, 30, '#fbbf24'), 400);
+            safeToIfBattleActive(() => addD(tr(t, 'battle.tag.chargeInterrupted', '💥Charge Interrupted!'), fxt().enemyAbove.x, fxt().enemyAbove.y, '#fbbf24'), 400);
           }
 
           const runChargeCounter = (baseDamage: number): boolean => {
@@ -544,7 +545,7 @@ export function runPlayerAnswer({
               setEAnim('shieldPulse 0.8s ease');
               setEffMsg({ text: tr(t, 'battle.effect.shadowShield', '🛡️ Shadow Shield absorbed the attack!'), color: '#7c3aed' });
               safeToIfBattleActive(() => setEffMsg(null), 1500);
-              addD(tr(t, 'battle.tag.shielded', '🛡️BLOCKED'), 155, 50, '#7c3aed');
+              addD(tr(t, 'battle.tag.shielded', '🛡️BLOCKED'), fxt().enemyMain.x, fxt().enemyMain.y, '#7c3aed');
               const chargeCounterKo = runChargeCounter(dmg);
               safeToIfBattleActive(() => {
                 setEAnim('');
@@ -559,7 +560,7 @@ export function runPlayerAnswer({
               sfx.play('specDef');
               setEffMsg({ text: tr(t, 'battle.effect.shadowShieldPartial', '🛡️ Shadow Shield reduced damage!'), color: '#a78bfa' });
               safeToIfBattleActive(() => setEffMsg(null), 1500);
-              addD(tr(t, 'battle.tag.parry', '⚔️PARRY'), 155, 30, '#a78bfa');
+              addD(tr(t, 'battle.tag.parry', '⚔️PARRY'), fxt().enemyAbove.x, fxt().enemyAbove.y, '#a78bfa');
             } else {
               setShadowShieldCD(-1);
             }
@@ -571,7 +572,7 @@ export function runPlayerAnswer({
             sfx.play('specDef');
             setEffMsg({ text: tr(t, 'battle.effect.swordParry', '⚔️ Sword Parry! Damage halved!'), color: '#94a3b8' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
-            addD(tr(t, 'battle.tag.parry', '⚔️PARRY'), 155, 30, '#94a3b8');
+            addD(tr(t, 'battle.tag.parry', '⚔️PARRY'), fxt().enemyAbove.x, fxt().enemyAbove.y, '#94a3b8');
           }
 
           // personality.incomingDamageScale is pre-clamped [0.75, 1.35]
@@ -593,7 +594,7 @@ export function runPlayerAnswer({
             );
             shatterDmg = applyBossDamageReduction(rawShatter, s3.enemy.id);
             setShattered(false);
-            safeToIfBattleActive(() => addD(tr(t, 'battle.tag.shatter', '💎Shatter'), 155, 30, '#22d3ee'), 400);
+            safeToIfBattleActive(() => addD(tr(t, 'battle.tag.shatter', '💎Shatter'), fxt().enemyAbove.x, fxt().enemyAbove.y, '#22d3ee'), 400);
           }
           let afterHp = Math.max(0, s3.eHp - appliedHitDmg - shatterDmg);
 
@@ -604,14 +605,14 @@ export function runPlayerAnswer({
             const burnRawDmg = newBurn * TRAIT_BALANCE.player.burnPerStackDamage;
             const burnDmg = applyBossDamageReduction(burnRawDmg, s3.enemy.id);
             afterHp = Math.max(0, afterHp - burnDmg);
-            safeToIfBattleActive(() => addD(`🔥-${burnDmg}`, 155, 50, '#f97316'), 500);
+            safeToIfBattleActive(() => addD(`🔥-${burnDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#f97316'), 500);
           }
 
           if (starter.type === 'grass') {
             const heal = TRAIT_BALANCE.player.grassHealPerMoveLevel * s3.mLvls[moveIdx];
             healAttacker(heal);
             sfx.play('heal');
-            safeToIfBattleActive(() => addD(`+${heal}`, isSubAttacker ? 112 : 50, isSubAttacker ? 146 : 165, '#22c55e'), 500);
+            safeToIfBattleActive(() => addD(`+${heal}`, isSubAttacker ? fxt().playerSub.x : fxt().playerMain.x - 10, isSubAttacker ? fxt().playerSub.y : fxt().playerMain.y - 5, '#22c55e'), 500);
           }
 
           let willFreeze = false;
@@ -623,7 +624,7 @@ export function runPlayerAnswer({
               frozenR.current = true;
               if (isIce) setShattered(true);
               sfx.play('freeze');
-              safeToIfBattleActive(() => addD(tr(t, 'battle.tag.freeze', '❄️Frozen'), 155, 50, '#38bdf8'), 600);
+              safeToIfBattleActive(() => addD(tr(t, 'battle.tag.freeze', '❄️Frozen'), fxt().enemyMain.x, fxt().enemyMain.y, '#38bdf8'), 600);
             }
           }
 
@@ -636,7 +637,7 @@ export function runPlayerAnswer({
               afterHp = Math.max(0, afterHp - staticDmg);
               setStaticStack(0);
               sfx.play('staticDischarge');
-              safeToIfBattleActive(() => addD(`⚡-${staticDmg}`, 155, 50, '#fbbf24'), 500);
+              safeToIfBattleActive(() => addD(`⚡-${staticDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#fbbf24'), 500);
             }
           }
 
@@ -652,7 +653,7 @@ export function runPlayerAnswer({
             setFuryRegenUsed(true);
             sfx.play('heal');
             safeToIfBattleActive(() => {
-              addD(`+${healAmt}`, 155, 30, '#ef4444');
+              addD(`+${healAmt}`, fxt().enemyAbove.x, fxt().enemyAbove.y, '#ef4444');
               setEffMsg({ text: tr(t, 'battle.effect.furyRegen', '🐉 Fury Regen! The dragon recovers!'), color: '#dc2626' });
               safeToIfBattleActive(() => setEffMsg(null), 1500);
             }, 600);
@@ -661,7 +662,7 @@ export function runPlayerAnswer({
           setEHp(afterHp);
           setEAnim(HIT_ANIMS[vfxType] || 'enemyHit 0.5s ease');
           const dmgColor = HIT_COLORS[vfxType] || '#ef4444';
-          addD(isCrit ? `💥-${appliedHitDmg}` : `-${appliedHitDmg}`, 140, 55, isCrit ? '#ff6b00' : dmgColor);
+          addD(isCrit ? `💥-${appliedHitDmg}` : `-${appliedHitDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, isCrit ? '#ff6b00' : dmgColor);
           safeToIfBattleActive(() => {
             setEAnim('');
             setAtkEffect(null);
@@ -752,7 +753,7 @@ export function runPlayerAnswer({
         const bd = s2.burnStack * TRAIT_BALANCE.player.burnPerStackDamage;
         const nh3 = Math.max(0, s2.eHp - bd);
         setEHp(nh3);
-        addD(`🔥-${bd}`, 155, 50, '#f97316');
+        addD(`🔥-${bd}`, fxt().enemyMain.x, fxt().enemyMain.y, '#f97316');
         mt += tr(t, 'battle.burn.tickShort', ' Burn -{damage}!', { damage: bd });
         if (nh3 <= 0) {
           setBText(mt);

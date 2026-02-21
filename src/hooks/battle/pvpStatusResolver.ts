@@ -1,5 +1,6 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
+import { fxt } from './battleFxTargets.ts';
 import { createBattleActiveScheduler, declarePvpWinner } from './pvpTurnPrimitives.ts';
 
 type TranslatorParams = Record<string, string | number>;
@@ -122,7 +123,7 @@ export function resolvePvpTurnStartStatus<TState extends PvpTurnStartState>({
       setPHp(nh);
       setPvpBurnP1(Math.max(0, burnStack - 1));
       setPAnim('playerHit 0.45s ease');
-      addD(`🔥-${burnDmg}`, 60, 170, '#f97316');
+      addD(`🔥-${burnDmg}`, fxt().playerMain.x, fxt().playerMain.y, '#f97316');
       safeToIfBattleActive(() => setPAnim(''), 480);
       if (nh <= 0) {
         declarePvpWinner({
@@ -138,7 +139,7 @@ export function resolvePvpTurnStartStatus<TState extends PvpTurnStartState>({
       setEHp(nh);
       setPvpBurnP2(Math.max(0, burnStack - 1));
       setEAnim('enemyFireHit 0.5s ease');
-      addD(`🔥-${burnDmg}`, 140, 55, '#f97316');
+      addD(`🔥-${burnDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#f97316');
       safeToIfBattleActive(() => setEAnim(''), 480);
       if (nh <= 0) {
         declarePvpWinner({

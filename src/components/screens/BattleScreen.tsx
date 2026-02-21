@@ -748,6 +748,7 @@ function BattleScreenComponent({
           subPlayerSize={subPlayerSize}
           enemySpriteRef={enemySpriteRef}
           playerSpriteRef={playerSpriteRef}
+          playerSubSpriteRef={playerSubSpriteRef}
           enemyMainSpriteStyle={enemyMainSpriteStyle}
           enemySubSpriteStyle={enemySubSpriteStyle}
           enemyMainShadowStyle={enemyMainShadowStyle}

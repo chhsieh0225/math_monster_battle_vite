@@ -84,8 +84,8 @@ export function resolveBattleLayout({
   const beastLeftAdj = isWideBeast ? -4 : 0;      // nudge main sprite left
   const beastSubLeftAdj = isWideBeast ? 6 : 0;     // push sub ally further right
   // Aegis Wolf King is visually wide and should stay a bit farther to the left/back.
-  const wolfFinalMainLeftAdj = isWolfFinal ? (dualUnits ? -0.4 : -0.8) : 0;
-  const wolfFinalMainBottomAdj = isWolfFinal ? (dualUnits ? -1 : -2) : 0;
+  const wolfFinalMainLeftAdj = isWolfFinal ? (dualUnits ? -0.8 : -1.2) : 0;
+  const wolfFinalMainBottomAdj = isWolfFinal ? (dualUnits ? -1.5 : -2.5) : 0;
   // Co-op battlefield readability: keep both allies slightly further from enemy side.
   // Sub ally is moved a bit more than main ally to reduce overlap after slot switches.
   const coopMainLeftShift = dualUnits ? (compactDual ? 1.5 : 2) : 0;
@@ -129,7 +129,7 @@ export function resolveBattleLayout({
   const pvpCrazyDragonPlayerBoost = battleMode === "pvp" && normalizedPlayerId === "boss_crazy_dragon"
     ? (compactUI ? 1 : 1.14)
     : 1;
-  const wolfFinalSizeScale = isWolfFinal ? 0.94 : 1;
+  const wolfFinalSizeScale = isWolfFinal ? 0.92 : 1;
   // Automatic height compensation from sprite profile (replaces hardcoded ×1.5).
   const playerComp = playerSpriteKey ? getCompensation(playerSpriteKey) : 1;
   const mainPlayerSize = Math.round(
@@ -173,7 +173,7 @@ export function resolveBattleLayout({
     ? (dualUnits ? -1 : -3)
     : 0;
   const swordGodExtraRightAdjust = isSwordGod
-    ? (compactDual ? -0.5 : -1.5)
+    ? (compactDual ? -0.8 : -2)
     : 0;
   const enemyMainRightPct = Math.max(
     2,
@@ -208,7 +208,7 @@ export function resolveBattleLayout({
     * compactGhostLanternScale
     * coopWideEnemyScale;
   const swordGodSizeBoost = isSwordGod
-    ? (compactUI ? 1.12 : 1.1)
+    ? (compactUI ? 1.16 : 1.13)
     : 1;
   const crazyDragonSizeBoost = isCrazyDragon
     ? (compactUI ? 1.12 : 1.06)

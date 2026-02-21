@@ -215,8 +215,8 @@ test('coop wolf final evolution is slightly smaller than lion for readability', 
   });
 
   assert.ok(wolfLayout.mainPlayerSize < lionLayout.mainPlayerSize);
-  // 188 × 0.96 × 0.94 × 1.699 ≈ 288
-  assert.equal(wolfLayout.mainPlayerSize, 288);
+  // 188 × 0.96 × 0.92 × 1.699 ≈ 282
+  assert.equal(wolfLayout.mainPlayerSize, 282);
 });
 
 test('wolf final form is nudged left/down compared with lion in battle lane', () => {
@@ -293,7 +293,7 @@ test('compact UI slightly reduces lion/wolf final evolution size', () => {
   // 200 × 0.97 × 1.699 ≈ 330   (compact ×0.97 reduction)
   assert.equal(lionCompact.mainPlayerSize, 330);
   // wolf final keeps a dedicated extra reduction in addition to compact scaling.
-  assert.equal(wolfCompact.mainPlayerSize, 310);
+  assert.equal(wolfCompact.mainPlayerSize, 303);
 });
 
 test('hydra gets coop-only size boost to avoid looking undersized', () => {
@@ -355,8 +355,8 @@ test('pvp boss id prefix keeps boss visual sizing', () => {
 
   assert.equal(pvpBoss.enemySize, normalBoss.enemySize);
   assert.equal(pvpBoss.enemyTopPct, normalBoss.enemyTopPct);
-  // 270 × 1.087 ≈ 293
-  assert.equal(pvpBoss.enemySize, 293);
+  // 270 × 1.13 × 1.087 ≈ 332
+  assert.equal(pvpBoss.enemySize, 332);
 });
 
 test('boss selected as player starter uses boss-class sprite size', () => {
@@ -552,11 +552,11 @@ test('sword god shifts right and renders larger in battle', () => {
     enemySpriteKey: 'bossHydraSVG',
   });
 
-  assert.equal(compactSwordGod.enemyMainRightPct, 5.5);
-  assert.equal(desktopSwordGod.enemyMainRightPct, 8.5);
+  assert.equal(compactSwordGod.enemyMainRightPct, 5);
+  assert.equal(desktopSwordGod.enemyMainRightPct, 8);
   assert.ok(compactSwordGod.enemyMainRightPct < compactHydra.enemyMainRightPct);
-  assert.equal(compactSwordGod.enemySize, 276);
-  assert.equal(desktopSwordGod.enemySize, 323);
+  assert.equal(compactSwordGod.enemySize, 286);
+  assert.equal(desktopSwordGod.enemySize, 332);
 });
 
 test('crazy dragon gets dedicated size boost on mobile and desktop', () => {

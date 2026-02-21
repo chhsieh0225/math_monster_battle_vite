@@ -875,7 +875,14 @@
 .battle-status-chip.is-static{background:rgba(234,179,8,.85)}
 .battle-status-chip.is-counter{background:rgba(99,102,241,.85)}
 .battle-status-chip.is-counter-soft{background:rgba(99,102,241,.72)}
-.battle-status-chip.is-personality{background:rgba(14,116,144,.86)}
+.battle-status-chip.is-personality{
+  background:linear-gradient(135deg,rgba(8,145,178,.94),rgba(14,116,144,.92));
+  border:1px solid rgba(34,211,238,.42);
+}
+.battle-status-chip.is-trait{
+  background:linear-gradient(135deg,rgba(124,58,237,.9),rgba(99,102,241,.86));
+  border:1px solid rgba(196,181,253,.42);
+}
 .battle-status-chip.is-boss{background:rgba(168,85,247,.85)}
 .battle-status-chip.is-charge{background:rgba(251,191,36,.9);color:#000}
 .battle-status-chip.is-curse{background:rgba(168,85,247,.85)}

@@ -100,7 +100,11 @@ export const BattleEnemyInfoPanel = memo(function BattleEnemyInfoPanel({
                 {(enemy.personality.icon || '✨')} {enemy.personality.name}
               </div>
             )}
-            {hasSpecialTrait(enemy.traitName, enemy.traitDesc) && <div className="battle-status-chip is-counter-soft">✦{enemy.traitName}</div>}
+            {hasSpecialTrait(enemy.traitName, enemy.traitDesc) && (
+              <div className="battle-status-chip is-trait">
+                ✦ {enemy.traitName}
+              </div>
+            )}
             {burnStack > 0 && <div className="battle-status-chip is-burn">🔥 {t('battle.status.burnStack', 'Burn x{count}', { count: burnStack })}</div>}
             {frozen && <div className="battle-status-chip is-freeze">❄️ {t('battle.status.freeze', 'Freeze')}</div>}
             {staticStack > 0 && <div className="battle-status-chip is-static">⚡ {t('battle.status.staticStack', 'Static x{count}', { count: staticStack })}{staticStack >= 2 ? ' ⚠️' : ''}</div>}

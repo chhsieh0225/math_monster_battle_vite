@@ -109,6 +109,36 @@ test('scene-only waves produce monsters whose mType matches the scene', () => {
   }
 });
 
+test('scene pool can draw wild starters (e.g. fire scene → 小火獸)', () => {
+  // Use a pickIndex that picks the last element to maximize chance of hitting starters
+  // (starters are appended last in the pool).
+  const pickLast = (length) => Math.max(0, length - 1);
+  const roster = buildRoster(pickLast, 'single', { disableRandomSwap: true });
+  const wildStarters = roster.filter((mon) => mon.id.startsWith('wild_starter_'));
+  assert.ok(
+    wildStarters.length > 0,
+    'Expected at least one wild starter from scene-based draw',
+  );
+  // Every wild starter should have race='starter' and mType matching the scene
+  for (const ws of wildStarters) {
+    assert.equal(ws.race, 'starter');
+  }
+});
+
+test('scene pool excludes the player-selected starter', () => {
+  // Pick last to always draw starters, but exclude fire
+  const pickLast = (length) => Math.max(0, length - 1);
+  const roster = buildRoster(pickLast, 'single', {
+    disableRandomSwap: true,
+    excludedStarterIds: ['fire'],
+  });
+  const wildFire = roster.filter((mon) => mon.id === 'wild_starter_fire');
+  assert.equal(
+    wildFire.length, 0,
+    'Player-selected starter (fire) should not appear as wild enemy',
+  );
+});
+
 test('buildRoster final wave boss is selected from config-driven boss list', () => {
   const seen = new Set();
 

@@ -225,27 +225,51 @@ for (const sv of SLIME_VARIANTS) {
     MONSTERS_BY_MTYPE.set(sv.mType, list);
   }
 }
+// Starters (player characters) also appear as wild encounters in matching scenes.
+// E.g. fire scene → 小火獸, water scene → 小水獸, steel scene → 小鋼狼.
+// Uses the starter_mirror: prefix so the existing starter-mirror code path handles
+// stage selection, stat scaling, and sprite resolution.
+for (const starterId of STARTER_IDS) {
+  const mType = STARTER_MONSTER_TYPE_BY_ID[starterId];
+  if (!mType) continue;
+  const mirrorId = `${STARTER_MIRROR_WAVE_PREFIX}${starterId}`;
+  const list = MONSTERS_BY_MTYPE.get(mType) || [];
+  if (!list.includes(mirrorId)) {
+    list.push(mirrorId);
+    MONSTERS_BY_MTYPE.set(mType, list);
+  }
+}
 
 /**
  * Resolve a monsterId for a wave that only specifies sceneType.
  * Returns a random non-boss monster whose mType matches the scene,
  * with optional dedup against the previous race to increase variety.
+ *
+ * @param excludedIds  IDs to exclude (e.g. player's selected starter as starter_mirror:fire)
  */
 function resolveMonsterIdByScene(
   sceneType: string,
   pickIndex: PickIndex,
   previousRace?: string,
+  excludedIds?: ReadonlySet<string>,
 ): string {
   const mType = SCENE_MTYPE_MAP[sceneType] || sceneType;
-  const pool = MONSTERS_BY_MTYPE.get(mType);
+  let pool = MONSTERS_BY_MTYPE.get(mType);
   if (!pool || pool.length === 0) {
     throw new Error(`[rosterBuilder] no monsters found for sceneType=${sceneType} (mType=${mType})`);
+  }
+  // Filter out excluded IDs (e.g. player's own starter shouldn't appear as wild enemy)
+  if (excludedIds && excludedIds.size > 0) {
+    const filtered = pool.filter((id) => !excludedIds.has(id));
+    if (filtered.length > 0) pool = filtered;
   }
   // Prefer a different race than the previous wave for variety
   if (previousRace && pool.length > 1) {
     const diversePool = pool.filter((id) => {
       const m = MONSTER_BY_ID.get(id);
-      return m && m.race !== previousRace;
+      // starter_mirror: IDs aren't in MONSTER_BY_ID — treat race as 'starter'
+      const race = m ? m.race : (id.startsWith(STARTER_MIRROR_WAVE_PREFIX) ? 'starter' : undefined);
+      return race !== previousRace;
     });
     if (diversePool.length > 0) {
       return diversePool[pickIndex(diversePool.length)];
@@ -296,6 +320,10 @@ export function buildRoster(
     (options.excludedStarterIds || [])
       .map((id) => String(id || '').trim())
       .filter(Boolean),
+  );
+  // Build mirror-prefixed exclusion set so the scene pool won't draw the player's own starter
+  const excludedMirrorIds = new Set(
+    [...excludedStarterIds].map((id) => `${STARTER_MIRROR_WAVE_PREFIX}${id}`),
   );
   const pick = (arr: SlimeVariant[]): SlimeVariant => arr[pickIndex(arr.length)];
   const useSingleWaveOverride = mode === 'single' && Array.isArray(options.singleWaves) && options.singleWaves.length > 0;
@@ -348,7 +376,20 @@ export function buildRoster(
 
   let previousRace: string | undefined;
   return waves.map((wave, i) => {
-    const starterMirrorId = wave.monsterId ? resolveStarterMirrorId(wave.monsterId) : null;
+    // Resolve monsterId: explicit → boss pool → scene-based random draw
+    let baseMonsterId: string;
+    if (wave.monsterId) {
+      baseMonsterId = BOSS_IDS.has(wave.monsterId)
+        ? BOSS_ID_LIST[pickIndex(BOSS_ID_LIST.length)]
+        : wave.monsterId;
+    } else if (wave.sceneType) {
+      baseMonsterId = resolveMonsterIdByScene(wave.sceneType, pickIndex, previousRace, excludedMirrorIds);
+    } else {
+      throw new Error(`[rosterBuilder] wave[${i}] has neither monsterId nor sceneType`);
+    }
+
+    // If resolved ID is a starter mirror (from explicit wave or scene pool), build via starter path
+    const starterMirrorId = resolveStarterMirrorId(baseMonsterId);
     if (starterMirrorId) {
       const starter = STARTER_BY_ID.get(starterMirrorId);
       if (starter) {
@@ -363,6 +404,7 @@ export function buildRoster(
         if (typeof starterSvgFn !== 'function') {
           throw new Error(`[rosterBuilder] starter ${starterMirrorId} missing stage svgFn`);
         }
+        previousRace = 'starter';
         return {
           id: `wild_starter_${starterMirrorId}`,
           name: stage?.name || starter.name,
@@ -383,18 +425,6 @@ export function buildRoster(
           selectedStageIdx: stageIdx,
         };
       }
-    }
-
-    // Resolve monsterId: explicit → boss pool → scene-based random draw
-    let baseMonsterId: string;
-    if (wave.monsterId) {
-      baseMonsterId = BOSS_IDS.has(wave.monsterId)
-        ? BOSS_ID_LIST[pickIndex(BOSS_ID_LIST.length)]
-        : wave.monsterId;
-    } else if (wave.sceneType) {
-      baseMonsterId = resolveMonsterIdByScene(wave.sceneType, pickIndex, previousRace);
-    } else {
-      throw new Error(`[rosterBuilder] wave[${i}] has neither monsterId nor sceneType`);
     }
     // When the wave has an explicit sceneType, constrain variants to matching mType.
     const sceneRequiredMType = wave.sceneType ? SCENE_MTYPE_MAP[wave.sceneType] : undefined;

@@ -37,6 +37,14 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
   const { t } = useI18n();
   const completedRef = useRef(false);
   const hasDualSilhouette = Boolean(enemySubName && enemySubSvg);
+  // Intro cinematic should use dedicated display sizes (not in-battle sizes),
+  // otherwise dual-boss overlays on mobile can overflow and get clipped.
+  const introMainSize = hasDualSilhouette
+    ? Math.min(enemySize, 250)
+    : Math.min(enemySize, 340);
+  const introSubSize = hasDualSilhouette
+    ? Math.min(enemySubSize ?? enemySize, 210)
+    : Math.min(enemySubSize ?? enemySize, 300);
 
   const finish = useCallback(() => {
     if (completedRef.current) return;
@@ -79,14 +87,14 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
             <div className="boss-intro-sprite boss-intro-sprite-shadow">
               <MonsterSprite
                 svgStr={enemySvg}
-                size={enemySize}
+                size={introMainSize}
                 decorative
               />
             </div>
             <div className="boss-intro-sprite boss-intro-sprite-color">
               <MonsterSprite
                 svgStr={enemySvg}
-                size={enemySize}
+                size={introMainSize}
                 decorative
               />
             </div>
@@ -98,14 +106,14 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
               <div className="boss-intro-sprite boss-intro-sprite-shadow">
                 <MonsterSprite
                   svgStr={enemySubSvg}
-                  size={enemySubSize ?? enemySize}
+                  size={introSubSize}
                   decorative
                 />
               </div>
               <div className="boss-intro-sprite boss-intro-sprite-color">
                 <MonsterSprite
                   svgStr={enemySubSvg}
-                  size={enemySubSize ?? enemySize}
+                  size={introSubSize}
                   decorative
                 />
               </div>

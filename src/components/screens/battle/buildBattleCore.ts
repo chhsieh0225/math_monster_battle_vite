@@ -217,6 +217,9 @@ export function buildBattleStaticCore({
   const playerSpriteKey = `player${starter.id}${pStg}SVG`;
   // Enemy carries activeSpriteKey from roster builder.
   const enemySpriteKey = (enemy as { activeSpriteKey?: string }).activeSpriteKey || enemy.spriteKey;
+  // Sub ally sprite key (same convention as player).
+  const subStageIdx = allySub?.selectedStageIdx ?? 0;
+  const subSpriteKey = allySub ? `player${allySub.id}${subStageIdx}SVG` : undefined;
 
   const layout = resolveBattleLayout({
     battleMode,
@@ -229,6 +232,8 @@ export function buildBattleStaticCore({
     enemyIsEvolved: enemy.isEvolved,
     playerSpriteKey,
     enemySpriteKey,
+    subStarterId: allySub?.id,
+    subSpriteKey,
   });
 
   const pvpEnemyBarActive = battleMode !== 'pvp' || pvpTurn === 'p2';

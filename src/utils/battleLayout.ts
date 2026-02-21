@@ -16,6 +16,10 @@ type ResolveBattleLayoutInput = {
   playerSpriteKey?: string;
   /** SVG export name of enemy sprite (e.g. 'ghostLanternSVG'). */
   enemySpriteKey?: string;
+  /** Starter id of the co-op sub ally (e.g. 'wolf'). */
+  subStarterId?: string | null;
+  /** SVG export name of the co-op sub ally sprite. */
+  subSpriteKey?: string;
 };
 
 export type BattleLayoutConfig = {
@@ -37,6 +41,8 @@ export type BattleLayoutConfig = {
   playerComp: number;
   /** Sprite-profile height compensation applied to the enemy (1 = standard). */
   enemyComp: number;
+  /** Sprite-profile height compensation applied to the co-op sub ally (1 = standard). */
+  subComp: number;
 };
 
 function normalizeEnemyVisualId(enemyId?: string | null): string {
@@ -55,6 +61,8 @@ export function resolveBattleLayout({
   enemyIsEvolved,
   playerSpriteKey,
   enemySpriteKey,
+  subStarterId,
+  subSpriteKey,
 }: ResolveBattleLayoutInput): BattleLayoutConfig {
   const isTeamMode = battleMode === "coop" || battleMode === "double";
   const dualUnits = hasDualUnits && isTeamMode;
@@ -107,7 +115,15 @@ export function resolveBattleLayout({
   // Automatic height compensation from sprite profile (replaces hardcoded ×1.5).
   const playerComp = playerSpriteKey ? getCompensation(playerSpriteKey) : 1;
   const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale * compactFinalStarterScale * playerComp);
-  const subPlayerSize = Math.round((compactDual ? 104 : 112) * (dualUnits ? (compactDual ? 0.9 : 0.95) : 1));
+
+  // Sub ally sizing: wide-sprites (beast starters) need compensation applied,
+  // otherwise the creature only fills ~59% of the viewBox height and looks tiny.
+  // A small base bump (112→120) keeps beast subs visually proportional.
+  const normalizedSubId = normalizeEnemyVisualId(subStarterId);
+  const isWideBeastSub = ["wolf", "tiger", "lion"].includes(normalizedSubId);
+  const subBaseSize = isWideBeastSub ? (compactDual ? 110 : 120) : (compactDual ? 104 : 112);
+  const subComp = subSpriteKey ? getCompensation(subSpriteKey) : 1;
+  const subPlayerSize = Math.round(subBaseSize * (dualUnits ? (compactDual ? 0.9 : 0.95) : 1) * subComp);
 
   const visualEnemyId = normalizeEnemyVisualId(enemyId);
   const isBoss = BOSS_IDS.has(visualEnemyId);
@@ -164,5 +180,6 @@ export function resolveBattleLayout({
     enemyTopPct,
     playerComp,
     enemyComp,
+    subComp,
   };
 }

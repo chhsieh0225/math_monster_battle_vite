@@ -40,11 +40,22 @@ test('stage config references valid monster ids', () => {
   assert.equal(DOUBLE_STAGE_WAVES.length % 2, 0, "double waves should be paired");
 
   for (const wave of STAGE_WAVES) {
-    assert.ok(knownIds.has(wave.monsterId), `unknown monsterId: ${wave.monsterId}`);
+    // monsterId is optional — scene-only waves draw from the mType pool at runtime
+    if (wave.monsterId) {
+      assert.ok(knownIds.has(wave.monsterId), `unknown monsterId: ${wave.monsterId}`);
+    } else {
+      assert.ok(wave.sceneType, `wave has neither monsterId nor sceneType`);
+      assert.ok(knownSceneTypes.has(wave.sceneType), `unknown sceneType: ${wave.sceneType}`);
+    }
   }
 
   for (const wave of DOUBLE_STAGE_WAVES) {
-    assert.ok(knownIds.has(wave.monsterId), `unknown double monsterId: ${wave.monsterId}`);
+    if (wave.monsterId) {
+      assert.ok(knownIds.has(wave.monsterId), `unknown double monsterId: ${wave.monsterId}`);
+    } else {
+      assert.ok(wave.sceneType, `double wave has neither monsterId nor sceneType`);
+      assert.ok(knownSceneTypes.has(wave.sceneType), `unknown sceneType: ${wave.sceneType}`);
+    }
     if (wave.slimeType) {
       assert.ok(knownTypes.has(wave.slimeType), `unknown slimeType: ${wave.slimeType}`);
     }
@@ -144,8 +155,16 @@ test('campaign branch choices reference valid monster ids and event tags', () =>
   assert.ok(campaign.branchChoices.length > 0);
 
   for (const choice of campaign.branchChoices) {
-    assert.ok(knownIds.has(choice.left.monsterId), `unknown campaign left monsterId: ${choice.left.monsterId}`);
-    assert.ok(knownIds.has(choice.right.monsterId), `unknown campaign right monsterId: ${choice.right.monsterId}`);
+    if (choice.left.monsterId) {
+      assert.ok(knownIds.has(choice.left.monsterId), `unknown campaign left monsterId: ${choice.left.monsterId}`);
+    } else {
+      assert.ok(choice.left.sceneType, `campaign left wave has neither monsterId nor sceneType`);
+    }
+    if (choice.right.monsterId) {
+      assert.ok(knownIds.has(choice.right.monsterId), `unknown campaign right monsterId: ${choice.right.monsterId}`);
+    } else {
+      assert.ok(choice.right.sceneType, `campaign right wave has neither monsterId nor sceneType`);
+    }
   }
 
   assert.ok(Array.isArray(campaign.eventPool));

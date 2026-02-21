@@ -63,14 +63,19 @@ function normalizePick(pickIndex: PickIndex, length: number): number {
 function normalizeWave(raw: unknown, fallback: StageWave): StageWave {
   if (!raw || typeof raw !== 'object') return { ...fallback };
   const wave = raw as StageWave;
-  const monsterId = typeof wave.monsterId === 'string' && wave.monsterId.length > 0
-    ? wave.monsterId
-    : fallback.monsterId;
-  return {
-    monsterId,
-    ...(typeof wave.slimeType === 'string' ? { slimeType: wave.slimeType } : {}),
-    ...(typeof wave.sceneType === 'string' ? { sceneType: wave.sceneType } : {}),
-  };
+  // monsterId is optional — when omitted, sceneType drives the random pool.
+  // Only fall back to fallback.monsterId when the wave has neither monsterId nor sceneType.
+  const hasMonsterId = typeof wave.monsterId === 'string' && wave.monsterId.length > 0;
+  const hasSceneType = typeof wave.sceneType === 'string' && wave.sceneType.length > 0;
+  const result: StageWave = {};
+  if (hasMonsterId) {
+    result.monsterId = wave.monsterId;
+  } else if (!hasSceneType) {
+    result.monsterId = fallback.monsterId;
+  }
+  if (hasSceneType) result.sceneType = wave.sceneType;
+  if (typeof wave.slimeType === 'string') result.slimeType = wave.slimeType;
+  return result;
 }
 
 function resolveWaveChoices(preset: CampaignPreset): CampaignWaveChoice[] {

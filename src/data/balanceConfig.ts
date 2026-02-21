@@ -59,16 +59,16 @@ export const BALANCE_CONFIG = {
     scaleStep: 0.12,
     waves: {
       single: [
-        { monsterId: 'slime' },
-        { monsterId: 'fire' },
-        { monsterId: 'ghost' },
-        { monsterId: 'candy_knight', sceneType: 'candy' },
-        { monsterId: 'slime' },
-        { monsterId: 'candy_monster', sceneType: 'candy' },
-        { monsterId: 'dragon' },
-        { monsterId: 'ghost' },
-        { monsterId: 'dragon' },
-        { monsterId: 'boss' },
+        { monsterId: 'slime' },                            // 1: 固定史萊姆（新手教學）
+        { sceneType: 'fire' },                              // 2: 火場隨機（火焰蜥 or 紅史萊姆）
+        { sceneType: 'ghost' },                             // 3: 靈場隨機（幽靈魔 or 提燈幽魂）
+        { sceneType: 'candy' },                             // 4: 糖果場隨機（糖果騎士 or 棉花糖怪）
+        { sceneType: 'rock' },                              // 5: 岩場隨機（岩石高崙 or 泥岩高崙）
+        { sceneType: 'candy' },                             // 6: 糖果場隨機
+        { monsterId: 'dragon' },                            // 7: 固定鋼鐵龍（中後期指標）
+        { sceneType: 'ghost' },                             // 8: 靈場隨機
+        { monsterId: 'dragon' },                            // 9: 固定鋼鐵龍
+        { monsterId: 'boss' },                              // 10: Boss
       ],
       double: [
         { monsterId: 'slime', slimeType: 'grass', sceneType: 'grass' },
@@ -95,43 +95,43 @@ export const BALANCE_CONFIG = {
     },
     campaign: {
       branchChoices: [
-        {
+        {   // 1: 新手——固定史萊姆
           left: { monsterId: 'slime', slimeType: 'grass', sceneType: 'grass' },
           right: { monsterId: 'slime', slimeType: 'water', sceneType: 'water' },
         },
-        {
-          left: { monsterId: 'fire', sceneType: 'fire' },
-          right: { monsterId: 'ghost', sceneType: 'ghost' },
+        {   // 2: 場景隨機
+          left: { sceneType: 'fire' },
+          right: { sceneType: 'ghost' },
         },
-        {
-          left: { monsterId: 'slime', slimeType: 'steel', sceneType: 'steel' },
-          right: { monsterId: 'golumn', sceneType: 'rock' },
+        {   // 3: 鋼 vs 岩
+          left: { sceneType: 'steel' },
+          right: { sceneType: 'rock' },
         },
-        {
+        {   // 4: 固定龍 vs 場景火
           left: { monsterId: 'dragon', sceneType: 'steel' },
-          right: { monsterId: 'fire', sceneType: 'fire' },
+          right: { sceneType: 'fire' },
         },
-        {
-          left: { monsterId: 'slime', slimeType: 'electric', sceneType: 'electric' },
-          right: { monsterId: 'golumn', sceneType: 'rock' },
+        {   // 5: 草 vs 岩
+          left: { sceneType: 'grass' },
+          right: { sceneType: 'rock' },
         },
-        {
-          left: { monsterId: 'dragon', sceneType: 'steel' },
-          right: { monsterId: 'ghost', sceneType: 'ghost' },
+        {   // 6: 鋼 vs 靈
+          left: { sceneType: 'steel' },
+          right: { sceneType: 'ghost' },
         },
-        {
-          left: { monsterId: 'fire', sceneType: 'fire' },
-          right: { monsterId: 'dragon', sceneType: 'steel' },
+        {   // 7: 火 vs 鋼
+          left: { sceneType: 'fire' },
+          right: { sceneType: 'steel' },
         },
-        {
-          left: { monsterId: 'golumn', sceneType: 'rock' },
-          right: { monsterId: 'candy_knight', sceneType: 'candy' },
+        {   // 8: 岩 vs 夢幻
+          left: { sceneType: 'rock' },
+          right: { sceneType: 'candy' },
         },
-        {
-          left: { monsterId: 'candy_monster', sceneType: 'candy' },
-          right: { monsterId: 'fire', sceneType: 'fire' },
+        {   // 9: 夢幻 vs 火
+          left: { sceneType: 'candy' },
+          right: { sceneType: 'fire' },
         },
-        {
+        {   // 10: Boss（固定）
           left: { monsterId: 'boss', sceneType: 'dark' },
           right: { monsterId: 'boss', sceneType: 'dark' },
         },

@@ -301,8 +301,7 @@ function checkWaveSceneConsistency(label, waves) {
   for (let i = 0; i < waves.length; i++) {
     const w = waves[i];
     if (!w.sceneType) continue; // no override → scene auto-adapts to monster type
-    // Slime with slimeType: the variant system picks a typed slime matching slimeType,
-    // so the base mType "grass" is irrelevant — the actual variant will match the scene.
+    if (!w.monsterId) continue; // scene-only wave → resolved at runtime by mType pool
     // Slime race: the variant system picks a typed slime matching the scene,
     // so the base mType "grass" is irrelevant — skip race=slime with slimeType.
     if (w.monsterId === 'slime' && w.slimeType) continue;
@@ -339,9 +338,8 @@ describe('Monster registry — scene-type consistency', () => {
     const mismatches = [];
     for (const w of allWaves) {
       if (!w.sceneType) continue;
-      // Slime race: the variant system picks a typed slime matching the scene,
-    // so the base mType "grass" is irrelevant — skip race=slime with slimeType.
-    if (w.monsterId === 'slime' && w.slimeType) continue;
+      if (!w.monsterId) continue; // scene-only wave → resolved at runtime
+      if (w.monsterId === 'slime' && w.slimeType) continue;
       const expectedMType = SCENE_MTYPE_MAP[w.sceneType];
       if (!expectedMType) continue;
       const mType = monsterMTypeById[w.monsterId];
@@ -431,5 +429,53 @@ describe('Monster registry — race (種族) completeness', () => {
       [],
       `Boss monsters with wrong race: ${bad.map((c) => `${c.id}(race=${c.race})`).join(', ')}`,
     );
+  });
+});
+
+// ─── 11. Scene-based monster pool (場景隨機抽怪) ────────────────
+
+import { MONSTERS_BY_MTYPE } from '../utils/rosterBuilder.ts';
+
+describe('Monster registry — scene-based monster pool', () => {
+  const SCENE_TO_MTYPE = {
+    grass: 'grass', fire: 'fire', ghost: 'ghost', steel: 'steel',
+    rock: 'rock', candy: 'dream', poison: 'poison',
+  };
+
+  it('every used sceneType has at least one monster in the pool', () => {
+    const usedScenes = new Set();
+    for (const w of BALANCE_CONFIG.stage.waves.single) {
+      if (!w.monsterId && w.sceneType) usedScenes.add(w.sceneType);
+    }
+    for (const c of BALANCE_CONFIG.stage.campaign.branchChoices) {
+      if (!c.left.monsterId && c.left.sceneType) usedScenes.add(c.left.sceneType);
+      if (!c.right.monsterId && c.right.sceneType) usedScenes.add(c.right.sceneType);
+    }
+    const empty = [];
+    for (const scene of usedScenes) {
+      const mType = SCENE_TO_MTYPE[scene] || scene;
+      const pool = MONSTERS_BY_MTYPE.get(mType);
+      if (!pool || pool.length === 0) empty.push(`${scene}→${mType}`);
+    }
+    assert.deepEqual(empty, [], `Scenes with empty monster pool: ${empty.join(', ')}`);
+  });
+
+  it('no boss appears in any scene pool', () => {
+    for (const [mType, ids] of MONSTERS_BY_MTYPE) {
+      const bosses = ids.filter((id) => BOSS_IDS.has(id));
+      assert.deepEqual(bosses, [], `Boss in ${mType} pool: ${bosses.join(', ')}`);
+    }
+  });
+
+  it('pools with multiple entries provide race diversity', () => {
+    const monsterRaceById = Object.fromEntries(MONSTER_CONFIGS.map((c) => [c.id, c.race]));
+    for (const [mType, ids] of MONSTERS_BY_MTYPE) {
+      if (ids.length <= 1) continue;
+      const races = new Set(ids.map((id) => monsterRaceById[id]).filter(Boolean));
+      assert.ok(
+        races.size >= 2 || ids.length <= 2,
+        `${mType} pool has ${ids.length} monsters but only ${races.size} race(s): ${[...races].join(', ')}`,
+      );
+    }
   });
 });

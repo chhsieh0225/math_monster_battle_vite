@@ -89,13 +89,24 @@ test('buildRoster can roll ghost and golumn variant encounters', () => {
   assert.equal(roster.some((mon) => mon.id === 'golumn_mud'), true);
 });
 
-test('buildRoster can roll mushroom poison variant from ghost encounter pool', () => {
-  const roster = buildRoster(pickThird, 'single');
-  const mushrooms = roster.filter((mon) => mon.id === 'mushroom');
-
-  assert.equal(mushrooms.length > 0, true);
-  assert.equal(mushrooms.every((mon) => mon.mType === 'poison'), true);
-  assert.equal(mushrooms.every((mon) => mon.sceneMType === 'poison'), true);
+test('scene-only waves produce monsters whose mType matches the scene', () => {
+  // Build with disableRandomSwap so we can assert against the original wave config.
+  const roster = buildRoster(pickFirst, 'single', { disableRandomSwap: true });
+  for (let i = 0; i < STAGE_WAVES.length; i++) {
+    const wave = STAGE_WAVES[i];
+    if (wave.monsterId) continue; // skip fixed-monsterId waves
+    if (!wave.sceneType) continue;
+    const mon = roster[i];
+    const expectedMType = {
+      fire: 'fire', ghost: 'ghost', candy: 'dream', rock: 'rock',
+      grass: 'grass', steel: 'steel', water: 'water', electric: 'electric',
+      dark: 'dark', poison: 'poison',
+    }[wave.sceneType] || wave.sceneType;
+    assert.equal(
+      mon.mType, expectedMType,
+      `wave[${i}] sceneType=${wave.sceneType}: expected mType=${expectedMType}, got ${mon.mType} (id=${mon.id})`,
+    );
+  }
 });
 
 test('buildRoster final wave boss is selected from config-driven boss list', () => {

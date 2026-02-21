@@ -202,6 +202,58 @@ const SCENE_MTYPE_MAP: Readonly<Record<string, string>> = {
   heaven: 'light',
 };
 
+/**
+ * mType → non-boss monster IDs reverse index.
+ * Used when a wave specifies sceneType but omits monsterId — the
+ * rosterBuilder draws randomly from all monsters whose mType matches.
+ */
+/** @internal — exported for testing only */
+export const MONSTERS_BY_MTYPE = new Map<string, string[]>();
+for (const mon of MONSTERS) {
+  if (BOSS_IDS.has(mon.id)) continue; // bosses are never in the scene pool
+  const list = MONSTERS_BY_MTYPE.get(mon.mType) || [];
+  list.push(mon.id);
+  MONSTERS_BY_MTYPE.set(mon.mType, list);
+}
+// Slime can appear in any scene that has a matching slime variant.
+// Add 'slime' to every mType that has a typed variant (water, fire, electric, dark, steel).
+for (const sv of SLIME_VARIANTS) {
+  if (sv.mType === 'grass') continue; // already covered by base slime
+  const list = MONSTERS_BY_MTYPE.get(sv.mType) || [];
+  if (!list.includes('slime')) {
+    list.push('slime');
+    MONSTERS_BY_MTYPE.set(sv.mType, list);
+  }
+}
+
+/**
+ * Resolve a monsterId for a wave that only specifies sceneType.
+ * Returns a random non-boss monster whose mType matches the scene,
+ * with optional dedup against the previous race to increase variety.
+ */
+function resolveMonsterIdByScene(
+  sceneType: string,
+  pickIndex: PickIndex,
+  previousRace?: string,
+): string {
+  const mType = SCENE_MTYPE_MAP[sceneType] || sceneType;
+  const pool = MONSTERS_BY_MTYPE.get(mType);
+  if (!pool || pool.length === 0) {
+    throw new Error(`[rosterBuilder] no monsters found for sceneType=${sceneType} (mType=${mType})`);
+  }
+  // Prefer a different race than the previous wave for variety
+  if (previousRace && pool.length > 1) {
+    const diversePool = pool.filter((id) => {
+      const m = MONSTER_BY_ID.get(id);
+      return m && m.race !== previousRace;
+    });
+    if (diversePool.length > 0) {
+      return diversePool[pickIndex(diversePool.length)];
+    }
+  }
+  return pool[pickIndex(pool.length)];
+}
+
 function getVariantPool(baseId: string): readonly string[] | null {
   return RANDOM_ENCOUNTER_VARIANTS_BY_BASE_ID[baseId] || null;
 }
@@ -294,8 +346,9 @@ export function buildRoster(
     }
   }
 
+  let previousRace: string | undefined;
   return waves.map((wave, i) => {
-    const starterMirrorId = resolveStarterMirrorId(wave.monsterId);
+    const starterMirrorId = wave.monsterId ? resolveStarterMirrorId(wave.monsterId) : null;
     if (starterMirrorId) {
       const starter = STARTER_BY_ID.get(starterMirrorId);
       if (starter) {
@@ -332,13 +385,20 @@ export function buildRoster(
       }
     }
 
-    // If wave requests a boss, randomly pick from the boss pool
-    const bossOrBaseId = BOSS_IDS.has(wave.monsterId)
-      ? BOSS_ID_LIST[pickIndex(BOSS_ID_LIST.length)]
-      : wave.monsterId;
+    // Resolve monsterId: explicit → boss pool → scene-based random draw
+    let baseMonsterId: string;
+    if (wave.monsterId) {
+      baseMonsterId = BOSS_IDS.has(wave.monsterId)
+        ? BOSS_ID_LIST[pickIndex(BOSS_ID_LIST.length)]
+        : wave.monsterId;
+    } else if (wave.sceneType) {
+      baseMonsterId = resolveMonsterIdByScene(wave.sceneType, pickIndex, previousRace);
+    } else {
+      throw new Error(`[rosterBuilder] wave[${i}] has neither monsterId nor sceneType`);
+    }
     // When the wave has an explicit sceneType, constrain variants to matching mType.
     const sceneRequiredMType = wave.sceneType ? SCENE_MTYPE_MAP[wave.sceneType] : undefined;
-    const resolvedId = resolveVariantMonsterId(bossOrBaseId, pickIndex, sceneRequiredMType);
+    const resolvedId = resolveVariantMonsterId(baseMonsterId, pickIndex, sceneRequiredMType);
     const b = MONSTER_BY_ID.get(resolvedId);
     if (!b) throw new Error(`[rosterBuilder] unknown monsterId: ${resolvedId}`);
     const sc = STAGE_SCALE_BASE + i * STAGE_SCALE_STEP;
@@ -346,17 +406,19 @@ export function buildRoster(
 
     let variant: SlimeVariant | null = null;
     let evolvedVariant: SlimeVariant | null = null;
+    // For slime: prefer wave.slimeType if set, otherwise match scene mType
+    const slimePreferredType = wave.slimeType || sceneRequiredMType;
     if (b.id === 'slime' && !isEvolved) {
       variant = pickSlimeVariant({
         pool: SLIME_VARIANTS,
-        preferredType: wave.slimeType,
+        preferredType: slimePreferredType,
         pick,
       });
     }
     if (b.id === 'slime' && isEvolved) {
       evolvedVariant = pickSlimeVariant({
         pool: EVOLVED_SLIME_VARIANTS,
-        preferredType: wave.slimeType,
+        preferredType: slimePreferredType,
         pick,
       });
     }
@@ -377,6 +439,8 @@ export function buildRoster(
     // Priority: wave-level override > boss scene map > monster type fallback.
     const resolvedSceneType = wave.sceneType || bossSceneType || resolvedMonsterType;
 
+    previousRace = activeVariant?.race || b.race;
+
     return {
       ...b,
       ...(variant && {
@@ -385,6 +449,7 @@ export function buildRoster(
         svgFn: variant.svgFn,
         c1: variant.c1,
         c2: variant.c2,
+        race: variant.race,
         mType: variant.mType,
         typeIcon: variant.typeIcon,
         typeName: variant.typeName,
@@ -398,6 +463,7 @@ export function buildRoster(
         svgFn: evolvedVariant.svgFn,
         c1: evolvedVariant.c1,
         c2: evolvedVariant.c2,
+        race: evolvedVariant.race,
         mType: evolvedVariant.mType,
         typeIcon: evolvedVariant.typeIcon,
         typeName: evolvedVariant.typeName,

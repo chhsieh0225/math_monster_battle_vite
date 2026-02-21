@@ -8,7 +8,11 @@ export const STAGE_SCALE_BASE = BALANCE_CONFIG.stage.scaleBase;
 export const STAGE_SCALE_STEP = BALANCE_CONFIG.stage.scaleStep;
 
 export type StageWave = {
-  monsterId: string;
+  /**
+   * 指定出場怪獸 ID。若省略，則依 sceneType 從符合屬性的怪獸池隨機抽取。
+   * 至少需要 monsterId 或 sceneType 其中之一。
+   */
+  monsterId?: string;
   slimeType?: string;
   sceneType?: string;
 };

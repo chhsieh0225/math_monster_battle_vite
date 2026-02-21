@@ -505,6 +505,7 @@ export function buildRoster(
         drops: variant.drops,
         trait: variant.trait,
         traitName: variant.traitName,
+        traitDesc: variant.traitDesc,
       }),
       ...(evolvedVariant && {
         id: evolvedVariant.id,
@@ -519,6 +520,7 @@ export function buildRoster(
         drops: evolvedVariant.drops,
         trait: evolvedVariant.trait,
         traitName: evolvedVariant.traitName,
+        traitDesc: evolvedVariant.traitDesc,
       }),
       name,
       svgFn,

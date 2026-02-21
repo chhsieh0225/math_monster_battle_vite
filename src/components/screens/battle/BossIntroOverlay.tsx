@@ -52,12 +52,12 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
   return (
     <div
       className="boss-intro-overlay"
-      role="button"
+      role="dialog"
+      aria-modal="true"
       tabIndex={0}
-      aria-live="assertive"
       aria-label={hasDualSilhouette
-        ? t('a11y.bossIntro.skipDual', 'Tap to skip dual boss intro cinematic')
-        : t('a11y.bossIntro.skip', 'Tap to skip boss intro cinematic')}
+        ? t('a11y.bossIntro.announceDual', 'Boss intro cinematic: {name}. Tap to skip', { name: enemyName + (enemySubName ? ` + ${enemySubName}` : '') })
+        : t('a11y.bossIntro.announce', 'Boss intro cinematic: {name}. Tap to skip', { name: enemyName })}
       onClick={finish}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {

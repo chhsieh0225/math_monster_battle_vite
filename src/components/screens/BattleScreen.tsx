@@ -574,15 +574,16 @@ function BattleScreenComponent({
 
       {/* Pause overlay */}
       {S.gamePaused && <div
-        role="button"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="battle-pause-title"
         tabIndex={0}
         className={`battle-pause-overlay ${UX.lowPerfMode ? "low-perf" : ""}`}
-        aria-label={t("a11y.overlay.pauseResume", "Resume game")}
         onKeyDown={handlePauseOverlayKeyDown}
         onClick={A.togglePause}
       >
         <div className="battle-pause-icon">⏸️</div>
-        <div className="battle-pause-title">{t("app.pause.title", "Game Paused")}</div>
+        <div id="battle-pause-title" className="battle-pause-title">{t("app.pause.title", "Game Paused")}</div>
         <div className="battle-pause-hint">{t("app.pause.hint", "Tap anywhere to resume")}</div>
       </div>}
 

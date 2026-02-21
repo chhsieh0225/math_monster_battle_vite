@@ -351,14 +351,16 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      aria-label={t('encyclopedia.a11y.closeEnemyDetail', 'Close monster details')}
-      onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, onClose)}
-      onClick={onClose}
       className="enc-modal-overlay"
+      onClick={onClose}
+      onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => {
+        if (ev.key === 'Escape') { ev.preventDefault(); onClose(); }
+      }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="enc-detail-title"
         onClick={(ev: MouseEvent<HTMLDivElement>) => ev.stopPropagation()}
         className="enc-modal-card"
         style={modalToneStyle}
@@ -382,7 +384,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
           </div>
 
           <div className="enc-modal-name-wrap">
-            <div className="enc-modal-name" style={{ textShadow: `0 0 20px ${tc}55` }}>{entry.name}</div>
+            <div id="enc-detail-title" className="enc-modal-name" style={{ textShadow: `0 0 20px ${tc}55` }}>{entry.name}</div>
             <div className="enc-modal-tag-row">
               <span className="enc-modal-pill enc-modal-pill-type">
                 {entry.typeIcon}{entry.typeIcon2 || ''} {t('encyclopedia.typeTag', '{type} type', { type: entry.typeName + (entry.typeName2 ? ' / ' + entry.typeName2 : '') })}
@@ -510,14 +512,16 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      aria-label={t('encyclopedia.a11y.closeStarterDetail', 'Close partner details')}
-      onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => handleKeyboardActivate(ev, onClose)}
-      onClick={onClose}
       className="enc-modal-overlay"
+      onClick={onClose}
+      onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => {
+        if (ev.key === 'Escape') { ev.preventDefault(); onClose(); }
+      }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="enc-starter-detail-title"
         onClick={(ev: MouseEvent<HTMLDivElement>) => ev.stopPropagation()}
         className="enc-modal-card"
         style={modalToneStyle}
@@ -550,7 +554,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
           </div>
 
           <div className="enc-modal-name-wrap">
-            <div className="enc-modal-name" style={{ textShadow: `0 0 20px ${tc}55` }}>{entry.name}</div>
+            <div id="enc-starter-detail-title" className="enc-modal-name" style={{ textShadow: `0 0 20px ${tc}55` }}>{entry.name}</div>
             <div className="enc-modal-tag-row is-wrap-center">
               <span className="enc-modal-pill enc-modal-pill-type">
                 {entry.typeIcon} {t('encyclopedia.typeTag', '{type} type', { type: entry.typeName })}

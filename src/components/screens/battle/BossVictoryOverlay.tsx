@@ -42,10 +42,10 @@ export const BossVictoryOverlay = memo(function BossVictoryOverlay({
   return (
     <div
       className="boss-victory-overlay"
-      role="button"
+      role="dialog"
+      aria-modal="true"
       tabIndex={0}
-      aria-live="assertive"
-      aria-label={t('a11y.bossVictory.skip', 'Tap to skip boss victory cinematic')}
+      aria-label={t('a11y.bossVictory.announce', 'Boss defeated: {name}. Tap to skip', { name: enemyName })}
       onClick={finish}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {

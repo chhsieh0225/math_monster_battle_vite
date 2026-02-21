@@ -81,11 +81,15 @@ export function resolveBattleLayout({
   const normalizedSubId = normalizeEnemyVisualId(subStarterId);
   const isWideBeastSub = ["wolf", "tiger", "lion"].includes(normalizedSubId);
   const isWolfFinal = normalizedPlayerId === "wolf" && playerStageIdx >= 2;
+  const isLionFinal = normalizedPlayerId === "lion" && playerStageIdx >= 2;
   const beastLeftAdj = isWideBeast ? -4 : 0;      // nudge main sprite left
   const beastSubLeftAdj = isWideBeast ? 6 : 0;     // push sub ally further right
   // Aegis Wolf King is visually wide and should stay a bit farther to the left/back.
   const wolfFinalMainLeftAdj = isWolfFinal ? (dualUnits ? -0.8 : -1.2) : 0;
   const wolfFinalMainBottomAdj = isWolfFinal ? (dualUnits ? -1.5 : -2.5) : 0;
+  // Lion King final form should sit slightly lower-left during battle.
+  const lionFinalMainLeftAdj = isLionFinal ? (dualUnits ? -0.25 : -0.7) : 0;
+  const lionFinalMainBottomAdj = isLionFinal ? (dualUnits ? -0.7 : -1.6) : 0;
   // Co-op battlefield readability: keep both allies slightly further from enemy side.
   // Sub ally is moved a bit more than main ally to reduce overlap after slot switches.
   const coopMainLeftShift = dualUnits ? (compactDual ? 1.5 : 2) : 0;
@@ -94,8 +98,14 @@ export function resolveBattleLayout({
   // on co-op lanes to prevent mobile overlap into enemy area.
   const wideSubPullback = dualUnits && isWideBeastSub ? (compactDual ? 4 : 3) : 0;
 
-  const playerMainLeftPct = (dualUnits ? (compactDual ? 4 : 6) : 6) - coopMainLeftShift + beastLeftAdj + wolfFinalMainLeftAdj;
-  const playerMainBottomPct = (dualUnits ? (compactDual ? 9 : 11) : 14) + wolfFinalMainBottomAdj;
+  const playerMainLeftPct = (dualUnits ? (compactDual ? 4 : 6) : 6)
+    - coopMainLeftShift
+    + beastLeftAdj
+    + wolfFinalMainLeftAdj
+    + lionFinalMainLeftAdj;
+  const playerMainBottomPct = (dualUnits ? (compactDual ? 9 : 11) : 14)
+    + wolfFinalMainBottomAdj
+    + lionFinalMainBottomAdj;
   const playerSubLeftPct = (dualUnits ? (compactDual ? 21 : 23) : 24) - coopSubLeftShift - wideSubPullback + beastSubLeftAdj;
   const playerSubBottomPct = dualUnits ? (compactDual ? 13 : 15) : 17;
   const isBossPlayer = BOSS_IDS.has(normalizedPlayerId);

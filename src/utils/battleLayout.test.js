@@ -249,6 +249,38 @@ test('wolf final form is nudged left/down compared with lion in battle lane', ()
   assert.ok(wolfLayout.playerMainBottomPct < lionLayout.playerMainBottomPct);
 });
 
+test('lion final form is nudged left/down versus default final-starter lane', () => {
+  const lionLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 2,
+    playerStarterId: 'lion',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerlion2SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+  const fireLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 2,
+    playerStarterId: 'fire',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerfire2SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+
+  assert.equal(lionLayout.playerMainLeftPct, 1.3);
+  assert.equal(lionLayout.playerMainBottomPct, 12.4);
+  assert.ok(lionLayout.playerMainLeftPct < fireLayout.playerMainLeftPct);
+  assert.ok(lionLayout.playerMainBottomPct < fireLayout.playerMainBottomPct);
+});
+
 test('compact UI slightly reduces lion/wolf final evolution size', () => {
   const lionDesktop = resolveBattleLayout({
     battleMode: 'single',

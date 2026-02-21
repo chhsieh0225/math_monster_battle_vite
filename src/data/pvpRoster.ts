@@ -44,6 +44,7 @@ const PVP_BOSS_SELECTABLES: StarterConfig[] = PVP_BOSS_IDS.flatMap((bossId) => {
   return [{
     id: bossId,
     name: boss.name,
+    race: boss.race,
     type: boss.mType,
     typeIcon: boss.typeIcon,
     typeName: boss.typeName || boss.mType,

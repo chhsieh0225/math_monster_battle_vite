@@ -267,8 +267,11 @@ function resolveMonsterIdByScene(
   if (previousRace && pool.length > 1) {
     const diversePool = pool.filter((id) => {
       const m = MONSTER_BY_ID.get(id);
-      // starter_mirror: IDs aren't in MONSTER_BY_ID — treat race as 'starter'
-      const race = m ? m.race : (id.startsWith(STARTER_MIRROR_WAVE_PREFIX) ? 'starter' : undefined);
+      // starter_mirror: IDs aren't in MONSTER_BY_ID — look up their actual race
+      const race = m ? m.race : (() => {
+        const sid = resolveStarterMirrorId(id);
+        return sid ? STARTER_BY_ID.get(sid)?.race : undefined;
+      })();
       return race !== previousRace;
     });
     if (diversePool.length > 0) {
@@ -404,7 +407,7 @@ export function buildRoster(
         if (typeof starterSvgFn !== 'function') {
           throw new Error(`[rosterBuilder] starter ${starterMirrorId} missing stage svgFn`);
         }
-        previousRace = 'starter';
+        previousRace = starter.race;
         return {
           id: `wild_starter_${starterMirrorId}`,
           name: stage?.name || starter.name,
@@ -415,7 +418,7 @@ export function buildRoster(
           c2: starter.c2,
           svgFn: starterSvgFn,
           drops: [...(STARTER_DROPS_BY_ID[starterMirrorId] || ['🍬', '🧪'])],
-          race: 'starter' as MonsterRace,
+          race: starter.race,
           mType: starterType,
           typeIcon: starter.typeIcon || '✨',
           typeName: starter.typeName || STARTER_TYPE_NAME_FALLBACK[starterMirrorId] || '屬性',

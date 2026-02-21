@@ -119,9 +119,13 @@ test('scene pool can draw wild starters (e.g. fire scene → 小火獸)', () => 
     wildStarters.length > 0,
     'Expected at least one wild starter from scene-based draw',
   );
-  // Every wild starter should have race='starter' and mType matching the scene
+  // Every wild starter should have an individual starter race and mType matching the scene
+  const STARTER_RACES = new Set([
+    'fire_beast', 'water_beast', 'grass_beast',
+    'thunder_beast', 'ice_tiger', 'steel_wolf', 'light_lion',
+  ]);
   for (const ws of wildStarters) {
-    assert.equal(ws.race, 'starter');
+    assert.ok(STARTER_RACES.has(ws.race), `wild starter race=${ws.race} not in starter races`);
   }
 });
 

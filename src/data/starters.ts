@@ -15,7 +15,7 @@ import { SKILL_SETS } from './skillSets.ts';
 // 所有招式 Lv.6 時威力趨近：42 / 45 / 45 / 55
 
 export const STARTERS: StarterConfig[] = [
-  {id:"grass",name:"小草獸",type:"grass",typeIcon:"🌿",typeName:"草",c1:"#4ade80",c2:"#16a34a",
+  {id:"grass",name:"小草獸",race:"grass_beast",type:"grass",typeIcon:"🌿",typeName:"草",c1:"#4ade80",c2:"#16a34a",
    stages:[
      {name:"小草獸",emoji:"🌿",svgFn:playergrass0SVG},
      {name:"花葉獸",emoji:"🌿",svgFn:playergrass1SVG},
@@ -26,7 +26,7 @@ export const STARTERS: StarterConfig[] = [
    mathTopicKey:'selection.topic.grass',
    mathTopicFallback:'加減法',
    moves: SKILL_SETS.grass},
-  {id:"fire",name:"小火獸",type:"fire",typeIcon:"🔥",typeName:"火",c1:"#f87171",c2:"#b91c1c",
+  {id:"fire",name:"小火獸",race:"fire_beast",type:"fire",typeIcon:"🔥",typeName:"火",c1:"#f87171",c2:"#b91c1c",
    stages:[
      {name:"小火獸",emoji:"🔥",svgFn:playerfire0SVG},
      {name:"烈焰獸",emoji:"🔥",svgFn:playerfire1SVG},
@@ -37,7 +37,7 @@ export const STARTERS: StarterConfig[] = [
    mathTopicKey:'selection.topic.fire',
    mathTopicFallback:'乘法',
    moves: SKILL_SETS.fire},
-  {id:"water",name:"小水獸",type:"water",typeIcon:"💧",typeName:"水",c1:"#60a5fa",c2:"#1d4ed8",
+  {id:"water",name:"小水獸",race:"water_beast",type:"water",typeIcon:"💧",typeName:"水",c1:"#60a5fa",c2:"#1d4ed8",
    stages:[
      {name:"小水獸",emoji:"💧",svgFn:playerwater0SVG},
      {name:"波濤獸",emoji:"💧",svgFn:playerwater1SVG},
@@ -48,7 +48,7 @@ export const STARTERS: StarterConfig[] = [
    mathTopicKey:'selection.topic.water',
    mathTopicFallback:'除法',
    moves: SKILL_SETS.water},
-  {id:"tiger",name:"小冰虎",type:"ice",typeIcon:"❄️",typeName:"冰",c1:"#67e8f9",c2:"#0e7490",
+  {id:"tiger",name:"小冰虎",race:"ice_tiger",type:"ice",typeIcon:"❄️",typeName:"冰",c1:"#67e8f9",c2:"#0e7490",
    stages:[
      {name:"小冰虎",emoji:"❄️",svgFn:playertiger0SVG},
      {name:"霜牙虎",emoji:"❄️",svgFn:playertiger1SVG},
@@ -59,7 +59,7 @@ export const STARTERS: StarterConfig[] = [
    mathTopicKey:'selection.topic.tiger',
    mathTopicFallback:'小數運算',
    moves: SKILL_SETS.tiger},
-  {id:"electric",name:"小雷獸",type:"electric",typeIcon:"⚡",typeName:"雷",c1:"#facc15",c2:"#ca8a04",
+  {id:"electric",name:"小雷獸",race:"thunder_beast",type:"electric",typeIcon:"⚡",typeName:"雷",c1:"#facc15",c2:"#ca8a04",
    stages:[
      {name:"小雷獸",emoji:"⚡",svgFn:playerelectric0SVG},
      {name:"雷電獸",emoji:"⚡",svgFn:playerelectric1SVG},
@@ -70,7 +70,7 @@ export const STARTERS: StarterConfig[] = [
    mathTopicKey:'selection.topic.electric',
    mathTopicFallback:'四則混合',
    moves: SKILL_SETS.electric},
-  {id:"wolf",name:"小鋼狼",type:"steel",typeIcon:"⚙️",typeName:"鋼",c1:"#94a3b8",c2:"#334155",
+  {id:"wolf",name:"小鋼狼",race:"steel_wolf",type:"steel",typeIcon:"⚙️",typeName:"鋼",c1:"#94a3b8",c2:"#334155",
    stages:[
      {name:"小鋼狼",emoji:"⚙️",svgFn:playerwolf0SVG},
      {name:"鋼刃狼",emoji:"⚙️",svgFn:playerwolf1SVG},
@@ -81,7 +81,7 @@ export const STARTERS: StarterConfig[] = [
    mathTopicKey:'selection.topic.wolf',
    mathTopicFallback:'分數運算',
    moves: SKILL_SETS.wolf},
-  {id:"lion",name:"小獅獸",type:"light",typeIcon:"✨",typeName:"光",c1:"#f59e0b",c2:"#92400e",
+  {id:"lion",name:"小獅獸",race:"light_lion",type:"light",typeIcon:"✨",typeName:"光",c1:"#f59e0b",c2:"#92400e",
    stages:[
      {name:"小獅獸",emoji:"✨",svgFn:playerlion0SVG},
      {name:"獅鬃獸",emoji:"✨",svgFn:playerlion1SVG},

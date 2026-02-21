@@ -382,7 +382,10 @@ describe('Monster registry — scene-type consistency', () => {
 
 const VALID_RACES = new Set([
   'slime', 'fire_lizard', 'ghost', 'mushroom', 'dragon',
-  'golumn', 'candy', 'butterfly', 'boss', 'starter',
+  'golumn', 'candy', 'butterfly', 'boss',
+  // starter races (我方角色種族)
+  'fire_beast', 'water_beast', 'grass_beast',
+  'thunder_beast', 'ice_tiger', 'steel_wolf', 'light_lion',
 ]);
 
 describe('Monster registry — race (種族) completeness', () => {

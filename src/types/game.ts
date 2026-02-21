@@ -99,6 +99,7 @@ export type StarterLite = {
 
 export type StarterSelectable = StarterLite & {
   id: StarterId;
+  race: MonsterRace;
   type: string;
   typeIcon: string;
   typeName: string;
@@ -190,7 +191,14 @@ export type MonsterRace =
   | "candy"
   | "butterfly"
   | "boss"
-  | "starter";
+  // starter races (我方角色種族)
+  | "fire_beast"
+  | "water_beast"
+  | "grass_beast"
+  | "thunder_beast"
+  | "ice_tiger"
+  | "steel_wolf"
+  | "light_lion";
 
 export type MonsterTraitFields = {
   trait?: string;

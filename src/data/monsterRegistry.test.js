@@ -371,7 +371,6 @@ describe('Monster registry — scene-type consistency', () => {
     // the variant filter in rosterBuilder handles them.
     if (mismatches.length > 0) {
       // Log but do not fail — cross-type variants are filtered at runtime
-      // eslint-disable-next-line no-console
       console.log(`[INFO] Cross-type variants (filtered at runtime): ${mismatches.join(', ')}`);
     }
     assert.ok(true, 'Cross-type variants are documented and handled by runtime filter');

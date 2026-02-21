@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', 'dist_temp', 'dist_temp2']),
+  globalIgnores(['dist', 'dist_temp', 'dist_temp2', 'ios', 'android', 'capacitor.config.ts']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [

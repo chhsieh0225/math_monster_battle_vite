@@ -25,11 +25,10 @@ type EncyclopediaCssVars = CSSProperties & Record<`--${string}`, string | number
 const LARGE_MONSTER_IDS: ReadonlySet<string> = new Set([...BOSS_IDS, 'golumn', 'golumn_mud', 'ghost_lantern', 'mushroom']);
 function encCardSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 64 : 48; }
 function encModalSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 200 : 160; }
-const WOLF_LEFT_FACING_STYLE: CSSProperties = { transform: 'scaleX(-1)' };
 
-function starterFacingStyle(entry: EncyclopediaStarterEntry): CSSProperties | undefined {
-  // Wolf stage 0/1 source images already face left, so only flip stage 2 if needed.
-  return entry.starterId === 'wolf' && entry.stageIdx >= 2 ? WOLF_LEFT_FACING_STYLE : undefined;
+function starterFacingStyle(): CSSProperties | undefined {
+  // Keep encyclopedia facing direction consistent with the source sprite file.
+  return undefined;
 }
 
 function isBladewolfEntry(entry: EncyclopediaStarterEntry): boolean {
@@ -271,7 +270,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                       <MonsterSprite
                         svgStr={e.svgFn(e.c1, e.c2)}
                         size={48}
-                        style={starterFacingStyle(e)}
+                        style={starterFacingStyle()}
                         ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: e.name })}
                       />
                     </div>
@@ -547,7 +546,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
               <MonsterSprite
                 svgStr={entry.svgFn(entry.c1, entry.c2)}
                 size={160}
-                style={starterFacingStyle(entry)}
+                style={starterFacingStyle()}
                 ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: entry.name })}
               />
             </div>

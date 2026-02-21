@@ -303,6 +303,8 @@ function checkWaveSceneConsistency(label, waves) {
     if (!w.sceneType) continue; // no override → scene auto-adapts to monster type
     // Slime with slimeType: the variant system picks a typed slime matching slimeType,
     // so the base mType "grass" is irrelevant — the actual variant will match the scene.
+    // Slime race: the variant system picks a typed slime matching the scene,
+    // so the base mType "grass" is irrelevant — skip race=slime with slimeType.
     if (w.monsterId === 'slime' && w.slimeType) continue;
     const expectedMType = SCENE_MTYPE_MAP[w.sceneType];
     if (!expectedMType) continue; // unknown scene → skip
@@ -337,7 +339,9 @@ describe('Monster registry — scene-type consistency', () => {
     const mismatches = [];
     for (const w of allWaves) {
       if (!w.sceneType) continue;
-      if (w.monsterId === 'slime' && w.slimeType) continue;
+      // Slime race: the variant system picks a typed slime matching the scene,
+    // so the base mType "grass" is irrelevant — skip race=slime with slimeType.
+    if (w.monsterId === 'slime' && w.slimeType) continue;
       const expectedMType = SCENE_MTYPE_MAP[w.sceneType];
       if (!expectedMType) continue;
       const mType = monsterMTypeById[w.monsterId];
@@ -373,5 +377,59 @@ describe('Monster registry — scene-type consistency', () => {
       console.log(`[INFO] Cross-type variants (filtered at runtime): ${mismatches.join(', ')}`);
     }
     assert.ok(true, 'Cross-type variants are documented and handled by runtime filter');
+  });
+});
+
+// ─── 10. Race (種族) field completeness ─────────────────────────
+
+const VALID_RACES = new Set([
+  'slime', 'fire_lizard', 'ghost', 'mushroom', 'dragon',
+  'golumn', 'candy', 'butterfly', 'boss', 'starter',
+]);
+
+describe('Monster registry — race (種族) completeness', () => {
+  it('every MonsterConfig has a valid race', () => {
+    const missing = MONSTER_CONFIGS.filter((c) => !VALID_RACES.has(c.race));
+    assert.deepEqual(
+      missing.map((c) => c.id),
+      [],
+      `Monsters with missing/invalid race: ${missing.map((c) => `${c.id}(race=${c.race})`).join(', ')}`,
+    );
+  });
+
+  it('every SlimeVariantConfig has race="slime"', () => {
+    const bad = SLIME_VARIANT_CONFIGS.filter((c) => c.race !== 'slime');
+    assert.deepEqual(
+      bad.map((c) => c.id),
+      [],
+      `Slime variants with wrong race: ${bad.map((c) => `${c.id}(race=${c.race})`).join(', ')}`,
+    );
+  });
+
+  it('every EvolvedSlimeVariantConfig has race="slime"', () => {
+    const bad = EVOLVED_SLIME_VARIANT_CONFIGS.filter((c) => c.race !== 'slime');
+    assert.deepEqual(
+      bad.map((c) => c.id),
+      [],
+      `Evolved slime variants with wrong race: ${bad.map((c) => `${c.id}(race=${c.race})`).join(', ')}`,
+    );
+  });
+
+  it('race is orthogonal to mType — slime race spans multiple mTypes', () => {
+    const slimeTypes = new Set(
+      [...SLIME_VARIANT_CONFIGS, ...EVOLVED_SLIME_VARIANT_CONFIGS].map((c) => c.mType),
+    );
+    // Slime race should cover at least grass, fire, water, electric, dark, steel
+    assert.ok(slimeTypes.size >= 5, `Slime race only covers ${slimeTypes.size} mTypes: ${[...slimeTypes].join(', ')}`);
+  });
+
+  it('boss monsters all have race="boss"', () => {
+    const bossConfigs = MONSTER_CONFIGS.filter((c) => BOSS_IDS.has(c.id));
+    const bad = bossConfigs.filter((c) => c.race !== 'boss');
+    assert.deepEqual(
+      bad.map((c) => c.id),
+      [],
+      `Boss monsters with wrong race: ${bad.map((c) => `${c.id}(race=${c.race})`).join(', ')}`,
+    );
   });
 });

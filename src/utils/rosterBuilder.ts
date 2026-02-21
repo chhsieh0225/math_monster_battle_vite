@@ -19,6 +19,7 @@ import { STARTERS } from '../data/starters.ts';
 import type {
   HydratedMonster,
   HydratedSlimeVariant,
+  MonsterRace,
   MonsterType,
   PlayerStarterId,
 } from '../types/game';
@@ -319,6 +320,7 @@ export function buildRoster(
           c2: starter.c2,
           svgFn: starterSvgFn,
           drops: [...(STARTER_DROPS_BY_ID[starterMirrorId] || ['🍬', '🧪'])],
+          race: 'starter' as MonsterRace,
           mType: starterType,
           typeIcon: starter.typeIcon || '✨',
           typeName: starter.typeName || STARTER_TYPE_NAME_FALLBACK[starterMirrorId] || '屬性',

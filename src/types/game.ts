@@ -179,6 +179,19 @@ export type MonsterType =
   | "poison"
   | "rock";
 
+/** 種族（species grouping）— 與屬性 (mType) 正交。 */
+export type MonsterRace =
+  | "slime"
+  | "fire_lizard"
+  | "ghost"
+  | "mushroom"
+  | "dragon"
+  | "golumn"
+  | "candy"
+  | "butterfly"
+  | "boss"
+  | "starter";
+
 export type MonsterTraitFields = {
   trait?: string;
   traitName?: string;
@@ -200,6 +213,7 @@ export type MonsterConfig = MonsterTraitFields & {
   evolvedHabitatEn?: string;
   evolveLvl?: number;
   dropTable: string;
+  race: MonsterRace;
   mType: MonsterType;
   typeIcon: string;
   typeName: string;
@@ -220,6 +234,7 @@ export type SlimeVariantConfig = MonsterTraitFields & {
   spriteKey: string;
   c1: string;
   c2: string;
+  race: MonsterRace;
   mType: MonsterType;
   typeIcon: string;
   typeName: string;

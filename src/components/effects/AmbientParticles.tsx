@@ -17,6 +17,8 @@ type Props = {
   type2?: string | null;
   /** Sprite container size in px (particles scale to this) */
   size?: number;
+  /** Visual body scale (use 1 / compensation for wide sprites) */
+  visualScale?: number;
   /** Unique seed for deterministic randomisation */
   seed?: string;
   /** Number of particles (default 6) */
@@ -168,11 +170,22 @@ function renderShape(
   }
 }
 
-export default function AmbientParticles({ type, type2, size = 160, seed = 'default', count = 6 }: Props) {
+export default function AmbientParticles({
+  type,
+  type2,
+  size = 160,
+  visualScale = 1,
+  seed = 'default',
+  count = 6,
+}: Props) {
   const theme = TYPE_THEMES[type] || TYPE_THEMES.grass;
   const theme2 = type2 ? TYPE_THEMES[type2] : null;
   const totalCount = theme2 ? count : count;
   const primaryCount = theme2 ? Math.ceil(count * 0.6) : count;
+  const bodyScale = Math.max(0.45, Math.min(1.1, visualScale));
+  const visualSize = size * bodyScale;
+  const halfSize = size / 2;
+  const halfVisualSize = visualSize / 2;
 
   const particles = useMemo(() => {
     const result: Array<{
@@ -195,11 +208,12 @@ export default function AmbientParticles({ type, type2, size = 160, seed = 'defa
       const pfx = isPrimary ? 'p' : 's';
       const color = t.colors[i % t.colors.length];
       const sz = rr(seed, `${pfx}sz`, i, t.sizeRange[0], t.sizeRange[1]);
-      // Distribute particles in a ring around the sprite center
+      // Place particles near the visible body instead of the padded SVG bounds.
       const angle = (i / totalCount) * 360 + rr(seed, `${pfx}ang`, i, -30, 30);
-      const dist = rr(seed, `${pfx}dist`, i, 35, 55); // % of half-size
-      const x = 50 + Math.cos(angle * Math.PI / 180) * dist;
-      const y = 50 + Math.sin(angle * Math.PI / 180) * dist;
+      const distRatio = rr(seed, `${pfx}dist`, i, 0.58, 0.92);
+      const distPx = halfVisualSize * distRatio;
+      const x = ((halfSize + Math.cos(angle * Math.PI / 180) * distPx) / size) * 100;
+      const y = ((halfSize + Math.sin(angle * Math.PI / 180) * distPx) / size) * 100;
       const dur = rr(seed, `${pfx}dur`, i, 2.5, 4.5);
       const delay = rr(seed, `${pfx}del`, i, 0, 3);
       const rotation = rr(seed, `${pfx}rot`, i, -45, 45);
@@ -219,7 +233,9 @@ export default function AmbientParticles({ type, type2, size = 160, seed = 'defa
       });
     }
     return result;
-  }, [seed, totalCount, primaryCount, theme, theme2]);
+  }, [seed, totalCount, primaryCount, theme, theme2, size, halfSize, halfVisualSize]);
+
+  const particleSizeScale = Math.max(0.72, Math.min(1.35, visualSize / 160));
 
   return (
     <div
@@ -248,7 +264,7 @@ export default function AmbientParticles({ type, type2, size = 160, seed = 'defa
             opacity: 0.85,
           }}
         >
-          {renderShape(p.shape, Math.round(p.sz * (size / 160)), p.color)}
+          {renderShape(p.shape, Math.round(p.sz * particleSizeScale), p.color)}
         </div>
       ))}
     </div>

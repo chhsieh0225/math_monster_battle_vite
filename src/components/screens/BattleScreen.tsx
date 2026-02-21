@@ -554,11 +554,15 @@ function BattleScreenComponent({
     mainPlayerSize: rawMainSize,
     subPlayerSize: rawSubSize,
     enemySize: eSize,
+    playerComp,
+    enemyComp,
   } = layout;
   // Keep each sprite's visual size bound to its own character asset.
   // Co-op slot switching should only swap positions/highlights, not raw size identities.
   const mainPlayerSize = rawMainSize;
   const subPlayerSize = rawSubSize;
+  const playerMainVisualScale = Math.max(0.45, Math.min(1.1, 1 / (playerComp || 1)));
+  const enemyMainVisualScale = Math.max(0.45, Math.min(1.1, 1 / (enemyComp || 1)));
 
   const effectTarget = memoEffectTarget!;
   const selectedMove = activeStarter && S.selIdx != null
@@ -740,6 +744,8 @@ function BattleScreenComponent({
           enemySubSize={enemySubSize}
           mainPlayerSize={mainPlayerSize}
           subPlayerSize={subPlayerSize}
+          playerMainVisualScale={playerMainVisualScale}
+          enemyMainVisualScale={enemyMainVisualScale}
           enemySpriteRef={enemySpriteRef}
           playerSpriteRef={playerSpriteRef}
           playerSubSpriteRef={playerSubSpriteRef}

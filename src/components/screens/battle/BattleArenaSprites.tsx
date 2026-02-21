@@ -18,6 +18,8 @@ type BattleArenaSpritesProps = {
   enemySubSize: number;
   mainPlayerSize: number;
   subPlayerSize: number;
+  playerMainVisualScale: number;
+  enemyMainVisualScale: number;
   enemySpriteRef: RefObject<HTMLDivElement | null>;
   playerSpriteRef: RefObject<HTMLDivElement | null>;
   playerSubSpriteRef?: RefObject<HTMLDivElement | null>;
@@ -56,6 +58,8 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
   enemySubSize,
   mainPlayerSize,
   subPlayerSize,
+  playerMainVisualScale,
+  enemyMainVisualScale,
   enemySpriteRef,
   playerSpriteRef,
   playerSubSpriteRef,
@@ -86,6 +90,7 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
             type={enemy.mType || 'grass'}
             type2={enemy.mType2}
             size={eSize}
+            visualScale={enemyMainVisualScale}
             seed={`e-${enemy.id}`}
           />
         )}
@@ -108,6 +113,7 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
           <AmbientParticles
             type={starterType || 'grass'}
             size={mainPlayerSize}
+            visualScale={playerMainVisualScale}
             seed={`p-${starterType}`}
             count={5}
           />

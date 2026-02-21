@@ -80,10 +80,14 @@ export function resolveBattleLayout({
   const isWideBeast = ["wolf", "tiger", "lion"].includes(normalizedPlayerId);
   const beastLeftAdj = isWideBeast ? -4 : 0;      // nudge main sprite left
   const beastSubLeftAdj = isWideBeast ? 6 : 0;     // push sub ally further right
+  // Co-op battlefield readability: keep both allies slightly further from enemy side.
+  // Sub ally is moved a bit more than main ally to reduce overlap after slot switches.
+  const coopMainLeftShift = dualUnits ? (compactDual ? 1.5 : 2) : 0;
+  const coopSubLeftShift = dualUnits ? (compactDual ? 2 : 2.5) : 0;
 
-  const playerMainLeftPct = (dualUnits ? (compactDual ? 4 : 6) : 6) + beastLeftAdj;
+  const playerMainLeftPct = (dualUnits ? (compactDual ? 4 : 6) : 6) - coopMainLeftShift + beastLeftAdj;
   const playerMainBottomPct = dualUnits ? (compactDual ? 9 : 11) : 14;
-  const playerSubLeftPct = (dualUnits ? (compactDual ? 21 : 23) : 24) + beastSubLeftAdj;
+  const playerSubLeftPct = (dualUnits ? (compactDual ? 21 : 23) : 24) - coopSubLeftShift + beastSubLeftAdj;
   const playerSubBottomPct = dualUnits ? (compactDual ? 13 : 15) : 17;
   const isBossPlayer = BOSS_IDS.has(normalizedPlayerId);
   const isLionOrWolfFinal = (normalizedPlayerId === "lion" || normalizedPlayerId === "wolf") && playerStageIdx >= 2;

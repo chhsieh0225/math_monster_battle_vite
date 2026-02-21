@@ -13,7 +13,6 @@ import { buildRoster } from './rosterBuilder.ts';
 
 const pickFirst = () => 0;
 const pickSecond = (length) => (length > 1 ? 1 : 0);
-const pickThird = (length) => (length > 2 ? 2 : 0);
 const pickStarterMidStage = (length) => {
   if (length >= 100) return 0;
   if (length >= 8) return 4;

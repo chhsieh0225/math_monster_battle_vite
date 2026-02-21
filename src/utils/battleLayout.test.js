@@ -24,8 +24,10 @@ test('coop lion final evolution is slightly reduced for screen fit', () => {
     enemyIsEvolved: false,
   });
 
-  assert.ok(lionLayout.mainPlayerSize < fireLayout.mainPlayerSize);
-  assert.equal(lionLayout.mainPlayerSize, 180);
+  // lion uses wide sprite (×1.5), fire uses standard sprite — lion SVG element
+  // is physically larger but the visible monster inside is proportionally similar.
+  assert.ok(lionLayout.mainPlayerSize > fireLayout.mainPlayerSize);
+  assert.equal(lionLayout.mainPlayerSize, 271);
 });
 
 test('coop wolf final evolution follows lion sizing profile', () => {
@@ -51,7 +53,7 @@ test('coop wolf final evolution follows lion sizing profile', () => {
   });
 
   assert.equal(wolfLayout.mainPlayerSize, lionLayout.mainPlayerSize);
-  assert.equal(wolfLayout.mainPlayerSize, 180);
+  assert.equal(wolfLayout.mainPlayerSize, 271);
 });
 
 test('compact UI slightly reduces lion/wolf final evolution size', () => {
@@ -87,8 +89,8 @@ test('compact UI slightly reduces lion/wolf final evolution size', () => {
   });
 
   assert.ok(lionCompact.mainPlayerSize < lionDesktop.mainPlayerSize);
-  assert.equal(lionDesktop.mainPlayerSize, 200);
-  assert.equal(lionCompact.mainPlayerSize, 194);
+  assert.equal(lionDesktop.mainPlayerSize, 300);
+  assert.equal(lionCompact.mainPlayerSize, 291);
   assert.equal(wolfCompact.mainPlayerSize, lionCompact.mainPlayerSize);
 });
 
@@ -193,7 +195,8 @@ test('evolved wild starter enemies render larger than base wild starter enemies'
   });
 
   assert.ok(evolvedWildStarterLayout.enemySize > baseWildStarterLayout.enemySize);
-  assert.equal(evolvedWildStarterLayout.enemySize, 172);
+  // wolf is a wide-sprite starter: base 172 × 1.5 = 258
+  assert.equal(evolvedWildStarterLayout.enemySize, 258);
 });
 
 test('ghost lantern variant gets larger in-battle render size for readability', () => {
@@ -219,7 +222,8 @@ test('ghost lantern variant gets larger in-battle render size for readability', 
   });
 
   assert.ok(lanternLayout.enemySize > baseGhostLayout.enemySize);
-  assert.equal(lanternLayout.enemySize, 182);
+  // ghost lantern is a wide sprite: base 182 × 1.5 = 273
+  assert.equal(lanternLayout.enemySize, 273);
 });
 
 test('mushroom variant uses enlarged in-battle render size', () => {
@@ -245,7 +249,8 @@ test('mushroom variant uses enlarged in-battle render size', () => {
   });
 
   assert.ok(mushroomLayout.enemySize > baseGhostLayout.enemySize);
-  assert.equal(mushroomLayout.enemySize, 176);
+  // mushroom is a wide sprite: base 176 × 1.5 = 264
+  assert.equal(mushroomLayout.enemySize, 264);
 });
 
 test('compact UI shifts crazy dragon enemy position to the right', () => {

@@ -66,6 +66,9 @@ export function resolveBattleLayout({
   const isWolfMid = normalizedPlayerId === "wolf" && playerStageIdx === 1;
   // 小火/小水/小草/小雷 (dragon_kin) stage-0 sprites are slightly smaller
   const isDragonKinBase = ["fire", "water", "grass", "electric"].includes(normalizedPlayerId) && playerStageIdx === 0;
+  // 677×369 wide sprites (lion/wolf/tiger) only occupy 65% of viewBox height
+  // with makeSvgFnFit, so scale up ×1.5 to maintain visual presence.
+  const isWideSpritePlayer = ["lion", "wolf", "tiger"].includes(normalizedPlayerId);
   const mainPlayerBaseSize = isBossPlayer
     ? 230
     : (isLionFinalInTeam || isWolfFinalInTeam)
@@ -81,7 +84,8 @@ export function resolveBattleLayout({
   const mainPlayerScale = dualUnits ? (compactDual ? 0.9 : 0.96) : 1;
   // Slightly reduce lion/wolf final forms on compact (mobile) viewports.
   const compactFinalStarterScale = compactUI && isLionOrWolfFinal ? 0.97 : 1;
-  const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale * compactFinalStarterScale);
+  const widePlayerFactor = isWideSpritePlayer ? 1.5 : 1;
+  const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale * compactFinalStarterScale * widePlayerFactor);
   const subPlayerSize = Math.round((compactDual ? 104 : 112) * (dualUnits ? (compactDual ? 0.9 : 0.95) : 1));
 
   const visualEnemyId = normalizeEnemyVisualId(enemyId);
@@ -93,9 +97,15 @@ export function resolveBattleLayout({
   const isGolumn = visualEnemyId === "golumn" || visualEnemyId === "golumn_mud";
   const isGhostLantern = visualEnemyId === "ghost_lantern";
   const isMushroom = visualEnemyId === "mushroom";
+  const isButterfly = visualEnemyId === "colorful_butterfly";
   const isCrazyDragon = visualEnemyId === "boss_crazy_dragon";
   const isSwordGod = visualEnemyId === "boss_sword_god";
   const isHydra = visualEnemyId === "boss_hydra";
+  // 677×369 wide enemy sprites only fill 65% of viewBox height with makeSvgFnFit.
+  // Scale ×1.5 to maintain visual presence. Bosses (hydra, crazy_dragon, sword_god)
+  // already have manually tuned fit-mode sizes, so they're excluded.
+  const isWideSpriteEnemy = isGhostLantern || isMushroom || isButterfly
+    || (isWildStarter && /_(lion|wolf|tiger)$/.test(visualEnemyId));
   // Mobile compact viewport: move Crazy Dragon slightly to the right so it doesn't
   // feel too close to player-side due to its large body width.
   const crazyDragonRightAdjust = compactUI && isCrazyDragon
@@ -114,7 +124,8 @@ export function resolveBattleLayout({
           : enemyIsEvolved ? 155 : 120;
   const enemyScale = dualUnits ? (compactDual ? 0.92 : 0.98) : 1;
   const hydraCoopBoost = isHydra && dualUnits ? (compactDual ? 1.08 : 1.1) : 1;
-  const enemySize = Math.round(enemyBaseSize * enemyScale * hydraCoopBoost);
+  const wideEnemyFactor = isWideSpriteEnemy ? 1.5 : 1;
+  const enemySize = Math.round(enemyBaseSize * enemyScale * hydraCoopBoost * wideEnemyFactor);
 
   const enemyBaseTopPct = (enemySceneType === "ghost" || isBoss) ? 12
     : enemySceneType === "steel" ? 16 : 26;

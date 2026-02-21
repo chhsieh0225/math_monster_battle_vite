@@ -407,9 +407,12 @@ export default function SelectionScreen({
             '--sel-border-top': `${starter.c1}44`,
           } as CSSProperties;
           const isBeastStarter = ['wolf', 'tiger', 'lion'].includes(starter.race);
-          const spriteSize = isBeastStarter
-            ? (selected ? 126 : 100)
-            : (selected ? 72 : 56);
+          const isBossStarter = starter.id.startsWith('boss');
+          const spriteSize = isBossStarter
+            ? (selected ? 90 : 72)
+            : isBeastStarter
+              ? (selected ? 96 : 76)
+              : (selected ? 72 : 56);
 
           return (
             <button

@@ -175,11 +175,21 @@
 }
 
 .selection-card-sprite{
+  width:clamp(76px, 16vw, 104px);
+  min-width:clamp(76px, 16vw, 104px);
+  height:clamp(56px, 12vw, 82px);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
   flex-shrink:0;
   transition:transform .3s;
 }
 
 .selection-card-sprite.is-selected{animation:spinSelect .7s ease-in-out}
+
+.selection-card-btn.is-selected .selection-card-sprite{
+  height:clamp(62px, 13vw, 92px);
+}
 
 .selection-card-sprite-inner{
   transform:scaleX(1);

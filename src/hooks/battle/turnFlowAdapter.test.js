@@ -141,7 +141,7 @@ test('smoke(select): pvp mode starts timer and blocks uncharged risky move', () 
   });
   runBattleSelectMove({ selectMoveInput: normal.selectMoveInput });
   assert.equal(normal.state.phase, 'question');
-  assert.deepEqual(normal.calls.timerArgs, [4]);
+  assert.deepEqual(normal.calls.timerArgs, [15]);
 
   const risky = createSelectMoveHarness({
     battleMode: 'pvp',

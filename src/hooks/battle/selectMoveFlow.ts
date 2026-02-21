@@ -1,4 +1,5 @@
 import type { MoveVm, QuestionVm, StarterVm } from '../../types/battle';
+import { PVP_TIMER_SEC } from '../../data/constants.ts';
 
 type BattleStarter = StarterVm | null;
 type BattleQuestion = QuestionVm;
@@ -103,6 +104,10 @@ export function runSelectMoveFlow({
   setPhase('question');
   markQStart();
 
-  if (timedMode || state.battleMode === 'pvp') startTimer(questionTimeLimitSec ?? undefined);
+  if (state.battleMode === 'pvp') {
+    startTimer(PVP_TIMER_SEC);
+  } else if (timedMode) {
+    startTimer(questionTimeLimitSec ?? undefined);
+  }
   return true;
 }

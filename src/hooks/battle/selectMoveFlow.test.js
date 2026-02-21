@@ -114,6 +114,25 @@ test('runSelectMoveFlow starts timer with explicit question time limit', () => {
   assert.deepEqual(calls.startTimerArgs, [5]);
 });
 
+test('runSelectMoveFlow uses fixed 15s timer in pvp mode', () => {
+  const { calls, args } = createDeps({
+    state: {
+      phase: 'menu',
+      battleMode: 'pvp',
+      pvpTurn: 'p1',
+      pvpChargeP1: 0,
+      pvpChargeP2: 0,
+      sealedMove: null,
+    },
+    timedMode: false,
+    questionTimeLimitSec: 4,
+  });
+  const out = runSelectMoveFlow(args);
+  assert.equal(out, true);
+  assert.equal(calls.startTimer, 1);
+  assert.deepEqual(calls.startTimerArgs, [15]);
+});
+
 test('runSelectMoveFlow blocks sealed move in non-pvp mode', () => {
   const { calls, args } = createDeps({
     state: {

@@ -2,6 +2,7 @@ export const MAX_MOVE_LVL = 6;
 export const POWER_CAPS = [42, 45, 45, 55] as const;
 export const HITS_PER_LVL = 2;
 export const TIMER_SEC = 5;
+export const PVP_TIMER_SEC = 15;
 export const PLAYER_MAX_HP = 100;
 
 export const EFX = {

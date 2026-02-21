@@ -337,12 +337,12 @@ function BattleScreenComponent({
     const mainFilter = !hasSelectableCoopPair
       ? "none"
       : mainIsActive
-        ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))"
+        ? "saturate(1) brightness(1) drop-shadow(0 0 12px rgba(99,102,241,0.7))"
         : "saturate(0.62) brightness(0.78)";
     const subFilter = !hasSelectableCoopPair
       ? "none"
       : subIsActive
-        ? "drop-shadow(0 0 12px rgba(34,197,94,0.75))"
+        ? "saturate(1) brightness(1) drop-shadow(0 0 12px rgba(34,197,94,0.75))"
         : "saturate(0.62) brightness(0.78)";
 
     const isLargeEnemySub = enemySubId === "golumn" || enemySubId === "golumn_mud" || enemySubId === "mushroom";
@@ -389,7 +389,7 @@ function BattleScreenComponent({
         "--player-main-bottom": `${playerMainBottomPct}%`,
         "--player-main-filter": mainFilter,
         "--player-main-z": coopUsingSub ? "4" : "6",
-        "--player-main-opacity": mainIsActive ? "1" : ".58",
+        "--player-main-opacity": mainIsActive ? "1" : ".52",
         "--battle-player-main-scale": mainIsActive ? "1" : ".95",
         "--player-main-anim": memoSpriteAnims.playerMain,
       } as BattleCssVars,
@@ -398,7 +398,7 @@ function BattleScreenComponent({
         "--player-sub-bottom": `${playerSubBottomPct}%`,
         "--player-sub-filter": subFilter,
         "--player-sub-z": coopUsingSub ? "6" : "4",
-        "--player-sub-opacity": subIsActive ? "1" : ".58",
+        "--player-sub-opacity": subIsActive ? "1" : ".52",
         "--battle-player-sub-scale": subIsActive ? "1" : ".95",
         "--player-sub-anim": memoSpriteAnims.playerSub,
       } as BattleCssVars,

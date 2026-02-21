@@ -275,8 +275,8 @@ test('lion final form is nudged left/down versus default final-starter lane', ()
     enemySpriteKey: 'slimeSVG',
   });
 
-  assert.equal(lionLayout.playerMainLeftPct, 1.3);
-  assert.equal(lionLayout.playerMainBottomPct, 12.4);
+  assert.ok(Math.abs(lionLayout.playerMainLeftPct - 0.3) < 1e-9);
+  assert.equal(lionLayout.playerMainBottomPct, 11.4);
   assert.ok(lionLayout.playerMainLeftPct < fireLayout.playerMainLeftPct);
   assert.ok(lionLayout.playerMainBottomPct < fireLayout.playerMainBottomPct);
 });
@@ -837,8 +837,8 @@ test('tiger player is nudged lower-left in single battle lane', () => {
     enemySpriteKey: 'slimeSVG',
   });
 
-  assert.equal(tigerSingle.playerMainLeftPct, 1.2);
-  assert.equal(tigerSingle.playerMainBottomPct, 12.8);
+  assert.ok(Math.abs(tigerSingle.playerMainLeftPct - 0.2) < 1e-9);
+  assert.equal(tigerSingle.playerMainBottomPct, 11.8);
   assert.ok(tigerSingle.playerMainLeftPct < fireSingle.playerMainLeftPct);
   assert.ok(tigerSingle.playerMainBottomPct < fireSingle.playerMainBottomPct);
 });

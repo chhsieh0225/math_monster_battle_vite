@@ -81,6 +81,7 @@ export function resolveBattleLayout({
   const normalizedSubId = normalizeEnemyVisualId(subStarterId);
   const isWideBeastSub = ["wolf", "tiger", "lion"].includes(normalizedSubId);
   const isTigerPlayer = normalizedPlayerId === "tiger";
+  const isBeastFinal = isWideBeast && playerStageIdx >= 2;
   const isWolfFinal = normalizedPlayerId === "wolf" && playerStageIdx >= 2;
   const isLionFinal = normalizedPlayerId === "lion" && playerStageIdx >= 2;
   const beastLeftAdj = isWideBeast ? -4 : 0;      // nudge main sprite left
@@ -91,6 +92,10 @@ export function resolveBattleLayout({
   // Lion King final form should sit slightly lower-left during battle.
   const lionFinalMainLeftAdj = isLionFinal ? (dualUnits ? -0.25 : -0.7) : 0;
   const lionFinalMainBottomAdj = isLionFinal ? (dualUnits ? -0.7 : -1.6) : 0;
+  // Wide beast final forms (wolf/tiger/lion) still look centered due aspect ratio,
+  // so apply an extra lane correction toward lower-left.
+  const beastFinalMainLeftAdj = isBeastFinal ? (dualUnits ? -0.4 : -1.0) : 0;
+  const beastFinalMainBottomAdj = isBeastFinal ? (dualUnits ? -0.3 : -1.0) : 0;
   // Ice Tiger should sit slightly lower-left for better lane readability.
   const tigerMainLeftAdj = isTigerPlayer ? (dualUnits ? -0.35 : -0.8) : 0;
   const tigerMainBottomAdj = isTigerPlayer ? (dualUnits ? -0.6 : -1.2) : 0;
@@ -105,10 +110,12 @@ export function resolveBattleLayout({
   const playerMainLeftPct = (dualUnits ? (compactDual ? 4 : 6) : 6)
     - coopMainLeftShift
     + beastLeftAdj
+    + beastFinalMainLeftAdj
     + wolfFinalMainLeftAdj
     + lionFinalMainLeftAdj
     + tigerMainLeftAdj;
   const playerMainBottomPct = (dualUnits ? (compactDual ? 9 : 11) : 14)
+    + beastFinalMainBottomAdj
     + wolfFinalMainBottomAdj
     + lionFinalMainBottomAdj
     + tigerMainBottomAdj;

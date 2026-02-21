@@ -424,7 +424,7 @@ function BattleScreenComponent({
         "--player-sub-opacity": subIsActive ? "1" : ".52",
         "--battle-player-sub-dim-scale": subIsActive
           ? ((subComp || 1) > 1.3 ? (compactDual ? ".95" : "1") : (compactDual ? "1.14" : "1.08"))
-          : ((subComp || 1) > 1.3 ? (compactDual ? ".76" : ".84") : ".84"),
+          : ((subComp || 1) > 1.3 ? (compactDual ? ".82" : ".88") : ".88"),
         "--player-sub-anim": memoSpriteAnims.playerSub,
       } as BattleCssVars,
       playerMainShadowStyle: {

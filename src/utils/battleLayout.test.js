@@ -68,7 +68,7 @@ function resolveSubDimScale({ showAllySub, coopUsingSub, subComp, compactDual })
   const subIsActive = hasSelectableCoopPair && coopUsingSub;
   if (!hasSelectableCoopPair) return 1;
   if (subIsActive) return subComp > 1.3 ? (compactDual ? 0.95 : 1) : (compactDual ? 1.14 : 1.08);
-  return subComp > 1.3 ? (compactDual ? 0.76 : 0.84) : 0.84;
+  return subComp > 1.3 ? (compactDual ? 0.82 : 0.88) : 0.88;
 }
 
 function resolveBattleRects({
@@ -1082,9 +1082,9 @@ const DEVICE_LAYOUT_SNAPSHOT = {
     laptop: { pm: [81.96, 189.96], em: [1021.4, 1229.4], pMainPct: 6, eMainPct: 10 },
   },
   coopMain: {
-    phone: { pm: [-5.85, 169.93], ps: [97.5, 168.56], em: [230.72, 378.3], es: [265.39, 327.6], pMainPct: -1.5, pSubPct: 25, eMainPct: 3, eSubPct: 16 },
-    tablet: { pm: [0, 193.03], ps: [203.52, 287.22], em: [528.08, 706.56], es: [541.44, 614.4], pMainPct: 0, pSubPct: 26.5, eMainPct: 8, eSubPct: 20 },
-    laptop: { pm: [0, 199], ps: [361.99, 451.03], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 0, pSubPct: 26.5, eMainPct: 8, eSubPct: 20 },
+    phone: { pm: [-5.85, 169.93], ps: [97.5, 171.95], em: [230.72, 378.3], es: [265.39, 327.6], pMainPct: -1.5, pSubPct: 25, eMainPct: 3, eSubPct: 16 },
+    tablet: { pm: [0, 193.03], ps: [203.52, 291.2], em: [528.08, 706.56], es: [541.44, 614.4], pMainPct: 0, pSubPct: 26.5, eMainPct: 8, eSubPct: 20 },
+    laptop: { pm: [0, 199], ps: [361.99, 455.27], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 0, pSubPct: 26.5, eMainPct: 8, eSubPct: 20 },
   },
   coopSub: {
     phone: { pm: [17.55, 119.5], ps: [-5.85, 90.59], em: [230.72, 378.3], es: [265.39, 327.6], pMainPct: 4.5, pSubPct: -1.5, eMainPct: 3, eSubPct: 16 },

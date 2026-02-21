@@ -11,4 +11,6 @@ export const DEFAULT_EFFECT_TARGET: SpriteTarget = {
   right: 'calc(10% + 60px)',
   flyRight: 25,
   flyTop: 37,
+  cx: 292.5,
+  cy: 203.5,
 };

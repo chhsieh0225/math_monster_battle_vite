@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { useBattleParallax } from '../../hooks/useBattleParallax';
@@ -27,6 +27,9 @@ import { BattleSceneLayers } from './battle/BattleSceneLayers.tsx';
 import { BattleWeatherLayer } from './battle/BattleWeatherLayer.tsx';
 import { BossIntroOverlay } from './battle/BossIntroOverlay.tsx';
 import { BossVictoryOverlay } from './battle/BossVictoryOverlay.tsx';
+import { updateBattleFxTargets, resetBattleFxTargets } from '../../hooks/battle/battleFxTargets';
+import type { BattleFxTargets } from '../../types/battleFx';
+import { DEFAULT_FX_TARGETS } from '../../types/battleFx';
 import './BattleScreen.css';
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
 
@@ -68,6 +71,7 @@ function BattleScreenComponent({
   const battleArenaRef = useRef<HTMLDivElement | null>(null);
   const enemySpriteRef = useRef<HTMLDivElement | null>(null);
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
+  const playerSubSpriteRef = useRef<HTMLDivElement | null>(null);
   const arenaScale = useBattleArenaScale({
     arenaRef: battleArenaRef,
     enabled: S.screen === 'battle',
@@ -80,7 +84,7 @@ function BattleScreenComponent({
     // Disable on compact/mobile layout to reduce input/render jitter on lower-end devices.
     enabled: showHeavyFx && !S.gamePaused && !UX.compactUI,
   });
-  const { measuredEnemyTarget, measuredPlayerTarget } = useSpriteTargets({
+  const { measuredEnemyTarget, measuredPlayerTarget, measuredPlayerSubTarget } = useSpriteTargets({
     screen: S.screen,
     phase: S.phase,
     enemyId: S.enemy?.id,
@@ -93,6 +97,7 @@ function BattleScreenComponent({
     battleRootRef,
     enemySpriteRef,
     playerSpriteRef,
+    playerSubSpriteRef,
   });
 
   const {
@@ -187,6 +192,8 @@ function BattleScreenComponent({
       right: `calc(${enemyMainRightPct}% + ${enemySize / 2}px)`,
       flyRight: enemyMainRightPct + enemySize / 2 * 100 / 390,
       flyTop: enemyTopPct + enemyHeight / 2 * 100 / 550,
+      cx: 390 - (enemyMainRightPct / 100 * 390 + enemySize / 2),
+      cy: enemyTopPct / 100 * 550 + enemyHeight / 2,
     };
 
     const playerMainHeight = mainPlayerSize * 100 / 120;
@@ -197,12 +204,73 @@ function BattleScreenComponent({
       right: `calc(${playerCenterRightPct}% + 0px)`,
       flyRight: playerCenterRightPct,
       flyTop: playerCenterTopPct,
+      cx: 390 - (playerCenterRightPct / 100 * 390),
+      cy: playerCenterTopPct / 100 * 550,
     };
 
     const enemyTarget = measuredEnemyTarget || enemyFallbackTarget;
     const playerTarget = measuredPlayerTarget || playerFallbackTarget;
     return S.atkEffect?.targetSide === "player" ? playerTarget : enemyTarget;
   }, [coreStatic, measuredEnemyTarget, measuredPlayerTarget, S.atkEffect?.targetSide]);
+
+  // ── Compute BattleFxTargets for particle/damage popup positioning ──
+  const memoFxTargets = useMemo<BattleFxTargets>(() => {
+    if (!coreStatic) return DEFAULT_FX_TARGETS;
+    const {
+      layout: {
+        playerSubLeftPct: rawSubLeftPct,
+        playerSubBottomPct: rawSubBottomPct,
+        subPlayerSize: rawSubSize,
+        playerMainLeftPct: rawMainLeftPct,
+        playerMainBottomPct: rawMainBottomPct,
+        mainPlayerSize: rawMainSize,
+      },
+      coopUsingSub,
+    } = coreStatic;
+
+    // Player-main: from measured target or fallback
+    const pTarget = measuredPlayerTarget;
+    const pCx = pTarget?.cx ?? DEFAULT_FX_TARGETS.playerMain.x;
+    const pCy = pTarget?.cy ?? DEFAULT_FX_TARGETS.playerMain.y;
+
+    // Player-sub: from measured sub target, or compute from layout percentages
+    const subTarget = measuredPlayerSubTarget;
+    let subCx: number;
+    let subCy: number;
+    if (subTarget) {
+      subCx = subTarget.cx;
+      subCy = subTarget.cy;
+    } else {
+      // Fallback: estimate sub position from layout percentages using 390×550 virtual arena
+      const subLeftPct = coopUsingSub ? rawMainLeftPct : rawSubLeftPct;
+      const subBottomPct = coopUsingSub ? rawMainBottomPct : rawSubBottomPct;
+      const subSize = coopUsingSub ? rawMainSize : rawSubSize;
+      const subHeight = subSize * 100 / 120;
+      const subCenterRightPct = Math.max(8, 100 - subLeftPct - (subSize * 100 / 390) / 2);
+      const subCenterTopPct = Math.max(8, 100 - subBottomPct - (subHeight * 100 / 550) / 2);
+      subCx = 390 - (subCenterRightPct / 100 * 390);
+      subCy = subCenterTopPct / 100 * 550;
+    }
+
+    // Enemy-main: from measured target or fallback
+    const eTarget = measuredEnemyTarget;
+    const eCx = eTarget?.cx ?? DEFAULT_FX_TARGETS.enemyMain.x;
+    const eCy = eTarget?.cy ?? DEFAULT_FX_TARGETS.enemyMain.y;
+
+    return {
+      playerMain: { x: Math.round(pCx), y: Math.round(pCy) },
+      playerSub: { x: Math.round(subCx), y: Math.round(subCy) },
+      enemyMain: { x: Math.round(eCx), y: Math.round(eCy) },
+      enemyAbove: { x: Math.round(eCx), y: Math.round(eCy - 25) },
+      playerAbove: { x: Math.round(pCx), y: Math.round(pCy - 30) },
+    };
+  }, [coreStatic, measuredEnemyTarget, measuredPlayerTarget, measuredPlayerSubTarget]);
+
+  // Push FX targets to the module-level singleton for flow functions.
+  useEffect(() => {
+    updateBattleFxTargets(memoFxTargets);
+    return () => resetBattleFxTargets();
+  }, [memoFxTargets]);
 
   // ── Sprite animation styles (isolated memo to prevent animation restarts) ──
   // Animation CSS variables are separated from layout styles so that frequent
@@ -493,8 +561,10 @@ function BattleScreenComponent({
     subPlayerSize: rawSubSize,
     enemySize: eSize,
   } = layout;
-  const mainPlayerSize = coopUsingSub ? rawSubSize : rawMainSize;
-  const subPlayerSize = coopUsingSub ? rawMainSize : rawSubSize;
+  // Keep each sprite's visual size bound to its own character asset.
+  // Co-op slot switching should only swap positions/highlights, not raw size identities.
+  const mainPlayerSize = rawMainSize;
+  const subPlayerSize = rawSubSize;
 
   const effectTarget = memoEffectTarget!;
   const selectedMove = activeStarter && S.selIdx != null

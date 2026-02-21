@@ -328,12 +328,25 @@ function BattleScreenComponent({
     // y-axis motion on compact/mobile layouts.
     const shouldSwapPlayerSlots = isCoopBattle && coopUsingSub;
     // If a wide main starter (wolf/tiger/lion class) is moved into the forward
-    // sub slot, pull it back a bit so it doesn't visually collide with enemies.
-    const swappedMainWidePullback = shouldSwapPlayerSlots && (playerComp || 1) > 1.3
+    // sub slot, pull it back from enemy lane — but also keep a minimum gap from
+    // the active sub sprite so both allies do not overlap on mobile.
+    const swappedMainIsWideBeast = shouldSwapPlayerSlots && (playerComp || 1) > 1.3;
+    const swappedMainWidePullback = swappedMainIsWideBeast
       ? (compactDual ? 21 : 20)
       : 0;
+    const swappedMainTargetPct = rawSubLeftPct - swappedMainWidePullback;
+    const swappedMainSafeMinPct = rawMainLeftPct + (swappedMainIsWideBeast ? (compactDual ? 6 : 7) : (compactDual ? 10 : 9));
+    const swappedMainSafeMaxPct = rawSubLeftPct - (swappedMainIsWideBeast ? (compactDual ? 2.5 : 1.5) : (compactDual ? 1.5 : 1));
+    const swappedMainWideCompactCapPct = swappedMainIsWideBeast && compactDual ? 6.5 : Number.POSITIVE_INFINITY;
+    const clampedSwappedMainPct = Math.max(
+      1,
+      Math.min(
+        swappedMainWideCompactCapPct,
+        Math.min(swappedMainSafeMaxPct, Math.max(swappedMainSafeMinPct, swappedMainTargetPct)),
+      ),
+    );
     const playerMainLeftPct = shouldSwapPlayerSlots
-      ? Math.max(1, rawSubLeftPct - swappedMainWidePullback)
+      ? clampedSwappedMainPct
       : rawMainLeftPct;
     const playerMainBottomPct = rawMainBottomPct;
     const playerSubLeftPct = shouldSwapPlayerSlots ? rawMainLeftPct : rawSubLeftPct;
@@ -400,7 +413,7 @@ function BattleScreenComponent({
         "--player-main-opacity": mainIsActive ? "1" : ".52",
         "--battle-player-main-dim-scale": mainIsActive
           ? "1"
-          : ((playerComp || 1) > 1.3 ? (compactDual ? ".74" : ".82") : ".84"),
+          : ((playerComp || 1) > 1.3 ? (compactDual ? ".58" : ".68") : ".84"),
         "--player-main-anim": memoSpriteAnims.playerMain,
       } as BattleCssVars,
       playerSubSpriteStyle: {

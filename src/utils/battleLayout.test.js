@@ -60,7 +60,7 @@ function resolveMainDimScale({ showAllySub, coopUsingSub, playerComp, compactDua
   const hasSelectableCoopPair = showAllySub;
   const mainIsActive = !hasSelectableCoopPair || !coopUsingSub;
   if (mainIsActive) return 1;
-  return playerComp > 1.3 ? (compactDual ? 0.74 : 0.82) : 0.84;
+  return playerComp > 1.3 ? (compactDual ? 0.58 : 0.68) : 0.84;
 }
 
 function resolveSubDimScale({ showAllySub, coopUsingSub, subComp, compactDual }) {
@@ -81,11 +81,23 @@ function resolveBattleRects({
 }) {
   const scales = getResponsiveSpriteScales(arenaWidth);
   const shouldSwapPlayerSlots = showAllySub && coopUsingSub;
-  const swappedMainWidePullback = shouldSwapPlayerSlots && layout.playerComp > 1.3
+  const swappedMainIsWideBeast = shouldSwapPlayerSlots && layout.playerComp > 1.3;
+  const swappedMainWidePullback = swappedMainIsWideBeast
     ? (layout.compactDual ? 21 : 20)
     : 0;
+  const swappedMainTargetPct = layout.playerSubLeftPct - swappedMainWidePullback;
+  const swappedMainSafeMinPct = layout.playerMainLeftPct + (swappedMainIsWideBeast ? (layout.compactDual ? 6 : 7) : (layout.compactDual ? 10 : 9));
+  const swappedMainSafeMaxPct = layout.playerSubLeftPct - (swappedMainIsWideBeast ? (layout.compactDual ? 2.5 : 1.5) : (layout.compactDual ? 1.5 : 1));
+  const swappedMainWideCompactCapPct = swappedMainIsWideBeast && layout.compactDual ? 6.5 : Number.POSITIVE_INFINITY;
+  const clampedSwappedMainPct = Math.max(
+    1,
+    Math.min(
+      swappedMainWideCompactCapPct,
+      Math.min(swappedMainSafeMaxPct, Math.max(swappedMainSafeMinPct, swappedMainTargetPct)),
+    ),
+  );
   const playerMainLeftPct = shouldSwapPlayerSlots
-    ? Math.max(1, layout.playerSubLeftPct - swappedMainWidePullback)
+    ? clampedSwappedMainPct
     : layout.playerMainLeftPct;
   const playerSubLeftPct = shouldSwapPlayerSlots ? layout.playerMainLeftPct : layout.playerSubLeftPct;
   const mainDimScale = resolveMainDimScale({
@@ -819,9 +831,9 @@ const DEVICE_LAYOUT_SNAPSHOT = {
     laptop: { pm: [0, 199], ps: [361.99, 451.03], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 0, pSubPct: 26.5, eMainPct: 8, eSubPct: 20 },
   },
   coopSub: {
-    phone: { pm: [15.6, 145.68], ps: [-5.85, 90.59], em: [230.72, 378.3], es: [265.39, 327.6], pMainPct: 4, pSubPct: -1.5, eMainPct: 3, eSubPct: 16 },
-    tablet: { pm: [49.92, 208.2], ps: [0, 107.61], em: [528.08, 706.56], es: [541.44, 614.4], pMainPct: 6.5, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
-    laptop: { pm: [88.79, 251.97], ps: [0, 114.48], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 6.5, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
+    phone: { pm: [17.55, 119.5], ps: [-5.85, 90.59], em: [230.72, 378.3], es: [265.39, 327.6], pMainPct: 4.5, pSubPct: -1.5, eMainPct: 3, eSubPct: 16 },
+    tablet: { pm: [53.76, 185.02], ps: [0, 107.61], em: [528.08, 706.56], es: [541.44, 614.4], pMainPct: 7, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
+    laptop: { pm: [95.62, 230.94], ps: [0, 114.48], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 7, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
   },
   pvp: {
     phone: { pm: [7.8, 202.38], em: [238.2, 351], pMainPct: 2, eMainPct: 10 },
@@ -909,10 +921,43 @@ test('device matrix keeps co-op swapped slots away from enemy lane', () => {
     );
     if (device.name === 'phone') {
       assert.ok(
-        swappedRects.playerMainLeftPct <= 6,
+        swappedRects.playerMainLeftPct <= 10,
         `phone swapped inactive main drifted too far forward: left=${swappedRects.playerMainLeftPct}%`,
       );
     }
+  }
+});
+
+test('wide beast starters keep separated swap lanes in compact co-op', () => {
+  for (const starterId of ['wolf', 'tiger', 'lion']) {
+    const layout = resolveBattleLayout({
+      battleMode: 'coop',
+      hasDualUnits: true,
+      compactUI: true,
+      playerStageIdx: 0,
+      playerStarterId: starterId,
+      subStarterId: 'electric',
+      enemyId: 'colorful_butterfly',
+      enemySceneType: 'grass',
+      enemyIsEvolved: false,
+      playerSpriteKey: `player${starterId}0SVG`,
+      subSpriteKey: 'playerelectric0SVG',
+      enemySpriteKey: 'colorfulButterflySVG',
+    });
+
+    const swappedRects = resolveBattleRects({
+      layout,
+      arenaWidth: 390,
+      showAllySub: true,
+      coopUsingSub: true,
+      enemySubId: 'slime',
+      enemySubIsEvolved: false,
+    });
+
+    assert.ok(
+      swappedRects.playerMainLeftPct >= 4 && swappedRects.playerMainLeftPct <= 6.5,
+      `${starterId} swapped inactive main left lane out of safe range: ${swappedRects.playerMainLeftPct}%`,
+    );
   }
 });
 

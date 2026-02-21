@@ -656,6 +656,7 @@ export function useBattle() {
         finishGame: _finishGame,
         resetFrozen: () => { frozenR.current = false; },
         playBattleIntro,
+        setCoopActiveSlot,
         pickIndex,
         getCampaignNodeMeta,
       },
@@ -677,6 +678,7 @@ export function useBattle() {
     setScreen,
     _finishGame,
     playBattleIntro,
+    setCoopActiveSlot,
     getCampaignNodeMeta,
     frozenR,
   ]);

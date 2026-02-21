@@ -46,7 +46,9 @@ export function useMobileExperience(): UseMobileExperienceApi {
   });
 
   const autoLowEnd = useMemo(() => detectLowEndDevice(), []);
-  const compactUI = viewport.width <= 390 || viewport.height <= 760;
+  // Use width-first compact detection so mobile browser URL-bar height
+  // changes do not flip compact mode mid-session.
+  const compactUI = viewport.width <= 430;
   const lowPerfMode = perfMode === PERF_ON
     || (perfMode === PERF_AUTO && (autoLowEnd || prefersReducedMotion));
 

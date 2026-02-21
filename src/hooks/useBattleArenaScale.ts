@@ -7,9 +7,9 @@ type UseBattleArenaScaleArgs = {
 };
 
 const BASE_WIDTH = 430;
-const BASE_HEIGHT = 320;
 const MIN_SCALE = 0.9;
 const MAX_SCALE = 1.16;
+const SCALE_STEP = 0.02;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -19,9 +19,12 @@ function computeScale(arena: HTMLElement | null): number {
   if (!arena) return 1;
   const rect = arena.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return 1;
+  // Width-only scaling keeps sprite size stable across rounds/phases.
+  // Arena height changes with question/menu panel states and can cause
+  // visible "same character suddenly bigger/smaller" jitter.
   const byWidth = rect.width / BASE_WIDTH;
-  const byHeight = rect.height / BASE_HEIGHT;
-  return clamp(Math.min(byWidth, byHeight), MIN_SCALE, MAX_SCALE);
+  const raw = clamp(byWidth, MIN_SCALE, MAX_SCALE);
+  return Math.round(raw / SCALE_STEP) * SCALE_STEP;
 }
 
 /**

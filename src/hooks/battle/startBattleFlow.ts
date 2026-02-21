@@ -45,6 +45,7 @@ type RunStartBattleFlowArgs = {
   finishGame: () => void;
   resetFrozen: () => void;
   playBattleIntro: () => void;
+  setCoopActiveSlot?: (slot: 'main' | 'sub') => void;
   pickIndex?: (size: number) => number;
   getCampaignNodeMeta?: (roundIndex: number) => CampaignNodeMeta | null;
 };
@@ -84,6 +85,7 @@ export function runStartBattleFlow({
   finishGame,
   resetFrozen,
   playBattleIntro,
+  setCoopActiveSlot,
   pickIndex,
 }: RunStartBattleFlowArgs): void {
   const list = roster || enemies;
@@ -100,6 +102,9 @@ export function runStartBattleFlow({
   }
 
   const isTeamMode = battleMode === 'double' || battleMode === 'coop';
+  // Keep co-op lane visuals deterministic across rounds: every new battle starts
+  // with main ally active so sprite size/opacity state does not drift by carry-over.
+  if (isTeamMode) setCoopActiveSlot?.('main');
   const enemySub = isTeamMode ? localizeEnemy(list[idx + 1] || null, locale) : null;
 
   // Boss first-move intimidation: seal a random move at battle start

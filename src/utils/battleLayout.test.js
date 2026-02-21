@@ -454,6 +454,37 @@ test('evolved wild starter enemies render larger than base wild starter enemies'
   assert.equal(evolvedWildStarterLayout.enemySize, 292);
 });
 
+test('tiger king enemy gets an extra size boost for opponent readability', () => {
+  const tigerKingLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'wild_starter_tiger',
+    enemySceneType: 'water',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerwater1SVG',
+    enemySpriteKey: 'playertiger2SVG',
+  });
+  const fireEvolvedLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'wild_starter_fire',
+    enemySceneType: 'fire',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerwater1SVG',
+    enemySpriteKey: 'playerfire2SVG',
+  });
+
+  assert.ok(tigerKingLayout.enemySize > fireEvolvedLayout.enemySize);
+  // 172 × 1.15 × 1.699 ≈ 336
+  assert.equal(tigerKingLayout.enemySize, 336);
+});
+
 test('ghost lantern variant gets larger in-battle render size for readability', () => {
   const baseGhostLayout = resolveBattleLayout({
     battleMode: 'single',
@@ -776,8 +807,40 @@ test('beast starter left shift also applies in single mode', () => {
     playerSpriteKey: 'playertiger0SVG',
     enemySpriteKey: 'slimeSVG',
   });
-  // base is 6%, beast shift −4% → 2%
-  assert.equal(tigerSingle.playerMainLeftPct, 2);
+  // base is 6%, beast shift −4%, tiger lane nudge −0.8% → 1.2%
+  assert.equal(tigerSingle.playerMainLeftPct, 1.2);
+});
+
+test('tiger player is nudged lower-left in single battle lane', () => {
+  const tigerSingle = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 2,
+    playerStarterId: 'tiger',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playertiger2SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+  const fireSingle = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 2,
+    playerStarterId: 'fire',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerfire2SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+
+  assert.equal(tigerSingle.playerMainLeftPct, 1.2);
+  assert.equal(tigerSingle.playerMainBottomPct, 12.8);
+  assert.ok(tigerSingle.playerMainLeftPct < fireSingle.playerMainLeftPct);
+  assert.ok(tigerSingle.playerMainBottomPct < fireSingle.playerMainBottomPct);
 });
 
 test('compact coop pulls wide beast sub ally backward from enemy lane', () => {

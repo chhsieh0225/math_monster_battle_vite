@@ -80,6 +80,7 @@ export function resolveBattleLayout({
   const isWideBeast = ["wolf", "tiger", "lion"].includes(normalizedPlayerId);
   const normalizedSubId = normalizeEnemyVisualId(subStarterId);
   const isWideBeastSub = ["wolf", "tiger", "lion"].includes(normalizedSubId);
+  const isTigerPlayer = normalizedPlayerId === "tiger";
   const isWolfFinal = normalizedPlayerId === "wolf" && playerStageIdx >= 2;
   const isLionFinal = normalizedPlayerId === "lion" && playerStageIdx >= 2;
   const beastLeftAdj = isWideBeast ? -4 : 0;      // nudge main sprite left
@@ -90,6 +91,9 @@ export function resolveBattleLayout({
   // Lion King final form should sit slightly lower-left during battle.
   const lionFinalMainLeftAdj = isLionFinal ? (dualUnits ? -0.25 : -0.7) : 0;
   const lionFinalMainBottomAdj = isLionFinal ? (dualUnits ? -0.7 : -1.6) : 0;
+  // Ice Tiger should sit slightly lower-left for better lane readability.
+  const tigerMainLeftAdj = isTigerPlayer ? (dualUnits ? -0.35 : -0.8) : 0;
+  const tigerMainBottomAdj = isTigerPlayer ? (dualUnits ? -0.6 : -1.2) : 0;
   // Co-op battlefield readability: keep both allies slightly further from enemy side.
   // Sub ally is moved a bit more than main ally to reduce overlap after slot switches.
   const coopMainLeftShift = dualUnits ? (compactDual ? 1.5 : 2) : 0;
@@ -102,10 +106,12 @@ export function resolveBattleLayout({
     - coopMainLeftShift
     + beastLeftAdj
     + wolfFinalMainLeftAdj
-    + lionFinalMainLeftAdj;
+    + lionFinalMainLeftAdj
+    + tigerMainLeftAdj;
   const playerMainBottomPct = (dualUnits ? (compactDual ? 9 : 11) : 14)
     + wolfFinalMainBottomAdj
-    + lionFinalMainBottomAdj;
+    + lionFinalMainBottomAdj
+    + tigerMainBottomAdj;
   const playerSubLeftPct = (dualUnits ? (compactDual ? 21 : 23) : 24) - coopSubLeftShift - wideSubPullback + beastSubLeftAdj;
   const playerSubBottomPct = dualUnits ? (compactDual ? 13 : 15) : 17;
   const isBossPlayer = BOSS_IDS.has(normalizedPlayerId);
@@ -170,6 +176,8 @@ export function resolveBattleLayout({
   const isCrazyDragon = visualEnemyId === "boss_crazy_dragon";
   const isSwordGod = visualEnemyId === "boss_sword_god";
   const isHydra = visualEnemyId === "boss_hydra";
+  const isTigerKingEnemy = (visualEnemyId === "wild_starter_tiger" || visualEnemyId === "tiger")
+    && enemySpriteKey === "playertiger2SVG";
   // Mobile compact viewport: bosses should sit farther from player-side to avoid
   // crowding, with a tiny extra retreat for Crazy Dragon's wide silhouette.
   const compactNonBossRightAdjust = compactDual && !isBoss ? -2 : 0;
@@ -232,6 +240,9 @@ export function resolveBattleLayout({
   const pvpCrazyDragonEnemyBoost = battleMode === "pvp" && isCrazyDragon
     ? (compactUI ? 1 : 1.1)
     : 1;
+  const tigerKingEnemyBoost = isTigerKingEnemy
+    ? (compactUI ? 1.12 : 1.15)
+    : 1;
   const enemySize = Math.round(
     enemyBaseSize
     * enemyScale
@@ -239,6 +250,7 @@ export function resolveBattleLayout({
     * crazyDragonSizeBoost
     * hydraSizeBoost
     * hydraCoopBoost
+    * tigerKingEnemyBoost
     * enemyComp
     * pvpCrazyDragonEnemyBoost,
   );

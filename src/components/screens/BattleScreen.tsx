@@ -326,7 +326,14 @@ function BattleScreenComponent({
     // Keep each unit's vertical baseline stable to avoid jumpy/overlap-prone
     // y-axis motion on compact/mobile layouts.
     const shouldSwapPlayerSlots = isCoopBattle && coopUsingSub;
-    const playerMainLeftPct = shouldSwapPlayerSlots ? rawSubLeftPct : rawMainLeftPct;
+    // If a wide main starter (wolf/tiger/lion class) is moved into the forward
+    // sub slot, pull it back a bit so it doesn't visually collide with enemies.
+    const swappedMainWidePullback = shouldSwapPlayerSlots && (playerComp || 1) > 1.3
+      ? (compactDual ? 4 : 3.2)
+      : 0;
+    const playerMainLeftPct = shouldSwapPlayerSlots
+      ? (rawSubLeftPct - swappedMainWidePullback)
+      : rawMainLeftPct;
     const playerMainBottomPct = rawMainBottomPct;
     const playerSubLeftPct = shouldSwapPlayerSlots ? rawMainLeftPct : rawSubLeftPct;
     const playerSubBottomPct = rawSubBottomPct;

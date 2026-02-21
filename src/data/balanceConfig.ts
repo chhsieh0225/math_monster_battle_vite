@@ -71,26 +71,26 @@ export const BALANCE_CONFIG = {
         { monsterId: 'boss' },                              // 10: Boss
       ],
       double: [
-        { monsterId: 'slime', slimeType: 'grass', sceneType: 'grass' },
-        { monsterId: 'slime', slimeType: 'water', sceneType: 'water' },
+        { monsterId: 'slime', slimeType: 'grass', sceneType: 'grass' },  // 1: 固定草史萊姆（教學）
+        { monsterId: 'slime', slimeType: 'water', sceneType: 'water' },  // 2: 固定水史萊姆（教學）
 
-        { monsterId: 'fire', sceneType: 'fire' },
-        { monsterId: 'ghost', sceneType: 'ghost' },
+        { sceneType: 'fire' },                                            // 3: 火場隨機
+        { sceneType: 'ghost' },                                           // 4: 靈場隨機
 
-        { monsterId: 'slime', slimeType: 'electric', sceneType: 'electric' },
-        { monsterId: 'fire', sceneType: 'fire' },
+        { sceneType: 'electric' },                                        // 5: 雷場隨機
+        { sceneType: 'fire' },                                            // 6: 火場隨機
 
-        { monsterId: 'slime', slimeType: 'steel', sceneType: 'steel' },
-        { monsterId: 'dragon', sceneType: 'steel' },
+        { sceneType: 'steel' },                                           // 7: 鋼場隨機
+        { sceneType: 'steel' },                                           // 8: 鋼場隨機
 
-        { monsterId: 'candy_knight', sceneType: 'candy' },
-        { monsterId: 'candy_monster', sceneType: 'candy' },
+        { sceneType: 'candy' },                                           // 9: 糖果場隨機
+        { sceneType: 'candy' },                                           // 10: 糖果場隨機
 
-        { monsterId: 'slime', slimeType: 'dark', sceneType: 'dark' },
-        { monsterId: 'fire', sceneType: 'fire' },
+        { sceneType: 'dark' },                                            // 11: 暗場隨機
+        { sceneType: 'fire' },                                            // 12: 火場隨機
 
-        { monsterId: 'boss', sceneType: 'dark' },
-        { monsterId: 'boss', sceneType: 'dark' },
+        { monsterId: 'boss', sceneType: 'dark' },                         // 13: Boss
+        { monsterId: 'boss', sceneType: 'dark' },                         // 14: Boss
       ],
     },
     campaign: {

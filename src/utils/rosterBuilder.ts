@@ -305,6 +305,10 @@ function resolveVariantMonsterId(
       return m && m.mType === requiredMType;
     })
     : pool;
+  // When requiredMType is set but no variant matches, fall back to baseId
+  // rather than the full pool — this prevents type-mismatched variants
+  // (e.g. mushroom(poison) appearing in a ghost scene).
+  if (requiredMType && candidates.length === 0) return baseId;
   const effectivePool = candidates.length > 0 ? candidates : pool;
   const rawIdx = Number(pickIndex(effectivePool.length));
   const idx = Number.isFinite(rawIdx)

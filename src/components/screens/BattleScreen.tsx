@@ -315,6 +315,7 @@ function BattleScreenComponent({
         enemyTopPct,
         playerComp,
         enemyComp,
+        subComp,
       },
     } = coreStatic;
 
@@ -329,10 +330,10 @@ function BattleScreenComponent({
     // If a wide main starter (wolf/tiger/lion class) is moved into the forward
     // sub slot, pull it back a bit so it doesn't visually collide with enemies.
     const swappedMainWidePullback = shouldSwapPlayerSlots && (playerComp || 1) > 1.3
-      ? (compactDual ? 4 : 3.2)
+      ? (compactDual ? 21 : 20)
       : 0;
     const playerMainLeftPct = shouldSwapPlayerSlots
-      ? (rawSubLeftPct - swappedMainWidePullback)
+      ? Math.max(1, rawSubLeftPct - swappedMainWidePullback)
       : rawMainLeftPct;
     const playerMainBottomPct = rawMainBottomPct;
     const playerSubLeftPct = shouldSwapPlayerSlots ? rawMainLeftPct : rawSubLeftPct;
@@ -397,7 +398,9 @@ function BattleScreenComponent({
         "--player-main-filter": mainFilter,
         "--player-main-z": coopUsingSub ? "4" : "6",
         "--player-main-opacity": mainIsActive ? "1" : ".52",
-        "--battle-player-main-scale": mainIsActive ? "1" : ".95",
+        "--battle-player-main-dim-scale": mainIsActive
+          ? "1"
+          : ((playerComp || 1) > 1.3 ? (compactDual ? ".74" : ".82") : ".84"),
         "--player-main-anim": memoSpriteAnims.playerMain,
       } as BattleCssVars,
       playerSubSpriteStyle: {
@@ -406,7 +409,9 @@ function BattleScreenComponent({
         "--player-sub-filter": subFilter,
         "--player-sub-z": coopUsingSub ? "6" : "4",
         "--player-sub-opacity": subIsActive ? "1" : ".52",
-        "--battle-player-sub-scale": subIsActive ? "1" : ".95",
+        "--battle-player-sub-dim-scale": subIsActive
+          ? ((subComp || 1) > 1.3 ? (compactDual ? ".95" : "1") : (compactDual ? "1.14" : "1.08"))
+          : ((subComp || 1) > 1.3 ? (compactDual ? ".76" : ".84") : ".84"),
         "--player-sub-anim": memoSpriteAnims.playerSub,
       } as BattleCssVars,
       playerMainShadowStyle: {

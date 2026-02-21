@@ -82,7 +82,7 @@ function resolveBattleRects({
   const scales = getResponsiveSpriteScales(arenaWidth);
   const shouldSwapPlayerSlots = showAllySub && coopUsingSub;
   const swappedMainWidePullback = shouldSwapPlayerSlots && layout.playerComp > 1.3
-    ? (layout.compactDual ? 13 : 10)
+    ? (layout.compactDual ? 21 : 20)
     : 0;
   const playerMainLeftPct = shouldSwapPlayerSlots
     ? Math.max(1, layout.playerSubLeftPct - swappedMainWidePullback)
@@ -819,9 +819,9 @@ const DEVICE_LAYOUT_SNAPSHOT = {
     laptop: { pm: [0, 199], ps: [361.99, 451.03], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 0, pSubPct: 26.5, eMainPct: 8, eSubPct: 20 },
   },
   coopSub: {
-    phone: { pm: [46.8, 176.88], ps: [-5.85, 90.59], em: [230.72, 378.3], es: [265.39, 327.6], pMainPct: 12, pSubPct: -1.5, eMainPct: 3, eSubPct: 16 },
-    tablet: { pm: [126.72, 285], ps: [0, 107.61], em: [528.08, 706.56], es: [541.44, 614.4], pMainPct: 16.5, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
-    laptop: { pm: [225.39, 388.57], ps: [0, 114.48], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 16.5, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
+    phone: { pm: [15.6, 145.68], ps: [-5.85, 90.59], em: [230.72, 378.3], es: [265.39, 327.6], pMainPct: 4, pSubPct: -1.5, eMainPct: 3, eSubPct: 16 },
+    tablet: { pm: [49.92, 208.2], ps: [0, 107.61], em: [528.08, 706.56], es: [541.44, 614.4], pMainPct: 6.5, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
+    laptop: { pm: [88.79, 251.97], ps: [0, 114.48], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 6.5, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
   },
   pvp: {
     phone: { pm: [7.8, 202.38], em: [238.2, 351], pMainPct: 2, eMainPct: 10 },
@@ -907,6 +907,12 @@ test('device matrix keeps co-op swapped slots away from enemy lane', () => {
       swappedRects.enemyMain.right < device.arenaWidth + swappedRects.enemyMain.width * 0.35,
       `${device.name} enemy main is clipped too far on the right`,
     );
+    if (device.name === 'phone') {
+      assert.ok(
+        swappedRects.playerMainLeftPct <= 6,
+        `phone swapped inactive main drifted too far forward: left=${swappedRects.playerMainLeftPct}%`,
+      );
+    }
   }
 });
 

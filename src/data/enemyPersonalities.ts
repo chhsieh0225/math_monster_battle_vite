@@ -14,13 +14,37 @@ export type EnemyPersonalityDef = {
   incomingDamageScale: number;
 };
 
+/**
+ * Clamped, applied personality attached to an enemy instance.
+ * All numeric fields are pre-clamped — consumers can trust them directly.
+ */
+export type EnemyPersonality = {
+  id: EnemyPersonalityId;
+  icon: string;
+  name: string;
+  nameEn: string;
+  desc: string;
+  descEn: string;
+  hpScale: number;
+  atkScale: number;
+  critChanceBonus: number;
+  critDamageBonus: number;
+  incomingDamageScale: number;
+};
+
 type PickIndex = (length: number) => number;
 
 const MIN_SCALE = 0.75;
 const MAX_SCALE = 1.35;
+/** Additive crit bonus absolute bound: |Δ| ≤ 0.10. */
+const MAX_CRIT_BONUS = 0.10;
 
 function clampScale(value: number): number {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
+}
+
+function clampCritBonus(value: number): number {
+  return Math.min(MAX_CRIT_BONUS, Math.max(-MAX_CRIT_BONUS, value));
 }
 
 /**
@@ -111,20 +135,6 @@ export const ENEMY_PERSONALITIES: readonly EnemyPersonalityDef[] = [
   },
 ];
 
-export type EnemyPersonalityAppliedFields = {
-  personalityId: EnemyPersonalityId;
-  personalityIcon: string;
-  personalityName: string;
-  personalityNameEn: string;
-  personalityDesc: string;
-  personalityDescEn: string;
-  personalityHpScale: number;
-  personalityAtkScale: number;
-  personalityCritChanceBonus: number;
-  personalityCritDamageBonus: number;
-  personalityIncomingDamageScale: number;
-};
-
 type PersonalityReadyEnemy = {
   hp: number;
   maxHp: number;
@@ -140,11 +150,11 @@ export function rollEnemyPersonality(pickIndex: PickIndex): EnemyPersonalityDef 
 
 export function applyEnemyPersonality<T extends PersonalityReadyEnemy>(
   enemy: T,
-  personality: EnemyPersonalityDef,
-): T & EnemyPersonalityAppliedFields {
-  const hpScale = clampScale(personality.hpScale);
-  const atkScale = clampScale(personality.atkScale);
-  const incomingDamageScale = clampScale(personality.incomingDamageScale);
+  personalityDef: EnemyPersonalityDef,
+): T & { personality: EnemyPersonality } {
+  const hpScale = clampScale(personalityDef.hpScale);
+  const atkScale = clampScale(personalityDef.atkScale);
+  const incomingDamageScale = clampScale(personalityDef.incomingDamageScale);
 
   const hp = Math.max(1, Math.round(enemy.hp * hpScale));
   const maxHp = Math.max(1, Math.round(enemy.maxHp * hpScale));
@@ -155,16 +165,18 @@ export function applyEnemyPersonality<T extends PersonalityReadyEnemy>(
     hp,
     maxHp,
     atk,
-    personalityId: personality.id,
-    personalityIcon: personality.icon,
-    personalityName: personality.name,
-    personalityNameEn: personality.nameEn,
-    personalityDesc: personality.desc,
-    personalityDescEn: personality.descEn,
-    personalityHpScale: hpScale,
-    personalityAtkScale: atkScale,
-    personalityCritChanceBonus: personality.critChanceBonus,
-    personalityCritDamageBonus: personality.critDamageBonus,
-    personalityIncomingDamageScale: incomingDamageScale,
+    personality: {
+      id: personalityDef.id,
+      icon: personalityDef.icon,
+      name: personalityDef.name,
+      nameEn: personalityDef.nameEn,
+      desc: personalityDef.desc,
+      descEn: personalityDef.descEn,
+      hpScale,
+      atkScale,
+      critChanceBonus: clampCritBonus(personalityDef.critChanceBonus),
+      critDamageBonus: clampCritBonus(personalityDef.critDamageBonus),
+      incomingDamageScale,
+    },
   };
 }

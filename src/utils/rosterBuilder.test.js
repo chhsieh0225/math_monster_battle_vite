@@ -222,13 +222,13 @@ test('buildRoster assigns personality affix to non-boss enemies only', () => {
   const roster = buildRoster(pickFirst, 'single', { disableRandomSwap: true });
   for (const mon of roster) {
     if (BOSS_IDS.has(mon.id)) {
-      assert.equal(mon.personalityId == null, true, `boss should not have personality: ${mon.id}`);
+      assert.equal(mon.personality == null, true, `boss should not have personality: ${mon.id}`);
       continue;
     }
-    assert.equal(typeof mon.personalityId, 'string', `non-boss missing personalityId: ${mon.id}`);
-    assert.equal(typeof mon.personalityName, 'string', `non-boss missing personalityName: ${mon.id}`);
-    assert.equal(typeof mon.personalityIcon, 'string', `non-boss missing personalityIcon: ${mon.id}`);
-    assert.equal(typeof mon.personalityIncomingDamageScale, 'number', `non-boss missing incomingDamageScale: ${mon.id}`);
+    assert.equal(typeof mon.personality?.id, 'string', `non-boss missing personality.id: ${mon.id}`);
+    assert.equal(typeof mon.personality?.name, 'string', `non-boss missing personality.name: ${mon.id}`);
+    assert.equal(typeof mon.personality?.icon, 'string', `non-boss missing personality.icon: ${mon.id}`);
+    assert.equal(typeof mon.personality?.incomingDamageScale, 'number', `non-boss missing personality.incomingDamageScale: ${mon.id}`);
   }
 });
 
@@ -238,6 +238,6 @@ test('buildRoster double-mode final double-boss remains personality-free', () =>
   const finalSub = roster[roster.length - 1];
   assert.equal(BOSS_IDS.has(finalMain.id), true);
   assert.equal(BOSS_IDS.has(finalSub.id), true);
-  assert.equal(finalMain.personalityId == null, true);
-  assert.equal(finalSub.personalityId == null, true);
+  assert.equal(finalMain.personality == null, true);
+  assert.equal(finalSub.personality == null, true);
 });

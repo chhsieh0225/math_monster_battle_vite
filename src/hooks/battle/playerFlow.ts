@@ -45,7 +45,12 @@ type BattleEnemy = {
   trait?: string;
   maxHp: number;
   mType?: string;
-  personalityIncomingDamageScale?: number;
+  personality?: {
+    incomingDamageScale?: number;
+    critChanceBonus?: number;
+    critDamageBonus?: number;
+    [k: string]: unknown;
+  };
 };
 
 type BattleQuestion = {
@@ -569,9 +574,10 @@ export function runPlayerAnswer({
             addD(tr(t, 'battle.tag.parry', '⚔️PARRY'), 155, 30, '#94a3b8');
           }
 
-          const personalityIncomingScale = typeof s3.enemy.personalityIncomingDamageScale === 'number'
-            ? Math.min(1.35, Math.max(0.75, s3.enemy.personalityIncomingDamageScale))
-            : 1;
+          // personality.incomingDamageScale is pre-clamped [0.75, 1.35]
+          // by applyEnemyPersonality — no redundant clamp needed here.
+          const personalityIncomingScale =
+            s3.enemy.personality?.incomingDamageScale ?? 1;
           if (personalityIncomingScale !== 1) {
             finalDmg = Math.max(1, Math.round(finalDmg * personalityIncomingScale));
           }

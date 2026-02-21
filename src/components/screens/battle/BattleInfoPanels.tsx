@@ -95,9 +95,9 @@ export const BattleEnemyInfoPanel = memo(function BattleEnemyInfoPanel({
           </>
         ) : (
           <>
-            {enemy.personalityName && (
+            {enemy.personality?.name && (
               <div className="battle-status-chip is-personality">
-                {(enemy.personalityIcon || '✨')} {enemy.personalityName}
+                {(enemy.personality.icon || '✨')} {enemy.personality.name}
               </div>
             )}
             {hasSpecialTrait(enemy.traitName, enemy.traitDesc) && <div className="battle-status-chip is-counter-soft">✦{enemy.traitName}</div>}

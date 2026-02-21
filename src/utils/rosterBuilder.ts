@@ -1,5 +1,5 @@
 import { EVOLVED_SLIME_VARIANTS, MONSTERS, SLIME_VARIANTS } from '../data/monsters.ts';
-import { applyEnemyPersonality, rollEnemyPersonality } from '../data/enemyPersonalities.ts';
+import { applyEnemyPersonality, rollEnemyPersonality, type EnemyPersonality } from '../data/enemyPersonalities.ts';
 import {
   BOSS_IDS,
   BOSS_ID_LIST,
@@ -18,7 +18,6 @@ import {
 } from '../data/stageConfigs.ts';
 import { STARTERS } from '../data/starters.ts';
 import type {
-  EnemyPersonalityId,
   HydratedMonster,
   HydratedSlimeVariant,
   MonsterRace,
@@ -37,17 +36,7 @@ export type BattleRosterMonster = MonsterBase & {
   /** SVG export name of the currently active sprite (for size compensation). */
   activeSpriteKey: string;
   selectedStageIdx?: number;
-  personalityId?: EnemyPersonalityId;
-  personalityIcon?: string;
-  personalityName?: string;
-  personalityNameEn?: string;
-  personalityDesc?: string;
-  personalityDescEn?: string;
-  personalityHpScale?: number;
-  personalityAtkScale?: number;
-  personalityCritChanceBonus?: number;
-  personalityCritDamageBonus?: number;
-  personalityIncomingDamageScale?: number;
+  personality?: EnemyPersonality;
 };
 
 type PickIndex = (length: number) => number;

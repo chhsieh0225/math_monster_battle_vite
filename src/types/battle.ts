@@ -1,11 +1,11 @@
 import type {
   AchievementId,
   EncyclopediaData,
-  EnemyPersonalityId,
   InventoryData,
   ItemId,
   StarterId,
 } from './game';
+import type { EnemyPersonality } from '../data/enemyPersonalities';
 import type {
   DailyChallengeFeedback,
   DailyChallengePlan,
@@ -97,17 +97,7 @@ export type EnemyVm = {
   traitDesc?: string;
   drops?: string[];
   selectedStageIdx?: number;
-  personalityId?: EnemyPersonalityId;
-  personalityIcon?: string;
-  personalityName?: string;
-  personalityNameEn?: string;
-  personalityDesc?: string;
-  personalityDescEn?: string;
-  personalityHpScale?: number;
-  personalityAtkScale?: number;
-  personalityCritChanceBonus?: number;
-  personalityCritDamageBonus?: number;
-  personalityIncomingDamageScale?: number;
+  personality?: EnemyPersonality;
   svgFn: (...args: string[]) => string;
   /** SVG export name of the base sprite (e.g. 'ghostLanternSVG'). */
   spriteKey?: string;

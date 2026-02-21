@@ -296,7 +296,7 @@ test('compact UI slightly reduces lion/wolf final evolution size', () => {
   assert.equal(wolfCompact.mainPlayerSize, 303);
 });
 
-test('hydra gets coop-only size boost to avoid looking undersized', () => {
+test('hydra keeps coop bonus on top of baseline size boost', () => {
   const coopHydra = resolveBattleLayout({
     battleMode: 'coop',
     hasDualUnits: true,
@@ -323,8 +323,8 @@ test('hydra gets coop-only size boost to avoid looking undersized', () => {
   });
 
   assert.ok(coopHydra.enemySize > soloHydra.enemySize);
-  // 260 × 0.98 × 1.1 × 1.662 ≈ 466
-  assert.equal(coopHydra.enemySize, 466);
+  // 260 × 0.98 × 1.04 × 1.1 × 1.662 ≈ 484
+  assert.equal(coopHydra.enemySize, 484);
 });
 
 test('pvp boss id prefix keeps boss visual sizing', () => {

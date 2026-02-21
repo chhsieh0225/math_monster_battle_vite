@@ -213,6 +213,11 @@ export function resolveBattleLayout({
   const crazyDragonSizeBoost = isCrazyDragon
     ? (compactUI ? 1.12 : 1.06)
     : 1;
+  // Hydra looked slightly undersized relative to other final bosses.
+  // Apply a small global boost while preserving existing co-op bonus.
+  const hydraSizeBoost = isHydra
+    ? (compactUI ? 1.06 : 1.04)
+    : 1;
   const hydraCoopBoost = isHydra && dualUnits ? (compactDual ? 1.08 : 1.1) : 1;
   const pvpCrazyDragonEnemyBoost = battleMode === "pvp" && isCrazyDragon
     ? (compactUI ? 1 : 1.1)
@@ -222,6 +227,7 @@ export function resolveBattleLayout({
     * enemyScale
     * swordGodSizeBoost
     * crazyDragonSizeBoost
+    * hydraSizeBoost
     * hydraCoopBoost
     * enemyComp
     * pvpCrazyDragonEnemyBoost,

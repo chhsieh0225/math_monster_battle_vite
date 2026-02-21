@@ -164,8 +164,24 @@ test('buildRoster double mode locks final battle to double-boss pair', () => {
 
   assert.equal(BOSS_ID_LIST.includes(finalMain.id), true);
   assert.equal(BOSS_ID_LIST.includes(finalSub.id), true);
+  if (BOSS_ID_LIST.length > 1) {
+    assert.notEqual(finalMain.id, finalSub.id);
+  }
   assert.equal(BOSS_ID_LIST.includes(preFinalMain.id), false);
   assert.equal(BOSS_ID_LIST.includes(preFinalSub.id), false);
+});
+
+test('buildRoster double mode final two bosses are sampled without replacement', () => {
+  const pickFirst = () => 0;
+  const roster = buildRoster(pickFirst, 'double');
+  const finalMain = roster[roster.length - 2];
+  const finalSub = roster[roster.length - 1];
+
+  assert.equal(finalMain.id, BOSS_ID_LIST[0]);
+  if (BOSS_ID_LIST.length > 1) {
+    assert.equal(finalSub.id, BOSS_ID_LIST[1]);
+    assert.notEqual(finalMain.id, finalSub.id);
+  }
 });
 
 test('buildRoster applies boss scene override mapping from config', () => {

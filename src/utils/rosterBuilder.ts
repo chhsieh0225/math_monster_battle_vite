@@ -47,6 +47,13 @@ type BuildRosterOptions = {
   excludedStarterIds?: readonly string[];
 };
 
+function normalizePickIndex(raw: number, length: number): number {
+  if (length <= 1) return 0;
+  return Number.isFinite(raw)
+    ? Math.min(length - 1, Math.max(0, Math.trunc(raw)))
+    : 0;
+}
+
 const MONSTER_BY_ID = new Map<string, MonsterBase>(MONSTERS.map((mon) => [mon.id, mon]));
 const STARTER_MIRROR_WAVE_PREFIX = 'starter_mirror:';
 const STARTER_IDS: readonly PlayerStarterId[] = ['fire', 'water', 'grass', 'tiger', 'electric', 'lion', 'wolf'];
@@ -386,13 +393,42 @@ export function buildRoster(
     }
   }
 
+  // Co-op / double final gate: last two boss placeholders must resolve to
+  // two distinct bosses (sample without replacement).
+  const forcedDoubleFinalBossByWaveIndex = new Map<number, string>();
+  if (mode === 'double' && BOSS_ID_LIST.length > 0) {
+    const bossWaveIndices = waves
+      .map((wave, idx) => (wave.monsterId && BOSS_IDS.has(wave.monsterId) ? idx : -1))
+      .filter((idx) => idx >= 0);
+    if (bossWaveIndices.length >= 2) {
+      const finalMainWaveIndex = bossWaveIndices[bossWaveIndices.length - 2];
+      const finalSubWaveIndex = bossWaveIndices[bossWaveIndices.length - 1];
+
+      const firstBossIdx = normalizePickIndex(pickIndex(BOSS_ID_LIST.length), BOSS_ID_LIST.length);
+      const firstBossId = BOSS_ID_LIST[firstBossIdx] || BOSS_ID_LIST[0];
+
+      let secondBossId = firstBossId;
+      if (BOSS_ID_LIST.length > 1) {
+        const offsetPoolLength = BOSS_ID_LIST.length - 1;
+        const offsetIdx = normalizePickIndex(pickIndex(offsetPoolLength), offsetPoolLength);
+        const secondBossIdx = (firstBossIdx + 1 + offsetIdx) % BOSS_ID_LIST.length;
+        secondBossId = BOSS_ID_LIST[secondBossIdx] || firstBossId;
+      }
+
+      forcedDoubleFinalBossByWaveIndex.set(finalMainWaveIndex, firstBossId);
+      forcedDoubleFinalBossByWaveIndex.set(finalSubWaveIndex, secondBossId);
+    }
+  }
+
   let previousRace: string | undefined;
   return waves.map((wave, i) => {
     // Resolve monsterId: explicit → boss pool → scene-based random draw
     let baseMonsterId: string;
     if (wave.monsterId) {
       baseMonsterId = BOSS_IDS.has(wave.monsterId)
-        ? BOSS_ID_LIST[pickIndex(BOSS_ID_LIST.length)]
+        ? (forcedDoubleFinalBossByWaveIndex.get(i)
+          || BOSS_ID_LIST[normalizePickIndex(pickIndex(BOSS_ID_LIST.length), BOSS_ID_LIST.length)]
+          || wave.monsterId)
         : wave.monsterId;
     } else if (wave.sceneType) {
       baseMonsterId = resolveMonsterIdByScene(wave.sceneType, pickIndex, previousRace, excludedMirrorIds);

@@ -1,6 +1,137 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolveBattleLayout } from './battleLayout.ts';
+import { BOSS_IDS } from '../data/monsterConfigs.ts';
+
+function getResponsiveSpriteScales(arenaWidth) {
+  if (arenaWidth <= 480) {
+    return {
+      enemyMain: 0.94,
+      enemySub: 0.9,
+      playerMain: 0.94,
+      playerSub: 0.9,
+    };
+  }
+  if (arenaWidth <= 768) {
+    return {
+      enemyMain: 0.97,
+      enemySub: 0.95,
+      playerMain: 0.97,
+      playerSub: 0.94,
+    };
+  }
+  return {
+    enemyMain: 1,
+    enemySub: 1,
+    playerMain: 1,
+    playerSub: 1,
+  };
+}
+
+function rectFromLeftPct(leftPct, widthPx, arenaWidth) {
+  const left = arenaWidth * leftPct / 100;
+  return { left, right: left + widthPx, width: widthPx };
+}
+
+function rectFromRightPct(rightPct, widthPx, arenaWidth) {
+  const right = arenaWidth - arenaWidth * rightPct / 100;
+  return { left: right - widthPx, right, width: widthPx };
+}
+
+function resolveEnemySubVisual({ enemySubId, enemySubIsEvolved, compactDual }) {
+  const isBossVisual = BOSS_IDS.has(enemySubId);
+  const isLargeEnemySub = enemySubId === 'golumn' || enemySubId === 'golumn_mud' || enemySubId === 'mushroom';
+  const enemySubScale = isLargeEnemySub
+    ? (compactDual ? 0.86 : 0.94)
+    : (compactDual ? 0.72 : 0.8);
+  const enemySubSize = !enemySubId
+    ? 96
+    : isBossVisual
+      ? 160
+      : isLargeEnemySub
+        ? 150
+        : enemySubIsEvolved
+          ? 120
+          : 96;
+  return { enemySubScale, enemySubSize };
+}
+
+function resolveMainDimScale({ showAllySub, coopUsingSub, playerComp, compactDual }) {
+  const hasSelectableCoopPair = showAllySub;
+  const mainIsActive = !hasSelectableCoopPair || !coopUsingSub;
+  if (mainIsActive) return 1;
+  return playerComp > 1.3 ? (compactDual ? 0.74 : 0.82) : 0.84;
+}
+
+function resolveSubDimScale({ showAllySub, coopUsingSub, subComp, compactDual }) {
+  const hasSelectableCoopPair = showAllySub;
+  const subIsActive = hasSelectableCoopPair && coopUsingSub;
+  if (!hasSelectableCoopPair) return 1;
+  if (subIsActive) return subComp > 1.3 ? (compactDual ? 0.95 : 1) : (compactDual ? 1.14 : 1.08);
+  return subComp > 1.3 ? (compactDual ? 0.76 : 0.84) : 0.84;
+}
+
+function resolveBattleRects({
+  layout,
+  arenaWidth,
+  showAllySub = false,
+  coopUsingSub = false,
+  enemySubId = '',
+  enemySubIsEvolved = false,
+}) {
+  const scales = getResponsiveSpriteScales(arenaWidth);
+  const shouldSwapPlayerSlots = showAllySub && coopUsingSub;
+  const swappedMainWidePullback = shouldSwapPlayerSlots && layout.playerComp > 1.3
+    ? (layout.compactDual ? 13 : 10)
+    : 0;
+  const playerMainLeftPct = shouldSwapPlayerSlots
+    ? Math.max(1, layout.playerSubLeftPct - swappedMainWidePullback)
+    : layout.playerMainLeftPct;
+  const playerSubLeftPct = shouldSwapPlayerSlots ? layout.playerMainLeftPct : layout.playerSubLeftPct;
+  const mainDimScale = resolveMainDimScale({
+    showAllySub,
+    coopUsingSub,
+    playerComp: layout.playerComp,
+    compactDual: layout.compactDual,
+  });
+  const subDimScale = resolveSubDimScale({
+    showAllySub,
+    coopUsingSub,
+    subComp: layout.subComp,
+    compactDual: layout.compactDual,
+  });
+  const playerMainWidth = layout.mainPlayerSize * scales.playerMain * mainDimScale;
+  const playerSubWidth = layout.subPlayerSize * scales.playerSub * subDimScale;
+  const enemyMainWidth = layout.enemySize * scales.enemyMain;
+  const { enemySubScale, enemySubSize } = resolveEnemySubVisual({
+    enemySubId,
+    enemySubIsEvolved,
+    compactDual: layout.compactDual,
+  });
+  const enemySubWidth = enemySubSize * enemySubScale * scales.enemySub;
+  return {
+    playerMain: rectFromLeftPct(playerMainLeftPct, playerMainWidth, arenaWidth),
+    playerSub: rectFromLeftPct(playerSubLeftPct, playerSubWidth, arenaWidth),
+    enemyMain: rectFromRightPct(layout.enemyMainRightPct, enemyMainWidth, arenaWidth),
+    enemySub: rectFromRightPct(layout.enemySubRightPct, enemySubWidth, arenaWidth),
+    playerMainLeftPct,
+    playerSubLeftPct,
+  };
+}
+
+function minFrontlineGap({ rects, showAllySub, showEnemySub }) {
+  const playerRects = [rects.playerMain];
+  if (showAllySub) playerRects.push(rects.playerSub);
+  const enemyRects = [rects.enemyMain];
+  if (showEnemySub) enemyRects.push(rects.enemySub);
+  let minGap = Number.POSITIVE_INFINITY;
+  for (const p of playerRects) {
+    for (const e of enemyRects) {
+      minGap = Math.min(minGap, e.left - p.right);
+    }
+  }
+  return minGap;
+}
 
 // ── Compensation-aware tests ────────────────────────────────────────
 // After the spriteProfile refactor, battleLayout no longer hard-codes
@@ -506,6 +637,344 @@ test('compact coop pulls wide beast sub ally backward from enemy lane', () => {
 
   assert.ok(fireWithWolfSub.playerSubLeftPct < fireWithFireSub.playerSubLeftPct);
   assert.equal(fireWithWolfSub.playerSubLeftPct, fireWithFireSub.playerSubLeftPct - 4);
+});
+
+test('compact dual non-boss enemies retreat right to reduce overlap', () => {
+  const compactDualSlime = resolveBattleLayout({
+    battleMode: 'coop',
+    hasDualUnits: true,
+    compactUI: true,
+    playerStageIdx: 0,
+    playerStarterId: 'fire',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerfire0SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+
+  assert.equal(compactDualSlime.enemyMainRightPct, 3);
+  assert.equal(compactDualSlime.enemySubRightPct, 16);
+});
+
+test('compact dual ghost lantern is pulled farther right and scaled down', () => {
+  const compactGhost = resolveBattleLayout({
+    battleMode: 'coop',
+    hasDualUnits: true,
+    compactUI: true,
+    playerStageIdx: 0,
+    playerStarterId: 'wolf',
+    enemyId: 'ghost_lantern',
+    enemySceneType: 'ghost',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerwolf0SVG',
+    enemySpriteKey: 'ghostLanternSVG',
+  });
+  const compactSlime = resolveBattleLayout({
+    battleMode: 'coop',
+    hasDualUnits: true,
+    compactUI: true,
+    playerStageIdx: 0,
+    playerStarterId: 'wolf',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerwolf0SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+
+  assert.ok(compactGhost.enemyMainRightPct < compactSlime.enemyMainRightPct);
+  assert.ok(compactGhost.enemySize > compactSlime.enemySize);
+});
+
+// ── Device matrix validation (phone / tablet / laptop) ─────────────
+
+const DEVICE_CASES = [
+  { name: 'phone', arenaWidth: 390, compactUI: true, minGap: 8 },
+  { name: 'tablet', arenaWidth: 768, compactUI: false, minGap: 16 },
+  { name: 'laptop', arenaWidth: 1366, compactUI: false, minGap: 24 },
+];
+
+function round2(v) {
+  return Math.round(v * 100) / 100;
+}
+
+function snapshotRect(rect) {
+  return [round2(rect.left), round2(rect.right)];
+}
+
+function buildLayoutSnapshot() {
+  const snapshot = { single: {}, coopMain: {}, coopSub: {}, pvp: {} };
+  for (const device of DEVICE_CASES) {
+    const singleLayout = resolveBattleLayout({
+      battleMode: 'single',
+      hasDualUnits: false,
+      compactUI: device.compactUI,
+      playerStageIdx: 0,
+      playerStarterId: 'fire',
+      enemyId: 'colorful_butterfly',
+      enemySceneType: 'grass',
+      enemyIsEvolved: false,
+      playerSpriteKey: 'playerfire0SVG',
+      enemySpriteKey: 'colorfulButterflySVG',
+    });
+    const singleRects = resolveBattleRects({
+      layout: singleLayout,
+      arenaWidth: device.arenaWidth,
+    });
+    snapshot.single[device.name] = {
+      pm: snapshotRect(singleRects.playerMain),
+      em: snapshotRect(singleRects.enemyMain),
+      pMainPct: round2(singleRects.playerMainLeftPct),
+      eMainPct: round2(singleLayout.enemyMainRightPct),
+    };
+
+    const coopLayout = resolveBattleLayout({
+      battleMode: 'coop',
+      hasDualUnits: true,
+      compactUI: device.compactUI,
+      playerStageIdx: 0,
+      playerStarterId: 'wolf',
+      subStarterId: 'electric',
+      enemyId: 'colorful_butterfly',
+      enemySceneType: 'grass',
+      enemyIsEvolved: false,
+      playerSpriteKey: 'playerwolf0SVG',
+      subSpriteKey: 'playerelectric0SVG',
+      enemySpriteKey: 'colorfulButterflySVG',
+    });
+    const coopMainRects = resolveBattleRects({
+      layout: coopLayout,
+      arenaWidth: device.arenaWidth,
+      showAllySub: true,
+      coopUsingSub: false,
+      enemySubId: 'slime',
+      enemySubIsEvolved: false,
+    });
+    snapshot.coopMain[device.name] = {
+      pm: snapshotRect(coopMainRects.playerMain),
+      ps: snapshotRect(coopMainRects.playerSub),
+      em: snapshotRect(coopMainRects.enemyMain),
+      es: snapshotRect(coopMainRects.enemySub),
+      pMainPct: round2(coopMainRects.playerMainLeftPct),
+      pSubPct: round2(coopMainRects.playerSubLeftPct),
+      eMainPct: round2(coopLayout.enemyMainRightPct),
+      eSubPct: round2(coopLayout.enemySubRightPct),
+    };
+
+    const coopSubRects = resolveBattleRects({
+      layout: coopLayout,
+      arenaWidth: device.arenaWidth,
+      showAllySub: true,
+      coopUsingSub: true,
+      enemySubId: 'slime',
+      enemySubIsEvolved: false,
+    });
+    snapshot.coopSub[device.name] = {
+      pm: snapshotRect(coopSubRects.playerMain),
+      ps: snapshotRect(coopSubRects.playerSub),
+      em: snapshotRect(coopSubRects.enemyMain),
+      es: snapshotRect(coopSubRects.enemySub),
+      pMainPct: round2(coopSubRects.playerMainLeftPct),
+      pSubPct: round2(coopSubRects.playerSubLeftPct),
+      eMainPct: round2(coopLayout.enemyMainRightPct),
+      eSubPct: round2(coopLayout.enemySubRightPct),
+    };
+
+    const pvpLayout = resolveBattleLayout({
+      battleMode: 'pvp',
+      hasDualUnits: false,
+      compactUI: device.compactUI,
+      playerStageIdx: 0,
+      playerStarterId: 'wolf',
+      enemyId: 'pvp_slime',
+      enemySceneType: 'grass',
+      enemyIsEvolved: false,
+      playerSpriteKey: 'playerwolf0SVG',
+      enemySpriteKey: 'slimeSVG',
+    });
+    const pvpRects = resolveBattleRects({
+      layout: pvpLayout,
+      arenaWidth: device.arenaWidth,
+    });
+    snapshot.pvp[device.name] = {
+      pm: snapshotRect(pvpRects.playerMain),
+      em: snapshotRect(pvpRects.enemyMain),
+      pMainPct: round2(pvpRects.playerMainLeftPct),
+      eMainPct: round2(pvpLayout.enemyMainRightPct),
+    };
+  }
+  return snapshot;
+}
+
+const DEVICE_LAYOUT_SNAPSHOT = {
+  single: {
+    phone: { pm: [23.4, 124.92], em: [155.48, 351], pMainPct: 6, eMainPct: 10 },
+    tablet: { pm: [46.08, 150.84], em: [489.44, 691.2], pMainPct: 6, eMainPct: 10 },
+    laptop: { pm: [81.96, 189.96], em: [1021.4, 1229.4], pMainPct: 6, eMainPct: 10 },
+  },
+  coopMain: {
+    phone: { pm: [-5.85, 169.93], ps: [97.5, 168.56], em: [230.72, 378.3], es: [265.39, 327.6], pMainPct: -1.5, pSubPct: 25, eMainPct: 3, eSubPct: 16 },
+    tablet: { pm: [0, 193.03], ps: [203.52, 287.22], em: [528.08, 706.56], es: [541.44, 614.4], pMainPct: 0, pSubPct: 26.5, eMainPct: 8, eSubPct: 20 },
+    laptop: { pm: [0, 199], ps: [361.99, 451.03], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 0, pSubPct: 26.5, eMainPct: 8, eSubPct: 20 },
+  },
+  coopSub: {
+    phone: { pm: [46.8, 176.88], ps: [-5.85, 90.59], em: [230.72, 378.3], es: [265.39, 327.6], pMainPct: 12, pSubPct: -1.5, eMainPct: 3, eSubPct: 16 },
+    tablet: { pm: [126.72, 285], ps: [0, 107.61], em: [528.08, 706.56], es: [541.44, 614.4], pMainPct: 16.5, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
+    laptop: { pm: [225.39, 388.57], ps: [0, 114.48], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 16.5, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
+  },
+  pvp: {
+    phone: { pm: [7.8, 202.38], em: [238.2, 351], pMainPct: 2, eMainPct: 10 },
+    tablet: { pm: [15.36, 216.15], em: [574.8, 691.2], pMainPct: 2, eMainPct: 10 },
+    laptop: { pm: [27.32, 234.32], em: [1109.4, 1229.4], pMainPct: 2, eMainPct: 10 },
+  },
+};
+
+test('device matrix keeps single-mode frontline spacing stable', () => {
+  for (const device of DEVICE_CASES) {
+    const layout = resolveBattleLayout({
+      battleMode: 'single',
+      hasDualUnits: false,
+      compactUI: device.compactUI,
+      playerStageIdx: 0,
+      playerStarterId: 'fire',
+      enemyId: 'colorful_butterfly',
+      enemySceneType: 'grass',
+      enemyIsEvolved: false,
+      playerSpriteKey: 'playerfire0SVG',
+      enemySpriteKey: 'colorfulButterflySVG',
+    });
+    const rects = resolveBattleRects({
+      layout,
+      arenaWidth: device.arenaWidth,
+      showAllySub: false,
+      showEnemySub: false,
+      coopUsingSub: false,
+    });
+    const gap = minFrontlineGap({
+      rects,
+      showAllySub: false,
+      showEnemySub: false,
+    });
+    assert.ok(
+      gap >= device.minGap,
+      `${device.name} single-mode gap too small: ${gap.toFixed(2)}px`,
+    );
+  }
+});
+
+test('device matrix keeps co-op swapped slots away from enemy lane', () => {
+  for (const device of DEVICE_CASES) {
+    const layout = resolveBattleLayout({
+      battleMode: 'coop',
+      hasDualUnits: true,
+      compactUI: device.compactUI,
+      playerStageIdx: 0,
+      playerStarterId: 'wolf',
+      subStarterId: 'electric',
+      enemyId: 'colorful_butterfly',
+      enemySceneType: 'grass',
+      enemyIsEvolved: false,
+      playerSpriteKey: 'playerwolf0SVG',
+      subSpriteKey: 'playerelectric0SVG',
+      enemySpriteKey: 'colorfulButterflySVG',
+    });
+    const swappedRects = resolveBattleRects({
+      layout,
+      arenaWidth: device.arenaWidth,
+      showAllySub: true,
+      showEnemySub: true,
+      coopUsingSub: true,
+      enemySubId: 'slime',
+      enemySubIsEvolved: false,
+    });
+    const swappedGap = minFrontlineGap({
+      rects: swappedRects,
+      showAllySub: true,
+      showEnemySub: true,
+    });
+    assert.ok(
+      swappedGap >= device.minGap,
+      `${device.name} swapped co-op gap too small: ${swappedGap.toFixed(2)}px`,
+    );
+
+    // Prevent severe clipping: allow a small off-screen margin only.
+    assert.ok(
+      swappedRects.playerMain.left > -swappedRects.playerMain.width * 0.35,
+      `${device.name} swapped main player is clipped too far on the left`,
+    );
+    assert.ok(
+      swappedRects.enemyMain.right < device.arenaWidth + swappedRects.enemyMain.width * 0.35,
+      `${device.name} enemy main is clipped too far on the right`,
+    );
+  }
+});
+
+test('device matrix keeps pvp frontline spacing stable', () => {
+  for (const device of DEVICE_CASES) {
+    const standardLayout = resolveBattleLayout({
+      battleMode: 'pvp',
+      hasDualUnits: false,
+      compactUI: device.compactUI,
+      playerStageIdx: 0,
+      playerStarterId: 'wolf',
+      enemyId: 'pvp_slime',
+      enemySceneType: 'grass',
+      enemyIsEvolved: false,
+      playerSpriteKey: 'playerwolf0SVG',
+      enemySpriteKey: 'slimeSVG',
+    });
+    const standardRects = resolveBattleRects({
+      layout: standardLayout,
+      arenaWidth: device.arenaWidth,
+      showAllySub: false,
+      showEnemySub: false,
+      coopUsingSub: false,
+    });
+    const standardGap = minFrontlineGap({
+      rects: standardRects,
+      showAllySub: false,
+      showEnemySub: false,
+    });
+    assert.ok(
+      standardGap >= device.minGap,
+      `${device.name} pvp standard gap too small: ${standardGap.toFixed(2)}px`,
+    );
+
+    // Boss-vs-boss can have intentional visual overlap, but should still avoid
+    // excessive clipping outside the arena.
+    const bossLayout = resolveBattleLayout({
+      battleMode: 'pvp',
+      hasDualUnits: false,
+      compactUI: device.compactUI,
+      playerStageIdx: 0,
+      playerStarterId: 'boss_crazy_dragon',
+      enemyId: 'pvp_boss_hydra',
+      enemySceneType: 'burnt_warplace',
+      enemyIsEvolved: true,
+      playerSpriteKey: 'bossCrazyDragonSVG',
+      enemySpriteKey: 'bossHydraSVG',
+    });
+    const bossRects = resolveBattleRects({
+      layout: bossLayout,
+      arenaWidth: device.arenaWidth,
+      showAllySub: false,
+      showEnemySub: false,
+      coopUsingSub: false,
+    });
+    assert.ok(
+      bossRects.playerMain.left > -bossRects.playerMain.width * 0.45,
+      `${device.name} pvp boss player clipped too far on the left`,
+    );
+    assert.ok(
+      bossRects.enemyMain.right < device.arenaWidth + bossRects.enemyMain.width * 0.45,
+      `${device.name} pvp boss enemy clipped too far on the right`,
+    );
+  }
+});
+
+test('device matrix snapshot remains stable across phone/tablet/laptop', () => {
+  assert.deepEqual(buildLayoutSnapshot(), DEVICE_LAYOUT_SNAPSHOT);
 });
 
 // ── Fallback: no spriteKey → compensation = 1 ──────────────────────

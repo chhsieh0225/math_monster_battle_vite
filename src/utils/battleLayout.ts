@@ -60,12 +60,19 @@ export function resolveBattleLayout({
   const baseEnemyMainRightPct = dualUnits ? (compactDual ? 5 : 8) : 10;
   const enemySubRightPct = dualUnits ? (compactDual ? 25 : 24) : 24;
   const enemySubTopPct = dualUnits ? (compactDual ? 27 : 23) : 14;
-  const playerMainLeftPct = dualUnits ? (compactDual ? 4 : 6) : 6;
-  const playerMainBottomPct = dualUnits ? (compactDual ? 9 : 11) : 14;
-  const playerSubLeftPct = dualUnits ? (compactDual ? 21 : 23) : 24;
-  const playerSubBottomPct = dualUnits ? (compactDual ? 13 : 15) : 17;
-
   const normalizedPlayerId = normalizeEnemyVisualId(playerStarterId);
+  // Beast starters (wolf/tiger/lion) have wide sprites (677×369, comp≈1.7)
+  // whose rendered width is much larger than standard starters. Shift them
+  // leftward to keep the visual centre in a natural position and prevent
+  // the main sprite from overlapping the sub ally in co-op mode.
+  const isWideBeast = ["wolf", "tiger", "lion"].includes(normalizedPlayerId);
+  const beastLeftAdj = isWideBeast ? -4 : 0;      // nudge main sprite left
+  const beastSubLeftAdj = isWideBeast ? 6 : 0;     // push sub ally further right
+
+  const playerMainLeftPct = (dualUnits ? (compactDual ? 4 : 6) : 6) + beastLeftAdj;
+  const playerMainBottomPct = dualUnits ? (compactDual ? 9 : 11) : 14;
+  const playerSubLeftPct = (dualUnits ? (compactDual ? 21 : 23) : 24) + beastSubLeftAdj;
+  const playerSubBottomPct = dualUnits ? (compactDual ? 13 : 15) : 17;
   const isBossPlayer = BOSS_IDS.has(normalizedPlayerId);
   const isLionOrWolfFinal = (normalizedPlayerId === "lion" || normalizedPlayerId === "wolf") && playerStageIdx >= 2;
   const isLionFinalInTeam = dualUnits && normalizedPlayerId === "lion" && playerStageIdx >= 2;

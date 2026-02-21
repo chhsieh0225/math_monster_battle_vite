@@ -339,6 +339,57 @@ test('compact UI shifts crazy dragon enemy position to the right', () => {
   assert.equal(compactCrazyDragon.enemyMainRightPct, 7);
 });
 
+// ── Beast starters shift leftward to avoid overlapping co-op ally ───
+
+test('beast starters shift main sprite left and sub ally right in coop', () => {
+  const wolfCoop = resolveBattleLayout({
+    battleMode: 'coop',
+    hasDualUnits: true,
+    compactUI: false,
+    playerStageIdx: 0,
+    playerStarterId: 'wolf',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerwolf0SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+  const fireCoop = resolveBattleLayout({
+    battleMode: 'coop',
+    hasDualUnits: true,
+    compactUI: false,
+    playerStageIdx: 0,
+    playerStarterId: 'fire',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerfire0SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+
+  // beast main sprite is shifted 4% further left than standard
+  assert.equal(wolfCoop.playerMainLeftPct, fireCoop.playerMainLeftPct - 4);
+  // beast sub ally is pushed 6% further right to avoid overlap
+  assert.equal(wolfCoop.playerSubLeftPct, fireCoop.playerSubLeftPct + 6);
+});
+
+test('beast starter left shift also applies in single mode', () => {
+  const tigerSingle = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 0,
+    playerStarterId: 'tiger',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playertiger0SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+  // base is 6%, beast shift −4% → 2%
+  assert.equal(tigerSingle.playerMainLeftPct, 2);
+});
+
 // ── Fallback: no spriteKey → compensation = 1 ──────────────────────
 
 test('without spriteKey, compensation defaults to 1 (backward compatible)', () => {

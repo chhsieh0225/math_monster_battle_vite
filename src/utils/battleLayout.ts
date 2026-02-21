@@ -78,16 +78,21 @@ export function resolveBattleLayout({
   // leftward to keep the visual centre in a natural position and prevent
   // the main sprite from overlapping the sub ally in co-op mode.
   const isWideBeast = ["wolf", "tiger", "lion"].includes(normalizedPlayerId);
+  const normalizedSubId = normalizeEnemyVisualId(subStarterId);
+  const isWideBeastSub = ["wolf", "tiger", "lion"].includes(normalizedSubId);
   const beastLeftAdj = isWideBeast ? -4 : 0;      // nudge main sprite left
   const beastSubLeftAdj = isWideBeast ? 6 : 0;     // push sub ally further right
   // Co-op battlefield readability: keep both allies slightly further from enemy side.
   // Sub ally is moved a bit more than main ally to reduce overlap after slot switches.
   const coopMainLeftShift = dualUnits ? (compactDual ? 1.5 : 2) : 0;
   const coopSubLeftShift = dualUnits ? (compactDual ? 2 : 2.5) : 0;
+  // When sub ally uses wide beast sprites (wolf/tiger/lion), pull it back a bit
+  // on co-op lanes to prevent mobile overlap into enemy area.
+  const wideSubPullback = dualUnits && isWideBeastSub ? (compactDual ? 4 : 3) : 0;
 
   const playerMainLeftPct = (dualUnits ? (compactDual ? 4 : 6) : 6) - coopMainLeftShift + beastLeftAdj;
   const playerMainBottomPct = dualUnits ? (compactDual ? 9 : 11) : 14;
-  const playerSubLeftPct = (dualUnits ? (compactDual ? 21 : 23) : 24) - coopSubLeftShift + beastSubLeftAdj;
+  const playerSubLeftPct = (dualUnits ? (compactDual ? 21 : 23) : 24) - coopSubLeftShift - wideSubPullback + beastSubLeftAdj;
   const playerSubBottomPct = dualUnits ? (compactDual ? 13 : 15) : 17;
   const isBossPlayer = BOSS_IDS.has(normalizedPlayerId);
   const isLionOrWolfFinal = (normalizedPlayerId === "lion" || normalizedPlayerId === "wolf") && playerStageIdx >= 2;
@@ -122,8 +127,6 @@ export function resolveBattleLayout({
   // Sub ally sizing: wide-sprites (beast starters) need compensation applied,
   // otherwise the creature only fills ~59% of the viewBox height and looks tiny.
   // A small base bump (112→120) keeps beast subs visually proportional.
-  const normalizedSubId = normalizeEnemyVisualId(subStarterId);
-  const isWideBeastSub = ["wolf", "tiger", "lion"].includes(normalizedSubId);
   const subBaseSize = isWideBeastSub ? (compactDual ? 110 : 120) : (compactDual ? 104 : 112);
   const subComp = subSpriteKey ? getCompensation(subSpriteKey) : 1;
   const subPlayerSize = Math.round(subBaseSize * (dualUnits ? (compactDual ? 0.9 : 0.95) : 1) * subComp);

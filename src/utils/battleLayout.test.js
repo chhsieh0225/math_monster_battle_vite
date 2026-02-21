@@ -390,6 +390,40 @@ test('beast starter left shift also applies in single mode', () => {
   assert.equal(tigerSingle.playerMainLeftPct, 2);
 });
 
+test('compact coop pulls wide beast sub ally backward from enemy lane', () => {
+  const fireWithWolfSub = resolveBattleLayout({
+    battleMode: 'coop',
+    hasDualUnits: true,
+    compactUI: true,
+    playerStageIdx: 0,
+    playerStarterId: 'fire',
+    subStarterId: 'wolf',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerfire0SVG',
+    subSpriteKey: 'playerwolf0SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+  const fireWithFireSub = resolveBattleLayout({
+    battleMode: 'coop',
+    hasDualUnits: true,
+    compactUI: true,
+    playerStageIdx: 0,
+    playerStarterId: 'fire',
+    subStarterId: 'fire',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerfire0SVG',
+    subSpriteKey: 'playerfire0SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+
+  assert.ok(fireWithWolfSub.playerSubLeftPct < fireWithFireSub.playerSubLeftPct);
+  assert.equal(fireWithWolfSub.playerSubLeftPct, fireWithFireSub.playerSubLeftPct - 4);
+});
+
 // ── Fallback: no spriteKey → compensation = 1 ──────────────────────
 
 test('without spriteKey, compensation defaults to 1 (backward compatible)', () => {

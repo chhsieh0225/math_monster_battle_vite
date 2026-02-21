@@ -80,8 +80,12 @@ export function resolveBattleLayout({
   const isWideBeast = ["wolf", "tiger", "lion"].includes(normalizedPlayerId);
   const normalizedSubId = normalizeEnemyVisualId(subStarterId);
   const isWideBeastSub = ["wolf", "tiger", "lion"].includes(normalizedSubId);
+  const isWolfFinal = normalizedPlayerId === "wolf" && playerStageIdx >= 2;
   const beastLeftAdj = isWideBeast ? -4 : 0;      // nudge main sprite left
   const beastSubLeftAdj = isWideBeast ? 6 : 0;     // push sub ally further right
+  // Aegis Wolf King is visually wide and should stay a bit farther to the left/back.
+  const wolfFinalMainLeftAdj = isWolfFinal ? (dualUnits ? -0.4 : -0.8) : 0;
+  const wolfFinalMainBottomAdj = isWolfFinal ? (dualUnits ? -1 : -2) : 0;
   // Co-op battlefield readability: keep both allies slightly further from enemy side.
   // Sub ally is moved a bit more than main ally to reduce overlap after slot switches.
   const coopMainLeftShift = dualUnits ? (compactDual ? 1.5 : 2) : 0;
@@ -90,8 +94,8 @@ export function resolveBattleLayout({
   // on co-op lanes to prevent mobile overlap into enemy area.
   const wideSubPullback = dualUnits && isWideBeastSub ? (compactDual ? 4 : 3) : 0;
 
-  const playerMainLeftPct = (dualUnits ? (compactDual ? 4 : 6) : 6) - coopMainLeftShift + beastLeftAdj;
-  const playerMainBottomPct = dualUnits ? (compactDual ? 9 : 11) : 14;
+  const playerMainLeftPct = (dualUnits ? (compactDual ? 4 : 6) : 6) - coopMainLeftShift + beastLeftAdj + wolfFinalMainLeftAdj;
+  const playerMainBottomPct = (dualUnits ? (compactDual ? 9 : 11) : 14) + wolfFinalMainBottomAdj;
   const playerSubLeftPct = (dualUnits ? (compactDual ? 21 : 23) : 24) - coopSubLeftShift - wideSubPullback + beastSubLeftAdj;
   const playerSubBottomPct = dualUnits ? (compactDual ? 13 : 15) : 17;
   const isBossPlayer = BOSS_IDS.has(normalizedPlayerId);
@@ -125,9 +129,17 @@ export function resolveBattleLayout({
   const pvpCrazyDragonPlayerBoost = battleMode === "pvp" && normalizedPlayerId === "boss_crazy_dragon"
     ? (compactUI ? 1 : 1.14)
     : 1;
+  const wolfFinalSizeScale = isWolfFinal ? 0.94 : 1;
   // Automatic height compensation from sprite profile (replaces hardcoded ×1.5).
   const playerComp = playerSpriteKey ? getCompensation(playerSpriteKey) : 1;
-  const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale * compactFinalStarterScale * playerComp * pvpCrazyDragonPlayerBoost);
+  const mainPlayerSize = Math.round(
+    mainPlayerBaseSize
+    * mainPlayerScale
+    * compactFinalStarterScale
+    * wolfFinalSizeScale
+    * playerComp
+    * pvpCrazyDragonPlayerBoost,
+  );
 
   // Sub ally sizing: wide-sprites (beast starters) need compensation applied,
   // otherwise the creature only fills ~59% of the viewBox height and looks tiny.
@@ -160,13 +172,17 @@ export function resolveBattleLayout({
   const crazyDragonExtraRightAdjust = compactUI && isCrazyDragon
     ? (dualUnits ? -1 : -3)
     : 0;
+  const swordGodExtraRightAdjust = isSwordGod
+    ? (compactDual ? -0.5 : -1.5)
+    : 0;
   const enemyMainRightPct = Math.max(
     2,
     baseEnemyMainRightPct
       + compactNonBossRightAdjust
       + compactBossRightAdjust
       + compactGhostLanternRightAdjust
-      + crazyDragonExtraRightAdjust,
+      + crazyDragonExtraRightAdjust
+      + swordGodExtraRightAdjust,
   );
   const enemyBaseSize = isSwordGod ? 270
     : isCrazyDragon ? 280
@@ -191,6 +207,9 @@ export function resolveBattleLayout({
     * compactBossScale
     * compactGhostLanternScale
     * coopWideEnemyScale;
+  const swordGodSizeBoost = isSwordGod
+    ? (compactUI ? 1.12 : 1.1)
+    : 1;
   const crazyDragonSizeBoost = isCrazyDragon
     ? (compactUI ? 1.12 : 1.06)
     : 1;
@@ -201,6 +220,7 @@ export function resolveBattleLayout({
   const enemySize = Math.round(
     enemyBaseSize
     * enemyScale
+    * swordGodSizeBoost
     * crazyDragonSizeBoost
     * hydraCoopBoost
     * enemyComp

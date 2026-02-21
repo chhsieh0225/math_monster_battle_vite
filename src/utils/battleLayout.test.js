@@ -188,7 +188,7 @@ test('coop lion final evolution is slightly reduced for screen fit', () => {
   assert.equal(lionLayout.mainPlayerSize, 307);
 });
 
-test('coop wolf final evolution follows lion sizing profile', () => {
+test('coop wolf final evolution is slightly smaller than lion for readability', () => {
   const wolfLayout = resolveBattleLayout({
     battleMode: 'coop',
     hasDualUnits: true,
@@ -214,8 +214,39 @@ test('coop wolf final evolution follows lion sizing profile', () => {
     enemySpriteKey: 'slimeSVG',
   });
 
-  assert.equal(wolfLayout.mainPlayerSize, lionLayout.mainPlayerSize);
-  assert.equal(wolfLayout.mainPlayerSize, 307);
+  assert.ok(wolfLayout.mainPlayerSize < lionLayout.mainPlayerSize);
+  // 188 × 0.96 × 0.94 × 1.699 ≈ 288
+  assert.equal(wolfLayout.mainPlayerSize, 288);
+});
+
+test('wolf final form is nudged left/down compared with lion in battle lane', () => {
+  const wolfLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 2,
+    playerStarterId: 'wolf',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerwolf2SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+  const lionLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 2,
+    playerStarterId: 'lion',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerlion2SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+
+  assert.ok(wolfLayout.playerMainLeftPct < lionLayout.playerMainLeftPct);
+  assert.ok(wolfLayout.playerMainBottomPct < lionLayout.playerMainBottomPct);
 });
 
 test('compact UI slightly reduces lion/wolf final evolution size', () => {
@@ -261,7 +292,8 @@ test('compact UI slightly reduces lion/wolf final evolution size', () => {
   assert.equal(lionDesktop.mainPlayerSize, 340);
   // 200 × 0.97 × 1.699 ≈ 330   (compact ×0.97 reduction)
   assert.equal(lionCompact.mainPlayerSize, 330);
-  assert.equal(wolfCompact.mainPlayerSize, lionCompact.mainPlayerSize);
+  // wolf final keeps a dedicated extra reduction in addition to compact scaling.
+  assert.equal(wolfCompact.mainPlayerSize, 310);
 });
 
 test('hydra gets coop-only size boost to avoid looking undersized', () => {
@@ -480,6 +512,51 @@ test('compact UI shifts crazy dragon enemy position to the right', () => {
 
   assert.ok(compactCrazyDragon.enemyMainRightPct < compactHydra.enemyMainRightPct);
   assert.equal(compactCrazyDragon.enemyMainRightPct, 4);
+});
+
+test('sword god shifts right and renders larger in battle', () => {
+  const compactSwordGod = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss_sword_god',
+    enemySceneType: 'heaven',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossSwordGodSVG',
+  });
+  const desktopSwordGod = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss_sword_god',
+    enemySceneType: 'heaven',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossSwordGodSVG',
+  });
+  const compactHydra = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss_hydra',
+    enemySceneType: 'poison',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossHydraSVG',
+  });
+
+  assert.equal(compactSwordGod.enemyMainRightPct, 5.5);
+  assert.equal(desktopSwordGod.enemyMainRightPct, 8.5);
+  assert.ok(compactSwordGod.enemyMainRightPct < compactHydra.enemyMainRightPct);
+  assert.equal(compactSwordGod.enemySize, 276);
+  assert.equal(desktopSwordGod.enemySize, 323);
 });
 
 test('crazy dragon gets dedicated size boost on mobile and desktop', () => {

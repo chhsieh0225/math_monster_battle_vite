@@ -77,7 +77,7 @@ test('runStartBattleFlow starts double battle with ally intro text', () => {
   assert.equal(action?.enemySub?.name, '毒液花');
   assert.deepEqual(encUpdated, ['史萊姆王', '毒液花']);
   assert.equal(phase, 'text');
-  assert.equal(text.includes('2v2 battle!'), true);
+  assert.equal(text.includes('vs'), true);
   assert.equal(text.includes('火狐'), true);
   assert.equal(text.includes('雷喵'), true);
   assert.equal(screen, 'battle');
@@ -110,12 +110,11 @@ test('runStartBattleFlow starts single battle intro text', () => {
     playBattleIntro: () => {},
   });
 
-  assert.equal(text.includes('A wild'), true);
   assert.equal(text.includes('Lv.'), true);
   assert.equal(text.includes('哥布林'), true);
 });
 
-test('runStartBattleFlow prepends campaign node context when provided', () => {
+test('runStartBattleFlow keeps intro concise even when campaign node meta is provided', () => {
   const enemy = createEnemy('伏擊狼');
   let text = '';
 
@@ -147,10 +146,12 @@ test('runStartBattleFlow prepends campaign node context when provided', () => {
     }),
   });
 
-  assert.equal(text.includes('Route node 3/10'), true);
-  assert.equal(text.includes('Right Path'), true);
-  assert.equal(text.includes('Elite node'), true);
-  assert.equal(text.includes('Ambush Trap'), true);
+  assert.equal(text.includes('Route node 3/10'), false);
+  assert.equal(text.includes('Right Path'), false);
+  assert.equal(text.includes('Elite node'), false);
+  assert.equal(text.includes('Ambush Trap'), false);
+  assert.equal(text.includes('伏擊狼'), true);
+  assert.equal(text.includes('Lv.'), true);
 });
 
 test('runStartBattleFlow enters boss intro when coop sub enemy is a boss', () => {

@@ -213,6 +213,11 @@ export function buildBattleStaticCore({
   const scene = scenes[sceneKey] || scenes.grass || Object.values(scenes)[0];
   if (!scene) return null;
 
+  // Derive SVG export key for player sprite: convention is `player${id}${stage}SVG`.
+  const playerSpriteKey = `player${starter.id}${pStg}SVG`;
+  // Enemy carries activeSpriteKey from roster builder.
+  const enemySpriteKey = (enemy as { activeSpriteKey?: string }).activeSpriteKey || enemy.spriteKey;
+
   const layout = resolveBattleLayout({
     battleMode,
     hasDualUnits,
@@ -222,6 +227,8 @@ export function buildBattleStaticCore({
     enemyId: enemy.id,
     enemySceneType: enemy.sceneMType || enemy.mType,
     enemyIsEvolved: enemy.isEvolved,
+    playerSpriteKey,
+    enemySpriteKey,
   });
 
   const pvpEnemyBarActive = battleMode !== 'pvp' || pvpTurn === 'p2';

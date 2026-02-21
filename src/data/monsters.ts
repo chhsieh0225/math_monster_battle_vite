@@ -68,20 +68,20 @@ function resolveDrops(dropTable: string): string[] {
 }
 
 function hydrateVariant(config: SlimeVariantConfig): HydratedSlimeVariant {
-  const { spriteKey, dropTable, ...rest } = config;
+  const { dropTable, ...rest } = config;
   return {
     ...rest,
-    svgFn: resolveSprite(spriteKey),
+    svgFn: resolveSprite(config.spriteKey),
     drops: resolveDrops(dropTable),
   };
 }
 
 function hydrateMonster(config: MonsterConfig): HydratedMonster {
-  const { spriteKey, evolvedSpriteKey, dropTable, ...rest } = config;
+  const { dropTable, ...rest } = config;
   return {
     ...rest,
-    svgFn: resolveSprite(spriteKey),
-    evolvedSvgFn: evolvedSpriteKey ? resolveSprite(evolvedSpriteKey) : undefined,
+    svgFn: resolveSprite(config.spriteKey),
+    evolvedSvgFn: config.evolvedSpriteKey ? resolveSprite(config.evolvedSpriteKey) : undefined,
     drops: resolveDrops(dropTable),
   };
 }

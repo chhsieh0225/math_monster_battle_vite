@@ -79,96 +79,99 @@ export const BG_IMGS_LOW = {
   candy: `${BASE}backgrounds/candy_low.jpg`,
 } as const;
 
-type SpriteKey = keyof typeof SPRITE_IMGS;
 type SvgFactory = () => string;
 
-// SVG wrapper functions — return inner SVG markup using image paths
-// viewBox is 120×100; standard images (~1.2:1) fill it directly.
-function makeSvgFn(key: SpriteKey, rendering = 'auto'): SvgFactory {
-  return () => `<image href="${SPRITE_IMGS[key]}" x="0" y="0" width="120" height="100" style="image-rendering:${rendering}"/>`;
-}
-// For sprites that must show in full (no clipping):
-// scale to fit entirely within the 120×100 viewBox, centered both axes.
-function makeSvgFnFit(
-  key: SpriteKey,
-  natW: number,
-  natH: number,
-  rendering = 'auto',
-): SvgFactory {
-  const vbW = 120, vbH = 100;
-  const scale = Math.min(vbW / natW, vbH / natH);
-  const w = Math.round(natW * scale);
-  const h = Math.round(natH * scale);
-  const x = Math.round((vbW - w) / 2);
-  const y = Math.round((vbH - h) / 2);
-  return () => `<image href="${SPRITE_IMGS[key]}" x="${x}" y="${y}" width="${w}" height="${h}" style="image-rendering:${rendering}"/>`;
-}
-// Like makeSvgFnFit but horizontally flipped (faces left → faces right).
-function makeSvgFnFitFlip(
-  key: SpriteKey,
-  natW: number,
-  natH: number,
-  rendering = 'auto',
-): SvgFactory {
-  const vbW = 120, vbH = 100;
-  const scale = Math.min(vbW / natW, vbH / natH);
-  const w = Math.round(natW * scale);
-  const h = Math.round(natH * scale);
-  const x = Math.round((vbW - w) / 2);
-  const y = Math.round((vbH - h) / 2);
-  return () => `<g transform="translate(${vbW},0) scale(-1,1)"><image href="${SPRITE_IMGS[key]}" x="${x}" y="${y}" width="${w}" height="${h}" style="image-rendering:${rendering}"/></g>`;
+// ─── Unified SVG factory ─────────────────────────────────────────────
+// All sprite geometry lives in spriteProfiles.ts.  This function reads a
+// SpriteProfile and produces the matching SVG <image> markup.
+
+import { PROFILES, VB_W, VB_H, type SpriteProfile } from './spriteProfiles.ts';
+
+function makeSvgFromProfile(p: SpriteProfile): SvgFactory {
+  const { imgKey, natW, natH, safePad, flip, rendering = 'auto' } = p;
+  const href = SPRITE_IMGS[imgKey];
+
+  // Fast path: standard-fill sprite (120×100, no padding).
+  if (natW === VB_W && natH === VB_H && safePad === 0) {
+    return () => `<image href="${href}" x="0" y="0" width="120" height="100" style="image-rendering:${rendering}"/>`;
+  }
+
+  // Contain-safe: fit within padded region, centred both axes.
+  const aW = VB_W * (1 - 2 * safePad);
+  const aH = VB_H * (1 - 2 * safePad);
+  const s = Math.min(aW / natW, aH / natH);
+  const w = Math.round(natW * s);
+  const h = Math.round(natH * s);
+  const x = Math.round((VB_W - w) / 2);
+  const y = Math.round((VB_H - h) / 2);
+
+  if (flip) {
+    return () =>
+      `<g transform="translate(${VB_W},0) scale(-1,1)"><image href="${href}" x="${x}" y="${y}" width="${w}" height="${h}" style="image-rendering:${rendering}"/></g>`;
+  }
+  return () =>
+    `<image href="${href}" x="${x}" y="${y}" width="${w}" height="${h}" style="image-rendering:${rendering}"/>`;
 }
 
-export const slimeSVG = makeSvgFn('slime', 'pixelated');
+// Helper to build from a profile key (SVG export name).
+function fromProfile(name: string): SvgFactory {
+  const p = PROFILES[name];
+  if (!p) throw new Error(`[sprites] missing profile for "${name}"`);
+  return makeSvgFromProfile(p);
+}
+
+// ─── Exports — one per sprite ────────────────────────────────────────
+
+export const slimeSVG = fromProfile('slimeSVG');
 
 // ── Slime variant PNGs (dedicated sprites with white eyes) ──
-export const slimeRedSVG    = makeSvgFn('slime_fire', 'pixelated');
-export const slimeBlueSVG   = makeSvgFn('slime_water', 'pixelated');
-export const slimeYellowSVG = makeSvgFn('slime_electric', 'pixelated');
-export const slimeDarkSVG   = makeSvgFn('slime_dark', 'pixelated');
-export const slimeSteelSVG  = makeSvgFn('slime_steel', 'pixelated');
+export const slimeRedSVG    = fromProfile('slimeRedSVG');
+export const slimeBlueSVG   = fromProfile('slimeBlueSVG');
+export const slimeYellowSVG = fromProfile('slimeYellowSVG');
+export const slimeDarkSVG   = fromProfile('slimeDarkSVG');
+export const slimeSteelSVG  = fromProfile('slimeSteelSVG');
 
-export const fireLizardSVG = makeSvgFn('fire');
-export const ghostSVG = makeSvgFn('ghost');
-export const ghostLanternSVG = makeSvgFnFit('ghost_lantern', 677, 369);
-export const mushroomSVG = makeSvgFnFit('mushroom', 677, 369);
-export const dragonSVG = makeSvgFn('dragon', 'pixelated');
-export const darkLordSVG = makeSvgFn('boss');
-export const slimeEvolvedSVG = makeSvgFn('slime_evolved');
-export const slimeElectricEvolvedSVG = makeSvgFn('slime_electric_evolved');
-export const slimeFireEvolvedSVG = makeSvgFn('slime_fire_evolved');
-export const slimeWaterEvolvedSVG = makeSvgFn('slime_water_evolved');
-export const slimeSteelEvolvedSVG = makeSvgFn('slime_steel_evolved');
-export const slimeDarkEvolvedSVG = makeSvgFn('slime_dark_evolved');
-export const fireEvolvedSVG = makeSvgFn('fire_evolved');
-export const ghostEvolvedSVG = makeSvgFn('ghost_evolved');
-export const dragonEvolvedSVG = makeSvgFn('dragon_evolved');
-export const playerfire0SVG = makeSvgFn('player_fire0');
-export const playerfire1SVG = makeSvgFn('player_fire1');
-export const playerfire2SVG = makeSvgFn('player_fire2');
-export const playerwater0SVG = makeSvgFn('player_water0');
-export const playerwater1SVG = makeSvgFn('player_water1');
-export const playerwater2SVG = makeSvgFn('player_water2');
-export const playergrass0SVG = makeSvgFn('player_grass0');
-export const playergrass1SVG = makeSvgFn('player_grass1');
-export const playergrass2SVG = makeSvgFn('player_grass2');
-export const playerelectric0SVG = makeSvgFn('player_electric0');
-export const playerelectric1SVG = makeSvgFn('player_electric1');
-export const playerelectric2SVG = makeSvgFn('player_electric2');
-export const playerlion0SVG = makeSvgFnFit('player_lion0', 677, 369);
-export const playerlion1SVG = makeSvgFnFit('player_lion1', 677, 369);
-export const playerlion2SVG = makeSvgFnFit('player_lion2', 677, 369);
-export const playerwolf0SVG = makeSvgFnFit('player_wolf0', 677, 369);
-export const playerwolf1SVG = makeSvgFnFit('player_wolf1', 677, 369);
-export const playerwolf2SVG = makeSvgFnFit('player_wolf2', 677, 369);
-export const playertiger0SVG = makeSvgFnFit('player_tiger0', 677, 369);
-export const playertiger1SVG = makeSvgFnFit('player_tiger1', 677, 369);
-export const playertiger2SVG = makeSvgFnFit('player_tiger2', 677, 369);
-export const bossHydraSVG = makeSvgFnFit('boss_hydra', 677, 369);
-export const bossCrazyDragonSVG = makeSvgFnFitFlip('boss_crazy_dragon', 677, 369);
-export const bossSwordGodSVG = makeSvgFnFit('boss_sword_god', 409, 610);
-export const golumnSVG = makeSvgFn('golumn');
-export const golumnMudSVG = makeSvgFn('golumn_mud');
-export const candyKnightSVG = makeSvgFnFit('candy_knight', 590, 423);
-export const candyMonsterSVG = makeSvgFnFit('candy_monster', 530, 471);
-export const colorfulButterflySVG = makeSvgFnFit('colorful_butterfly', 676, 369);
+export const fireLizardSVG = fromProfile('fireLizardSVG');
+export const ghostSVG = fromProfile('ghostSVG');
+export const ghostLanternSVG = fromProfile('ghostLanternSVG');
+export const mushroomSVG = fromProfile('mushroomSVG');
+export const dragonSVG = fromProfile('dragonSVG');
+export const darkLordSVG = fromProfile('darkLordSVG');
+export const slimeEvolvedSVG = fromProfile('slimeEvolvedSVG');
+export const slimeElectricEvolvedSVG = fromProfile('slimeElectricEvolvedSVG');
+export const slimeFireEvolvedSVG = fromProfile('slimeFireEvolvedSVG');
+export const slimeWaterEvolvedSVG = fromProfile('slimeWaterEvolvedSVG');
+export const slimeSteelEvolvedSVG = fromProfile('slimeSteelEvolvedSVG');
+export const slimeDarkEvolvedSVG = fromProfile('slimeDarkEvolvedSVG');
+export const fireEvolvedSVG = fromProfile('fireEvolvedSVG');
+export const ghostEvolvedSVG = fromProfile('ghostEvolvedSVG');
+export const dragonEvolvedSVG = fromProfile('dragonEvolvedSVG');
+export const playerfire0SVG = fromProfile('playerfire0SVG');
+export const playerfire1SVG = fromProfile('playerfire1SVG');
+export const playerfire2SVG = fromProfile('playerfire2SVG');
+export const playerwater0SVG = fromProfile('playerwater0SVG');
+export const playerwater1SVG = fromProfile('playerwater1SVG');
+export const playerwater2SVG = fromProfile('playerwater2SVG');
+export const playergrass0SVG = fromProfile('playergrass0SVG');
+export const playergrass1SVG = fromProfile('playergrass1SVG');
+export const playergrass2SVG = fromProfile('playergrass2SVG');
+export const playerelectric0SVG = fromProfile('playerelectric0SVG');
+export const playerelectric1SVG = fromProfile('playerelectric1SVG');
+export const playerelectric2SVG = fromProfile('playerelectric2SVG');
+export const playerlion0SVG = fromProfile('playerlion0SVG');
+export const playerlion1SVG = fromProfile('playerlion1SVG');
+export const playerlion2SVG = fromProfile('playerlion2SVG');
+export const playerwolf0SVG = fromProfile('playerwolf0SVG');
+export const playerwolf1SVG = fromProfile('playerwolf1SVG');
+export const playerwolf2SVG = fromProfile('playerwolf2SVG');
+export const playertiger0SVG = fromProfile('playertiger0SVG');
+export const playertiger1SVG = fromProfile('playertiger1SVG');
+export const playertiger2SVG = fromProfile('playertiger2SVG');
+export const bossHydraSVG = fromProfile('bossHydraSVG');
+export const bossCrazyDragonSVG = fromProfile('bossCrazyDragonSVG');
+export const bossSwordGodSVG = fromProfile('bossSwordGodSVG');
+export const golumnSVG = fromProfile('golumnSVG');
+export const golumnMudSVG = fromProfile('golumnMudSVG');
+export const candyKnightSVG = fromProfile('candyKnightSVG');
+export const candyMonsterSVG = fromProfile('candyMonsterSVG');
+export const colorfulButterflySVG = fromProfile('colorfulButterflySVG');

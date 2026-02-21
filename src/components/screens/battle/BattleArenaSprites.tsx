@@ -41,22 +41,6 @@ const FACING_SUB_STYLE: CSSProperties = {
   transformOrigin: '50% 64%',
 };
 
-// Wide-wing sprites can hit the SVG viewport edges when battle camera adds
-// extra transforms (shake/freeze/charge). Keep a small in-frame safety margin.
-const FACING_MAIN_WIDE_SAFE_STYLE: CSSProperties = {
-  transform: 'translate3d(var(--battle-face-shift-main, -2px), 0, 0) rotate(var(--battle-face-tilt-main, -1.6deg)) scale(0.94)',
-  transformOrigin: '50% 62%',
-};
-
-const FACING_SUB_WIDE_SAFE_STYLE: CSSProperties = {
-  transform: 'translate3d(var(--battle-face-shift-sub, -1px), 0, 0) rotate(var(--battle-face-tilt-sub, -1deg)) scale(0.94)',
-  transformOrigin: '50% 64%',
-};
-
-function isWideWingSprite(svgStr: string | null | undefined): boolean {
-  return typeof svgStr === 'string' && svgStr.includes('colorful_butterfly.png');
-}
-
 export const BattleArenaSprites = memo(function BattleArenaSprites({
   showHeavyFx,
   enemy,
@@ -82,10 +66,11 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
   showEnemyShadow,
   showPlayerShadow,
 }: BattleArenaSpritesProps) {
-  const enemyMainFacingStyle = isWideWingSprite(eSvg) ? FACING_MAIN_WIDE_SAFE_STYLE : FACING_MAIN_STYLE;
-  const enemySubFacingStyle = isWideWingSprite(eSubSvg) ? FACING_SUB_WIDE_SAFE_STYLE : FACING_SUB_STYLE;
-  const playerMainFacingStyle = isWideWingSprite(pSvg) ? FACING_MAIN_WIDE_SAFE_STYLE : FACING_MAIN_STYLE;
-  const playerSubFacingStyle = isWideWingSprite(pSubSvg) ? FACING_SUB_WIDE_SAFE_STYLE : FACING_SUB_STYLE;
+  // Safe padding is now baked into SVG via spriteProfiles.ts — no CSS scale hack needed.
+  const enemyMainFacingStyle = FACING_MAIN_STYLE;
+  const enemySubFacingStyle = FACING_SUB_STYLE;
+  const playerMainFacingStyle = FACING_MAIN_STYLE;
+  const playerSubFacingStyle = FACING_SUB_STYLE;
 
   return (
     <>

@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia.ts';
-import { BOSS_IDS } from '../../data/monsterConfigs.ts';
+
 import { useI18n } from '../../i18n';
 import { hasSpecialTrait } from '../../utils/traits';
 import { loadCollection, type CollectionData } from '../../utils/collectionStore.ts';
+import { getCompensation } from '../../data/spriteProfiles.ts';
 import './EncyclopediaScreen.css';
 import {
   localizeEncyclopediaEnemyEntries,
@@ -22,9 +23,11 @@ import type {
 const PAGE_BG = 'linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)';
 type EncyclopediaCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
 
-const LARGE_MONSTER_IDS: ReadonlySet<string> = new Set([...BOSS_IDS, 'golumn', 'golumn_mud', 'ghost_lantern', 'mushroom']);
-function encCardSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 64 : 48; }
-function encModalSpriteSize(key: string): number { return LARGE_MONSTER_IDS.has(key) ? 200 : 160; }
+// Sprite size is automatically compensated by the profile's height-compensation
+// factor.  No more hardcoded LARGE_MONSTER_IDS set — the formula handles all
+// aspect ratios uniformly.
+function encCardSpriteSize(spriteKey: string): number { return Math.round(48 * getCompensation(spriteKey)); }
+function encModalSpriteSize(spriteKey: string): number { return Math.round(160 * getCompensation(spriteKey)); }
 
 function starterFacingStyle(): CSSProperties | undefined {
   // Keep encyclopedia facing direction consistent with the source sprite file.
@@ -228,8 +231,8 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                     onClick={() => seen && setSelected({ entry: e, kind: 'enemy' })}
                     className={`enc-card ${seen ? 'is-seen' : 'is-hidden'} ${killed ? 'is-killed' : ''}`}
                   >
-                    <div className={`enc-card-sprite-wrap ${seen ? '' : 'is-hidden'} ${LARGE_MONSTER_IDS.has(e.key) ? 'is-large' : ''}`}>
-                      <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={encCardSpriteSize(e.key)} ariaLabel={seen
+                    <div className={`enc-card-sprite-wrap ${seen ? '' : 'is-hidden'} ${getCompensation(e.spriteKey) > 1.1 ? 'is-large' : ''}`}>
+                      <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={encCardSpriteSize(e.spriteKey)} ariaLabel={seen
                         ? t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: e.name })
                         : t('encyclopedia.a11y.unknownEnemySprite', 'Unknown monster sprite')} />
                     </div>
@@ -269,7 +272,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                     <div className={`enc-starter-sprite-inner ${isBladewolfEntry(e) ? 'is-bladewolf' : ''}`}>
                       <MonsterSprite
                         svgStr={e.svgFn(e.c1, e.c2)}
-                        size={48}
+                        size={encCardSpriteSize(e.spriteKey)}
                         style={starterFacingStyle()}
                         ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: e.name })}
                       />
@@ -379,7 +382,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
           <div className="enc-modal-rarity">{entry.rarity}</div>
 
           <div className="enc-modal-sprite-wrap">
-            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={encModalSpriteSize(entry.key)} ariaLabel={t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: entry.name })} />
+            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={encModalSpriteSize(entry.spriteKey)} ariaLabel={t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: entry.name })} />
           </div>
 
           <div className="enc-modal-name-wrap">
@@ -545,7 +548,7 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
             <div className={`enc-starter-sprite-inner ${isBladewolfEntry(entry) ? 'is-bladewolf' : ''}`}>
               <MonsterSprite
                 svgStr={entry.svgFn(entry.c1, entry.c2)}
-                size={160}
+                size={encModalSpriteSize(entry.spriteKey)}
                 style={starterFacingStyle()}
                 ariaLabel={t('encyclopedia.a11y.starterSprite', '{name} sprite', { name: entry.name })}
               />

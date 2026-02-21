@@ -154,7 +154,9 @@ export function resolveBattleLayout({
   const compactBossRightAdjust = compactUI && isBoss
     ? (dualUnits ? -2 : -3)
     : 0;
-  const compactGhostLanternRightAdjust = compactDual && isGhostLantern ? -1 : 0;
+  const compactGhostLanternRightAdjust = compactUI && isGhostLantern
+    ? (compactDual ? -1 : -5)
+    : 0;
   const crazyDragonExtraRightAdjust = compactUI && isCrazyDragon
     ? (dualUnits ? -0.5 : -0.5)
     : 0;

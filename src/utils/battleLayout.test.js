@@ -699,6 +699,36 @@ test('compact dual ghost lantern is pulled farther right and scaled down', () =>
   assert.ok(compactGhost.enemySize > compactSlime.enemySize);
 });
 
+test('compact single ghost lantern is pulled farther right on mobile', () => {
+  const compactGhostSingle = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 0,
+    playerStarterId: 'fire',
+    enemyId: 'ghost_lantern',
+    enemySceneType: 'ghost',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerfire0SVG',
+    enemySpriteKey: 'ghostLanternSVG',
+  });
+  const compactSlimeSingle = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 0,
+    playerStarterId: 'fire',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerfire0SVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+
+  assert.ok(compactGhostSingle.enemyMainRightPct < compactSlimeSingle.enemyMainRightPct);
+  assert.equal(compactGhostSingle.enemyMainRightPct, 5);
+});
+
 // ── Device matrix validation (phone / tablet / laptop) ─────────────
 
 const DEVICE_CASES = [

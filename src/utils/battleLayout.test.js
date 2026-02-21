@@ -339,6 +339,60 @@ test('compact UI shifts crazy dragon enemy position to the right', () => {
   assert.equal(compactCrazyDragon.enemyMainRightPct, 7);
 });
 
+test('pvp one-wing dragon gets dedicated size boost for readability', () => {
+  const singleEnemy = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss_crazy_dragon',
+    enemySceneType: 'burnt_warplace',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossCrazyDragonSVG',
+  });
+  const pvpEnemy = resolveBattleLayout({
+    battleMode: 'pvp',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'pvp_boss_crazy_dragon',
+    enemySceneType: 'burnt_warplace',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossCrazyDragonSVG',
+  });
+  const singlePlayer = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 0,
+    playerStarterId: 'boss_crazy_dragon',
+    enemyId: 'slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'bossCrazyDragonSVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+  const pvpPlayer = resolveBattleLayout({
+    battleMode: 'pvp',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 0,
+    playerStarterId: 'boss_crazy_dragon',
+    enemyId: 'pvp_slime',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'bossCrazyDragonSVG',
+    enemySpriteKey: 'slimeSVG',
+  });
+
+  assert.ok(pvpEnemy.enemySize > singleEnemy.enemySize);
+  assert.ok(pvpPlayer.mainPlayerSize > singlePlayer.mainPlayerSize);
+});
+
 // ── Beast starters shift leftward to avoid overlapping co-op ally ───
 
 test('beast starters shift main sprite left and sub ally right in coop', () => {

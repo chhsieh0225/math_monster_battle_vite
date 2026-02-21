@@ -120,9 +120,14 @@ export function resolveBattleLayout({
   const mainPlayerScale = dualUnits ? (compactDual ? 0.9 : 0.96) : 1;
   // Slightly reduce lion/wolf final forms on compact (mobile) viewports.
   const compactFinalStarterScale = compactUI && isLionOrWolfFinal ? 0.97 : 1;
+  // PvP readability: one-wing dragon silhouette is wide and appears visually
+  // smaller than other bosses, so give it a dedicated in-battle boost.
+  const pvpCrazyDragonPlayerBoost = battleMode === "pvp" && normalizedPlayerId === "boss_crazy_dragon"
+    ? (compactUI ? 1.06 : 1.14)
+    : 1;
   // Automatic height compensation from sprite profile (replaces hardcoded ×1.5).
   const playerComp = playerSpriteKey ? getCompensation(playerSpriteKey) : 1;
-  const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale * compactFinalStarterScale * playerComp);
+  const mainPlayerSize = Math.round(mainPlayerBaseSize * mainPlayerScale * compactFinalStarterScale * playerComp * pvpCrazyDragonPlayerBoost);
 
   // Sub ally sizing: wide-sprites (beast starters) need compensation applied,
   // otherwise the creature only fills ~59% of the viewBox height and looks tiny.
@@ -143,12 +148,15 @@ export function resolveBattleLayout({
   const isCrazyDragon = visualEnemyId === "boss_crazy_dragon";
   const isSwordGod = visualEnemyId === "boss_sword_god";
   const isHydra = visualEnemyId === "boss_hydra";
-  // Mobile compact viewport: move Crazy Dragon slightly to the right so it doesn't
-  // feel too close to player-side due to its large body width.
-  const crazyDragonRightAdjust = compactUI && isCrazyDragon
-    ? (dualUnits ? -1.5 : -3)
+  // Mobile compact viewport: bosses should sit farther from player-side to avoid
+  // crowding, with a tiny extra retreat for Crazy Dragon's wide silhouette.
+  const compactBossRightAdjust = compactUI && isBoss
+    ? (dualUnits ? -1.5 : -2.5)
     : 0;
-  const enemyMainRightPct = Math.max(3, baseEnemyMainRightPct + crazyDragonRightAdjust);
+  const crazyDragonExtraRightAdjust = compactUI && isCrazyDragon
+    ? (dualUnits ? -0.5 : -0.5)
+    : 0;
+  const enemyMainRightPct = Math.max(2, baseEnemyMainRightPct + compactBossRightAdjust + crazyDragonExtraRightAdjust);
   const enemyBaseSize = isSwordGod ? 270
     : isCrazyDragon ? 280
     : isHydra ? 260
@@ -159,11 +167,17 @@ export function resolveBattleLayout({
         : isEvolvedWildStarter ? 172
         : (isDragonOrFire || isEvolvedSlime) ? 190
           : enemyIsEvolved ? 155 : 120;
-  const enemyScale = dualUnits ? (compactDual ? 0.92 : 0.98) : 1;
+  const compactBossScale = compactUI && isBoss
+    ? (isHydra ? 0.84 : isCrazyDragon ? 0.86 : isSwordGod ? 0.88 : 0.9)
+    : 1;
+  const enemyScale = (dualUnits ? (compactDual ? 0.92 : 0.98) : 1) * compactBossScale;
   const hydraCoopBoost = isHydra && dualUnits ? (compactDual ? 1.08 : 1.1) : 1;
+  const pvpCrazyDragonEnemyBoost = battleMode === "pvp" && isCrazyDragon
+    ? (compactUI ? 1.03 : 1.1)
+    : 1;
   // Automatic height compensation from sprite profile (replaces hardcoded ×1.5).
   const enemyComp = enemySpriteKey ? getCompensation(enemySpriteKey) : 1;
-  const enemySize = Math.round(enemyBaseSize * enemyScale * hydraCoopBoost * enemyComp);
+  const enemySize = Math.round(enemyBaseSize * enemyScale * hydraCoopBoost * enemyComp * pvpCrazyDragonEnemyBoost);
 
   const enemyBaseTopPct = (enemySceneType === "ghost" || isBoss) ? 12
     : enemySceneType === "steel" ? 16 : 26;

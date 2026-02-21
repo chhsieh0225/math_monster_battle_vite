@@ -173,18 +173,16 @@ function BattleScreenComponent({
         enemyTopPct,
         playerMainLeftPct: rawMainLeftPct,
         playerMainBottomPct: rawMainBottomPct,
-        playerSubLeftPct: rawSubLeftPct,
-        playerSubBottomPct: rawSubBottomPct,
         mainPlayerSize: rawMainSize,
-        subPlayerSize: rawSubSize,
         enemySize,
       },
-      coopUsingSub,
     } = coreStatic;
 
-    const playerMainLeftPct = coopUsingSub ? rawSubLeftPct : rawMainLeftPct;
-    const playerMainBottomPct = coopUsingSub ? rawSubBottomPct : rawMainBottomPct;
-    const mainPlayerSize = coopUsingSub ? rawSubSize : rawMainSize;
+    // Keep player-main target anchored to main slot to avoid large jump drift
+    // when co-op active slot switches on smaller/mobile viewports.
+    const playerMainLeftPct = rawMainLeftPct;
+    const playerMainBottomPct = rawMainBottomPct;
+    const mainPlayerSize = rawMainSize;
 
     const enemyHeight = enemySize * 100 / 120;
     const enemyFallbackTarget = {
@@ -221,11 +219,7 @@ function BattleScreenComponent({
         playerSubLeftPct: rawSubLeftPct,
         playerSubBottomPct: rawSubBottomPct,
         subPlayerSize: rawSubSize,
-        playerMainLeftPct: rawMainLeftPct,
-        playerMainBottomPct: rawMainBottomPct,
-        mainPlayerSize: rawMainSize,
       },
-      coopUsingSub,
     } = coreStatic;
 
     // Player-main: from measured target or fallback
@@ -242,9 +236,9 @@ function BattleScreenComponent({
       subCy = subTarget.cy;
     } else {
       // Fallback: estimate sub position from layout percentages using 390×550 virtual arena
-      const subLeftPct = coopUsingSub ? rawMainLeftPct : rawSubLeftPct;
-      const subBottomPct = coopUsingSub ? rawMainBottomPct : rawSubBottomPct;
-      const subSize = coopUsingSub ? rawMainSize : rawSubSize;
+      const subLeftPct = rawSubLeftPct;
+      const subBottomPct = rawSubBottomPct;
+      const subSize = rawSubSize;
       const subHeight = subSize * 100 / 120;
       const subCenterRightPct = Math.max(8, 100 - subLeftPct - (subSize * 100 / 390) / 2);
       const subCenterTopPct = Math.max(8, 100 - subBottomPct - (subHeight * 100 / 550) / 2);
@@ -316,7 +310,6 @@ function BattleScreenComponent({
         playerSubLeftPct: rawSubLeftPct,
         playerSubBottomPct: rawSubBottomPct,
         mainPlayerSize: rawMainSize,
-        subPlayerSize: rawSubSize,
         enemySize,
         enemyTopPct,
         playerComp,
@@ -328,11 +321,12 @@ function BattleScreenComponent({
     const enemySubIsEvolved = Boolean(S.enemySub?.isEvolved);
     const enemySubIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemySubId));
 
-    const playerMainLeftPct = coopUsingSub ? rawSubLeftPct : rawMainLeftPct;
-    const playerMainBottomPct = coopUsingSub ? rawSubBottomPct : rawMainBottomPct;
-    const playerSubLeftPct = coopUsingSub ? rawMainLeftPct : rawSubLeftPct;
-    const playerSubBottomPct = coopUsingSub ? rawMainBottomPct : rawSubBottomPct;
-    const mainPlayerSize = coopUsingSub ? rawSubSize : rawMainSize;
+    // Keep slot coordinates stable in co-op; active slot is conveyed by glow/z-index only.
+    const playerMainLeftPct = rawMainLeftPct;
+    const playerMainBottomPct = rawMainBottomPct;
+    const playerSubLeftPct = rawSubLeftPct;
+    const playerSubBottomPct = rawSubBottomPct;
+    const mainPlayerSize = rawMainSize;
 
     const isLargeEnemySub = enemySubId === "golumn" || enemySubId === "golumn_mud" || enemySubId === "mushroom";
     const enemySubScale = isLargeEnemySub

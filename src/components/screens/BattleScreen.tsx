@@ -321,11 +321,13 @@ function BattleScreenComponent({
     const enemySubIsEvolved = Boolean(S.enemySub?.isEvolved);
     const enemySubIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemySubId));
 
-    // Keep slot coordinates stable in co-op; active slot is conveyed by glow/z-index only.
-    const playerMainLeftPct = rawMainLeftPct;
-    const playerMainBottomPct = rawMainBottomPct;
-    const playerSubLeftPct = rawSubLeftPct;
-    const playerSubBottomPct = rawSubBottomPct;
+    // In co-op, swap main/sub slot positions when sub is active so players can
+    // instantly see which character is currently selected.
+    const shouldSwapPlayerSlots = isCoopBattle && coopUsingSub;
+    const playerMainLeftPct = shouldSwapPlayerSlots ? rawSubLeftPct : rawMainLeftPct;
+    const playerMainBottomPct = shouldSwapPlayerSlots ? rawSubBottomPct : rawMainBottomPct;
+    const playerSubLeftPct = shouldSwapPlayerSlots ? rawMainLeftPct : rawSubLeftPct;
+    const playerSubBottomPct = shouldSwapPlayerSlots ? rawMainBottomPct : rawSubBottomPct;
     const mainPlayerSize = rawMainSize;
 
     const isLargeEnemySub = enemySubId === "golumn" || enemySubId === "golumn_mud" || enemySubId === "mushroom";

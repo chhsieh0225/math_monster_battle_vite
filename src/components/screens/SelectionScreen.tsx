@@ -406,6 +406,10 @@ export default function SelectionScreen({
             '--sel-border-soft': `${starter.c1}22`,
             '--sel-border-top': `${starter.c1}44`,
           } as CSSProperties;
+          const isBeastStarter = ['wolf', 'tiger', 'lion'].includes(starter.race);
+          const spriteSize = isBeastStarter
+            ? (selected ? 126 : 100)
+            : (selected ? 72 : 56);
 
           return (
             <button
@@ -433,9 +437,7 @@ export default function SelectionScreen({
                   >
                     <MonsterSprite
                       svgStr={selectedStage.svgFn(starter.c1, starter.c2)}
-                      size={(['wolf', 'tiger', 'lion'].includes(starter.race))
-                        ? (selected ? 92 : 72)
-                        : (selected ? 72 : 56)}
+                      size={spriteSize}
                       ariaLabel={locked
                         ? t('selection.a11y.lockedStarter', 'Locked boss. Defeat it in other modes first.')
                         : t('selection.a11y.starterSprite', '{name} sprite', { name: starter.name })}

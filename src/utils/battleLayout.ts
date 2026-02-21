@@ -96,9 +96,8 @@ export function resolveBattleLayout({
   const isWolfMid = normalizedPlayerId === "wolf" && playerStageIdx === 1;
   // 小火/小水/小草/小雷 (dragon_kin) stage-0 sprites are slightly smaller
   const isDragonKinBase = ["fire", "water", "grass", "electric"].includes(normalizedPlayerId) && playerStageIdx === 0;
-  // 小剛狼/小冰虎/小獅獸 (beast_kin) stage-0 are wide-frame sprites that
-  // look undersized at the default 120 base — bump to 145 so the visible
-  // creature is comparable to dragon_kin starters after compensation.
+  // 小剛狼/小冰虎/小獅獸 (beast_kin) stage-0 are wide-frame sprites.
+  // Keep them slightly above dragon_kin stage-0 but avoid oversized feel in battle.
   const isBeastBase = ["wolf", "tiger", "lion"].includes(normalizedPlayerId) && playerStageIdx === 0;
   const mainPlayerBaseSize = isBossPlayer
     ? 230
@@ -110,7 +109,7 @@ export function resolveBattleLayout({
           ? 150
       : playerStageIdx >= 1
           ? 170
-          : isBeastBase ? 145
+          : isBeastBase ? 122
           : isDragonKinBase ? 108
           : 120;
   const mainPlayerScale = dualUnits ? (compactDual ? 0.9 : 0.96) : 1;

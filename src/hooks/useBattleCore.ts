@@ -34,6 +34,7 @@ import { SCENE_NAMES } from '../data/scenes';
 import {
   MAX_MOVE_LVL,
   TIMER_SEC,
+  PVP_TIMER_SEC,
 } from '../data/constants';
 import {
   localizeEnemy,
@@ -466,10 +467,11 @@ export function useBattle() {
   );
   const challengeDamageMult = challengeModsResolved.playerDamageMult;
   const challengeComboMult = challengeModsResolved.comboScaleMult;
-  const { questionTimerSec, questionAllowedOps } = useMemo(
+  const { questionTimerSec: baseQuestionTimerSec, questionAllowedOps } = useMemo(
     () => resolveBattleQuestionConfig(currentChallengeBattleRule, TIMER_SEC),
     [currentChallengeBattleRule],
   );
+  const questionTimerSec = battleMode === 'pvp' ? PVP_TIMER_SEC : baseQuestionTimerSec;
 
   const genBattleQuestion = useCallback(
     (

@@ -300,6 +300,7 @@ function BattleScreenComponent({
     const {
       isCoopBattle,
       coopUsingSub,
+      showAllySub,
       layout: {
         compactDual,
         enemyMainRightPct,
@@ -330,6 +331,19 @@ function BattleScreenComponent({
     const playerSubLeftPct = shouldSwapPlayerSlots ? rawMainLeftPct : rawSubLeftPct;
     const playerSubBottomPct = rawSubBottomPct;
     const mainPlayerSize = rawMainSize;
+    const hasSelectableCoopPair = isCoopBattle && showAllySub;
+    const mainIsActive = !hasSelectableCoopPair || !coopUsingSub;
+    const subIsActive = hasSelectableCoopPair && coopUsingSub;
+    const mainFilter = !hasSelectableCoopPair
+      ? "none"
+      : mainIsActive
+        ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))"
+        : "saturate(0.62) brightness(0.78)";
+    const subFilter = !hasSelectableCoopPair
+      ? "none"
+      : subIsActive
+        ? "drop-shadow(0 0 12px rgba(34,197,94,0.75))"
+        : "saturate(0.62) brightness(0.78)";
 
     const isLargeEnemySub = enemySubId === "golumn" || enemySubId === "golumn_mud" || enemySubId === "mushroom";
     const enemySubScale = isLargeEnemySub
@@ -373,17 +387,19 @@ function BattleScreenComponent({
       playerMainSpriteStyle: {
         "--player-main-left": `${playerMainLeftPct}%`,
         "--player-main-bottom": `${playerMainBottomPct}%`,
-        "--player-main-filter": isCoopBattle && !coopUsingSub ? "drop-shadow(0 0 12px rgba(99,102,241,0.7))" : "none",
+        "--player-main-filter": mainFilter,
         "--player-main-z": coopUsingSub ? "4" : "6",
-        "--player-main-opacity": coopUsingSub ? ".84" : "1",
+        "--player-main-opacity": mainIsActive ? "1" : ".58",
+        "--battle-player-main-scale": mainIsActive ? "1" : ".95",
         "--player-main-anim": memoSpriteAnims.playerMain,
       } as BattleCssVars,
       playerSubSpriteStyle: {
         "--player-sub-left": `${playerSubLeftPct}%`,
         "--player-sub-bottom": `${playerSubBottomPct}%`,
-        "--player-sub-filter": isCoopBattle && coopUsingSub ? "drop-shadow(0 0 12px rgba(34,197,94,0.75))" : "none",
+        "--player-sub-filter": subFilter,
         "--player-sub-z": coopUsingSub ? "6" : "4",
-        "--player-sub-opacity": coopUsingSub ? "1" : ".84",
+        "--player-sub-opacity": subIsActive ? "1" : ".58",
+        "--battle-player-sub-scale": subIsActive ? "1" : ".95",
         "--player-sub-anim": memoSpriteAnims.playerSub,
       } as BattleCssVars,
       playerMainShadowStyle: {

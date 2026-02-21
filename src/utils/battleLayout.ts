@@ -123,7 +123,7 @@ export function resolveBattleLayout({
   // PvP readability: one-wing dragon silhouette is wide and appears visually
   // smaller than other bosses, so give it a dedicated in-battle boost.
   const pvpCrazyDragonPlayerBoost = battleMode === "pvp" && normalizedPlayerId === "boss_crazy_dragon"
-    ? (compactUI ? 1.06 : 1.14)
+    ? (compactUI ? 1 : 1.14)
     : 1;
   // Automatic height compensation from sprite profile (replaces hardcoded ×1.5).
   const playerComp = playerSpriteKey ? getCompensation(playerSpriteKey) : 1;
@@ -151,7 +151,7 @@ export function resolveBattleLayout({
   // Mobile compact viewport: bosses should sit farther from player-side to avoid
   // crowding, with a tiny extra retreat for Crazy Dragon's wide silhouette.
   const compactBossRightAdjust = compactUI && isBoss
-    ? (dualUnits ? -1.5 : -2.5)
+    ? (dualUnits ? -2 : -3)
     : 0;
   const crazyDragonExtraRightAdjust = compactUI && isCrazyDragon
     ? (dualUnits ? -0.5 : -0.5)
@@ -168,12 +168,12 @@ export function resolveBattleLayout({
         : (isDragonOrFire || isEvolvedSlime) ? 190
           : enemyIsEvolved ? 155 : 120;
   const compactBossScale = compactUI && isBoss
-    ? (isHydra ? 0.84 : isCrazyDragon ? 0.86 : isSwordGod ? 0.88 : 0.9)
+    ? (isHydra ? 0.76 : isCrazyDragon ? 0.8 : isSwordGod ? 0.84 : 0.86)
     : 1;
   const enemyScale = (dualUnits ? (compactDual ? 0.92 : 0.98) : 1) * compactBossScale;
   const hydraCoopBoost = isHydra && dualUnits ? (compactDual ? 1.08 : 1.1) : 1;
   const pvpCrazyDragonEnemyBoost = battleMode === "pvp" && isCrazyDragon
-    ? (compactUI ? 1.03 : 1.1)
+    ? (compactUI ? 1 : 1.1)
     : 1;
   // Automatic height compensation from sprite profile (replaces hardcoded ×1.5).
   const enemyComp = enemySpriteKey ? getCompensation(enemySpriteKey) : 1;

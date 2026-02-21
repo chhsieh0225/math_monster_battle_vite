@@ -336,7 +336,37 @@ test('compact UI shifts crazy dragon enemy position to the right', () => {
   });
 
   assert.ok(compactCrazyDragon.enemyMainRightPct < compactHydra.enemyMainRightPct);
-  assert.equal(compactCrazyDragon.enemyMainRightPct, 7);
+  assert.equal(compactCrazyDragon.enemyMainRightPct, 6.5);
+});
+
+test('compact UI scales boss enemies down and moves them farther right', () => {
+  const desktopHydra = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss_hydra',
+    enemySceneType: 'poison',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossHydraSVG',
+  });
+  const compactHydra = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss_hydra',
+    enemySceneType: 'poison',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossHydraSVG',
+  });
+
+  assert.ok(compactHydra.enemySize < desktopHydra.enemySize);
+  assert.ok(compactHydra.enemyMainRightPct < desktopHydra.enemyMainRightPct);
 });
 
 test('pvp one-wing dragon gets dedicated size boost for readability', () => {

@@ -63,6 +63,7 @@
     "mac": {
       "category": "public.app-category.education-games",
       "icon": "dist/icon-512.png",
+      "identity": null,
       "target": [
         "dmg"
       ]

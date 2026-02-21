@@ -192,13 +192,10 @@ export type MonsterRace =
   | "butterfly"
   | "boss"
   // starter races (我方角色種族)
-  | "fire_beast"
-  | "water_beast"
-  | "grass_beast"
-  | "thunder_beast"
-  | "ice_tiger"
-  | "steel_wolf"
-  | "light_lion";
+  | "dragon_kin"   // 龍族 — 小火/小水/小草/小雷
+  | "wolf"         // 狼族 — 小鋼狼
+  | "tiger"        // 虎族 — 小冰虎
+  | "lion";        // 獅族 — 小獅獸
 
 export type MonsterTraitFields = {
   trait?: string;

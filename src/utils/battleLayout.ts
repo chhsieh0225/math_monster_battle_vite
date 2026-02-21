@@ -64,6 +64,8 @@ export function resolveBattleLayout({
   const isLionFinalInTeam = dualUnits && normalizedPlayerId === "lion" && playerStageIdx >= 2;
   const isWolfFinalInTeam = dualUnits && normalizedPlayerId === "wolf" && playerStageIdx >= 2;
   const isWolfMid = normalizedPlayerId === "wolf" && playerStageIdx === 1;
+  // 小火/小水/小草/小雷 (dragon_kin) stage-0 sprites are slightly smaller
+  const isDragonKinBase = ["fire", "water", "grass", "electric"].includes(normalizedPlayerId) && playerStageIdx === 0;
   const mainPlayerBaseSize = isBossPlayer
     ? 230
     : (isLionFinalInTeam || isWolfFinalInTeam)
@@ -74,6 +76,7 @@ export function resolveBattleLayout({
           ? 150
       : playerStageIdx >= 1
           ? 170
+          : isDragonKinBase ? 108
           : 120;
   const mainPlayerScale = dualUnits ? (compactDual ? 0.9 : 0.96) : 1;
   // Slightly reduce lion/wolf final forms on compact (mobile) viewports.

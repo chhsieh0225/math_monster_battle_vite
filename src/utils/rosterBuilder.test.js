@@ -121,8 +121,7 @@ test('scene pool can draw wild starters (e.g. fire scene → 小火獸)', () => 
   );
   // Every wild starter should have an individual starter race and mType matching the scene
   const STARTER_RACES = new Set([
-    'fire_beast', 'water_beast', 'grass_beast',
-    'thunder_beast', 'ice_tiger', 'steel_wolf', 'light_lion',
+    'dragon_kin', 'wolf', 'tiger', 'lion',
   ]);
   for (const ws of wildStarters) {
     assert.ok(STARTER_RACES.has(ws.race), `wild starter race=${ws.race} not in starter races`);

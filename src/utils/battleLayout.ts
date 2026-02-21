@@ -158,7 +158,7 @@ export function resolveBattleLayout({
     ? (compactDual ? -1 : -5)
     : 0;
   const crazyDragonExtraRightAdjust = compactUI && isCrazyDragon
-    ? (dualUnits ? -0.5 : -0.5)
+    ? (dualUnits ? -1 : -3)
     : 0;
   const enemyMainRightPct = Math.max(
     2,
@@ -191,11 +191,21 @@ export function resolveBattleLayout({
     * compactBossScale
     * compactGhostLanternScale
     * coopWideEnemyScale;
+  const crazyDragonSizeBoost = isCrazyDragon
+    ? (compactUI ? 1.12 : 1.06)
+    : 1;
   const hydraCoopBoost = isHydra && dualUnits ? (compactDual ? 1.08 : 1.1) : 1;
   const pvpCrazyDragonEnemyBoost = battleMode === "pvp" && isCrazyDragon
     ? (compactUI ? 1 : 1.1)
     : 1;
-  const enemySize = Math.round(enemyBaseSize * enemyScale * hydraCoopBoost * enemyComp * pvpCrazyDragonEnemyBoost);
+  const enemySize = Math.round(
+    enemyBaseSize
+    * enemyScale
+    * crazyDragonSizeBoost
+    * hydraCoopBoost
+    * enemyComp
+    * pvpCrazyDragonEnemyBoost,
+  );
 
   const enemyBaseTopPct = (enemySceneType === "ghost" || isBoss) ? 12
     : enemySceneType === "steel" ? 16 : 26;

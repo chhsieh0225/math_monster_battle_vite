@@ -479,7 +479,61 @@ test('compact UI shifts crazy dragon enemy position to the right', () => {
   });
 
   assert.ok(compactCrazyDragon.enemyMainRightPct < compactHydra.enemyMainRightPct);
-  assert.equal(compactCrazyDragon.enemyMainRightPct, 6.5);
+  assert.equal(compactCrazyDragon.enemyMainRightPct, 4);
+});
+
+test('crazy dragon gets dedicated size boost on mobile and desktop', () => {
+  const compactCrazyDragon = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss_crazy_dragon',
+    enemySceneType: 'burnt_warplace',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossCrazyDragonSVG',
+  });
+  const compactHydra = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss_hydra',
+    enemySceneType: 'poison',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossHydraSVG',
+  });
+  const desktopCrazyDragon = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss_crazy_dragon',
+    enemySceneType: 'burnt_warplace',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossCrazyDragonSVG',
+  });
+  const desktopHydra = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss_hydra',
+    enemySceneType: 'poison',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossHydraSVG',
+  });
+
+  assert.ok(compactCrazyDragon.enemySize > compactHydra.enemySize);
+  assert.ok(desktopCrazyDragon.enemySize > desktopHydra.enemySize);
 });
 
 test('compact UI scales boss enemies down and moves them farther right', () => {

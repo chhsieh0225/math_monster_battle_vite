@@ -653,36 +653,7 @@ export function useBattle() {
   const _finishGame = useStableCallback(finishGameImpl);
 
   // --- Start a battle against enemies[idx], optionally from a fresh roster ---
-  const startBattle = useCallback((idx: number, roster?: EnemyVm[]) => {
-    runBattleStart({
-      idx,
-      roster,
-      invalidateAsyncWork,
-      clearTimer,
-      startBattleSharedArgsInput: {
-        sr,
-        enemies,
-        locale,
-        fallbackBattleMode: battleMode,
-        starter,
-        t,
-        sceneNames: SCENE_NAMES,
-        localizeEnemy,
-        localizeSceneName,
-        dispatchBattle,
-        updateEnc,
-        setPhase,
-        setBText,
-        setScreen,
-        finishGame: _finishGame,
-        resetFrozen: () => { frozenR.current = false; },
-        playBattleIntro,
-        setCoopActiveSlot,
-        pickIndex,
-        getCampaignNodeMeta,
-      },
-    });
-  }, [
+  const startBattleContextRef = useBattleStateRef({
     invalidateAsyncWork,
     clearTimer,
     sr,
@@ -691,18 +662,50 @@ export function useBattle() {
     battleMode,
     starter,
     t,
-    pickIndex,
     dispatchBattle,
     updateEnc,
     setPhase,
     setBText,
     setScreen,
-    _finishGame,
+    finishGame: _finishGame,
+    frozenRef: frozenR,
     playBattleIntro,
     setCoopActiveSlot,
+    pickIndex,
     getCampaignNodeMeta,
-    frozenR,
-  ]);
+  });
+  const startBattleImpl = useCallback((idx: number, roster?: EnemyVm[]) => {
+    const ctx = startBattleContextRef.current;
+    runBattleStart({
+      idx,
+      roster,
+      invalidateAsyncWork: ctx.invalidateAsyncWork,
+      clearTimer: ctx.clearTimer,
+      startBattleSharedArgsInput: {
+        sr: ctx.sr,
+        enemies: ctx.enemies,
+        locale: ctx.locale,
+        fallbackBattleMode: ctx.battleMode,
+        starter: ctx.starter,
+        t: ctx.t,
+        sceneNames: SCENE_NAMES,
+        localizeEnemy,
+        localizeSceneName,
+        dispatchBattle: ctx.dispatchBattle,
+        updateEnc: ctx.updateEnc,
+        setPhase: ctx.setPhase,
+        setBText: ctx.setBText,
+        setScreen: ctx.setScreen,
+        finishGame: ctx.finishGame,
+        resetFrozen: () => { ctx.frozenRef.current = false; },
+        playBattleIntro: ctx.playBattleIntro,
+        setCoopActiveSlot: ctx.setCoopActiveSlot,
+        pickIndex: ctx.pickIndex,
+        getCampaignNodeMeta: ctx.getCampaignNodeMeta,
+      },
+    });
+  }, [startBattleContextRef]);
+  const startBattle = useStableCallback(startBattleImpl);
 
   // --- Full game reset (starterOverride used on first game when setStarter hasn't rendered yet) ---
   const resetRunRuntimeState = useCallback(() => {
@@ -1156,43 +1159,72 @@ export function useBattle() {
   const onAns = useStableCallback(onAnsImpl);
 
   // --- Mid-run save: snapshot state before starting next battle ---
-  const saveMidRun = useCallback((nextRound: number) => {
+  const saveMidRunContextRef = useBattleStateRef({
+    battleMode,
+    hasChallengeRun,
+    starter,
+    timedMode,
+    battle,
+    coopActiveSlot,
+    enemies,
+    sr,
+  });
+  const saveMidRunImpl = useCallback((nextRound: number) => {
+    const ctx = saveMidRunContextRef.current;
     // Only save for standard runs (not PvP, not challenge/daily/tower)
-    if (battleMode === 'pvp' || hasChallengeRun) return;
-    if (!starter) return;
+    if (ctx.battleMode === 'pvp' || ctx.hasChallengeRun) return;
+    if (!ctx.starter) return;
     writeSave(buildSaveSnapshot({
-      battleMode,
-      timedMode,
+      battleMode: ctx.battleMode,
+      timedMode: ctx.timedMode,
       nextRound,
-      starter,
-      allySub: battle.allySub ? (sr.current as { allySub?: StarterVm }).allySub ?? null : null,
-      coopActiveSlot,
-      battle,
-      enemies,
+      starter: ctx.starter,
+      allySub: ctx.battle.allySub ? (ctx.sr.current as { allySub?: StarterVm }).allySub ?? null : null,
+      coopActiveSlot: ctx.coopActiveSlot,
+      battle: ctx.battle,
+      enemies: ctx.enemies,
     }));
-  }, [battleMode, hasChallengeRun, starter, timedMode, battle, coopActiveSlot, enemies, sr]);
+  }, [saveMidRunContextRef]);
+  const saveMidRun = useStableCallback(saveMidRunImpl);
 
   // Wrap startBattle to auto-save before each new round
-  const startBattleWithSave = useCallback((idx: number, roster?: EnemyVm[]) => {
+  const startBattleWithSaveImpl = useCallback((idx: number, roster?: EnemyVm[]) => {
     if (idx > 0) saveMidRun(idx);
     startBattle(idx, roster);
   }, [startBattle, saveMidRun]);
+  const startBattleWithSave = useStableCallback(startBattleWithSaveImpl);
 
   // --- Resume from a mid-run save ---
-  const resumeFromSave = useCallback(() => {
+  const resumeFromSaveContextRef = useBattleStateRef({
+    setBattleMode,
+    setTimedMode,
+    setEnemies,
+    setStarter,
+    setCoopActiveSlot,
+    dispatchBattle,
+    invalidateAsyncWork,
+    beginRun,
+    clearTimer,
+    resetRunRuntimeState,
+    initSession,
+    setScreen,
+    startBattle,
+  });
+  const resumeFromSaveImpl = useCallback(() => {
     const saved = loadSave();
     if (!saved) return;
+    const ctx = resumeFromSaveContextRef.current;
 
     // Restore mode, roster, starter, allySub
-    setBattleMode(saved.battleMode);
-    setTimedMode(saved.timedMode);
-    setEnemies(saved.enemies);
-    setStarter(saved.starter);
-    setCoopActiveSlot(saved.coopActiveSlot);
+    ctx.setBattleMode(saved.battleMode);
+    ctx.setTimedMode(saved.timedMode);
+    ctx.setEnemies(saved.enemies);
+    ctx.setStarter(saved.starter);
+    ctx.setCoopActiveSlot(saved.coopActiveSlot);
 
     // Restore accumulated battle stats via reset_run + patch
     const partnerSub = saved.allySub;
-    dispatchBattle({
+    ctx.dispatchBattle({
       type: 'reset_run',
       patch: {
         diffLevel: saved.battle.diffLevel,
@@ -1202,7 +1234,7 @@ export function useBattle() {
         pStg: saved.battle.pStg,
       },
     });
-    dispatchBattle({
+    ctx.dispatchBattle({
       type: 'patch',
       patch: {
         pExp: saved.battle.pExp,
@@ -1220,21 +1252,17 @@ export function useBattle() {
     });
 
     // Wire session lifecycle
-    invalidateAsyncWork();
-    beginRun();
-    clearTimer();
-    resetRunRuntimeState();
-    initSession(saved.starter, saved.timedMode);
+    ctx.invalidateAsyncWork();
+    ctx.beginRun();
+    ctx.clearTimer();
+    ctx.resetRunRuntimeState();
+    ctx.initSession(saved.starter, saved.timedMode);
 
     // Jump into battle at the saved round
-    setScreen('battle');
-    startBattle(saved.nextRound, saved.enemies);
-  }, [
-    setBattleMode, setTimedMode,
-    setEnemies, setStarter, setCoopActiveSlot, dispatchBattle,
-    invalidateAsyncWork, beginRun, clearTimer, resetRunRuntimeState,
-    initSession, setScreen, startBattle,
-  ]);
+    ctx.setScreen('battle');
+    ctx.startBattle(saved.nextRound, saved.enemies);
+  }, [resumeFromSaveContextRef]);
+  const resumeFromSave = useStableCallback(resumeFromSaveImpl);
 
   // --- Advance from text / victory phase ---
   const continueFromVictoryContextRef = useBattleStateRef({

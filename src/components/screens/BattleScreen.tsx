@@ -423,7 +423,7 @@ function BattleScreenComponent({
         "--player-sub-z": coopUsingSub ? "6" : "4",
         "--player-sub-opacity": subIsActive ? "1" : ".52",
         "--battle-player-sub-dim-scale": subIsActive
-          ? ((subComp || 1) > 1.3 ? (compactDual ? ".95" : "1") : (compactDual ? "1.14" : "1.08"))
+          ? "1"
           : ((subComp || 1) > 1.3 ? (compactDual ? ".82" : ".88") : ".88"),
         "--player-sub-anim": memoSpriteAnims.playerSub,
       } as BattleCssVars,
@@ -567,6 +567,8 @@ function BattleScreenComponent({
     sceneKey,
     scene,
     layout,
+    allyMainRoleSize,
+    starterSubRoleSize,
     pvpEnemyBarActive,
     mainBarActive,
     subBarActive,
@@ -601,10 +603,10 @@ function BattleScreenComponent({
     playerComp,
     enemyComp,
   } = layout;
-  // Keep each sprite's visual size bound to its own character asset.
-  // Co-op slot switching should only swap positions/highlights, not raw size identities.
-  const mainPlayerSize = rawMainSize;
-  const subPlayerSize = rawSubSize;
+  // Co-op role swap: when sub is active, render it at its own "main-role" size,
+  // and render main starter at its own "sub-role" size for clearer turn ownership.
+  const mainPlayerSize = coopUsingSub ? starterSubRoleSize : rawMainSize;
+  const subPlayerSize = coopUsingSub ? allyMainRoleSize : rawSubSize;
   const playerMainVisualScale = Math.max(0.45, Math.min(1.1, 1 / (playerComp || 1)));
   const enemyMainVisualScale = Math.max(0.45, Math.min(1.1, 1 / (enemyComp || 1)));
 

@@ -119,6 +119,10 @@ export type BattleCore = {
   sceneKey: string;
   scene: SceneConfig;
   layout: BattleLayoutConfig;
+  /** Size for ally sub if promoted to the active main role in co-op. */
+  allyMainRoleSize: number;
+  /** Size for main starter when demoted to sub role in co-op. */
+  starterSubRoleSize: number;
   pvpEnemyBarActive: boolean;
   mainBarActive: boolean;
   subBarActive: boolean;
@@ -235,6 +239,41 @@ export function buildBattleStaticCore({
     subStarterId: allySub?.id,
     subSpriteKey,
   });
+  let allyMainRoleSize = layout.subPlayerSize;
+  let starterSubRoleSize = layout.mainPlayerSize;
+  if (showAllySub && allySub) {
+    const allyAsMainLayout = resolveBattleLayout({
+      battleMode,
+      hasDualUnits,
+      compactUI,
+      playerStageIdx: subStageIdx,
+      playerStarterId: allySub.id,
+      enemyId: enemy.id,
+      enemySceneType: enemy.sceneMType || enemy.mType,
+      enemyIsEvolved: enemy.isEvolved,
+      playerSpriteKey: subSpriteKey,
+      enemySpriteKey,
+      subStarterId: starter.id,
+      subSpriteKey: playerSpriteKey,
+    });
+    allyMainRoleSize = allyAsMainLayout.mainPlayerSize;
+
+    const starterAsSubLayout = resolveBattleLayout({
+      battleMode,
+      hasDualUnits,
+      compactUI,
+      playerStageIdx: pStg,
+      playerStarterId: starter.id,
+      enemyId: enemy.id,
+      enemySceneType: enemy.sceneMType || enemy.mType,
+      enemyIsEvolved: enemy.isEvolved,
+      playerSpriteKey,
+      enemySpriteKey,
+      subStarterId: starter.id,
+      subSpriteKey: playerSpriteKey,
+    });
+    starterSubRoleSize = starterAsSubLayout.subPlayerSize;
+  }
 
   const pvpEnemyBarActive = battleMode !== 'pvp' || pvpTurn === 'p2';
   const mainBarActive = battleMode === 'pvp'
@@ -262,6 +301,8 @@ export function buildBattleStaticCore({
     sceneKey,
     scene,
     layout,
+    allyMainRoleSize,
+    starterSubRoleSize,
     pvpEnemyBarActive,
     mainBarActive,
     subBarActive,

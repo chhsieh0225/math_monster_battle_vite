@@ -314,24 +314,24 @@ export function useBattle() {
     pvpState: pvpStructuredState,
     pvpStarter2, setPvpStarter2,
     pvpHp2,
-    pvpTurn,
-    pvpWinner,
-    pvpChargeP1,
-    pvpChargeP2,
-    pvpActionCount,
-    pvpBurnP1,
-    pvpBurnP2,
-    pvpFreezeP1,
-    pvpFreezeP2,
-    pvpStaticP1,
-    pvpStaticP2,
-    pvpParalyzeP1,
-    pvpParalyzeP2,
-    pvpComboP1,
-    pvpComboP2,
-    pvpSpecDefP1,
-    pvpSpecDefP2,
   } = pvpStore;
+  const pvpTurn = pvpStructuredState.turn;
+  const pvpWinner = pvpStructuredState.winner;
+  const pvpActionCount = pvpStructuredState.actionCount;
+  const pvpChargeP1 = pvpStructuredState.p1.charge;
+  const pvpChargeP2 = pvpStructuredState.p2.charge;
+  const pvpBurnP1 = pvpStructuredState.p1.burn;
+  const pvpBurnP2 = pvpStructuredState.p2.burn;
+  const pvpFreezeP1 = pvpStructuredState.p1.freeze;
+  const pvpFreezeP2 = pvpStructuredState.p2.freeze;
+  const pvpStaticP1 = pvpStructuredState.p1.static;
+  const pvpStaticP2 = pvpStructuredState.p2.static;
+  const pvpParalyzeP1 = pvpStructuredState.p1.paralyze;
+  const pvpParalyzeP2 = pvpStructuredState.p2.paralyze;
+  const pvpComboP1 = pvpStructuredState.p1.combo;
+  const pvpComboP2 = pvpStructuredState.p2.combo;
+  const pvpSpecDefP1 = pvpStructuredState.p1.specDef;
+  const pvpSpecDefP2 = pvpStructuredState.p2.specDef;
 
   // ──── Player ────
   const [starter, setStarter] = useState<StarterVm | null>(null);

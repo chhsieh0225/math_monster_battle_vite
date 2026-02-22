@@ -8,14 +8,30 @@ type BattleQuestion = QuestionVm;
 type BattleState = {
   phase: string;
   battleMode: string;
-  pvpTurn: 'p1' | 'p2';
+  pvpTurn?: 'p1' | 'p2';
   pvpState?: {
-    p1?: { charge?: number };
-    p2?: { charge?: number };
+    p1?: {
+      charge?: number;
+      burn?: number;
+      freeze?: boolean;
+      static?: number;
+      paralyze?: boolean;
+      combo?: number;
+      specDef?: boolean;
+    };
+    p2?: {
+      charge?: number;
+      burn?: number;
+      freeze?: boolean;
+      static?: number;
+      paralyze?: boolean;
+      combo?: number;
+      specDef?: boolean;
+    };
     turn?: 'p1' | 'p2';
   } | null;
-  pvpChargeP1: number;
-  pvpChargeP2: number;
+  pvpChargeP1?: number;
+  pvpChargeP2?: number;
   sealedMove: number | null;
 };
 

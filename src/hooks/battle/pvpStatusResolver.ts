@@ -2,7 +2,7 @@ import { PVP_BALANCE } from '../../data/pvpBalance.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { fxt } from './battleFxTargets.ts';
 import { createBattleActiveScheduler, declarePvpWinner } from './pvpTurnPrimitives.ts';
-import { getResolvedPvpCombatant, getResolvedPvpTurn } from './pvpStateSelectors.ts';
+import { getResolvedPvpCombatant, type PvpStateReadLike, getResolvedPvpTurn } from './pvpStateSelectors.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -23,31 +23,11 @@ type PvpBalanceConfig = {
   };
 };
 
-type PvpTurnStartState = {
-  pvpTurn: PvpTurn;
-  pvpState?: {
-    p1?: {
-      burn?: number;
-      paralyze?: boolean;
-      freeze?: boolean;
-    };
-    p2?: {
-      burn?: number;
-      paralyze?: boolean;
-      freeze?: boolean;
-    };
-    turn?: PvpTurn;
-  } | null;
+type PvpTurnStartState = PvpStateReadLike & {
   starter?: { id?: string } | null;
   pvpStarter2?: { id?: string } | null;
   pHp: number;
   pvpHp2: number;
-  pvpBurnP1: number;
-  pvpBurnP2: number;
-  pvpParalyzeP1: boolean;
-  pvpParalyzeP2: boolean;
-  pvpFreezeP1: boolean;
-  pvpFreezeP2: boolean;
 };
 
 type ResolvePvpTurnStartStatusArgs<TState extends PvpTurnStartState> = {

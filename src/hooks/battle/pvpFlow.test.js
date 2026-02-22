@@ -18,12 +18,10 @@ function createNumberSetter(initialValue = 0) {
 }
 
 function createBasePvpState(overrides = {}) {
-  return {
+  const baseState = {
     battleMode: 'pvp',
     phase: 'question',
     screen: 'battle',
-    pvpWinner: null,
-    pvpTurn: 'p1',
     starter: {
       id: 'fire',
       name: '火狐',
@@ -42,25 +40,51 @@ function createBasePvpState(overrides = {}) {
     },
     selIdx: 0,
     q: { answer: 8, steps: ['3+5'] },
-    pvpSpecDefP1: false,
-    pvpSpecDefP2: false,
-    pvpComboP1: 1,
-    pvpComboP2: 0,
-    pvpChargeP1: 2,
-    pvpChargeP2: 1,
-    pvpActionCount: 4,
+    pvpState: {
+      turn: 'p1',
+      winner: null,
+      actionCount: 4,
+      p1: {
+        specDef: false,
+        combo: 1,
+        charge: 2,
+        burn: 0,
+        freeze: false,
+        static: 0,
+        paralyze: false,
+      },
+      p2: {
+        specDef: false,
+        combo: 0,
+        charge: 1,
+        burn: 0,
+        freeze: false,
+        static: 0,
+        paralyze: false,
+      },
+    },
     pHp: 100,
     pvpHp2: 100,
     pStg: 0,
-    pvpBurnP1: 0,
-    pvpBurnP2: 0,
-    pvpFreezeP1: false,
-    pvpFreezeP2: false,
-    pvpStaticP1: 0,
-    pvpStaticP2: 0,
-    pvpParalyzeP1: false,
-    pvpParalyzeP2: false,
+  };
+
+  const pvpStateOverrides = overrides.pvpState || {};
+
+  return {
+    ...baseState,
     ...overrides,
+    pvpState: {
+      ...baseState.pvpState,
+      ...pvpStateOverrides,
+      p1: {
+        ...baseState.pvpState.p1,
+        ...(pvpStateOverrides.p1 || {}),
+      },
+      p2: {
+        ...baseState.pvpState.p2,
+        ...(pvpStateOverrides.p2 || {}),
+      },
+    },
   };
 }
 
@@ -333,9 +357,11 @@ test('handlePvpAnswer returns false when question payload is missing', () => {
 
 test('processPvpTurnStart resolves lethal burn tick and declares winner', () => {
   const state = createBasePvpState({
-    pvpTurn: 'p1',
     pHp: 6,
-    pvpBurnP1: 2,
+    pvpState: {
+      turn: 'p1',
+      p1: { burn: 2 },
+    },
   });
   const pHp = createNumberSetter(6);
   const burnP1 = createNumberSetter(2);
@@ -375,8 +401,10 @@ test('processPvpTurnStart resolves lethal burn tick and declares winner', () => 
 
 test('processPvpTurnStart clears paralyze and skips current turn', () => {
   const state = createBasePvpState({
-    pvpTurn: 'p2',
-    pvpParalyzeP2: true,
+    pvpState: {
+      turn: 'p2',
+      p2: { paralyze: true },
+    },
   });
   let turn = 'p2';
   let text = '';
@@ -416,9 +444,9 @@ test('processPvpTurnStart clears paralyze and skips current turn', () => {
 
 test('processPvpTurnStart returns false when no status effect blocks turn', () => {
   const state = createBasePvpState({
-    pvpBurnP1: 0,
-    pvpParalyzeP1: false,
-    pvpFreezeP1: false,
+    pvpState: {
+      p1: { burn: 0, paralyze: false, freeze: false },
+    },
   });
 
   const out = processPvpTurnStart({
@@ -453,12 +481,14 @@ test('handlePvpAnswer ignores stale delayed strike callback after battle ended',
   const state = createBasePvpState({
     phase: 'question',
     screen: 'battle',
-    pvpTurn: 'p1',
-    pvpActionCount: 0,
+    pvpState: {
+      turn: 'p1',
+      actionCount: 0,
+    },
   });
   const pvpHp2 = createNumberSetter(state.pvpHp2);
   let phase = '';
-  let turn = state.pvpTurn;
+  let turn = state.pvpState.turn;
   let winner = null;
   let screen = state.screen;
 
@@ -480,7 +510,7 @@ test('handlePvpAnswer ignores stale delayed strike callback after battle ended',
     setPvpComboP2: () => {},
     setPvpTurn: (value) => {
       turn = value;
-      state.pvpTurn = value;
+      state.pvpState.turn = value;
     },
     setPvpActionCount: () => {},
     setBText: () => {},
@@ -511,7 +541,7 @@ test('handlePvpAnswer ignores stale delayed strike callback after battle ended',
     },
     setPvpWinner: (value) => {
       winner = value;
-      state.pvpWinner = value;
+      state.pvpState.winner = value;
     },
     setPvpBurnP1: () => {},
     setPvpBurnP2: () => {},
@@ -543,8 +573,10 @@ test('processPvpTurnStart ignores stale delayed burn animation reset after battl
   const state = createBasePvpState({
     phase: 'text',
     screen: 'battle',
-    pvpTurn: 'p1',
-    pvpBurnP1: 1,
+    pvpState: {
+      turn: 'p1',
+      p1: { burn: 1 },
+    },
   });
   const animCalls = [];
 

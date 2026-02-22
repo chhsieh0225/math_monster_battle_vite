@@ -16,6 +16,7 @@ import { executePvpStrikeTurn } from './pvpStrikeResolver.ts';
 import { resolvePvpTurnStartStatus } from './pvpStatusResolver.ts';
 import {
   getResolvedPvpActionCount,
+  type PvpStateReadLike,
   getResolvedPvpTurn,
   getResolvedPvpWinner,
 } from './pvpStateSelectors.ts';
@@ -59,58 +60,18 @@ type BattleQuestion = {
   steps?: string[];
 };
 
-type PvpBattleState = {
+type PvpBattleState = PvpStateReadLike & {
   battleMode: string;
   phase?: string;
   screen?: string;
-  pvpWinner: PvpWinner;
-  pvpTurn: PvpTurn;
-  pvpState?: {
-    p1?: {
-      charge?: number;
-      burn?: number;
-      freeze?: boolean;
-      static?: number;
-      paralyze?: boolean;
-      combo?: number;
-      specDef?: boolean;
-    };
-    p2?: {
-      charge?: number;
-      burn?: number;
-      freeze?: boolean;
-      static?: number;
-      paralyze?: boolean;
-      combo?: number;
-      specDef?: boolean;
-    };
-    turn?: PvpTurn;
-    winner?: PvpWinner;
-    actionCount?: number;
-  } | null;
   starter: StarterLike | null;
   pvpStarter2: StarterLike | null;
   selIdx: number | null;
   q: BattleQuestion | null;
-  pvpSpecDefP1: boolean;
-  pvpSpecDefP2: boolean;
-  pvpComboP1: number;
-  pvpComboP2: number;
-  pvpChargeP1: number;
-  pvpChargeP2: number;
-  pvpActionCount: number;
   pHp: number;
   pvpHp2: number;
   pStg: number;
   pLvl?: number;
-  pvpBurnP1: number;
-  pvpBurnP2: number;
-  pvpFreezeP1: boolean;
-  pvpFreezeP2: boolean;
-  pvpStaticP1: number;
-  pvpStaticP2: number;
-  pvpParalyzeP1: boolean;
-  pvpParalyzeP2: boolean;
 };
 
 type StateRef = {

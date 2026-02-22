@@ -3,7 +3,7 @@ import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { getLevelMaxHp, getStarterLevelMaxHp } from '../../utils/playerHp.ts';
 import { fxt } from './battleFxTargets.ts';
 import { declarePvpWinner, swapPvpTurnToText } from './pvpTurnPrimitives.ts';
-import { getResolvedPvpCombatant } from './pvpStateSelectors.ts';
+import { getResolvedPvpCombatant, type PvpStateReadLike } from './pvpStateSelectors.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -40,30 +40,13 @@ type StarterLike = {
 };
 
 type PvpStateRef = {
-  current: {
+  current: PvpStateReadLike & {
     selIdx: number | null;
     pHp: number;
     pvpHp2: number;
     pStg: number;
     pLvl?: number;
     pvpStarter2: StarterLike | null;
-    pvpState?: {
-      p1?: {
-        static?: number;
-        specDef?: boolean;
-      };
-      p2?: {
-        static?: number;
-        specDef?: boolean;
-      };
-      turn?: PvpTurn;
-      winner?: PvpWinner;
-      actionCount?: number;
-    } | null;
-    pvpSpecDefP1: boolean;
-    pvpSpecDefP2: boolean;
-    pvpStaticP1: number;
-    pvpStaticP2: number;
   };
 };
 

@@ -24,9 +24,11 @@ function createDeps(overrides = {}) {
       state: {
         phase: 'menu',
         battleMode: 'single',
-        pvpTurn: 'p1',
-        pvpChargeP1: 0,
-        pvpChargeP2: 0,
+        pvpState: {
+          p1: { charge: 0 },
+          p2: { charge: 0 },
+          turn: 'p1',
+        },
         sealedMove: null,
       },
       timedMode: false,
@@ -56,9 +58,11 @@ test('runSelectMoveFlow blocks selection when phase is not menu', () => {
     state: {
       phase: 'text',
       battleMode: 'single',
-      pvpTurn: 'p1',
-      pvpChargeP1: 0,
-      pvpChargeP2: 0,
+      pvpState: {
+        p1: { charge: 0 },
+        p2: { charge: 0 },
+        turn: 'p1',
+      },
       sealedMove: null,
     },
   });
@@ -73,9 +77,11 @@ test('runSelectMoveFlow blocks risky pvp move without enough charge', () => {
     state: {
       phase: 'menu',
       battleMode: 'pvp',
-      pvpTurn: 'p1',
-      pvpChargeP1: 2,
-      pvpChargeP2: 0,
+      pvpState: {
+        p1: { charge: 2 },
+        p2: { charge: 0 },
+        turn: 'p1',
+      },
       sealedMove: null,
     },
     getActingStarter: () => ({ moves: [{}, { risky: true }, {}] }),
@@ -119,9 +125,11 @@ test('runSelectMoveFlow uses fixed 15s timer in pvp mode', () => {
     state: {
       phase: 'menu',
       battleMode: 'pvp',
-      pvpTurn: 'p1',
-      pvpChargeP1: 0,
-      pvpChargeP2: 0,
+      pvpState: {
+        p1: { charge: 0 },
+        p2: { charge: 0 },
+        turn: 'p1',
+      },
       sealedMove: null,
     },
     timedMode: false,
@@ -138,9 +146,11 @@ test('runSelectMoveFlow blocks sealed move in non-pvp mode', () => {
     state: {
       phase: 'menu',
       battleMode: 'single',
-      pvpTurn: 'p1',
-      pvpChargeP1: 0,
-      pvpChargeP2: 0,
+      pvpState: {
+        p1: { charge: 0 },
+        p2: { charge: 0 },
+        turn: 'p1',
+      },
       sealedMove: 1,
     },
   });

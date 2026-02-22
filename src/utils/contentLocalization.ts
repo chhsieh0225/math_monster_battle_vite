@@ -814,7 +814,8 @@ export function localizeEncyclopediaEnemyEntries<T>(entries: T, locale: LocaleCo
 export function localizeEncyclopediaEnemyEntries(entries: unknown, locale: LocaleCode): unknown {
   if (!Array.isArray(entries)) return entries;
   const enemyEntries = entries as EncyclopediaEnemyLike[];
-  if (!isEnglishLocale(locale)) return enemyEntries;
+  // Always localize: zh-TW needs weakAgainst/resistAgainst type-ID → Chinese mapping,
+  // en-US needs full name/desc/habitat/trait translation.
   return enemyEntries.map((entry) => localizeEncyclopediaEnemyEntry(entry, locale));
 }
 

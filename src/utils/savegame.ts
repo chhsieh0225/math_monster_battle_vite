@@ -86,6 +86,10 @@ type SerialBattleState = {
   diffLevel: number;
 };
 
+type SaveVersionProbe = {
+  version?: unknown;
+};
+
 // ─── Strip / rehydrate helpers ───────────────────────────────────
 
 function stripEnemy(e: EnemyVm): SerialEnemyVm {
@@ -146,7 +150,7 @@ function rehydrateEnemySvg(e: SerialEnemyVm): EnemyVm {
   } as EnemyVm;
 }
 
-function rehydrateStarter(id: string, stageIdx: number, locale?: string): StarterVm | null {
+function rehydrateStarter(id: string, stageIdx: number): StarterVm | null {
   const config = STARTERS.find((s) => s.id === id);
   if (!config) return null;
 
@@ -180,14 +184,19 @@ function rehydrateStarter(id: string, stageIdx: number, locale?: string): Starte
   };
 }
 
+function isSaveVersionProbe(value: unknown): value is SaveVersionProbe {
+  return typeof value === 'object' && value !== null;
+}
+
 // ─── Public API ──────────────────────────────────────────────────
 
 export function hasSave(): boolean {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return false;
-    const parsed = JSON.parse(raw);
-    return parsed && parsed.version === SAVE_VERSION;
+    const parsed: unknown = JSON.parse(raw);
+    if (!isSaveVersionProbe(parsed)) return false;
+    return parsed.version === SAVE_VERSION;
   } catch {
     return false;
   }

@@ -2,6 +2,7 @@ import { HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from '../../../data/constants.
 import { bossDarkPhase2SVG } from '../../../data/sprites.ts';
 import { getLevelMaxHp, getStarterLevelMaxHp } from '../../../utils/playerHp.ts';
 import { resolveBattleLayout, type BattleLayoutConfig } from '../../../utils/battleLayout.ts';
+import { getCachedSpriteSvg } from '../../../utils/spriteSvgCache.ts';
 import { computeBossPhase } from '../../../utils/turnFlow.ts';
 import type { ComponentType } from 'react';
 import type {
@@ -185,6 +186,11 @@ type EnemySpriteResolveInput = {
   fallbackBossPhase?: number;
 };
 
+function resolveSpriteCacheKey(prefix: string, fallbackId: string, spriteKey?: string): string {
+  const safeKey = spriteKey && spriteKey.length > 0 ? spriteKey : fallbackId;
+  return `${prefix}:${safeKey}`;
+}
+
 function resolveEnemySpriteForBattle({
   battleMode,
   enemy,
@@ -194,7 +200,11 @@ function resolveEnemySpriteForBattle({
   const defaultSpriteKey = (enemy as { activeSpriteKey?: string }).activeSpriteKey || enemy.spriteKey || '';
   const enemyId = normalizeEnemyVisualId(enemy.id);
   if (battleMode === 'pvp' || enemyId !== DARK_DRAGON_BOSS_ID) {
-    return { svg: enemy.svgFn(), spriteKey: defaultSpriteKey };
+    const cacheKey = resolveSpriteCacheKey('battle-enemy', enemy.id || enemy.name || 'enemy', defaultSpriteKey);
+    return {
+      svg: getCachedSpriteSvg(cacheKey, () => enemy.svgFn()),
+      spriteKey: defaultSpriteKey,
+    };
   }
 
   const maxHp = Math.max(1, Number(enemy.maxHp) || 1);
@@ -202,9 +212,16 @@ function resolveEnemySpriteForBattle({
   const computedPhase = computeBossPhase(normalizedHp, maxHp);
   const resolvedPhase = Math.max(computedPhase, fallbackBossPhase || 1);
   if (resolvedPhase >= 2) {
-    return { svg: bossDarkPhase2SVG(), spriteKey: DARK_DRAGON_PHASE2_SPRITE_KEY };
+    return {
+      svg: getCachedSpriteSvg('battle-enemy:bossDarkPhase2SVG', () => bossDarkPhase2SVG()),
+      spriteKey: DARK_DRAGON_PHASE2_SPRITE_KEY,
+    };
   }
-  return { svg: enemy.svgFn(), spriteKey: defaultSpriteKey };
+  const phase1CacheKey = resolveSpriteCacheKey('battle-enemy', enemy.id || enemy.name || 'enemy', defaultSpriteKey);
+  return {
+    svg: getCachedSpriteSvg(phase1CacheKey, () => enemy.svgFn()),
+    spriteKey: defaultSpriteKey,
+  };
 }
 
 export function buildBattleStaticCore({
@@ -261,8 +278,16 @@ export function buildBattleStaticCore({
   const allyStage = showAllySub && allySub
     ? (allySub.stages[allySub.selectedStageIdx || 0] || allySub.stages[0])
     : null;
-  const pSubSvg = allyStage ? allyStage.svgFn() : null;
-  const pSvg = st.svgFn();
+  const pSubSvg = allyStage
+    ? getCachedSpriteSvg(
+      `battle-player-sub:${allySub?.id || 'ally'}:${allySub?.selectedStageIdx ?? 0}`,
+      () => allyStage.svgFn(),
+    )
+    : null;
+  const pSvg = getCachedSpriteSvg(
+    `battle-player-main:${starter.id || 'starter'}:${pStg}`,
+    () => st.svgFn(),
+  );
 
   const mainMaxHp = getLevelMaxHp(pLvl, pStg);
   const subMaxHp = showAllySub && allySub ? getStarterLevelMaxHp(allySub, pLvl, pStg) : getLevelMaxHp(1, 0);

@@ -1,4 +1,5 @@
 import { scheduleIfBattleActive } from './menuResetGuard.ts';
+import { getResolvedPvpCombatant, type PvpStateReadLike } from './pvpStateSelectors.ts';
 
 export type PvpTurn = 'p1' | 'p2';
 export type PvpWinner = PvpTurn | null;
@@ -66,12 +67,7 @@ export function resetCurrentTurnResources({
   setPvpComboP2(0);
 }
 
-type PvpCorrectProgressState = {
-  pvpSpecDefP1: boolean;
-  pvpSpecDefP2: boolean;
-  pvpComboP1: number;
-  pvpComboP2: number;
-};
+type PvpCorrectProgressState = PvpStateReadLike;
 
 type ApplyCorrectTurnProgressArgs = {
   currentTurn: PvpTurn;
@@ -96,11 +92,12 @@ export function applyCorrectTurnProgress({
   setPvpSpecDefP1,
   setPvpSpecDefP2,
 }: ApplyCorrectTurnProgressArgs): boolean {
+  const acting = getResolvedPvpCombatant(state, currentTurn);
   let unlockedSpecDef = false;
   if (currentTurn === 'p1') {
     setPvpChargeP1((c) => Math.min(c + 1, 3));
-    if (!state.pvpSpecDefP1) {
-      const nextCombo = (state.pvpComboP1 || 0) + 1;
+    if (!acting.specDef) {
+      const nextCombo = acting.combo + 1;
       if (nextCombo >= pvpSpecDefTrigger) {
         setPvpComboP1(0);
         setPvpSpecDefP1(true);
@@ -113,8 +110,8 @@ export function applyCorrectTurnProgress({
   }
 
   setPvpChargeP2((c) => Math.min(c + 1, 3));
-  if (!state.pvpSpecDefP2) {
-    const nextCombo = (state.pvpComboP2 || 0) + 1;
+  if (!acting.specDef) {
+    const nextCombo = acting.combo + 1;
     if (nextCombo >= pvpSpecDefTrigger) {
       setPvpComboP2(0);
       setPvpSpecDefP2(true);

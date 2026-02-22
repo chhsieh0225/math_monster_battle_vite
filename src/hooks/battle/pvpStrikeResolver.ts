@@ -3,6 +3,7 @@ import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { getLevelMaxHp, getStarterLevelMaxHp } from '../../utils/playerHp.ts';
 import { fxt } from './battleFxTargets.ts';
 import { declarePvpWinner, swapPvpTurnToText } from './pvpTurnPrimitives.ts';
+import { getResolvedPvpCombatant } from './pvpStateSelectors.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -46,6 +47,19 @@ type PvpStateRef = {
     pStg: number;
     pLvl?: number;
     pvpStarter2: StarterLike | null;
+    pvpState?: {
+      p1?: {
+        static?: number;
+        specDef?: boolean;
+      };
+      p2?: {
+        static?: number;
+        specDef?: boolean;
+      };
+      turn?: PvpTurn;
+      winner?: PvpWinner;
+      actionCount?: number;
+    } | null;
     pvpSpecDefP1: boolean;
     pvpSpecDefP2: boolean;
     pvpStaticP1: number;
@@ -194,7 +208,9 @@ export function executePvpStrikeTurn({
   }
 
   const hitAnim = PVP_HIT_ANIMS[vfxType] || 'enemyHit 0.45s ease';
-  const defenderSpecDefReady = currentTurn === 'p1' ? !!s2.pvpSpecDefP2 : !!s2.pvpSpecDefP1;
+  const defenderTurn = currentTurn === 'p1' ? 'p2' : 'p1';
+  const attackerTurn = currentTurn;
+  const defenderSpecDefReady = getResolvedPvpCombatant(s2, defenderTurn).specDef;
   if (defenderSpecDefReady) {
     if (currentTurn === 'p1') setPvpSpecDefP2(false);
     else setPvpSpecDefP1(false);
@@ -358,7 +374,7 @@ export function executePvpStrikeTurn({
 
   if (attacker.type === 'electric') {
     if (currentTurn === 'p1') {
-      const stack = (s2.pvpStaticP1 || 0) + 1;
+      const stack = getResolvedPvpCombatant(s2, attackerTurn).static + 1;
       if (stack >= PVP.passive.electricDischargeAt) {
         bonusDmg += PVP.passive.electricDischargeDamage;
         setPvpStaticP1(0);
@@ -369,7 +385,7 @@ export function executePvpStrikeTurn({
         setPvpStaticP1(stack);
       }
     } else {
-      const stack = (s2.pvpStaticP2 || 0) + 1;
+      const stack = getResolvedPvpCombatant(s2, attackerTurn).static + 1;
       if (stack >= PVP.passive.electricDischargeAt) {
         bonusDmg += PVP.passive.electricDischargeDamage;
         setPvpStaticP2(0);

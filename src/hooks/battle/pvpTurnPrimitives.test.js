@@ -74,6 +74,35 @@ test('applyCorrectTurnProgress unlocks spec-def when combo reaches trigger', () 
   assert.equal(specDefP1, true);
 });
 
+test('applyCorrectTurnProgress prefers structured pvpState combo over flat fields', () => {
+  let comboP1 = -1;
+  let specDefP1 = false;
+
+  const unlocked = applyCorrectTurnProgress({
+    currentTurn: 'p1',
+    state: {
+      pvpSpecDefP1: false,
+      pvpSpecDefP2: false,
+      pvpComboP1: 0,
+      pvpComboP2: 0,
+      pvpState: {
+        p1: { combo: 2, specDef: false },
+      },
+    },
+    pvpSpecDefTrigger: 3,
+    setPvpChargeP1: () => {},
+    setPvpChargeP2: () => {},
+    setPvpComboP1: (value) => { comboP1 = typeof value === 'function' ? value(comboP1) : value; },
+    setPvpComboP2: () => {},
+    setPvpSpecDefP1: (value) => { specDefP1 = typeof value === 'function' ? value(specDefP1) : value; },
+    setPvpSpecDefP2: () => {},
+  });
+
+  assert.equal(unlocked, true);
+  assert.equal(comboP1, 0);
+  assert.equal(specDefP1, true);
+});
+
 test('declarePvpWinner sets winner and routes to pvp result screen', () => {
   let winner = null;
   let screen = 'battle';

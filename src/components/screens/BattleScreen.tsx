@@ -32,6 +32,7 @@ import type { BattleFxTargets } from '../../types/battleFx';
 import { DEFAULT_FX_TARGETS } from '../../types/battleFx';
 import {
   resolveBattleLaneSnapshot,
+  resolveBattleFallbackTargets,
 } from '../../utils/battleLayout.ts';
 import './BattleScreen.css';
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
@@ -263,91 +264,91 @@ function BattleScreenComponent({
     UX.lowPerfMode,
   ]);
 
-  const memoEffectTarget = useMemo(() => {
+  const memoLaneSnapshot = useMemo(() => {
     if (!coreStatic) return null;
     const {
+      isCoopBattle,
+      hasDualUnits,
+      coopUsingSub,
+      showAllySub,
+      showEnemySub,
+      allyMainRoleSize,
+      starterSubRoleSize,
       layout: {
+        compactDual,
         enemyMainRightPct,
-        enemyTopPct,
+        enemySubRightPct,
+        enemySubTopPct,
         playerMainLeftPct: rawMainLeftPct,
         playerMainBottomPct: rawMainBottomPct,
+        playerSubLeftPct: rawSubLeftPct,
+        playerSubBottomPct: rawSubBottomPct,
         mainPlayerSize: rawMainSize,
+        subPlayerSize: rawSubSize,
         enemySize,
+        enemyTopPct,
+        playerComp,
+        enemyComp,
+        subComp,
       },
     } = coreStatic;
+    const enemySubId = S.enemySub?.id ?? '';
+    const enemySubIsEvolved = Boolean(S.enemySub?.isEvolved);
+    const enemySubIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemySubId));
+    return resolveBattleLaneSnapshot({
+      arenaWidthPx: arenaWidth,
+      compactDual,
+      hasDualUnits,
+      isCoopBattle,
+      showAllySub,
+      showEnemySub,
+      coopUsingSub,
+      playerComp,
+      subComp,
+      enemyComp,
+      rawMainLeftPct,
+      rawMainBottomPct,
+      rawSubLeftPct,
+      rawSubBottomPct,
+      rawMainSize,
+      rawSubSize,
+      starterSubRoleSize,
+      allyMainRoleSize,
+      enemyMainRightPct,
+      enemySubRightPct,
+      enemyTopPct,
+      enemySubTopPct,
+      enemySize,
+      enemySubId,
+      enemySubIsBossVisual,
+      enemySubIsEvolved,
+    });
+  }, [coreStatic, arenaWidth, S.enemySub?.id, S.enemySub?.isEvolved]);
 
-    // Keep player-main target anchored to main slot to avoid large jump drift
-    // when co-op active slot switches on smaller/mobile viewports.
-    const playerMainLeftPct = rawMainLeftPct;
-    const playerMainBottomPct = rawMainBottomPct;
-    const mainPlayerSize = rawMainSize;
+  const memoFallbackTargets = useMemo(
+    () => (memoLaneSnapshot ? resolveBattleFallbackTargets(memoLaneSnapshot) : null),
+    [memoLaneSnapshot],
+  );
 
-    const enemyHeight = enemySize * 100 / 120;
-    const enemyFallbackTarget = {
-      top: `calc(${enemyTopPct}% + ${enemyHeight / 2}px)`,
-      right: `calc(${enemyMainRightPct}% + ${enemySize / 2}px)`,
-      flyRight: enemyMainRightPct + enemySize / 2 * 100 / 390,
-      flyTop: enemyTopPct + enemyHeight / 2 * 100 / 550,
-      cx: 390 - (enemyMainRightPct / 100 * 390 + enemySize / 2),
-      cy: enemyTopPct / 100 * 550 + enemyHeight / 2,
-    };
-
-    const playerMainHeight = mainPlayerSize * 100 / 120;
-    const playerCenterTopPct = Math.max(8, 100 - playerMainBottomPct - (playerMainHeight * 100 / 550) / 2);
-    const playerCenterRightPct = Math.max(8, 100 - playerMainLeftPct - (mainPlayerSize * 100 / 390) / 2);
-    const playerFallbackTarget = {
-      top: `calc(${playerCenterTopPct}% + 0px)`,
-      right: `calc(${playerCenterRightPct}% + 0px)`,
-      flyRight: playerCenterRightPct,
-      flyTop: playerCenterTopPct,
-      cx: 390 - (playerCenterRightPct / 100 * 390),
-      cy: playerCenterTopPct / 100 * 550,
-    };
-
-    const enemyTarget = measuredEnemyTarget || enemyFallbackTarget;
-    const playerTarget = measuredPlayerTarget || playerFallbackTarget;
+  const memoEffectTarget = useMemo(() => {
+    if (!memoFallbackTargets) return null;
+    const enemyTarget = measuredEnemyTarget || memoFallbackTargets.enemyMain;
+    const playerTarget = measuredPlayerTarget || memoFallbackTargets.playerMain;
     return S.atkEffect?.targetSide === "player" ? playerTarget : enemyTarget;
-  }, [coreStatic, measuredEnemyTarget, measuredPlayerTarget, S.atkEffect?.targetSide]);
+  }, [memoFallbackTargets, measuredEnemyTarget, measuredPlayerTarget, S.atkEffect?.targetSide]);
 
   // ── Compute BattleFxTargets for particle/damage popup positioning ──
   const memoFxTargets = useMemo<BattleFxTargets>(() => {
-    if (!coreStatic) return DEFAULT_FX_TARGETS;
-    const {
-      layout: {
-        playerSubLeftPct: rawSubLeftPct,
-        playerSubBottomPct: rawSubBottomPct,
-        subPlayerSize: rawSubSize,
-      },
-    } = coreStatic;
-
-    // Player-main: from measured target or fallback
-    const pTarget = measuredPlayerTarget;
-    const pCx = pTarget?.cx ?? DEFAULT_FX_TARGETS.playerMain.x;
-    const pCy = pTarget?.cy ?? DEFAULT_FX_TARGETS.playerMain.y;
-
-    // Player-sub: from measured sub target, or compute from layout percentages
-    const subTarget = measuredPlayerSubTarget;
-    let subCx: number;
-    let subCy: number;
-    if (subTarget) {
-      subCx = subTarget.cx;
-      subCy = subTarget.cy;
-    } else {
-      // Fallback: estimate sub position from layout percentages using 390×550 virtual arena
-      const subLeftPct = rawSubLeftPct;
-      const subBottomPct = rawSubBottomPct;
-      const subSize = rawSubSize;
-      const subHeight = subSize * 100 / 120;
-      const subCenterRightPct = Math.max(8, 100 - subLeftPct - (subSize * 100 / 390) / 2);
-      const subCenterTopPct = Math.max(8, 100 - subBottomPct - (subHeight * 100 / 550) / 2);
-      subCx = 390 - (subCenterRightPct / 100 * 390);
-      subCy = subCenterTopPct / 100 * 550;
-    }
-
-    // Enemy-main: from measured target or fallback
-    const eTarget = measuredEnemyTarget;
-    const eCx = eTarget?.cx ?? DEFAULT_FX_TARGETS.enemyMain.x;
-    const eCy = eTarget?.cy ?? DEFAULT_FX_TARGETS.enemyMain.y;
+    if (!memoFallbackTargets) return DEFAULT_FX_TARGETS;
+    const pTarget = measuredPlayerTarget ?? memoFallbackTargets.playerMain;
+    const subTarget = measuredPlayerSubTarget ?? memoFallbackTargets.playerSub;
+    const eTarget = measuredEnemyTarget ?? memoFallbackTargets.enemyMain;
+    const pCx = pTarget.cx ?? DEFAULT_FX_TARGETS.playerMain.x;
+    const pCy = pTarget.cy ?? DEFAULT_FX_TARGETS.playerMain.y;
+    const subCx = subTarget.cx ?? DEFAULT_FX_TARGETS.playerSub.x;
+    const subCy = subTarget.cy ?? DEFAULT_FX_TARGETS.playerSub.y;
+    const eCx = eTarget.cx ?? DEFAULT_FX_TARGETS.enemyMain.x;
+    const eCy = eTarget.cy ?? DEFAULT_FX_TARGETS.enemyMain.y;
 
     return {
       playerMain: { x: Math.round(pCx), y: Math.round(pCy) },
@@ -356,7 +357,7 @@ function BattleScreenComponent({
       enemyAbove: { x: Math.round(eCx), y: Math.round(eCy - 25) },
       playerAbove: { x: Math.round(pCx), y: Math.round(pCy - 30) },
     };
-  }, [coreStatic, measuredEnemyTarget, measuredPlayerTarget, measuredPlayerSubTarget]);
+  }, [memoFallbackTargets, measuredEnemyTarget, measuredPlayerTarget, measuredPlayerSubTarget]);
 
   // Push FX targets to the module-level singleton for flow functions.
   useEffect(() => {
@@ -394,37 +395,18 @@ function BattleScreenComponent({
 
   // ── Sprite layout styles (position, size, filter — no animation strings) ──
   const memoSpriteStyles = useMemo(() => {
-    if (!coreStatic || !memoSpriteAnims) return null;
+    if (!coreStatic || !memoSpriteAnims || !memoLaneSnapshot) return null;
     const {
       isCoopBattle,
-      hasDualUnits,
       coopUsingSub,
       showAllySub,
-      showEnemySub,
-      allyMainRoleSize,
-      starterSubRoleSize,
       layout: {
         compactDual,
-        enemyMainRightPct,
-        enemySubRightPct,
-        enemySubTopPct,
-        playerMainLeftPct: rawMainLeftPct,
-        playerMainBottomPct: rawMainBottomPct,
-        playerSubLeftPct: rawSubLeftPct,
-        playerSubBottomPct: rawSubBottomPct,
-        mainPlayerSize: rawMainSize,
-        subPlayerSize: rawSubSize,
-        enemySize,
-        enemyTopPct,
         playerComp,
         enemyComp,
         subComp,
       },
     } = coreStatic;
-
-    const enemySubId = S.enemySub?.id ?? '';
-    const enemySubIsEvolved = Boolean(S.enemySub?.isEvolved);
-    const enemySubIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemySubId));
 
     const hasSelectableCoopPair = isCoopBattle && showAllySub;
     const mainIsActive = !hasSelectableCoopPair || !coopUsingSub;
@@ -439,34 +421,6 @@ function BattleScreenComponent({
       : subIsActive
         ? "saturate(1) brightness(1) drop-shadow(0 0 12px rgba(34,197,94,0.75))"
         : "saturate(0.62) brightness(0.78)";
-    const laneSnapshot = resolveBattleLaneSnapshot({
-      arenaWidthPx: arenaWidth,
-      compactDual,
-      hasDualUnits,
-      isCoopBattle,
-      showAllySub,
-      showEnemySub,
-      coopUsingSub,
-      playerComp,
-      subComp,
-      enemyComp,
-      rawMainLeftPct,
-      rawMainBottomPct,
-      rawSubLeftPct,
-      rawSubBottomPct,
-      rawMainSize,
-      rawSubSize,
-      starterSubRoleSize,
-      allyMainRoleSize,
-      enemyMainRightPct,
-      enemySubRightPct,
-      enemyTopPct,
-      enemySubTopPct,
-      enemySize,
-      enemySubId,
-      enemySubIsBossVisual,
-      enemySubIsEvolved,
-    });
 
     const {
       playerMainLeftPct: resolvedPlayerMainLeftPct,
@@ -485,7 +439,7 @@ function BattleScreenComponent({
       laneEnemySubScale: resolvedEnemySubScale,
       playerMainWidthPx,
       enemyMainWidthPx,
-    } = laneSnapshot;
+    } = memoLaneSnapshot;
 
     // Shadow offset & width should reflect the *visual* creature footprint,
     // not the inflated SVG element size. Dividing by compensation recovers
@@ -546,7 +500,7 @@ function BattleScreenComponent({
         "--player-shadow-width": `${Math.round(pVisual * 0.5)}px`,
       } as BattleCssVars,
     };
-  }, [coreStatic, memoSpriteAnims, S.enemySub?.id, S.enemySub?.isEvolved, arenaWidth]);
+  }, [coreStatic, memoSpriteAnims, memoLaneSnapshot]);
 
   // ─── Battle screen locals ───
   const coreRuntime = useMemo(() => buildBattleRuntimeCore({

@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { resolveBattleLayout } from './battleLayout.ts';
+import {
+  BATTLE_ARENA_VIEWPORT,
+  resolveBattleFallbackTargets,
+  resolveBattleLaneSnapshot,
+  resolveBattleLayout,
+} from './battleLayout.ts';
 import { BOSS_IDS } from '../data/monsterConfigs.ts';
 
 function getResponsiveSpriteScales(arenaWidth) {
@@ -129,6 +134,47 @@ function resolveBattleRects({
     playerMainLeftPct,
     playerSubLeftPct,
   };
+}
+
+function buildLaneSnapshot({
+  layout,
+  arenaWidth,
+  showAllySub,
+  showEnemySub,
+  coopUsingSub,
+  isCoopBattle,
+  enemySubId,
+  enemySubIsEvolved,
+}) {
+  const resolvedEnemySubId = enemySubId || '';
+  return resolveBattleLaneSnapshot({
+    arenaWidthPx: arenaWidth,
+    compactDual: layout.compactDual,
+    hasDualUnits: showAllySub || showEnemySub,
+    isCoopBattle,
+    showAllySub,
+    showEnemySub,
+    coopUsingSub,
+    playerComp: layout.playerComp,
+    subComp: layout.subComp,
+    enemyComp: layout.enemyComp,
+    rawMainLeftPct: layout.playerMainLeftPct,
+    rawMainBottomPct: layout.playerMainBottomPct,
+    rawSubLeftPct: layout.playerSubLeftPct,
+    rawSubBottomPct: layout.playerSubBottomPct,
+    rawMainSize: layout.mainPlayerSize,
+    rawSubSize: layout.subPlayerSize,
+    starterSubRoleSize: layout.mainPlayerSize,
+    allyMainRoleSize: layout.subPlayerSize,
+    enemyMainRightPct: layout.enemyMainRightPct,
+    enemySubRightPct: layout.enemySubRightPct,
+    enemyTopPct: layout.enemyTopPct,
+    enemySubTopPct: layout.enemySubTopPct,
+    enemySize: layout.enemySize,
+    enemySubId: resolvedEnemySubId,
+    enemySubIsBossVisual: BOSS_IDS.has(resolvedEnemySubId),
+    enemySubIsEvolved,
+  });
 }
 
 function minFrontlineGap({ rects, showAllySub, showEnemySub }) {
@@ -1394,6 +1440,93 @@ test('device matrix keeps pvp frontline spacing stable', () => {
 
 test('device matrix snapshot remains stable across phone/tablet/laptop', () => {
   assert.deepEqual(buildLayoutSnapshot(), DEVICE_LAYOUT_SNAPSHOT);
+});
+
+test('fallback targets stay inside battle viewport bounds', () => {
+  const layout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 2,
+    playerStarterId: 'wolf',
+    enemyId: 'ghost_lantern',
+    enemySceneType: 'ghost',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerwolf2SVG',
+    enemySpriteKey: 'ghostLanternSVG',
+  });
+  const laneSnapshot = buildLaneSnapshot({
+    layout,
+    arenaWidth: BATTLE_ARENA_VIEWPORT.width,
+    showAllySub: false,
+    showEnemySub: false,
+    coopUsingSub: false,
+    isCoopBattle: false,
+    enemySubId: '',
+    enemySubIsEvolved: false,
+  });
+  const targets = resolveBattleFallbackTargets(laneSnapshot);
+  const allTargets = [targets.enemyMain, targets.playerMain, targets.playerSub];
+  for (const target of allTargets) {
+    assert.ok(
+      target.cx >= 0 && target.cx <= BATTLE_ARENA_VIEWPORT.width,
+      `target cx out of bounds: ${target.cx}`,
+    );
+    assert.ok(
+      target.cy >= 0 && target.cy <= BATTLE_ARENA_VIEWPORT.height,
+      `target cy out of bounds: ${target.cy}`,
+    );
+  }
+});
+
+test('fallback targets follow coop slot swap geometry', () => {
+  const layout = resolveBattleLayout({
+    battleMode: 'coop',
+    hasDualUnits: true,
+    compactUI: true,
+    playerStageIdx: 0,
+    playerStarterId: 'wolf',
+    subStarterId: 'electric',
+    enemyId: 'colorful_butterfly',
+    enemySceneType: 'grass',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerwolf0SVG',
+    subSpriteKey: 'playerelectric0SVG',
+    enemySpriteKey: 'colorfulButterflySVG',
+  });
+  const beforeSwap = resolveBattleFallbackTargets(buildLaneSnapshot({
+    layout,
+    arenaWidth: BATTLE_ARENA_VIEWPORT.width,
+    showAllySub: true,
+    showEnemySub: true,
+    coopUsingSub: false,
+    isCoopBattle: true,
+    enemySubId: 'slime',
+    enemySubIsEvolved: false,
+  }));
+  const afterSwap = resolveBattleFallbackTargets(buildLaneSnapshot({
+    layout,
+    arenaWidth: BATTLE_ARENA_VIEWPORT.width,
+    showAllySub: true,
+    showEnemySub: true,
+    coopUsingSub: true,
+    isCoopBattle: true,
+    enemySubId: 'slime',
+    enemySubIsEvolved: false,
+  }));
+
+  assert.ok(
+    Math.abs(afterSwap.playerMain.cx - beforeSwap.playerMain.cx) < 0.001,
+    `main slot target should stay stable across swap: ${beforeSwap.playerMain.cx} -> ${afterSwap.playerMain.cx}`,
+  );
+  assert.ok(
+    afterSwap.playerSub.cx < beforeSwap.playerSub.cx,
+    `sub slot target should move left after swap: ${beforeSwap.playerSub.cx} -> ${afterSwap.playerSub.cx}`,
+  );
+  assert.ok(
+    afterSwap.playerSub.cx < afterSwap.playerMain.cx,
+    `after swap, active sub target should be left of main target: sub=${afterSwap.playerSub.cx}, main=${afterSwap.playerMain.cx}`,
+  );
 });
 
 // ── Fallback: no spriteKey → compensation = 1 ──────────────────────

@@ -139,6 +139,21 @@ export type BattleLaneSnapshot = {
   enemySubWidthPx: number;
 };
 
+export type BattleSpriteTarget = {
+  right: string;
+  top: string;
+  flyRight: number;
+  flyTop: number;
+  cx: number;
+  cy: number;
+};
+
+export type BattleFallbackTargets = {
+  enemyMain: BattleSpriteTarget;
+  playerMain: BattleSpriteTarget;
+  playerSub: BattleSpriteTarget;
+};
+
 const DEVICE_TIER_THRESHOLD = {
   phoneMaxWidth: 520,
   tabletMaxWidth: 980,
@@ -784,5 +799,69 @@ export function resolveBattleLaneSnapshot({
     playerSubWidthPx,
     enemyMainWidthPx,
     enemySubWidthPx,
+  };
+}
+
+function buildEnemyCenterTarget(
+  rightPct: number,
+  topPct: number,
+  widthPx: number,
+): BattleSpriteTarget {
+  const vw = BATTLE_ARENA_VIEWPORT.width;
+  const vh = BATTLE_ARENA_VIEWPORT.height;
+  const visualHeightPx = widthPx * 100 / 120;
+  const halfWidthPct = (widthPx / 2) * 100 / vw;
+  const halfHeightPct = (visualHeightPx / 2) * 100 / vh;
+  const cx = vw - ((rightPct / 100) * vw + widthPx / 2);
+  const cy = (topPct / 100) * vh + visualHeightPx / 2;
+  return {
+    top: `calc(${topPct}% + ${visualHeightPx / 2}px)`,
+    right: `calc(${rightPct}% + ${widthPx / 2}px)`,
+    flyRight: rightPct + halfWidthPct,
+    flyTop: topPct + halfHeightPct,
+    cx,
+    cy,
+  };
+}
+
+function buildPlayerCenterTarget(
+  leftPct: number,
+  bottomPct: number,
+  widthPx: number,
+): BattleSpriteTarget {
+  const vw = BATTLE_ARENA_VIEWPORT.width;
+  const vh = BATTLE_ARENA_VIEWPORT.height;
+  const visualHeightPx = widthPx * 100 / 120;
+  const centerRightPct = Math.max(8, 100 - leftPct - (widthPx * 100 / vw) / 2);
+  const centerTopPct = Math.max(8, 100 - bottomPct - (visualHeightPx * 100 / vh) / 2);
+  const cx = vw - (centerRightPct / 100 * vw);
+  const cy = centerTopPct / 100 * vh;
+  return {
+    top: `calc(${centerTopPct}% + 0px)`,
+    right: `calc(${centerRightPct}% + 0px)`,
+    flyRight: centerRightPct,
+    flyTop: centerTopPct,
+    cx,
+    cy,
+  };
+}
+
+export function resolveBattleFallbackTargets(snapshot: BattleLaneSnapshot): BattleFallbackTargets {
+  return {
+    enemyMain: buildEnemyCenterTarget(
+      snapshot.enemyMainRightPct,
+      snapshot.enemyTopPct,
+      snapshot.enemyMainWidthPx,
+    ),
+    playerMain: buildPlayerCenterTarget(
+      snapshot.playerMainLeftPct,
+      snapshot.playerMainBottomPct,
+      snapshot.playerMainWidthPx,
+    ),
+    playerSub: buildPlayerCenterTarget(
+      snapshot.playerSubLeftPct,
+      snapshot.playerSubBottomPct,
+      snapshot.playerSubWidthPx,
+    ),
   };
 }

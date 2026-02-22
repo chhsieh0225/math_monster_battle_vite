@@ -183,6 +183,8 @@ export function resolveBattleLayout({
   const isGolumn = visualEnemyId === "golumn" || visualEnemyId === "golumn_mud";
   const isGhostLantern = visualEnemyId === "ghost_lantern";
   const isMushroom = visualEnemyId === "mushroom";
+  const isCandyKnight = visualEnemyId === "candy_knight";
+  const isCandyMonster = visualEnemyId === "candy_monster";
   const isCrazyDragon = visualEnemyId === "boss_crazy_dragon";
   const isSwordGod = visualEnemyId === "boss_sword_god";
   const isHydra = visualEnemyId === "boss_hydra";
@@ -253,6 +255,12 @@ export function resolveBattleLayout({
   const tigerKingEnemyBoost = isTigerKingEnemy
     ? (compactUI ? 1.12 : 1.15)
     : 1;
+  const candyKnightSizeBoost = isCandyKnight
+    ? (compactUI ? 1.07 : 1.05)
+    : 1;
+  const candyMonsterSizeBoost = isCandyMonster
+    ? (compactUI ? 1.08 : 1.06)
+    : 1;
   const darkDragonPhase2Boost = isDarkDragon && isDarkDragonPhase2Sprite
     ? (compactUI ? 1.08 : 1.12)
     : 1;
@@ -264,6 +272,8 @@ export function resolveBattleLayout({
     * hydraSizeBoost
     * hydraCoopBoost
     * tigerKingEnemyBoost
+    * candyKnightSizeBoost
+    * candyMonsterSizeBoost
     * darkDragonPhase2Boost
     * enemyComp
     * pvpCrazyDragonEnemyBoost,

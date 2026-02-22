@@ -547,6 +547,64 @@ test('mushroom variant uses enlarged in-battle render size', () => {
   assert.equal(mushroomLayout.enemySize, 299);
 });
 
+test('candy monster renders slightly larger than default same-sprite baseline', () => {
+  const baseLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'slime',
+    enemySceneType: 'candy',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerwater1SVG',
+    enemySpriteKey: 'candyMonsterSVG',
+  });
+  const candyMonsterLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'candy_monster',
+    enemySceneType: 'candy',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerwater1SVG',
+    enemySpriteKey: 'candyMonsterSVG',
+  });
+
+  assert.ok(candyMonsterLayout.enemySize > baseLayout.enemySize);
+});
+
+test('candy knight renders slightly larger than default same-sprite baseline', () => {
+  const baseLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'slime',
+    enemySceneType: 'candy',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerwater1SVG',
+    enemySpriteKey: 'candyKnightSVG',
+  });
+  const candyKnightLayout = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'water',
+    enemyId: 'candy_knight',
+    enemySceneType: 'candy',
+    enemyIsEvolved: false,
+    playerSpriteKey: 'playerwater1SVG',
+    enemySpriteKey: 'candyKnightSVG',
+  });
+
+  assert.ok(candyKnightLayout.enemySize > baseLayout.enemySize);
+});
+
 test('dark dragon phase-2 sprite never renders smaller than phase-1', () => {
   const phase1Desktop = resolveBattleLayout({
     battleMode: 'single',

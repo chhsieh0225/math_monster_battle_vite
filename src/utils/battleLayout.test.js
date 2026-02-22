@@ -547,6 +547,60 @@ test('mushroom variant uses enlarged in-battle render size', () => {
   assert.equal(mushroomLayout.enemySize, 299);
 });
 
+test('dark dragon phase-2 sprite never renders smaller than phase-1', () => {
+  const phase1Desktop = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss',
+    enemySceneType: 'dark',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'darkLordSVG',
+  });
+  const phase2Desktop = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: false,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss',
+    enemySceneType: 'dark',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossDarkPhase2SVG',
+  });
+  const phase1Mobile = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss',
+    enemySceneType: 'dark',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'darkLordSVG',
+  });
+  const phase2Mobile = resolveBattleLayout({
+    battleMode: 'single',
+    hasDualUnits: false,
+    compactUI: true,
+    playerStageIdx: 1,
+    playerStarterId: 'fire',
+    enemyId: 'boss',
+    enemySceneType: 'dark',
+    enemyIsEvolved: true,
+    playerSpriteKey: 'playerfire1SVG',
+    enemySpriteKey: 'bossDarkPhase2SVG',
+  });
+
+  assert.ok(phase2Desktop.enemySize >= phase1Desktop.enemySize);
+  assert.ok(phase2Mobile.enemySize >= phase1Mobile.enemySize);
+});
+
 test('compact UI shifts crazy dragon enemy position to the right', () => {
   const compactCrazyDragon = resolveBattleLayout({
     battleMode: 'single',

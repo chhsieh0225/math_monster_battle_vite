@@ -186,6 +186,8 @@ export function resolveBattleLayout({
   const isCrazyDragon = visualEnemyId === "boss_crazy_dragon";
   const isSwordGod = visualEnemyId === "boss_sword_god";
   const isHydra = visualEnemyId === "boss_hydra";
+  const isDarkDragon = visualEnemyId === "boss";
+  const isDarkDragonPhase2Sprite = enemySpriteKey === "bossDarkPhase2SVG";
   const isTigerKingEnemy = (visualEnemyId === "wild_starter_tiger" || visualEnemyId === "tiger")
     && enemySpriteKey === "playertiger2SVG";
   // Mobile compact viewport: bosses should sit farther from player-side to avoid
@@ -251,7 +253,10 @@ export function resolveBattleLayout({
   const tigerKingEnemyBoost = isTigerKingEnemy
     ? (compactUI ? 1.12 : 1.15)
     : 1;
-  const enemySize = Math.round(
+  const darkDragonPhase2Boost = isDarkDragon && isDarkDragonPhase2Sprite
+    ? (compactUI ? 1.08 : 1.12)
+    : 1;
+  const enemySizeRaw = Math.round(
     enemyBaseSize
     * enemyScale
     * swordGodSizeBoost
@@ -259,9 +264,17 @@ export function resolveBattleLayout({
     * hydraSizeBoost
     * hydraCoopBoost
     * tigerKingEnemyBoost
+    * darkDragonPhase2Boost
     * enemyComp
     * pvpCrazyDragonEnemyBoost,
   );
+  // Phase-2 dark dragon should never render smaller than phase-1 at the same layout tier.
+  const darkDragonPhase1Floor = isDarkDragon && isDarkDragonPhase2Sprite
+    ? Math.round(enemyBaseSize * enemyScale)
+    : 0;
+  const enemySize = isDarkDragon && isDarkDragonPhase2Sprite
+    ? Math.max(enemySizeRaw, darkDragonPhase1Floor)
+    : enemySizeRaw;
 
   const enemyBaseTopPct = (enemySceneType === "ghost" || isBoss) ? 12
     : enemySceneType === "steel" ? 16 : 26;

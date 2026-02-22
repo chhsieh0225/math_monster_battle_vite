@@ -190,6 +190,35 @@ type ApplyDamageArgs = {
   color?: string;
 };
 
+type PostHitContinueRoute = 'freeze' | 'enemy';
+
+export type PostHitResolutionPlan = {
+  kind: 'victory' | 'continue';
+  nextDelayMs: number;
+  unlockOneHit: boolean;
+  continueRoute: PostHitContinueRoute | null;
+  tryAllySupport: boolean;
+};
+
+type BuildPostHitResolutionPlanArgs = {
+  enemyHpAfterHit: number;
+  enemyMaxHp: number;
+  appliedHitDmg: number;
+  nextDelayMs: number;
+  willFreeze: boolean;
+  hasAllySupportRunner: boolean;
+};
+
+type ApplyPostHitResolutionPlanArgs = {
+  plan: PostHitResolutionPlan;
+  tryUnlock: (id: AchievementId) => void;
+  safeToIfBattleActive: (fn: () => void, ms: number) => void;
+  handleVictory: (verb?: string) => void;
+  runAllySupportTurn?: AllySupportTurnRunner;
+  handleFreeze: () => void;
+  doEnemyTurn: () => void;
+};
+
 const HITS_PER_LVL_N = HITS_PER_LVL;
 const MAX_MOVE_LVL_N = MAX_MOVE_LVL;
 const POWER_CAPS_N = POWER_CAPS;
@@ -228,6 +257,58 @@ function tr(
 ): string {
   if (typeof t === 'function') return t(key, fallback, params);
   return formatFallback(fallback, params);
+}
+
+export function buildPostHitResolutionPlan({
+  enemyHpAfterHit,
+  enemyMaxHp,
+  appliedHitDmg,
+  nextDelayMs,
+  willFreeze,
+  hasAllySupportRunner,
+}: BuildPostHitResolutionPlanArgs): PostHitResolutionPlan {
+  const isEnemyDefeated = enemyHpAfterHit <= 0;
+  return {
+    kind: isEnemyDefeated ? 'victory' : 'continue',
+    nextDelayMs,
+    unlockOneHit: isEnemyDefeated && appliedHitDmg >= enemyMaxHp,
+    continueRoute: isEnemyDefeated ? null : (willFreeze ? 'freeze' : 'enemy'),
+    tryAllySupport: !isEnemyDefeated && hasAllySupportRunner,
+  };
+}
+
+function applyPostHitResolutionPlan({
+  plan,
+  tryUnlock,
+  safeToIfBattleActive,
+  handleVictory,
+  runAllySupportTurn,
+  handleFreeze,
+  doEnemyTurn,
+}: ApplyPostHitResolutionPlanArgs): void {
+  if (plan.unlockOneHit) tryUnlock('one_hit');
+
+  if (plan.kind === 'victory') {
+    safeToIfBattleActive(() => handleVictory(), plan.nextDelayMs);
+    return;
+  }
+
+  const continueAfterTurn = () => {
+    if (plan.continueRoute === 'freeze') handleFreeze();
+    else doEnemyTurn();
+  };
+
+  if (
+    plan.tryAllySupport
+    && runAllySupportTurn
+    && runAllySupportTurn({
+      delayMs: plan.nextDelayMs,
+      onDone: continueAfterTurn,
+    })
+  ) {
+    return;
+  }
+  safeToIfBattleActive(continueAfterTurn, plan.nextDelayMs);
 }
 
 export function runPlayerAnswer({
@@ -694,22 +775,23 @@ export function runPlayerAnswer({
             }
           }
 
-          if (afterHp <= 0 && appliedHitDmg >= s3.enemy.maxHp) tryUnlock('one_hit');
-          if (afterHp <= 0) {
-            safeToIfBattleActive(() => handleVictory(), effectTimeline.nextDelay);
-          } else {
-            const continueAfterTurn = () => {
-              if (willFreeze) handleFreeze();
-              else doEnemyTurn();
-            };
-            if (runAllySupportTurn && runAllySupportTurn({
-              delayMs: effectTimeline.nextDelay,
-              onDone: continueAfterTurn,
-            })) {
-              return;
-            }
-            safeToIfBattleActive(continueAfterTurn, effectTimeline.nextDelay);
-          }
+          const postHitPlan = buildPostHitResolutionPlan({
+            enemyHpAfterHit: afterHp,
+            enemyMaxHp: s3.enemy.maxHp,
+            appliedHitDmg,
+            nextDelayMs: effectTimeline.nextDelay,
+            willFreeze,
+            hasAllySupportRunner: Boolean(runAllySupportTurn),
+          });
+          applyPostHitResolutionPlan({
+            plan: postHitPlan,
+            tryUnlock,
+            safeToIfBattleActive,
+            handleVictory,
+            runAllySupportTurn,
+            handleFreeze,
+            doEnemyTurn,
+          });
         }, effectTimeline.hitDelay);
       },
     });

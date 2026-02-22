@@ -22,6 +22,7 @@ This folder holds the battle-domain layering used by `useBattle`.
 - `playerFlow.ts`
   - Player answer / attack flow orchestration.
   - Uses resolver + orchestrator + injected state/effects.
+  - Prefer "plan + effect-runner" split inside complex branches (e.g. post-hit continuation).
 - `pvpFlow.ts`
   - PvP-only turn flow and status-resolution orchestration.
   - Keeps `useBattle` free of PvP branch details.

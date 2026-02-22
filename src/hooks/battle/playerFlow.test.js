@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { runPlayerAnswer } from './playerFlow.ts';
+import { buildPostHitResolutionPlan, runPlayerAnswer } from './playerFlow.ts';
 
 function createNumberSetter(initialValue = 0, onChange = null) {
   let value = initialValue;
@@ -149,6 +149,53 @@ function createTestContext(stateOverrides = {}) {
     counters: { tc, tw, streak, passive, charge, maxStreak, pHp, pHpSub, eHp, burn, frozen, staticStack, mHits, mLvls, mlvlUp },
   };
 }
+
+test('buildPostHitResolutionPlan returns victory plan and one-hit unlock on lethal full damage', () => {
+  const plan = buildPostHitResolutionPlan({
+    enemyHpAfterHit: 0,
+    enemyMaxHp: 120,
+    appliedHitDmg: 120,
+    nextDelayMs: 1100,
+    willFreeze: false,
+    hasAllySupportRunner: true,
+  });
+
+  assert.equal(plan.kind, 'victory');
+  assert.equal(plan.unlockOneHit, true);
+  assert.equal(plan.tryAllySupport, false);
+  assert.equal(plan.continueRoute, null);
+});
+
+test('buildPostHitResolutionPlan keeps continue route and ally-support intent when enemy survives', () => {
+  const plan = buildPostHitResolutionPlan({
+    enemyHpAfterHit: 40,
+    enemyMaxHp: 120,
+    appliedHitDmg: 60,
+    nextDelayMs: 900,
+    willFreeze: true,
+    hasAllySupportRunner: true,
+  });
+
+  assert.equal(plan.kind, 'continue');
+  assert.equal(plan.unlockOneHit, false);
+  assert.equal(plan.tryAllySupport, true);
+  assert.equal(plan.continueRoute, 'freeze');
+});
+
+test('buildPostHitResolutionPlan does not request ally support when no support runner exists', () => {
+  const plan = buildPostHitResolutionPlan({
+    enemyHpAfterHit: 50,
+    enemyMaxHp: 120,
+    appliedHitDmg: 50,
+    nextDelayMs: 700,
+    willFreeze: false,
+    hasAllySupportRunner: false,
+  });
+
+  assert.equal(plan.kind, 'continue');
+  assert.equal(plan.tryAllySupport, false);
+  assert.equal(plan.continueRoute, 'enemy');
+});
 
 test('runPlayerAnswer returns early when starter or move is missing', () => {
   const { calls, deps } = createTestContext();

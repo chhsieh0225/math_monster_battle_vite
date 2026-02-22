@@ -26,6 +26,7 @@ import type {
   CollectionPopupVm,
   EnemyVm,
   MoveVm,
+  WrongQuestionReviewVm,
   ScreenName,
   StarterVm,
 } from '../types/battle';
@@ -144,6 +145,13 @@ import {
   runQuitGameWithContext,
   runToggleCoopActiveWithContext,
 } from './battle/lifecycleActionDelegates.ts';
+import {
+  buildSaveSnapshot,
+  clearSave,
+  hasSave as checkHasSave,
+  loadSave,
+  writeSave,
+} from '../utils/savegame.ts';
 import { useBattleAbilityModel } from './battle/useBattleAbilityModel.ts';
 import { useBattleItemActions } from './battle/useBattleItemActions.ts';
 import {
@@ -338,6 +346,7 @@ export function useBattle() {
     diffLevel,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, shadowShieldCD, furyRegenUsed,
   } = battle;
+  const [wrongQuestions, setWrongQuestions] = useState<WrongQuestionReviewVm[]>([]);
 
   const battleFieldSetters = useMemo(
     () => createBattleFieldSetters(dispatchBattle),
@@ -373,6 +382,30 @@ export function useBattle() {
     addD, rmD,
     addP, rmP,
   } = UI;
+
+  useEffect(() => {
+    if (!fb || fb.correct) return;
+    const display = typeof q?.display === 'string' && q.display.trim().length > 0
+      ? q.display.trim()
+      : '?';
+    const answerLabel = typeof q?.answerLabel === 'string' && q.answerLabel.trim().length > 0
+      ? q.answerLabel.trim()
+      : null;
+    const answer = answerLabel
+      || (fb.answer != null ? String(fb.answer) : (q?.answer != null ? String(q.answer) : '?'));
+    const steps = Array.isArray(fb.steps)
+      ? fb.steps
+        .filter((step): step is string => typeof step === 'string')
+        .map((step) => step.trim())
+        .filter(Boolean)
+        .slice(0, 6)
+      : [];
+    setWrongQuestions((prev) => {
+      const nextId = (prev.at(-1)?.id ?? 0) + 1;
+      const next = [...prev, { id: nextId, display, answer, steps }];
+      return next.length > 120 ? next.slice(next.length - 120) : next;
+    });
+  }, [fb, q]);
 
   const {
     frozenRef: frozenR,
@@ -608,6 +641,7 @@ export function useBattle() {
 
   // ── Finalize and persist session log ──
   const _endSession = useCallback((isCompleted: boolean, reasonOverride: string | null = null) => {
+    clearSave(); // Wipe mid-run save on any session end (victory, KO, quit)
     if (!isCompleted) {
       settleRunAsFailed(sr.current?.defeated || 0);
     }
@@ -706,6 +740,7 @@ export function useBattle() {
     allyOverride: StarterVm | null = null,
   ) => {
     setCollectionPopup(null);
+    setWrongQuestions([]);
     clearRecentQuestionDisplays();
     runStartGameWithContext({
       setDailyChallengeFeedback,
@@ -1111,6 +1146,87 @@ export function useBattle() {
     challengeDamageMult,
   ]);
 
+  // --- Mid-run save: snapshot state before starting next battle ---
+  const saveMidRun = useCallback((nextRound: number) => {
+    // Only save for standard runs (not PvP, not challenge/daily/tower)
+    if (battleMode === 'pvp' || hasChallengeRun) return;
+    if (!starter) return;
+    writeSave(buildSaveSnapshot({
+      battleMode,
+      timedMode,
+      nextRound,
+      starter,
+      allySub: battle.allySub ? (sr.current as { allySub?: StarterVm }).allySub ?? null : null,
+      coopActiveSlot,
+      battle,
+      enemies,
+    }));
+  }, [battleMode, hasChallengeRun, starter, timedMode, battle, coopActiveSlot, enemies, sr]);
+
+  // Wrap startBattle to auto-save before each new round
+  const startBattleWithSave = useCallback((idx: number, roster?: EnemyVm[]) => {
+    if (idx > 0) saveMidRun(idx);
+    startBattle(idx, roster);
+  }, [startBattle, saveMidRun]);
+
+  // --- Resume from a mid-run save ---
+  const resumeFromSave = useCallback(() => {
+    const saved = loadSave();
+    if (!saved) return;
+
+    // Restore mode, roster, starter, allySub
+    setBattleMode(saved.battleMode);
+    setTimedMode(saved.timedMode);
+    setEnemies(saved.enemies);
+    setStarter(saved.starter);
+    setCoopActiveSlot(saved.coopActiveSlot);
+
+    // Restore accumulated battle stats via reset_run + patch
+    const partnerSub = saved.allySub;
+    dispatchBattle({
+      type: 'reset_run',
+      patch: {
+        diffLevel: saved.battle.diffLevel,
+        allySub: partnerSub,
+        pHpSub: saved.battle.pHpSub,
+        pHp: saved.battle.pHp,
+        pStg: saved.battle.pStg,
+      },
+    });
+    dispatchBattle({
+      type: 'patch',
+      patch: {
+        pExp: saved.battle.pExp,
+        pLvl: saved.battle.pLvl,
+        streak: saved.battle.streak,
+        passiveCount: saved.battle.passiveCount,
+        charge: saved.battle.charge,
+        tC: saved.battle.tC,
+        tW: saved.battle.tW,
+        defeated: saved.battle.defeated,
+        maxStreak: saved.battle.maxStreak,
+        mHits: saved.battle.mHits,
+        mLvls: saved.battle.mLvls,
+      },
+    });
+
+    // Wire session lifecycle
+    invalidateAsyncWork();
+    beginRun();
+    clearTimer();
+    resetRunRuntimeState();
+    initSession(saved.starter, saved.timedMode);
+
+    // Jump into battle at the saved round
+    setScreen('battle');
+    startBattle(saved.nextRound, saved.enemies);
+  }, [
+    setBattleMode, setTimedMode,
+    setEnemies, setStarter, setCoopActiveSlot, dispatchBattle,
+    invalidateAsyncWork, beginRun, clearTimer, resetRunRuntimeState,
+    initSession, setScreen, startBattle,
+  ]);
+
   // --- Advance from text / victory phase ---
   const continueFromVictory = useCallback(() => {
     runContinueWithContext({
@@ -1130,7 +1246,7 @@ export function useBattle() {
         ui: UI,
         callbacks: {
           finishGame: _finishGame,
-          startBattle,
+          startBattle: startBattleWithSave,
         },
       },
     });
@@ -1145,7 +1261,7 @@ export function useBattle() {
     battleFieldSetters,
     UI,
     _finishGame,
-    startBattle,
+    startBattleWithSave,
   ]);
 
   const advance = useCallback(() => {
@@ -1272,6 +1388,7 @@ export function useBattle() {
     expNext, chargeReady,
     inventory,
     achUnlocked, achPopup, collectionPopup, encData,
+    wrongQuestions,
   });
 
   // eslint-disable-next-line react-hooks/refs
@@ -1297,6 +1414,7 @@ export function useBattle() {
     toggleCoopActive,
     rmD,
     rmP,
+    resumeFromSave,
   });
 
   const view = useMemo(() => buildUseBattleView({

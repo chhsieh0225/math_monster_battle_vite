@@ -80,6 +80,7 @@ const REQUIRED_STATE_KEYS = [
   'charge',
   'tC',
   'tW',
+  'wrongQuestions',
   'defeated',
   'maxStreak',
   'mHits',
@@ -150,6 +151,7 @@ const REQUIRED_ACTION_KEYS = [
   'toggleCoopActive',
   'rmD',
   'rmP',
+  'resumeFromSave',
 ] as const satisfies ReadonlyArray<keyof UseBattleActions>;
 
 type MissingActionKey = Exclude<keyof UseBattleActions, (typeof REQUIRED_ACTION_KEYS)[number]>;

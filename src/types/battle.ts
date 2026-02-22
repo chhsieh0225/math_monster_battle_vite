@@ -129,6 +129,13 @@ export type FeedbackVm = {
   steps?: string[];
 };
 
+export type WrongQuestionReviewVm = {
+  id: number;
+  display: string;
+  answer: string;
+  steps: string[];
+};
+
 export type DamageVm = {
   id: number;
   value: number | string;
@@ -276,6 +283,7 @@ export type UseBattleState = {
   charge: number;
   tC: number;
   tW: number;
+  wrongQuestions: WrongQuestionReviewVm[];
   defeated: number;
   maxStreak: number;
   mHits: number[];
@@ -347,6 +355,7 @@ export type UseBattleActions = {
   toggleCoopActive: () => void;
   rmD: (id: number) => void;
   rmP: (id: number) => void;
+  resumeFromSave: () => void;
 };
 
 export type UseBattleView = {

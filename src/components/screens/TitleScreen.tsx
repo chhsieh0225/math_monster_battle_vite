@@ -59,6 +59,8 @@ type TitleScreenProps = {
   onDashboard: TitleAction;
   onDailyChallenge: TitleAction;
   onSettings: TitleAction;
+  onContinue?: TitleAction | null;
+  hasSavedGame?: boolean;
   lowPerfMode?: boolean;
 };
 
@@ -115,6 +117,8 @@ export default function TitleScreen({
   onDashboard,
   onDailyChallenge,
   onSettings,
+  onContinue = null,
+  hasSavedGame = false,
   lowPerfMode = false,
 }: TitleScreenProps) {
   const { t, locale } = useI18n();
@@ -195,6 +199,15 @@ export default function TitleScreen({
       </div>
 
       <section className="title-actions" aria-label="Game start actions">
+        {hasSavedGame && onContinue && (
+          <button
+            className="title-action-btn title-action-btn-continue touch-btn"
+            onClick={onContinue}
+            aria-label={t('a11y.title.continueSave', 'Continue from saved game')}
+          >
+            ▶️ {t('title.mode.continue', 'Continue')}
+          </button>
+        )}
         <div className="title-action-row">
           <button className="title-action-btn title-action-btn-normal touch-btn" onClick={onStartNormal} aria-label={t('a11y.title.startNormal', 'Start normal mode')}>
             ⚔️ {t('title.mode.normal', 'Normal')}

@@ -3,6 +3,7 @@ import type { ComponentProps, ReactNode } from 'react';
 
 import TitleScreen from './screens/TitleScreen';
 import SelectionScreen from './screens/SelectionScreen';
+import { hasSave as checkHasSave } from '../utils/savegame.ts';
 import type {
   ScreenName,
   UseBattleActions,
@@ -65,6 +66,9 @@ export default function AppScreenRouter({
   const S = state;
   const A = actions;
   const V = view;
+
+  // Check for mid-run save on every render when screen is title (cheap sync read)
+  const savedGameExists = S.screen === 'title' ? checkHasSave() : false;
 
   const wrapMain = (node: ReactNode) => (
     <div id="main-content" className="screen-transition" key={S.screen} style={{ height: '100%' }}>
@@ -132,6 +136,11 @@ export default function AppScreenRouter({
         onDashboard={() => A.setScreen('dashboard')}
         onDailyChallenge={() => A.setScreen('daily_challenge')}
         onSettings={() => onOpenSettings('title')}
+        hasSavedGame={savedGameExists}
+        onContinue={() => {
+          void V.sfx.init().catch(() => {});
+          A.resumeFromSave();
+        }}
         lowPerfMode={mobile.lowPerfMode}
       />,
     );
@@ -276,6 +285,7 @@ export default function AppScreenRouter({
           totalEnemies={S.enemies.length}
           tC={S.tC}
           tW={S.tW}
+          wrongQuestions={S.wrongQuestions}
           pLvl={S.pLvl}
           pStg={S.pStg}
           timedMode={S.timedMode}

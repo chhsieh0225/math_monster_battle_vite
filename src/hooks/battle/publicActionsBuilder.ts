@@ -28,6 +28,7 @@ export type BuildUseBattleActionsArgs = {
   toggleCoopActive: () => void;
   rmD: (id: number) => void;
   rmP: (id: number) => void;
+  resumeFromSave: () => void;
 };
 
 /**
@@ -57,5 +58,6 @@ export function buildUseBattleActions(args: BuildUseBattleActionsArgs): UseBattl
     toggleCoopActive: args.toggleCoopActive,
     rmD: args.rmD,
     rmP: args.rmP,
+    resumeFromSave: args.resumeFromSave,
   };
 }

@@ -139,6 +139,21 @@
   padding: 14px 0;
 }
 
+.title-action-btn-continue {
+  width: 100%;
+  font-size: 1.05rem;
+  padding: 14px 0;
+  background: linear-gradient(135deg, #10b981, #34d399);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+  animation: title-continue-pulse 2s ease-in-out infinite;
+  margin-bottom: 6px;
+}
+
+@keyframes title-continue-pulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 4px 28px rgba(16, 185, 129, 0.65); }
+}
+
 .title-action-btn-normal {
   background: linear-gradient(135deg, #6366f1, #a855f7);
   box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);

@@ -380,12 +380,12 @@ function BattleScreenComponent({
     // the active sub sprite so both allies do not overlap on mobile.
     const swappedMainIsWideBeast = shouldSwapPlayerSlots && (playerComp || 1) > 1.3;
     const swappedMainWidePullback = swappedMainIsWideBeast
-      ? (compactDual ? 21 : 20)
+      ? (compactDual ? 24 : 22)
       : 0;
     const swappedMainTargetPct = rawSubLeftPct - swappedMainWidePullback;
-    const swappedMainSafeMinPct = rawMainLeftPct + (swappedMainIsWideBeast ? (compactDual ? 6 : 7) : (compactDual ? 10 : 9));
-    const swappedMainSafeMaxPct = rawSubLeftPct - (swappedMainIsWideBeast ? (compactDual ? 2.5 : 1.5) : (compactDual ? 1.5 : 1));
-    const swappedMainWideCompactCapPct = swappedMainIsWideBeast && compactDual ? 6.5 : Number.POSITIVE_INFINITY;
+    const swappedMainSafeMinPct = rawMainLeftPct + (swappedMainIsWideBeast ? (compactDual ? 4.2 : 5.4) : (compactDual ? 10 : 9));
+    const swappedMainSafeMaxPct = rawSubLeftPct - (swappedMainIsWideBeast ? (compactDual ? 2.2 : 1.3) : (compactDual ? 1.5 : 1));
+    const swappedMainWideCompactCapPct = swappedMainIsWideBeast && compactDual ? 5.8 : Number.POSITIVE_INFINITY;
     const clampedSwappedMainPct = Math.max(
       1,
       Math.min(
@@ -544,17 +544,23 @@ function BattleScreenComponent({
       playerSubWidthPx,
     );
     if (showAllySub) {
+      // On narrow phones, permit a small ally overlap so wide sprites can stay
+      // farther from the enemy lane after main/sub swap without hard clipping.
+      const allowAllyOverlapPx = deviceTier === 'phone'
+        ? Math.min(playerMainWidthPx, playerSubWidthPx) * ((isWidePlayerMainSprite || isWidePlayerSubSprite) ? 0.28 : 0.14)
+        : 0;
+      const requiredSeparationPx = Math.max(0, playerMainWidthPx + allyGapPx - allowAllyOverlapPx);
       const maxSubLeftPx = Math.max(minPlayerLeftPx, playerLaneRightPx - playerSubWidthPx);
-      const minSubLeftPxFromMain = resolvedPlayerMainLeftPx + playerMainWidthPx + allyGapPx;
+      const minSubLeftPxFromMain = resolvedPlayerMainLeftPx + requiredSeparationPx;
       if (minSubLeftPxFromMain > maxSubLeftPx) {
         resolvedPlayerMainLeftPx = clampPlayerLeftPx(
-          maxSubLeftPx - playerMainWidthPx - allyGapPx,
+          maxSubLeftPx - requiredSeparationPx,
           playerMainWidthPx,
         );
       }
       const minSubLeftPx = Math.min(
         maxSubLeftPx,
-        resolvedPlayerMainLeftPx + playerMainWidthPx + allyGapPx,
+        resolvedPlayerMainLeftPx + requiredSeparationPx,
       );
       resolvedPlayerSubLeftPx = clampNumber(resolvedPlayerSubLeftPx, minSubLeftPx, maxSubLeftPx);
     }

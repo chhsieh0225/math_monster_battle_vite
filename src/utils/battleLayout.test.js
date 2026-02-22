@@ -83,12 +83,12 @@ function resolveBattleRects({
   const shouldSwapPlayerSlots = showAllySub && coopUsingSub;
   const swappedMainIsWideBeast = shouldSwapPlayerSlots && layout.playerComp > 1.3;
   const swappedMainWidePullback = swappedMainIsWideBeast
-    ? (layout.compactDual ? 21 : 20)
+    ? (layout.compactDual ? 24 : 22)
     : 0;
   const swappedMainTargetPct = layout.playerSubLeftPct - swappedMainWidePullback;
-  const swappedMainSafeMinPct = layout.playerMainLeftPct + (swappedMainIsWideBeast ? (layout.compactDual ? 6 : 7) : (layout.compactDual ? 10 : 9));
-  const swappedMainSafeMaxPct = layout.playerSubLeftPct - (swappedMainIsWideBeast ? (layout.compactDual ? 2.5 : 1.5) : (layout.compactDual ? 1.5 : 1));
-  const swappedMainWideCompactCapPct = swappedMainIsWideBeast && layout.compactDual ? 6.5 : Number.POSITIVE_INFINITY;
+  const swappedMainSafeMinPct = layout.playerMainLeftPct + (swappedMainIsWideBeast ? (layout.compactDual ? 4.2 : 5.4) : (layout.compactDual ? 10 : 9));
+  const swappedMainSafeMaxPct = layout.playerSubLeftPct - (swappedMainIsWideBeast ? (layout.compactDual ? 2.2 : 1.3) : (layout.compactDual ? 1.5 : 1));
+  const swappedMainWideCompactCapPct = swappedMainIsWideBeast && layout.compactDual ? 5.8 : Number.POSITIVE_INFINITY;
   const clampedSwappedMainPct = Math.max(
     1,
     Math.min(
@@ -1087,9 +1087,9 @@ const DEVICE_LAYOUT_SNAPSHOT = {
     laptop: { pm: [0, 199], ps: [361.99, 455.27], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 0, pSubPct: 26.5, eMainPct: 8, eSubPct: 20 },
   },
   coopSub: {
-    phone: { pm: [17.55, 119.5], ps: [-5.85, 90.59], em: [230.72, 378.3], es: [265.39, 327.6], pMainPct: 4.5, pSubPct: -1.5, eMainPct: 3, eSubPct: 16 },
-    tablet: { pm: [53.76, 185.02], ps: [0, 107.61], em: [528.08, 706.56], es: [541.44, 614.4], pMainPct: 7, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
-    laptop: { pm: [95.62, 230.94], ps: [0, 114.48], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 7, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
+    phone: { pm: [10.53, 112.48], ps: [-5.85, 90.59], em: [230.72, 378.3], es: [265.39, 327.6], pMainPct: 2.7, pSubPct: -1.5, eMainPct: 3, eSubPct: 16 },
+    tablet: { pm: [41.47, 172.73], ps: [0, 107.61], em: [528.08, 706.56], es: [541.44, 614.4], pMainPct: 5.4, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
+    laptop: { pm: [73.76, 209.08], ps: [0, 114.48], em: [1072.72, 1256.72], es: [1016, 1092.8], pMainPct: 5.4, pSubPct: 0, eMainPct: 8, eSubPct: 20 },
   },
   pvp: {
     phone: { pm: [7.8, 202.38], em: [238.2, 351], pMainPct: 2, eMainPct: 10 },
@@ -1211,7 +1211,7 @@ test('wide beast starters keep separated swap lanes in compact co-op', () => {
     });
 
     assert.ok(
-      swappedRects.playerMainLeftPct >= 4 && swappedRects.playerMainLeftPct <= 6.5,
+      swappedRects.playerMainLeftPct >= 2.2 && swappedRects.playerMainLeftPct <= 5.8,
       `${starterId} swapped inactive main left lane out of safe range: ${swappedRects.playerMainLeftPct}%`,
     );
   }

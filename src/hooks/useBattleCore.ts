@@ -830,15 +830,24 @@ export function useBattle() {
   }, [startGameContextRef]);
   const startGame = useStableCallback(startGameImpl);
 
-  const quitGame = useCallback(() => {
+  const quitGameContextRef = useBattleStateRef({
+    clearTimer,
+    appendQuitEventIfOpen,
+    sr,
+    endSession: _endSession,
+    setScreenFromString,
+  });
+  const quitGameImpl = useCallback(() => {
+    const ctx = quitGameContextRef.current;
     runQuitGameWithContext({
-      clearTimer,
-      appendQuitEventIfOpen,
-      sr,
-      endSession: _endSession,
-      setScreen: setScreenFromString,
+      clearTimer: ctx.clearTimer,
+      appendQuitEventIfOpen: ctx.appendQuitEventIfOpen,
+      sr: ctx.sr,
+      endSession: ctx.endSession,
+      setScreen: ctx.setScreenFromString,
     });
-  }, [clearTimer, appendQuitEventIfOpen, sr, _endSession, setScreenFromString]);
+  }, [quitGameContextRef]);
+  const quitGame = useStableCallback(quitGameImpl);
 
   const handlePlayerPartyKoImpl = useCallback(({
     target = 'main',
@@ -1366,13 +1375,19 @@ export function useBattle() {
     continueFromVictory();
   }, [continueFromVictory]);
 
-  const toggleCoopActive = useCallback(() => {
+  const toggleCoopActiveContextRef = useBattleStateRef({
+    sr,
+    setCoopActiveSlot,
+  });
+  const toggleCoopActiveImpl = useCallback(() => {
+    const ctx = toggleCoopActiveContextRef.current;
     runToggleCoopActiveWithContext({
-      sr,
+      sr: ctx.sr,
       canSwitchCoopActiveSlot,
-      setCoopActiveSlot,
+      setCoopActiveSlot: ctx.setCoopActiveSlot,
     });
-  }, [sr, setCoopActiveSlot]);
+  }, [toggleCoopActiveContextRef]);
+  const toggleCoopActive = useStableCallback(toggleCoopActiveImpl);
 
   const useItem = useBattleItemActions({
     phase,

@@ -348,6 +348,12 @@ const enUS = {
   "gameOver.stat.level": "Level",
   "gameOver.stat.accuracy": "Accuracy",
   "gameOver.restart": "Retry",
+  "gameOver.review.toggle": "Review Wrong Answers",
+  "gameOver.review.hide": "Hide Wrong Answers",
+  "gameOver.review.empty": "No wrong answers this run. Great job!",
+  "gameOver.review.title": "Question",
+  "gameOver.review.answer": "Correct Answer",
+  "gameOver.review.steps": "Solution Steps",
 
   "pvpResult.defaultWinner": "Player",
   "pvpResult.defaultLoser": "Opponent",

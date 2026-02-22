@@ -32,6 +32,7 @@ test('buildUseBattleActions maps localized starter setters into public action na
     toggleCoopActive: createFn('toggleCoopActive', calls),
     rmD: createFn('rmD', calls),
     rmP: createFn('rmP', calls),
+    resumeFromSave: createFn('resumeFromSave', calls),
   };
 
   const actions = buildUseBattleActions(deps);
@@ -68,6 +69,7 @@ test('buildUseBattleActions exposes full expected public action surface', () => 
     toggleCoopActive: noop,
     rmD: noop,
     rmP: noop,
+    resumeFromSave: noop,
   });
 
   const keys = Object.keys(actions).sort();
@@ -81,6 +83,7 @@ test('buildUseBattleActions exposes full expected public action surface', () => 
     'queueDailyChallenge',
     'queueTowerChallenge',
     'quitGame',
+    'resumeFromSave',
     'rmD',
     'rmP',
     'selectMove',

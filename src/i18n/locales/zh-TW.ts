@@ -348,6 +348,12 @@ const zhTW = {
   "gameOver.stat.level": "等級",
   "gameOver.stat.accuracy": "正確率",
   "gameOver.restart": "再挑戰",
+  "gameOver.review.toggle": "錯題複習",
+  "gameOver.review.hide": "收合錯題複習",
+  "gameOver.review.empty": "本局沒有答錯題，太厲害了！",
+  "gameOver.review.title": "題目",
+  "gameOver.review.answer": "正確答案",
+  "gameOver.review.steps": "解題步驟",
 
   "pvpResult.defaultWinner": "玩家",
   "pvpResult.defaultLoser": "對手",

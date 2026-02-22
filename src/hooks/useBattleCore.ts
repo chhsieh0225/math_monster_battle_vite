@@ -148,7 +148,6 @@ import {
 import {
   buildSaveSnapshot,
   clearSave,
-  hasSave as checkHasSave,
   loadSave,
   writeSave,
 } from '../utils/savegame.ts';

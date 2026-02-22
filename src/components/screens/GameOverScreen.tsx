@@ -4,6 +4,7 @@ import { calcScore, saveScore } from '../../utils/leaderboard.ts';
 import { readText, writeText } from '../../utils/storage.ts';
 import type { LeaderboardEntry } from '../../types/game';
 import type { DailyChallengeFeedback, TowerChallengeFeedback } from '../../types/challenges';
+import type { WrongQuestionReviewVm } from '../../types/battle';
 import { useI18n } from '../../i18n';
 import './GameOverScreen.css';
 
@@ -29,6 +30,7 @@ type GameOverScreenProps = {
   totalEnemies: number;
   tC: number;
   tW: number;
+  wrongQuestions: WrongQuestionReviewVm[];
   pLvl: number;
   pStg: number;
   timedMode: boolean;
@@ -48,6 +50,7 @@ export default function GameOverScreen({
   totalEnemies,
   tC,
   tW,
+  wrongQuestions,
   pLvl,
   pStg,
   timedMode,
@@ -67,6 +70,7 @@ export default function GameOverScreen({
   const [lastRank, setLastRank] = useState(-1);
   const [nameSaved, setNameSaved] = useState(false);
   const [playerName, setPlayerName] = useState(() => readText('mathMonsterBattle_name', ''));
+  const [showWrongReview, setShowWrongReview] = useState(false);
   const scoreSaved = useRef(false);
   const hasDailyFeedback = Boolean(dailyChallengeFeedback);
   const dailySuccess = dailyChallengeFeedback?.outcome === 'cleared';
@@ -276,6 +280,49 @@ export default function GameOverScreen({
           ))}
         </div>
       )}
+
+      <div className="game-over-review-wrap">
+        <button
+          className={`touch-btn game-over-review-toggle ${showWrongReview ? 'is-open' : ''}`}
+          onClick={() => setShowWrongReview((prev) => !prev)}
+          aria-label={showWrongReview
+            ? t('gameOver.review.hide', 'Hide wrong answer review')
+            : t('gameOver.review.toggle', 'Review wrong answers')}
+        >
+          📘 {showWrongReview
+            ? t('gameOver.review.hide', 'Hide Wrong Answers')
+            : t('gameOver.review.toggle', 'Review Wrong Answers')} ({wrongQuestions.length})
+        </button>
+        {showWrongReview && (
+          <div className="game-over-review-panel">
+            {wrongQuestions.length === 0 ? (
+              <div className="game-over-review-empty">
+                {t('gameOver.review.empty', 'No wrong answers this run. Great job!')}
+              </div>
+            ) : (
+              wrongQuestions.map((item, idx) => (
+                <article key={item.id} className="game-over-review-item">
+                  <div className="game-over-review-item-title">
+                    {t('gameOver.review.title', 'Question')} #{idx + 1}
+                  </div>
+                  <div className="game-over-review-question">{item.display}</div>
+                  <div className="game-over-review-answer">
+                    {t('gameOver.review.answer', 'Correct Answer')}: <b>{item.answer}</b>
+                  </div>
+                  <div className="game-over-review-steps-label">
+                    {t('gameOver.review.steps', 'Solution Steps')}:
+                  </div>
+                  {(item.steps.length > 0 ? item.steps : ['—']).map((step, stepIdx) => (
+                    <div key={`${item.id}-s-${stepIdx}`} className="game-over-review-step">
+                      {stepIdx + 1}. {step}
+                    </div>
+                  ))}
+                </article>
+              ))
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="game-over-actions">
         <button className="end-action-btn touch-btn game-over-action-restart" onClick={onRestart} aria-label={t('gameOver.restart', 'Retry')}>

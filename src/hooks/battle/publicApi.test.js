@@ -77,6 +77,7 @@ function createValidPublicApi() {
       charge: 0,
       tC: 0,
       tW: 0,
+      wrongQuestions: [],
       defeated: 0,
       maxStreak: 0,
       mHits: [0, 0, 0, 0],
@@ -142,6 +143,7 @@ function createValidPublicApi() {
       toggleCoopActive: noop,
       rmD: noop,
       rmP: noop,
+      resumeFromSave: noop,
     },
     view: {
       timerSubscribe: noopUnsub,

@@ -261,7 +261,7 @@ export default function AppScreenRouter({
           p2Starter={S.pvpStarter2}
           p1StageIdx={S.pStg}
           p2StageIdx={S.pvpStarter2?.selectedStageIdx || 0}
-          winner={S.pvpWinner || 'p1'}
+          winner={S.pvpState.winner || 'p1'}
           onRematch={() => S.starter && A.startGame(S.starter, 'pvp')}
           onHome={() => A.setScreen('title')}
         />,

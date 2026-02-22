@@ -739,74 +739,10 @@ export function useBattle() {
     });
   }, [setDmgs, setParts, setAtkEffect, setEffMsg, abilityModelRef, frozenR, pendingEvolve, pendingTextAdvanceActionRef]);
 
-  const startGameImpl = useCallback((
-    starterOverride?: StarterVm | null,
-    modeOverride: BattleMode | null = null,
-    allyOverride: StarterVm | null = null,
-  ) => {
-    const pvp = pvpStoreRef.current;
-    const ui = uiRef.current;
-    setCollectionPopup(null);
-    setWrongQuestions([]);
-    clearRecentQuestionDisplays();
-    runStartGameWithContext({
-      setDailyChallengeFeedback,
-      setTowerChallengeFeedback,
-      queuedChallenge,
-      activeChallenge,
-      buildNewRoster,
-      startGameOrchestratorArgs: {
-        invalidateAsyncWork,
-        beginRun,
-        clearTimer,
-        resetCoopRotatePending,
-        pvpStartDepsArgs: {
-          runtime: {
-            chance,
-            getStarterMaxHp,
-            t,
-            setEnemies,
-            setTimedMode,
-            setCoopActiveSlot,
-            dispatchBattle,
-            appendSessionEvent,
-            initSession,
-            createPvpEnemyFromStarter,
-            setScreen: setScreenFromString,
-            playBattleIntro,
-          },
-          pvp,
-          ui,
-          resetRunRuntimeState,
-        },
-        standardStartDepsArgs: {
-          runtime: {
-            getStarterMaxHp,
-            setEnemies,
-            setCoopActiveSlot,
-            dispatchBattle,
-            appendSessionEvent,
-            initSession,
-            setScreen: setScreenFromString,
-            startBattle,
-          },
-          pvp,
-          resetRunRuntimeState,
-        },
-        startGameControllerArgs: {
-          sr,
-          battleMode,
-          pvpStarter2,
-          locale,
-          localizeStarter,
-          pickPartnerStarter: (mainStarter) => pickPartnerStarter(mainStarter, pickIndex, locale),
-          getStarterStageIdx,
-          getStageMaxHp: getPlayerMaxHp,
-        },
-      },
-      activateQueuedChallenge,
-    }, starterOverride, modeOverride, allyOverride);
-  }, [
+  const startGameContextRef = useBattleStateRef({
+    setCollectionPopup,
+    setWrongQuestions,
+    clearRecentQuestionDisplays,
     setDailyChallengeFeedback,
     setTowerChallengeFeedback,
     queuedChallenge,
@@ -817,6 +753,7 @@ export function useBattle() {
     clearTimer,
     resetCoopRotatePending,
     chance,
+    getStarterMaxHp,
     t,
     setEnemies,
     setTimedMode,
@@ -837,8 +774,76 @@ export function useBattle() {
     pickIndex,
     getPlayerMaxHp,
     activateQueuedChallenge,
-    clearRecentQuestionDisplays,
-  ]);
+  });
+  const startGameImpl = useCallback((
+    starterOverride?: StarterVm | null,
+    modeOverride: BattleMode | null = null,
+    allyOverride: StarterVm | null = null,
+  ) => {
+    const ctx = startGameContextRef.current;
+    const pvp = ctx.pvpStoreRef.current;
+    const ui = ctx.uiRef.current;
+    ctx.setCollectionPopup(null);
+    ctx.setWrongQuestions([]);
+    ctx.clearRecentQuestionDisplays();
+    runStartGameWithContext({
+      setDailyChallengeFeedback: ctx.setDailyChallengeFeedback,
+      setTowerChallengeFeedback: ctx.setTowerChallengeFeedback,
+      queuedChallenge: ctx.queuedChallenge,
+      activeChallenge: ctx.activeChallenge,
+      buildNewRoster: ctx.buildNewRoster,
+      startGameOrchestratorArgs: {
+        invalidateAsyncWork: ctx.invalidateAsyncWork,
+        beginRun: ctx.beginRun,
+        clearTimer: ctx.clearTimer,
+        resetCoopRotatePending: ctx.resetCoopRotatePending,
+        pvpStartDepsArgs: {
+          runtime: {
+            chance: ctx.chance,
+            getStarterMaxHp: ctx.getStarterMaxHp,
+            t: ctx.t,
+            setEnemies: ctx.setEnemies,
+            setTimedMode: ctx.setTimedMode,
+            setCoopActiveSlot: ctx.setCoopActiveSlot,
+            dispatchBattle: ctx.dispatchBattle,
+            appendSessionEvent: ctx.appendSessionEvent,
+            initSession: ctx.initSession,
+            createPvpEnemyFromStarter,
+            setScreen: ctx.setScreenFromString,
+            playBattleIntro: ctx.playBattleIntro,
+          },
+          pvp,
+          ui,
+          resetRunRuntimeState: ctx.resetRunRuntimeState,
+        },
+        standardStartDepsArgs: {
+          runtime: {
+            getStarterMaxHp: ctx.getStarterMaxHp,
+            setEnemies: ctx.setEnemies,
+            setCoopActiveSlot: ctx.setCoopActiveSlot,
+            dispatchBattle: ctx.dispatchBattle,
+            appendSessionEvent: ctx.appendSessionEvent,
+            initSession: ctx.initSession,
+            setScreen: ctx.setScreenFromString,
+            startBattle: ctx.startBattle,
+          },
+          pvp,
+          resetRunRuntimeState: ctx.resetRunRuntimeState,
+        },
+        startGameControllerArgs: {
+          sr: ctx.sr,
+          battleMode: ctx.battleMode,
+          pvpStarter2: ctx.pvpStarter2,
+          locale: ctx.locale,
+          localizeStarter,
+          pickPartnerStarter: (mainStarter) => pickPartnerStarter(mainStarter, ctx.pickIndex, ctx.locale),
+          getStarterStageIdx,
+          getStageMaxHp: ctx.getPlayerMaxHp,
+        },
+      },
+      activateQueuedChallenge: ctx.activateQueuedChallenge,
+    }, starterOverride, modeOverride, allyOverride);
+  }, [startGameContextRef]);
   const startGame = useStableCallback(startGameImpl);
 
   const quitGame = useCallback(() => {
@@ -997,65 +1002,46 @@ export function useBattle() {
   const handleFreeze = useStableCallback(handleFreezeImpl);
 
   // --- Player selects a move ---
-  const selectMoveImpl = useCallback((i: number) => {
-    runSelectMoveWithContext({
-      sr,
-      runtime: {
-        timedMode,
-        questionTimeLimitSec: questionTimerSec,
-        questionAllowedOps,
-        diffMods: DIFF_MODS,
-        t,
-        getActingStarter,
-        getMoveDiffLevel: _getMoveDiffLevel,
-        genQuestion: genBattleQuestion,
-        startTimer,
-        markQStart,
-        sfx,
-      },
-      ui: uiRef.current,
-      battleFields: battleFieldSettersRef.current,
-    }, i);
-  }, [
+  const selectMoveContextRef = useBattleStateRef({
     sr,
     timedMode,
     questionTimerSec,
     questionAllowedOps,
     t,
     getActingStarter,
-    _getMoveDiffLevel,
+    getMoveDiffLevel: _getMoveDiffLevel,
     genBattleQuestion,
     startTimer,
     markQStart,
+    sfx,
     uiRef,
     battleFieldSettersRef,
-  ]);
+  });
+  const selectMoveImpl = useCallback((i: number) => {
+    const ctx = selectMoveContextRef.current;
+    runSelectMoveWithContext({
+      sr: ctx.sr,
+      runtime: {
+        timedMode: ctx.timedMode,
+        questionTimeLimitSec: ctx.questionTimerSec,
+        questionAllowedOps: ctx.questionAllowedOps,
+        diffMods: DIFF_MODS,
+        t: ctx.t,
+        getActingStarter: ctx.getActingStarter,
+        getMoveDiffLevel: ctx.getMoveDiffLevel,
+        genQuestion: ctx.genBattleQuestion,
+        startTimer: ctx.startTimer,
+        markQStart: ctx.markQStart,
+        sfx: ctx.sfx,
+      },
+      ui: ctx.uiRef.current,
+      battleFields: ctx.battleFieldSettersRef.current,
+    }, i);
+  }, [selectMoveContextRef]);
   const selectMove = useStableCallback(selectMoveImpl);
 
   // --- Enemy turn logic (reads from stateRef) ---
-  const doEnemyTurnImpl = useCallback(() => {
-    runBattleEnemyTurn({
-      enemyTurnInput: {
-        sr,
-        runtime: {
-          safeTo,
-          rand,
-          randInt,
-          chance,
-          sfx,
-          setScreen: setScreenFromString,
-          t,
-        },
-        battleFields: battleFieldSettersRef.current,
-        ui: uiRef.current,
-        callbacks: {
-          _endSession,
-          handleVictory,
-          handlePlayerPartyKo,
-        },
-      },
-    });
-  }, [
+  const doEnemyTurnContextRef = useBattleStateRef({
     sr,
     safeTo,
     rand,
@@ -1068,67 +1054,36 @@ export function useBattle() {
     _endSession,
     handleVictory,
     handlePlayerPartyKo,
-  ]);
+  });
+  const doEnemyTurnImpl = useCallback(() => {
+    const ctx = doEnemyTurnContextRef.current;
+    runBattleEnemyTurn({
+      enemyTurnInput: {
+        sr: ctx.sr,
+        runtime: {
+          safeTo: ctx.safeTo,
+          rand: ctx.rand,
+          randInt: ctx.randInt,
+          chance: ctx.chance,
+          sfx,
+          setScreen: ctx.setScreenFromString,
+          t: ctx.t,
+        },
+        battleFields: ctx.battleFieldSettersRef.current,
+        ui: ctx.uiRef.current,
+        callbacks: {
+          _endSession: ctx._endSession,
+          handleVictory: ctx.handleVictory,
+          handlePlayerPartyKo: ctx.handlePlayerPartyKo,
+        },
+      },
+    });
+  }, [doEnemyTurnContextRef]);
   const doEnemyTurn = useStableCallback(doEnemyTurnImpl);
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; }, [doEnemyTurn, doEnemyTurnRef]);
 
   // --- Player answers a question ---
-  const onAnsImpl = useCallback((choice: number) => {
-    runAnswerWithContext({
-      answered,
-      setAnswered,
-      clearTimer,
-      pvpAnswerDepsInput: {
-        runtime: {
-          sr,
-          rand,
-          chance,
-          safeTo,
-          sfx,
-          getOtherPvpTurn,
-          setScreen: setScreenFromString,
-          t,
-        },
-        ui: uiRef.current,
-        pvp: pvpStoreRef.current,
-        battleFields: battleFieldSettersRef.current,
-      },
-      playerDepsArgs: {
-        runtime: {
-          sr,
-          safeTo,
-          chance,
-          sfx,
-          getCollectionDamageScale,
-          challengeDamageMult,
-          challengeComboMult,
-          t,
-        },
-        ui: uiRef.current,
-        battleFields: battleFieldSettersRef.current,
-        callbacks: {
-          tryUnlock,
-          frozenR,
-          doEnemyTurn,
-          handleVictory,
-          handleFreeze,
-          _endSession,
-          setScreen: setScreenFromString,
-          handlePlayerPartyKo,
-          runAllySupportTurn,
-          setPendingTextAdvanceAction,
-        },
-      },
-      answerControllerArgsInput: {
-        sr,
-        getActingStarter,
-        logAns,
-        appendSessionEvent,
-        updateAbility: _updateAbility,
-        markCoopRotatePending,
-      },
-    }, choice);
-  }, [
+  const onAnsContextRef = useBattleStateRef({
     answered,
     setAnswered,
     clearTimer,
@@ -1136,12 +1091,15 @@ export function useBattle() {
     rand,
     chance,
     safeTo,
+    getOtherPvpTurn,
     setScreenFromString,
     t,
     uiRef,
     pvpStoreRef,
     battleFieldSettersRef,
     getCollectionDamageScale,
+    challengeDamageMult,
+    challengeComboMult,
     tryUnlock,
     frozenR,
     doEnemyTurn,
@@ -1154,11 +1112,66 @@ export function useBattle() {
     getActingStarter,
     logAns,
     appendSessionEvent,
-    _updateAbility,
+    updateAbility: _updateAbility,
     markCoopRotatePending,
-    challengeComboMult,
-    challengeDamageMult,
-  ]);
+  });
+  const onAnsImpl = useCallback((choice: number) => {
+    const ctx = onAnsContextRef.current;
+    runAnswerWithContext({
+      answered: ctx.answered,
+      setAnswered: ctx.setAnswered,
+      clearTimer: ctx.clearTimer,
+      pvpAnswerDepsInput: {
+        runtime: {
+          sr: ctx.sr,
+          rand: ctx.rand,
+          chance: ctx.chance,
+          safeTo: ctx.safeTo,
+          sfx,
+          getOtherPvpTurn: ctx.getOtherPvpTurn,
+          setScreen: ctx.setScreenFromString,
+          t: ctx.t,
+        },
+        ui: ctx.uiRef.current,
+        pvp: ctx.pvpStoreRef.current,
+        battleFields: ctx.battleFieldSettersRef.current,
+      },
+      playerDepsArgs: {
+        runtime: {
+          sr: ctx.sr,
+          safeTo: ctx.safeTo,
+          chance: ctx.chance,
+          sfx,
+          getCollectionDamageScale: ctx.getCollectionDamageScale,
+          challengeDamageMult: ctx.challengeDamageMult,
+          challengeComboMult: ctx.challengeComboMult,
+          t: ctx.t,
+        },
+        ui: ctx.uiRef.current,
+        battleFields: ctx.battleFieldSettersRef.current,
+        callbacks: {
+          tryUnlock: ctx.tryUnlock,
+          frozenR: ctx.frozenR,
+          doEnemyTurn: ctx.doEnemyTurn,
+          handleVictory: ctx.handleVictory,
+          handleFreeze: ctx.handleFreeze,
+          _endSession: ctx._endSession,
+          setScreen: ctx.setScreenFromString,
+          handlePlayerPartyKo: ctx.handlePlayerPartyKo,
+          runAllySupportTurn: ctx.runAllySupportTurn,
+          setPendingTextAdvanceAction: ctx.setPendingTextAdvanceAction,
+        },
+      },
+      answerControllerArgsInput: {
+        sr: ctx.sr,
+        getActingStarter: ctx.getActingStarter,
+        logAns: ctx.logAns,
+        appendSessionEvent: ctx.appendSessionEvent,
+        updateAbility: ctx.updateAbility,
+        markCoopRotatePending: ctx.markCoopRotatePending,
+      },
+    }, choice);
+  }, [onAnsContextRef]);
   const onAns = useStableCallback(onAnsImpl);
 
   // --- Mid-run save: snapshot state before starting next battle ---
@@ -1243,75 +1256,47 @@ export function useBattle() {
   ]);
 
   // --- Advance from text / victory phase ---
-  const continueFromVictoryImpl = useCallback(() => {
-    runContinueWithContext({
-      continueFromVictoryInput: {
-        sr,
-        enemiesLength: enemies.length,
-        runtime: {
-          setScreen: setScreenFromString,
-          dispatchBattle,
-          localizeEnemy,
-          locale,
-          getStageMaxHp: getPlayerMaxHp,
-          getStarterMaxHp,
-          t,
-        },
-        battleFields: battleFieldSettersRef.current,
-        ui: uiRef.current,
-        callbacks: {
-          finishGame: _finishGame,
-          startBattle: startBattleWithSave,
-        },
-      },
-    });
-  }, [
+  const continueFromVictoryContextRef = useBattleStateRef({
     sr,
-    enemies.length,
+    enemiesLength: enemies.length,
     setScreenFromString,
     dispatchBattle,
     locale,
     getPlayerMaxHp,
+    getStarterMaxHp,
     t,
     battleFieldSettersRef,
     uiRef,
     _finishGame,
     startBattleWithSave,
-  ]);
+  });
+  const continueFromVictoryImpl = useCallback(() => {
+    const ctx = continueFromVictoryContextRef.current;
+    runContinueWithContext({
+      continueFromVictoryInput: {
+        sr: ctx.sr,
+        enemiesLength: ctx.enemiesLength,
+        runtime: {
+          setScreen: ctx.setScreenFromString,
+          dispatchBattle: ctx.dispatchBattle,
+          localizeEnemy,
+          locale: ctx.locale,
+          getStageMaxHp: ctx.getPlayerMaxHp,
+          getStarterMaxHp: ctx.getStarterMaxHp,
+          t: ctx.t,
+        },
+        battleFields: ctx.battleFieldSettersRef.current,
+        ui: ctx.uiRef.current,
+        callbacks: {
+          finishGame: ctx._finishGame,
+          startBattle: ctx.startBattleWithSave,
+        },
+      },
+    });
+  }, [continueFromVictoryContextRef]);
   const continueFromVictory = useStableCallback(continueFromVictoryImpl);
 
-  const advanceImpl = useCallback(() => {
-    runAdvanceWithContext({
-      phase,
-      sr,
-      setPhase,
-      setBText,
-      continueFromVictory,
-      consumePendingTextAdvanceAction,
-      advancePvpDepsInput: {
-        runtime: {
-          sr,
-          safeTo,
-          getOtherPvpTurn,
-          getPvpTurnName,
-          setScreen: setScreenFromString,
-          t,
-        },
-        ui: uiRef.current,
-        pvp: pvpStoreRef.current,
-        battleFields: battleFieldSettersRef.current,
-      },
-        pendingEvolutionInput: {
-          pendingEvolveRef: pendingEvolve,
-          battleFields: battleFieldSettersRef.current,
-          setScreen,
-          tryUnlock,
-          getStageMaxHp: getPlayerMaxHp,
-          getStarterMaxHp,
-          maxMoveLvl: MAX_MOVE_LVL,
-        },
-    });
-  }, [
+  const advanceContextRef = useBattleStateRef({
     phase,
     sr,
     setPhase,
@@ -1319,6 +1304,7 @@ export function useBattle() {
     continueFromVictory,
     consumePendingTextAdvanceAction,
     safeTo,
+    getOtherPvpTurn,
     getPvpTurnName,
     setScreenFromString,
     t,
@@ -1329,7 +1315,41 @@ export function useBattle() {
     setScreen,
     tryUnlock,
     getPlayerMaxHp,
-  ]);
+    getStarterMaxHp,
+  });
+  const advanceImpl = useCallback(() => {
+    const ctx = advanceContextRef.current;
+    runAdvanceWithContext({
+      phase: ctx.phase,
+      sr: ctx.sr,
+      setPhase: ctx.setPhase,
+      setBText: ctx.setBText,
+      continueFromVictory: ctx.continueFromVictory,
+      consumePendingTextAdvanceAction: ctx.consumePendingTextAdvanceAction,
+      advancePvpDepsInput: {
+        runtime: {
+          sr: ctx.sr,
+          safeTo: ctx.safeTo,
+          getOtherPvpTurn: ctx.getOtherPvpTurn,
+          getPvpTurnName: ctx.getPvpTurnName,
+          setScreen: ctx.setScreenFromString,
+          t: ctx.t,
+        },
+        ui: ctx.uiRef.current,
+        pvp: ctx.pvpStoreRef.current,
+        battleFields: ctx.battleFieldSettersRef.current,
+      },
+        pendingEvolutionInput: {
+          pendingEvolveRef: ctx.pendingEvolve,
+          battleFields: ctx.battleFieldSettersRef.current,
+          setScreen: ctx.setScreen,
+          tryUnlock: ctx.tryUnlock,
+          getStageMaxHp: ctx.getPlayerMaxHp,
+          getStarterMaxHp: ctx.getStarterMaxHp,
+          maxMoveLvl: MAX_MOVE_LVL,
+        },
+    });
+  }, [advanceContextRef]);
   const advance = useStableCallback(advanceImpl);
 
   // --- Continue from evolve screen → start next battle ---

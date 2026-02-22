@@ -4,25 +4,63 @@ import { resolvePvpTurnStartStatus } from './pvpStatusResolver.ts';
 import { noop } from './__testStubs.js';
 
 function createState(overrides = {}) {
-  return {
-    pvpTurn: 'p1',
+  const base = {
     pHp: 100,
     pvpHp2: 100,
-    pvpBurnP1: 0,
-    pvpBurnP2: 0,
-    pvpParalyzeP1: false,
-    pvpParalyzeP2: false,
-    pvpFreezeP1: false,
-    pvpFreezeP2: false,
     phase: 'text',
     screen: 'battle',
-    pvpWinner: null,
+    pvpState: {
+      turn: 'p1',
+      winner: null,
+      actionCount: 0,
+      p1: {
+        charge: 0,
+        burn: 0,
+        freeze: false,
+        static: 0,
+        paralyze: false,
+        combo: 0,
+        specDef: false,
+      },
+      p2: {
+        charge: 0,
+        burn: 0,
+        freeze: false,
+        static: 0,
+        paralyze: false,
+        combo: 0,
+        specDef: false,
+      },
+    },
+  };
+
+  const overrideState = overrides.pvpState || {};
+  return {
+    ...base,
     ...overrides,
+    pvpState: {
+      ...base.pvpState,
+      ...overrideState,
+      p1: {
+        ...base.pvpState.p1,
+        ...(overrideState.p1 || {}),
+      },
+      p2: {
+        ...base.pvpState.p2,
+        ...(overrideState.p2 || {}),
+      },
+    },
   };
 }
 
 test('resolvePvpTurnStartStatus applies lethal burn and declares winner', () => {
-  const state = createState({ pvpTurn: 'p1', pHp: 6, pvpBurnP1: 2 });
+  const state = createState({
+    pHp: 6,
+    pvpState: {
+      turn: 'p1',
+      p1: { burn: 2 },
+    },
+  });
   let hp = 6;
   let winner = null;
   let screen = 'battle';
@@ -58,7 +96,12 @@ test('resolvePvpTurnStartStatus applies lethal burn and declares winner', () => 
 });
 
 test('resolvePvpTurnStartStatus handles paralyze skip and turn swap', () => {
-  const state = createState({ pvpTurn: 'p2', pvpParalyzeP2: true });
+  const state = createState({
+    pvpState: {
+      turn: 'p2',
+      p2: { paralyze: true },
+    },
+  });
   let turn = 'p2';
   let phase = '';
 

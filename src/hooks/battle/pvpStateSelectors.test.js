@@ -9,10 +9,6 @@ import {
 
 test('pvp selectors prioritize structured pvpState values', () => {
   const state = {
-    pvpTurn: 'p1',
-    pvpWinner: null,
-    pvpActionCount: 0,
-    pvpChargeP2: 1,
     pvpState: {
       turn: 'p2',
       winner: 'p1',
@@ -28,43 +24,24 @@ test('pvp selectors prioritize structured pvpState values', () => {
   assert.equal(getResolvedPvpCombatant(state, 'p2').freeze, true);
 });
 
-test('pvp selectors fall back to legacy flat fields', () => {
-  const state = {
-    pvpTurn: 'p2',
-    pvpWinner: 'p2',
-    pvpActionCount: 7,
-    pvpChargeP2: 2,
-    pvpBurnP2: 3,
-    pvpFreezeP2: false,
-    pvpStaticP2: 1,
-    pvpParalyzeP2: true,
-    pvpComboP2: 5,
-    pvpSpecDefP2: true,
-  };
-  assert.equal(getResolvedPvpTurn(state), 'p2');
-  assert.equal(getResolvedPvpWinner(state), 'p2');
-  assert.equal(getResolvedPvpActionCount(state), 7);
+test('pvp selectors default to safe values when pvpState is missing', () => {
+  const state = {};
+  assert.equal(getResolvedPvpTurn(state), 'p1');
+  assert.equal(getResolvedPvpWinner(state), null);
+  assert.equal(getResolvedPvpActionCount(state), 0);
   assert.deepEqual(getResolvedPvpCombatant(state, 'p2'), {
-    charge: 2,
-    burn: 3,
+    charge: 0,
+    burn: 0,
     freeze: false,
-    static: 1,
-    paralyze: true,
-    combo: 5,
-    specDef: true,
+    static: 0,
+    paralyze: false,
+    combo: 0,
+    specDef: false,
   });
 });
 
-test('pvp selectors merge partial structured state with flat fallbacks', () => {
+test('pvp selectors default missing combatant fields to safe values', () => {
   const state = {
-    pvpTurn: 'p1',
-    pvpChargeP1: 1,
-    pvpBurnP1: 2,
-    pvpFreezeP1: false,
-    pvpStaticP1: 3,
-    pvpParalyzeP1: false,
-    pvpComboP1: 4,
-    pvpSpecDefP1: false,
     pvpState: {
       p1: {
         charge: 9,
@@ -74,9 +51,9 @@ test('pvp selectors merge partial structured state with flat fallbacks', () => {
   };
   assert.deepEqual(getResolvedPvpCombatant(state, 'p1'), {
     charge: 9,
-    burn: 2,
+    burn: 0,
     freeze: false,
-    static: 3,
+    static: 0,
     paralyze: false,
     combo: 8,
     specDef: false,

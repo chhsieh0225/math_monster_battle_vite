@@ -54,10 +54,10 @@ test('applyCorrectTurnProgress unlocks spec-def when combo reaches trigger', () 
   const unlocked = applyCorrectTurnProgress({
     currentTurn: 'p1',
     state: {
-      pvpSpecDefP1: false,
-      pvpSpecDefP2: false,
-      pvpComboP1: 1,
-      pvpComboP2: 0,
+      pvpState: {
+        p1: { combo: 1, specDef: false },
+        p2: { combo: 0, specDef: false },
+      },
     },
     pvpSpecDefTrigger: 2,
     setPvpChargeP1: (value) => { chargeP1 = typeof value === 'function' ? value(chargeP1) : value; },
@@ -81,12 +81,9 @@ test('applyCorrectTurnProgress prefers structured pvpState combo over flat field
   const unlocked = applyCorrectTurnProgress({
     currentTurn: 'p1',
     state: {
-      pvpSpecDefP1: false,
-      pvpSpecDefP2: false,
-      pvpComboP1: 0,
-      pvpComboP2: 0,
       pvpState: {
         p1: { combo: 2, specDef: false },
+        p2: { combo: 0, specDef: false },
       },
     },
     pvpSpecDefTrigger: 3,

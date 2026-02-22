@@ -20,39 +20,22 @@ type UsePvpStateResult = {
   setPvpStarter2: (value: StarterLite | ((prev: StarterLite) => StarterLite)) => void;
   pvpHp2: number;
   setPvpHp2: (value: number | ((prev: number) => number)) => void;
-  pvpTurn: PvpTurn;
   setPvpTurn: (value: PvpTurn | ((prev: PvpTurn) => PvpTurn)) => void;
-  pvpWinner: PvpTurn | null;
   setPvpWinner: (value: PvpTurn | null | ((prev: PvpTurn | null) => PvpTurn | null)) => void;
-  pvpChargeP1: number;
   setPvpChargeP1: (value: number | ((prev: number) => number)) => void;
-  pvpChargeP2: number;
   setPvpChargeP2: (value: number | ((prev: number) => number)) => void;
-  pvpActionCount: number;
   setPvpActionCount: (value: number | ((prev: number) => number)) => void;
-  pvpBurnP1: number;
   setPvpBurnP1: (value: number | ((prev: number) => number)) => void;
-  pvpBurnP2: number;
   setPvpBurnP2: (value: number | ((prev: number) => number)) => void;
-  pvpFreezeP1: boolean;
   setPvpFreezeP1: (value: boolean | ((prev: boolean) => boolean)) => void;
-  pvpFreezeP2: boolean;
   setPvpFreezeP2: (value: boolean | ((prev: boolean) => boolean)) => void;
-  pvpStaticP1: number;
   setPvpStaticP1: (value: number | ((prev: number) => number)) => void;
-  pvpStaticP2: number;
   setPvpStaticP2: (value: number | ((prev: number) => number)) => void;
-  pvpParalyzeP1: boolean;
   setPvpParalyzeP1: (value: boolean | ((prev: boolean) => boolean)) => void;
-  pvpParalyzeP2: boolean;
   setPvpParalyzeP2: (value: boolean | ((prev: boolean) => boolean)) => void;
-  pvpComboP1: number;
   setPvpComboP1: (value: number | ((prev: number) => number)) => void;
-  pvpComboP2: number;
   setPvpComboP2: (value: number | ((prev: number) => number)) => void;
-  pvpSpecDefP1: boolean;
   setPvpSpecDefP1: (value: boolean | ((prev: boolean) => boolean)) => void;
-  pvpSpecDefP2: boolean;
   setPvpSpecDefP2: (value: boolean | ((prev: boolean) => boolean)) => void;
   resetPvpRuntime: () => void;
 };
@@ -245,24 +228,6 @@ export function usePvpState(): UsePvpStateResult {
     }));
   }, []);
 
-  const pvpTurn = pvpState.turn;
-  const pvpWinner = pvpState.winner;
-  const pvpActionCount = pvpState.actionCount;
-  const pvpChargeP1 = pvpState.p1.charge;
-  const pvpChargeP2 = pvpState.p2.charge;
-  const pvpBurnP1 = pvpState.p1.burn;
-  const pvpBurnP2 = pvpState.p2.burn;
-  const pvpFreezeP1 = pvpState.p1.freeze;
-  const pvpFreezeP2 = pvpState.p2.freeze;
-  const pvpStaticP1 = pvpState.p1.static;
-  const pvpStaticP2 = pvpState.p2.static;
-  const pvpParalyzeP1 = pvpState.p1.paralyze;
-  const pvpParalyzeP2 = pvpState.p2.paralyze;
-  const pvpComboP1 = pvpState.p1.combo;
-  const pvpComboP2 = pvpState.p2.combo;
-  const pvpSpecDefP1 = pvpState.p1.specDef;
-  const pvpSpecDefP2 = pvpState.p2.specDef;
-
   const resetPvpRuntime = useCallback(() => {
     setPvpState((prev) => ({
       ...prev,
@@ -295,39 +260,22 @@ export function usePvpState(): UsePvpStateResult {
     setPvpStarter2,
     pvpHp2,
     setPvpHp2,
-    pvpTurn,
     setPvpTurn,
-    pvpWinner,
     setPvpWinner,
-    pvpChargeP1,
     setPvpChargeP1,
-    pvpChargeP2,
     setPvpChargeP2,
-    pvpActionCount,
     setPvpActionCount,
-    pvpBurnP1,
     setPvpBurnP1,
-    pvpBurnP2,
     setPvpBurnP2,
-    pvpFreezeP1,
     setPvpFreezeP1,
-    pvpFreezeP2,
     setPvpFreezeP2,
-    pvpStaticP1,
     setPvpStaticP1,
-    pvpStaticP2,
     setPvpStaticP2,
-    pvpParalyzeP1,
     setPvpParalyzeP1,
-    pvpParalyzeP2,
     setPvpParalyzeP2,
-    pvpComboP1,
     setPvpComboP1,
-    pvpComboP2,
     setPvpComboP2,
-    pvpSpecDefP1,
     setPvpSpecDefP1,
-    pvpSpecDefP2,
     setPvpSpecDefP2,
     resetPvpRuntime,
   };

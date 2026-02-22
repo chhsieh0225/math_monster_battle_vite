@@ -23,7 +23,7 @@ test('getPvpTurnName uses starter names and fallback labels', () => {
 test('getActingStarter resolves by pvp turn in pvp mode', () => {
   const state = {
     battleMode: 'pvp',
-    pvpTurn: 'p2',
+    pvpState: { turn: 'p2' },
     starter: { name: '火狐' },
     pvpStarter2: { name: '水靈' },
   };

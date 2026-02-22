@@ -45,6 +45,216 @@ export type BattleLayoutConfig = {
   subComp: number;
 };
 
+export type BattleDeviceTier = 'phone' | 'tablet' | 'laptop';
+
+export const BATTLE_ARENA_VIEWPORT = {
+  width: 390,
+  height: 550,
+  minWidth: 280,
+} as const;
+
+type DualityKey = 'single' | 'dual';
+
+type BattleLaneTuningInput = {
+  arenaWidthPx: number;
+  deviceTier: BattleDeviceTier;
+  hasDualUnits: boolean;
+  isCoopBattle: boolean;
+  showAllySub: boolean;
+  showEnemySub: boolean;
+  isWidePlayerMainSprite: boolean;
+  isWidePlayerSubSprite: boolean;
+  isWideEnemyMainSprite: boolean;
+  isWideEnemySubSprite: boolean;
+};
+
+export type BattleLaneTuning = {
+  sepPct: number;
+  safeGapPct: number;
+  minPlayerLeftPct: number;
+  minEnemyRightPct: number;
+  allyGapPx: number;
+  widePlayerMainScaleCap: number;
+  widePlayerSubScaleCap: number;
+  wideEnemyMainScaleCap: number;
+  wideEnemySubScaleCap: number;
+  coopGlobalScale: number;
+  wideMainBackShiftPct: number;
+  wideSubBackShiftPct: number;
+  wideEnemyMainRetreatPct: number;
+  wideEnemySubRetreatPct: number;
+  allyOverlapRatio: number;
+};
+
+const DEVICE_TIER_THRESHOLD = {
+  phoneMaxWidth: 520,
+  tabletMaxWidth: 980,
+} as const;
+
+const LANE_TUNING_CONFIG = {
+  sepPct: { single: 50, dual: 42 },
+  safeGapPct: {
+    phone: { single: 3.4, dual: 3.8 },
+    tablet: { single: 2.9, dual: 3.2 },
+    laptop: { single: 2.6, dual: 2.8 },
+  },
+  laneEdgePct: {
+    phone: 0.7,
+    tablet: 0.9,
+    laptop: 1.1,
+  },
+  allyGap: {
+    minPx: 8,
+    widthRatio: 0.018,
+  },
+  coopGlobalScale: {
+    phone: 0.9,
+    tablet: 0.96,
+    laptop: 1,
+  },
+  wideScaleCap: {
+    playerMain: {
+      phone: { single: 0.9, dual: 0.82 },
+      tablet: { single: 0.96, dual: 0.9 },
+      laptop: { single: 1, dual: 0.96 },
+    },
+    playerSub: {
+      phone: 0.72,
+      tablet: 0.8,
+      laptop: 0.88,
+    },
+    enemyMain: {
+      phone: { single: 0.9, dual: 0.84 },
+      tablet: { single: 0.96, dual: 0.9 },
+      laptop: { single: 1, dual: 1 },
+    },
+    enemySub: {
+      phone: 0.76,
+      tablet: 0.84,
+      laptop: 0.9,
+    },
+  },
+  wideShiftPct: {
+    playerMainBack: {
+      phone: { single: 1.8, dual: 2.4 },
+      tablet: { single: 1.1, dual: 1.5 },
+      laptop: { single: 0.6, dual: 0.9 },
+    },
+    playerSubBack: {
+      phone: 2.6,
+      tablet: 1.8,
+      laptop: 1.1,
+    },
+    enemyMainRetreat: {
+      phone: { single: 1.6, dual: 2.1 },
+      tablet: { single: 1.0, dual: 1.4 },
+      laptop: { single: 0.6, dual: 0.8 },
+    },
+    enemySubRetreat: {
+      phone: 1.4,
+      tablet: 1.0,
+      laptop: 0.7,
+    },
+  },
+  allyOverlapRatio: {
+    phone: {
+      normal: 0.14,
+      wide: 0.28,
+    },
+    tablet: {
+      normal: 0,
+      wide: 0,
+    },
+    laptop: {
+      normal: 0,
+      wide: 0,
+    },
+  },
+} as const;
+
+function dualityKey(hasDualUnits: boolean): DualityKey {
+  return hasDualUnits ? 'dual' : 'single';
+}
+
+export function resolveBattleDeviceTier(arenaWidth: number): BattleDeviceTier {
+  if (arenaWidth <= DEVICE_TIER_THRESHOLD.phoneMaxWidth) return 'phone';
+  if (arenaWidth <= DEVICE_TIER_THRESHOLD.tabletMaxWidth) return 'tablet';
+  return 'laptop';
+}
+
+export function resolveBattleLaneTuning({
+  arenaWidthPx,
+  deviceTier,
+  hasDualUnits,
+  isCoopBattle,
+  showAllySub,
+  showEnemySub,
+  isWidePlayerMainSprite,
+  isWidePlayerSubSprite,
+  isWideEnemyMainSprite,
+  isWideEnemySubSprite,
+}: BattleLaneTuningInput): BattleLaneTuning {
+  const dualKey = dualityKey(hasDualUnits);
+  const sepPct = LANE_TUNING_CONFIG.sepPct[dualKey];
+  const safeGapPct = LANE_TUNING_CONFIG.safeGapPct[deviceTier][dualKey];
+  const minPlayerLeftPct = LANE_TUNING_CONFIG.laneEdgePct[deviceTier];
+  const minEnemyRightPct = LANE_TUNING_CONFIG.laneEdgePct[deviceTier];
+  const allyGapPx = showAllySub
+    ? Math.max(
+      LANE_TUNING_CONFIG.allyGap.minPx,
+      arenaWidthPx * LANE_TUNING_CONFIG.allyGap.widthRatio,
+    )
+    : 0;
+  const widePlayerMainScaleCap = isWidePlayerMainSprite
+    ? LANE_TUNING_CONFIG.wideScaleCap.playerMain[deviceTier][dualKey]
+    : 1;
+  const widePlayerSubScaleCap = showAllySub && isWidePlayerSubSprite
+    ? LANE_TUNING_CONFIG.wideScaleCap.playerSub[deviceTier]
+    : 1;
+  const wideEnemyMainScaleCap = isWideEnemyMainSprite
+    ? LANE_TUNING_CONFIG.wideScaleCap.enemyMain[deviceTier][dualKey]
+    : 1;
+  const wideEnemySubScaleCap = showEnemySub && isWideEnemySubSprite
+    ? LANE_TUNING_CONFIG.wideScaleCap.enemySub[deviceTier]
+    : 1;
+  const coopGlobalScale = isCoopBattle
+    ? LANE_TUNING_CONFIG.coopGlobalScale[deviceTier]
+    : 1;
+  const wideMainBackShiftPct = isWidePlayerMainSprite
+    ? LANE_TUNING_CONFIG.wideShiftPct.playerMainBack[deviceTier][dualKey]
+    : 0;
+  const wideSubBackShiftPct = showAllySub && isWidePlayerSubSprite
+    ? LANE_TUNING_CONFIG.wideShiftPct.playerSubBack[deviceTier]
+    : 0;
+  const wideEnemyMainRetreatPct = isWideEnemyMainSprite
+    ? LANE_TUNING_CONFIG.wideShiftPct.enemyMainRetreat[deviceTier][dualKey]
+    : 0;
+  const wideEnemySubRetreatPct = showEnemySub && isWideEnemySubSprite
+    ? LANE_TUNING_CONFIG.wideShiftPct.enemySubRetreat[deviceTier]
+    : 0;
+  const allyOverlapRatio = LANE_TUNING_CONFIG.allyOverlapRatio[deviceTier][
+    (isWidePlayerMainSprite || isWidePlayerSubSprite) ? 'wide' : 'normal'
+  ];
+
+  return {
+    sepPct,
+    safeGapPct,
+    minPlayerLeftPct,
+    minEnemyRightPct,
+    allyGapPx,
+    widePlayerMainScaleCap,
+    widePlayerSubScaleCap,
+    wideEnemyMainScaleCap,
+    wideEnemySubScaleCap,
+    coopGlobalScale,
+    wideMainBackShiftPct,
+    wideSubBackShiftPct,
+    wideEnemyMainRetreatPct,
+    wideEnemySubRetreatPct,
+    allyOverlapRatio,
+  };
+}
+
 function normalizeEnemyVisualId(enemyId?: string | null): string {
   if (!enemyId) return '';
   return enemyId.startsWith('pvp_') ? enemyId.slice(4) : enemyId;

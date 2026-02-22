@@ -30,6 +30,10 @@ import { BossVictoryOverlay } from './battle/BossVictoryOverlay.tsx';
 import { updateBattleFxTargets, resetBattleFxTargets } from '../../hooks/battle/battleFxTargets';
 import type { BattleFxTargets } from '../../types/battleFx';
 import { DEFAULT_FX_TARGETS } from '../../types/battleFx';
+import {
+  resolveBattleDeviceTier,
+  resolveBattleLaneTuning,
+} from '../../utils/battleLayout.ts';
 import './BattleScreen.css';
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
 
@@ -43,16 +47,6 @@ function normalizeBossVisualId(id?: string | null): string {
 
 function clampNumber(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
-}
-
-type BattleDeviceTier = 'phone' | 'tablet' | 'laptop';
-const LOGICAL_ARENA_WIDTH = 390;
-const LOGICAL_ARENA_HEIGHT = 550;
-
-function resolveBattleDeviceTier(arenaWidth: number): BattleDeviceTier {
-  if (arenaWidth <= 520) return 'phone';
-  if (arenaWidth <= 980) return 'tablet';
-  return 'laptop';
 }
 
 type SceneEnemyRef = {
@@ -104,13 +98,11 @@ function BattleScreenComponent({
     enabled: showHeavyFx,
   });
   const battleRootRef = useRef<HTMLDivElement | null>(null);
-  const battleArenaShellRef = useRef<HTMLDivElement | null>(null);
   const battleArenaRef = useRef<HTMLDivElement | null>(null);
   const enemySpriteRef = useRef<HTMLDivElement | null>(null);
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
   const playerSubSpriteRef = useRef<HTMLDivElement | null>(null);
-  const [arenaWidth, setArenaWidth] = useState(LOGICAL_ARENA_WIDTH);
-  const [arenaViewportScale, setArenaViewportScale] = useState(1);
+  const [arenaWidth, setArenaWidth] = useState(390);
   const arenaScale = useBattleArenaScale({
     arenaRef: battleArenaRef,
     enabled: S.screen === 'battle',
@@ -118,11 +110,6 @@ function BattleScreenComponent({
   const arenaScaleStyle = useMemo(() => ({
     '--battle-device-scale': arenaScale.toFixed(3),
   }) as BattleCssVars, [arenaScale]);
-  const arenaViewportStyle = useMemo(() => ({
-    '--battle-stage-width': `${LOGICAL_ARENA_WIDTH}px`,
-    '--battle-stage-height': `${LOGICAL_ARENA_HEIGHT}px`,
-    '--battle-stage-scale': arenaViewportScale.toFixed(4),
-  }) as BattleCssVars, [arenaViewportScale]);
   useBattleParallax({
     hostRef: battleArenaRef,
     // Disable on compact/mobile layout to reduce input/render jitter on lower-end devices.
@@ -130,27 +117,13 @@ function BattleScreenComponent({
   });
   useLayoutEffect(() => {
     if (S.screen !== 'battle') return;
-    const arenaShell = battleArenaShellRef.current;
-    if (!arenaShell) return;
+    const arena = battleArenaRef.current;
+    if (!arena) return;
 
     const sync = () => {
-      const rect = arenaShell.getBoundingClientRect();
-      const shellWidth = rect.width;
-      const shellHeight = rect.height;
-      if (
-        !Number.isFinite(shellWidth)
-        || !Number.isFinite(shellHeight)
-        || shellWidth <= 0
-        || shellHeight <= 0
-      ) return;
-      const nextScale = clampNumber(
-        Math.min(shellWidth / LOGICAL_ARENA_WIDTH, shellHeight / LOGICAL_ARENA_HEIGHT),
-        0.45,
-        3,
-      );
-      const nextArenaWidth = LOGICAL_ARENA_WIDTH * nextScale;
-      setArenaViewportScale((prev) => (Math.abs(prev - nextScale) > 0.001 ? nextScale : prev));
-      setArenaWidth((prev) => (Math.abs(prev - nextArenaWidth) > 1 ? nextArenaWidth : prev));
+      const width = arena.getBoundingClientRect().width;
+      if (!Number.isFinite(width) || width <= 0) return;
+      setArenaWidth((prev) => (Math.abs(prev - width) > 1 ? width : prev));
     };
     sync();
 
@@ -164,7 +137,7 @@ function BattleScreenComponent({
     let observer: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
       observer = new ResizeObserver(scheduleSync);
-      observer.observe(arenaShell);
+      observer.observe(arena);
     }
     return () => {
       cancelAnimationFrame(rafId);
@@ -528,23 +501,31 @@ function BattleScreenComponent({
     // across phone/tablet/laptop without hardcoded per-device offsets.
     const arenaWidthPx = Math.max(280, arenaWidth || 390);
     const deviceTier = resolveBattleDeviceTier(arenaWidthPx);
-    const sepPct = hasDualUnits ? 42 : 50;
-    const safeGapPct = deviceTier === 'phone'
-      ? (hasDualUnits ? 3.8 : 3.4)
-      : deviceTier === 'tablet'
-        ? (hasDualUnits ? 3.2 : 2.9)
-        : (hasDualUnits ? 2.8 : 2.6);
+    const laneTuning = resolveBattleLaneTuning({
+      arenaWidthPx,
+      deviceTier,
+      hasDualUnits,
+      isCoopBattle,
+      showAllySub,
+      showEnemySub,
+      isWidePlayerMainSprite,
+      isWidePlayerSubSprite,
+      isWideEnemyMainSprite,
+      isWideEnemySubSprite,
+    });
+    const sepPct = laneTuning.sepPct;
+    const safeGapPct = laneTuning.safeGapPct;
     const sepPx = arenaWidthPx * sepPct / 100;
     const safeGapPx = arenaWidthPx * safeGapPct / 100;
-    const minPlayerLeftPct = deviceTier === 'phone' ? 0.7 : deviceTier === 'tablet' ? 0.9 : 1.1;
-    const minEnemyRightPct = deviceTier === 'phone' ? 0.7 : deviceTier === 'tablet' ? 0.9 : 1.1;
+    const minPlayerLeftPct = laneTuning.minPlayerLeftPct;
+    const minEnemyRightPct = laneTuning.minEnemyRightPct;
     const minPlayerLeftPx = arenaWidthPx * minPlayerLeftPct / 100;
     const minEnemyRightPx = arenaWidthPx * minEnemyRightPct / 100;
     const playerLaneRightPx = sepPx - safeGapPx;
     const enemyLaneLeftPx = sepPx + safeGapPx;
     const playerLaneWidthPx = Math.max(24, playerLaneRightPx - minPlayerLeftPx);
     const enemyLaneWidthPx = Math.max(24, arenaWidthPx - minEnemyRightPx - enemyLaneLeftPx);
-    const allyGapPx = showAllySub ? Math.max(8, arenaWidthPx * 0.018) : 0;
+    const allyGapPx = laneTuning.allyGapPx;
 
     // When two allies share one lane on small phones, shrink both together
     // so they fit in-lane before applying positional clamps.
@@ -552,31 +533,13 @@ function BattleScreenComponent({
       ? mainPlayerSize + subPlayerSize + allyGapPx
       : mainPlayerSize;
     const playerLaneScale = Math.min(1, playerLaneWidthPx / Math.max(1, playerTotalWidthPx));
-    const widePlayerMainScaleCap = isWidePlayerMainSprite
-      ? (deviceTier === 'phone'
-        ? (hasDualUnits ? 0.82 : 0.9)
-        : deviceTier === 'tablet'
-          ? (hasDualUnits ? 0.9 : 0.96)
-          : (hasDualUnits ? 0.96 : 1))
-      : 1;
-    const widePlayerSubScaleCap = showAllySub && isWidePlayerSubSprite
-      ? (deviceTier === 'phone' ? 0.72 : deviceTier === 'tablet' ? 0.8 : 0.88)
-      : 1;
-    const wideEnemyMainScaleCap = isWideEnemyMainSprite
-      ? (deviceTier === 'phone'
-        ? (hasDualUnits ? 0.84 : 0.9)
-        : deviceTier === 'tablet'
-          ? (hasDualUnits ? 0.9 : 0.96)
-          : 1)
-      : 1;
-    const wideEnemySubScaleCap = isWideEnemySubSprite
-      ? (deviceTier === 'phone' ? 0.76 : deviceTier === 'tablet' ? 0.84 : 0.9)
-      : 1;
+    const widePlayerMainScaleCap = laneTuning.widePlayerMainScaleCap;
+    const widePlayerSubScaleCap = laneTuning.widePlayerSubScaleCap;
+    const wideEnemyMainScaleCap = laneTuning.wideEnemyMainScaleCap;
+    const wideEnemySubScaleCap = laneTuning.wideEnemySubScaleCap;
     // Co-op readability scaling by device:
     // phone: slightly smaller, tablet: tiny reduction, laptop: unchanged.
-    const coopGlobalScale = isCoopBattle
-      ? (deviceTier === 'phone' ? 0.9 : deviceTier === 'tablet' ? 0.96 : 1)
-      : 1;
+    const coopGlobalScale = laneTuning.coopGlobalScale;
     const basePlayerMainScale = Math.min(playerLaneScale, widePlayerMainScaleCap);
     const basePlayerSubScale = showAllySub
       ? Math.min(playerLaneScale, widePlayerSubScaleCap)
@@ -610,26 +573,10 @@ function BattleScreenComponent({
       return clampNumber(rightPx, minEnemyRightPx, Math.max(minEnemyRightPx, maxRightPx));
     };
 
-    const wideMainBackShiftPct = isWidePlayerMainSprite
-      ? (deviceTier === 'phone'
-        ? (hasDualUnits ? 2.4 : 1.8)
-        : deviceTier === 'tablet'
-          ? (hasDualUnits ? 1.5 : 1.1)
-          : (hasDualUnits ? 0.9 : 0.6))
-      : 0;
-    const wideSubBackShiftPct = showAllySub && isWidePlayerSubSprite
-      ? (deviceTier === 'phone' ? 2.6 : deviceTier === 'tablet' ? 1.8 : 1.1)
-      : 0;
-    const wideEnemyMainRetreatPct = isWideEnemyMainSprite
-      ? (deviceTier === 'phone'
-        ? (hasDualUnits ? 2.1 : 1.6)
-        : deviceTier === 'tablet'
-          ? (hasDualUnits ? 1.4 : 1.0)
-          : (hasDualUnits ? 0.8 : 0.6))
-      : 0;
-    const wideEnemySubRetreatPct = showEnemySub && isWideEnemySubSprite
-      ? (deviceTier === 'phone' ? 1.4 : deviceTier === 'tablet' ? 1.0 : 0.7)
-      : 0;
+    const wideMainBackShiftPct = laneTuning.wideMainBackShiftPct;
+    const wideSubBackShiftPct = laneTuning.wideSubBackShiftPct;
+    const wideEnemyMainRetreatPct = laneTuning.wideEnemyMainRetreatPct;
+    const wideEnemySubRetreatPct = laneTuning.wideEnemySubRetreatPct;
 
     let resolvedPlayerMainLeftPx = clampPlayerLeftPx(
       (playerMainLeftPct - wideMainBackShiftPct) * arenaWidthPx / 100,
@@ -642,9 +589,7 @@ function BattleScreenComponent({
     if (showAllySub) {
       // On narrow phones, permit a small ally overlap so wide sprites can stay
       // farther from the enemy lane after main/sub swap without hard clipping.
-      const allowAllyOverlapPx = deviceTier === 'phone'
-        ? Math.min(playerMainWidthPx, playerSubWidthPx) * ((isWidePlayerMainSprite || isWidePlayerSubSprite) ? 0.28 : 0.14)
-        : 0;
+      const allowAllyOverlapPx = Math.min(playerMainWidthPx, playerSubWidthPx) * laneTuning.allyOverlapRatio;
       const requiredSeparationPx = Math.max(0, playerMainWidthPx + allyGapPx - allowAllyOverlapPx);
       const maxSubLeftPx = Math.max(minPlayerLeftPx, playerLaneRightPx - playerSubWidthPx);
       const minSubLeftPxFromMain = resolvedPlayerMainLeftPx + requiredSeparationPx;
@@ -1042,124 +987,120 @@ function BattleScreenComponent({
       />
 
       {/* ═══ Battle arena ═══ */}
-      <div className="battle-arena-shell" ref={battleArenaShellRef}>
-        <div className="battle-arena-viewport" style={arenaViewportStyle}>
-          <div className="battle-arena" ref={battleArenaRef} style={arenaScaleStyle}>
-            <BattleSceneLayers
-              showHeavyFx={showHeavyFx}
-              bgStyle={sceneBgStyle}
-              skyStyle={sceneSkyStyle}
-              groundStyle={sceneGroundStyle}
-              Deco={scene.Deco}
-            />
-            <BattleWeatherLayer
-              sceneType={sceneKey}
-              seed={weatherSeed}
-              enabled={showHeavyFx && !S.gamePaused}
-              reduced={UX.compactUI || UX.autoLowEnd}
-            />
+      <div className="battle-arena" ref={battleArenaRef} style={arenaScaleStyle}>
+        <BattleSceneLayers
+          showHeavyFx={showHeavyFx}
+          bgStyle={sceneBgStyle}
+          skyStyle={sceneSkyStyle}
+          groundStyle={sceneGroundStyle}
+          Deco={scene.Deco}
+        />
+        <BattleWeatherLayer
+          sceneType={sceneKey}
+          seed={weatherSeed}
+          enabled={showHeavyFx && !S.gamePaused}
+          reduced={UX.compactUI || UX.autoLowEnd}
+        />
 
-            {/* Enemy info */}
-            <BattleEnemyInfoPanel
-              t={t}
-              style={enemyInfoStyle}
-              enemy={enemy}
-              enemyHp={S.eHp}
-              showEnemySub={showEnemySub}
-              enemySub={S.enemySub}
-              enemySubHp={S.eHpSub}
-              battleMode={S.battleMode}
-              pvpEnemyBarActive={pvpEnemyBarActive}
-              pvpComboTrigger={pvpComboTrigger}
-              pvpEnemyBurn={pvpEnemyBurn}
-              pvpEnemyFreeze={pvpEnemyFreeze}
-              pvpEnemyParalyze={pvpEnemyParalyze}
-              pvpEnemyStatic={pvpEnemyStatic}
-              pvpEnemyCombo={pvpEnemyCombo}
-              pvpEnemySpecDef={pvpEnemySpecDef}
-              burnStack={S.burnStack}
-              frozen={S.frozen}
-              staticStack={S.staticStack}
-              bossPhase={S.bossPhase}
-              bossCharging={S.bossCharging}
-            />
+        {/* Enemy info */}
+        <BattleEnemyInfoPanel
+          t={t}
+          style={enemyInfoStyle}
+          enemy={enemy}
+          enemyHp={S.eHp}
+          showEnemySub={showEnemySub}
+          enemySub={S.enemySub}
+          enemySubHp={S.eHpSub}
+          battleMode={S.battleMode}
+          pvpEnemyBarActive={pvpEnemyBarActive}
+          pvpComboTrigger={pvpComboTrigger}
+          pvpEnemyBurn={pvpEnemyBurn}
+          pvpEnemyFreeze={pvpEnemyFreeze}
+          pvpEnemyParalyze={pvpEnemyParalyze}
+          pvpEnemyStatic={pvpEnemyStatic}
+          pvpEnemyCombo={pvpEnemyCombo}
+          pvpEnemySpecDef={pvpEnemySpecDef}
+          burnStack={S.burnStack}
+          frozen={S.frozen}
+          staticStack={S.staticStack}
+          bossPhase={S.bossPhase}
+          bossCharging={S.bossCharging}
+        />
 
-            <BattleArenaSprites
-              showHeavyFx={showHeavyFx}
-              enemy={enemy}
-              starterType={starter.type}
-              showEnemySub={showEnemySub}
-              showAllySub={showAllySub}
-              eSvg={eSvg}
-              pSvg={pSvg}
-              eSubSvg={eSubSvg}
-              pSubSvg={pSubSvg}
-              eSize={eSize}
-              enemySubSize={enemySubSize}
-              mainPlayerSize={mainPlayerSize}
-              subPlayerSize={subPlayerSize}
-              playerMainVisualScale={playerMainVisualScale * lanePlayerMainScale}
-              enemyMainVisualScale={enemyMainVisualScale * laneEnemyMainScale}
-              enemySpriteRef={enemySpriteRef}
-              playerSpriteRef={playerSpriteRef}
-              playerSubSpriteRef={playerSubSpriteRef}
-              enemyMainSpriteStyle={enemyMainSpriteStyle}
-              enemySubSpriteStyle={enemySubSpriteStyle}
-              enemyMainShadowStyle={enemyMainShadowStyle}
-              playerMainSpriteStyle={playerMainSpriteStyle}
-              playerSubSpriteStyle={playerSubSpriteStyle}
-              playerMainShadowStyle={playerMainShadowStyle}
-              showEnemyShadow={!S.eAnim && !UX.lowPerfMode}
-              showPlayerShadow={!S.pAnim && !UX.lowPerfMode}
-            />
+        <BattleArenaSprites
+          showHeavyFx={showHeavyFx}
+          enemy={enemy}
+          starterType={starter.type}
+          showEnemySub={showEnemySub}
+          showAllySub={showAllySub}
+          eSvg={eSvg}
+          pSvg={pSvg}
+          eSubSvg={eSubSvg}
+          pSubSvg={pSubSvg}
+          eSize={eSize}
+          enemySubSize={enemySubSize}
+          mainPlayerSize={mainPlayerSize}
+          subPlayerSize={subPlayerSize}
+          playerMainVisualScale={playerMainVisualScale * lanePlayerMainScale}
+          enemyMainVisualScale={enemyMainVisualScale * laneEnemyMainScale}
+          enemySpriteRef={enemySpriteRef}
+          playerSpriteRef={playerSpriteRef}
+          playerSubSpriteRef={playerSubSpriteRef}
+          enemyMainSpriteStyle={enemyMainSpriteStyle}
+          enemySubSpriteStyle={enemySubSpriteStyle}
+          enemyMainShadowStyle={enemyMainShadowStyle}
+          playerMainSpriteStyle={playerMainSpriteStyle}
+          playerSubSpriteStyle={playerSubSpriteStyle}
+          playerMainShadowStyle={playerMainShadowStyle}
+          showEnemyShadow={!S.eAnim && !UX.lowPerfMode}
+          showPlayerShadow={!S.pAnim && !UX.lowPerfMode}
+        />
 
-            {/* Player info */}
-            <BattlePlayerInfoPanel
-              t={t}
-              style={playerInfoStyle}
-              battleMode={S.battleMode}
-              pLvl={S.pLvl}
-              pHp={S.pHp}
-              pHpSub={S.pHpSub}
-              pExp={S.pExp}
-              expNext={S.expNext}
-              mainMaxHp={mainMaxHp}
-              subMaxHp={subMaxHp}
-              stName={st.name}
-              isCoopBattle={isCoopBattle}
-              coopUsingSub={coopUsingSub}
-              showAllySub={showAllySub}
-              allySub={S.allySub}
-              mainBarActive={mainBarActive}
-              subBarActive={subBarActive}
-              pvpComboTrigger={pvpComboTrigger}
-              pvpPlayerBurn={pvpPlayerBurn}
-              pvpPlayerFreeze={pvpPlayerFreeze}
-              pvpPlayerParalyze={pvpPlayerParalyze}
-              pvpPlayerStatic={pvpPlayerStatic}
-              pvpPlayerCombo={pvpPlayerCombo}
-              pvpPlayerSpecDef={pvpPlayerSpecDef}
-              cursed={S.cursed}
-              poisoned={S.effMsg?.color === '#7c3aed'}
-            />
+        {/* Player info */}
+        <BattlePlayerInfoPanel
+          t={t}
+          style={playerInfoStyle}
+          battleMode={S.battleMode}
+          pLvl={S.pLvl}
+          pHp={S.pHp}
+          pHpSub={S.pHpSub}
+          pExp={S.pExp}
+          expNext={S.expNext}
+          mainMaxHp={mainMaxHp}
+          subMaxHp={subMaxHp}
+          stName={st.name}
+          isCoopBattle={isCoopBattle}
+          coopUsingSub={coopUsingSub}
+          showAllySub={showAllySub}
+          allySub={S.allySub}
+          mainBarActive={mainBarActive}
+          subBarActive={subBarActive}
+          pvpComboTrigger={pvpComboTrigger}
+          pvpPlayerBurn={pvpPlayerBurn}
+          pvpPlayerFreeze={pvpPlayerFreeze}
+          pvpPlayerParalyze={pvpPlayerParalyze}
+          pvpPlayerStatic={pvpPlayerStatic}
+          pvpPlayerCombo={pvpPlayerCombo}
+          pvpPlayerSpecDef={pvpPlayerSpecDef}
+          cursed={S.cursed}
+          poisoned={S.effMsg?.color === '#7c3aed'}
+        />
 
-            <BattleStatusOverlay
-              t={t}
-              lowPerfMode={UX.lowPerfMode}
-              streak={S.streak}
-              passiveCount={S.passiveCount}
-              specDef={S.specDef}
-              timedMode={S.timedMode}
-              diffLevel={S.diffLevel}
-              chargeDisplay={chargeDisplay}
-              chargeReadyDisplay={chargeReadyDisplay}
-              bossPhase={S.bossPhase}
-              specDefToneClass={specDefToneClass}
-              specDefReadyLabel={specDefReadyLabel}
-              bossCharging={S.bossCharging}
-            />
-          </div>
-        </div>
+        <BattleStatusOverlay
+          t={t}
+          lowPerfMode={UX.lowPerfMode}
+          streak={S.streak}
+          passiveCount={S.passiveCount}
+          specDef={S.specDef}
+          timedMode={S.timedMode}
+          diffLevel={S.diffLevel}
+          chargeDisplay={chargeDisplay}
+          chargeReadyDisplay={chargeReadyDisplay}
+          bossPhase={S.bossPhase}
+          specDefToneClass={specDefToneClass}
+          specDefReadyLabel={specDefReadyLabel}
+          bossCharging={S.bossCharging}
+        />
       </div>
 
       {/* ═══ Bottom panel ═══ */}

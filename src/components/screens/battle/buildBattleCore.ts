@@ -1,6 +1,8 @@
 import { HITS_PER_LVL, MAX_MOVE_LVL, POWER_CAPS } from '../../../data/constants.ts';
+import { bossDarkPhase2SVG } from '../../../data/sprites.ts';
 import { getLevelMaxHp, getStarterLevelMaxHp } from '../../../utils/playerHp.ts';
 import { resolveBattleLayout, type BattleLayoutConfig } from '../../../utils/battleLayout.ts';
+import { computeBossPhase } from '../../../utils/turnFlow.ts';
 import type { ComponentType } from 'react';
 import type {
   MoveVm,
@@ -16,6 +18,9 @@ type BattleCoreStaticState = Pick<
   | 'pStg'
   | 'battleMode'
   | 'enemySub'
+  | 'eHp'
+  | 'eHpSub'
+  | 'bossPhase'
   | 'allySub'
   | 'pHpSub'
   | 'coopActiveSlot'
@@ -165,6 +170,43 @@ type BattleCoreRuntimeKey =
 export type BattleCoreRuntime = Pick<BattleCore, BattleCoreRuntimeKey>;
 export type BattleCoreStatic = Omit<BattleCore, BattleCoreRuntimeKey>;
 
+const DARK_DRAGON_BOSS_ID = 'boss';
+const DARK_DRAGON_PHASE2_SPRITE_KEY = 'bossDarkPhase2SVG';
+
+function normalizeEnemyVisualId(enemyId: string | undefined): string {
+  if (!enemyId) return '';
+  return enemyId.startsWith('pvp_') ? enemyId.slice(4) : enemyId;
+}
+
+type EnemySpriteResolveInput = {
+  battleMode: string;
+  enemy: NonNullable<UseBattleState['enemy']>;
+  currentHp?: number;
+  fallbackBossPhase?: number;
+};
+
+function resolveEnemySpriteForBattle({
+  battleMode,
+  enemy,
+  currentHp,
+  fallbackBossPhase = 1,
+}: EnemySpriteResolveInput): { svg: string; spriteKey: string } {
+  const defaultSpriteKey = (enemy as { activeSpriteKey?: string }).activeSpriteKey || enemy.spriteKey || '';
+  const enemyId = normalizeEnemyVisualId(enemy.id);
+  if (battleMode === 'pvp' || enemyId !== DARK_DRAGON_BOSS_ID) {
+    return { svg: enemy.svgFn(), spriteKey: defaultSpriteKey };
+  }
+
+  const maxHp = Math.max(1, Number(enemy.maxHp) || 1);
+  const normalizedHp = Number.isFinite(currentHp) ? Math.max(0, Number(currentHp)) : maxHp;
+  const computedPhase = computeBossPhase(normalizedHp, maxHp);
+  const resolvedPhase = Math.max(computedPhase, fallbackBossPhase || 1);
+  if (resolvedPhase >= 2) {
+    return { svg: bossDarkPhase2SVG(), spriteKey: DARK_DRAGON_PHASE2_SPRITE_KEY };
+  }
+  return { svg: enemy.svgFn(), spriteKey: defaultSpriteKey };
+}
+
 export function buildBattleStaticCore({
   state,
   compactUI,
@@ -177,6 +219,9 @@ export function buildBattleStaticCore({
     pStg,
     battleMode,
     enemySub,
+    eHp,
+    eHpSub,
+    bossPhase,
     allySub,
     pHpSub,
     coopActiveSlot,
@@ -198,8 +243,21 @@ export function buildBattleStaticCore({
     ? (pvpTurn === 'p1' ? starter : pvpStarter2)
     : (coopUsingSub ? allySub : starter);
 
-  const eSvg = enemy.svgFn();
-  const eSubSvg = showEnemySub && enemySub ? enemySub.svgFn() : null;
+  const resolvedEnemySprite = resolveEnemySpriteForBattle({
+    battleMode,
+    enemy,
+    currentHp: eHp,
+    fallbackBossPhase: bossPhase,
+  });
+  const eSvg = resolvedEnemySprite.svg;
+  const eSubSvg = showEnemySub && enemySub
+    ? resolveEnemySpriteForBattle({
+      battleMode,
+      enemy: enemySub,
+      currentHp: eHpSub,
+      fallbackBossPhase: 1,
+    }).svg
+    : null;
   const allyStage = showAllySub && allySub
     ? (allySub.stages[allySub.selectedStageIdx || 0] || allySub.stages[0])
     : null;
@@ -220,8 +278,9 @@ export function buildBattleStaticCore({
 
   // Derive SVG export key for player sprite: convention is `player${id}${stage}SVG`.
   const playerSpriteKey = `player${starter.id}${pStg}SVG`;
-  // Enemy carries activeSpriteKey from roster builder.
-  const enemySpriteKey = (enemy as { activeSpriteKey?: string }).activeSpriteKey || enemy.spriteKey;
+  // Enemy carries activeSpriteKey from roster builder. For dark dragon phase 2,
+  // override with the dedicated phase sprite key for proper size compensation.
+  const enemySpriteKey = resolvedEnemySprite.spriteKey;
   // Sub ally sprite key (same convention as player).
   const subStageIdx = allySub?.selectedStageIdx ?? 0;
   const subSpriteKey = allySub ? `player${allySub.id}${subStageIdx}SVG` : undefined;

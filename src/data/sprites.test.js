@@ -14,7 +14,7 @@ import {
   playerlion0SVG, playerlion1SVG, playerlion2SVG,
   playerwolf0SVG, playerwolf1SVG, playerwolf2SVG,
   playertiger0SVG, playertiger1SVG, playertiger2SVG,
-  bossHydraSVG, bossCrazyDragonSVG, bossSwordGodSVG,
+  bossHydraSVG, bossCrazyDragonSVG, bossSwordGodSVG, bossDarkPhase2SVG,
   golumnSVG, golumnMudSVG,
 } from './sprites.ts';
 
@@ -44,7 +44,7 @@ describe('SVG factory functions return valid SVG markup', () => {
     playerlion0SVG, playerlion1SVG, playerlion2SVG,
     playerwolf0SVG, playerwolf1SVG, playerwolf2SVG,
     playertiger0SVG, playertiger1SVG, playertiger2SVG,
-    bossHydraSVG, bossCrazyDragonSVG, bossSwordGodSVG,
+    bossHydraSVG, bossCrazyDragonSVG, bossSwordGodSVG, bossDarkPhase2SVG,
     golumnSVG, golumnMudSVG,
   ];
 

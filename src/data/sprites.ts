@@ -49,6 +49,7 @@ export const SPRITE_IMGS = {
   boss_hydra: `${BASE}sprites/boss_hydra.png`,
   boss_crazy_dragon: `${BASE}sprites/boss_crazy_dragon.png`,
   boss_sword_god: `${BASE}sprites/boss_sword_god.png`,
+  boss_2nd_phase: `${BASE}sprites/boss_2nd_phase.png`,
   golumn: `${BASE}sprites/golumn.png`,
   golumn_mud: `${BASE}sprites/golumn_mud.png`,
   candy_knight: `${BASE}sprites/candy_knight.png`,
@@ -170,6 +171,7 @@ export const playertiger2SVG = fromProfile('playertiger2SVG');
 export const bossHydraSVG = fromProfile('bossHydraSVG');
 export const bossCrazyDragonSVG = fromProfile('bossCrazyDragonSVG');
 export const bossSwordGodSVG = fromProfile('bossSwordGodSVG');
+export const bossDarkPhase2SVG = fromProfile('bossDarkPhase2SVG');
 export const golumnSVG = fromProfile('golumnSVG');
 export const golumnMudSVG = fromProfile('golumnMudSVG');
 export const candyKnightSVG = fromProfile('candyKnightSVG');

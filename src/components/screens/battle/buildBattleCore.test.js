@@ -27,6 +27,8 @@ function makeEnemy(id = 'slime') {
     name: id,
     lvl: 1,
     maxHp: 40,
+    spriteKey: 'slimeSVG',
+    activeSpriteKey: 'slimeSVG',
     mType: 'grass',
     typeIcon: '🌿',
     c1: '#0f0',
@@ -43,6 +45,9 @@ function makeState(overrides = {}) {
     pStg: 0,
     battleMode: 'single',
     enemySub: null,
+    eHp: 40,
+    eHpSub: 0,
+    bossPhase: 0,
     allySub: null,
     pHpSub: 0,
     coopActiveSlot: 'main',
@@ -145,4 +150,69 @@ test('buildBattleCore returns resolved sceneKey when requested key is missing', 
 
   assert.ok(core);
   assert.equal(core.sceneKey, 'grass');
+});
+
+test('buildBattleCore switches dark dragon to phase-2 sprite when hp is low', () => {
+  const phase1 = buildBattleCore({
+    state: makeState({
+      enemy: {
+        ...makeEnemy('boss'),
+        maxHp: 100,
+        spriteKey: 'darkLordSVG',
+        activeSpriteKey: 'darkLordSVG',
+      },
+      eHp: 80,
+      bossPhase: 1,
+    }),
+    compactUI: false,
+    getPow: (idx) => 10 + idx,
+    dualEff: () => 1,
+    scenes: TEST_SCENES,
+  });
+  const phase2 = buildBattleCore({
+    state: makeState({
+      enemy: {
+        ...makeEnemy('boss'),
+        maxHp: 100,
+        spriteKey: 'darkLordSVG',
+        activeSpriteKey: 'darkLordSVG',
+      },
+      eHp: 60,
+      bossPhase: 2,
+    }),
+    compactUI: false,
+    getPow: (idx) => 10 + idx,
+    dualEff: () => 1,
+    scenes: TEST_SCENES,
+  });
+
+  assert.ok(phase1);
+  assert.ok(phase2);
+  assert.equal(phase1.eSvg.includes('boss_2nd_phase.png'), false);
+  assert.equal(phase2.eSvg.includes('boss_2nd_phase.png'), true);
+  assert.ok(phase2.layout.enemyComp > phase1.layout.enemyComp);
+});
+
+test('buildBattleCore switches dark dragon sub target in co-op when sub hp is low', () => {
+  const core = buildBattleCore({
+    state: makeState({
+      battleMode: 'coop',
+      enemy: makeEnemy('slime'),
+      enemySub: {
+        ...makeEnemy('boss'),
+        maxHp: 100,
+        spriteKey: 'darkLordSVG',
+        activeSpriteKey: 'darkLordSVG',
+      },
+      eHpSub: 55,
+    }),
+    compactUI: true,
+    getPow: (idx) => 10 + idx,
+    dualEff: () => 1,
+    scenes: TEST_SCENES,
+  });
+
+  assert.ok(core);
+  assert.ok(core.eSubSvg);
+  assert.equal(core.eSubSvg.includes('boss_2nd_phase.png'), true);
 });

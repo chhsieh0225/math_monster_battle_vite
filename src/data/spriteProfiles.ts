@@ -118,6 +118,7 @@ export const PROFILES: Record<string, SpriteProfile> = {
   bossHydraSVG:                wide('boss_hydra', 0.04),
   bossCrazyDragonSVG:          { imgKey: 'boss_crazy_dragon', natW: 677, natH: 369, safePad: 0.04, flip: true },
   bossSwordGodSVG:             { imgKey: 'boss_sword_god', natW: 409, natH: 610, safePad: 0.04 },
+  bossDarkPhase2SVG:           { imgKey: 'boss_2nd_phase', natW: 548, natH: 455, safePad: 0.04 },
 
   // ── Candy sprites ─────────────────────────────────────────────────
   candyKnightSVG:              { imgKey: 'candy_knight', natW: 590, natH: 423, safePad: 0.05 },

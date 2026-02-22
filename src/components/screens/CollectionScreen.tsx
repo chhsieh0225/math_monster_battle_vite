@@ -93,7 +93,7 @@ export default function CollectionScreen({ onBack }: CollectionScreenProps) {
                 fontSize: 10, fontWeight: 600,
                 color: owned ? 'rgba(255,255,255,0.7)' : '#475569',
               }}>
-                {owned ? `×${count}` : '???'}
+                {owned ? `×${count > 999 ? '999+' : count}` : '???'}
               </div>
               <div style={{
                 fontSize: 9, fontWeight: 700, marginTop: 3,

@@ -345,7 +345,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                     <div className={`enc-drop-emoji ${owned ? '' : 'is-locked'}`}>{emoji}</div>
                     <div className={`enc-drop-name ${owned ? '' : 'is-locked'}`}>{t(nameKey, nameFallback)}</div>
                     <div className={`enc-drop-count ${owned ? '' : 'is-locked'}`}>
-                      {owned ? `×${count}` : '???'}
+                      {owned ? `×${count > 999 ? '999+' : count}` : '???'}
                     </div>
                     <div className="enc-drop-rarity">{t(`drop.rarity.${rarity}`, rarity)}</div>
                     <div className="enc-drop-desc">{t(descKey, descFallback)}</div>

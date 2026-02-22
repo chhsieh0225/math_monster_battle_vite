@@ -432,48 +432,88 @@ function BattleScreenComponent({
     const safeGapPx = arenaWidthPx * safeGapPct / 100;
     const minPlayerLeftPx = arenaWidthPx * (compactDual ? 0.4 : 0.8) / 100;
     const minEnemyRightPx = arenaWidthPx * 0.4 / 100;
+    const playerLaneRightPx = sepPx - safeGapPx;
+    const enemyLaneLeftPx = sepPx + safeGapPx;
+    const playerLaneWidthPx = Math.max(24, playerLaneRightPx - minPlayerLeftPx);
+    const enemyLaneWidthPx = Math.max(24, arenaWidthPx - minEnemyRightPx - enemyLaneLeftPx);
+    const allyGapPx = showAllySub ? Math.max(8, arenaWidthPx * 0.018) : 0;
 
-    const clampPlayerLeftPct = (leftPct: number, spriteWidthPx: number): number => {
-      const maxLeftPx = sepPx - safeGapPx - spriteWidthPx;
-      const fallbackPx = minPlayerLeftPx;
-      if (maxLeftPx <= fallbackPx) return fallbackPx / arenaWidthPx * 100;
-      const nextPx = clampNumber(leftPct * arenaWidthPx / 100, fallbackPx, maxLeftPx);
-      return nextPx / arenaWidthPx * 100;
+    // When two allies share one lane on small phones, shrink both together
+    // so they fit in-lane before applying positional clamps.
+    const playerTotalWidthPx = showAllySub
+      ? mainPlayerSize + subPlayerSize + allyGapPx
+      : mainPlayerSize;
+    const playerLaneScale = Math.min(1, playerLaneWidthPx / Math.max(1, playerTotalWidthPx));
+    const resolvedPlayerMainScale = playerLaneScale;
+    const resolvedPlayerSubScale = showAllySub ? playerLaneScale : 1;
+    const resolvedEnemyMainScale = Math.min(1, enemyLaneWidthPx / Math.max(1, enemySize));
+    const resolvedEnemySubScale = Math.min(
+      1,
+      enemyLaneWidthPx / Math.max(1, enemySubSize * enemySubScaleNum),
+    );
+
+    const playerMainWidthPx = mainPlayerSize * resolvedPlayerMainScale;
+    const playerSubWidthPx = subPlayerSize * resolvedPlayerSubScale;
+    const enemyMainWidthPx = enemySize * resolvedEnemyMainScale;
+    const enemySubWidthPx = enemySubSize * enemySubScaleNum * resolvedEnemySubScale;
+
+    const clampPlayerLeftPx = (leftPx: number, spriteWidthPx: number): number => {
+      const maxLeftPx = playerLaneRightPx - spriteWidthPx;
+      return clampNumber(leftPx, minPlayerLeftPx, Math.max(minPlayerLeftPx, maxLeftPx));
     };
-    const clampEnemyRightPct = (rightPct: number, spriteWidthPx: number): number => {
-      const maxRightPx = arenaWidthPx - spriteWidthPx - (sepPx + safeGapPx);
-      const fallbackPx = minEnemyRightPx;
-      if (maxRightPx <= fallbackPx) return fallbackPx / arenaWidthPx * 100;
-      const nextPx = clampNumber(rightPct * arenaWidthPx / 100, fallbackPx, maxRightPx);
-      return nextPx / arenaWidthPx * 100;
+    const clampEnemyRightPx = (rightPx: number, spriteWidthPx: number): number => {
+      const maxRightPx = arenaWidthPx - spriteWidthPx - enemyLaneLeftPx;
+      return clampNumber(rightPx, minEnemyRightPx, Math.max(minEnemyRightPx, maxRightPx));
     };
 
-    const resolvedPlayerMainLeftPct = clampPlayerLeftPct(playerMainLeftPct, mainPlayerSize);
-    const resolvedPlayerSubLeftPct = showAllySub
-      ? clampPlayerLeftPct(playerSubLeftPct, subPlayerSize)
-      : playerSubLeftPct;
-    const resolvedEnemyMainRightPct = clampEnemyRightPct(enemyMainRightPct, enemySize);
-    const resolvedEnemySubRightPct = showEnemySub
-      ? clampEnemyRightPct(enemySubRightPct, enemySubSize * enemySubScaleNum)
-      : enemySubRightPct;
+    let resolvedPlayerMainLeftPx = clampPlayerLeftPx(playerMainLeftPct * arenaWidthPx / 100, playerMainWidthPx);
+    let resolvedPlayerSubLeftPx = clampPlayerLeftPx(playerSubLeftPct * arenaWidthPx / 100, playerSubWidthPx);
+    if (showAllySub) {
+      const maxSubLeftPx = Math.max(minPlayerLeftPx, playerLaneRightPx - playerSubWidthPx);
+      const minSubLeftPxFromMain = resolvedPlayerMainLeftPx + playerMainWidthPx + allyGapPx;
+      if (minSubLeftPxFromMain > maxSubLeftPx) {
+        resolvedPlayerMainLeftPx = clampPlayerLeftPx(
+          maxSubLeftPx - playerMainWidthPx - allyGapPx,
+          playerMainWidthPx,
+        );
+      }
+      const minSubLeftPx = Math.min(
+        maxSubLeftPx,
+        resolvedPlayerMainLeftPx + playerMainWidthPx + allyGapPx,
+      );
+      resolvedPlayerSubLeftPx = clampNumber(resolvedPlayerSubLeftPx, minSubLeftPx, maxSubLeftPx);
+    }
+    const resolvedEnemyMainRightPx = clampEnemyRightPx(enemyMainRightPct * arenaWidthPx / 100, enemyMainWidthPx);
+    const resolvedEnemySubRightPx = showEnemySub
+      ? clampEnemyRightPx(enemySubRightPct * arenaWidthPx / 100, enemySubWidthPx)
+      : enemySubRightPct * arenaWidthPx / 100;
+
+    const resolvedPlayerMainLeftPct = resolvedPlayerMainLeftPx / arenaWidthPx * 100;
+    const resolvedPlayerSubLeftPct = resolvedPlayerSubLeftPx / arenaWidthPx * 100;
+    const resolvedEnemyMainRightPct = resolvedEnemyMainRightPx / arenaWidthPx * 100;
+    const resolvedEnemySubRightPct = resolvedEnemySubRightPx / arenaWidthPx * 100;
 
     // Shadow offset & width should reflect the *visual* creature footprint,
     // not the inflated SVG element size. Dividing by compensation recovers
     // the base size that matches the visible body area.
-    const pVisual = mainPlayerSize / (playerComp || 1);
-    const eVisual = enemySize / (enemyComp || 1);
-    const enemyHeight = enemySize * 100 / 120;
+    const pVisual = playerMainWidthPx / (playerComp || 1);
+    const eVisual = enemyMainWidthPx / (enemyComp || 1);
+    const enemyHeight = enemyMainWidthPx * 100 / 120;
     return {
       enemySubSize,
+      lanePlayerMainScale: resolvedPlayerMainScale,
+      laneEnemyMainScale: resolvedEnemyMainScale,
       enemyMainSpriteStyle: {
         "--enemy-main-right": `${resolvedEnemyMainRightPct}%`,
         "--enemy-main-top": `${enemyTopPct}%`,
+        "--battle-enemy-main-scale": resolvedEnemyMainScale.toFixed(3),
         "--enemy-main-anim": memoSpriteAnims.enemyMain,
       } as BattleCssVars,
       enemySubSpriteStyle: {
         "--enemy-sub-right": `${resolvedEnemySubRightPct}%`,
         "--enemy-sub-top": `${enemySubTopPct}%`,
         "--enemy-sub-scale": enemySubScale,
+        "--battle-enemy-sub-scale": resolvedEnemySubScale.toFixed(3),
         "--enemy-sub-anim": memoSpriteAnims.enemySub,
       } as BattleCssVars,
       enemyMainShadowStyle: {
@@ -486,6 +526,7 @@ function BattleScreenComponent({
         "--player-main-left": `${resolvedPlayerMainLeftPct}%`,
         "--player-main-bottom": `${playerMainBottomPct}%`,
         "--player-main-filter": mainFilter,
+        "--battle-player-main-scale": resolvedPlayerMainScale.toFixed(3),
         "--player-main-z": coopUsingSub ? "4" : "6",
         "--player-main-opacity": mainIsActive ? "1" : ".52",
         "--battle-player-main-dim-scale": mainIsActive
@@ -497,6 +538,7 @@ function BattleScreenComponent({
         "--player-sub-left": `${resolvedPlayerSubLeftPct}%`,
         "--player-sub-bottom": `${playerSubBottomPct}%`,
         "--player-sub-filter": subFilter,
+        "--battle-player-sub-scale": resolvedPlayerSubScale.toFixed(3),
         "--player-sub-z": coopUsingSub ? "6" : "4",
         "--player-sub-opacity": subIsActive ? "1" : ".52",
         "--battle-player-sub-dim-scale": subIsActive
@@ -734,6 +776,8 @@ function BattleScreenComponent({
     playerSubSpriteStyle,
     playerMainShadowStyle,
     enemySubSize,
+    lanePlayerMainScale,
+    laneEnemyMainScale,
   } = memoSpriteStyles!;
   const coOpBossSubIntro = isCoopBattle
     && showEnemySub
@@ -869,8 +913,8 @@ function BattleScreenComponent({
           enemySubSize={enemySubSize}
           mainPlayerSize={mainPlayerSize}
           subPlayerSize={subPlayerSize}
-          playerMainVisualScale={playerMainVisualScale}
-          enemyMainVisualScale={enemyMainVisualScale}
+          playerMainVisualScale={playerMainVisualScale * lanePlayerMainScale}
+          enemyMainVisualScale={enemyMainVisualScale * laneEnemyMainScale}
           enemySpriteRef={enemySpriteRef}
           playerSpriteRef={playerSpriteRef}
           playerSubSpriteRef={playerSubSpriteRef}

@@ -243,25 +243,25 @@ export const COLLECTION_MILESTONES: readonly CollectionMilestoneDef[] = [
   {
     id: 'dream_mastery_1',
     emoji: '🍬',
-    required: 40,
+    required: 100,
     rewards: [{ kind: 'damage_boost', damageType: 'dream', bonus: 0.02 }],
   },
   {
     id: 'dream_mastery_2',
     emoji: '🍬',
-    required: 120,
+    required: 300,
     rewards: [{ kind: 'damage_boost', damageType: 'dream', bonus: 0.02 }],
   },
   {
     id: 'dream_mastery_3',
     emoji: '🍬',
-    required: 250,
+    required: 600,
     rewards: [{ kind: 'damage_boost', damageType: 'dream', bonus: 0.03 }],
   },
   {
     id: 'collector_boost_1',
     emoji: '🍬',
-    required: 20,
+    required: 50,
     rewards: [{ kind: 'damage_boost', damageType: 'all', bonus: 0.03 }],
   },
   {

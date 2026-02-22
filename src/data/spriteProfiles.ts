@@ -46,6 +46,8 @@ export interface SpriteProfile {
   rendering?: 'pixelated' | 'auto';
 }
 
+export type SpriteShape = 'square' | 'wide' | 'tall';
+
 export const VB_W = 120;
 export const VB_H = 100;
 
@@ -158,4 +160,20 @@ export function getCompensation(svgExportName: string): number {
  */
 export function getProfile(svgExportName: string): SpriteProfile | undefined {
   return PROFILES[svgExportName];
+}
+
+/**
+ * Classify sprite silhouette from profile geometry (no image decode needed).
+ * wide  : aspect ratio >= 1.35
+ * tall  : aspect ratio <= 0.82
+ * square: everything else
+ */
+export function getSpriteShape(svgExportName?: string): SpriteShape {
+  if (!svgExportName) return 'square';
+  const p = PROFILES[svgExportName];
+  if (!p) return 'square';
+  const aspect = p.natW / Math.max(1, p.natH);
+  if (aspect >= 1.35) return 'wide';
+  if (aspect <= 0.82) return 'tall';
+  return 'square';
 }

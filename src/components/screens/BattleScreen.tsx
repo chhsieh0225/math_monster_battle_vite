@@ -45,6 +45,14 @@ function clampNumber(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
+type BattleDeviceTier = 'phone' | 'tablet' | 'laptop';
+
+function resolveBattleDeviceTier(arenaWidth: number): BattleDeviceTier {
+  if (arenaWidth <= 520) return 'phone';
+  if (arenaWidth <= 980) return 'tablet';
+  return 'laptop';
+}
+
 type BattleScreenProps = {
   state: UseBattleState;
   actions: UseBattleActions;
@@ -421,17 +429,30 @@ function BattleScreenComponent({
             ? 120
             : 96;
     const enemySubScaleNum = Number(enemySubScale) || 1;
+    const isWidePlayerMainSprite = (playerComp || 1) >= 1.55;
+    const isWidePlayerSubSprite = (subComp || 1) >= 1.55;
+    const isWideEnemyMainSprite = (enemyComp || 1) >= 1.55;
+    const isWideEnemySubSprite = Boolean(enemySubId)
+      && !enemySubIsBossVisual
+      && (enemySubIsEvolved || isLargeEnemySub);
 
     // Dynamic lane safety clamp:
     // Keep allies inside player zone (left side) and enemies inside enemy zone (right side)
     // across phone/tablet/laptop without hardcoded per-device offsets.
     const arenaWidthPx = Math.max(280, arenaWidth || 390);
+    const deviceTier = resolveBattleDeviceTier(arenaWidthPx);
     const sepPct = hasDualUnits ? 42 : 50;
-    const safeGapPct = compactDual ? 2.4 : 3;
+    const safeGapPct = deviceTier === 'phone'
+      ? (hasDualUnits ? 3.8 : 3.4)
+      : deviceTier === 'tablet'
+        ? (hasDualUnits ? 3.2 : 2.9)
+        : (hasDualUnits ? 2.8 : 2.6);
     const sepPx = arenaWidthPx * sepPct / 100;
     const safeGapPx = arenaWidthPx * safeGapPct / 100;
-    const minPlayerLeftPx = arenaWidthPx * (compactDual ? 0.4 : 0.8) / 100;
-    const minEnemyRightPx = arenaWidthPx * 0.4 / 100;
+    const minPlayerLeftPct = deviceTier === 'phone' ? 0.7 : deviceTier === 'tablet' ? 0.9 : 1.1;
+    const minEnemyRightPct = deviceTier === 'phone' ? 0.7 : deviceTier === 'tablet' ? 0.9 : 1.1;
+    const minPlayerLeftPx = arenaWidthPx * minPlayerLeftPct / 100;
+    const minEnemyRightPx = arenaWidthPx * minEnemyRightPct / 100;
     const playerLaneRightPx = sepPx - safeGapPx;
     const enemyLaneLeftPx = sepPx + safeGapPx;
     const playerLaneWidthPx = Math.max(24, playerLaneRightPx - minPlayerLeftPx);
@@ -444,12 +465,39 @@ function BattleScreenComponent({
       ? mainPlayerSize + subPlayerSize + allyGapPx
       : mainPlayerSize;
     const playerLaneScale = Math.min(1, playerLaneWidthPx / Math.max(1, playerTotalWidthPx));
-    const resolvedPlayerMainScale = playerLaneScale;
-    const resolvedPlayerSubScale = showAllySub ? playerLaneScale : 1;
-    const resolvedEnemyMainScale = Math.min(1, enemyLaneWidthPx / Math.max(1, enemySize));
+    const widePlayerMainScaleCap = isWidePlayerMainSprite
+      ? (deviceTier === 'phone'
+        ? (hasDualUnits ? 0.82 : 0.9)
+        : deviceTier === 'tablet'
+          ? (hasDualUnits ? 0.9 : 0.96)
+          : (hasDualUnits ? 0.96 : 1))
+      : 1;
+    const widePlayerSubScaleCap = showAllySub && isWidePlayerSubSprite
+      ? (deviceTier === 'phone' ? 0.72 : deviceTier === 'tablet' ? 0.8 : 0.88)
+      : 1;
+    const wideEnemyMainScaleCap = isWideEnemyMainSprite
+      ? (deviceTier === 'phone'
+        ? (hasDualUnits ? 0.84 : 0.9)
+        : deviceTier === 'tablet'
+          ? (hasDualUnits ? 0.9 : 0.96)
+          : 1)
+      : 1;
+    const wideEnemySubScaleCap = isWideEnemySubSprite
+      ? (deviceTier === 'phone' ? 0.76 : deviceTier === 'tablet' ? 0.84 : 0.9)
+      : 1;
+    const resolvedPlayerMainScale = Math.min(playerLaneScale, widePlayerMainScaleCap);
+    const resolvedPlayerSubScale = showAllySub
+      ? Math.min(playerLaneScale, widePlayerSubScaleCap)
+      : 1;
+    const resolvedEnemyMainScale = Math.min(
+      1,
+      enemyLaneWidthPx / Math.max(1, enemySize),
+      wideEnemyMainScaleCap,
+    );
     const resolvedEnemySubScale = Math.min(
       1,
       enemyLaneWidthPx / Math.max(1, enemySubSize * enemySubScaleNum),
+      wideEnemySubScaleCap,
     );
 
     const playerMainWidthPx = mainPlayerSize * resolvedPlayerMainScale;
@@ -466,8 +514,35 @@ function BattleScreenComponent({
       return clampNumber(rightPx, minEnemyRightPx, Math.max(minEnemyRightPx, maxRightPx));
     };
 
-    let resolvedPlayerMainLeftPx = clampPlayerLeftPx(playerMainLeftPct * arenaWidthPx / 100, playerMainWidthPx);
-    let resolvedPlayerSubLeftPx = clampPlayerLeftPx(playerSubLeftPct * arenaWidthPx / 100, playerSubWidthPx);
+    const wideMainBackShiftPct = isWidePlayerMainSprite
+      ? (deviceTier === 'phone'
+        ? (hasDualUnits ? 2.4 : 1.8)
+        : deviceTier === 'tablet'
+          ? (hasDualUnits ? 1.5 : 1.1)
+          : (hasDualUnits ? 0.9 : 0.6))
+      : 0;
+    const wideSubBackShiftPct = showAllySub && isWidePlayerSubSprite
+      ? (deviceTier === 'phone' ? 2.6 : deviceTier === 'tablet' ? 1.8 : 1.1)
+      : 0;
+    const wideEnemyMainRetreatPct = isWideEnemyMainSprite
+      ? (deviceTier === 'phone'
+        ? (hasDualUnits ? 2.1 : 1.6)
+        : deviceTier === 'tablet'
+          ? (hasDualUnits ? 1.4 : 1.0)
+          : (hasDualUnits ? 0.8 : 0.6))
+      : 0;
+    const wideEnemySubRetreatPct = showEnemySub && isWideEnemySubSprite
+      ? (deviceTier === 'phone' ? 1.4 : deviceTier === 'tablet' ? 1.0 : 0.7)
+      : 0;
+
+    let resolvedPlayerMainLeftPx = clampPlayerLeftPx(
+      (playerMainLeftPct - wideMainBackShiftPct) * arenaWidthPx / 100,
+      playerMainWidthPx,
+    );
+    let resolvedPlayerSubLeftPx = clampPlayerLeftPx(
+      (playerSubLeftPct - wideSubBackShiftPct) * arenaWidthPx / 100,
+      playerSubWidthPx,
+    );
     if (showAllySub) {
       const maxSubLeftPx = Math.max(minPlayerLeftPx, playerLaneRightPx - playerSubWidthPx);
       const minSubLeftPxFromMain = resolvedPlayerMainLeftPx + playerMainWidthPx + allyGapPx;
@@ -483,9 +558,15 @@ function BattleScreenComponent({
       );
       resolvedPlayerSubLeftPx = clampNumber(resolvedPlayerSubLeftPx, minSubLeftPx, maxSubLeftPx);
     }
-    const resolvedEnemyMainRightPx = clampEnemyRightPx(enemyMainRightPct * arenaWidthPx / 100, enemyMainWidthPx);
+    const resolvedEnemyMainRightPx = clampEnemyRightPx(
+      (enemyMainRightPct + wideEnemyMainRetreatPct) * arenaWidthPx / 100,
+      enemyMainWidthPx,
+    );
     const resolvedEnemySubRightPx = showEnemySub
-      ? clampEnemyRightPx(enemySubRightPct * arenaWidthPx / 100, enemySubWidthPx)
+      ? clampEnemyRightPx(
+        (enemySubRightPct + wideEnemySubRetreatPct) * arenaWidthPx / 100,
+        enemySubWidthPx,
+      )
       : enemySubRightPct * arenaWidthPx / 100;
 
     const resolvedPlayerMainLeftPct = resolvedPlayerMainLeftPx / arenaWidthPx * 100;

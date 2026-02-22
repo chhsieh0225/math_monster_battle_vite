@@ -1,5 +1,5 @@
 import { BOSS_IDS } from '../data/monsterConfigs.ts';
-import { getCompensation } from '../data/spriteProfiles.ts';
+import { getCompensation, getSpriteShape } from '../data/spriteProfiles.ts';
 
 type BattleMode = string;
 
@@ -73,13 +73,19 @@ export function resolveBattleLayout({
   const enemySubRightPct = dualUnits ? (compactDual ? 16 : 20) : 24;
   const enemySubTopPct = dualUnits ? (compactDual ? 27 : 23) : 14;
   const normalizedPlayerId = normalizeEnemyVisualId(playerStarterId);
+  const playerComp = playerSpriteKey ? getCompensation(playerSpriteKey) : 1;
+  const subComp = subSpriteKey ? getCompensation(subSpriteKey) : 1;
+  const enemyComp = enemySpriteKey ? getCompensation(enemySpriteKey) : 1;
+  const playerShape = getSpriteShape(playerSpriteKey);
+  const subShape = getSpriteShape(subSpriteKey);
+  const enemyShape = getSpriteShape(enemySpriteKey);
   // Beast starters (wolf/tiger/lion) have wide sprites (677×369, comp≈1.7)
   // whose rendered width is much larger than standard starters. Shift them
   // leftward to keep the visual centre in a natural position and prevent
   // the main sprite from overlapping the sub ally in co-op mode.
-  const isWideBeast = ["wolf", "tiger", "lion"].includes(normalizedPlayerId);
+  const isWideBeast = playerShape === 'wide' || ["wolf", "tiger", "lion"].includes(normalizedPlayerId);
   const normalizedSubId = normalizeEnemyVisualId(subStarterId);
-  const isWideBeastSub = ["wolf", "tiger", "lion"].includes(normalizedSubId);
+  const isWideBeastSub = subShape === 'wide' || ["wolf", "tiger", "lion"].includes(normalizedSubId);
   const isTigerPlayer = normalizedPlayerId === "tiger";
   const isBeastFinal = isWideBeast && playerStageIdx >= 2;
   const isWolfFinal = normalizedPlayerId === "wolf" && playerStageIdx >= 2;
@@ -153,8 +159,6 @@ export function resolveBattleLayout({
     ? (compactUI ? 1 : 1.14)
     : 1;
   const wolfFinalSizeScale = isWolfFinal ? 0.92 : 1;
-  // Automatic height compensation from sprite profile (replaces hardcoded ×1.5).
-  const playerComp = playerSpriteKey ? getCompensation(playerSpriteKey) : 1;
   const mainPlayerSize = Math.round(
     mainPlayerBaseSize
     * mainPlayerScale
@@ -168,7 +172,6 @@ export function resolveBattleLayout({
   // otherwise the creature only fills ~59% of the viewBox height and looks tiny.
   // A small base bump (112→120) keeps beast subs visually proportional.
   const subBaseSize = isWideBeastSub ? (compactDual ? 110 : 120) : (compactDual ? 104 : 112);
-  const subComp = subSpriteKey ? getCompensation(subSpriteKey) : 1;
   const subPlayerSize = Math.round(subBaseSize * (dualUnits ? (compactDual ? 0.9 : 0.95) : 1) * subComp);
 
   const visualEnemyId = normalizeEnemyVisualId(enemyId);
@@ -223,9 +226,7 @@ export function resolveBattleLayout({
     ? (isHydra ? 0.76 : isCrazyDragon ? 0.8 : isSwordGod ? 0.84 : 0.86)
     : 1;
   const compactGhostLanternScale = compactDual && isGhostLantern ? 0.78 : 1;
-  // Automatic height compensation from sprite profile (replaces hardcoded ×1.5).
-  const enemyComp = enemySpriteKey ? getCompensation(enemySpriteKey) : 1;
-  const coopWideEnemyScale = dualUnits && !isBoss && enemyComp > 1.35
+  const coopWideEnemyScale = dualUnits && !isBoss && enemyShape === 'wide'
     ? (compactDual ? 0.82 : 0.9)
     : 1;
   const enemyScale = (dualUnits ? (compactDual ? 0.92 : 0.98) : 1)

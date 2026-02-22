@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { PROFILES, heightCompensation, getCompensation, VB_W, VB_H } from './spriteProfiles.ts';
+import {
+  PROFILES,
+  heightCompensation,
+  getCompensation,
+  getSpriteShape,
+  VB_W,
+  VB_H,
+} from './spriteProfiles.ts';
 import { SPRITE_IMGS } from './sprites.ts';
 
 // ── Profile completeness ─────────────────────────────────────────────
@@ -108,4 +115,17 @@ test('boss_sword_god (tall sprite) has small but non-trivial compensation', () =
   const sg = getCompensation('bossSwordGodSVG');
   // 409×610 is height-bound. safePad=0.04 → compensation = 1/(1-0.08) ≈ 1.087
   assert.ok(sg > 1.05 && sg < 1.15, `boss_sword_god compensation should be ~1.09, got ${sg}`);
+});
+
+// ── Shape classification ──────────────────────────────────────────────
+
+test('getSpriteShape classifies wide / square / tall from profile geometry', () => {
+  assert.equal(getSpriteShape('playerwolf2SVG'), 'wide');
+  assert.equal(getSpriteShape('slimeSVG'), 'square');
+  assert.equal(getSpriteShape('bossSwordGodSVG'), 'tall');
+});
+
+test('getSpriteShape falls back to square for unknown keys', () => {
+  assert.equal(getSpriteShape('unknown_sprite_key'), 'square');
+  assert.equal(getSpriteShape(undefined), 'square');
 });

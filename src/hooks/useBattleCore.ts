@@ -550,27 +550,45 @@ export function useBattle() {
   // ═══════════════════════════════════════════════════════════════
   //  TIMER
   // ═══════════════════════════════════════════════════════════════
-  const onTimeout = () => {
+  const onTimeoutContextRef = useBattleStateRef({
+    sr,
+    t,
+    getPvpTurnName,
+    getOtherPvpTurn,
+    logAns,
+    updateAbility: _updateAbility,
+    getActingStarter,
+    appendSessionEvent,
+    markCoopRotatePending,
+    safeTo,
+    doEnemyTurnRef,
+    uiRef,
+    pvpStoreRef,
+    battleFieldSettersRef,
+  });
+  const onTimeoutImpl = useCallback(() => {
+    const ctx = onTimeoutContextRef.current;
     runTimeoutController(buildTimeoutControllerArgs({
       runtime: {
-        sr,
-        t,
-        getPvpTurnName,
-        getOtherPvpTurn,
+        sr: ctx.sr,
+        t: ctx.t,
+        getPvpTurnName: ctx.getPvpTurnName,
+        getOtherPvpTurn: ctx.getOtherPvpTurn,
         sfx,
-        logAns,
-        updateAbility: _updateAbility,
-        getActingStarter,
-        appendSessionEvent,
-        markCoopRotatePending,
-        safeTo,
-        doEnemyTurnRef,
+        logAns: ctx.logAns,
+        updateAbility: ctx.updateAbility,
+        getActingStarter: ctx.getActingStarter,
+        appendSessionEvent: ctx.appendSessionEvent,
+        markCoopRotatePending: ctx.markCoopRotatePending,
+        safeTo: ctx.safeTo,
+        doEnemyTurnRef: ctx.doEnemyTurnRef,
       },
-      ui: UI,
-      pvp: pvpStore,
-      battleFields: battleFieldSetters,
+      ui: ctx.uiRef.current,
+      pvp: ctx.pvpStoreRef.current,
+      battleFields: ctx.battleFieldSettersRef.current,
     }));
-  };
+  }, [onTimeoutContextRef]);
+  const onTimeout = useStableCallback(onTimeoutImpl);
 
   const {
     paused: _PAUSED,
@@ -578,31 +596,34 @@ export function useBattle() {
     subscribeTimerLeft, getTimerLeft,
   } = useTimer(TIMER_SEC, onTimeout);
 
-  const setScreen = useCallback((nextScreen: ScreenName) => {
-    if (nextScreen === 'title') {
-      clearChallengeRun();
-      clearRecentQuestionDisplays();
-    }
-    setPendingTextAdvanceAction(null);
-    runScreenTransition({
-      prevScreen: sr.current.screen,
-      nextScreen,
-      clearTimer,
-      invalidateAsyncWork,
-      setScreenState,
-    });
-  }, [
+  const setScreenContextRef = useBattleStateRef({
     clearChallengeRun,
     clearRecentQuestionDisplays,
+    setPendingTextAdvanceAction,
+    sr,
     clearTimer,
     invalidateAsyncWork,
-    setPendingTextAdvanceAction,
     setScreenState,
-    sr,
-  ]);
-  const setScreenFromString = useCallback((nextScreen: string) => {
+  });
+  const setScreenImpl = useCallback((nextScreen: ScreenName) => {
+    const ctx = setScreenContextRef.current;
+    if (nextScreen === 'title') {
+      ctx.clearChallengeRun();
+      ctx.clearRecentQuestionDisplays();
+    }
+    ctx.setPendingTextAdvanceAction(null);
+    runScreenTransition({
+      prevScreen: ctx.sr.current.screen,
+      nextScreen,
+      clearTimer: ctx.clearTimer,
+      invalidateAsyncWork: ctx.invalidateAsyncWork,
+      setScreenState: ctx.setScreenState,
+    });
+  }, [setScreenContextRef]);
+  const setScreen = useStableCallback(setScreenImpl);
+  const setScreenFromString = useStableCallback((nextScreen: string) => {
     setScreen(nextScreen as ScreenName);
-  }, [setScreen]);
+  });
 
   const { gamePaused, togglePause } = useBattlePauseState({
     pauseTimer,
@@ -849,26 +870,7 @@ export function useBattle() {
   }, [quitGameContextRef]);
   const quitGame = useStableCallback(quitGameImpl);
 
-  const handlePlayerPartyKoImpl = useCallback(({
-    target = 'main',
-    reason = t('battle.ally.ko', 'Your partner has fallen...'),
-  }: { target?: 'main' | 'sub'; reason?: string } = {}) => {
-    return runPlayerPartyKoWithContext({
-      sr,
-      setStarter,
-      setPStg,
-      setPHp,
-      setAllySub,
-      setPHpSub,
-      setCoopActiveSlot,
-      setPhase,
-      setBText,
-      safeTo,
-      endSession: _endSession,
-      setScreen: setScreenFromString,
-      t,
-    }, { target, reason });
-  }, [
+  const handlePlayerPartyKoContextRef = useBattleStateRef({
     sr,
     setStarter,
     setPStg,
@@ -879,25 +881,61 @@ export function useBattle() {
     setPhase,
     setBText,
     safeTo,
-    _endSession,
+    endSession: _endSession,
     setScreenFromString,
     t,
-  ]);
+  });
+  const handlePlayerPartyKoImpl = useCallback(({
+    target = 'main',
+    reason,
+  }: { target?: 'main' | 'sub'; reason?: string } = {}) => {
+    const ctx = handlePlayerPartyKoContextRef.current;
+    const resolvedReason = reason ?? ctx.t('battle.ally.ko', 'Your partner has fallen...');
+    return runPlayerPartyKoWithContext({
+      sr: ctx.sr,
+      setStarter: ctx.setStarter,
+      setPStg: ctx.setPStg,
+      setPHp: ctx.setPHp,
+      setAllySub: ctx.setAllySub,
+      setPHpSub: ctx.setPHpSub,
+      setCoopActiveSlot: ctx.setCoopActiveSlot,
+      setPhase: ctx.setPhase,
+      setBText: ctx.setBText,
+      safeTo: ctx.safeTo,
+      endSession: ctx.endSession,
+      setScreen: ctx.setScreenFromString,
+      t: ctx.t,
+    }, { target, reason: resolvedReason });
+  }, [handlePlayerPartyKoContextRef]);
   const handlePlayerPartyKo = useStableCallback(handlePlayerPartyKoImpl);
 
   // --- Handle a defeated enemy ---
-  const handleVictoryImpl = useCallback((verb = t("battle.victory.verb.defeated", "was defeated")) => {
+  const handleVictoryContextRef = useBattleStateRef({
+    sr,
+    randInt,
+    getPlayerMaxHp,
+    tryUnlock,
+    updateEncDefeated,
+    battleFieldSettersRef,
+    uiRef,
+    frozenRef: frozenR,
+    pendingEvolveRef: pendingEvolve,
+    t,
+  });
+  const handleVictoryImpl = useCallback((verb?: string) => {
+    const ctx = handleVictoryContextRef.current;
+    const resolvedVerb = verb ?? ctx.t("battle.victory.verb.defeated", "was defeated");
     runBattleVictory({
       victoryInput: {
-        verb,
-        sr,
+        verb: resolvedVerb,
+        sr: ctx.sr,
         runtime: {
-          randInt,
+          randInt: ctx.randInt,
           resolveLevelProgress,
-          getStageMaxHp: getPlayerMaxHp,
-          tryUnlock,
+          getStageMaxHp: ctx.getPlayerMaxHp,
+          tryUnlock: ctx.tryUnlock,
           applyVictoryAchievements,
-          updateEncDefeated,
+          updateEncDefeated: ctx.updateEncDefeated,
           onDropResolved: (drop) => {
             if (!drop) return;
             setInventory((prev) => {
@@ -924,74 +962,88 @@ export function useBattle() {
             );
             const firstTitle = unlockedTitles[0];
             const localizedTitle = firstTitle
-              ? t(firstTitle.nameKey, firstTitle.nameFallback)
+              ? ctx.t(firstTitle.nameKey, firstTitle.nameFallback)
               : '';
             const desc = firstTitle
-              ? t('collection.popup.desc.title', 'Unlocked title: {title}', { title: localizedTitle })
+              ? ctx.t('collection.popup.desc.title', 'Unlocked title: {title}', { title: localizedTitle })
               : unlockedCount > 1
-                ? t('collection.popup.desc.multi', 'Unlocked {count} new collection rewards.', { count: unlockedCount })
-                : t('collection.popup.desc.single', 'Unlocked 1 new collection reward.');
+                ? ctx.t('collection.popup.desc.multi', 'Unlocked {count} new collection rewards.', { count: unlockedCount })
+                : ctx.t('collection.popup.desc.single', 'Unlocked 1 new collection reward.');
             setCollectionPopup({
               id: Date.now(),
               icon: firstMilestone?.emoji || (firstTitle ? '🏅' : '🎁'),
-              title: t('collection.popup.title', 'Collection Milestone!'),
+              title: ctx.t('collection.popup.title', 'Collection Milestone!'),
               desc,
             });
           },
           sfx,
-          t,
+          t: ctx.t,
         },
-        battleFields: battleFieldSettersRef.current,
-        ui: uiRef.current,
-        frozenRef: frozenR,
-        pendingEvolveRef: pendingEvolve,
+        battleFields: ctx.battleFieldSettersRef.current,
+        ui: ctx.uiRef.current,
+        frozenRef: ctx.frozenRef,
+        pendingEvolveRef: ctx.pendingEvolveRef,
       },
     });
-  }, [
-    t,
-    sr,
-    randInt,
-    getPlayerMaxHp,
-    tryUnlock,
-    updateEncDefeated,
-    battleFieldSettersRef,
-    uiRef,
-    frozenR,
-    pendingEvolve,
-  ]);
+  }, [handleVictoryContextRef]);
   const handleVictory = useStableCallback(handleVictoryImpl);
 
+  const runAllySupportTurnContextRef = useBattleStateRef({
+    sr,
+    safeTo,
+    chance,
+    rand,
+    setBText,
+    setPhase,
+    setEAnim,
+    setEHp,
+    addD,
+    addP,
+    handleVictory,
+    t,
+  });
   const runAllySupportTurnImpl = useCallback(({ delayMs = 850, onDone }: { delayMs?: number; onDone?: () => void } = {}) => {
+    const ctx = runAllySupportTurnContextRef.current;
     return runAllySupportTurnWithContext({
-      sr,
-      safeTo,
-      chance,
-      rand,
-      setBText,
-      setPhase,
-      setEAnim,
-      setEHp,
-      addD,
-      addP,
+      sr: ctx.sr,
+      safeTo: ctx.safeTo,
+      chance: ctx.chance,
+      rand: ctx.rand,
+      setBText: ctx.setBText,
+      setPhase: ctx.setPhase,
+      setEAnim: ctx.setEAnim,
+      setEHp: ctx.setEHp,
+      addD: ctx.addD,
+      addP: ctx.addP,
       sfx,
-      handleVictory,
-      t,
+      handleVictory: ctx.handleVictory,
+      t: ctx.t,
     }, { delayMs, onDone });
-  }, [sr, safeTo, chance, rand, setBText, setPhase, setEAnim, setEHp, addD, addP, handleVictory, t]);
+  }, [runAllySupportTurnContextRef]);
   const runAllySupportTurn = useStableCallback(runAllySupportTurnImpl);
 
   // --- Frozen enemy skips turn ---
+  const handleFreezeContextRef = useBattleStateRef({
+    sr,
+    frozenRef: frozenR,
+    setFrozen,
+    setBText,
+    setPhase,
+    safeTo,
+    t,
+  });
   const handleFreezeImpl = useCallback(() => {
+    const ctx = handleFreezeContextRef.current;
     runHandleFreezeWithContext({
-      sr,
-      frozenRef: frozenR,
-      setFrozen,
-      setBText,
-      setPhase,
-      safeTo,
-      t,
+      sr: ctx.sr,
+      frozenRef: ctx.frozenRef,
+      setFrozen: ctx.setFrozen,
+      setBText: ctx.setBText,
+      setPhase: ctx.setPhase,
+      safeTo: ctx.safeTo,
+      t: ctx.t,
     });
-  }, [sr, frozenR, setFrozen, setBText, setPhase, safeTo, t]);
+  }, [handleFreezeContextRef]);
   const handleFreeze = useStableCallback(handleFreezeImpl);
 
   // --- Player selects a move ---

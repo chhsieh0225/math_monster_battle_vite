@@ -2,6 +2,7 @@ import { PVP_BALANCE } from '../../data/pvpBalance.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { fxt } from './battleFxTargets.ts';
 import { createBattleActiveScheduler, declarePvpWinner } from './pvpTurnPrimitives.ts';
+import { getResolvedPvpCombatant, getResolvedPvpTurn } from './pvpStateSelectors.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -24,6 +25,19 @@ type PvpBalanceConfig = {
 
 type PvpTurnStartState = {
   pvpTurn: PvpTurn;
+  pvpState?: {
+    p1?: {
+      burn?: number;
+      paralyze?: boolean;
+      freeze?: boolean;
+    };
+    p2?: {
+      burn?: number;
+      paralyze?: boolean;
+      freeze?: boolean;
+    };
+    turn?: PvpTurn;
+  } | null;
   starter?: { id?: string } | null;
   pvpStarter2?: { id?: string } | null;
   pHp: number;
@@ -108,11 +122,12 @@ export function resolvePvpTurnStartStatus<TState extends PvpTurnStartState>({
     safeTo,
     getState: () => sr?.current || state,
   });
-  const currentTurn = state.pvpTurn;
+  const currentTurn = getResolvedPvpTurn(state);
   const currentName = getPvpTurnName(state, currentTurn);
   const isP1 = currentTurn === 'p1';
+  const currentCombatant = getResolvedPvpCombatant(state, currentTurn);
 
-  const burnStack = isP1 ? (state.pvpBurnP1 || 0) : (state.pvpBurnP2 || 0);
+  const burnStack = currentCombatant.burn;
   if (burnStack > 0) {
     const burnRawDmg = PVP.passive.fireBurnTickBase
       + burnStack * PVP.passive.fireBurnTickPerStack;
@@ -155,7 +170,7 @@ export function resolvePvpTurnStartStatus<TState extends PvpTurnStartState>({
     return true;
   }
 
-  const paralyzed = isP1 ? !!state.pvpParalyzeP1 : !!state.pvpParalyzeP2;
+  const paralyzed = currentCombatant.paralyze;
   if (paralyzed) {
     if (isP1) setPvpParalyzeP1(false);
     else setPvpParalyzeP2(false);
@@ -166,7 +181,7 @@ export function resolvePvpTurnStartStatus<TState extends PvpTurnStartState>({
     return true;
   }
 
-  const frozen = isP1 ? !!state.pvpFreezeP1 : !!state.pvpFreezeP2;
+  const frozen = currentCombatant.freeze;
   if (frozen) {
     if (isP1) setPvpFreezeP1(false);
     else setPvpFreezeP2(false);

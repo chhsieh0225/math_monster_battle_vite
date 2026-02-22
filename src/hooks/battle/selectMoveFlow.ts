@@ -1,5 +1,6 @@
 import type { MoveVm, QuestionVm, StarterVm } from '../../types/battle';
 import { PVP_TIMER_SEC } from '../../data/constants.ts';
+import { getResolvedPvpCombatant, getResolvedPvpTurn } from './pvpStateSelectors.ts';
 
 type BattleStarter = StarterVm | null;
 type BattleQuestion = QuestionVm;
@@ -8,6 +9,11 @@ type BattleState = {
   phase: string;
   battleMode: string;
   pvpTurn: 'p1' | 'p2';
+  pvpState?: {
+    p1?: { charge?: number };
+    p2?: { charge?: number };
+    turn?: 'p1' | 'p2';
+  } | null;
   pvpChargeP1: number;
   pvpChargeP2: number;
   sealedMove: number | null;
@@ -83,7 +89,8 @@ export function runSelectMoveFlow({
     return false;
   }
   if (state.battleMode === 'pvp' && move?.risky) {
-    const chargeNow = state.pvpTurn === 'p1' ? (state.pvpChargeP1 || 0) : (state.pvpChargeP2 || 0);
+    const currentTurn = getResolvedPvpTurn(state);
+    const chargeNow = getResolvedPvpCombatant(state, currentTurn).charge;
     if (chargeNow < 3) return false;
   }
 

@@ -1,5 +1,6 @@
 import { isCoopBattleMode } from './coopFlow.ts';
 import type { StarterVm } from '../../types/battle';
+import { getResolvedPvpTurn } from './pvpStateSelectors.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -19,6 +20,9 @@ type StarterLike = {
 export type TurnState = {
   battleMode?: string;
   pvpTurn?: 'p1' | 'p2';
+  pvpState?: {
+    turn?: 'p1' | 'p2';
+  } | null;
   starter?: StarterLike | null;
   pvpStarter2?: StarterLike | null;
   coopActiveSlot?: 'main' | 'sub';
@@ -55,7 +59,7 @@ export function getPvpTurnName(
 export function getActingStarter(state: TurnState | null | undefined): StarterVm | null {
   if (!state) return null;
   if (state.battleMode === 'pvp') {
-    return state.pvpTurn === 'p1'
+    return getResolvedPvpTurn(state) === 'p1'
       ? (state.starter as StarterVm | null)
       : (state.pvpStarter2 as StarterVm | null);
   }

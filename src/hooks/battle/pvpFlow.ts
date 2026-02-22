@@ -14,6 +14,11 @@ import {
 } from './pvpTurnPrimitives.ts';
 import { executePvpStrikeTurn } from './pvpStrikeResolver.ts';
 import { resolvePvpTurnStartStatus } from './pvpStatusResolver.ts';
+import {
+  getResolvedPvpActionCount,
+  getResolvedPvpTurn,
+  getResolvedPvpWinner,
+} from './pvpStateSelectors.ts';
 import { resolvePvpStrike } from './turnResolver.ts';
 
 type TranslatorParams = Record<string, string | number>;
@@ -60,6 +65,29 @@ type PvpBattleState = {
   screen?: string;
   pvpWinner: PvpWinner;
   pvpTurn: PvpTurn;
+  pvpState?: {
+    p1?: {
+      charge?: number;
+      burn?: number;
+      freeze?: boolean;
+      static?: number;
+      paralyze?: boolean;
+      combo?: number;
+      specDef?: boolean;
+    };
+    p2?: {
+      charge?: number;
+      burn?: number;
+      freeze?: boolean;
+      static?: number;
+      paralyze?: boolean;
+      combo?: number;
+      specDef?: boolean;
+    };
+    turn?: PvpTurn;
+    winner?: PvpWinner;
+    actionCount?: number;
+  } | null;
   starter: StarterLike | null;
   pvpStarter2: StarterLike | null;
   selIdx: number | null;
@@ -305,8 +333,9 @@ export function handlePvpAnswer({
     safeTo,
     getState: () => sr.current,
   });
-  const attacker = state.pvpTurn === 'p1' ? state.starter : state.pvpStarter2;
-  const defender = state.pvpTurn === 'p1' ? state.pvpStarter2 : state.starter;
+  const currentTurn = getResolvedPvpTurn(state);
+  const attacker = currentTurn === 'p1' ? state.starter : state.pvpStarter2;
+  const defender = currentTurn === 'p1' ? state.pvpStarter2 : state.starter;
   if (!attacker || !defender || state.selIdx == null) return false;
 
   const move = attacker.moves?.[state.selIdx];
@@ -316,7 +345,6 @@ export function handlePvpAnswer({
   setFb({ correct, answer: state.q.answer, steps: state.q.steps || [] });
   if (correct) setTC((c) => c + 1);
   else setTW((w) => w + 1);
-  const currentTurn = state.pvpTurn;
   const nextTurn = getOtherPvpTurn(currentTurn);
 
   if (!correct) {
@@ -360,7 +388,7 @@ export function handlePvpAnswer({
     defenderType: defender.type,
     attackerHp,
     attackerMaxHp,
-    firstStrike: state.pvpActionCount === 0,
+    firstStrike: getResolvedPvpActionCount(state) === 0,
     random: rand,
   });
 
@@ -457,7 +485,7 @@ export function processPvpTurnStart({
   t,
 }: ProcessPvpTurnStartArgs): boolean {
   try {
-  if (state.battleMode !== 'pvp' || state.pvpWinner) return false;
+  if (state.battleMode !== 'pvp' || getResolvedPvpWinner(state)) return false;
   if (!isBattleActiveState(state)) return false;
   return resolvePvpTurnStartStatus({
     state,

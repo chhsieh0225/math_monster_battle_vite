@@ -1,5 +1,6 @@
 import { isCoopBattleMode } from './coopFlow.ts';
 import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
+import { getResolvedPvpTurn } from './pvpStateSelectors.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -21,6 +22,9 @@ type BattleState = {
   round?: number;
   timedMode?: boolean;
   pvpTurn?: 'p1' | 'p2';
+  pvpState?: {
+    turn?: 'p1' | 'p2';
+  } | null;
 };
 
 type StateRef = { current: BattleState };
@@ -110,7 +114,7 @@ export function handleTimeoutFlow({
     setFb({ correct: false, answer: s.q?.answer, steps: s.q?.steps || [] });
     setTW((prev) => prev + 1);
 
-    const currentTurn = s.pvpTurn || 'p1';
+    const currentTurn = getResolvedPvpTurn(s);
     const nextTurn = getOtherPvpTurn(currentTurn);
     if (currentTurn === 'p1') {
       setPvpChargeP1(0);

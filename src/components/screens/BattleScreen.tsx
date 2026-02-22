@@ -432,32 +432,25 @@ function BattleScreenComponent({
     const enemySubIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemySubId));
 
     // In co-op, swap only horizontal slots when sub is active.
-    // Keep each unit's vertical baseline stable to avoid jumpy/overlap-prone
-    // y-axis motion on compact/mobile layouts.
+    // Keep each unit's vertical baseline stable to avoid jumpy y-axis motion.
+    // For wide beasts on compact screens, keep the inactive unit closer to the
+    // rear lane so it does not drift into the enemy lane after slot swap.
     const shouldSwapPlayerSlots = isCoopBattle && coopUsingSub;
-    // If a wide main starter (wolf/tiger/lion class) is moved into the forward
-    // sub slot, pull it back from enemy lane — but also keep a minimum gap from
-    // the active sub sprite so both allies do not overlap on mobile.
-    const swappedMainIsWideBeast = shouldSwapPlayerSlots && (playerComp || 1) > 1.3;
-    const swappedMainWidePullback = swappedMainIsWideBeast
-      ? (compactDual ? 24 : 22)
-      : 0;
-    const swappedMainTargetPct = rawSubLeftPct - swappedMainWidePullback;
-    const swappedMainSafeMinPct = rawMainLeftPct + (swappedMainIsWideBeast ? (compactDual ? 4.2 : 5.4) : (compactDual ? 10 : 9));
-    const swappedMainSafeMaxPct = rawSubLeftPct - (swappedMainIsWideBeast ? (compactDual ? 2.2 : 1.3) : (compactDual ? 1.5 : 1));
-    const swappedMainWideCompactCapPct = swappedMainIsWideBeast && compactDual ? 5.8 : Number.POSITIVE_INFINITY;
-    const clampedSwappedMainPct = Math.max(
-      1,
-      Math.min(
-        swappedMainWideCompactCapPct,
-        Math.min(swappedMainSafeMaxPct, Math.max(swappedMainSafeMinPct, swappedMainTargetPct)),
-      ),
-    );
+    const isWideMainSprite = (playerComp || 1) > 1.3;
+    const isWideSubSprite = (subComp || 1) > 1.3;
+    const compactWideInactiveMainShiftPct = compactDual && isWideMainSprite ? 4.2 : 0;
+    const compactWideInactiveSubShiftPct = compactDual && isWideSubSprite ? 6.2 : 0;
     const playerMainLeftPct = shouldSwapPlayerSlots
-      ? clampedSwappedMainPct
+      ? (compactWideInactiveMainShiftPct > 0
+        ? rawMainLeftPct + compactWideInactiveMainShiftPct
+        : rawSubLeftPct)
       : rawMainLeftPct;
     const playerMainBottomPct = rawMainBottomPct;
-    const playerSubLeftPct = shouldSwapPlayerSlots ? rawMainLeftPct : rawSubLeftPct;
+    const playerSubLeftPct = shouldSwapPlayerSlots
+      ? rawMainLeftPct
+      : (compactWideInactiveSubShiftPct > 0
+        ? rawMainLeftPct + compactWideInactiveSubShiftPct
+        : rawSubLeftPct);
     const playerSubBottomPct = rawSubBottomPct;
     const mainPlayerSize = coopUsingSub ? starterSubRoleSize : rawMainSize;
     const subPlayerSize = coopUsingSub ? allyMainRoleSize : rawSubSize;
@@ -489,8 +482,8 @@ function BattleScreenComponent({
             ? 120
             : 96;
     const enemySubScaleNum = Number(enemySubScale) || 1;
-    const isWidePlayerMainSprite = (playerComp || 1) >= 1.55;
-    const isWidePlayerSubSprite = (subComp || 1) >= 1.55;
+    const isWidePlayerMainSprite = isWideMainSprite;
+    const isWidePlayerSubSprite = isWideSubSprite;
     const isWideEnemyMainSprite = (enemyComp || 1) >= 1.55;
     const isWideEnemySubSprite = Boolean(enemySubId)
       && !enemySubIsBossVisual
@@ -586,7 +579,8 @@ function BattleScreenComponent({
       (playerSubLeftPct - wideSubBackShiftPct) * arenaWidthPx / 100,
       playerSubWidthPx,
     );
-    if (showAllySub) {
+    const skipStrictAllySeparation = compactDual && (isWidePlayerMainSprite || isWidePlayerSubSprite);
+    if (showAllySub && !skipStrictAllySeparation) {
       // On narrow phones, permit a small ally overlap so wide sprites can stay
       // farther from the enemy lane after main/sub swap without hard clipping.
       const allowAllyOverlapPx = Math.min(playerMainWidthPx, playerSubWidthPx) * laneTuning.allyOverlapRatio;

@@ -53,6 +53,13 @@ const MonsterSprite = memo(function MonsterSprite({
       <g dangerouslySetInnerHTML={{ __html: svgStr }} />
     </svg>
   );
-}, (a: MonsterSpriteProps, b: MonsterSpriteProps) => a.svgStr === b.svgStr && a.size === b.size && a.anim === b.anim);
+}, (a: MonsterSpriteProps, b: MonsterSpriteProps) => (
+  a.svgStr === b.svgStr
+  && a.size === b.size
+  && a.anim === b.anim
+  && a.style === b.style
+  && a.ariaLabel === b.ariaLabel
+  && a.decorative === b.decorative
+));
 
 export default MonsterSprite;

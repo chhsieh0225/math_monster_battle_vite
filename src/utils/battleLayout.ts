@@ -86,6 +86,59 @@ export type BattleLaneTuning = {
   allyOverlapRatio: number;
 };
 
+export type ResolveBattleLaneSnapshotInput = {
+  arenaWidthPx: number;
+  compactDual: boolean;
+  hasDualUnits: boolean;
+  isCoopBattle: boolean;
+  showAllySub: boolean;
+  showEnemySub: boolean;
+  coopUsingSub: boolean;
+  playerComp: number;
+  subComp: number;
+  enemyComp: number;
+  rawMainLeftPct: number;
+  rawMainBottomPct: number;
+  rawSubLeftPct: number;
+  rawSubBottomPct: number;
+  rawMainSize: number;
+  rawSubSize: number;
+  starterSubRoleSize: number;
+  allyMainRoleSize: number;
+  enemyMainRightPct: number;
+  enemySubRightPct: number;
+  enemyTopPct: number;
+  enemySubTopPct: number;
+  enemySize: number;
+  enemySubId?: string;
+  enemySubIsBossVisual: boolean;
+  enemySubIsEvolved: boolean;
+};
+
+export type BattleLaneSnapshot = {
+  playerMainLeftPct: number;
+  playerMainBottomPct: number;
+  playerSubLeftPct: number;
+  playerSubBottomPct: number;
+  mainPlayerSize: number;
+  subPlayerSize: number;
+  enemyMainRightPct: number;
+  enemySubRightPct: number;
+  enemyTopPct: number;
+  enemySubTopPct: number;
+  enemySubScale: string;
+  enemySubScaleNum: number;
+  enemySubSize: number;
+  lanePlayerMainScale: number;
+  lanePlayerSubScale: number;
+  laneEnemyMainScale: number;
+  laneEnemySubScale: number;
+  playerMainWidthPx: number;
+  playerSubWidthPx: number;
+  enemyMainWidthPx: number;
+  enemySubWidthPx: number;
+};
+
 const DEVICE_TIER_THRESHOLD = {
   phoneMaxWidth: 520,
   tabletMaxWidth: 980,
@@ -174,6 +227,10 @@ const LANE_TUNING_CONFIG = {
 
 function dualityKey(hasDualUnits: boolean): DualityKey {
   return hasDualUnits ? 'dual' : 'single';
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
 
 export function resolveBattleDeviceTier(arenaWidth: number): BattleDeviceTier {
@@ -518,5 +575,214 @@ export function resolveBattleLayout({
     playerComp,
     enemyComp,
     subComp,
+  };
+}
+
+export function resolveBattleLaneSnapshot({
+  arenaWidthPx,
+  compactDual,
+  hasDualUnits,
+  isCoopBattle,
+  showAllySub,
+  showEnemySub,
+  coopUsingSub,
+  playerComp,
+  subComp,
+  enemyComp,
+  rawMainLeftPct,
+  rawMainBottomPct,
+  rawSubLeftPct,
+  rawSubBottomPct,
+  rawMainSize,
+  rawSubSize,
+  starterSubRoleSize,
+  allyMainRoleSize,
+  enemyMainRightPct,
+  enemySubRightPct,
+  enemyTopPct,
+  enemySubTopPct,
+  enemySize,
+  enemySubId = '',
+  enemySubIsBossVisual,
+  enemySubIsEvolved,
+}: ResolveBattleLaneSnapshotInput): BattleLaneSnapshot {
+  const safeArenaWidthPx = Math.max(280, arenaWidthPx || 390);
+
+  // In co-op, swap only horizontal slots when sub is active.
+  // Keep each unit's vertical baseline stable to avoid jumpy y-axis motion.
+  // For wide beasts on compact screens, keep the inactive unit closer to rear lane.
+  const shouldSwapPlayerSlots = isCoopBattle && coopUsingSub;
+  const isWideMainSprite = (playerComp || 1) > 1.3;
+  const isWideSubSprite = (subComp || 1) > 1.3;
+  const compactWideInactiveMainShiftPct = compactDual && isWideMainSprite ? 4.2 : 0;
+  const compactWideInactiveSubShiftPct = compactDual && isWideSubSprite ? 6.2 : 0;
+
+  const playerMainLeftPct = shouldSwapPlayerSlots
+    ? (compactWideInactiveMainShiftPct > 0
+      ? rawMainLeftPct + compactWideInactiveMainShiftPct
+      : rawSubLeftPct)
+    : rawMainLeftPct;
+  const playerMainBottomPct = rawMainBottomPct;
+  const playerSubLeftPct = shouldSwapPlayerSlots
+    ? rawMainLeftPct
+    : (compactWideInactiveSubShiftPct > 0
+      ? rawMainLeftPct + compactWideInactiveSubShiftPct
+      : rawSubLeftPct);
+  const playerSubBottomPct = rawSubBottomPct;
+
+  const mainPlayerSize = coopUsingSub ? starterSubRoleSize : rawMainSize;
+  const subPlayerSize = coopUsingSub ? allyMainRoleSize : rawSubSize;
+
+  const isLargeEnemySub = enemySubId === 'golumn' || enemySubId === 'golumn_mud' || enemySubId === 'mushroom';
+  const enemySubScale = isLargeEnemySub
+    ? (compactDual ? '0.86' : '0.94')
+    : (compactDual ? '0.72' : '0.8');
+  const enemySubSize = !enemySubId
+    ? 96
+    : enemySubIsBossVisual
+      ? 160
+      : isLargeEnemySub
+        ? 150
+        : enemySubIsEvolved
+          ? 120
+          : 96;
+  const enemySubScaleNum = Number(enemySubScale) || 1;
+
+  const isWidePlayerMainSprite = isWideMainSprite;
+  const isWidePlayerSubSprite = isWideSubSprite;
+  const isWideEnemyMainSprite = (enemyComp || 1) >= 1.55;
+  const isWideEnemySubSprite = Boolean(enemySubId)
+    && !enemySubIsBossVisual
+    && (enemySubIsEvolved || isLargeEnemySub);
+
+  const deviceTier = resolveBattleDeviceTier(safeArenaWidthPx);
+  const laneTuning = resolveBattleLaneTuning({
+    arenaWidthPx: safeArenaWidthPx,
+    deviceTier,
+    hasDualUnits,
+    isCoopBattle,
+    showAllySub,
+    showEnemySub,
+    isWidePlayerMainSprite,
+    isWidePlayerSubSprite,
+    isWideEnemyMainSprite,
+    isWideEnemySubSprite,
+  });
+
+  const sepPx = safeArenaWidthPx * laneTuning.sepPct / 100;
+  const safeGapPx = safeArenaWidthPx * laneTuning.safeGapPct / 100;
+  const minPlayerLeftPx = safeArenaWidthPx * laneTuning.minPlayerLeftPct / 100;
+  const minEnemyRightPx = safeArenaWidthPx * laneTuning.minEnemyRightPct / 100;
+  const playerLaneRightPx = sepPx - safeGapPx;
+  const enemyLaneLeftPx = sepPx + safeGapPx;
+  const playerLaneWidthPx = Math.max(24, playerLaneRightPx - minPlayerLeftPx);
+  const enemyLaneWidthPx = Math.max(24, safeArenaWidthPx - minEnemyRightPx - enemyLaneLeftPx);
+  const allyGapPx = laneTuning.allyGapPx;
+
+  // When two allies share one lane on small phones, shrink both together
+  // so they fit in-lane before applying positional clamps.
+  const playerTotalWidthPx = showAllySub
+    ? mainPlayerSize + subPlayerSize + allyGapPx
+    : mainPlayerSize;
+  const playerLaneScale = Math.min(1, playerLaneWidthPx / Math.max(1, playerTotalWidthPx));
+  const basePlayerMainScale = Math.min(playerLaneScale, laneTuning.widePlayerMainScaleCap);
+  const basePlayerSubScale = showAllySub
+    ? Math.min(playerLaneScale, laneTuning.widePlayerSubScaleCap)
+    : 1;
+  const baseEnemyMainScale = Math.min(
+    1,
+    enemyLaneWidthPx / Math.max(1, enemySize),
+    laneTuning.wideEnemyMainScaleCap,
+  );
+  const baseEnemySubScale = Math.min(
+    1,
+    enemyLaneWidthPx / Math.max(1, enemySubSize * enemySubScaleNum),
+    laneTuning.wideEnemySubScaleCap,
+  );
+
+  // Co-op readability scaling by device:
+  // phone: slightly smaller, tablet: tiny reduction, laptop: unchanged.
+  const resolvedPlayerMainScale = Math.min(1, basePlayerMainScale * laneTuning.coopGlobalScale);
+  const resolvedPlayerSubScale = Math.min(1, basePlayerSubScale * laneTuning.coopGlobalScale);
+  const resolvedEnemyMainScale = Math.min(1, baseEnemyMainScale * laneTuning.coopGlobalScale);
+  const resolvedEnemySubScale = Math.min(1, baseEnemySubScale * laneTuning.coopGlobalScale);
+
+  const playerMainWidthPx = mainPlayerSize * resolvedPlayerMainScale;
+  const playerSubWidthPx = subPlayerSize * resolvedPlayerSubScale;
+  const enemyMainWidthPx = enemySize * resolvedEnemyMainScale;
+  const enemySubWidthPx = enemySubSize * enemySubScaleNum * resolvedEnemySubScale;
+
+  const clampPlayerLeftPx = (leftPx: number, spriteWidthPx: number): number => {
+    const maxLeftPx = playerLaneRightPx - spriteWidthPx;
+    return clampNumber(leftPx, minPlayerLeftPx, Math.max(minPlayerLeftPx, maxLeftPx));
+  };
+  const clampEnemyRightPx = (rightPx: number, spriteWidthPx: number): number => {
+    const maxRightPx = safeArenaWidthPx - spriteWidthPx - enemyLaneLeftPx;
+    return clampNumber(rightPx, minEnemyRightPx, Math.max(minEnemyRightPx, maxRightPx));
+  };
+
+  let resolvedPlayerMainLeftPx = clampPlayerLeftPx(
+    (playerMainLeftPct - laneTuning.wideMainBackShiftPct) * safeArenaWidthPx / 100,
+    playerMainWidthPx,
+  );
+  let resolvedPlayerSubLeftPx = clampPlayerLeftPx(
+    (playerSubLeftPct - laneTuning.wideSubBackShiftPct) * safeArenaWidthPx / 100,
+    playerSubWidthPx,
+  );
+
+  const skipStrictAllySeparation = compactDual && (isWidePlayerMainSprite || isWidePlayerSubSprite);
+  if (showAllySub && !skipStrictAllySeparation) {
+    // On narrow phones, permit a small ally overlap so wide sprites can stay
+    // farther from the enemy lane after main/sub swap without hard clipping.
+    const allowAllyOverlapPx = Math.min(playerMainWidthPx, playerSubWidthPx) * laneTuning.allyOverlapRatio;
+    const requiredSeparationPx = Math.max(0, playerMainWidthPx + allyGapPx - allowAllyOverlapPx);
+    const maxSubLeftPx = Math.max(minPlayerLeftPx, playerLaneRightPx - playerSubWidthPx);
+    const minSubLeftPxFromMain = resolvedPlayerMainLeftPx + requiredSeparationPx;
+    if (minSubLeftPxFromMain > maxSubLeftPx) {
+      resolvedPlayerMainLeftPx = clampPlayerLeftPx(
+        maxSubLeftPx - requiredSeparationPx,
+        playerMainWidthPx,
+      );
+    }
+    const minSubLeftPx = Math.min(
+      maxSubLeftPx,
+      resolvedPlayerMainLeftPx + requiredSeparationPx,
+    );
+    resolvedPlayerSubLeftPx = clampNumber(resolvedPlayerSubLeftPx, minSubLeftPx, maxSubLeftPx);
+  }
+
+  const resolvedEnemyMainRightPx = clampEnemyRightPx(
+    (enemyMainRightPct + laneTuning.wideEnemyMainRetreatPct) * safeArenaWidthPx / 100,
+    enemyMainWidthPx,
+  );
+  const resolvedEnemySubRightPx = showEnemySub
+    ? clampEnemyRightPx(
+      (enemySubRightPct + laneTuning.wideEnemySubRetreatPct) * safeArenaWidthPx / 100,
+      enemySubWidthPx,
+    )
+    : enemySubRightPct * safeArenaWidthPx / 100;
+
+  return {
+    playerMainLeftPct: resolvedPlayerMainLeftPx / safeArenaWidthPx * 100,
+    playerMainBottomPct,
+    playerSubLeftPct: resolvedPlayerSubLeftPx / safeArenaWidthPx * 100,
+    playerSubBottomPct,
+    mainPlayerSize,
+    subPlayerSize,
+    enemyMainRightPct: resolvedEnemyMainRightPx / safeArenaWidthPx * 100,
+    enemySubRightPct: resolvedEnemySubRightPx / safeArenaWidthPx * 100,
+    enemyTopPct,
+    enemySubTopPct,
+    enemySubScale,
+    enemySubScaleNum,
+    enemySubSize,
+    lanePlayerMainScale: resolvedPlayerMainScale,
+    lanePlayerSubScale: resolvedPlayerSubScale,
+    laneEnemyMainScale: resolvedEnemyMainScale,
+    laneEnemySubScale: resolvedEnemySubScale,
+    playerMainWidthPx,
+    playerSubWidthPx,
+    enemyMainWidthPx,
+    enemySubWidthPx,
   };
 }

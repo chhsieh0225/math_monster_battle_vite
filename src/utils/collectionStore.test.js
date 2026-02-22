@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { addToCollection, getCollectionPerks, loadCollection } from './collectionStore.ts';
+import {
+  addToCollection,
+  getCollectionPerks,
+  loadCollection,
+  MAX_COLLECTION_ALL_DAMAGE_BONUS,
+  MAX_COLLECTION_TYPE_DAMAGE_BONUS,
+} from './collectionStore.ts';
 
 function createStorageMock() {
   const map = new Map();
@@ -49,3 +55,45 @@ test('addToCollection reports newly unlocked milestone ids once', () => {
   assert.equal(loadCollection()['🔥'], 11);
 });
 
+test('getCollectionPerks unlocks combo milestone when all requirements are met', () => {
+  const perks = getCollectionPerks({
+    '🔥': 5,
+    '💧': 5,
+    '⚡': 5,
+    '🌿': 5,
+    '🛡️': 5,
+  });
+
+  assert.equal(perks.unlockedMilestoneIds.includes('elemental_harmony_1'), true);
+  assert.equal(perks.unlockedTitles.some((title) => title.id === 'elemental_harmony'), true);
+  assert.equal(perks.allDamageBonus, 0.01);
+});
+
+test('getCollectionPerks caps damage bonuses at configured limits', () => {
+  const perks = getCollectionPerks({
+    '🔥': 999,
+    '💧': 999,
+    '⚡': 999,
+    '⭐': 999,
+    '🌿': 999,
+    '🛡️': 999,
+    '💎': 999,
+    '🪨': 999,
+    '💀': 999,
+    '👻': 999,
+    '☠️': 999,
+    '🍬': 999,
+    '🐉': 999,
+    '👑': 999,
+    '🏆': 999,
+    '⚔️': 999,
+  });
+
+  assert.equal(perks.damageBonusByType.fire, MAX_COLLECTION_TYPE_DAMAGE_BONUS);
+  assert.equal(perks.damageBonusByType.water, MAX_COLLECTION_TYPE_DAMAGE_BONUS);
+  assert.equal(perks.damageBonusByType.electric, MAX_COLLECTION_TYPE_DAMAGE_BONUS);
+  assert.equal(perks.damageBonusByType.light, MAX_COLLECTION_TYPE_DAMAGE_BONUS);
+  assert.equal(perks.damageBonusByType.grass, MAX_COLLECTION_TYPE_DAMAGE_BONUS);
+  assert.equal(perks.damageBonusByType.steel, MAX_COLLECTION_TYPE_DAMAGE_BONUS);
+  assert.equal(Math.abs(perks.allDamageBonus - MAX_COLLECTION_ALL_DAMAGE_BONUS) < 1e-9, true);
+});

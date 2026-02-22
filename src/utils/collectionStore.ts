@@ -1,5 +1,10 @@
 import { readJson, writeJson } from './storage.ts';
-import { COLLECTION_MILESTONES, type CollectionTitleReward } from '../data/collectionMilestones.ts';
+import {
+  COLLECTION_MILESTONES,
+  type CollectionMilestoneDef,
+  type CollectionMilestoneRequirement,
+  type CollectionTitleReward,
+} from '../data/collectionMilestones.ts';
 
 /**
  * collectionStore.ts — Persistent drop collection tracking.
@@ -9,6 +14,8 @@ import { COLLECTION_MILESTONES, type CollectionTitleReward } from '../data/colle
  */
 
 const COLLECTION_KEY = 'mathMonsterBattle_collection';
+export const MAX_COLLECTION_TYPE_DAMAGE_BONUS = 0.12;
+export const MAX_COLLECTION_ALL_DAMAGE_BONUS = 0.08;
 
 export type CollectionData = Record<string, number>;
 export type CollectionTitle = Omit<CollectionTitleReward, 'kind'>;
@@ -35,8 +42,23 @@ export function saveCollection(data: CollectionData): void {
   writeJson(COLLECTION_KEY, data);
 }
 
-function isMilestoneUnlocked(data: CollectionData, emoji: string, required: number): boolean {
-  return (data[emoji] || 0) >= required;
+function resolveMilestoneRequirements(
+  milestone: CollectionMilestoneDef,
+): readonly CollectionMilestoneRequirement[] {
+  const requirements = milestone.requirements;
+  if (Array.isArray(requirements) && requirements.length > 0) {
+    return requirements as readonly CollectionMilestoneRequirement[];
+  }
+  if (typeof milestone.required === 'number' && Number.isFinite(milestone.required)) {
+    return [{ emoji: milestone.emoji, required: milestone.required }];
+  }
+  return [];
+}
+
+function isMilestoneUnlocked(data: CollectionData, milestone: CollectionMilestoneDef): boolean {
+  const requirements = resolveMilestoneRequirements(milestone);
+  if (requirements.length <= 0) return false;
+  return requirements.every((requirement) => (data[requirement.emoji] || 0) >= requirement.required);
 }
 
 export function getCollectionPerks(data: CollectionData = loadCollection()): CollectionPerks {
@@ -46,7 +68,7 @@ export function getCollectionPerks(data: CollectionData = loadCollection()): Col
   let allDamageBonus = 0;
 
   for (const milestone of COLLECTION_MILESTONES) {
-    if (!isMilestoneUnlocked(data, milestone.emoji, milestone.required)) continue;
+    if (!isMilestoneUnlocked(data, milestone)) continue;
     unlockedMilestoneIds.push(milestone.id);
     for (const reward of milestone.rewards) {
       if (reward.kind === 'title') {
@@ -58,10 +80,14 @@ export function getCollectionPerks(data: CollectionData = loadCollection()): Col
         continue;
       }
       if (reward.damageType === 'all') {
-        allDamageBonus += reward.bonus;
+        allDamageBonus = Math.min(MAX_COLLECTION_ALL_DAMAGE_BONUS, allDamageBonus + reward.bonus);
         continue;
       }
-      damageBonusByType[reward.damageType] = (damageBonusByType[reward.damageType] || 0) + reward.bonus;
+      const prevBonus = damageBonusByType[reward.damageType] || 0;
+      damageBonusByType[reward.damageType] = Math.min(
+        MAX_COLLECTION_TYPE_DAMAGE_BONUS,
+        prevBonus + reward.bonus,
+      );
     }
   }
 

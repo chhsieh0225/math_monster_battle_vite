@@ -52,3 +52,19 @@ export function useBattleAsyncGate(): {
     invalidateAsyncWork,
   };
 }
+
+/**
+ * Stable callback identity with latest implementation.
+ * Useful for high-fanout battle handlers to avoid callback dependency churn.
+ */
+export function useStableCallback<TArgs extends unknown[], TResult>(
+  fn: (...args: TArgs) => TResult,
+): (...args: TArgs) => TResult {
+  const fnRef = useRef(fn);
+
+  useLayoutEffect(() => {
+    fnRef.current = fn;
+  }, [fn]);
+
+  return useCallback((...args: TArgs) => fnRef.current(...args), []);
+}

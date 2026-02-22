@@ -126,7 +126,7 @@ import {
   runBattleVictory,
 } from './battle/progressionFlowAdapter.ts';
 import { useCoopTurnRotation } from './useCoopTurnRotation';
-import { useBattleAsyncGate, useBattleStateRef } from './useBattleRuntime';
+import { useBattleAsyncGate, useBattleStateRef, useStableCallback } from './useBattleRuntime';
 import { buildUseBattleState } from './battle/publicStateBuilder.ts';
 import { buildUseBattleView } from './battle/publicViewBuilder.ts';
 import { buildUseBattleActions } from './battle/publicActionsBuilder.ts';
@@ -399,6 +399,7 @@ export function useBattle() {
         .filter(Boolean)
         .slice(0, 6)
       : [];
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- this effect appends review entries after answer feedback is committed
     setWrongQuestions((prev) => {
       const nextId = (prev.at(-1)?.id ?? 0) + 1;
       const next = [...prev, { id: nextId, display, answer, steps }];
@@ -450,6 +451,9 @@ export function useBattle() {
     pvpParalyzeP1, pvpParalyzeP2, pvpComboP1, pvpComboP2, pvpSpecDefP1, pvpSpecDefP2,
     inventory,
   });
+  const uiRef = useBattleStateRef(UI);
+  const battleFieldSettersRef = useBattleStateRef(battleFieldSetters);
+  const pvpStoreRef = useBattleStateRef(pvpStore);
 
   const {
     beginRun,
@@ -639,7 +643,7 @@ export function useBattle() {
   }, [safeTo, setEAnim, setPAnim]);
 
   // ── Finalize and persist session log ──
-  const _endSession = useCallback((isCompleted: boolean, reasonOverride: string | null = null) => {
+  const endSessionImpl = useCallback((isCompleted: boolean, reasonOverride: string | null = null) => {
     clearSave(); // Wipe mid-run save on any session end (victory, KO, quit)
     if (!isCompleted) {
       settleRunAsFailed(sr.current?.defeated || 0);
@@ -651,9 +655,10 @@ export function useBattle() {
       reasonOverride,
     });
   }, [sr, endSessionOnce, settleRunAsFailed]);
+  const _endSession = useStableCallback(endSessionImpl);
 
   // --- Shared game-completion logic (achievements + session save) ---
-  const _finishGame = useCallback(() => {
+  const finishGameImpl = useCallback(() => {
     settleRunAsCleared();
     runFinishGameController({
       sr,
@@ -664,6 +669,7 @@ export function useBattle() {
       setScreen,
     });
   }, [settleRunAsCleared, sr, tryUnlock, setEncData, _endSession, setScreen]);
+  const _finishGame = useStableCallback(finishGameImpl);
 
   // --- Start a battle against enemies[idx], optionally from a fresh roster ---
   const startBattle = useCallback((idx: number, roster?: EnemyVm[]) => {
@@ -733,11 +739,13 @@ export function useBattle() {
     });
   }, [setDmgs, setParts, setAtkEffect, setEffMsg, abilityModelRef, frozenR, pendingEvolve, pendingTextAdvanceActionRef]);
 
-  const startGame = useCallback((
+  const startGameImpl = useCallback((
     starterOverride?: StarterVm | null,
     modeOverride: BattleMode | null = null,
     allyOverride: StarterVm | null = null,
   ) => {
+    const pvp = pvpStoreRef.current;
+    const ui = uiRef.current;
     setCollectionPopup(null);
     setWrongQuestions([]);
     clearRecentQuestionDisplays();
@@ -767,8 +775,8 @@ export function useBattle() {
             setScreen: setScreenFromString,
             playBattleIntro,
           },
-          pvp: pvpStore,
-          ui: UI,
+          pvp,
+          ui,
           resetRunRuntimeState,
         },
         standardStartDepsArgs: {
@@ -782,7 +790,7 @@ export function useBattle() {
             setScreen: setScreenFromString,
             startBattle,
           },
-          pvp: pvpStore,
+          pvp,
           resetRunRuntimeState,
         },
         startGameControllerArgs: {
@@ -818,8 +826,8 @@ export function useBattle() {
     initSession,
     setScreenFromString,
     playBattleIntro,
-    pvpStore,
-    UI,
+    pvpStoreRef,
+    uiRef,
     resetRunRuntimeState,
     startBattle,
     sr,
@@ -831,6 +839,7 @@ export function useBattle() {
     activateQueuedChallenge,
     clearRecentQuestionDisplays,
   ]);
+  const startGame = useStableCallback(startGameImpl);
 
   const quitGame = useCallback(() => {
     runQuitGameWithContext({
@@ -842,7 +851,7 @@ export function useBattle() {
     });
   }, [clearTimer, appendQuitEventIfOpen, sr, _endSession, setScreenFromString]);
 
-  const handlePlayerPartyKo = useCallback(({
+  const handlePlayerPartyKoImpl = useCallback(({
     target = 'main',
     reason = t('battle.ally.ko', 'Your partner has fallen...'),
   }: { target?: 'main' | 'sub'; reason?: string } = {}) => {
@@ -876,9 +885,10 @@ export function useBattle() {
     setScreenFromString,
     t,
   ]);
+  const handlePlayerPartyKo = useStableCallback(handlePlayerPartyKoImpl);
 
   // --- Handle a defeated enemy ---
-  const handleVictory = useCallback((verb = t("battle.victory.verb.defeated", "was defeated")) => {
+  const handleVictoryImpl = useCallback((verb = t("battle.victory.verb.defeated", "was defeated")) => {
     runBattleVictory({
       victoryInput: {
         verb,
@@ -933,8 +943,8 @@ export function useBattle() {
           sfx,
           t,
         },
-        battleFields: battleFieldSetters,
-        ui: UI,
+        battleFields: battleFieldSettersRef.current,
+        ui: uiRef.current,
         frozenRef: frozenR,
         pendingEvolveRef: pendingEvolve,
       },
@@ -946,13 +956,14 @@ export function useBattle() {
     getPlayerMaxHp,
     tryUnlock,
     updateEncDefeated,
-    battleFieldSetters,
-    UI,
+    battleFieldSettersRef,
+    uiRef,
     frozenR,
     pendingEvolve,
   ]);
+  const handleVictory = useStableCallback(handleVictoryImpl);
 
-  const runAllySupportTurn = useCallback(({ delayMs = 850, onDone }: { delayMs?: number; onDone?: () => void } = {}) => {
+  const runAllySupportTurnImpl = useCallback(({ delayMs = 850, onDone }: { delayMs?: number; onDone?: () => void } = {}) => {
     return runAllySupportTurnWithContext({
       sr,
       safeTo,
@@ -969,9 +980,10 @@ export function useBattle() {
       t,
     }, { delayMs, onDone });
   }, [sr, safeTo, chance, rand, setBText, setPhase, setEAnim, setEHp, addD, addP, handleVictory, t]);
+  const runAllySupportTurn = useStableCallback(runAllySupportTurnImpl);
 
   // --- Frozen enemy skips turn ---
-  const handleFreeze = useCallback(() => {
+  const handleFreezeImpl = useCallback(() => {
     runHandleFreezeWithContext({
       sr,
       frozenRef: frozenR,
@@ -982,9 +994,10 @@ export function useBattle() {
       t,
     });
   }, [sr, frozenR, setFrozen, setBText, setPhase, safeTo, t]);
+  const handleFreeze = useStableCallback(handleFreezeImpl);
 
   // --- Player selects a move ---
-  const selectMove = useCallback((i: number) => {
+  const selectMoveImpl = useCallback((i: number) => {
     runSelectMoveWithContext({
       sr,
       runtime: {
@@ -1000,8 +1013,8 @@ export function useBattle() {
         markQStart,
         sfx,
       },
-      ui: UI,
-      battleFields: battleFieldSetters,
+      ui: uiRef.current,
+      battleFields: battleFieldSettersRef.current,
     }, i);
   }, [
     sr,
@@ -1014,12 +1027,13 @@ export function useBattle() {
     genBattleQuestion,
     startTimer,
     markQStart,
-    UI,
-    battleFieldSetters,
+    uiRef,
+    battleFieldSettersRef,
   ]);
+  const selectMove = useStableCallback(selectMoveImpl);
 
   // --- Enemy turn logic (reads from stateRef) ---
-  const doEnemyTurn = useCallback(() => {
+  const doEnemyTurnImpl = useCallback(() => {
     runBattleEnemyTurn({
       enemyTurnInput: {
         sr,
@@ -1029,11 +1043,11 @@ export function useBattle() {
           randInt,
           chance,
           sfx,
-      setScreen: setScreenFromString,
+          setScreen: setScreenFromString,
           t,
         },
-        battleFields: battleFieldSetters,
-        ui: UI,
+        battleFields: battleFieldSettersRef.current,
+        ui: uiRef.current,
         callbacks: {
           _endSession,
           handleVictory,
@@ -1049,16 +1063,17 @@ export function useBattle() {
     chance,
     setScreenFromString,
     t,
-    battleFieldSetters,
-    UI,
+    battleFieldSettersRef,
+    uiRef,
     _endSession,
     handleVictory,
     handlePlayerPartyKo,
   ]);
+  const doEnemyTurn = useStableCallback(doEnemyTurnImpl);
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; }, [doEnemyTurn, doEnemyTurnRef]);
 
   // --- Player answers a question ---
-  const onAns = useCallback((choice: number) => {
+  const onAnsImpl = useCallback((choice: number) => {
     runAnswerWithContext({
       answered,
       setAnswered,
@@ -1074,9 +1089,9 @@ export function useBattle() {
           setScreen: setScreenFromString,
           t,
         },
-        ui: UI,
-        pvp: pvpStore,
-        battleFields: battleFieldSetters,
+        ui: uiRef.current,
+        pvp: pvpStoreRef.current,
+        battleFields: battleFieldSettersRef.current,
       },
       playerDepsArgs: {
         runtime: {
@@ -1089,8 +1104,8 @@ export function useBattle() {
           challengeComboMult,
           t,
         },
-        ui: UI,
-        battleFields: battleFieldSetters,
+        ui: uiRef.current,
+        battleFields: battleFieldSettersRef.current,
         callbacks: {
           tryUnlock,
           frozenR,
@@ -1123,9 +1138,9 @@ export function useBattle() {
     safeTo,
     setScreenFromString,
     t,
-    UI,
-    pvpStore,
-    battleFieldSetters,
+    uiRef,
+    pvpStoreRef,
+    battleFieldSettersRef,
     getCollectionDamageScale,
     tryUnlock,
     frozenR,
@@ -1144,6 +1159,7 @@ export function useBattle() {
     challengeComboMult,
     challengeDamageMult,
   ]);
+  const onAns = useStableCallback(onAnsImpl);
 
   // --- Mid-run save: snapshot state before starting next battle ---
   const saveMidRun = useCallback((nextRound: number) => {
@@ -1227,7 +1243,7 @@ export function useBattle() {
   ]);
 
   // --- Advance from text / victory phase ---
-  const continueFromVictory = useCallback(() => {
+  const continueFromVictoryImpl = useCallback(() => {
     runContinueWithContext({
       continueFromVictoryInput: {
         sr,
@@ -1241,8 +1257,8 @@ export function useBattle() {
           getStarterMaxHp,
           t,
         },
-        battleFields: battleFieldSetters,
-        ui: UI,
+        battleFields: battleFieldSettersRef.current,
+        ui: uiRef.current,
         callbacks: {
           finishGame: _finishGame,
           startBattle: startBattleWithSave,
@@ -1257,13 +1273,14 @@ export function useBattle() {
     locale,
     getPlayerMaxHp,
     t,
-    battleFieldSetters,
-    UI,
+    battleFieldSettersRef,
+    uiRef,
     _finishGame,
     startBattleWithSave,
   ]);
+  const continueFromVictory = useStableCallback(continueFromVictoryImpl);
 
-  const advance = useCallback(() => {
+  const advanceImpl = useCallback(() => {
     runAdvanceWithContext({
       phase,
       sr,
@@ -1280,13 +1297,13 @@ export function useBattle() {
           setScreen: setScreenFromString,
           t,
         },
-        ui: UI,
-        pvp: pvpStore,
-        battleFields: battleFieldSetters,
+        ui: uiRef.current,
+        pvp: pvpStoreRef.current,
+        battleFields: battleFieldSettersRef.current,
       },
         pendingEvolutionInput: {
           pendingEvolveRef: pendingEvolve,
-          battleFields: battleFieldSetters,
+          battleFields: battleFieldSettersRef.current,
           setScreen,
           tryUnlock,
           getStageMaxHp: getPlayerMaxHp,
@@ -1305,14 +1322,15 @@ export function useBattle() {
     getPvpTurnName,
     setScreenFromString,
     t,
-    UI,
-    pvpStore,
-    battleFieldSetters,
+    uiRef,
+    pvpStoreRef,
+    battleFieldSettersRef,
     pendingEvolve,
     setScreen,
     tryUnlock,
     getPlayerMaxHp,
   ]);
+  const advance = useStableCallback(advanceImpl);
 
   // --- Continue from evolve screen → start next battle ---
   const continueAfterEvolve = useCallback(() => {
@@ -1390,7 +1408,6 @@ export function useBattle() {
     wrongQuestions,
   });
 
-  // eslint-disable-next-line react-hooks/refs
   const actions = buildUseBattleActions({
     dismissAch,
     dismissCollectionPopup,

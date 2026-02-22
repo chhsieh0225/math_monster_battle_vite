@@ -7,13 +7,35 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',   // SW 自動更新，使用者永遠拿到最新版
+      includeAssets: ['icon-192.png', 'icon-512.png'],
       workbox: {
-        // 預快取所有 build 產物（JS/CSS bundles + public/ 複製過來的靜態資源）
-        globPatterns: ['**/*.{js,css,html,png,jpg,mp3,json,svg,ico,webp}'],
-        // MP3 最大 ~3MB，需提高上限（預設 2MB）
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        // 只預快取 app shell，重資產（音樂/場景/精靈圖）走 runtime cache。
+        // 這可大幅降低首次安裝與更新下載量。
+        globPatterns: ['**/*.{js,css,html,json,svg,ico,webmanifest}'],
+        maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
         // Google Fonts：runtime cache，避免 precache 外部資源失敗阻擋安裝
         runtimeCaching: [
+          {
+            // 場景圖與精靈圖：首次請求後快取，之後離線可用。
+            urlPattern: /\/(?:backgrounds|sprites)\/.*\.(?:png|jpg|jpeg|webp|svg)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'game-visual-assets',
+              expiration: { maxEntries: 260, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // BGM/SE：避免全量 precache，改為按需快取。
+            urlPattern: /\/musics\/.*\.mp3$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'game-bgm-assets',
+              expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 45 },
+              cacheableResponse: { statuses: [0, 200] },
+              rangeRequests: true,
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',

@@ -1088,7 +1088,7 @@ export function useBattle() {
   });
   const selectMoveImpl = useCallback((i: number) => {
     const ctx = selectMoveContextRef.current;
-    runSelectMoveWithContext({
+    const selectMoveInput = {
       sr: ctx.sr,
       runtime: {
         timedMode: ctx.timedMode,
@@ -1105,7 +1105,8 @@ export function useBattle() {
       },
       ui: ctx.uiRef.current,
       battleFields: ctx.battleFieldSettersRef.current,
-    }, i);
+    };
+    runSelectMoveWithContext(selectMoveInput, i);
   }, [selectMoveContextRef]);
   const selectMove = useStableCallback(selectMoveImpl);
 
@@ -1126,26 +1127,27 @@ export function useBattle() {
   });
   const doEnemyTurnImpl = useCallback(() => {
     const ctx = doEnemyTurnContextRef.current;
-    runBattleEnemyTurn({
-      enemyTurnInput: {
-        sr: ctx.sr,
-        runtime: {
-          safeTo: ctx.safeTo,
-          rand: ctx.rand,
-          randInt: ctx.randInt,
-          chance: ctx.chance,
-          sfx,
-          setScreen: ctx.setScreenFromString,
-          t: ctx.t,
-        },
-        battleFields: ctx.battleFieldSettersRef.current,
-        ui: ctx.uiRef.current,
-        callbacks: {
-          _endSession: ctx._endSession,
-          handleVictory: ctx.handleVictory,
-          handlePlayerPartyKo: ctx.handlePlayerPartyKo,
-        },
+    const enemyTurnInput = {
+      sr: ctx.sr,
+      runtime: {
+        safeTo: ctx.safeTo,
+        rand: ctx.rand,
+        randInt: ctx.randInt,
+        chance: ctx.chance,
+        sfx,
+        setScreen: ctx.setScreenFromString,
+        t: ctx.t,
       },
+      battleFields: ctx.battleFieldSettersRef.current,
+      ui: ctx.uiRef.current,
+      callbacks: {
+        _endSession: ctx._endSession,
+        handleVictory: ctx.handleVictory,
+        handlePlayerPartyKo: ctx.handlePlayerPartyKo,
+      },
+    };
+    runBattleEnemyTurn({
+      enemyTurnInput,
     });
   }, [doEnemyTurnContextRef]);
   const doEnemyTurn = useStableCallback(doEnemyTurnImpl);

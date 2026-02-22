@@ -87,4 +87,8 @@ When adding new combat mechanics:
   - `interactionFlowAdapter.test.js`
   - `answerDepsBuilder.test.js`
   - `advanceDepsBuilder.test.js`
+  - `startFlowAdapter.test.js`
+  - `startDepsBuilder.test.js`
+  - `progressionFlowAdapter.test.js`
+  - `progressionDepsBuilder.test.js`
 - For new resolver helpers, add tests before wiring into flows.

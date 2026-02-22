@@ -815,63 +815,73 @@ export function useBattle() {
     ctx.setCollectionPopup(null);
     ctx.setWrongQuestions([]);
     ctx.clearRecentQuestionDisplays();
-    runStartGameWithContext({
+    const pvpStartDepsArgs = {
+      runtime: {
+        chance: ctx.chance,
+        getStarterMaxHp: ctx.getStarterMaxHp,
+        t: ctx.t,
+        setEnemies: ctx.setEnemies,
+        setTimedMode: ctx.setTimedMode,
+        setCoopActiveSlot: ctx.setCoopActiveSlot,
+        dispatchBattle: ctx.dispatchBattle,
+        appendSessionEvent: ctx.appendSessionEvent,
+        initSession: ctx.initSession,
+        createPvpEnemyFromStarter,
+        setScreen: ctx.setScreenFromString,
+        playBattleIntro: ctx.playBattleIntro,
+      },
+      pvp,
+      ui,
+      resetRunRuntimeState: ctx.resetRunRuntimeState,
+    };
+
+    const standardStartDepsArgs = {
+      runtime: {
+        getStarterMaxHp: ctx.getStarterMaxHp,
+        setEnemies: ctx.setEnemies,
+        setCoopActiveSlot: ctx.setCoopActiveSlot,
+        dispatchBattle: ctx.dispatchBattle,
+        appendSessionEvent: ctx.appendSessionEvent,
+        initSession: ctx.initSession,
+        setScreen: ctx.setScreenFromString,
+        startBattle: ctx.startBattle,
+      },
+      pvp,
+      resetRunRuntimeState: ctx.resetRunRuntimeState,
+    };
+
+    const startGameControllerArgs = {
+      sr: ctx.sr,
+      battleMode: ctx.battleMode,
+      pvpStarter2: ctx.pvpStarter2,
+      locale: ctx.locale,
+      localizeStarter,
+      pickPartnerStarter: (mainStarter: StarterVm | null) => pickPartnerStarter(mainStarter, ctx.pickIndex, ctx.locale),
+      getStarterStageIdx,
+      getStageMaxHp: ctx.getPlayerMaxHp,
+    };
+
+    const startGameOrchestratorArgs = {
+      invalidateAsyncWork: ctx.invalidateAsyncWork,
+      beginRun: ctx.beginRun,
+      clearTimer: ctx.clearTimer,
+      resetCoopRotatePending: ctx.resetCoopRotatePending,
+      pvpStartDepsArgs,
+      standardStartDepsArgs,
+      startGameControllerArgs,
+    };
+
+    const startGameInput = {
       setDailyChallengeFeedback: ctx.setDailyChallengeFeedback,
       setTowerChallengeFeedback: ctx.setTowerChallengeFeedback,
       queuedChallenge: ctx.queuedChallenge,
       activeChallenge: ctx.activeChallenge,
       buildNewRoster: ctx.buildNewRoster,
-      startGameOrchestratorArgs: {
-        invalidateAsyncWork: ctx.invalidateAsyncWork,
-        beginRun: ctx.beginRun,
-        clearTimer: ctx.clearTimer,
-        resetCoopRotatePending: ctx.resetCoopRotatePending,
-        pvpStartDepsArgs: {
-          runtime: {
-            chance: ctx.chance,
-            getStarterMaxHp: ctx.getStarterMaxHp,
-            t: ctx.t,
-            setEnemies: ctx.setEnemies,
-            setTimedMode: ctx.setTimedMode,
-            setCoopActiveSlot: ctx.setCoopActiveSlot,
-            dispatchBattle: ctx.dispatchBattle,
-            appendSessionEvent: ctx.appendSessionEvent,
-            initSession: ctx.initSession,
-            createPvpEnemyFromStarter,
-            setScreen: ctx.setScreenFromString,
-            playBattleIntro: ctx.playBattleIntro,
-          },
-          pvp,
-          ui,
-          resetRunRuntimeState: ctx.resetRunRuntimeState,
-        },
-        standardStartDepsArgs: {
-          runtime: {
-            getStarterMaxHp: ctx.getStarterMaxHp,
-            setEnemies: ctx.setEnemies,
-            setCoopActiveSlot: ctx.setCoopActiveSlot,
-            dispatchBattle: ctx.dispatchBattle,
-            appendSessionEvent: ctx.appendSessionEvent,
-            initSession: ctx.initSession,
-            setScreen: ctx.setScreenFromString,
-            startBattle: ctx.startBattle,
-          },
-          pvp,
-          resetRunRuntimeState: ctx.resetRunRuntimeState,
-        },
-        startGameControllerArgs: {
-          sr: ctx.sr,
-          battleMode: ctx.battleMode,
-          pvpStarter2: ctx.pvpStarter2,
-          locale: ctx.locale,
-          localizeStarter,
-          pickPartnerStarter: (mainStarter) => pickPartnerStarter(mainStarter, ctx.pickIndex, ctx.locale),
-          getStarterStageIdx,
-          getStageMaxHp: ctx.getPlayerMaxHp,
-        },
-      },
+      startGameOrchestratorArgs,
       activateQueuedChallenge: ctx.activateQueuedChallenge,
-    }, starterOverride, modeOverride, allyOverride);
+    };
+
+    runStartGameWithContext(startGameInput, starterOverride, modeOverride, allyOverride);
   }, [startGameContextRef]);
   const startGame = useStableCallback(startGameImpl);
 
@@ -1287,27 +1297,26 @@ export function useBattle() {
   });
   const continueFromVictoryImpl = useCallback(() => {
     const ctx = continueFromVictoryContextRef.current;
-    runContinueWithContext({
-      continueFromVictoryInput: {
-        sr: ctx.sr,
-        enemiesLength: ctx.enemiesLength,
-        runtime: {
-          setScreen: ctx.setScreenFromString,
-          dispatchBattle: ctx.dispatchBattle,
-          localizeEnemy,
-          locale: ctx.locale,
-          getStageMaxHp: ctx.getPlayerMaxHp,
-          getStarterMaxHp: ctx.getStarterMaxHp,
-          t: ctx.t,
-        },
-        battleFields: ctx.battleFieldSettersRef.current,
-        ui: ctx.uiRef.current,
-        callbacks: {
-          finishGame: ctx._finishGame,
-          startBattle: ctx.startBattleWithSave,
-        },
+    const continueFromVictoryInput = {
+      sr: ctx.sr,
+      enemiesLength: ctx.enemiesLength,
+      runtime: {
+        setScreen: ctx.setScreenFromString,
+        dispatchBattle: ctx.dispatchBattle,
+        localizeEnemy,
+        locale: ctx.locale,
+        getStageMaxHp: ctx.getPlayerMaxHp,
+        getStarterMaxHp: ctx.getStarterMaxHp,
+        t: ctx.t,
       },
-    });
+      battleFields: ctx.battleFieldSettersRef.current,
+      ui: ctx.uiRef.current,
+      callbacks: {
+        finishGame: ctx._finishGame,
+        startBattle: ctx.startBattleWithSave,
+      },
+    };
+    runContinueWithContext({ continueFromVictoryInput });
   }, [continueFromVictoryContextRef]);
   const continueFromVictory = useStableCallback(continueFromVictoryImpl);
 

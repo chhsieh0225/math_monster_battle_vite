@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters.ts';

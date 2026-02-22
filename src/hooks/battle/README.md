@@ -83,4 +83,8 @@ When adding new combat mechanics:
 - For deterministic logic, prefer unit tests in:
   - `battleReducer.test.js`
   - `turnResolver.test.js`
+- For coordinator wiring safety, prefer adapter/builder tests in:
+  - `interactionFlowAdapter.test.js`
+  - `answerDepsBuilder.test.js`
+  - `advanceDepsBuilder.test.js`
 - For new resolver helpers, add tests before wiring into flows.

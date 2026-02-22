@@ -1186,7 +1186,7 @@ export function useBattle() {
   });
   const onAnsImpl = useCallback((choice: number) => {
     const ctx = onAnsContextRef.current;
-    runAnswerWithContext({
+    const answerInput = {
       answered: ctx.answered,
       setAnswered: ctx.setAnswered,
       clearTimer: ctx.clearTimer,
@@ -1239,7 +1239,8 @@ export function useBattle() {
         updateAbility: ctx.updateAbility,
         markCoopRotatePending: ctx.markCoopRotatePending,
       },
-    }, choice);
+    };
+    runAnswerWithContext(answerInput, choice);
   }, [onAnsContextRef]);
   const onAns = useStableCallback(onAnsImpl);
 
@@ -1331,7 +1332,7 @@ export function useBattle() {
   });
   const advanceImpl = useCallback(() => {
     const ctx = advanceContextRef.current;
-    runAdvanceWithContext({
+    const advanceInput = {
       phase: ctx.phase,
       sr: ctx.sr,
       setPhase: ctx.setPhase,
@@ -1360,7 +1361,8 @@ export function useBattle() {
           getStarterMaxHp: ctx.getStarterMaxHp,
           maxMoveLvl: MAX_MOVE_LVL,
         },
-    });
+    };
+    runAdvanceWithContext(advanceInput);
   }, [advanceContextRef]);
   const advance = useStableCallback(advanceImpl);
 

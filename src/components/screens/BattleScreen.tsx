@@ -53,6 +53,28 @@ function resolveBattleDeviceTier(arenaWidth: number): BattleDeviceTier {
   return 'laptop';
 }
 
+type SceneEnemyRef = {
+  sceneMType?: string;
+  mType?: string;
+} | null | undefined;
+
+function resolveSceneKeyFromEnemy(enemy: SceneEnemyRef): string {
+  const requestedSceneKey = enemy?.sceneMType || enemy?.mType || 'grass';
+  if (Object.prototype.hasOwnProperty.call(SCENES, requestedSceneKey)) return requestedSceneKey;
+  if (Object.prototype.hasOwnProperty.call(SCENES, 'grass')) return 'grass';
+  const fallbackSceneKey = Object.keys(SCENES)[0];
+  return fallbackSceneKey || 'grass';
+}
+
+function resolveBattleSceneBg(sceneKey: string, lowPerfMode: boolean): string | null {
+  const scene = (SCENES as Record<string, { bgImg?: string } | undefined>)[sceneKey];
+  if (!scene?.bgImg) return null;
+  const lowBg = Object.prototype.hasOwnProperty.call(BG_IMGS_LOW, sceneKey)
+    ? BG_IMGS_LOW[sceneKey as keyof typeof BG_IMGS_LOW]
+    : null;
+  return lowPerfMode && lowBg ? lowBg : scene.bgImg;
+}
+
 type BattleScreenProps = {
   state: UseBattleState;
   actions: UseBattleActions;
@@ -201,10 +223,7 @@ function BattleScreenComponent({
   const memoSceneStyles = useMemo(() => {
     if (!coreStatic) return null;
     const { scene, sceneKey, layout } = coreStatic;
-    const lowBg = Object.prototype.hasOwnProperty.call(BG_IMGS_LOW, sceneKey)
-      ? BG_IMGS_LOW[sceneKey as keyof typeof BG_IMGS_LOW]
-      : null;
-    const resolvedBg = UX.lowPerfMode && lowBg ? lowBg : scene.bgImg;
+    const resolvedBg = resolveBattleSceneBg(sceneKey, UX.lowPerfMode) ?? scene.bgImg;
     const bgStyle: CSSProperties | undefined = resolvedBg
       ? { backgroundImage: `url(${resolvedBg})` }
       : undefined;
@@ -216,6 +235,42 @@ function BattleScreenComponent({
       playerInfoStyle: { "--battle-player-info-left": layout.playerInfoLeft } as BattleCssVars,
     };
   }, [coreStatic, UX.lowPerfMode]);
+
+  useEffect(() => {
+    if (S.screen !== 'battle') return;
+
+    const preloadUrls = new Set<string>();
+    const preloadForEnemy = (enemy: SceneEnemyRef) => {
+      const sceneKey = resolveSceneKeyFromEnemy(enemy);
+      const bg = resolveBattleSceneBg(sceneKey, UX.lowPerfMode);
+      if (bg) preloadUrls.add(bg);
+    };
+
+    preloadForEnemy({
+      sceneMType: S.enemy?.sceneMType,
+      mType: S.enemy?.mType,
+    });
+
+    if (Array.isArray(S.enemies) && S.enemies.length > 0) {
+      const roundStep = S.battleMode === 'coop' || S.battleMode === 'double' ? 2 : 1;
+      const nextEnemy = S.enemies[S.round + roundStep];
+      if (nextEnemy) preloadForEnemy(nextEnemy);
+    }
+
+    preloadUrls.forEach((src) => {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = src;
+    });
+  }, [
+    S.screen,
+    S.battleMode,
+    S.round,
+    S.enemy?.sceneMType,
+    S.enemy?.mType,
+    S.enemies,
+    UX.lowPerfMode,
+  ]);
 
   const memoEffectTarget = useMemo(() => {
     if (!coreStatic) return null;

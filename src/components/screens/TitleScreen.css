@@ -271,3 +271,135 @@
 .title-screen.is-low-perf .title-monster-float {
   animation: none;
 }
+
+@media (max-width: 768px) {
+  .title-screen {
+    gap: 16px;
+    padding: 18px 14px 12px;
+  }
+
+  .title-game-name {
+    font-size: 1.5rem;
+    letter-spacing: 1.4px;
+  }
+
+  .title-tagline {
+    font-size: 0.75rem;
+  }
+
+  .title-player-title {
+    font-size: 0.625rem;
+  }
+
+  .title-actions {
+    max-width: 360px;
+    gap: 10px;
+  }
+
+  .title-action-btn-normal,
+  .title-action-btn-timed,
+  .title-action-btn-continue {
+    font-size: 0.9375rem;
+    padding: 12px 0;
+  }
+
+  .title-action-btn-coop,
+  .title-action-btn-pvp {
+    font-size: 0.8125rem;
+    padding: 11px 0;
+  }
+
+  .title-feature-btn {
+    font-size: 0.75rem;
+    min-height: 40px;
+    padding: 8px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .title-screen {
+    gap: 12px;
+    padding: 14px 10px 10px;
+  }
+
+  .title-star-main {
+    top: 9%;
+    right: 10%;
+    font-size: 1.5rem;
+  }
+
+  .title-sprite-row {
+    gap: 6px;
+  }
+
+  .title-sprite-row-top {
+    margin-bottom: 4px;
+  }
+
+  .title-sprite-row-bottom {
+    margin-bottom: 8px;
+  }
+
+  .title-game-name {
+    font-size: 1.3125rem;
+    letter-spacing: 1px;
+  }
+
+  .title-tagline {
+    font-size: 0.6875rem;
+  }
+
+  .title-player-title {
+    margin-top: 4px;
+  }
+
+  .title-actions {
+    max-width: 100%;
+    gap: 8px;
+  }
+
+  .title-action-row,
+  .title-mode-grid,
+  .title-feature-grid {
+    gap: 7px;
+  }
+
+  .title-action-btn-normal,
+  .title-action-btn-timed,
+  .title-action-btn-continue {
+    font-size: 0.875rem;
+    padding: 11px 0;
+    border-radius: 12px;
+  }
+
+  .title-action-btn-coop,
+  .title-action-btn-pvp {
+    font-size: 0.75rem;
+    padding: 10px 0;
+    border-radius: 12px;
+  }
+
+  .title-feature-btn {
+    font-size: 0.6875rem;
+    min-height: 40px;
+    border-radius: 10px;
+    gap: 4px;
+  }
+
+  .title-feature-quick-slot {
+    gap: 6px;
+    padding: 5px 0;
+    border-radius: 10px;
+  }
+
+  .title-feature-quick-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+
+  .title-footer {
+    font-size: 0.5625rem;
+    line-height: 1.5;
+  }
+}

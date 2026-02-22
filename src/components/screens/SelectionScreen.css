@@ -371,3 +371,269 @@
     filter:brightness(1);
   }
 }
+
+@media (max-width:768px){
+  .selection-header{
+    padding:10px 12px 6px;
+    gap:10px;
+  }
+
+  .selection-back-btn{
+    width:34px;
+    height:34px;
+    border-radius:9px;
+    font-size:0.9375rem;
+  }
+
+  .selection-title{
+    font-size:1rem;
+    letter-spacing:.7px;
+  }
+
+  .selection-subtitle{
+    font-size:0.5938rem;
+  }
+
+  .selection-slot-row{
+    padding:0 12px 6px;
+    gap:7px;
+  }
+
+  .selection-slot-btn{
+    font-size:0.6875rem;
+    padding:6px 7px;
+    min-height:40px;
+  }
+
+  .selection-stage-wrap{
+    padding:0 12px 8px;
+  }
+
+  .selection-stage-btn{
+    font-size:0.625rem;
+    padding:6px 7px;
+    min-height:38px;
+  }
+
+  .selection-card-list{
+    padding:0 10px 8px;
+    gap:6px;
+  }
+
+  .selection-card-btn{
+    border-radius:11px;
+    padding:8px 10px;
+  }
+
+  .selection-card-btn.is-selected{
+    padding:9px 10px;
+  }
+
+  .selection-card-top{
+    gap:8px;
+  }
+
+  .selection-card-sprite{
+    width:clamp(68px, 18vw, 94px);
+    min-width:clamp(68px, 18vw, 94px);
+    height:clamp(52px, 11vw, 74px);
+  }
+
+  .selection-card-btn.is-selected .selection-card-sprite{
+    height:clamp(56px, 12vw, 82px);
+  }
+
+  .selection-card-name{
+    font-size:0.875rem;
+  }
+
+  .selection-card-type-tag,
+  .selection-card-difficulty-tag,
+  .selection-card-locked-tag,
+  .selection-role-tag{
+    font-size:0.5625rem;
+  }
+
+  .selection-card-moves-brief,
+  .selection-card-grade-hint,
+  .selection-card-locked-hint,
+  .selection-card-desc{
+    font-size:0.625rem;
+  }
+
+  .selection-card-passive-item{
+    font-size:0.5938rem;
+    padding:4px 7px;
+  }
+
+  .selection-move-chip{
+    padding:4px 3px;
+  }
+
+  .selection-move-chip-name,
+  .selection-move-chip-desc{
+    font-size:0.5312rem;
+  }
+
+  .selection-confirm-wrap{
+    padding:6px 12px 12px;
+  }
+
+  .selection-confirm-btn{
+    font-size:0.9375rem;
+    padding:12px 0;
+    min-height:44px;
+  }
+}
+
+@media (max-width:480px){
+  .selection-header{
+    padding:8px 10px 4px;
+    gap:8px;
+  }
+
+  .selection-back-btn{
+    width:32px;
+    height:32px;
+    border-radius:8px;
+    font-size:0.875rem;
+  }
+
+  .selection-title{
+    font-size:0.9375rem;
+    letter-spacing:.4px;
+  }
+
+  .selection-subtitle{
+    font-size:0.5625rem;
+  }
+
+  .selection-slot-row{
+    padding:0 10px 5px;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .selection-slot-btn{
+    width:100%;
+    font-size:0.6562rem;
+    padding:6px 8px;
+    min-height:40px;
+  }
+
+  .selection-stage-wrap{
+    padding:0 10px 6px;
+  }
+
+  .selection-stage-row{
+    gap:5px;
+  }
+
+  .selection-stage-btn{
+    font-size:0.5938rem;
+    padding:5px 6px;
+    min-height:36px;
+    border-radius:9px;
+  }
+
+  .selection-card-list{
+    padding:0 8px 6px;
+    gap:5px;
+  }
+
+  .selection-card-btn{
+    border-radius:10px;
+    padding:7px 8px;
+  }
+
+  .selection-card-btn.is-selected{
+    padding:8px 8px;
+  }
+
+  .selection-card-top{
+    gap:7px;
+  }
+
+  .selection-card-sprite{
+    width:clamp(62px, 30vw, 84px);
+    min-width:clamp(62px, 30vw, 84px);
+    height:clamp(46px, 19vw, 64px);
+  }
+
+  .selection-card-btn.is-selected .selection-card-sprite{
+    height:clamp(50px, 20vw, 72px);
+  }
+
+  .selection-card-name{
+    font-size:0.8125rem;
+  }
+
+  .selection-card-type-tag,
+  .selection-card-difficulty-tag{
+    margin-left:4px;
+  }
+
+  .selection-card-type-tag,
+  .selection-card-difficulty-tag,
+  .selection-card-locked-tag,
+  .selection-role-tag{
+    font-size:0.5312rem;
+  }
+
+  .selection-card-moves-brief,
+  .selection-card-grade-hint,
+  .selection-card-locked-hint{
+    font-size:0.5625rem;
+    line-height:1.35;
+  }
+
+  .selection-card-expand{
+    margin-top:6px;
+    padding-top:6px;
+  }
+
+  .selection-card-desc{
+    font-size:0.5938rem;
+    line-height:1.45;
+  }
+
+  .selection-card-passive-list{
+    gap:2px;
+    margin-bottom:6px;
+  }
+
+  .selection-card-passive-item{
+    font-size:0.5625rem;
+    padding:3px 6px;
+  }
+
+  .selection-card-move-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:4px;
+  }
+
+  .selection-move-chip{
+    padding:4px 2px;
+  }
+
+  .selection-move-chip-icon{
+    font-size:0.6875rem;
+  }
+
+  .selection-move-chip-name,
+  .selection-move-chip-desc{
+    font-size:0.5rem;
+  }
+
+  .selection-confirm-wrap{
+    padding:6px 10px 10px;
+  }
+
+  .selection-confirm-btn{
+    font-size:0.875rem;
+    padding:10px 0;
+    min-height:44px;
+    border-radius:12px;
+  }
+}

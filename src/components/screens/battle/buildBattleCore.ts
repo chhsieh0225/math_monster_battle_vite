@@ -32,22 +32,7 @@ type BattleCoreStaticState = Pick<
 type BattleCoreRuntimeState = Pick<
   UseBattleState,
   | 'battleMode'
-  | 'pvpTurn'
   | 'pvpState'
-  | 'pvpChargeP1'
-  | 'pvpChargeP2'
-  | 'pvpComboP1'
-  | 'pvpComboP2'
-  | 'pvpSpecDefP1'
-  | 'pvpSpecDefP2'
-  | 'pvpBurnP1'
-  | 'pvpBurnP2'
-  | 'pvpFreezeP1'
-  | 'pvpFreezeP2'
-  | 'pvpParalyzeP1'
-  | 'pvpParalyzeP2'
-  | 'pvpStaticP1'
-  | 'pvpStaticP2'
   | 'charge'
   | 'chargeReady'
   | 'sealedMove'
@@ -402,46 +387,31 @@ export function buildBattleRuntimeCore({
 }: BuildBattleRuntimeCoreArgs): BattleCoreRuntime {
   const {
     battleMode,
-    pvpTurn,
     pvpState,
-    pvpChargeP1,
-    pvpChargeP2,
-    pvpComboP1,
-    pvpComboP2,
-    pvpSpecDefP1,
-    pvpSpecDefP2,
-    pvpBurnP1,
-    pvpBurnP2,
-    pvpFreezeP1,
-    pvpFreezeP2,
-    pvpParalyzeP1,
-    pvpParalyzeP2,
-    pvpStaticP1,
-    pvpStaticP2,
     charge,
     chargeReady,
     sealedMove,
     mLvls,
     mHits,
   } = state;
-  const pvpTurnResolved = pvpState?.turn || pvpTurn;
-  const pvpP1 = pvpState?.p1;
-  const pvpP2 = pvpState?.p2;
+  const pvpP1 = pvpState.p1;
+  const pvpP2 = pvpState.p2;
+  const pvpTurnResolved = pvpState.turn;
 
   const pvpActiveCharge = battleMode === 'pvp'
     ? (pvpTurnResolved === 'p1'
-      ? ((pvpP1?.charge ?? pvpChargeP1) || 0)
-      : ((pvpP2?.charge ?? pvpChargeP2) || 0))
+      ? pvpP1.charge
+      : pvpP2.charge)
     : 0;
   const pvpActiveCombo = battleMode === 'pvp'
     ? (pvpTurnResolved === 'p1'
-      ? ((pvpP1?.combo ?? pvpComboP1) || 0)
-      : ((pvpP2?.combo ?? pvpComboP2) || 0))
+      ? pvpP1.combo
+      : pvpP2.combo)
     : 0;
   const pvpActiveSpecDefReady = battleMode === 'pvp'
     ? (pvpTurnResolved === 'p1'
-      ? !!(pvpP1?.specDef ?? pvpSpecDefP1)
-      : !!(pvpP2?.specDef ?? pvpSpecDefP2))
+      ? pvpP1.specDef
+      : pvpP2.specDef)
     : false;
   const chargeDisplay = battleMode === 'pvp' ? pvpActiveCharge : charge;
   const chargeReadyDisplay = battleMode === 'pvp' ? pvpActiveCharge >= 3 : chargeReady;
@@ -465,18 +435,18 @@ export function buildBattleRuntimeCore({
     chargeDisplay,
     chargeReadyDisplay,
     moveRuntime,
-    pvpEnemyBurn: (pvpP2?.burn ?? pvpBurnP2) || 0,
-    pvpEnemyFreeze: !!(pvpP2?.freeze ?? pvpFreezeP2),
-    pvpEnemyParalyze: !!(pvpP2?.paralyze ?? pvpParalyzeP2),
-    pvpEnemyStatic: (pvpP2?.static ?? pvpStaticP2) || 0,
-    pvpEnemyCombo: (pvpP2?.combo ?? pvpComboP2) || 0,
-    pvpEnemySpecDef: !!(pvpP2?.specDef ?? pvpSpecDefP2),
-    pvpPlayerBurn: (pvpP1?.burn ?? pvpBurnP1) || 0,
-    pvpPlayerFreeze: !!(pvpP1?.freeze ?? pvpFreezeP1),
-    pvpPlayerParalyze: !!(pvpP1?.paralyze ?? pvpParalyzeP1),
-    pvpPlayerStatic: (pvpP1?.static ?? pvpStaticP1) || 0,
-    pvpPlayerCombo: (pvpP1?.combo ?? pvpComboP1) || 0,
-    pvpPlayerSpecDef: !!(pvpP1?.specDef ?? pvpSpecDefP1),
+    pvpEnemyBurn: pvpP2.burn,
+    pvpEnemyFreeze: pvpP2.freeze,
+    pvpEnemyParalyze: pvpP2.paralyze,
+    pvpEnemyStatic: pvpP2.static,
+    pvpEnemyCombo: pvpP2.combo,
+    pvpEnemySpecDef: pvpP2.specDef,
+    pvpPlayerBurn: pvpP1.burn,
+    pvpPlayerFreeze: pvpP1.freeze,
+    pvpPlayerParalyze: pvpP1.paralyze,
+    pvpPlayerStatic: pvpP1.static,
+    pvpPlayerCombo: pvpP1.combo,
+    pvpPlayerSpecDef: pvpP1.specDef,
   };
 }
 

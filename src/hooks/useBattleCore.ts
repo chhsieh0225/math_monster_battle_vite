@@ -640,37 +640,63 @@ export function useBattle() {
   //  BATTLE FLOW
   // ═══════════════════════════════════════════════════════════════
 
-  const playBattleIntro = useCallback(() => {
-    effectOrchestrator.playBattleIntro({ safeTo, setEAnim, setPAnim });
-  }, [safeTo, setEAnim, setPAnim]);
+  const playBattleIntroContextRef = useBattleStateRef({
+    safeTo,
+    setEAnim,
+    setPAnim,
+  });
+  const playBattleIntroImpl = useCallback(() => {
+    const ctx = playBattleIntroContextRef.current;
+    effectOrchestrator.playBattleIntro({
+      safeTo: ctx.safeTo,
+      setEAnim: ctx.setEAnim,
+      setPAnim: ctx.setPAnim,
+    });
+  }, [playBattleIntroContextRef]);
+  const playBattleIntro = useStableCallback(playBattleIntroImpl);
 
   // ── Finalize and persist session log ──
+  const endSessionContextRef = useBattleStateRef({
+    sr,
+    endSessionOnce,
+    settleRunAsFailed,
+  });
   const endSessionImpl = useCallback((isCompleted: boolean, reasonOverride: string | null = null) => {
+    const ctx = endSessionContextRef.current;
     clearSave(); // Wipe mid-run save on any session end (victory, KO, quit)
     if (!isCompleted) {
-      settleRunAsFailed(sr.current?.defeated || 0);
+      ctx.settleRunAsFailed(ctx.sr.current?.defeated || 0);
     }
     runEndSessionController({
-      sr,
-      endSessionOnce,
+      sr: ctx.sr,
+      endSessionOnce: ctx.endSessionOnce,
       isCompleted,
       reasonOverride,
     });
-  }, [sr, endSessionOnce, settleRunAsFailed]);
+  }, [endSessionContextRef]);
   const _endSession = useStableCallback(endSessionImpl);
 
   // --- Shared game-completion logic (achievements + session save) ---
+  const finishGameContextRef = useBattleStateRef({
+    settleRunAsCleared,
+    sr,
+    tryUnlock,
+    setEncData,
+    endSession: _endSession,
+    setScreen,
+  });
   const finishGameImpl = useCallback(() => {
-    settleRunAsCleared();
+    const ctx = finishGameContextRef.current;
+    ctx.settleRunAsCleared();
     runFinishGameController({
-      sr,
-      tryUnlock,
-      setEncData,
+      sr: ctx.sr,
+      tryUnlock: ctx.tryUnlock,
+      setEncData: ctx.setEncData,
       encTotal: ENC_TOTAL,
-      endSession: _endSession,
-      setScreen,
+      endSession: ctx.endSession,
+      setScreen: ctx.setScreen,
     });
-  }, [settleRunAsCleared, sr, tryUnlock, setEncData, _endSession, setScreen]);
+  }, [finishGameContextRef]);
   const _finishGame = useStableCallback(finishGameImpl);
 
   // --- Start a battle against enemies[idx], optionally from a fresh roster ---
@@ -1423,9 +1449,9 @@ export function useBattle() {
   const advance = useStableCallback(advanceImpl);
 
   // --- Continue from evolve screen → start next battle ---
-  const continueAfterEvolve = useCallback(() => {
+  const continueAfterEvolve = useStableCallback(() => {
     continueFromVictory();
-  }, [continueFromVictory]);
+  });
 
   const toggleCoopActiveContextRef = useBattleStateRef({
     sr,

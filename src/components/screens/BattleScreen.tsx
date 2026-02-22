@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { useBattleParallax } from '../../hooks/useBattleParallax';
@@ -41,6 +41,10 @@ function normalizeBossVisualId(id?: string | null): string {
   return id.startsWith('pvp_') ? id.slice(4) : id;
 }
 
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
 type BattleScreenProps = {
   state: UseBattleState;
   actions: UseBattleActions;
@@ -72,6 +76,7 @@ function BattleScreenComponent({
   const enemySpriteRef = useRef<HTMLDivElement | null>(null);
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
   const playerSubSpriteRef = useRef<HTMLDivElement | null>(null);
+  const [arenaWidth, setArenaWidth] = useState(390);
   const arenaScale = useBattleArenaScale({
     arenaRef: battleArenaRef,
     enabled: S.screen === 'battle',
@@ -84,6 +89,36 @@ function BattleScreenComponent({
     // Disable on compact/mobile layout to reduce input/render jitter on lower-end devices.
     enabled: showHeavyFx && !S.gamePaused && !UX.compactUI,
   });
+  useLayoutEffect(() => {
+    if (S.screen !== 'battle') return;
+    const arena = battleArenaRef.current;
+    if (!arena) return;
+
+    const sync = () => {
+      const width = arena.getBoundingClientRect().width;
+      if (!Number.isFinite(width) || width <= 0) return;
+      setArenaWidth((prev) => (Math.abs(prev - width) > 1 ? width : prev));
+    };
+    sync();
+
+    let rafId = 0;
+    const scheduleSync = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(sync);
+    };
+
+    window.addEventListener('resize', scheduleSync);
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(scheduleSync);
+      observer.observe(arena);
+    }
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', scheduleSync);
+      if (observer) observer.disconnect();
+    };
+  }, [S.screen]);
   const { measuredEnemyTarget, measuredPlayerTarget, measuredPlayerSubTarget } = useSpriteTargets({
     screen: S.screen,
     phase: S.phase,
@@ -299,8 +334,12 @@ function BattleScreenComponent({
     if (!coreStatic || !memoSpriteAnims) return null;
     const {
       isCoopBattle,
+      hasDualUnits,
       coopUsingSub,
       showAllySub,
+      showEnemySub,
+      allyMainRoleSize,
+      starterSubRoleSize,
       layout: {
         compactDual,
         enemyMainRightPct,
@@ -311,6 +350,7 @@ function BattleScreenComponent({
         playerSubLeftPct: rawSubLeftPct,
         playerSubBottomPct: rawSubBottomPct,
         mainPlayerSize: rawMainSize,
+        subPlayerSize: rawSubSize,
         enemySize,
         enemyTopPct,
         playerComp,
@@ -351,7 +391,8 @@ function BattleScreenComponent({
     const playerMainBottomPct = rawMainBottomPct;
     const playerSubLeftPct = shouldSwapPlayerSlots ? rawMainLeftPct : rawSubLeftPct;
     const playerSubBottomPct = rawSubBottomPct;
-    const mainPlayerSize = rawMainSize;
+    const mainPlayerSize = coopUsingSub ? starterSubRoleSize : rawMainSize;
+    const subPlayerSize = coopUsingSub ? allyMainRoleSize : rawSubSize;
     const hasSelectableCoopPair = isCoopBattle && showAllySub;
     const mainIsActive = !hasSelectableCoopPair || !coopUsingSub;
     const subIsActive = hasSelectableCoopPair && coopUsingSub;
@@ -379,6 +420,42 @@ function BattleScreenComponent({
           : enemySubIsEvolved
             ? 120
             : 96;
+    const enemySubScaleNum = Number(enemySubScale) || 1;
+
+    // Dynamic lane safety clamp:
+    // Keep allies inside player zone (left side) and enemies inside enemy zone (right side)
+    // across phone/tablet/laptop without hardcoded per-device offsets.
+    const arenaWidthPx = Math.max(280, arenaWidth || 390);
+    const sepPct = hasDualUnits ? 42 : 50;
+    const safeGapPct = compactDual ? 2.4 : 3;
+    const sepPx = arenaWidthPx * sepPct / 100;
+    const safeGapPx = arenaWidthPx * safeGapPct / 100;
+    const minPlayerLeftPx = arenaWidthPx * (compactDual ? 0.4 : 0.8) / 100;
+    const minEnemyRightPx = arenaWidthPx * 0.4 / 100;
+
+    const clampPlayerLeftPct = (leftPct: number, spriteWidthPx: number): number => {
+      const maxLeftPx = sepPx - safeGapPx - spriteWidthPx;
+      const fallbackPx = minPlayerLeftPx;
+      if (maxLeftPx <= fallbackPx) return fallbackPx / arenaWidthPx * 100;
+      const nextPx = clampNumber(leftPct * arenaWidthPx / 100, fallbackPx, maxLeftPx);
+      return nextPx / arenaWidthPx * 100;
+    };
+    const clampEnemyRightPct = (rightPct: number, spriteWidthPx: number): number => {
+      const maxRightPx = arenaWidthPx - spriteWidthPx - (sepPx + safeGapPx);
+      const fallbackPx = minEnemyRightPx;
+      if (maxRightPx <= fallbackPx) return fallbackPx / arenaWidthPx * 100;
+      const nextPx = clampNumber(rightPct * arenaWidthPx / 100, fallbackPx, maxRightPx);
+      return nextPx / arenaWidthPx * 100;
+    };
+
+    const resolvedPlayerMainLeftPct = clampPlayerLeftPct(playerMainLeftPct, mainPlayerSize);
+    const resolvedPlayerSubLeftPct = showAllySub
+      ? clampPlayerLeftPct(playerSubLeftPct, subPlayerSize)
+      : playerSubLeftPct;
+    const resolvedEnemyMainRightPct = clampEnemyRightPct(enemyMainRightPct, enemySize);
+    const resolvedEnemySubRightPct = showEnemySub
+      ? clampEnemyRightPct(enemySubRightPct, enemySubSize * enemySubScaleNum)
+      : enemySubRightPct;
 
     // Shadow offset & width should reflect the *visual* creature footprint,
     // not the inflated SVG element size. Dividing by compensation recovers
@@ -389,24 +466,24 @@ function BattleScreenComponent({
     return {
       enemySubSize,
       enemyMainSpriteStyle: {
-        "--enemy-main-right": `${enemyMainRightPct}%`,
+        "--enemy-main-right": `${resolvedEnemyMainRightPct}%`,
         "--enemy-main-top": `${enemyTopPct}%`,
         "--enemy-main-anim": memoSpriteAnims.enemyMain,
       } as BattleCssVars,
       enemySubSpriteStyle: {
-        "--enemy-sub-right": `${enemySubRightPct}%`,
+        "--enemy-sub-right": `${resolvedEnemySubRightPct}%`,
         "--enemy-sub-top": `${enemySubTopPct}%`,
         "--enemy-sub-scale": enemySubScale,
         "--enemy-sub-anim": memoSpriteAnims.enemySub,
       } as BattleCssVars,
       enemyMainShadowStyle: {
-        "--enemy-shadow-right": `calc(${enemyMainRightPct}% + ${Math.round(eVisual * 0.18)}px)`,
+        "--enemy-shadow-right": `calc(${resolvedEnemyMainRightPct}% + ${Math.round(eVisual * 0.18)}px)`,
         "--enemy-shadow-top": `calc(${enemyTopPct}% + ${Math.round(enemyHeight * 0.72)}px)`,
         "--enemy-shadow-width": `${Math.round(eVisual * 0.56)}px`,
         "--enemy-shadow-anim": memoSpriteAnims.enemyShadow,
       } as BattleCssVars,
       playerMainSpriteStyle: {
-        "--player-main-left": `${playerMainLeftPct}%`,
+        "--player-main-left": `${resolvedPlayerMainLeftPct}%`,
         "--player-main-bottom": `${playerMainBottomPct}%`,
         "--player-main-filter": mainFilter,
         "--player-main-z": coopUsingSub ? "4" : "6",
@@ -417,7 +494,7 @@ function BattleScreenComponent({
         "--player-main-anim": memoSpriteAnims.playerMain,
       } as BattleCssVars,
       playerSubSpriteStyle: {
-        "--player-sub-left": `${playerSubLeftPct}%`,
+        "--player-sub-left": `${resolvedPlayerSubLeftPct}%`,
         "--player-sub-bottom": `${playerSubBottomPct}%`,
         "--player-sub-filter": subFilter,
         "--player-sub-z": coopUsingSub ? "6" : "4",
@@ -428,12 +505,12 @@ function BattleScreenComponent({
         "--player-sub-anim": memoSpriteAnims.playerSub,
       } as BattleCssVars,
       playerMainShadowStyle: {
-        "--player-shadow-left": `calc(${playerMainLeftPct}% + ${Math.round(pVisual * 0.48)}px)`,
+        "--player-shadow-left": `calc(${resolvedPlayerMainLeftPct}% + ${Math.round(pVisual * 0.48)}px)`,
         "--player-shadow-bottom": `${Math.max(8, playerMainBottomPct - 1)}%`,
         "--player-shadow-width": `${Math.round(pVisual * 0.5)}px`,
       } as BattleCssVars,
     };
-  }, [coreStatic, memoSpriteAnims, S.enemySub?.id, S.enemySub?.isEvolved]);
+  }, [coreStatic, memoSpriteAnims, S.enemySub?.id, S.enemySub?.isEvolved, arenaWidth]);
 
   // ─── Battle screen locals ───
   const coreRuntime = useMemo(() => buildBattleRuntimeCore({

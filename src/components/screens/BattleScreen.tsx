@@ -46,6 +46,8 @@ function clampNumber(value: number, min: number, max: number): number {
 }
 
 type BattleDeviceTier = 'phone' | 'tablet' | 'laptop';
+const LOGICAL_ARENA_WIDTH = 390;
+const LOGICAL_ARENA_HEIGHT = 550;
 
 function resolveBattleDeviceTier(arenaWidth: number): BattleDeviceTier {
   if (arenaWidth <= 520) return 'phone';
@@ -102,11 +104,13 @@ function BattleScreenComponent({
     enabled: showHeavyFx,
   });
   const battleRootRef = useRef<HTMLDivElement | null>(null);
+  const battleArenaShellRef = useRef<HTMLDivElement | null>(null);
   const battleArenaRef = useRef<HTMLDivElement | null>(null);
   const enemySpriteRef = useRef<HTMLDivElement | null>(null);
   const playerSpriteRef = useRef<HTMLDivElement | null>(null);
   const playerSubSpriteRef = useRef<HTMLDivElement | null>(null);
-  const [arenaWidth, setArenaWidth] = useState(390);
+  const [arenaWidth, setArenaWidth] = useState(LOGICAL_ARENA_WIDTH);
+  const [arenaViewportScale, setArenaViewportScale] = useState(1);
   const arenaScale = useBattleArenaScale({
     arenaRef: battleArenaRef,
     enabled: S.screen === 'battle',
@@ -114,6 +118,11 @@ function BattleScreenComponent({
   const arenaScaleStyle = useMemo(() => ({
     '--battle-device-scale': arenaScale.toFixed(3),
   }) as BattleCssVars, [arenaScale]);
+  const arenaViewportStyle = useMemo(() => ({
+    '--battle-stage-width': `${LOGICAL_ARENA_WIDTH}px`,
+    '--battle-stage-height': `${LOGICAL_ARENA_HEIGHT}px`,
+    '--battle-stage-scale': arenaViewportScale.toFixed(4),
+  }) as BattleCssVars, [arenaViewportScale]);
   useBattleParallax({
     hostRef: battleArenaRef,
     // Disable on compact/mobile layout to reduce input/render jitter on lower-end devices.
@@ -121,13 +130,27 @@ function BattleScreenComponent({
   });
   useLayoutEffect(() => {
     if (S.screen !== 'battle') return;
-    const arena = battleArenaRef.current;
-    if (!arena) return;
+    const arenaShell = battleArenaShellRef.current;
+    if (!arenaShell) return;
 
     const sync = () => {
-      const width = arena.getBoundingClientRect().width;
-      if (!Number.isFinite(width) || width <= 0) return;
-      setArenaWidth((prev) => (Math.abs(prev - width) > 1 ? width : prev));
+      const rect = arenaShell.getBoundingClientRect();
+      const shellWidth = rect.width;
+      const shellHeight = rect.height;
+      if (
+        !Number.isFinite(shellWidth)
+        || !Number.isFinite(shellHeight)
+        || shellWidth <= 0
+        || shellHeight <= 0
+      ) return;
+      const nextScale = clampNumber(
+        Math.min(shellWidth / LOGICAL_ARENA_WIDTH, shellHeight / LOGICAL_ARENA_HEIGHT),
+        0.45,
+        3,
+      );
+      const nextArenaWidth = LOGICAL_ARENA_WIDTH * nextScale;
+      setArenaViewportScale((prev) => (Math.abs(prev - nextScale) > 0.001 ? nextScale : prev));
+      setArenaWidth((prev) => (Math.abs(prev - nextArenaWidth) > 1 ? nextArenaWidth : prev));
     };
     sync();
 
@@ -141,7 +164,7 @@ function BattleScreenComponent({
     let observer: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
       observer = new ResizeObserver(scheduleSync);
-      observer.observe(arena);
+      observer.observe(arenaShell);
     }
     return () => {
       cancelAnimationFrame(rafId);
@@ -1019,120 +1042,124 @@ function BattleScreenComponent({
       />
 
       {/* ═══ Battle arena ═══ */}
-      <div className="battle-arena" ref={battleArenaRef} style={arenaScaleStyle}>
-        <BattleSceneLayers
-          showHeavyFx={showHeavyFx}
-          bgStyle={sceneBgStyle}
-          skyStyle={sceneSkyStyle}
-          groundStyle={sceneGroundStyle}
-          Deco={scene.Deco}
-        />
-        <BattleWeatherLayer
-          sceneType={sceneKey}
-          seed={weatherSeed}
-          enabled={showHeavyFx && !S.gamePaused}
-          reduced={UX.compactUI || UX.autoLowEnd}
-        />
+      <div className="battle-arena-shell" ref={battleArenaShellRef}>
+        <div className="battle-arena-viewport" style={arenaViewportStyle}>
+          <div className="battle-arena" ref={battleArenaRef} style={arenaScaleStyle}>
+            <BattleSceneLayers
+              showHeavyFx={showHeavyFx}
+              bgStyle={sceneBgStyle}
+              skyStyle={sceneSkyStyle}
+              groundStyle={sceneGroundStyle}
+              Deco={scene.Deco}
+            />
+            <BattleWeatherLayer
+              sceneType={sceneKey}
+              seed={weatherSeed}
+              enabled={showHeavyFx && !S.gamePaused}
+              reduced={UX.compactUI || UX.autoLowEnd}
+            />
 
-        {/* Enemy info */}
-        <BattleEnemyInfoPanel
-          t={t}
-          style={enemyInfoStyle}
-          enemy={enemy}
-          enemyHp={S.eHp}
-          showEnemySub={showEnemySub}
-          enemySub={S.enemySub}
-          enemySubHp={S.eHpSub}
-          battleMode={S.battleMode}
-          pvpEnemyBarActive={pvpEnemyBarActive}
-          pvpComboTrigger={pvpComboTrigger}
-          pvpEnemyBurn={pvpEnemyBurn}
-          pvpEnemyFreeze={pvpEnemyFreeze}
-          pvpEnemyParalyze={pvpEnemyParalyze}
-          pvpEnemyStatic={pvpEnemyStatic}
-          pvpEnemyCombo={pvpEnemyCombo}
-          pvpEnemySpecDef={pvpEnemySpecDef}
-          burnStack={S.burnStack}
-          frozen={S.frozen}
-          staticStack={S.staticStack}
-          bossPhase={S.bossPhase}
-          bossCharging={S.bossCharging}
-        />
+            {/* Enemy info */}
+            <BattleEnemyInfoPanel
+              t={t}
+              style={enemyInfoStyle}
+              enemy={enemy}
+              enemyHp={S.eHp}
+              showEnemySub={showEnemySub}
+              enemySub={S.enemySub}
+              enemySubHp={S.eHpSub}
+              battleMode={S.battleMode}
+              pvpEnemyBarActive={pvpEnemyBarActive}
+              pvpComboTrigger={pvpComboTrigger}
+              pvpEnemyBurn={pvpEnemyBurn}
+              pvpEnemyFreeze={pvpEnemyFreeze}
+              pvpEnemyParalyze={pvpEnemyParalyze}
+              pvpEnemyStatic={pvpEnemyStatic}
+              pvpEnemyCombo={pvpEnemyCombo}
+              pvpEnemySpecDef={pvpEnemySpecDef}
+              burnStack={S.burnStack}
+              frozen={S.frozen}
+              staticStack={S.staticStack}
+              bossPhase={S.bossPhase}
+              bossCharging={S.bossCharging}
+            />
 
-        <BattleArenaSprites
-          showHeavyFx={showHeavyFx}
-          enemy={enemy}
-          starterType={starter.type}
-          showEnemySub={showEnemySub}
-          showAllySub={showAllySub}
-          eSvg={eSvg}
-          pSvg={pSvg}
-          eSubSvg={eSubSvg}
-          pSubSvg={pSubSvg}
-          eSize={eSize}
-          enemySubSize={enemySubSize}
-          mainPlayerSize={mainPlayerSize}
-          subPlayerSize={subPlayerSize}
-          playerMainVisualScale={playerMainVisualScale * lanePlayerMainScale}
-          enemyMainVisualScale={enemyMainVisualScale * laneEnemyMainScale}
-          enemySpriteRef={enemySpriteRef}
-          playerSpriteRef={playerSpriteRef}
-          playerSubSpriteRef={playerSubSpriteRef}
-          enemyMainSpriteStyle={enemyMainSpriteStyle}
-          enemySubSpriteStyle={enemySubSpriteStyle}
-          enemyMainShadowStyle={enemyMainShadowStyle}
-          playerMainSpriteStyle={playerMainSpriteStyle}
-          playerSubSpriteStyle={playerSubSpriteStyle}
-          playerMainShadowStyle={playerMainShadowStyle}
-          showEnemyShadow={!S.eAnim && !UX.lowPerfMode}
-          showPlayerShadow={!S.pAnim && !UX.lowPerfMode}
-        />
+            <BattleArenaSprites
+              showHeavyFx={showHeavyFx}
+              enemy={enemy}
+              starterType={starter.type}
+              showEnemySub={showEnemySub}
+              showAllySub={showAllySub}
+              eSvg={eSvg}
+              pSvg={pSvg}
+              eSubSvg={eSubSvg}
+              pSubSvg={pSubSvg}
+              eSize={eSize}
+              enemySubSize={enemySubSize}
+              mainPlayerSize={mainPlayerSize}
+              subPlayerSize={subPlayerSize}
+              playerMainVisualScale={playerMainVisualScale * lanePlayerMainScale}
+              enemyMainVisualScale={enemyMainVisualScale * laneEnemyMainScale}
+              enemySpriteRef={enemySpriteRef}
+              playerSpriteRef={playerSpriteRef}
+              playerSubSpriteRef={playerSubSpriteRef}
+              enemyMainSpriteStyle={enemyMainSpriteStyle}
+              enemySubSpriteStyle={enemySubSpriteStyle}
+              enemyMainShadowStyle={enemyMainShadowStyle}
+              playerMainSpriteStyle={playerMainSpriteStyle}
+              playerSubSpriteStyle={playerSubSpriteStyle}
+              playerMainShadowStyle={playerMainShadowStyle}
+              showEnemyShadow={!S.eAnim && !UX.lowPerfMode}
+              showPlayerShadow={!S.pAnim && !UX.lowPerfMode}
+            />
 
-        {/* Player info */}
-        <BattlePlayerInfoPanel
-          t={t}
-          style={playerInfoStyle}
-          battleMode={S.battleMode}
-          pLvl={S.pLvl}
-          pHp={S.pHp}
-          pHpSub={S.pHpSub}
-          pExp={S.pExp}
-          expNext={S.expNext}
-          mainMaxHp={mainMaxHp}
-          subMaxHp={subMaxHp}
-          stName={st.name}
-          isCoopBattle={isCoopBattle}
-          coopUsingSub={coopUsingSub}
-          showAllySub={showAllySub}
-          allySub={S.allySub}
-          mainBarActive={mainBarActive}
-          subBarActive={subBarActive}
-          pvpComboTrigger={pvpComboTrigger}
-          pvpPlayerBurn={pvpPlayerBurn}
-          pvpPlayerFreeze={pvpPlayerFreeze}
-          pvpPlayerParalyze={pvpPlayerParalyze}
-          pvpPlayerStatic={pvpPlayerStatic}
-          pvpPlayerCombo={pvpPlayerCombo}
-          pvpPlayerSpecDef={pvpPlayerSpecDef}
-          cursed={S.cursed}
-          poisoned={S.effMsg?.color === '#7c3aed'}
-        />
+            {/* Player info */}
+            <BattlePlayerInfoPanel
+              t={t}
+              style={playerInfoStyle}
+              battleMode={S.battleMode}
+              pLvl={S.pLvl}
+              pHp={S.pHp}
+              pHpSub={S.pHpSub}
+              pExp={S.pExp}
+              expNext={S.expNext}
+              mainMaxHp={mainMaxHp}
+              subMaxHp={subMaxHp}
+              stName={st.name}
+              isCoopBattle={isCoopBattle}
+              coopUsingSub={coopUsingSub}
+              showAllySub={showAllySub}
+              allySub={S.allySub}
+              mainBarActive={mainBarActive}
+              subBarActive={subBarActive}
+              pvpComboTrigger={pvpComboTrigger}
+              pvpPlayerBurn={pvpPlayerBurn}
+              pvpPlayerFreeze={pvpPlayerFreeze}
+              pvpPlayerParalyze={pvpPlayerParalyze}
+              pvpPlayerStatic={pvpPlayerStatic}
+              pvpPlayerCombo={pvpPlayerCombo}
+              pvpPlayerSpecDef={pvpPlayerSpecDef}
+              cursed={S.cursed}
+              poisoned={S.effMsg?.color === '#7c3aed'}
+            />
 
-        <BattleStatusOverlay
-          t={t}
-          lowPerfMode={UX.lowPerfMode}
-          streak={S.streak}
-          passiveCount={S.passiveCount}
-          specDef={S.specDef}
-          timedMode={S.timedMode}
-          diffLevel={S.diffLevel}
-          chargeDisplay={chargeDisplay}
-          chargeReadyDisplay={chargeReadyDisplay}
-          bossPhase={S.bossPhase}
-          specDefToneClass={specDefToneClass}
-          specDefReadyLabel={specDefReadyLabel}
-          bossCharging={S.bossCharging}
-        />
+            <BattleStatusOverlay
+              t={t}
+              lowPerfMode={UX.lowPerfMode}
+              streak={S.streak}
+              passiveCount={S.passiveCount}
+              specDef={S.specDef}
+              timedMode={S.timedMode}
+              diffLevel={S.diffLevel}
+              chargeDisplay={chargeDisplay}
+              chargeReadyDisplay={chargeReadyDisplay}
+              bossPhase={S.bossPhase}
+              specDefToneClass={specDefToneClass}
+              specDefReadyLabel={specDefReadyLabel}
+              bossCharging={S.bossCharging}
+            />
+          </div>
+        </div>
       </div>
 
       {/* ═══ Bottom panel ═══ */}

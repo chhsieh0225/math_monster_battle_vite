@@ -440,6 +440,7 @@ function BattleScreenComponent({
     state: {
       battleMode,
       pvpTurn,
+      pvpState: S.pvpState,
       pvpChargeP1: S.pvpChargeP1,
       pvpChargeP2: S.pvpChargeP2,
       pvpComboP1: S.pvpComboP1,
@@ -466,6 +467,7 @@ function BattleScreenComponent({
   }), [
     battleMode,
     pvpTurn,
+    S.pvpState,
     S.pvpChargeP1,
     S.pvpChargeP2,
     S.pvpComboP1,

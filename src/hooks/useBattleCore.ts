@@ -302,8 +302,9 @@ export function useBattle() {
     locale,
     hasChallengeRun,
   });
-  const pvpState = usePvpState();
+  const pvpStore = usePvpState();
   const {
+    pvpState: pvpStructuredState,
     pvpStarter2, setPvpStarter2,
     pvpHp2,
     pvpTurn,
@@ -323,7 +324,7 @@ export function useBattle() {
     pvpComboP2,
     pvpSpecDefP1,
     pvpSpecDefP2,
-  } = pvpState;
+  } = pvpStore;
 
   // ──── Player ────
   const [starter, setStarter] = useState<StarterVm | null>(null);
@@ -549,7 +550,7 @@ export function useBattle() {
         doEnemyTurnRef,
       },
       ui: UI,
-      pvp: pvpState,
+      pvp: pvpStore,
       battleFields: battleFieldSetters,
     }));
   };
@@ -732,7 +733,7 @@ export function useBattle() {
             setScreen: setScreenFromString,
             playBattleIntro,
           },
-          pvp: pvpState,
+          pvp: pvpStore,
           ui: UI,
           resetRunRuntimeState,
         },
@@ -747,7 +748,7 @@ export function useBattle() {
             setScreen: setScreenFromString,
             startBattle,
           },
-          pvp: pvpState,
+          pvp: pvpStore,
           resetRunRuntimeState,
         },
         startGameControllerArgs: {
@@ -783,7 +784,7 @@ export function useBattle() {
     initSession,
     setScreenFromString,
     playBattleIntro,
-    pvpState,
+    pvpStore,
     UI,
     resetRunRuntimeState,
     startBattle,
@@ -1040,7 +1041,7 @@ export function useBattle() {
           t,
         },
         ui: UI,
-        pvp: pvpState,
+        pvp: pvpStore,
         battleFields: battleFieldSetters,
       },
       playerDepsArgs: {
@@ -1089,7 +1090,7 @@ export function useBattle() {
     setScreenFromString,
     t,
     UI,
-    pvpState,
+    pvpStore,
     battleFieldSetters,
     getCollectionDamageScale,
     tryUnlock,
@@ -1165,7 +1166,7 @@ export function useBattle() {
           t,
         },
         ui: UI,
-        pvp: pvpState,
+        pvp: pvpStore,
         battleFields: battleFieldSetters,
       },
         pendingEvolutionInput: {
@@ -1190,7 +1191,7 @@ export function useBattle() {
     setScreenFromString,
     t,
     UI,
-    pvpState,
+    pvpStore,
     battleFieldSetters,
     pendingEvolve,
     setScreen,
@@ -1254,6 +1255,7 @@ export function useBattle() {
     starter, allySub, pHp, pHpSub, pExp, pLvl, pStg,
     coopActiveSlot,
     pvpStarter2, pvpHp2, pvpTurn, pvpWinner, pvpChargeP1, pvpChargeP2, pvpActionCount,
+    pvpState: pvpStructuredState,
     pvpBurnP1, pvpBurnP2, pvpFreezeP1, pvpFreezeP2, pvpStaticP1, pvpStaticP2,
     pvpParalyzeP1, pvpParalyzeP2, pvpComboP1, pvpComboP2, pvpSpecDefP1, pvpSpecDefP2,
     round, enemy, eHp, enemySub, eHpSub,

@@ -215,6 +215,24 @@ export type CollectionPopupVm = {
   desc: string;
 };
 
+export type PvpCombatantStateVm = {
+  charge: number;
+  burn: number;
+  freeze: boolean;
+  static: number;
+  paralyze: boolean;
+  combo: number;
+  specDef: boolean;
+};
+
+export type PvpStateVm = {
+  p1: PvpCombatantStateVm;
+  p2: PvpCombatantStateVm;
+  turn: 'p1' | 'p2';
+  winner: 'p1' | 'p2' | null;
+  actionCount: number;
+};
+
 export type UseBattleState = {
   screen: ScreenName;
   timedMode: boolean;
@@ -232,6 +250,7 @@ export type UseBattleState = {
   pvpHp2: number;
   pvpTurn: "p1" | "p2";
   pvpWinner: "p1" | "p2" | null;
+  pvpState: PvpStateVm;
   pvpChargeP1: number;
   pvpChargeP2: number;
   pvpActionCount: number;

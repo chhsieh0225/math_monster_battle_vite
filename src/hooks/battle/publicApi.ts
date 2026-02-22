@@ -54,6 +54,7 @@ const REQUIRED_STATE_KEYS = [
   'pvpHp2',
   'pvpTurn',
   'pvpWinner',
+  'pvpState',
   'pvpChargeP1',
   'pvpChargeP2',
   'pvpActionCount',

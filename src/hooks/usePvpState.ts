@@ -1,12 +1,13 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { getLevelMaxHp } from '../utils/playerHp';
-import type { StarterVm } from '../types/battle';
+import type { PvpStateVm, StarterVm } from '../types/battle';
 
 type PvpTurn = 'p1' | 'p2';
 
 type StarterLite = StarterVm | null;
 
 type UsePvpStateResult = {
+  pvpState: PvpStateVm;
   pvpStarter2: StarterLite;
   setPvpStarter2: (value: StarterLite | ((prev: StarterLite) => StarterLite)) => void;
   pvpHp2: number;
@@ -68,6 +69,50 @@ export function usePvpState(): UsePvpStateResult {
   const [pvpComboP2, setPvpComboP2] = useState(0);
   const [pvpSpecDefP1, setPvpSpecDefP1] = useState(false);
   const [pvpSpecDefP2, setPvpSpecDefP2] = useState(false);
+  const pvpState = useMemo<PvpStateVm>(
+    () => ({
+      p1: {
+        charge: pvpChargeP1,
+        burn: pvpBurnP1,
+        freeze: pvpFreezeP1,
+        static: pvpStaticP1,
+        paralyze: pvpParalyzeP1,
+        combo: pvpComboP1,
+        specDef: pvpSpecDefP1,
+      },
+      p2: {
+        charge: pvpChargeP2,
+        burn: pvpBurnP2,
+        freeze: pvpFreezeP2,
+        static: pvpStaticP2,
+        paralyze: pvpParalyzeP2,
+        combo: pvpComboP2,
+        specDef: pvpSpecDefP2,
+      },
+      turn: pvpTurn,
+      winner: pvpWinner,
+      actionCount: pvpActionCount,
+    }),
+    [
+      pvpActionCount,
+      pvpBurnP1,
+      pvpBurnP2,
+      pvpChargeP1,
+      pvpChargeP2,
+      pvpComboP1,
+      pvpComboP2,
+      pvpFreezeP1,
+      pvpFreezeP2,
+      pvpParalyzeP1,
+      pvpParalyzeP2,
+      pvpSpecDefP1,
+      pvpSpecDefP2,
+      pvpStaticP1,
+      pvpStaticP2,
+      pvpTurn,
+      pvpWinner,
+    ],
+  );
 
   const resetPvpRuntime = useCallback(() => {
     setPvpWinner(null);
@@ -89,6 +134,7 @@ export function usePvpState(): UsePvpStateResult {
   }, []);
 
   return {
+    pvpState,
     pvpStarter2,
     setPvpStarter2,
     pvpHp2,

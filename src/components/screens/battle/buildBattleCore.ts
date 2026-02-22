@@ -27,6 +27,7 @@ type BattleCoreRuntimeState = Pick<
   UseBattleState,
   | 'battleMode'
   | 'pvpTurn'
+  | 'pvpState'
   | 'pvpChargeP1'
   | 'pvpChargeP2'
   | 'pvpComboP1'
@@ -318,6 +319,7 @@ export function buildBattleRuntimeCore({
   const {
     battleMode,
     pvpTurn,
+    pvpState,
     pvpChargeP1,
     pvpChargeP2,
     pvpComboP1,
@@ -338,15 +340,24 @@ export function buildBattleRuntimeCore({
     mLvls,
     mHits,
   } = state;
+  const pvpTurnResolved = pvpState?.turn || pvpTurn;
+  const pvpP1 = pvpState?.p1;
+  const pvpP2 = pvpState?.p2;
 
   const pvpActiveCharge = battleMode === 'pvp'
-    ? (pvpTurn === 'p1' ? (pvpChargeP1 || 0) : (pvpChargeP2 || 0))
+    ? (pvpTurnResolved === 'p1'
+      ? ((pvpP1?.charge ?? pvpChargeP1) || 0)
+      : ((pvpP2?.charge ?? pvpChargeP2) || 0))
     : 0;
   const pvpActiveCombo = battleMode === 'pvp'
-    ? (pvpTurn === 'p1' ? (pvpComboP1 || 0) : (pvpComboP2 || 0))
+    ? (pvpTurnResolved === 'p1'
+      ? ((pvpP1?.combo ?? pvpComboP1) || 0)
+      : ((pvpP2?.combo ?? pvpComboP2) || 0))
     : 0;
   const pvpActiveSpecDefReady = battleMode === 'pvp'
-    ? (pvpTurn === 'p1' ? !!pvpSpecDefP1 : !!pvpSpecDefP2)
+    ? (pvpTurnResolved === 'p1'
+      ? !!(pvpP1?.specDef ?? pvpSpecDefP1)
+      : !!(pvpP2?.specDef ?? pvpSpecDefP2))
     : false;
   const chargeDisplay = battleMode === 'pvp' ? pvpActiveCharge : charge;
   const chargeReadyDisplay = battleMode === 'pvp' ? pvpActiveCharge >= 3 : chargeReady;
@@ -370,18 +381,18 @@ export function buildBattleRuntimeCore({
     chargeDisplay,
     chargeReadyDisplay,
     moveRuntime,
-    pvpEnemyBurn: pvpBurnP2 || 0,
-    pvpEnemyFreeze: !!pvpFreezeP2,
-    pvpEnemyParalyze: !!pvpParalyzeP2,
-    pvpEnemyStatic: pvpStaticP2 || 0,
-    pvpEnemyCombo: pvpComboP2 || 0,
-    pvpEnemySpecDef: !!pvpSpecDefP2,
-    pvpPlayerBurn: pvpBurnP1 || 0,
-    pvpPlayerFreeze: !!pvpFreezeP1,
-    pvpPlayerParalyze: !!pvpParalyzeP1,
-    pvpPlayerStatic: pvpStaticP1 || 0,
-    pvpPlayerCombo: pvpComboP1 || 0,
-    pvpPlayerSpecDef: !!pvpSpecDefP1,
+    pvpEnemyBurn: (pvpP2?.burn ?? pvpBurnP2) || 0,
+    pvpEnemyFreeze: !!(pvpP2?.freeze ?? pvpFreezeP2),
+    pvpEnemyParalyze: !!(pvpP2?.paralyze ?? pvpParalyzeP2),
+    pvpEnemyStatic: (pvpP2?.static ?? pvpStaticP2) || 0,
+    pvpEnemyCombo: (pvpP2?.combo ?? pvpComboP2) || 0,
+    pvpEnemySpecDef: !!(pvpP2?.specDef ?? pvpSpecDefP2),
+    pvpPlayerBurn: (pvpP1?.burn ?? pvpBurnP1) || 0,
+    pvpPlayerFreeze: !!(pvpP1?.freeze ?? pvpFreezeP1),
+    pvpPlayerParalyze: !!(pvpP1?.paralyze ?? pvpParalyzeP1),
+    pvpPlayerStatic: (pvpP1?.static ?? pvpStaticP1) || 0,
+    pvpPlayerCombo: (pvpP1?.combo ?? pvpComboP1) || 0,
+    pvpPlayerSpecDef: !!(pvpP1?.specDef ?? pvpSpecDefP1),
   };
 }
 

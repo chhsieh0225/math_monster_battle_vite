@@ -21,7 +21,7 @@ type UseSpriteTargetsArgs = {
   enemyMType?: string;
   playerStageIdx: number;
   battleMode: string;
-  pvpTurn: string;
+  pvpTurn: 'p1' | 'p2';
   battleRootRef: RefObject<HTMLDivElement | null>;
   enemySpriteRef: RefObject<HTMLDivElement | null>;
   playerSpriteRef: RefObject<HTMLDivElement | null>;

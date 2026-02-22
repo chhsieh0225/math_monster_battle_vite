@@ -145,6 +145,7 @@ function BattleScreenComponent({
       if (observer) observer.disconnect();
     };
   }, [S.screen]);
+  const pvpTurn = S.pvpState.turn;
   const { measuredEnemyTarget, measuredPlayerTarget, measuredPlayerSubTarget } = useSpriteTargets({
     screen: S.screen,
     phase: S.phase,
@@ -154,7 +155,7 @@ function BattleScreenComponent({
     enemyMType: S.enemy?.mType,
     playerStageIdx: S.pStg,
     battleMode: S.battleMode,
-    pvpTurn: S.pvpTurn,
+    pvpTurn,
     battleRootRef,
     enemySpriteRef,
     playerSpriteRef,
@@ -174,7 +175,6 @@ function BattleScreenComponent({
     allySub,
     pHpSub,
     coopActiveSlot,
-    pvpTurn,
     pvpStarter2,
   } = S;
   const { getPow, dualEff } = V;
@@ -1078,7 +1078,7 @@ function BattleScreenComponent({
             coopUsingSub={coopUsingSub}
             coopCanSwitch={coopCanSwitch}
             battleMode={S.battleMode}
-            pvpTurn={S.pvpTurn}
+            pvpTurn={pvpTurn}
             pvpActiveCharge={pvpActiveCharge}
             pvpActiveCombo={pvpActiveCombo}
             pvpActiveSpecDefReady={pvpActiveSpecDefReady}

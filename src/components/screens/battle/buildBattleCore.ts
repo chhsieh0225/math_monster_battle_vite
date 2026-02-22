@@ -25,9 +25,10 @@ type BattleCoreStaticState = Pick<
   | 'allySub'
   | 'pHpSub'
   | 'coopActiveSlot'
-  | 'pvpTurn'
   | 'pvpStarter2'
->;
+> & {
+  pvpTurn: 'p1' | 'p2';
+};
 
 type BattleCoreRuntimeState = Pick<
   UseBattleState,

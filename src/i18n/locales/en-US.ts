@@ -18,7 +18,7 @@ const enUS = {
   "title.mode.coop": "Co-op",
   "title.mode.pvp": "PvP",
   "title.mode.continue": "Continue",
-  "title.timedHint": "Timed mode: answer within 5 seconds",
+  "title.timedHint": "Timed mode: answer within 15 seconds",
   "title.feature.leaderboard": "Leaderboard",
   "title.feature.achievements": "Achievements",
   "title.feature.encyclopedia": "Encyclopedia",

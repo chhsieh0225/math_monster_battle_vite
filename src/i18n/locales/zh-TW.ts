@@ -18,7 +18,7 @@ const zhTW = {
   "title.mode.coop": "雙人合作",
   "title.mode.pvp": "雙人對戰",
   "title.mode.continue": "繼續冒險",
-  "title.timedHint": "計時模式：5 秒內回答",
+  "title.timedHint": "計時模式：15 秒內回答",
   "title.feature.leaderboard": "排行榜",
   "title.feature.achievements": "成就",
   "title.feature.encyclopedia": "圖鑑",

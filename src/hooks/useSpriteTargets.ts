@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 
 export type SpriteTarget = {
@@ -54,6 +54,15 @@ function measureSpriteTarget(
   };
 }
 
+function shouldUpdateTarget(prev: SpriteTarget | null, next: SpriteTarget): boolean {
+  if (!prev) return true;
+  const dx = Math.abs(prev.flyRight - next.flyRight);
+  const dy = Math.abs(prev.flyTop - next.flyTop);
+  return dx > 0.08 || dy > 0.08;
+}
+
+const NOOP = () => {};
+
 export function useSpriteTargets({
   screen,
   phase,
@@ -72,17 +81,20 @@ export function useSpriteTargets({
   const [measuredEnemyTarget, setMeasuredEnemyTarget] = useState<SpriteTarget | null>(null);
   const [measuredPlayerTarget, setMeasuredPlayerTarget] = useState<SpriteTarget | null>(null);
   const [measuredPlayerSubTarget, setMeasuredPlayerSubTarget] = useState<SpriteTarget | null>(null);
-
-  const shouldUpdateTarget = (prev: SpriteTarget | null, next: SpriteTarget): boolean => {
-    if (!prev) return true;
-    const dx = Math.abs(prev.flyRight - next.flyRight);
-    const dy = Math.abs(prev.flyTop - next.flyTop);
-    return dx > 0.08 || dy > 0.08;
-  };
+  const scheduleSyncRef = useRef<() => void>(NOOP);
 
   useEffect(() => {
-    if (screen !== 'battle') return;
+    if (screen !== 'battle') {
+      scheduleSyncRef.current = NOOP;
+      return;
+    }
+
     let rafId = 0;
+    let observer: ResizeObserver | null = null;
+    let observedRoot: HTMLElement | null = null;
+    let observedEnemy: HTMLElement | null = null;
+    let observedPlayer: HTMLElement | null = null;
+    let observedPlayerSub: HTMLElement | null = null;
 
     const syncTargets = () => {
       const rootEl = battleRootRef.current;
@@ -94,45 +106,89 @@ export function useSpriteTargets({
       const enemyEl = enemySpriteRef.current;
       if (enemyEl) {
         const t = measureSpriteTarget(rootRect, enemyEl);
-        if (t) setMeasuredEnemyTarget((prev) => (shouldUpdateTarget(prev, t) ? t : prev));
+        if (t) {
+          setMeasuredEnemyTarget((prev) => (shouldUpdateTarget(prev, t) ? t : prev));
+        }
       }
 
       const playerEl = playerSpriteRef.current;
       if (playerEl) {
         const t = measureSpriteTarget(rootRect, playerEl);
-        if (t) setMeasuredPlayerTarget((prev) => (shouldUpdateTarget(prev, t) ? t : prev));
+        if (t) {
+          setMeasuredPlayerTarget((prev) => (shouldUpdateTarget(prev, t) ? t : prev));
+        }
       }
 
       const subEl = playerSubSpriteRef?.current;
       if (subEl) {
         const t = measureSpriteTarget(rootRect, subEl);
-        if (t) setMeasuredPlayerSubTarget((prev) => (shouldUpdateTarget(prev, t) ? t : prev));
+        if (t) {
+          setMeasuredPlayerSubTarget((prev) => (shouldUpdateTarget(prev, t) ? t : prev));
+        }
+      }
+    };
+
+    const bindObservedElements = () => {
+      if (!observer) return;
+      const rootEl = battleRootRef.current;
+      const enemyEl = enemySpriteRef.current;
+      const playerEl = playerSpriteRef.current;
+      const playerSubEl = playerSubSpriteRef?.current || null;
+
+      if (observedRoot !== rootEl) {
+        if (observedRoot) observer.unobserve(observedRoot);
+        if (rootEl) observer.observe(rootEl);
+        observedRoot = rootEl;
+      }
+      if (observedEnemy !== enemyEl) {
+        if (observedEnemy) observer.unobserve(observedEnemy);
+        if (enemyEl) observer.observe(enemyEl);
+        observedEnemy = enemyEl;
+      }
+      if (observedPlayer !== playerEl) {
+        if (observedPlayer) observer.unobserve(observedPlayer);
+        if (playerEl) observer.observe(playerEl);
+        observedPlayer = playerEl;
+      }
+      if (observedPlayerSub !== playerSubEl) {
+        if (observedPlayerSub) observer.unobserve(observedPlayerSub);
+        if (playerSubEl) observer.observe(playerSubEl);
+        observedPlayerSub = playerSubEl;
       }
     };
 
     const scheduleSync = () => {
+      bindObservedElements();
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(syncTargets);
     };
+    scheduleSyncRef.current = scheduleSync;
 
     scheduleSync();
     window.addEventListener('resize', scheduleSync);
 
-    let observer: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
       observer = new ResizeObserver(scheduleSync);
-      if (battleRootRef.current) observer.observe(battleRootRef.current);
-      if (enemySpriteRef.current) observer.observe(enemySpriteRef.current);
-      if (playerSpriteRef.current) observer.observe(playerSpriteRef.current);
-      const subEl = playerSubSpriteRef?.current;
-      if (subEl) observer.observe(subEl);
+      bindObservedElements();
     }
 
     return () => {
       cancelAnimationFrame(rafId);
       window.removeEventListener('resize', scheduleSync);
       if (observer) observer.disconnect();
+      scheduleSyncRef.current = NOOP;
     };
+  }, [
+    screen,
+    battleRootRef,
+    enemySpriteRef,
+    playerSpriteRef,
+    playerSubSpriteRef,
+  ]);
+
+  useEffect(() => {
+    if (screen !== 'battle') return;
+    scheduleSyncRef.current();
   }, [
     screen,
     phase,
@@ -143,11 +199,11 @@ export function useSpriteTargets({
     playerStageIdx,
     battleMode,
     pvpTurn,
-    battleRootRef,
-    enemySpriteRef,
-    playerSpriteRef,
-    playerSubSpriteRef,
   ]);
 
-  return { measuredEnemyTarget, measuredPlayerTarget, measuredPlayerSubTarget };
+  return {
+    measuredEnemyTarget: screen === 'battle' ? measuredEnemyTarget : null,
+    measuredPlayerTarget: screen === 'battle' ? measuredPlayerTarget : null,
+    measuredPlayerSubTarget: screen === 'battle' ? measuredPlayerSubTarget : null,
+  };
 }

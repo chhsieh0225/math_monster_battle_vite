@@ -45,19 +45,6 @@ function normalizeBossVisualId(id?: string | null): string {
   return id.startsWith('pvp_') ? id.slice(4) : id;
 }
 
-type SceneEnemyRef = {
-  sceneMType?: string;
-  mType?: string;
-} | null | undefined;
-
-function resolveSceneKeyFromEnemy(enemy: SceneEnemyRef): string {
-  const requestedSceneKey = enemy?.sceneMType || enemy?.mType || 'grass';
-  if (Object.prototype.hasOwnProperty.call(SCENES, requestedSceneKey)) return requestedSceneKey;
-  if (Object.prototype.hasOwnProperty.call(SCENES, 'grass')) return 'grass';
-  const fallbackSceneKey = Object.keys(SCENES)[0];
-  return fallbackSceneKey || 'grass';
-}
-
 function resolveBattleSceneBg(sceneKey: string, lowPerfMode: boolean): string | null {
   const scene = (SCENES as Record<string, { bgImg?: string } | undefined>)[sceneKey];
   if (!scene?.bgImg) return null;
@@ -75,6 +62,117 @@ type BattleScreenProps = {
   onOpenSettings: (fromScreen: ScreenName) => void;
   t: Translator;
 };
+
+const BATTLE_STATE_RENDER_KEYS = [
+  'screen',
+  'phase',
+  'starter',
+  'enemy',
+  'enemySub',
+  'battleMode',
+  'round',
+  'pLvl',
+  'pStg',
+  'pHp',
+  'pHpSub',
+  'pExp',
+  'expNext',
+  'eHp',
+  'eHpSub',
+  'streak',
+  'passiveCount',
+  'charge',
+  'chargeReady',
+  'selIdx',
+  'q',
+  'fb',
+  'answered',
+  'bText',
+  'dmgs',
+  'parts',
+  'eAnim',
+  'pAnim',
+  'atkEffect',
+  'effMsg',
+  'burnStack',
+  'frozen',
+  'staticStack',
+  'specDef',
+  'cursed',
+  'bossPhase',
+  'bossCharging',
+  'sealedMove',
+  'sealedTurns',
+  'diffLevel',
+  'gamePaused',
+  'questionTimerSec',
+  'timedMode',
+  'mHits',
+  'mLvls',
+  'mLvlUp',
+  'inventory',
+  'achPopup',
+  'collectionPopup',
+  'allySub',
+  'coopActiveSlot',
+  'pvpStarter2',
+  'pvpState',
+  'defAnim',
+] as const satisfies ReadonlyArray<keyof UseBattleState>;
+
+const BATTLE_ACTION_RENDER_KEYS = [
+  'advance',
+  'dismissAch',
+  'dismissCollectionPopup',
+  'onAns',
+  'quitGame',
+  'rmD',
+  'rmP',
+  'selectMove',
+  'toggleCoopActive',
+  'togglePause',
+  'useItem',
+] as const satisfies ReadonlyArray<keyof UseBattleActions>;
+
+const BATTLE_VIEW_RENDER_KEYS = [
+  'getPow',
+  'dualEff',
+  'timerSubscribe',
+  'getTimerLeft',
+] as const satisfies ReadonlyArray<keyof UseBattleView>;
+
+function arePickedKeysEqual<T extends object, K extends readonly (keyof T)[]>(
+  prevObj: T,
+  nextObj: T,
+  keys: K,
+): boolean {
+  for (const key of keys) {
+    if (prevObj[key] !== nextObj[key]) return false;
+  }
+  return true;
+}
+
+function areBattleScreenPropsEqual(
+  prev: BattleScreenProps,
+  next: BattleScreenProps,
+): boolean {
+  if (prev.t !== next.t) return false;
+  if (prev.onOpenSettings !== next.onOpenSettings) return false;
+
+  if (
+    prev.mobile.compactUI !== next.mobile.compactUI
+    || prev.mobile.lowPerfMode !== next.mobile.lowPerfMode
+    || prev.mobile.autoLowEnd !== next.mobile.autoLowEnd
+  ) {
+    return false;
+  }
+
+  if (!arePickedKeysEqual(prev.actions, next.actions, BATTLE_ACTION_RENDER_KEYS)) return false;
+  if (!arePickedKeysEqual(prev.view, next.view, BATTLE_VIEW_RENDER_KEYS)) return false;
+  if (!arePickedKeysEqual(prev.state, next.state, BATTLE_STATE_RENDER_KEYS)) return false;
+
+  return true;
+}
 
 function BattleScreenComponent({
   state,
@@ -227,42 +325,6 @@ function BattleScreenComponent({
       playerInfoStyle: { "--battle-player-info-left": layout.playerInfoLeft } as BattleCssVars,
     };
   }, [coreStatic, UX.lowPerfMode]);
-
-  useEffect(() => {
-    if (S.screen !== 'battle') return;
-
-    const preloadUrls = new Set<string>();
-    const preloadForEnemy = (enemy: SceneEnemyRef) => {
-      const sceneKey = resolveSceneKeyFromEnemy(enemy);
-      const bg = resolveBattleSceneBg(sceneKey, UX.lowPerfMode);
-      if (bg) preloadUrls.add(bg);
-    };
-
-    preloadForEnemy({
-      sceneMType: S.enemy?.sceneMType,
-      mType: S.enemy?.mType,
-    });
-
-    if (Array.isArray(S.enemies) && S.enemies.length > 0) {
-      const roundStep = S.battleMode === 'coop' || S.battleMode === 'double' ? 2 : 1;
-      const nextEnemy = S.enemies[S.round + roundStep];
-      if (nextEnemy) preloadForEnemy(nextEnemy);
-    }
-
-    preloadUrls.forEach((src) => {
-      const img = new Image();
-      img.decoding = 'async';
-      img.src = src;
-    });
-  }, [
-    S.screen,
-    S.battleMode,
-    S.round,
-    S.enemy?.sceneMType,
-    S.enemy?.mType,
-    S.enemies,
-    UX.lowPerfMode,
-  ]);
 
   const memoLaneSnapshot = useMemo(() => {
     if (!coreStatic) return null;
@@ -949,4 +1011,4 @@ function BattleScreenComponent({
   );
 }
 
-export default memo(BattleScreenComponent);
+export default memo(BattleScreenComponent, areBattleScreenPropsEqual);

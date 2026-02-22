@@ -265,7 +265,8 @@ function App() {
     const sceneTypes = new Set<string>();
     const currentSceneType = S.enemy?.sceneMType || S.enemy?.mType;
     const subSceneType = S.enemySub?.sceneMType || S.enemySub?.mType;
-    const nextEnemy = S.enemies?.[(S.round || 0) + 1] || null;
+    const roundStep = S.battleMode === 'coop' || S.battleMode === 'double' ? 2 : 1;
+    const nextEnemy = S.enemies?.[(S.round || 0) + roundStep] || null;
     const nextSceneType = nextEnemy?.sceneMType || nextEnemy?.mType;
 
     if (currentSceneType) sceneTypes.add(currentSceneType);
@@ -278,6 +279,7 @@ function App() {
     });
   }, [
     S.screen,
+    S.battleMode,
     S.round,
     S.enemies,
     S.enemy?.sceneMType,

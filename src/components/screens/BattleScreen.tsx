@@ -494,20 +494,29 @@ function BattleScreenComponent({
     const wideEnemySubScaleCap = isWideEnemySubSprite
       ? (deviceTier === 'phone' ? 0.76 : deviceTier === 'tablet' ? 0.84 : 0.9)
       : 1;
-    const resolvedPlayerMainScale = Math.min(playerLaneScale, widePlayerMainScaleCap);
-    const resolvedPlayerSubScale = showAllySub
+    // Co-op readability scaling by device:
+    // phone: slightly smaller, tablet: tiny reduction, laptop: unchanged.
+    const coopGlobalScale = isCoopBattle
+      ? (deviceTier === 'phone' ? 0.9 : deviceTier === 'tablet' ? 0.96 : 1)
+      : 1;
+    const basePlayerMainScale = Math.min(playerLaneScale, widePlayerMainScaleCap);
+    const basePlayerSubScale = showAllySub
       ? Math.min(playerLaneScale, widePlayerSubScaleCap)
       : 1;
-    const resolvedEnemyMainScale = Math.min(
+    const baseEnemyMainScale = Math.min(
       1,
       enemyLaneWidthPx / Math.max(1, enemySize),
       wideEnemyMainScaleCap,
     );
-    const resolvedEnemySubScale = Math.min(
+    const baseEnemySubScale = Math.min(
       1,
       enemyLaneWidthPx / Math.max(1, enemySubSize * enemySubScaleNum),
       wideEnemySubScaleCap,
     );
+    const resolvedPlayerMainScale = Math.min(1, basePlayerMainScale * coopGlobalScale);
+    const resolvedPlayerSubScale = Math.min(1, basePlayerSubScale * coopGlobalScale);
+    const resolvedEnemyMainScale = Math.min(1, baseEnemyMainScale * coopGlobalScale);
+    const resolvedEnemySubScale = Math.min(1, baseEnemySubScale * coopGlobalScale);
 
     const playerMainWidthPx = mainPlayerSize * resolvedPlayerMainScale;
     const playerSubWidthPx = subPlayerSize * resolvedPlayerSubScale;

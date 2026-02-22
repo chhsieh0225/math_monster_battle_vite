@@ -521,8 +521,9 @@ export function buildRoster(
       : (isEvolved && b.evolvedSpriteKey ? b.evolvedSpriteKey : (variant ? variant.spriteKey : b.spriteKey));
     const resolvedMonsterType = evolvedVariant?.mType || variant?.mType || b.mType;
     const bossSceneType = BOSS_SCENE_BY_ID[resolvedId];
-    // Priority: wave-level override > boss scene map > monster type fallback.
-    const resolvedSceneType = wave.sceneType || bossSceneType || resolvedMonsterType;
+    // Bosses should always use their dedicated battlefield from config.
+    // For non-boss enemies, keep wave-level override behavior.
+    const resolvedSceneType = bossSceneType || wave.sceneType || resolvedMonsterType;
 
     previousRace = activeVariant?.race || b.race;
 

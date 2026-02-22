@@ -162,6 +162,29 @@ export default function TitleScreen({
     : t('title.playerTitle.none', 'No title yet');
   const versionText = String(VERSION);
 
+  /* ── Idle detection: pause all CSS animations after IDLE_MS of no interaction ── */
+  const IDLE_MS = 8_000;
+  const [idle, setIdle] = useState(false);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resetIdle = useCallback(() => {
+    if (idle) setIdle(false);
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+    idleTimer.current = setTimeout(() => setIdle(true), IDLE_MS);
+  }, [idle]);
+
+  useEffect(() => {
+    // Start the idle timer on mount
+    idleTimer.current = setTimeout(() => setIdle(true), IDLE_MS);
+    const events: (keyof WindowEventMap)[] = ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'scroll'];
+    const handler = () => resetIdle();
+    events.forEach((e) => window.addEventListener(e, handler, { passive: true }));
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, handler));
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+    };
+  }, [resetIdle]);
+
   const featureButtons = [
     { icon: '🏆', label: t('title.feature.leaderboard', 'Leaderboard'), fn: onLeaderboard, aria: t('a11y.title.openLeaderboard', 'Open leaderboard') },
     { icon: '⭐', label: t('title.feature.achievements', 'Achievements'), fn: onAchievements, aria: t('a11y.title.openAchievements', 'Open achievements') },
@@ -171,7 +194,7 @@ export default function TitleScreen({
   ];
 
   return (
-    <main className={`title-screen${lowPerfMode ? ' is-low-perf' : ''}`} style={titleStyle}>
+    <main className={`title-screen${lowPerfMode ? ' is-low-perf' : ''}${idle ? ' is-idle' : ''}`} style={titleStyle}>
       <div className="title-star title-star-main">✨</div>
 
       <div className="title-hero">
@@ -179,7 +202,7 @@ export default function TitleScreen({
           {row1.map((s, i) => (
             <div key={s.id} className={`title-monster-float title-monster-float-${i}`}>
               <div className={`title-monster-face${spriteRandomConfig.flipById[s.id] ? ' is-flipped' : ''}`}>
-                <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={(['wolf', 'tiger', 'lion'].includes(s.id)) ? 78 : 60} ariaLabel={`${s.name} ${t('a11y.sprite.default', 'Monster sprite')}`} />
+                <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={(['wolf', 'tiger', 'lion'].includes(s.id)) ? 78 : 60} ariaLabel={`${s.name} ${t('a11y.sprite.default', 'Monster sprite')}`} noFilter />
               </div>
             </div>
           ))}
@@ -188,7 +211,7 @@ export default function TitleScreen({
           {row2.map((s, i) => (
             <div key={s.id} className={`title-monster-float title-monster-float-${i + 3}`}>
               <div className={`title-monster-face${spriteRandomConfig.flipById[s.id] ? ' is-flipped' : ''}`}>
-                <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={(['wolf', 'tiger', 'lion'].includes(s.id)) ? 78 : 60} ariaLabel={`${s.name} ${t('a11y.sprite.default', 'Monster sprite')}`} />
+                <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={(['wolf', 'tiger', 'lion'].includes(s.id)) ? 78 : 60} ariaLabel={`${s.name} ${t('a11y.sprite.default', 'Monster sprite')}`} noFilter />
               </div>
             </div>
           ))}

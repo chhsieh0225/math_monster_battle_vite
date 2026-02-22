@@ -140,18 +140,30 @@
 }
 
 .title-action-btn-continue {
+  position: relative;
   width: 100%;
   font-size: 1.05rem;
   padding: 14px 0;
   background: linear-gradient(135deg, #10b981, #34d399);
   box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
-  animation: title-continue-pulse 2s ease-in-out infinite;
   margin-bottom: 6px;
 }
 
+/* GPU-friendly pulse: animate opacity of a pseudo-element instead of box-shadow */
+.title-action-btn-continue::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 4px 28px rgba(16, 185, 129, 0.65);
+  opacity: 0;
+  animation: title-continue-pulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
 @keyframes title-continue-pulse {
-  0%, 100% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); }
-  50% { box-shadow: 0 4px 28px rgba(16, 185, 129, 0.65); }
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
 }
 
 .title-action-btn-normal {
@@ -270,6 +282,12 @@
 .title-screen.is-low-perf .title-star,
 .title-screen.is-low-perf .title-monster-float {
   animation: none;
+}
+
+/* Idle: pause all GPU animations to let mobile CPU/GPU sleep */
+.title-screen.is-idle .title-monster-float,
+.title-screen.is-idle .title-action-btn-continue::after {
+  animation-play-state: paused;
 }
 
 @media (max-width: 768px) {

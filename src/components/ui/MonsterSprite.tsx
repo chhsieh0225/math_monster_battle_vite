@@ -8,6 +8,8 @@ type MonsterSpriteProps = {
   style?: CSSProperties;
   ariaLabel?: string;
   decorative?: boolean;
+  /** Skip <defs> filter/gradient to reduce GPU cost (e.g. title screen). */
+  noFilter?: boolean;
 };
 
 const MonsterSprite = memo(function MonsterSprite({
@@ -17,6 +19,7 @@ const MonsterSprite = memo(function MonsterSprite({
   style = {},
   ariaLabel = "Monster sprite",
   decorative = false,
+  noFilter = false,
 }: MonsterSpriteProps) {
   // useId() generates a unique, stable ID per component instance,
   // avoiding SVG gradient/filter ID collisions when multiple sprites are on screen.
@@ -37,19 +40,21 @@ const MonsterSprite = memo(function MonsterSprite({
       style={{ ...style, animation: anim || "none", imageRendering: "pixelated" }}
     >
       {!decorative && <title>{ariaLabel}</title>}
-      <defs>
-        <radialGradient id={gsId} cx="35%" cy="25%">
-          <stop offset="0%" stopColor="white" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="white" stopOpacity="0" />
-        </radialGradient>
-        <filter id={glowId}>
-          <feGaussianBlur stdDeviation="2" result="b" />
-          <feMerge>
-            <feMergeNode in="b" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
+      {!noFilter && (
+        <defs>
+          <radialGradient id={gsId} cx="35%" cy="25%">
+            <stop offset="0%" stopColor="white" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
+          </radialGradient>
+          <filter id={glowId}>
+            <feGaussianBlur stdDeviation="2" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+      )}
       <g dangerouslySetInnerHTML={{ __html: svgStr }} />
     </svg>
   );
@@ -60,6 +65,7 @@ const MonsterSprite = memo(function MonsterSprite({
   && a.style === b.style
   && a.ariaLabel === b.ariaLabel
   && a.decorative === b.decorative
+  && a.noFilter === b.noFilter
 ));
 
 export default MonsterSprite;

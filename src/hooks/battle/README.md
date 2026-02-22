@@ -54,6 +54,7 @@ This folder holds the battle-domain layering used by `useBattle`.
   - Keeps `selectMove` guard and question-boot logic out of `useBattle`.
 - `coopFlow.ts`
   - Co-op only helper flows (party KO handling, support turns, evolution sync helpers).
+  - Prefer "plan + effect-runner" split for new logic: pure decision first, side-effect execution second.
 - `coopTurnRotationFlow.ts`
   - Pure decision helper for co-op active-slot auto-rotation.
   - Lets `useCoopTurnRotation` stay thin and testable.

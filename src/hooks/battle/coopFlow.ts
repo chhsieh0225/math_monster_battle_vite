@@ -80,6 +80,32 @@ type RunCoopAllySupportTurnArgs = {
   t?: Translator;
 };
 
+type FxTargetKey = 'enemyMain' | 'playerSub';
+
+type CoopSupportTurnEffect =
+  | { kind: 'set_text'; text: string }
+  | { kind: 'set_phase'; phase: 'playerAtk' }
+  | { kind: 'set_enemy_anim'; anim: string }
+  | { kind: 'set_enemy_hp'; hp: number }
+  | { kind: 'damage_popup'; text: string; color: string; target: FxTargetKey }
+  | { kind: 'particle_arc'; emoji: string; from: FxTargetKey; to: FxTargetKey; count?: number }
+  | { kind: 'play_move_sfx'; moveType: string; moveIdx?: number; fallbackName: string }
+  | { kind: 'schedule_clear_enemy_anim'; delayMs: number }
+  | { kind: 'schedule_victory'; delayMs: number; verb: string }
+  | { kind: 'schedule_on_done'; delayMs: number };
+
+export type CoopSupportTurnPlan = {
+  damage: number;
+  nextEnemyHp: number;
+  effects: CoopSupportTurnEffect[];
+};
+
+type BuildCoopSupportTurnPlanArgs = {
+  state: BattleState;
+  rand: RandomFn;
+  t?: Translator;
+};
+
 function formatFallback(template: string, params?: TranslatorParams): string {
   if (!params) return template;
   return template.replace(/\{(\w+)\}/g, (_m: string, key: string) => String(params[key] ?? ''));
@@ -118,6 +144,132 @@ export function buildNextEvolvedAlly(allySub: StarterLite | null | undefined): S
     selectedStageIdx: nextAllyStage,
     name: allyStageData?.name || allySub.name,
   };
+}
+
+export function buildCoopAllySupportTurnPlan({
+  state,
+  rand,
+  t,
+}: BuildCoopSupportTurnPlanArgs): CoopSupportTurnPlan | null {
+  if (
+    !isCoopBattleMode(state.battleMode)
+    || !state.allySub
+    || (state.pHpSub || 0) <= 0
+    || !state.enemy
+  ) return null;
+
+  const base = 16 + Math.max(0, (state.pLvl || 1) - 1) * 2;
+  const rawDmg = Math.min(28, Math.max(6, Math.round(base * (0.85 + rand() * 0.3))));
+  const damage = applyBossDamageReduction(rawDmg, state.enemy?.id);
+  const nextEnemyHp = Math.max(0, (state.eHp || 0) - damage);
+  const effects: CoopSupportTurnEffect[] = [
+    {
+      kind: 'set_text',
+      text: tr(t, 'battle.coop.supportAttack', '🤝 {name} launches a support attack!', {
+        name: state.allySub.name,
+      }),
+    },
+    { kind: 'set_phase', phase: 'playerAtk' },
+    { kind: 'set_enemy_anim', anim: 'enemyWaterHit 0.45s ease' },
+    { kind: 'set_enemy_hp', hp: nextEnemyHp },
+    { kind: 'damage_popup', text: `-${damage}`, color: '#60a5fa', target: 'enemyMain' },
+    { kind: 'particle_arc', emoji: 'starter', from: 'playerSub', to: 'enemyMain', count: 3 },
+    { kind: 'play_move_sfx', moveType: 'water', moveIdx: 1, fallbackName: 'water' },
+    { kind: 'schedule_clear_enemy_anim', delayMs: 450 },
+  ];
+  if (nextEnemyHp <= 0) {
+    effects.push({
+      kind: 'schedule_victory',
+      delayMs: 700,
+      verb: tr(t, 'battle.victory.verb.coopCombo', 'was defeated by co-op combo'),
+    });
+  } else {
+    effects.push({ kind: 'schedule_on_done', delayMs: 700 });
+  }
+  return { damage, nextEnemyHp, effects };
+}
+
+type ApplyCoopSupportTurnEffectsArgs = {
+  plan: CoopSupportTurnPlan;
+  setBText: TextSetter;
+  setPhase: PhaseSetter;
+  setEAnim: TextSetter;
+  setEHp: NumberSetter;
+  addD: (value: string, x: number, y: number, color: string) => void;
+  addP: (emoji: string, x: number, y: number, count?: number) => void;
+  sfx: {
+    play: (name: string) => void;
+    playMove?: (type: string, idx?: number) => void;
+  };
+  safeToIfBattleActive: (fn: () => void, ms: number) => void;
+  handleVictory: (verb?: string) => void;
+  onDone?: () => void;
+};
+
+function applyCoopSupportTurnEffects({
+  plan,
+  setBText,
+  setPhase,
+  setEAnim,
+  setEHp,
+  addD,
+  addP,
+  sfx,
+  safeToIfBattleActive,
+  handleVictory,
+  onDone,
+}: ApplyCoopSupportTurnEffectsArgs): void {
+  const targets = fxt();
+  const resolveTarget = (key: FxTargetKey): { x: number; y: number } => (
+    key === 'enemyMain' ? targets.enemyMain : targets.playerSub
+  );
+
+  plan.effects.forEach((effect) => {
+    switch (effect.kind) {
+      case 'set_text':
+        setBText(effect.text);
+        return;
+      case 'set_phase':
+        setPhase(effect.phase);
+        return;
+      case 'set_enemy_anim':
+        setEAnim(effect.anim);
+        return;
+      case 'set_enemy_hp':
+        setEHp(effect.hp);
+        return;
+      case 'damage_popup': {
+        const target = resolveTarget(effect.target);
+        addD(effect.text, target.x, target.y, effect.color);
+        return;
+      }
+      case 'particle_arc': {
+        const from = resolveTarget(effect.from);
+        const to = resolveTarget(effect.to);
+        addP(effect.emoji, (from.x + to.x) / 2, (from.y + to.y) / 2, effect.count);
+        return;
+      }
+      case 'play_move_sfx':
+        if (typeof sfx.playMove === 'function') sfx.playMove(effect.moveType, effect.moveIdx);
+        else sfx.play(effect.fallbackName);
+        return;
+      case 'schedule_clear_enemy_anim':
+        safeToIfBattleActive(() => setEAnim(''), effect.delayMs);
+        return;
+      case 'schedule_victory':
+        safeToIfBattleActive(() => {
+          handleVictory(effect.verb);
+        }, effect.delayMs);
+        return;
+      case 'schedule_on_done':
+        if (onDone) safeToIfBattleActive(() => {
+          onDone();
+        }, effect.delayMs);
+        return;
+      default:
+        return;
+    }
+  });
 }
 
 export function handleCoopPartyKo({
@@ -221,34 +373,28 @@ export function runCoopAllySupportTurn({
 
   safeToIfBattleActive(() => {
     const s2 = sr.current;
-    if (!s2.allySub || (s2.pHpSub || 0) <= 0 || !s2.enemy) {
+    const plan = buildCoopAllySupportTurnPlan({
+      state: s2,
+      rand,
+      t,
+    });
+    if (!plan) {
       if (onDone) onDone();
       return;
     }
-
-    const base = 16 + Math.max(0, (s2.pLvl || 1) - 1) * 2;
-    const rawDmg = Math.min(28, Math.max(6, Math.round(base * (0.85 + rand() * 0.3))));
-    const dmg = applyBossDamageReduction(rawDmg, s2.enemy?.id);
-    const nh = Math.max(0, (s2.eHp || 0) - dmg);
-    setBText(tr(t, 'battle.coop.supportAttack', '🤝 {name} launches a support attack!', { name: s2.allySub.name }));
-    setPhase('playerAtk');
-    setEAnim('enemyWaterHit 0.45s ease');
-    setEHp(nh);
-    addD(`-${dmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#60a5fa');
-    addP('starter', (fxt().playerSub.x + fxt().enemyMain.x) / 2, (fxt().playerSub.y + fxt().enemyMain.y) / 2, 3);
-    if (typeof sfx.playMove === 'function') sfx.playMove('water', 1);
-    else sfx.play('water');
-
-    safeToIfBattleActive(() => setEAnim(''), 450);
-    if (nh <= 0) {
-      safeToIfBattleActive(() => {
-        handleVictory(tr(t, 'battle.victory.verb.coopCombo', 'was defeated by co-op combo'));
-      }, 700);
-      return;
-    }
-    if (onDone) safeToIfBattleActive(() => {
-      onDone();
-    }, 700);
+    applyCoopSupportTurnEffects({
+      plan,
+      setBText,
+      setPhase,
+      setEAnim,
+      setEHp,
+      addD,
+      addP,
+      sfx,
+      safeToIfBattleActive,
+      handleVictory,
+      onDone,
+    });
   }, delayMs);
 
   return true;

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  buildCoopAllySupportTurnPlan,
   buildNextEvolvedAlly,
   canSwitchCoopActiveSlot,
   handleCoopPartyKo,
@@ -140,6 +141,46 @@ test('runCoopAllySupportTurn can finish the enemy and trigger victory callback',
   assert.equal(out, true);
   assert.equal(sr.current.eHp, 0);
   assert.equal(victoryReason, "was defeated by co-op combo");
+});
+
+test('buildCoopAllySupportTurnPlan returns effect plan with onDone scheduling when enemy survives', () => {
+  const plan = buildCoopAllySupportTurnPlan({
+    state: {
+      battleMode: "coop",
+      allySub: { name: "火狐" },
+      pHpSub: 20,
+      enemy: { id: "slime", name: "史萊姆" },
+      pLvl: 1,
+      eHp: 30,
+    },
+    rand: () => 0,
+  });
+
+  assert.ok(plan);
+  assert.equal(plan.damage, 14);
+  assert.equal(plan.nextEnemyHp, 16);
+  assert.equal(plan.effects.some((e) => e.kind === "schedule_on_done"), true);
+  assert.equal(plan.effects.some((e) => e.kind === "schedule_victory"), false);
+});
+
+test('buildCoopAllySupportTurnPlan schedules victory effect when support attack is lethal', () => {
+  const plan = buildCoopAllySupportTurnPlan({
+    state: {
+      battleMode: "coop",
+      allySub: { name: "火狐" },
+      pHpSub: 20,
+      enemy: { id: "slime", name: "史萊姆" },
+      pLvl: 1,
+      eHp: 10,
+    },
+    rand: () => 0,
+  });
+
+  assert.ok(plan);
+  assert.equal(plan.nextEnemyHp, 0);
+  const victoryEffect = plan.effects.find((e) => e.kind === "schedule_victory");
+  assert.ok(victoryEffect);
+  assert.equal(victoryEffect.verb, "was defeated by co-op combo");
 });
 
 test('handleCoopPartyKo skips stale delayed menu reset after battle ended', () => {

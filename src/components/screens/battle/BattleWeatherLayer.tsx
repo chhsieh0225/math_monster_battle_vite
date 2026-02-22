@@ -48,9 +48,10 @@ type DustVm = {
 };
 
 function buildRain(seed: string, dense: boolean, reduced: boolean): RainDropVm[] {
+  // Tuned compromise: keep weather motion readable while lowering DOM + paint cost.
   const count = dense
-    ? (reduced ? 34 : 56)
-    : (reduced ? 30 : 46);
+    ? (reduced ? 26 : 42)
+    : (reduced ? 24 : 34);
   return Array.from({ length: count }, (_, i) => {
     const x = seedRange(`weather-rain-x-${seed}-${i}`, 1, 98);
     const h = seedRange(`weather-rain-h-${seed}-${i}`, 24, dense ? 42 : 34);
@@ -71,7 +72,7 @@ function buildRain(seed: string, dense: boolean, reduced: boolean): RainDropVm[]
 }
 
 function buildSnow(seed: string, reduced: boolean): SnowFlakeVm[] {
-  const count = reduced ? 24 : 36;
+  const count = reduced ? 20 : 28;
   return Array.from({ length: count }, (_, i) => {
     const x = seedRange(`weather-snow-x-${seed}-${i}`, 2, 98);
     const size = seedRange(`weather-snow-s-${seed}-${i}`, 3, 9);
@@ -97,7 +98,7 @@ function buildSnow(seed: string, reduced: boolean): SnowFlakeVm[] {
    CSS class .weather-fog-band is kept so fog can be restored with a cheaper blur alternative. */
 
 function buildDust(seed: string, reduced: boolean): DustVm[] {
-  const count = reduced ? 22 : 32;
+  const count = reduced ? 18 : 24;
   return Array.from({ length: count }, (_, i) => {
     const top = seedRange(`weather-dust-top-${seed}-${i}`, 10, 85);
     const size = seedRange(`weather-dust-s-${seed}-${i}`, 2.4, 6.5);

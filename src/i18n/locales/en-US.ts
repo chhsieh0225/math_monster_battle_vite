@@ -802,6 +802,57 @@ const enUS = {
   "a11y.bossVictory.skip": "Tap to skip boss victory cinematic",
   "a11y.battle.items": "Battle items",
   "a11y.battle.useItem": "Use {item}",
+
+  // ── Drop catalog names ──
+  "drop.name.candy": "Candy",
+  "drop.name.potion": "Potion",
+  "drop.name.fire": "Flame Shard",
+  "drop.name.water": "Water Drop",
+  "drop.name.thunder": "Thunder Gem",
+  "drop.name.leaf": "Leaf Essence",
+  "drop.name.dark": "Dark Fragment",
+  "drop.name.steel": "Steel Plate",
+  "drop.name.rock": "Rock Core",
+  "drop.name.ghost": "Ghost Wisp",
+  "drop.name.diamond": "Diamond",
+  "drop.name.star": "Star Crystal",
+  "drop.name.venom": "Venom Fang",
+  "drop.name.pvpflag": "PvP Flag",
+  "drop.name.dragon": "Dragon Scale",
+  "drop.name.crown": "Crown",
+  "drop.name.trophy": "Trophy",
+  "drop.name.blade": "Blade Relic",
+
+  // ── Drop catalog descriptions ──
+  "drop.desc.candy": "A sweet treat from any foe. Collect many to boost all damage.",
+  "drop.desc.potion": "A basic battle extract. Common but useful in large quantities.",
+  "drop.desc.fire": "Crystallized fire energy. Collecting these boosts fire-type damage.",
+  "drop.desc.water": "A pure water gem. Collecting these boosts water-type damage.",
+  "drop.desc.thunder": "A crackling electric crystal. Boosts electric-type damage.",
+  "drop.desc.leaf": "Concentrated forest vitality. Boosts grass-type damage.",
+  "drop.desc.dark": "A shard of shadow essence. Boosts dark-type damage.",
+  "drop.desc.steel": "Tempered metal from iron foes. Boosts steel-type damage.",
+  "drop.desc.rock": "A dense mineral core. Boosts rock-type damage.",
+  "drop.desc.ghost": "A flickering spirit remnant. Boosts ghost-type damage.",
+  "drop.desc.diamond": "A gleaming ice-born gem. Boosts ice-type damage.",
+  "drop.desc.star": "A radiant light fragment. Boosts light-type damage.",
+  "drop.desc.venom": "A toxic fang shard. Boosts poison-type damage.",
+  "drop.desc.pvpflag": "A battle flag won from PvP combat.",
+  "drop.desc.dragon": "A scale from a mighty dragon. Collecting these unlocks titles.",
+  "drop.desc.crown": "A royal emblem. Collecting these unlocks prestigious titles.",
+  "drop.desc.trophy": "A champion's prize. Collecting these unlocks arena titles.",
+  "drop.desc.blade": "A fragment of a legendary sword. Part of the Apex Relic collection.",
+
+  // ── Drop milestone labels ──
+  "drop.milestone.typeDmg": "{pct} {type} damage",
+  "drop.milestone.allDmg": "{pct} all damage",
+  "drop.milestone.title": "Title: {name}",
+
+  // ── Drop rarity labels ──
+  "drop.rarity.common": "Common",
+  "drop.rarity.rare": "Rare",
+  "drop.rarity.epic": "Epic",
+  "drop.rarity.legendary": "Legendary",
 } as const;
 
 export default enUS;

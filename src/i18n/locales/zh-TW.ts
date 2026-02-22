@@ -802,6 +802,57 @@ const zhTW = {
   "a11y.bossVictory.skip": "點擊可跳過首領擊敗演出",
   "a11y.battle.items": "戰鬥道具",
   "a11y.battle.useItem": "使用 {item}",
+
+  // ── Drop catalog names ──
+  "drop.name.candy": "糖果",
+  "drop.name.potion": "藥水",
+  "drop.name.fire": "火焰碎片",
+  "drop.name.water": "水之寶珠",
+  "drop.name.thunder": "雷電結晶",
+  "drop.name.leaf": "翠葉精華",
+  "drop.name.dark": "暗影殘片",
+  "drop.name.steel": "鋼鐵板甲",
+  "drop.name.rock": "岩石核心",
+  "drop.name.ghost": "幽靈鬼火",
+  "drop.name.diamond": "鑽石",
+  "drop.name.star": "星光結晶",
+  "drop.name.venom": "毒牙碎片",
+  "drop.name.pvpflag": "對戰旗幟",
+  "drop.name.dragon": "龍之鱗片",
+  "drop.name.crown": "王冠",
+  "drop.name.trophy": "獎盃",
+  "drop.name.blade": "劍聖遺物",
+
+  // ── Drop catalog descriptions ──
+  "drop.desc.candy": "任何戰鬥都可能掉落的小甜點。大量蒐集可提升全屬性傷害。",
+  "drop.desc.potion": "基本戰鬥萃取物。數量多了也很有用。",
+  "drop.desc.fire": "結晶的火焰能量。蒐集可提升火系傷害。",
+  "drop.desc.water": "純淨水之寶珠。蒐集可提升水系傷害。",
+  "drop.desc.thunder": "閃爍的電系結晶。蒐集可提升雷系傷害。",
+  "drop.desc.leaf": "濃縮的森林生命力。蒐集可提升草系傷害。",
+  "drop.desc.dark": "暗影精華碎片。蒐集可提升暗系傷害。",
+  "drop.desc.steel": "來自鋼系怪獸的淬煉金屬。蒐集可提升鋼系傷害。",
+  "drop.desc.rock": "堅硬的礦物核心。蒐集可提升岩系傷害。",
+  "drop.desc.ghost": "飄忽的靈魂殘光。蒐集可提升鬼系傷害。",
+  "drop.desc.diamond": "冰原誕生的寶石。蒐集可提升冰系傷害。",
+  "drop.desc.star": "璀璨的光之碎片。蒐集可提升光系傷害。",
+  "drop.desc.venom": "劇毒牙齒碎片。蒐集可提升毒系傷害。",
+  "drop.desc.pvpflag": "對戰模式中贏得的戰旗。",
+  "drop.desc.dragon": "強大龍族的鱗片。蒐集可解鎖稱號。",
+  "drop.desc.crown": "王族的徽章。蒐集可解鎖尊貴稱號。",
+  "drop.desc.trophy": "冠軍的獎盃。蒐集可解鎖競技場稱號。",
+  "drop.desc.blade": "傳說之劍的碎片。頂級收藏的一環。",
+
+  // ── Drop milestone labels ──
+  "drop.milestone.typeDmg": "{pct} {type}系傷害",
+  "drop.milestone.allDmg": "{pct} 全屬性傷害",
+  "drop.milestone.title": "稱號：{name}",
+
+  // ── Drop rarity labels ──
+  "drop.rarity.common": "普通",
+  "drop.rarity.rare": "稀有",
+  "drop.rarity.epic": "史詩",
+  "drop.rarity.legendary": "傳說",
 } as const;
 
 export default zhTW;

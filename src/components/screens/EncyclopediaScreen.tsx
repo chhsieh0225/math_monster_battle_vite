@@ -6,6 +6,7 @@ import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia
 import { useI18n } from '../../i18n';
 import { hasSpecialTrait } from '../../utils/traits';
 import { loadCollection, type CollectionData } from '../../utils/collectionStore.ts';
+import { COLLECTION_MILESTONES, type CollectionMilestoneDef } from '../../data/collectionMilestones.ts';
 import { getCompensation } from '../../data/spriteProfiles.ts';
 import './EncyclopediaScreen.css';
 import {
@@ -38,22 +39,49 @@ function isBladewolfEntry(entry: EncyclopediaStarterEntry): boolean {
   return entry.starterId === 'wolf' && entry.stageIdx === 1;
 }
 
-const DROP_CATALOG: { emoji: string; name: string; rarity: 'common' | 'rare' | 'epic' | 'legendary' }[] = [
-  { emoji: '🍬', name: 'Candy', rarity: 'common' },
-  { emoji: '🧪', name: 'Potion', rarity: 'common' },
-  { emoji: '🔥', name: 'Flame Shard', rarity: 'rare' },
-  { emoji: '💧', name: 'Water Drop', rarity: 'rare' },
-  { emoji: '⚡', name: 'Thunder Gem', rarity: 'rare' },
-  { emoji: '💀', name: 'Dark Fragment', rarity: 'rare' },
-  { emoji: '🛡️', name: 'Steel Plate', rarity: 'rare' },
-  { emoji: '👻', name: 'Ghost Wisp', rarity: 'epic' },
-  { emoji: '💎', name: 'Diamond', rarity: 'epic' },
-  { emoji: '⭐', name: 'Star Crystal', rarity: 'epic' },
-  { emoji: '🐉', name: 'Dragon Scale', rarity: 'legendary' },
-  { emoji: '👑', name: 'Crown', rarity: 'legendary' },
-  { emoji: '🏆', name: 'Trophy', rarity: 'legendary' },
-  { emoji: '🏁', name: 'PvP Flag', rarity: 'epic' },
+type DropEntry = {
+  emoji: string;
+  nameKey: string;
+  nameFallback: string;
+  descKey: string;
+  descFallback: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+};
+
+const DROP_CATALOG: DropEntry[] = [
+  { emoji: '🍬', nameKey: 'drop.name.candy',   nameFallback: 'Candy',          descKey: 'drop.desc.candy',   descFallback: 'A sweet treat from any foe. Collect many to boost all damage.',            rarity: 'common' },
+  { emoji: '🧪', nameKey: 'drop.name.potion',  nameFallback: 'Potion',         descKey: 'drop.desc.potion',  descFallback: 'A basic battle extract. Common but useful in large quantities.',           rarity: 'common' },
+  { emoji: '🔥', nameKey: 'drop.name.fire',    nameFallback: 'Flame Shard',    descKey: 'drop.desc.fire',    descFallback: 'Crystallized fire energy. Collecting these boosts fire-type damage.',      rarity: 'rare' },
+  { emoji: '💧', nameKey: 'drop.name.water',   nameFallback: 'Water Drop',     descKey: 'drop.desc.water',   descFallback: 'A pure water gem. Collecting these boosts water-type damage.',             rarity: 'rare' },
+  { emoji: '⚡', nameKey: 'drop.name.thunder', nameFallback: 'Thunder Gem',    descKey: 'drop.desc.thunder', descFallback: 'A crackling electric crystal. Boosts electric-type damage.',               rarity: 'rare' },
+  { emoji: '🌿', nameKey: 'drop.name.leaf',    nameFallback: 'Leaf Essence',   descKey: 'drop.desc.leaf',    descFallback: 'Concentrated forest vitality. Boosts grass-type damage.',                  rarity: 'rare' },
+  { emoji: '💀', nameKey: 'drop.name.dark',    nameFallback: 'Dark Fragment',  descKey: 'drop.desc.dark',    descFallback: 'A shard of shadow essence. Boosts dark-type damage.',                      rarity: 'rare' },
+  { emoji: '🛡️', nameKey: 'drop.name.steel',   nameFallback: 'Steel Plate',    descKey: 'drop.desc.steel',   descFallback: 'Tempered metal from iron foes. Boosts steel-type damage.',                 rarity: 'rare' },
+  { emoji: '🪨', nameKey: 'drop.name.rock',    nameFallback: 'Rock Core',      descKey: 'drop.desc.rock',    descFallback: 'A dense mineral core. Boosts rock-type damage.',                          rarity: 'rare' },
+  { emoji: '👻', nameKey: 'drop.name.ghost',   nameFallback: 'Ghost Wisp',     descKey: 'drop.desc.ghost',   descFallback: 'A flickering spirit remnant. Boosts ghost-type damage.',                   rarity: 'epic' },
+  { emoji: '💎', nameKey: 'drop.name.diamond', nameFallback: 'Diamond',        descKey: 'drop.desc.diamond', descFallback: 'A gleaming ice-born gem. Boosts ice-type damage.',                         rarity: 'epic' },
+  { emoji: '⭐', nameKey: 'drop.name.star',    nameFallback: 'Star Crystal',   descKey: 'drop.desc.star',    descFallback: 'A radiant light fragment. Boosts light-type damage.',                      rarity: 'epic' },
+  { emoji: '☠️', nameKey: 'drop.name.venom',   nameFallback: 'Venom Fang',     descKey: 'drop.desc.venom',   descFallback: 'A toxic fang shard. Boosts poison-type damage.',                          rarity: 'epic' },
+  { emoji: '🏁', nameKey: 'drop.name.pvpflag', nameFallback: 'PvP Flag',       descKey: 'drop.desc.pvpflag', descFallback: 'A battle flag won from PvP combat.',                                      rarity: 'epic' },
+  { emoji: '🐉', nameKey: 'drop.name.dragon',  nameFallback: 'Dragon Scale',   descKey: 'drop.desc.dragon',  descFallback: 'A scale from a mighty dragon. Collecting these unlocks titles.',           rarity: 'legendary' },
+  { emoji: '👑', nameKey: 'drop.name.crown',   nameFallback: 'Crown',          descKey: 'drop.desc.crown',   descFallback: 'A royal emblem. Collecting these unlocks prestigious titles.',             rarity: 'legendary' },
+  { emoji: '🏆', nameKey: 'drop.name.trophy',  nameFallback: 'Trophy',         descKey: 'drop.desc.trophy',  descFallback: 'A champion\'s prize. Collecting these unlocks arena titles.',              rarity: 'legendary' },
+  { emoji: '⚔️', nameKey: 'drop.name.blade',   nameFallback: 'Blade Relic',    descKey: 'drop.desc.blade',   descFallback: 'A fragment of a legendary sword. Part of the Apex Relic collection.',      rarity: 'legendary' },
 ];
+
+// Pre-compute milestones grouped by emoji for O(1) lookup per drop card.
+const MILESTONES_BY_EMOJI: ReadonlyMap<string, readonly CollectionMilestoneDef[]> = (() => {
+  const map = new Map<string, CollectionMilestoneDef[]>();
+  for (const m of COLLECTION_MILESTONES) {
+    // Only index single-emoji milestones (combo milestones shown separately).
+    if (m.required != null) {
+      const arr = map.get(m.emoji) || [];
+      arr.push(m);
+      map.set(m.emoji, arr);
+    }
+  }
+  return map;
+})();
 
 const RARITY_COLORS: Record<string, string> = {
   common: '#94a3b8', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b',
@@ -139,12 +167,17 @@ function normalizeStarterEntries(value: unknown): EncyclopediaStarterEntry[] {
 
 type TabId = 'monsters' | 'starters' | 'drops';
 
-const RARITY_DESC: Record<string, string> = {
-  common: 'Common drop from any battle',
-  rare: 'Uncommon drop from specific types',
-  epic: 'Rare drop from tough foes',
-  legendary: 'Extremely rare treasure',
-};
+function formatMilestoneReward(m: CollectionMilestoneDef, t: (key: string, fallback: string) => string): string {
+  for (const r of m.rewards) {
+    if (r.kind === 'damage_boost') {
+      const pct = `+${Math.round(r.bonus * 100)}%`;
+      if (r.damageType === 'all') return t('drop.milestone.allDmg', '{pct} all damage').replace('{pct}', pct);
+      return t('drop.milestone.typeDmg', '{pct} {type} damage').replace('{pct}', pct).replace('{type}', r.damageType);
+    }
+    if (r.kind === 'title') return t('drop.milestone.title', 'Title: {name}').replace('{name}', t(r.nameKey, r.nameFallback));
+  }
+  return '';
+}
 
 export default function EncyclopediaScreen({ encData = {}, onBack }: EncyclopediaScreenProps) {
   const { t, locale } = useI18n();
@@ -296,7 +329,8 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
               })}
             </div>
             <div className="enc-grid-drops">
-              {DROP_CATALOG.map(({ emoji, name, rarity }) => {
+              {DROP_CATALOG.map((drop) => {
+                const { emoji, nameKey, nameFallback, descKey, descFallback, rarity } = drop;
                 const count = collection[emoji] || 0;
                 const owned = count > 0;
                 const rc = RARITY_COLORS[rarity];
@@ -305,15 +339,35 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                   '--enc-rarity-bg': `${rc}12`,
                   '--enc-rarity-border': `${rc}44`,
                 };
+                const milestones = MILESTONES_BY_EMOJI.get(emoji);
                 return (
                   <div key={emoji} className={`enc-drop-card ${owned ? 'is-owned' : 'is-locked'}`} style={dropStyle}>
                     <div className={`enc-drop-emoji ${owned ? '' : 'is-locked'}`}>{emoji}</div>
-                    <div className={`enc-drop-name ${owned ? '' : 'is-locked'}`}>{name}</div>
+                    <div className={`enc-drop-name ${owned ? '' : 'is-locked'}`}>{t(nameKey, nameFallback)}</div>
                     <div className={`enc-drop-count ${owned ? '' : 'is-locked'}`}>
                       {owned ? `×${count}` : '???'}
                     </div>
-                    <div className="enc-drop-rarity">{rarity}</div>
-                    <div className="enc-drop-desc">{RARITY_DESC[rarity] || ''}</div>
+                    <div className="enc-drop-rarity">{t(`drop.rarity.${rarity}`, rarity)}</div>
+                    <div className="enc-drop-desc">{t(descKey, descFallback)}</div>
+                    {milestones && milestones.length > 0 && owned && (
+                      <div className="enc-drop-milestones">
+                        {milestones.map((m) => {
+                          const req = m.required ?? 0;
+                          const done = count >= req;
+                          const pct = req > 0 ? Math.min(100, Math.round((count / req) * 100)) : 0;
+                          return (
+                            <div key={m.id} className={`enc-milestone-row ${done ? 'is-done' : ''}`}>
+                              <div className="enc-milestone-bar">
+                                <div className="enc-milestone-fill" style={{ width: `${pct}%` }} />
+                              </div>
+                              <span className="enc-milestone-label">
+                                {count}/{req} {done ? '✅' : ''} {formatMilestoneReward(m, t)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 );
               })}

@@ -623,7 +623,7 @@ export function runPlayerAnswer({
             if (fullBlock) {
               setShadowShieldCD(0);
               sfx.play('specDef');
-              setEAnim('shieldPulse 0.8s ease');
+              setEAnim('enemyShieldPulse 0.8s ease');
               setEffMsg({ text: tr(t, 'battle.effect.shadowShield', '🛡️ Shadow Shield absorbed the attack!'), color: '#7c3aed' });
               safeToIfBattleActive(() => setEffMsg(null), 1500);
               addD(tr(t, 'battle.tag.shielded', '🛡️BLOCKED'), fxt().enemyMain.x, fxt().enemyMain.y, '#7c3aed');

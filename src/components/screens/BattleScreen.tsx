@@ -440,10 +440,10 @@ function BattleScreenComponent({
     const { enemy, isCoopBattle, showAllySub, coopUsingSub } = coreStatic;
     const enemyIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemy.id));
     const enemyIdleAnim = enemyIsBossVisual
-      ? "bossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
+      ? "battleBossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
       : enemyLowHpFlag
-        ? "float 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite"
-        : "float 3s ease-in-out infinite";
+        ? "battleFloat 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite"
+        : "battleFloat 3s ease-in-out infinite";
     const playerMainIdleAnim = UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite";
     const playerSubIdleAnim = UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite";
     const hasSelectableCoopPair = isCoopBattle && showAllySub;
@@ -454,7 +454,7 @@ function BattleScreenComponent({
       enemyMain: (enemyDefeatedFlag
         ? "enemyDissolve .9s ease-out forwards"
         : S.eAnim || (UX.lowPerfMode ? "none" : enemyIdleAnim)),
-      enemySub: UX.lowPerfMode ? "none" : "float 3.8s ease-in-out infinite",
+      enemySub: UX.lowPerfMode ? "none" : "battleFloat 3.8s ease-in-out infinite",
       enemyShadow: enemyIsBossVisual ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
       playerMain: playerMainAnim,
       playerSub: playerSubAnim,

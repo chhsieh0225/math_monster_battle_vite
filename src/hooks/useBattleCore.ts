@@ -146,10 +146,7 @@ import {
   runToggleCoopActiveWithContext,
 } from './battle/lifecycleActionDelegates.ts';
 import {
-  buildSaveSnapshot,
   clearSave,
-  loadSave,
-  writeSave,
 } from '../utils/savegame.ts';
 import { useBattleAbilityModel } from './battle/useBattleAbilityModel.ts';
 import { useBattleItemActions } from './battle/useBattleItemActions.ts';
@@ -158,6 +155,7 @@ import {
   useBattlePauseState,
 } from './battle/useBattleOrchestrationState.ts';
 import { useBattleFlowState } from './battle/useBattleFlowState.ts';
+import { useBattleSaveFlow } from './battle/useBattleSaveFlow.ts';
 
 const MAX_RECENT_QUESTION_WINDOW = 8;
 
@@ -1245,8 +1243,7 @@ export function useBattle() {
   }, [onAnsContextRef]);
   const onAns = useStableCallback(onAnsImpl);
 
-  // --- Mid-run save: snapshot state before starting next battle ---
-  const saveMidRunContextRef = useBattleStateRef({
+  const { startBattleWithSave, resumeFromSave } = useBattleSaveFlow({
     battleMode,
     hasChallengeRun,
     starter,
@@ -1255,34 +1252,6 @@ export function useBattle() {
     coopActiveSlot,
     enemies,
     sr,
-  });
-  const saveMidRunImpl = useCallback((nextRound: number) => {
-    const ctx = saveMidRunContextRef.current;
-    // Only save for standard runs (not PvP, not challenge/daily/tower)
-    if (ctx.battleMode === 'pvp' || ctx.hasChallengeRun) return;
-    if (!ctx.starter) return;
-    writeSave(buildSaveSnapshot({
-      battleMode: ctx.battleMode,
-      timedMode: ctx.timedMode,
-      nextRound,
-      starter: ctx.starter,
-      allySub: ctx.battle.allySub ? (ctx.sr.current as { allySub?: StarterVm }).allySub ?? null : null,
-      coopActiveSlot: ctx.coopActiveSlot,
-      battle: ctx.battle,
-      enemies: ctx.enemies,
-    }));
-  }, [saveMidRunContextRef]);
-  const saveMidRun = useStableCallback(saveMidRunImpl);
-
-  // Wrap startBattle to auto-save before each new round
-  const startBattleWithSaveImpl = useCallback((idx: number, roster?: EnemyVm[]) => {
-    if (idx > 0) saveMidRun(idx);
-    startBattle(idx, roster);
-  }, [startBattle, saveMidRun]);
-  const startBattleWithSave = useStableCallback(startBattleWithSaveImpl);
-
-  // --- Resume from a mid-run save ---
-  const resumeFromSaveContextRef = useBattleStateRef({
     setBattleMode,
     setTimedMode,
     setEnemies,
@@ -1297,59 +1266,6 @@ export function useBattle() {
     setScreen,
     startBattle,
   });
-  const resumeFromSaveImpl = useCallback(() => {
-    const saved = loadSave();
-    if (!saved) return;
-    const ctx = resumeFromSaveContextRef.current;
-
-    // Restore mode, roster, starter, allySub
-    ctx.setBattleMode(saved.battleMode);
-    ctx.setTimedMode(saved.timedMode);
-    ctx.setEnemies(saved.enemies);
-    ctx.setStarter(saved.starter);
-    ctx.setCoopActiveSlot(saved.coopActiveSlot);
-
-    // Restore accumulated battle stats via reset_run + patch
-    const partnerSub = saved.allySub;
-    ctx.dispatchBattle({
-      type: 'reset_run',
-      patch: {
-        diffLevel: saved.battle.diffLevel,
-        allySub: partnerSub,
-        pHpSub: saved.battle.pHpSub,
-        pHp: saved.battle.pHp,
-        pStg: saved.battle.pStg,
-      },
-    });
-    ctx.dispatchBattle({
-      type: 'patch',
-      patch: {
-        pExp: saved.battle.pExp,
-        pLvl: saved.battle.pLvl,
-        streak: saved.battle.streak,
-        passiveCount: saved.battle.passiveCount,
-        charge: saved.battle.charge,
-        tC: saved.battle.tC,
-        tW: saved.battle.tW,
-        defeated: saved.battle.defeated,
-        maxStreak: saved.battle.maxStreak,
-        mHits: saved.battle.mHits,
-        mLvls: saved.battle.mLvls,
-      },
-    });
-
-    // Wire session lifecycle
-    ctx.invalidateAsyncWork();
-    ctx.beginRun();
-    ctx.clearTimer();
-    ctx.resetRunRuntimeState();
-    ctx.initSession(saved.starter, saved.timedMode);
-
-    // Jump into battle at the saved round
-    ctx.setScreen('battle');
-    ctx.startBattle(saved.nextRound, saved.enemies);
-  }, [resumeFromSaveContextRef]);
-  const resumeFromSave = useStableCallback(resumeFromSaveImpl);
 
   // --- Advance from text / victory phase ---
   const continueFromVictoryContextRef = useBattleStateRef({

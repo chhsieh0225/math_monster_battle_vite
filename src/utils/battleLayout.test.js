@@ -1547,3 +1547,48 @@ test('without spriteKey, compensation defaults to 1 (backward compatible)', () =
   assert.equal(layout.mainPlayerSize, 108);
   assert.equal(layout.enemySize, 120);
 });
+
+test('beast starter stages render progressively larger on phone single mode', () => {
+  const phoneArenaWidth = 390;
+  const starters = [
+    { id: 'wolf', spritePrefix: 'playerwolf' },
+    { id: 'tiger', spritePrefix: 'playertiger' },
+    { id: 'lion', spritePrefix: 'playerlion' },
+  ];
+  for (const starter of starters) {
+    const sizes = [];
+    for (let stage = 0; stage <= 2; stage++) {
+      const layout = resolveBattleLayout({
+        battleMode: 'single',
+        hasDualUnits: false,
+        compactUI: true,
+        playerStageIdx: stage,
+        playerStarterId: starter.id,
+        enemyId: 'slime',
+        enemySceneType: 'grass',
+        enemyIsEvolved: false,
+        playerSpriteKey: `${starter.spritePrefix}${stage}SVG`,
+        enemySpriteKey: 'slimeSVG',
+      });
+      const snap = buildLaneSnapshot({
+        layout,
+        arenaWidth: phoneArenaWidth,
+        showAllySub: false,
+        showEnemySub: false,
+        coopUsingSub: false,
+        isCoopBattle: false,
+        enemySubId: '',
+        enemySubIsEvolved: false,
+      });
+      sizes.push(snap.playerMainWidthPx);
+    }
+    assert.ok(
+      sizes[0] < sizes[1],
+      `${starter.id} stage0 (${sizes[0].toFixed(1)}) should be smaller than stage1 (${sizes[1].toFixed(1)})`,
+    );
+    assert.ok(
+      sizes[1] < sizes[2],
+      `${starter.id} stage1 (${sizes[1].toFixed(1)}) should be smaller than stage2 (${sizes[2].toFixed(1)})`,
+    );
+  }
+});

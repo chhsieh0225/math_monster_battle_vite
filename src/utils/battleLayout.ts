@@ -746,9 +746,21 @@ export function resolveBattleLaneSnapshot({
     laneTuning.wideEnemySubScaleCap,
   );
 
+  // Wide-frame beast starters (wolf/tiger/lion) on phone single non-boss:
+  // stages 1 & 2 both cap to lane width, appearing identical to stage 0.
+  // Apply a minimum scale floor so larger stages always render bigger.
+  // Player (bottom-left) and enemy (top-right) have ample vertical separation,
+  // so controlled horizontal overflow is safe.
+  const phoneSingleBeastScaleFloor = (
+    deviceTier === 'phone' && !hasDualUnits && isWidePlayerMainSprite && !isBossEnemy
+  ) ? 0.90 : 0;
+
   // Co-op readability scaling by device:
   // phone: slightly smaller, tablet: tiny reduction, laptop: unchanged.
-  const resolvedPlayerMainScale = Math.min(1, basePlayerMainScale * laneTuning.coopGlobalScale);
+  const resolvedPlayerMainScale = Math.max(
+    phoneSingleBeastScaleFloor,
+    Math.min(1, basePlayerMainScale * laneTuning.coopGlobalScale),
+  );
   const resolvedPlayerSubScale = Math.min(1, basePlayerSubScale * laneTuning.coopGlobalScale);
   const resolvedEnemyMainScale = Math.min(1, baseEnemyMainScale * laneTuning.coopGlobalScale);
   const resolvedEnemySubScale = Math.min(1, baseEnemySubScale * laneTuning.coopGlobalScale);

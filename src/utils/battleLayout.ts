@@ -62,6 +62,7 @@ type BattleLaneTuningInput = {
   isCoopBattle: boolean;
   showAllySub: boolean;
   showEnemySub: boolean;
+  isBossEnemy: boolean;
   isWidePlayerMainSprite: boolean;
   isWidePlayerSubSprite: boolean;
   isWideEnemyMainSprite: boolean;
@@ -115,6 +116,7 @@ export type ResolveBattleLaneSnapshotInput = {
   enemySubId?: string;
   enemySubIsBossVisual: boolean;
   enemySubIsEvolved: boolean;
+  isBossEnemy?: boolean;
 };
 
 export type BattleLaneSnapshot = {
@@ -167,6 +169,8 @@ const LANE_TUNING_CONFIG = {
   // Enemies sit at the top-right, players at bottom-left — vertical separation
   // means horizontal overlap is safe.
   phoneSepPctOverride: { single: 58, dual: 66 },
+  // Boss battles: give the enemy more room so bosses render larger than players.
+  phoneBossSepPctOverride: { single: 48, dual: 52 },
   safeGapPct: {
     phone: { single: 1.5, dual: 1.0 },
     tablet: { single: 2.9, dual: 3.2 },
@@ -274,6 +278,7 @@ export function resolveBattleLaneTuning({
   isCoopBattle,
   showAllySub,
   showEnemySub,
+  isBossEnemy,
   isWidePlayerMainSprite,
   isWidePlayerSubSprite,
   isWideEnemyMainSprite,
@@ -281,7 +286,9 @@ export function resolveBattleLaneTuning({
 }: BattleLaneTuningInput): BattleLaneTuning {
   const dualKey = dualityKey(hasDualUnits);
   const sepPct = deviceTier === 'phone'
-    ? LANE_TUNING_CONFIG.phoneSepPctOverride[dualKey]
+    ? (isBossEnemy
+      ? LANE_TUNING_CONFIG.phoneBossSepPctOverride[dualKey]
+      : LANE_TUNING_CONFIG.phoneSepPctOverride[dualKey])
     : LANE_TUNING_CONFIG.sepPct[dualKey];
   const safeGapPct = LANE_TUNING_CONFIG.safeGapPct[deviceTier][dualKey];
   const minPlayerLeftPct = LANE_TUNING_CONFIG.laneEdgePct[deviceTier];
@@ -516,9 +523,10 @@ export function resolveBattleLayout({
       + crazyDragonExtraRightAdjust
       + swordGodExtraRightAdjust,
   );
-  const enemyBaseSize = isSwordGod ? 270
+  const enemyBaseSize = isSwordGod ? 285
     : isCrazyDragon ? 280
     : isHydra ? 260
+    : isDarkDragon ? 350
     : isBoss ? 230
       : isGolumn ? 230
         : isGhostLantern ? 182
@@ -638,6 +646,7 @@ export function resolveBattleLaneSnapshot({
   enemySubId = '',
   enemySubIsBossVisual,
   enemySubIsEvolved,
+  isBossEnemy = false,
 }: ResolveBattleLaneSnapshotInput): BattleLaneSnapshot {
   const safeArenaWidthPx = Math.max(280, arenaWidthPx || 390);
 
@@ -696,6 +705,7 @@ export function resolveBattleLaneSnapshot({
     isCoopBattle,
     showAllySub,
     showEnemySub,
+    isBossEnemy: Boolean(isBossEnemy),
     isWidePlayerMainSprite,
     isWidePlayerSubSprite,
     isWideEnemyMainSprite,

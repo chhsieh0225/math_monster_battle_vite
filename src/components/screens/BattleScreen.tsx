@@ -357,6 +357,7 @@ function BattleScreenComponent({
     const enemySubId = S.enemySub?.id ?? '';
     const enemySubIsEvolved = Boolean(S.enemySub?.isEvolved);
     const enemySubIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemySubId));
+    const isBossEnemy = BOSS_IDS.has(normalizeBossVisualId(coreStatic.enemy?.id));
     return resolveBattleLaneSnapshot({
       arenaWidthPx: arenaWidth,
       compactDual,
@@ -384,6 +385,7 @@ function BattleScreenComponent({
       enemySubId,
       enemySubIsBossVisual,
       enemySubIsEvolved,
+      isBossEnemy,
     });
   }, [coreStatic, arenaWidth, S.enemySub?.id, S.enemySub?.isEvolved]);
 

@@ -433,8 +433,8 @@ test('pvp boss id prefix keeps boss visual sizing', () => {
 
   assert.equal(pvpBoss.enemySize, normalBoss.enemySize);
   assert.equal(pvpBoss.enemyTopPct, normalBoss.enemyTopPct);
-  // 270 × 1.13 × 1.087 ≈ 332
-  assert.equal(pvpBoss.enemySize, 332);
+  // 285 × 1.13 × 1.087 ≈ 350
+  assert.equal(pvpBoss.enemySize, 350);
 });
 
 test('boss selected as player starter uses boss-class sprite size', () => {
@@ -776,8 +776,8 @@ test('sword god shifts right and renders larger in battle', () => {
   assert.equal(compactSwordGod.enemyMainRightPct, 5);
   assert.equal(desktopSwordGod.enemyMainRightPct, 8);
   assert.ok(compactSwordGod.enemyMainRightPct < compactHydra.enemyMainRightPct);
-  assert.equal(compactSwordGod.enemySize, 286);
-  assert.equal(desktopSwordGod.enemySize, 332);
+  assert.equal(compactSwordGod.enemySize, 302);
+  assert.equal(desktopSwordGod.enemySize, 350);
 });
 
 test('crazy dragon gets dedicated size boost on mobile and desktop', () => {

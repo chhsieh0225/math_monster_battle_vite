@@ -160,9 +160,9 @@ const DEVICE_TIER_THRESHOLD = {
 } as const;
 
 const LANE_TUNING_CONFIG = {
-  sepPct: { single: 50, dual: 42 },
+  sepPct: { single: 50, dual: 50 },
   safeGapPct: {
-    phone: { single: 3.4, dual: 3.8 },
+    phone: { single: 3.4, dual: 2.5 },
     tablet: { single: 2.9, dual: 3.2 },
     laptop: { single: 2.6, dual: 2.8 },
   },
@@ -176,8 +176,8 @@ const LANE_TUNING_CONFIG = {
     widthRatio: 0.018,
   },
   coopGlobalScale: {
-    phone: 0.9,
-    tablet: 0.96,
+    phone: 1,
+    tablet: 1,
     laptop: 1,
   },
   wideScaleCap: {
@@ -410,22 +410,20 @@ export function resolveBattleLayout({
   const playerSubLeftPct = (dualUnits ? (compactDual ? 21 : 23) : 24) - coopSubLeftShift - wideSubPullback + beastSubLeftAdj;
   const playerSubBottomPct = dualUnits ? (compactDual ? 13 : 15) : 17;
   const isBossPlayer = BOSS_IDS.has(normalizedPlayerId);
-  const isLionOrWolfFinal = (normalizedPlayerId === "lion" || normalizedPlayerId === "wolf") && playerStageIdx >= 2;
-  const isLionFinalInTeam = dualUnits && normalizedPlayerId === "lion" && playerStageIdx >= 2;
-  const isWolfFinalInTeam = dualUnits && normalizedPlayerId === "wolf" && playerStageIdx >= 2;
-  const isWolfMid = normalizedPlayerId === "wolf" && playerStageIdx === 1;
+  const isBeastFinalInTeam = dualUnits && isBeastFinal;
   // 小火/小水/小草/小雷 (dragon_kin) stage-0 sprites are slightly smaller
   const isDragonKinBase = ["fire", "water", "grass", "electric"].includes(normalizedPlayerId) && playerStageIdx === 0;
   // 小剛狼/小冰虎/小獅獸 (beast_kin) stage-0 are wide-frame sprites.
   // Keep them slightly above dragon_kin stage-0 but avoid oversized feel in battle.
   const isBeastBase = ["wolf", "tiger", "lion"].includes(normalizedPlayerId) && playerStageIdx === 0;
+  const isBeastMid = isWideBeast && playerStageIdx === 1;
   const mainPlayerBaseSize = isBossPlayer
     ? 230
-    : (isLionFinalInTeam || isWolfFinalInTeam)
+    : isBeastFinalInTeam
       ? 188
       : playerStageIdx >= 2
         ? 200
-      : isWolfMid
+      : isBeastMid
           ? 150
       : playerStageIdx >= 1
           ? 170
@@ -433,19 +431,20 @@ export function resolveBattleLayout({
           : isDragonKinBase ? 108
           : 120;
   const mainPlayerScale = dualUnits ? (compactDual ? 0.9 : 0.96) : 1;
-  // Slightly reduce lion/wolf final forms on compact (mobile) viewports.
-  const compactFinalStarterScale = compactUI && isLionOrWolfFinal ? 0.97 : 1;
+  // Slightly reduce beast final forms on compact (mobile) viewports.
+  const compactFinalStarterScale = compactUI && isBeastFinal ? 0.97 : 1;
   // PvP readability: one-wing dragon silhouette is wide and appears visually
   // smaller than other bosses, so give it a dedicated in-battle boost.
   const pvpCrazyDragonPlayerBoost = battleMode === "pvp" && normalizedPlayerId === "boss_crazy_dragon"
     ? (compactUI ? 1 : 1.14)
     : 1;
-  const wolfFinalSizeScale = isWolfFinal ? 0.92 : 1;
+  const isTigerFinal = isTigerPlayer && playerStageIdx >= 2;
+  const beastFinalSizeScale = isWolfFinal ? 0.92 : isTigerFinal ? 0.94 : 1;
   const mainPlayerSize = Math.round(
     mainPlayerBaseSize
     * mainPlayerScale
     * compactFinalStarterScale
-    * wolfFinalSizeScale
+    * beastFinalSizeScale
     * playerComp
     * pvpCrazyDragonPlayerBoost,
   );
@@ -453,7 +452,7 @@ export function resolveBattleLayout({
   // Sub ally sizing: wide-sprites (beast starters) need compensation applied,
   // otherwise the creature only fills ~59% of the viewBox height and looks tiny.
   // A small base bump (112→120) keeps beast subs visually proportional.
-  const subBaseSize = isWideBeastSub ? (compactDual ? 110 : 120) : (compactDual ? 104 : 112);
+  const subBaseSize = isWideBeastSub ? (compactDual ? 110 : 120) : (compactDual ? 112 : 116);
   const subPlayerSize = Math.round(subBaseSize * (dualUnits ? (compactDual ? 0.9 : 0.95) : 1) * subComp);
 
   const visualEnemyId = normalizeEnemyVisualId(enemyId);

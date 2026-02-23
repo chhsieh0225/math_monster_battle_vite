@@ -853,6 +853,14 @@ const zhTW = {
   "drop.rarity.rare": "稀有",
   "drop.rarity.epic": "史詩",
   "drop.rarity.legendary": "傳說",
+
+  // ── Narrative beats ──
+  "narrative.prologue": "📖 傳說數學大陸被怪獸入侵了！唯有計算之力才能拯救世界，出發吧！",
+  "narrative.midpoint": "📖 你越來越強了！但前方的怪獸也在變強... 繼續加油！",
+  "narrative.lategame": "📖 距離最終決戰不遠了！你的數學力量正在覺醒！",
+  "narrative.preBoss": "📖 黑暗的氣息... 最後的強敵就在前方，準備迎接挑戰！",
+  "narrative.victory": "🎊 恭喜！你的數學之力拯救了大陸！",
+  "narrative.defeat": "📖 冒險暫時告一段落... 繼續練習，下次一定能走更遠！",
 } as const;
 
 export default zhTW;

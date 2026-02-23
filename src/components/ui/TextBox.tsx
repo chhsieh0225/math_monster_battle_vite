@@ -37,7 +37,7 @@ export default function TextBox({ text, onClick }: TextBoxProps) {
       cursor: "pointer", zIndex: 50
     }}
     >
-      <div style={{ fontSize: 18, fontWeight: 600, color: "white", lineHeight: 1.6, animation: "fadeSlide 0.3s ease" }}>{text}</div>
+      <div style={{ fontSize: 18, fontWeight: 600, color: "white", lineHeight: 1.6, whiteSpace: 'pre-line', animation: "fadeSlide 0.3s ease" }}>{text}</div>
       <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0, marginLeft: 12 }}>▼</div>
     </div>
   );

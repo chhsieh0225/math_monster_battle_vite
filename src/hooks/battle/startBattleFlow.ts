@@ -2,6 +2,7 @@ import type { BattleMode, BattlePhase, EnemyVm, ScreenName, StarterVm } from '..
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { randomInt } from '../../utils/prng.ts';
+import { getNarrativeBeat } from '../../data/narrativeScript.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -134,6 +135,13 @@ export function runStartBattleFlow({
   // Boss encounters start with a cinematic intro phase;
   // the overlay's onComplete callback will transition to 'text'.
   setPhase(isBossEncounter ? 'bossIntro' : 'text');
+
+  // Narrative beat: inject story text before the battle intro at key rounds.
+  const narrativeBeat = getNarrativeBeat(idx, battleMode);
+  const narrativePrefix = narrativeBeat
+    ? tr(t, narrativeBeat.textKey, narrativeBeat.fallback) + '\n'
+    : '';
+
   if (enemySub) {
     if (allySub) {
       const intro = tr(
@@ -148,7 +156,7 @@ export function runStartBattleFlow({
           enemySub: enemySub.name || '',
         },
       );
-      setBText(intro);
+      setBText(narrativePrefix + intro);
     } else {
       const intro = tr(
         t,
@@ -160,7 +168,7 @@ export function runStartBattleFlow({
           enemySub: enemySub.name || '',
         },
       );
-      setBText(intro);
+      setBText(narrativePrefix + intro);
     }
   } else {
     let introText = tr(
@@ -187,7 +195,7 @@ export function runStartBattleFlow({
         },
       );
     }
-    setBText(introText);
+    setBText(narrativePrefix + introText);
   }
 
   setScreen('battle');

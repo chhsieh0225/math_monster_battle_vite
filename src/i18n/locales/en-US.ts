@@ -853,6 +853,14 @@ const enUS = {
   "drop.rarity.rare": "Rare",
   "drop.rarity.epic": "Epic",
   "drop.rarity.legendary": "Legendary",
+
+  // ── Narrative beats ──
+  "narrative.prologue": "📖 Legend says monsters invaded the Math Realm! Only the power of calculation can save the world. Let's go!",
+  "narrative.midpoint": "📖 You're getting stronger! But the monsters ahead are tougher... Keep going!",
+  "narrative.lategame": "📖 The final battle draws near! Your math power is awakening!",
+  "narrative.preBoss": "📖 A dark presence looms... The ultimate challenge awaits!",
+  "narrative.victory": "🎊 Congratulations! Your math power has saved the realm!",
+  "narrative.defeat": "📖 The adventure ends for now... Keep practicing, you'll go further next time!",
 } as const;
 
 export default enUS;

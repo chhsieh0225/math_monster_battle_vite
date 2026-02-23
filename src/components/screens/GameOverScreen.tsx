@@ -127,6 +127,16 @@ export default function GameOverScreen({
         )}
       </h2>
 
+      <div style={{
+        textAlign: 'center', fontSize: 15,
+        color: 'rgba(255,255,255,0.85)',
+        padding: '2px 16px 8px', lineHeight: 1.6,
+      }}>
+        {won
+          ? t('narrative.victory', '🎊 恭喜！你的數學之力拯救了大陸！')
+          : t('narrative.defeat', '📖 冒險暫時告一段落... 繼續練習，下次一定能走更遠！')}
+      </div>
+
       {hasDailyFeedback && dailyChallengeFeedback && (
         <div className={`game-over-result-card ${dailySuccess ? 'is-success' : 'is-fail'}`}>
           <div className="game-over-result-head">

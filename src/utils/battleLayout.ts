@@ -166,7 +166,7 @@ const LANE_TUNING_CONFIG = {
   // On phones the player side is severely squeezed; give it much more room.
   // Enemies sit at the top-right, players at bottom-left — vertical separation
   // means horizontal overlap is safe.
-  phoneSepPctOverride: { single: 62, dual: 70 },
+  phoneSepPctOverride: { single: 58, dual: 66 },
   safeGapPct: {
     phone: { single: 1.5, dual: 1.0 },
     tablet: { single: 2.9, dual: 3.2 },

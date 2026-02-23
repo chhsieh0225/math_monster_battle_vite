@@ -84,6 +84,8 @@ export type BattleLaneTuning = {
   wideEnemyMainRetreatPct: number;
   wideEnemySubRetreatPct: number;
   allyOverlapRatio: number;
+  /** Fraction of sub width that overlaps main for lane-scaling purposes (0–1). */
+  subLaneOverlapFraction: number;
 };
 
 export type ResolveBattleLaneSnapshotInput = {
@@ -161,8 +163,12 @@ const DEVICE_TIER_THRESHOLD = {
 
 const LANE_TUNING_CONFIG = {
   sepPct: { single: 50, dual: 50 },
+  // On phones the player side is severely squeezed; give it much more room.
+  // Enemies sit at the top-right, players at bottom-left — vertical separation
+  // means horizontal overlap is safe.
+  phoneSepPctOverride: { single: 62, dual: 70 },
   safeGapPct: {
-    phone: { single: 3.4, dual: 2.5 },
+    phone: { single: 1.5, dual: 1.0 },
     tablet: { single: 2.9, dual: 3.2 },
     laptop: { single: 2.6, dual: 2.8 },
   },
@@ -180,14 +186,21 @@ const LANE_TUNING_CONFIG = {
     tablet: 1,
     laptop: 1,
   },
+  // On phones the sub ally sits behind and overlaps the main; count only
+  // (1 - fraction) of the sub width for lane-scaling, so sprites render bigger.
+  subLaneOverlapFraction: {
+    phone: 0.6,
+    tablet: 0,
+    laptop: 0,
+  },
   wideScaleCap: {
     playerMain: {
-      phone: { single: 0.9, dual: 0.82 },
+      phone: { single: 1, dual: 0.92 },
       tablet: { single: 0.96, dual: 0.9 },
       laptop: { single: 1, dual: 0.96 },
     },
     playerSub: {
-      phone: 0.72,
+      phone: 0.88,
       tablet: 0.8,
       laptop: 0.88,
     },
@@ -226,8 +239,8 @@ const LANE_TUNING_CONFIG = {
   },
   allyOverlapRatio: {
     phone: {
-      normal: 0.14,
-      wide: 0.28,
+      normal: 0.35,
+      wide: 0.5,
     },
     tablet: {
       normal: 0,
@@ -267,7 +280,9 @@ export function resolveBattleLaneTuning({
   isWideEnemySubSprite,
 }: BattleLaneTuningInput): BattleLaneTuning {
   const dualKey = dualityKey(hasDualUnits);
-  const sepPct = LANE_TUNING_CONFIG.sepPct[dualKey];
+  const sepPct = deviceTier === 'phone'
+    ? LANE_TUNING_CONFIG.phoneSepPctOverride[dualKey]
+    : LANE_TUNING_CONFIG.sepPct[dualKey];
   const safeGapPct = LANE_TUNING_CONFIG.safeGapPct[deviceTier][dualKey];
   const minPlayerLeftPct = LANE_TUNING_CONFIG.laneEdgePct[deviceTier];
   const minEnemyRightPct = LANE_TUNING_CONFIG.laneEdgePct[deviceTier];
@@ -307,6 +322,9 @@ export function resolveBattleLaneTuning({
   const allyOverlapRatio = LANE_TUNING_CONFIG.allyOverlapRatio[deviceTier][
     (isWidePlayerMainSprite || isWidePlayerSubSprite) ? 'wide' : 'normal'
   ];
+  const subLaneOverlapFraction = showAllySub
+    ? LANE_TUNING_CONFIG.subLaneOverlapFraction[deviceTier]
+    : 0;
 
   return {
     sepPct,
@@ -324,6 +342,7 @@ export function resolveBattleLaneTuning({
     wideEnemyMainRetreatPct,
     wideEnemySubRetreatPct,
     allyOverlapRatio,
+    subLaneOverlapFraction,
   };
 }
 
@@ -695,8 +714,11 @@ export function resolveBattleLaneSnapshot({
 
   // When two allies share one lane on small phones, shrink both together
   // so they fit in-lane before applying positional clamps.
+  // On phones the sub sits behind and overlaps the main, so count only a
+  // fraction of the sub width to avoid over-compressing both sprites.
+  const subEffectiveWidth = subPlayerSize * (1 - laneTuning.subLaneOverlapFraction);
   const playerTotalWidthPx = showAllySub
-    ? mainPlayerSize + subPlayerSize + allyGapPx
+    ? mainPlayerSize + subEffectiveWidth + allyGapPx
     : mainPlayerSize;
   const playerLaneScale = Math.min(1, playerLaneWidthPx / Math.max(1, playerTotalWidthPx));
   const basePlayerMainScale = Math.min(playerLaneScale, laneTuning.widePlayerMainScaleCap);

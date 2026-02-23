@@ -31,6 +31,14 @@ export type GeneratedQuestion = QuestionDraft & {
   choices: number[];
 };
 
+type QuestionGeneratorFn = (
+  range: [number, number],
+  tr: Translator,
+  diffMod: number,
+) => GeneratedQuestion;
+
+const QUESTION_REGISTRY = new Map<string, QuestionGeneratorFn>();
+
 type Fraction = {
   n: number;
   d: number;
@@ -1100,6 +1108,90 @@ function genUnknown4(range: [number, number], depth = 0): QuestionDraft {
   };
 }
 
+// ── Basic arithmetic generators (extracted from genQ switch) ──
+
+function genAdd(range: [number, number]): QuestionDraft {
+  const a = rr(range[0], range[1]);
+  const b = rr(range[0], range[1]);
+  const ans = a + b;
+  return {
+    display: `${a} + ${b}`,
+    answer: ans,
+    op: '+',
+    steps: [`${a} + ${b} = ${ans}`],
+  };
+}
+
+function genSub(range: [number, number]): QuestionDraft {
+  const x = rr(range[0], range[1]);
+  let y = rr(range[0], range[1]);
+  if (x === y) y = Math.min(range[1], y + 1);
+  const a = Math.max(x, y);
+  const b = Math.min(x, y);
+  const ans = a - b;
+  return {
+    display: `${a} - ${b}`,
+    answer: ans,
+    op: '-',
+    steps: [`${a} - ${b} = ${ans}`],
+  };
+}
+
+function genMul(range: [number, number]): QuestionDraft {
+  const a = rr(range[0], range[1]);
+  const b = rr(range[0], range[1]);
+  const ans = a * b;
+  return {
+    display: `${a} × ${b}`,
+    answer: ans,
+    op: '×',
+    steps: [`${a} × ${b} = ${ans}`],
+    distractorCandidates: buildMultiplicationDistractors(a, b, ans),
+  };
+}
+
+function genDiv(range: [number, number], tr: Translator): QuestionDraft {
+  const b = Math.max(1, rr(range[0], range[1]));
+  const ans = Math.max(1, rr(range[0], range[1]));
+  const a = b * ans;
+  return {
+    display: `${a} ÷ ${b}`,
+    answer: ans,
+    op: '÷',
+    steps: [
+      tr("question.step.think", "Think: {expr}", { expr: `${b} × ? = ${a}` }),
+      `${b} × ${ans} = ${a}`,
+      tr("question.step.therefore", "Therefore {expr}", { expr: `${a} ÷ ${b} = ${ans}` }),
+    ],
+  };
+}
+
+// ── Question Registry ──
+
+QUESTION_REGISTRY.set('+', (range) => makeChoices(genAdd(range)));
+QUESTION_REGISTRY.set('-', (range) => makeChoices(genSub(range)));
+QUESTION_REGISTRY.set('×', (range) => makeChoices(genMul(range)));
+QUESTION_REGISTRY.set('÷', (range, tr) => makeChoices(genDiv(range, tr)));
+
+QUESTION_REGISTRY.set('mixed2', (range) => makeChoices(genMixed2(range)));
+QUESTION_REGISTRY.set('mixed3', (range, tr) => makeChoices(genMixed3(range, tr)));
+QUESTION_REGISTRY.set('mixed4', (range, tr) => makeChoices(genMixed4(range, tr)));
+
+QUESTION_REGISTRY.set('unknown1', (range) => makeChoices(genUnknown1(range)));
+QUESTION_REGISTRY.set('unknown2', (range) => makeChoices(genUnknown2(range)));
+QUESTION_REGISTRY.set('unknown3', (range) => makeChoices(genUnknown3(range)));
+QUESTION_REGISTRY.set('unknown4', (range) => makeChoices(genUnknown4(range)));
+
+QUESTION_REGISTRY.set('frac_cmp', (range, tr) => genFractionCompare(range, tr));
+QUESTION_REGISTRY.set('frac_same', (range, tr) => genFractionSameDen(range, tr));
+QUESTION_REGISTRY.set('frac_diff', (range, tr) => genFractionDiffDen(range, tr));
+QUESTION_REGISTRY.set('frac_muldiv', (range, tr) => genFractionMulDiv(range, tr));
+
+QUESTION_REGISTRY.set('dec_add', (range, tr, diffMod) => genDecimalAdd(range, tr, diffMod));
+QUESTION_REGISTRY.set('dec_frac', (range, tr) => genDecimalFrac(range, tr));
+QUESTION_REGISTRY.set('dec_mul', (range, tr) => genDecimalMul(range, tr));
+QUESTION_REGISTRY.set('dec_div', (range, tr) => genDecimalDiv(range, tr));
+
 export function genQ(
   move: QuestionGeneratorMove,
   diffMod = 1,
@@ -1125,92 +1217,12 @@ export function genQ(
     : (allowedOps.length > 0 ? allowedOps : baseOps);
   const op = pickOne(ops) ?? "+";
 
-  // ── Decimal operations (ice starter) ──
-  if (op === "dec_add") return genDecimalAdd(range, tr, diffMod);
-  if (op === "dec_frac") return genDecimalFrac(range, tr);
-  if (op === "dec_mul") return genDecimalMul(range, tr);
-  if (op === "dec_div") return genDecimalDiv(range, tr);
+  // Registry lookup
+  const generator = QUESTION_REGISTRY.get(op);
+  if (generator) return generator(range, tr, diffMod);
 
-  // ── Mixed operations (electric starter) ──
-  if (op === "mixed2") return makeChoices(genMixed2(range));
-  if (op === "mixed3") return makeChoices(genMixed3(range, tr));
-  if (op === "mixed4") return makeChoices(genMixed4(range, tr));
-
-  // ── Solve-for-unknown operations (lion starter) ──
-  if (op === "unknown1") return makeChoices(genUnknown1(range));
-  if (op === "unknown2") return makeChoices(genUnknown2(range));
-  if (op === "unknown3") return makeChoices(genUnknown3(range));
-  if (op === "unknown4") return makeChoices(genUnknown4(range));
-
-  // ── Fraction operations (steel starter) ──
-  if (op === "frac_cmp") return genFractionCompare(range, tr);
-  if (op === "frac_same") return genFractionSameDen(range, tr);
-  if (op === "frac_diff") return genFractionDiffDen(range, tr);
-  if (op === "frac_muldiv") return genFractionMulDiv(range, tr);
-
-  // ── Single operations (original starters) ──
-  let draft: QuestionDraft;
-  switch (op) {
-    case "×": {
-      const a = rr(range[0], range[1]);
-      const b = rr(range[0], range[1]);
-      const ans = a * b;
-      draft = {
-        display: `${a} × ${b}`,
-        answer: ans,
-        op,
-        steps: [`${a} × ${b} = ${ans}`],
-        distractorCandidates: buildMultiplicationDistractors(a, b, ans),
-      };
-      break;
-    }
-    case "÷": {
-      const b = Math.max(1, rr(range[0], range[1]));
-      const ans = Math.max(1, rr(range[0], range[1]));
-      const a = b * ans;
-      draft = {
-        display: `${a} ÷ ${b}`,
-        answer: ans,
-        op,
-        steps: [
-          tr("question.step.think", "Think: {expr}", { expr: `${b} × ? = ${a}` }),
-          `${b} × ${ans} = ${a}`,
-          tr("question.step.therefore", "Therefore {expr}", { expr: `${a} ÷ ${b} = ${ans}` }),
-        ],
-      };
-      break;
-    }
-    case "-": {
-      const x = rr(range[0], range[1]);
-      let y = rr(range[0], range[1]);
-      if (x === y) y = Math.min(range[1], y + 1);
-      const a = Math.max(x, y);
-      const b = Math.min(x, y);
-      const ans = a - b;
-      draft = {
-        display: `${a} - ${b}`,
-        answer: ans,
-        op,
-        steps: [`${a} - ${b} = ${ans}`],
-      };
-      break;
-    }
-    case "+":
-    default: {
-      const a = rr(range[0], range[1]);
-      const b = rr(range[0], range[1]);
-      const ans = a + b;
-      draft = {
-        display: `${a} + ${b}`,
-        answer: ans,
-        op: op === "+" ? op : "+",
-        steps: [`${a} + ${b} = ${ans}`],
-      };
-      break;
-    }
-  }
-
-  return makeChoices(draft);
+  // Fallback: addition (unreachable if registry is complete)
+  return QUESTION_REGISTRY.get('+')!(range, tr, diffMod);
 }
 
 /**

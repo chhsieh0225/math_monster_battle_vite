@@ -262,6 +262,21 @@ test('genQ fraction steps can be localized through translator', () => {
   assert.equal(q.steps.some((step) => String(step).startsWith("LOC question.step.frac")), true);
 });
 
+test('all known ops are handled by genQ without falling back', () => {
+  const allOps = [
+    '+', '-', '×', '÷',
+    'mixed2', 'mixed3', 'mixed4',
+    'unknown1', 'unknown2', 'unknown3', 'unknown4',
+    'frac_cmp', 'frac_same', 'frac_diff', 'frac_muldiv',
+    'dec_add', 'dec_frac', 'dec_mul', 'dec_div',
+  ];
+  for (const op of allOps) {
+    const move = { range: [2, 10], ops: [op] };
+    const q = genQ(move, 1);
+    assert.equal(q.op, op, `op "${op}" should produce matching output op`);
+  }
+});
+
 test('genQ multiplication distractors prioritize neighboring table values', () => {
   const move = { range: [7, 8], ops: ["×"] };
   const randomSeq = [0.2, 0.8, 0.15, 0.65, 0.35, 0.55, 0.75, 0.95];

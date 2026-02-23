@@ -94,6 +94,9 @@ export default defineConfig({
           if (id.includes('/src/components/effects/')) {
             return 'battle-effects'
           }
+          if (id.includes('/src/utils/sfx')) {
+            return 'audio'
+          }
           return undefined
         },
       },

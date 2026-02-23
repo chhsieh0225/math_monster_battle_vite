@@ -11,8 +11,6 @@ import { Suspense, lazy, useState, useEffect, useRef, Component } from 'react';
 import type { ReactNode } from 'react';
 import './App.css';
 import { useI18n } from './i18n';
-import zhTW from './i18n/locales/zh-TW';
-import enUS from './i18n/locales/en-US';
 
 // Hooks
 import { useBattle } from './hooks/useBattle';
@@ -69,28 +67,19 @@ function toTieredTrack(track: BattleBgmTrack | null, tier: BgmTier): BattleBgmTr
   return 'battle';
 }
 
-type StaticLocaleCode = "zh-TW" | "en-US";
-
-function resolveStaticLocale(): StaticLocaleCode {
-  if (typeof window !== "undefined") {
-    try {
-      const stored = window.localStorage.getItem("mathMonsterBattle_locale");
-      if (stored === "zh-TW" || stored === "en-US") return stored;
-    } catch {
-      // ignore
-    }
+/** Lightweight locale lookup for class components that cannot use hooks. */
+function staticT(_key: string, fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  const STATIC_STRINGS: Record<string, Record<string, string>> = {
+    "app.error.title":  { "zh-TW": "遊戲發生錯誤", "en-US": "A game error occurred" },
+    "app.error.reload": { "zh-TW": "重新載入",     "en-US": "Reload" },
+  };
+  try {
+    const locale = window.localStorage.getItem("mathMonsterBattle_locale") || "zh-TW";
+    return STATIC_STRINGS[_key]?.[locale] || fallback;
+  } catch {
+    return fallback;
   }
-  return "zh-TW";
-}
-
-const STATIC_DICTS: Readonly<Record<StaticLocaleCode, Record<string, string>>> = {
-  "zh-TW": { ...zhTW },
-  "en-US": { ...enUS },
-};
-
-function staticT(key: string, fallback: string): string {
-  const locale = resolveStaticLocale();
-  return STATIC_DICTS[locale][key] || STATIC_DICTS["zh-TW"][key] || fallback;
 }
 
 const preloadedSceneBackgrounds = new Set<string>();

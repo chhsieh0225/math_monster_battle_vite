@@ -13,11 +13,13 @@ const ASSETS_DIR = 'dist/assets';
 
 // Budget per chunk pattern (bytes). ~20% headroom over current sizes.
 const CHUNK_BUDGETS = [
-  { pattern: /^index-.*\.js$/,            label: 'index (main)',     budget: 420_000 },
+  { pattern: /^index-.*\.js$/,            label: 'index (main)',     budget: 320_000 },
   { pattern: /^vendor-react-.*\.js$/,     label: 'vendor-react',     budget: 230_000 },
+  { pattern: /^audio-.*\.js$/,            label: 'audio',            budget: 120_000 },
   { pattern: /^battle-effects-.*\.js$/,   label: 'battle-effects',   budget: 110_000 },
-  { pattern: /^game-data-.*\.js$/,        label: 'game-data',        budget: 100_000 },
-  { pattern: /^BattleScreen-.*\.js$/,     label: 'BattleScreen',     budget:  70_000 },
+  { pattern: /^game-data-.*\.js$/,        label: 'game-data',        budget: 115_000 },
+  { pattern: /^BattleScreen-.*\.js$/,     label: 'BattleScreen',     budget:  85_000 },
+  { pattern: /^en-US-.*\.js$/,            label: 'en-US (locale)',   budget:  55_000 },
 ];
 const OTHER_JS_BUDGET = 40_000;
 const TOTAL_JS_BUDGET = 1_000_000;

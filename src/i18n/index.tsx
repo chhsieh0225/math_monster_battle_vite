@@ -1,8 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import zhTW from './locales/zh-TW';
-import enUS from './locales/en-US';
 
 export type LocaleCode = "zh-TW" | "en-US";
 type Dict = Record<string, string>;
@@ -11,9 +10,14 @@ type Params = Record<string, string | number>;
 const STORAGE_KEY = "mathMonsterBattle_locale";
 const FALLBACK_LOCALE: LocaleCode = "zh-TW";
 
-const LOCALES: Record<LocaleCode, Dict> = {
+/** Eagerly-loaded default dict; other locales are loaded on demand. */
+const loadedDicts: Record<string, Dict> = {
   "zh-TW": zhTW,
-  "en-US": enUS,
+};
+
+const LOCALE_LOADERS: Record<LocaleCode, (() => Promise<{ default: Dict }>) | null> = {
+  "zh-TW": null, // already loaded
+  "en-US": () => import('./locales/en-US'),
 };
 
 function normalizeLocale(input: unknown): LocaleCode {
@@ -24,6 +28,10 @@ function normalizeLocale(input: unknown): LocaleCode {
 function formatMsg(template: string, params?: Params): string {
   if (!params) return template;
   return template.replace(/\{(\w+)\}/g, (_m: string, key: string) => String(params[key] ?? ""));
+}
+
+function resolveDict(locale: LocaleCode): Dict {
+  return loadedDicts[locale] || loadedDicts[FALLBACK_LOCALE];
 }
 
 type I18nApi = {
@@ -46,9 +54,28 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     }
   });
 
+  // Bump this to force re-render after async dict load
+  const [dictVersion, setDictVersion] = useState(0);
+
   const setLocale = useCallback((next: LocaleCode) => {
     setLocaleState(normalizeLocale(next));
   }, []);
+
+  // Load non-default locale dict on demand
+  const loadingRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (loadedDicts[locale] || loadingRef.current === locale) return;
+    const loader = LOCALE_LOADERS[locale];
+    if (!loader) return;
+    loadingRef.current = locale;
+    loader().then((mod) => {
+      loadedDicts[locale] = mod.default;
+      loadingRef.current = null;
+      setDictVersion((v) => v + 1);
+    }).catch(() => {
+      loadingRef.current = null;
+    });
+  }, [locale]);
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -64,9 +91,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [locale]);
 
   const t = useCallback((key: string, fallback = key, params?: Params): string => {
-    const msg = LOCALES[locale][key] || LOCALES[FALLBACK_LOCALE][key] || fallback;
+    const dict = resolveDict(locale);
+    const fallbackDict = loadedDicts[FALLBACK_LOCALE];
+    const msg = dict[key] || fallbackDict[key] || fallback;
     return formatMsg(msg, params);
-  }, [locale]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale, dictVersion]);
 
   const value = useMemo<I18nApi>(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
 

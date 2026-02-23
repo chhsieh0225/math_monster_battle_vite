@@ -776,7 +776,7 @@ test('sword god shifts right and renders larger in battle', () => {
   assert.equal(compactSwordGod.enemyMainRightPct, 5);
   assert.equal(desktopSwordGod.enemyMainRightPct, 8);
   assert.ok(compactSwordGod.enemyMainRightPct < compactHydra.enemyMainRightPct);
-  assert.equal(compactSwordGod.enemySize, 302);
+  assert.equal(compactSwordGod.enemySize, 323);
   assert.equal(desktopSwordGod.enemySize, 350);
 });
 

@@ -535,7 +535,7 @@ export function resolveBattleLayout({
         : (isDragonOrFire || isEvolvedSlime) ? 190
           : enemyIsEvolved ? 155 : 120;
   const compactBossScale = compactUI && isBoss
-    ? (isHydra ? 0.76 : isCrazyDragon ? 0.8 : isSwordGod ? 0.84 : 0.86)
+    ? (isHydra ? 0.82 : isCrazyDragon ? 0.86 : isSwordGod ? 0.9 : 0.92)
     : 1;
   const compactGhostLanternScale = compactDual && isGhostLantern ? 0.78 : 1;
   const coopWideEnemyScale = dualUnits && !isBoss && enemyShape === 'wide'

@@ -31,6 +31,7 @@ import type {
   StarterVm,
 } from '../types/battle';
 
+import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
 import { SCENE_NAMES } from '../data/scenes';
 import {
   MAX_MOVE_LVL,
@@ -353,6 +354,7 @@ export function useBattle() {
     fb,
     bText, setBText,
     answered, setAnswered,
+    hintsRevealed,
     dmgs, setDmgs,
     parts, setParts,
     eAnim, setEAnim,
@@ -1120,6 +1122,26 @@ export function useBattle() {
   }, [selectMoveContextRef]);
   const selectMove = useStableCallback(selectMoveImpl);
 
+  // --- Player requests a hint step ---
+  const requestHintContextRef = useBattleStateRef({
+    sr,
+    uiRef,
+    battleFieldSettersRef,
+  });
+  const requestHintImpl = useCallback(() => {
+    const ctx = requestHintContextRef.current;
+    const s = ctx.sr.current;
+    const cost = BALANCE_CONFIG.hint.costPerStep;
+    if ((s.pExp || 0) < cost) return;
+    const steps = s.q?.steps;
+    if (!Array.isArray(steps) || steps.length === 0) return;
+    const revealed = ctx.uiRef.current.hintsRevealed;
+    if (revealed >= steps.length) return;
+    ctx.battleFieldSettersRef.current.setPExp((s.pExp || 0) - cost);
+    ctx.uiRef.current.setHintsRevealed(revealed + 1);
+  }, [requestHintContextRef]);
+  const requestHint = useStableCallback(requestHintImpl);
+
   // --- Enemy turn logic (reads from stateRef) ---
   const doEnemyTurnContextRef = useBattleStateRef({
     sr,
@@ -1455,6 +1477,7 @@ export function useBattle() {
     inventory,
     achUnlocked, achPopup, collectionPopup, encData,
     wrongQuestions,
+    hintsRevealed,
   });
 
   const actions = buildUseBattleActions({
@@ -1472,6 +1495,7 @@ export function useBattle() {
     selectMove,
     useItem,
     onAns,
+    requestHint,
     advance,
     continueAfterEvolve,
     quitGame,

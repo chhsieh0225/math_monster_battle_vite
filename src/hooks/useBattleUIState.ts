@@ -50,6 +50,8 @@ type UseBattleUIStateResult = {
   setBText: Dispatch<SetStateAction<string>>;
   answered: boolean;
   setAnswered: Dispatch<SetStateAction<boolean>>;
+  hintsRevealed: number;
+  setHintsRevealed: Dispatch<SetStateAction<number>>;
   dmgs: DamageIndicator[];
   setDmgs: Dispatch<SetStateAction<DamageIndicator[]>>;
   parts: ParticleEffect[];

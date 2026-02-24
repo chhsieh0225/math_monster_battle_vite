@@ -21,6 +21,7 @@ export type BuildUseBattleActionsArgs = {
   selectMove: (idx: number) => void;
   useItem: (itemId: ItemId) => void;
   onAns: (choice: number) => void;
+  requestHint: () => void;
   advance: () => void;
   continueAfterEvolve: () => void;
   quitGame: () => void;
@@ -51,6 +52,7 @@ export function buildUseBattleActions(args: BuildUseBattleActionsArgs): UseBattl
     selectMove: args.selectMove,
     useItem: args.useItem,
     onAns: args.onAns,
+    requestHint: args.requestHint,
     advance: args.advance,
     continueAfterEvolve: args.continueAfterEvolve,
     quitGame: args.quitGame,

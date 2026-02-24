@@ -862,6 +862,7 @@ const enUS = {
   "narrative.victory": "🎊 Congratulations! Your math power has saved the realm!",
   "narrative.defeat": "📖 The adventure ends for now... Keep practicing, you'll go further next time!",
   "battle.mastery.boost": "{emoji}Mastery +{pct}%",
+  "battle.coop.linkAttack": "🔗 Link Attack! Damage +30%",
 } as const;
 
 export default enUS;

@@ -862,6 +862,7 @@ const zhTW = {
   "narrative.victory": "🎊 恭喜！你的數學之力拯救了大陸！",
   "narrative.defeat": "📖 冒險暫時告一段落... 繼續練習，下次一定能走更遠！",
   "battle.mastery.boost": "{emoji}精通 +{pct}%",
+  "battle.coop.linkAttack": "🔗 連結攻擊！傷害 +30%",
 } as const;
 
 export default zhTW;

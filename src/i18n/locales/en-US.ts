@@ -469,6 +469,7 @@ const enUS = {
   "battle.hint.button": "💡 Hint (-{cost} XP)",
   "battle.hint.step": "Step {index}.",
   "battle.hint.noXp": "Not enough XP",
+  "battle.encourage.keepGoing": "💪 Keep going! Learning takes practice!",
   "question.word.add": "addition",
   "question.word.sub": "subtraction",
   "question.step.mulFirst": "Multiply first: {a} × {b} = {result}",

@@ -469,6 +469,7 @@ const zhTW = {
   "battle.hint.button": "💡 提示 (-{cost} XP)",
   "battle.hint.step": "步驟 {index}.",
   "battle.hint.noXp": "XP 不足",
+  "battle.encourage.keepGoing": "💪 繼續加油！學習需要練習！",
   "question.word.add": "加法",
   "question.word.sub": "減法",
   "question.step.mulFirst": "先算乘法：{a} × {b} = {result}",

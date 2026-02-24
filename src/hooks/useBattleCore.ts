@@ -58,9 +58,7 @@ import { useEncyclopedia } from './useEncyclopedia';
 import { useSessionLog } from './useSessionLog';
 import { getCollectionPerks, loadCollection, type CollectionPerks } from '../utils/collectionStore.ts';
 import {
-  applyDropsToInventory,
   loadInventory,
-  saveInventory,
 } from '../utils/inventoryStore.ts';
 import { useBattleRng } from './useBattleRng';
 import { useBattleUIState } from './useBattleUIState';
@@ -107,7 +105,7 @@ import {
   applyVictoryAchievements,
 } from './battle/achievementFlow';
 import { DIFF_MODS, pickPartnerStarter } from './battle/partnerStarter.ts';
-import { COLLECTION_MILESTONES } from '../data/collectionMilestones.ts';
+import { useVictoryRewardCallbacks } from './battle/useVictoryRewardCallbacks.ts';
 import {
   runBattleStart,
 } from './battle/startFlowAdapter.ts';
@@ -788,6 +786,10 @@ export function useBattle() {
   const handlePlayerPartyKo = useStableCallback(handlePlayerPartyKoImpl);
 
   // --- Handle a defeated enemy ---
+  const { onDropResolved, onCollectionUpdated } = useVictoryRewardCallbacks({
+    setInventory, setCollectionPerks, setCollectionPopup, t,
+  });
+
   const handleVictoryContextRef = useBattleStateRef({
     sr,
     randInt,
@@ -814,46 +816,8 @@ export function useBattle() {
           tryUnlock: ctx.tryUnlock,
           applyVictoryAchievements,
           updateEncDefeated: ctx.updateEncDefeated,
-          onDropResolved: (drop) => {
-            if (!drop) return;
-            setInventory((prev) => {
-              const result = applyDropsToInventory(prev, [drop]);
-              if (result.changed) {
-                saveInventory(result.inventory);
-              }
-              return result.inventory;
-            });
-          },
-          onCollectionUpdated: (result) => {
-            if (!result) return;
-            if (result.perks) setCollectionPerks(result.perks);
-            const unlockedMilestones = Array.isArray(result.newlyUnlockedMilestoneIds)
-              ? result.newlyUnlockedMilestoneIds
-              : [];
-            const unlockedTitles = Array.isArray(result.newlyUnlockedTitles)
-              ? result.newlyUnlockedTitles
-              : [];
-            const unlockedCount = unlockedMilestones.length + unlockedTitles.length;
-            if (unlockedCount <= 0) return;
-            const firstMilestone = COLLECTION_MILESTONES.find(
-              (milestone) => milestone.id === unlockedMilestones[0],
-            );
-            const firstTitle = unlockedTitles[0];
-            const localizedTitle = firstTitle
-              ? ctx.t(firstTitle.nameKey, firstTitle.nameFallback)
-              : '';
-            const desc = firstTitle
-              ? ctx.t('collection.popup.desc.title', 'Unlocked title: {title}', { title: localizedTitle })
-              : unlockedCount > 1
-                ? ctx.t('collection.popup.desc.multi', 'Unlocked {count} new collection rewards.', { count: unlockedCount })
-                : ctx.t('collection.popup.desc.single', 'Unlocked 1 new collection reward.');
-            setCollectionPopup({
-              id: Date.now(),
-              icon: firstMilestone?.emoji || (firstTitle ? '🏅' : '🎁'),
-              title: ctx.t('collection.popup.title', 'Collection Milestone!'),
-              desc,
-            });
-          },
+          onDropResolved,
+          onCollectionUpdated,
           sfx,
           t: ctx.t,
         },

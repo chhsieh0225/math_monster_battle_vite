@@ -112,6 +112,7 @@ const BGM_MEDIA_LOOP_END_PAD_SEC = 0.08;
 const BGM_MEDIA_LOOP_POLL_MS = 90;
 const bgmMediaRampTimers = new Set<ReturnType<typeof setInterval>>();
 const bgmMediaElements = new Set<HTMLAudioElement>();
+let bgmDisconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let bgmMediaLoopTimer: ReturnType<typeof setInterval> | null = null;
 let bgmMediaLoopRestarting = false;
 const bgmWarmupCache = new Map<string, HTMLAudioElement>();
@@ -1317,7 +1318,11 @@ function stopBgmLoop(immediate = false): void {
       } else {
         g.gain.setValueAtTime(g.gain.value, ctx.currentTime);
         g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
-        setTimeout(() => { try { g.disconnect(); } catch { /* ok */ } }, 350);
+        if (bgmDisconnectTimer) { clearTimeout(bgmDisconnectTimer); bgmDisconnectTimer = null; }
+        bgmDisconnectTimer = setTimeout(() => {
+          try { g.disconnect(); } catch { /* ok */ }
+          bgmDisconnectTimer = null;
+        }, 350);
       }
     } catch { /* ok */ }
   }
@@ -1432,6 +1437,12 @@ function apiStopBgm(immediate = false): void {
 }
 
 function disposeBgm(): void {
+  disarmBgmUnlockRetry();
+  pendingBgmTrack = null;
+  if (bgmDisconnectTimer) {
+    clearTimeout(bgmDisconnectTimer);
+    bgmDisconnectTimer = null;
+  }
   try { stopBgmLoop(true); } catch { /* ok */ }
   // Flush warmup cache
   for (const [_Src, el] of bgmWarmupCache) {

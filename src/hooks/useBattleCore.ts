@@ -36,7 +36,6 @@ import { SCENE_NAMES } from '../data/scenes';
 import {
   MAX_MOVE_LVL,
   TIMER_SEC,
-  PVP_TIMER_SEC,
 } from '../data/constants';
 import {
   localizeEnemy,
@@ -71,6 +70,7 @@ import { useBattleSessionLifecycle } from './useBattleSessionLifecycle';
 import { ENC_TOTAL } from '../data/encyclopedia.ts';
 import sfx from '../utils/sfx.ts';
 import { useBattleRosterState } from './battle/useBattleRosterState.ts';
+import { useChallengeBattleModifiers } from './battle/useChallengeBattleModifiers.ts';
 import {
   createAbilityModel,
   resolveLevelProgress,
@@ -106,14 +106,8 @@ import {
 import {
   applyVictoryAchievements,
 } from './battle/achievementFlow';
-import {
-  resolveDailyBattleRule,
-  resolveTowerBattleRule,
-} from './battle/challengeRuntime.ts';
 import { DIFF_MODS, pickPartnerStarter } from './battle/partnerStarter.ts';
 import { COLLECTION_MILESTONES } from '../data/collectionMilestones.ts';
-import { resolveBattleQuestionConfig } from './battle/questionConfig.ts';
-import { resolveModifiers } from '../utils/challengeModifiers.ts';
 import {
   runBattleStart,
 } from './battle/startFlowAdapter.ts';
@@ -371,26 +365,14 @@ export function useBattle() {
     return 1 + allBonus + typeBonus;
   }, [collectionPerks]);
 
-  const currentDailyBattleRule = useMemo(
-    () => resolveDailyBattleRule(dailyPlan, round),
-    [dailyPlan, round],
-  );
-  const currentTowerBattleRule = useMemo(
-    () => resolveTowerBattleRule(towerPlan, round),
-    [towerPlan, round],
-  );
-  const currentChallengeBattleRule = currentDailyBattleRule || currentTowerBattleRule;
-  const challengeModsResolved = useMemo(
-    () => resolveModifiers(currentChallengeBattleRule?.modifierTags),
-    [currentChallengeBattleRule],
-  );
-  const challengeDamageMult = challengeModsResolved.playerDamageMult;
-  const challengeComboMult = challengeModsResolved.comboScaleMult;
-  const { questionTimerSec: baseQuestionTimerSec, questionAllowedOps } = useMemo(
-    () => resolveBattleQuestionConfig(currentChallengeBattleRule, TIMER_SEC),
-    [currentChallengeBattleRule],
-  );
-  const questionTimerSec = battleMode === 'pvp' ? PVP_TIMER_SEC : baseQuestionTimerSec;
+  const {
+    currentChallengeBattleRule,
+    challengeDamageMult,
+    challengeComboMult,
+    questionTimerSec,
+    questionAllowedOps,
+  } = useChallengeBattleModifiers({ dailyPlan, towerPlan, round, battleMode });
+
 
   const genBattleQuestion = useGenBattleQuestion({ rand, recentQuestionDisplaysRef });
 

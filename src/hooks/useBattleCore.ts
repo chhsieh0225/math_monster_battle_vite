@@ -157,100 +157,11 @@ import {
 } from './battle/useBattleOrchestrationState.ts';
 import { useBattleFlowState } from './battle/useBattleFlowState.ts';
 import { useBattleSaveFlow } from './battle/useBattleSaveFlow.ts';
-
-const MAX_RECENT_QUESTION_WINDOW = 8;
-
-function normalizeOps(ops: readonly string[] | null | undefined): string[] {
-  if (!Array.isArray(ops)) return [];
-  const normalized = ops
-    .map((item) => String(item || '').trim())
-    .filter(Boolean);
-  return Array.from(new Set(normalized));
-}
-
-function resolveEffectiveQuestionOps(
-  move: QuestionGeneratorMove,
-  allowedOps: readonly string[] | null | undefined,
-): string[] {
-  const baseOps = normalizeOps(move.ops);
-  const allowed = normalizeOps(allowedOps);
-  if (allowed.length <= 0) return baseOps;
-  const overlap = baseOps.filter((item) => allowed.includes(item));
-  if (overlap.length > 0) return overlap;
-  return allowed;
-}
-
-function estimateOpCombinationSpace(op: string, span: number): number {
-  const safeSpan = Math.max(1, Math.trunc(span));
-  switch (op) {
-    case '+':
-    case 'dec_add':
-    case '×':
-    case 'dec_mul':
-    case '÷':
-    case 'dec_div':
-      return safeSpan * safeSpan;
-    case 'dec_frac':
-      return Math.max(14, safeSpan * safeSpan * 2);
-    case '-':
-      return safeSpan * Math.max(1, safeSpan - 1);
-    case 'mixed2':
-      return safeSpan * safeSpan * safeSpan * 4;
-    case 'mixed3':
-      return safeSpan * safeSpan * safeSpan * 2;
-    case 'mixed4':
-      return safeSpan * safeSpan * safeSpan * safeSpan * 3;
-    case 'unknown1':
-    case 'unknown2':
-      return safeSpan * safeSpan * 2;
-    case 'unknown3':
-      return safeSpan * safeSpan * 3;
-    case 'unknown4':
-      return safeSpan * safeSpan * safeSpan * 2;
-    case 'frac_cmp':
-    case 'frac_diff':
-    case 'frac_muldiv':
-      return Math.max(16, safeSpan * safeSpan * safeSpan);
-    case 'frac_same':
-      return Math.max(12, safeSpan * safeSpan * 2);
-    default:
-      return safeSpan * safeSpan;
-  }
-}
-
-function estimateMoveQuestionCombinationSpace(
-  move: QuestionGeneratorMove,
-  diffMod: number,
-  allowedOps: readonly string[] | null | undefined,
-): number {
-  const lo = Number.isFinite(move.range?.[0]) ? Number(move.range[0]) : 1;
-  const hi = Number.isFinite(move.range?.[1]) ? Number(move.range[1]) : lo;
-  const scaledMin = Math.max(1, Math.round(Math.min(lo, hi) * diffMod));
-  const scaledMax = Math.max(scaledMin, Math.round(Math.max(lo, hi) * diffMod));
-  const span = Math.max(1, scaledMax - scaledMin + 1);
-  const ops = resolveEffectiveQuestionOps(move, allowedOps);
-  if (ops.length <= 0) return span;
-  return ops.reduce((sum, op) => sum + estimateOpCombinationSpace(op, span), 0);
-}
-
-function resolveQuestionRecentWindowSize(
-  move: QuestionGeneratorMove,
-  diffMod: number,
-  allowedOps: readonly string[] | null | undefined,
-): number {
-  const space = estimateMoveQuestionCombinationSpace(move, diffMod, allowedOps);
-  return Math.max(0, Math.min(MAX_RECENT_QUESTION_WINDOW, Math.floor(space / 2)));
-}
-
-function buildQuestionHistoryKey(
-  move: QuestionGeneratorMove,
-  diffMod: number,
-  allowedOps: readonly string[] | null | undefined,
-): string {
-  const [rangeLo = 1, rangeHi = 10] = move.range || [1, 10];
-  const ops = resolveEffectiveQuestionOps(move, allowedOps);
-  return `${rangeLo}:${rangeHi}:${Math.round(diffMod * 1000)}:${ops.join('|')}`;
-}
+import {
+  resolveQuestionRecentWindowSize,
+  buildQuestionHistoryKey,
+  deduplicateQuestion,
+} from './battle/questionDedup.ts';
 
 // ═══════════════════════════════════════════════════════════════════
 /** @returns {import('../types/battle').UseBattlePublicApi} */
@@ -507,29 +418,14 @@ export function useBattle() {
       };
       const generateQuestion = () => withRandomSource(rand, () => genQ(moveConfig, diffMod, options));
       const dedupWindow = resolveQuestionRecentWindowSize(moveConfig, diffMod, allowedOps);
-      const questionHistoryKey = buildQuestionHistoryKey(moveConfig, diffMod, allowedOps);
-      const questionHistoryByKey = recentQuestionDisplaysRef.current;
-      const recentDisplays = questionHistoryByKey.get(questionHistoryKey) || [];
+      const historyKey = buildQuestionHistoryKey(moveConfig, diffMod, allowedOps);
 
-      let question = generateQuestion();
-      if (dedupWindow > 0 && recentDisplays.length > 0) {
-        let attempts = 0;
-        const maxAttempts = Math.max(2, Math.min(12, dedupWindow * 2));
-        while (attempts < maxAttempts && recentDisplays.includes(question.display)) {
-          question = generateQuestion();
-          attempts += 1;
-        }
-      }
-
-      if (dedupWindow > 0 && typeof question.display === 'string' && question.display.trim().length > 0) {
-        const nextHistory = [...recentDisplays, question.display];
-        if (nextHistory.length > dedupWindow) {
-          nextHistory.splice(0, nextHistory.length - dedupWindow);
-        }
-        questionHistoryByKey.set(questionHistoryKey, nextHistory);
-      }
-
-      return question;
+      return deduplicateQuestion({
+        generate: generateQuestion,
+        historyMap: recentQuestionDisplaysRef.current,
+        historyKey,
+        dedupWindow,
+      });
     },
     [rand, recentQuestionDisplaysRef],
   );

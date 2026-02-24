@@ -83,6 +83,7 @@ type BattleRuntimeState = {
   bossCharging: boolean;
   shadowShieldCD: number;
   furyRegenUsed: boolean;
+  battleMode?: string;
   consecutiveWrong?: number;
   eHp: number;
   burnStack: number;

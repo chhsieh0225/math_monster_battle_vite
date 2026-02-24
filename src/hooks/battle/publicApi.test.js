@@ -120,6 +120,7 @@ function createValidPublicApi() {
       achPopup: null,
       collectionPopup: null,
       encData: { encountered: {}, defeated: {} },
+      hintsRevealed: 0,
     },
     actions: {
       dismissAch: noop,
@@ -144,6 +145,7 @@ function createValidPublicApi() {
       rmD: noop,
       rmP: noop,
       resumeFromSave: noop,
+      requestHint: noop,
     },
     view: {
       timerSubscribe: noopUnsub,

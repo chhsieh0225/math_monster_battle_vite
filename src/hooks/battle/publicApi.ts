@@ -107,6 +107,7 @@ const REQUIRED_STATE_KEYS = [
   'achPopup',
   'collectionPopup',
   'encData',
+  'hintsRevealed',
 ] as const satisfies ReadonlyArray<keyof UseBattleState>;
 
 type MissingStateKey = Exclude<keyof UseBattleState, (typeof REQUIRED_STATE_KEYS)[number]>;
@@ -135,6 +136,7 @@ const REQUIRED_ACTION_KEYS = [
   'rmD',
   'rmP',
   'resumeFromSave',
+  'requestHint',
 ] as const satisfies ReadonlyArray<keyof UseBattleActions>;
 
 type MissingActionKey = Exclude<keyof UseBattleActions, (typeof REQUIRED_ACTION_KEYS)[number]>;

@@ -18,6 +18,7 @@ import { effectOrchestrator } from './effectOrchestrator.ts';
 import { fxt } from './battleFxTargets.ts';
 import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
 import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
+import { TYPE_EMOJI } from '../../data/elementEmoji.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -744,6 +745,15 @@ export function runPlayerAnswer({
           setEAnim(HIT_ANIMS[vfxType] || 'enemyHit 0.5s ease');
           const dmgColor = HIT_COLORS[vfxType] || '#ef4444';
           addD(isCrit ? `💥-${appliedHitDmg}` : `-${appliedHitDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, isCrit ? '#ff6b00' : dmgColor);
+          if (strike.masteryBoost) {
+            const { damageType, bonusPct } = strike.masteryBoost;
+            const emoji = TYPE_EMOJI[damageType] || '⭐';
+            const masteryLabel = tr(t, 'battle.mastery.boost', '{emoji}精通 +{pct}%', { emoji, pct: String(bonusPct) });
+            safeToIfBattleActive(
+              () => addD(masteryLabel, fxt().enemyMain.x + 10, fxt().enemyMain.y + 30, '#fbbf24'),
+              250,
+            );
+          }
           safeToIfBattleActive(() => {
             setEAnim('');
             setAtkEffect(null);

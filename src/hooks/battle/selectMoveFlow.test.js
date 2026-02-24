@@ -183,3 +183,68 @@ test('runSelectMoveFlow returns false when required setter is missing', () => {
   assert.equal(calls.setSelIdx.length, 0);
   assert.equal(calls.markQStart, 0);
 });
+
+test('runSelectMoveFlow applies 15% difficulty debuff when consecutiveWrong >= 3', () => {
+  let receivedDiffMod = null;
+  const result = runSelectMoveFlow({
+    index: 0,
+    state: {
+      phase: 'menu',
+      battleMode: 'single',
+      sealedMove: -1,
+      consecutiveWrong: 3,
+    },
+    timedMode: false,
+    diffMods: [0.5, 0.75, 1.0, 1.25, 1.5],
+    getActingStarter: () => ({
+      id: 's1', name: 'Hero', type: 'fire',
+      moves: [{ name: 'Slash', basePower: 10, growth: 1, type: 'fire', range: [1, 10], ops: ['+'] }],
+    }),
+    getMoveDiffLevel: () => 2,
+    genQuestion: (_move, diffMod) => { receivedDiffMod = diffMod; return { display: '1+1', answer: 2, choices: [1,2,3,4] }; },
+    startTimer: () => {},
+    markQStart: () => {},
+    sfx: { play: () => {} },
+    setSelIdx: () => {},
+    setDiffLevel: () => {},
+    setQ: () => {},
+    setFb: () => {},
+    setAnswered: () => {},
+    setHintsRevealed: () => {},
+    setPhase: () => {},
+  });
+  assert.equal(result, true);
+  assert.ok(Math.abs(receivedDiffMod - 0.85) < 0.001, `expected ~0.85, got ${receivedDiffMod}`);
+});
+
+test('runSelectMoveFlow does not debuff when consecutiveWrong < 3', () => {
+  let receivedDiffMod = null;
+  runSelectMoveFlow({
+    index: 0,
+    state: {
+      phase: 'menu',
+      battleMode: 'single',
+      sealedMove: -1,
+      consecutiveWrong: 2,
+    },
+    timedMode: false,
+    diffMods: [0.5, 0.75, 1.0, 1.25, 1.5],
+    getActingStarter: () => ({
+      id: 's1', name: 'Hero', type: 'fire',
+      moves: [{ name: 'Slash', basePower: 10, growth: 1, type: 'fire', range: [1, 10], ops: ['+'] }],
+    }),
+    getMoveDiffLevel: () => 2,
+    genQuestion: (_move, diffMod) => { receivedDiffMod = diffMod; return { display: '1+1', answer: 2, choices: [1,2,3,4] }; },
+    startTimer: () => {},
+    markQStart: () => {},
+    sfx: { play: () => {} },
+    setSelIdx: () => {},
+    setDiffLevel: () => {},
+    setQ: () => {},
+    setFb: () => {},
+    setAnswered: () => {},
+    setHintsRevealed: () => {},
+    setPhase: () => {},
+  });
+  assert.equal(receivedDiffMod, 1.0, 'should use base diffMod without debuff');
+});

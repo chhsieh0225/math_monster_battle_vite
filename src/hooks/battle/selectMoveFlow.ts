@@ -2,6 +2,9 @@ import type { MoveVm, QuestionVm, StarterVm } from '../../types/battle';
 import { PVP_TIMER_SEC } from '../../data/constants.ts';
 import { getResolvedPvpCombatant, getResolvedPvpTurn } from './pvpStateSelectors.ts';
 
+const WRONG_STREAK_DIFF_DEBUFF = 0.85;
+const ENCOURAGE_THRESHOLD = 3;
+
 type BattleStarter = StarterVm | null;
 type BattleQuestion = QuestionVm;
 
@@ -120,10 +123,14 @@ export function runSelectMoveFlow({
   const lv = getMoveDiffLevel(move);
   const diffMod = diffMods[lv] ?? diffMods[2];
   setDiffLevel(lv);
+  const consecutiveWrong = (state as { consecutiveWrong?: number }).consecutiveWrong ?? 0;
+  const adjustedDiffMod = consecutiveWrong >= ENCOURAGE_THRESHOLD
+    ? diffMod * WRONG_STREAK_DIFF_DEBUFF
+    : diffMod;
   const allowedOps = Array.isArray(questionAllowedOps) && questionAllowedOps.length > 0
     ? questionAllowedOps
     : undefined;
-  setQ(genQuestion(move, diffMod, { t, allowedOps }));
+  setQ(genQuestion(move, adjustedDiffMod, { t, allowedOps }));
   setFb(null);
   setAnswered(false);
   setHintsRevealed(0);

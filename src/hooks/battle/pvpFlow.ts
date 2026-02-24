@@ -414,8 +414,8 @@ export function handlePvpAnswer({
   });
   return true;
   } catch (err) {
-    if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) console.error('[pvpFlow] handlePvpAnswer crashed:', err);
-    try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch { /* last resort */ }
+    console.error('[pvpFlow] handlePvpAnswer crashed:', err);
+    try { setScreen('title'); setPhase('idle'); } catch { /* last resort */ }
     return false;
   }
 }
@@ -474,8 +474,8 @@ export function processPvpTurnStart({
     t,
   });
   } catch (err) {
-    if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) console.error('[pvpFlow] processPvpTurnStart crashed:', err);
-    try { setScreen('menu'); setPhase('menu'); setBText('⚠️ Battle error — returning to menu'); } catch { /* last resort */ }
+    console.error('[pvpFlow] processPvpTurnStart crashed:', err);
+    try { setScreen('title'); setPhase('idle'); } catch { /* last resort */ }
     return false;
   }
 }

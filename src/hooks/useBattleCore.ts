@@ -50,7 +50,6 @@ import {
 import {
   getLevelMaxHp,
   getStarterMaxHp,
-  getStarterStageIdx,
 } from '../utils/playerHp';
 import { useTimer } from './useTimer';
 import { useAchievements } from './useAchievements';
@@ -96,15 +95,12 @@ import {
   getPvpTurnName as resolvePvpTurnName,
 } from './battle/turnHelpers';
 import {
-  createPvpEnemyFromStarter,
-} from './battle/pvpFlow';
-import {
   canSwitchCoopActiveSlot,
 } from './battle/coopFlow';
 import {
   applyVictoryAchievements,
 } from './battle/achievementFlow';
-import { DIFF_MODS, pickPartnerStarter } from './battle/partnerStarter.ts';
+import { DIFF_MODS } from './battle/partnerStarter.ts';
 import { useVictoryRewardCallbacks } from './battle/useVictoryRewardCallbacks.ts';
 import {
   runBattleStart,
@@ -122,9 +118,9 @@ import {
   runAdvanceWithContext,
   runContinueWithContext,
   runSelectMoveWithContext,
-  runStartGameWithContext,
 } from './battle/actionFlowDelegates.ts';
 import { useOnAnsWiring } from './battle/useOnAnsWiring.ts';
+import { useStartGameWiring } from './battle/useStartGameWiring.ts';
 import {
   runAllySupportTurnWithContext,
   runHandleFreezeWithContext,
@@ -610,7 +606,7 @@ export function useBattle() {
     });
   }, [setDmgs, setParts, setAtkEffect, setEffMsg, abilityModelRef, frozenR, pendingEvolve, pendingTextAdvanceActionRef]);
 
-  const startGameContextRef = useBattleStateRef({
+  const startGame = useStartGameWiring({
     setCollectionPopup,
     setWrongQuestions,
     clearRecentQuestionDisplays,
@@ -646,86 +642,6 @@ export function useBattle() {
     getPlayerMaxHp,
     activateQueuedChallenge,
   });
-  const startGameImpl = useCallback((
-    starterOverride?: StarterVm | null,
-    modeOverride: BattleMode | null = null,
-    allyOverride: StarterVm | null = null,
-  ) => {
-    const ctx = startGameContextRef.current;
-    const pvp = ctx.pvpStoreRef.current;
-    const ui = ctx.uiRef.current;
-    ctx.setCollectionPopup(null);
-    ctx.setWrongQuestions([]);
-    ctx.clearRecentQuestionDisplays();
-    const pvpStartDepsArgs = {
-      runtime: {
-        chance: ctx.chance,
-        getStarterMaxHp: ctx.getStarterMaxHp,
-        t: ctx.t,
-        setEnemies: ctx.setEnemies,
-        setTimedMode: ctx.setTimedMode,
-        setCoopActiveSlot: ctx.setCoopActiveSlot,
-        dispatchBattle: ctx.dispatchBattle,
-        appendSessionEvent: ctx.appendSessionEvent,
-        initSession: ctx.initSession,
-        createPvpEnemyFromStarter,
-        setScreen: ctx.setScreenFromString,
-        playBattleIntro: ctx.playBattleIntro,
-      },
-      pvp,
-      ui,
-      resetRunRuntimeState: ctx.resetRunRuntimeState,
-    };
-
-    const standardStartDepsArgs = {
-      runtime: {
-        getStarterMaxHp: ctx.getStarterMaxHp,
-        setEnemies: ctx.setEnemies,
-        setCoopActiveSlot: ctx.setCoopActiveSlot,
-        dispatchBattle: ctx.dispatchBattle,
-        appendSessionEvent: ctx.appendSessionEvent,
-        initSession: ctx.initSession,
-        setScreen: ctx.setScreenFromString,
-        startBattle: ctx.startBattle,
-      },
-      pvp,
-      resetRunRuntimeState: ctx.resetRunRuntimeState,
-    };
-
-    const startGameControllerArgs = {
-      sr: ctx.sr,
-      battleMode: ctx.battleMode,
-      pvpStarter2: ctx.pvpStarter2,
-      locale: ctx.locale,
-      localizeStarter,
-      pickPartnerStarter: (mainStarter: StarterVm | null) => pickPartnerStarter(mainStarter, ctx.pickIndex, ctx.locale),
-      getStarterStageIdx,
-      getStageMaxHp: ctx.getPlayerMaxHp,
-    };
-
-    const startGameOrchestratorArgs = {
-      invalidateAsyncWork: ctx.invalidateAsyncWork,
-      beginRun: ctx.beginRun,
-      clearTimer: ctx.clearTimer,
-      resetCoopRotatePending: ctx.resetCoopRotatePending,
-      pvpStartDepsArgs,
-      standardStartDepsArgs,
-      startGameControllerArgs,
-    };
-
-    const startGameInput = {
-      setDailyChallengeFeedback: ctx.setDailyChallengeFeedback,
-      setTowerChallengeFeedback: ctx.setTowerChallengeFeedback,
-      queuedChallenge: ctx.queuedChallenge,
-      activeChallenge: ctx.activeChallenge,
-      buildNewRoster: ctx.buildNewRoster,
-      startGameOrchestratorArgs,
-      activateQueuedChallenge: ctx.activateQueuedChallenge,
-    };
-
-    runStartGameWithContext(startGameInput, starterOverride, modeOverride, allyOverride);
-  }, [startGameContextRef]);
-  const startGame = useStableCallback(startGameImpl);
 
   const quitGameContextRef = useBattleStateRef({
     clearTimer,

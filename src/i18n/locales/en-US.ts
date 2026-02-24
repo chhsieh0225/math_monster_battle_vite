@@ -369,6 +369,10 @@ const enUS = {
 
   "app.error.title": "A game error occurred",
   "app.error.reload": "Reload",
+  "app.error.battleCrash": "Battle error",
+  "app.error.returnTitle": "Return to Title",
+  "app.error.chunkLoad": "Failed to load. Please check your connection.",
+  "app.error.retry": "Retry",
   "app.rotate.title": "Please rotate your phone to portrait",
   "app.rotate.hint": "This game supports portrait mode only",
   "app.rotate.continue": "Tap anywhere to continue",

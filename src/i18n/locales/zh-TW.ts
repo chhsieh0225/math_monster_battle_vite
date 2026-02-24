@@ -369,6 +369,10 @@ const zhTW = {
 
   "app.error.title": "遊戲發生錯誤",
   "app.error.reload": "重新載入",
+  "app.error.battleCrash": "戰鬥發生錯誤",
+  "app.error.returnTitle": "返回標題畫面",
+  "app.error.chunkLoad": "載入失敗，請檢查網路連線。",
+  "app.error.retry": "重試",
   "app.rotate.title": "請將手機轉為直立方向",
   "app.rotate.hint": "本遊戲僅支援直向模式",
   "app.rotate.continue": "點擊任意處繼續遊戲",

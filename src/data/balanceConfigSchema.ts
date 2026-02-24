@@ -142,6 +142,9 @@ export function validateBalanceConfigSchema(config: unknown): void {
     issues.push('challenges.tower.pressureBands.atkBonus length must match floors length');
   }
 
+  checkNumber(config, 'coop.linkStreak', issues, { min: 1, max: 10 });
+  checkNumber(config, 'coop.linkDamageMult', issues, { min: 1, max: 3 });
+
   if (issues.length > 0) {
     const message = [
       '[balance-config] Invalid BALANCE_CONFIG detected:',

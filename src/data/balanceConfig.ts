@@ -438,6 +438,12 @@ export const BALANCE_CONFIG = {
       swordGodReleaseScale: 1.5,
     },
   },
+  coop: {
+    /** Streak threshold to activate link bonus */
+    linkStreak: 2,
+    /** Damage multiplier when link bonus is active */
+    linkDamageMult: 1.3,
+  },
 } as const;
 
 validateBalanceConfigSchema(BALANCE_CONFIG);

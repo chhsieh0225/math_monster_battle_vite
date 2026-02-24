@@ -73,6 +73,8 @@ function staticT(_key: string, fallback: string): string {
   const STATIC_STRINGS: Record<string, Record<string, string>> = {
     "app.error.title":  { "zh-TW": "遊戲發生錯誤", "en-US": "A game error occurred" },
     "app.error.reload": { "zh-TW": "重新載入",     "en-US": "Reload" },
+    "app.error.battleCrash": { "zh-TW": "戰鬥發生錯誤", "en-US": "Battle error" },
+    "app.error.returnTitle": { "zh-TW": "返回標題畫面", "en-US": "Return to Title" },
   };
   try {
     const locale = window.localStorage.getItem("mathMonsterBattle_locale") || "zh-TW";
@@ -135,6 +137,10 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     return { error: String(error) };
   }
 
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[ErrorBoundary] Uncaught error:', error, info.componentStack);
+  }
+
   render() {
     if (this.state.error) {
       const errorText = typeof this.state.error === "string"
@@ -145,8 +151,44 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         <div className="app-error-icon">⚠️</div>
         <div className="app-error-title">{staticT("app.error.title", "A game error occurred")}</div>
         <div className="app-error-detail">{errorText}</div>
-        <button onClick={() => { this.setState({ error: null }); }} className="app-error-reload">{staticT("app.error.reload", "Reload")}</button>
+        <button onClick={() => { window.location.reload(); }} className="app-error-reload">{staticT("app.error.reload", "Reload")}</button>
       </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+type BattleErrorBoundaryProps = {
+  children?: ReactNode;
+  onReset: () => void;
+};
+
+class BattleErrorBoundary extends Component<BattleErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: BattleErrorBoundaryProps) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
+    if (error instanceof Error) return { error };
+    return { error: String(error) };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[BattleErrorBoundary] Battle render crashed:', error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="app-error-wrap">
+          <div className="app-error-icon">⚠️</div>
+          <div className="app-error-title">{staticT("app.error.battleCrash", "Battle error")}</div>
+          <button onClick={() => { this.setState({ error: null }); this.props.onReset(); }} className="app-error-reload">
+            {staticT("app.error.returnTitle", "Return to Title")}
+          </button>
+        </div>
       );
     }
     return this.props.children;
@@ -440,23 +482,25 @@ function App() {
   }
 
   return (
-    <Suspense
-      fallback={(
-        <div className="battle-loading-wrap">
-          <div className="battle-loading-icon">⚔️</div>
-          <div className="battle-loading-text">{t("app.loading.battle", "Preparing battle...")}</div>
-        </div>
-      )}
-    >
-      <BattleScreen
-        state={S}
-        actions={A}
-        view={V}
-        mobile={UX}
-        onOpenSettings={openSettings}
-        t={t}
-      />
-    </Suspense>
+    <BattleErrorBoundary onReset={() => A.setScreen('title')}>
+      <Suspense
+        fallback={(
+          <div className="battle-loading-wrap">
+            <div className="battle-loading-icon">⚔️</div>
+            <div className="battle-loading-text">{t("app.loading.battle", "Preparing battle...")}</div>
+          </div>
+        )}
+      >
+        <BattleScreen
+          state={S}
+          actions={A}
+          view={V}
+          mobile={UX}
+          onOpenSettings={openSettings}
+          t={t}
+        />
+      </Suspense>
+    </BattleErrorBoundary>
   );
 }
 

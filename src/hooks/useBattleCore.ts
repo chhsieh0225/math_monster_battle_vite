@@ -45,12 +45,6 @@ import {
 } from '../utils/contentLocalization.ts';
 
 import {
-  genQ,
-  type QuestionGeneratorMove,
-  type QuestionGeneratorOptions,
-} from '../utils/questionGenerator.ts';
-import { withRandomSource } from '../utils/prng.ts';
-import {
   movePower,
   bestEffectiveness,
 } from '../utils/damageCalc';
@@ -157,11 +151,7 @@ import {
 } from './battle/useBattleOrchestrationState.ts';
 import { useBattleFlowState } from './battle/useBattleFlowState.ts';
 import { useBattleSaveFlow } from './battle/useBattleSaveFlow.ts';
-import {
-  resolveQuestionRecentWindowSize,
-  buildQuestionHistoryKey,
-  deduplicateQuestion,
-} from './battle/questionDedup.ts';
+import { useGenBattleQuestion } from './battle/useGenBattleQuestion.ts';
 
 // ═══════════════════════════════════════════════════════════════════
 /** @returns {import('../types/battle').UseBattlePublicApi} */
@@ -402,33 +392,7 @@ export function useBattle() {
   );
   const questionTimerSec = battleMode === 'pvp' ? PVP_TIMER_SEC : baseQuestionTimerSec;
 
-  const genBattleQuestion = useCallback(
-    (
-      move: MoveVm | undefined,
-      diffMod: number,
-      options?: QuestionGeneratorOptions,
-    ) => {
-      if (!move) return null;
-      const allowedOps = Array.isArray(options?.allowedOps) && options?.allowedOps.length > 0
-        ? options.allowedOps
-        : null;
-      const moveConfig: QuestionGeneratorMove = {
-        range: move.range || [1, 10],
-        ops: move.ops || ['+', '-'],
-      };
-      const generateQuestion = () => withRandomSource(rand, () => genQ(moveConfig, diffMod, options));
-      const dedupWindow = resolveQuestionRecentWindowSize(moveConfig, diffMod, allowedOps);
-      const historyKey = buildQuestionHistoryKey(moveConfig, diffMod, allowedOps);
-
-      return deduplicateQuestion({
-        generate: generateQuestion,
-        historyMap: recentQuestionDisplaysRef.current,
-        historyKey,
-        dedupWindow,
-      });
-    },
-    [rand, recentQuestionDisplaysRef],
-  );
+  const genBattleQuestion = useGenBattleQuestion({ rand, recentQuestionDisplaysRef });
 
   // ──── Safe timeout (cancelled on async-gate change or unmount) ────
   const { safeTo, invalidateAsyncWork } = useBattleAsyncGate();

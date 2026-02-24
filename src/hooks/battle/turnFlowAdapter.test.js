@@ -73,6 +73,7 @@ function createSelectMoveHarness({
       setQ: (value) => { state.q = value; },
       setFb: (value) => { state.fb = value; },
       setAnswered: (value) => { state.answered = value; },
+      setHintsRevealed: (value) => { state.hintsRevealed = value; },
       setPhase: (value) => { state.phase = value; },
     },
     battleFields: {

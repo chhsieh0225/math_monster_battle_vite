@@ -23,7 +23,7 @@ type BuildSelectMoveFlowArgsArgs = {
   >;
   ui: Pick<
     RunSelectMoveFlowArgs,
-    'setSelIdx' | 'setQ' | 'setFb' | 'setAnswered' | 'setPhase'
+    'setSelIdx' | 'setQ' | 'setFb' | 'setAnswered' | 'setHintsRevealed' | 'setPhase'
   >;
   battleFields: Pick<RunSelectMoveFlowArgs, 'setDiffLevel'>;
 };
@@ -84,6 +84,7 @@ export function buildSelectMoveFlowArgs({
     setQ: ui.setQ,
     setFb: ui.setFb,
     setAnswered: ui.setAnswered,
+    setHintsRevealed: ui.setHintsRevealed,
     setPhase: ui.setPhase,
   };
 }

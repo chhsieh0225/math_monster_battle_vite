@@ -66,6 +66,7 @@ type RunSelectMoveFlowArgs = {
   setQ: (value: BattleQuestion | null) => void;
   setFb: (value: null) => void;
   setAnswered: (value: boolean) => void;
+  setHintsRevealed: (value: number) => void;
   setPhase: (value: string) => void;
 };
 
@@ -92,6 +93,7 @@ export function runSelectMoveFlow({
   setQ,
   setFb,
   setAnswered,
+  setHintsRevealed,
   setPhase,
 }: RunSelectMoveFlowArgs): boolean {
   if (state.phase !== 'menu') return false;
@@ -101,7 +103,7 @@ export function runSelectMoveFlow({
   const move = activeStarter.moves[index];
   if (!move) return false;
 
-  if (!isFn(setSelIdx) || !isFn(setDiffLevel) || !isFn(setQ) || !isFn(setFb) || !isFn(setAnswered) || !isFn(setPhase)) {
+  if (!isFn(setSelIdx) || !isFn(setDiffLevel) || !isFn(setQ) || !isFn(setFb) || !isFn(setAnswered) || !isFn(setHintsRevealed) || !isFn(setPhase)) {
     return false;
   }
   if (state.battleMode === 'pvp' && move?.risky) {
@@ -124,6 +126,7 @@ export function runSelectMoveFlow({
   setQ(genQuestion(move, diffMod, { t, allowedOps }));
   setFb(null);
   setAnswered(false);
+  setHintsRevealed(0);
   setPhase('question');
   markQStart();
 

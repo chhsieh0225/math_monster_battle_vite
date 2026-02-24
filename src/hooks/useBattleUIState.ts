@@ -77,6 +77,7 @@ export function useBattleUIState({ rand, randInt }: RngDeps): UseBattleUIStateRe
   const [fb, setFb] = useState<FeedbackState>(null);
   const [bText, setBText] = useState('');
   const [answered, setAnswered] = useState(false);
+  const [hintsRevealed, setHintsRevealed] = useState(0);
   const [dmgs, setDmgs] = useState<DamageIndicator[]>([]);
   const [parts, setParts] = useState<ParticleEffect[]>([]);
   const [eAnim, setEAnim] = useState('');
@@ -140,6 +141,8 @@ export function useBattleUIState({ rand, randInt }: RngDeps): UseBattleUIStateRe
     setBText,
     answered,
     setAnswered,
+    hintsRevealed,
+    setHintsRevealed,
     dmgs,
     setDmgs,
     parts,

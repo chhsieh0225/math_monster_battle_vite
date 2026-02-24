@@ -83,6 +83,7 @@ test('buildSelectMoveFlowArgs uses battle field diff setter (not UI)', () => {
       setQ: () => {},
       setFb: () => {},
       setAnswered: () => {},
+      setHintsRevealed: () => {},
       setPhase: () => {},
       // Intentional extra prop to catch wrong wiring.
       setDiffLevel: uiDiffSetter,

@@ -310,6 +310,7 @@ export type UseBattleState = {
   achPopup: AchievementId | null;
   collectionPopup: CollectionPopupVm | null;
   encData: EncyclopediaData;
+  hintsRevealed: number;
 };
 
 export type UseBattleActions = {
@@ -331,6 +332,7 @@ export type UseBattleActions = {
   selectMove: (idx: number) => void;
   useItem: (itemId: ItemId) => void;
   onAns: (choice: number) => void;
+  requestHint: () => void;
   advance: () => void;
   continueAfterEvolve: () => void;
   quitGame: () => void;

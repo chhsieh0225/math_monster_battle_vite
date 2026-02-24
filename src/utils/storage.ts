@@ -28,7 +28,7 @@ function parseJsonUnknown(raw: string): unknown {
 }
 
 function matchesFallbackShape<T>(value: unknown, fallback: T): value is T {
-  if (fallback == null) return value == null;
+  if (fallback == null) return true;
   if (Array.isArray(fallback)) return Array.isArray(value);
   if (typeof fallback === 'object') return Boolean(value) && typeof value === 'object';
   return typeof value === typeof fallback;

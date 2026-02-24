@@ -32,7 +32,8 @@ type FieldKey =
   | 'sealedMove'
   | 'sealedTurns'
   | 'shadowShieldCD'
-  | 'furyRegenUsed';
+  | 'furyRegenUsed'
+  | 'consecutiveWrong';
 
 type FieldValue<K extends FieldKey> = BattleState[K] | ((prev: BattleState[K]) => BattleState[K]);
 
@@ -80,6 +81,7 @@ type BattleFieldSetters = {
   setSealedTurns: FieldSetter<'sealedTurns'>;
   setShadowShieldCD: FieldSetter<'shadowShieldCD'>;
   setFuryRegenUsed: FieldSetter<'furyRegenUsed'>;
+  setConsecutiveWrong: FieldSetter<'consecutiveWrong'>;
 };
 
 function createFieldSetter<K extends FieldKey>(
@@ -129,5 +131,6 @@ export function createBattleFieldSetters(dispatchBattle: DispatchBattle): Battle
     setSealedTurns: createFieldSetter(setBattleField, 'sealedTurns'),
     setShadowShieldCD: createFieldSetter(setBattleField, 'shadowShieldCD'),
     setFuryRegenUsed: createFieldSetter(setBattleField, 'furyRegenUsed'),
+    setConsecutiveWrong: createFieldSetter(setBattleField, 'consecutiveWrong'),
   };
 }

@@ -24,6 +24,7 @@ export type BattleState = {
   charge: number;
   tC: number;
   tW: number;
+  consecutiveWrong: number;
   defeated: number;
   maxStreak: number;
   mHits: number[];
@@ -117,6 +118,7 @@ const BASE_STATE: BattleState = {
   charge: 0,
   tC: 0,
   tW: 0,
+  consecutiveWrong: 0,
   defeated: 0,
   maxStreak: 0,
   mHits: [0, 0, 0, 0],
@@ -235,6 +237,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         sealedTurns: action.sealedTurns ?? 0,
         shadowShieldCD: enemy?.id === 'boss' ? 3 : -1,
         furyRegenUsed: false,
+        consecutiveWrong: 0,
       };
     }
 
@@ -261,6 +264,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         shadowShieldCD: promoted?.id === 'boss' ? 3 : -1,
         sealedTurns: 0,
         furyRegenUsed: false,
+        consecutiveWrong: 0,
       };
     }
 

@@ -86,3 +86,20 @@ test('battleReducer promote_enemy_sub is no-op without sub', () => {
   state = battleReducer(state, { type: "promote_enemy_sub" });
   assert.equal(state, before);
 });
+
+test('start_battle resets consecutiveWrong to 0', () => {
+  const state = { ...createInitialBattleState(), consecutiveWrong: 5 };
+  const result = battleReducer(state, { type: 'start_battle', enemy: { id: 'e1', maxHp: 50 } });
+  assert.equal(result.consecutiveWrong, 0);
+});
+
+test('promote_enemy_sub resets consecutiveWrong to 0', () => {
+  const state = {
+    ...createInitialBattleState(),
+    consecutiveWrong: 3,
+    enemySub: { id: 'e2', maxHp: 30 },
+    eHpSub: 30,
+  };
+  const result = battleReducer(state, { type: 'promote_enemy_sub' });
+  assert.equal(result.consecutiveWrong, 0);
+});

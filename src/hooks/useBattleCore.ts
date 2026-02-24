@@ -120,11 +120,11 @@ import { buildUseBattleActions } from './battle/publicActionsBuilder.ts';
 import { buildUseBattlePublicApi } from './battle/publicApi.ts';
 import {
   runAdvanceWithContext,
-  runAnswerWithContext,
   runContinueWithContext,
   runSelectMoveWithContext,
   runStartGameWithContext,
 } from './battle/actionFlowDelegates.ts';
+import { useOnAnsWiring } from './battle/useOnAnsWiring.ts';
 import {
   runAllySupportTurnWithContext,
   runHandleFreezeWithContext,
@@ -992,97 +992,15 @@ export function useBattle() {
   useEffect(() => { doEnemyTurnRef.current = doEnemyTurn; }, [doEnemyTurn, doEnemyTurnRef]);
 
   // --- Player answers a question ---
-  const onAnsContextRef = useBattleStateRef({
-    answered,
-    setAnswered,
-    clearTimer,
-    sr,
-    rand,
-    chance,
-    safeTo,
-    getOtherPvpTurn,
-    setScreenFromString,
-    t,
-    uiRef,
-    pvpStoreRef,
-    battleFieldSettersRef,
-    getCollectionDamageScale,
-    challengeDamageMult,
-    challengeComboMult,
-    tryUnlock,
-    frozenR,
-    doEnemyTurn,
-    handleVictory,
-    handleFreeze,
-    _endSession,
-    handlePlayerPartyKo,
-    runAllySupportTurn,
-    setPendingTextAdvanceAction,
-    getActingStarter,
-    logAns,
-    appendSessionEvent,
-    updateAbility: _updateAbility,
-    markCoopRotatePending,
+  const onAns = useOnAnsWiring({
+    answered, setAnswered, clearTimer, sr, rand, chance, safeTo,
+    getOtherPvpTurn, setScreenFromString, t, uiRef, pvpStoreRef,
+    battleFieldSettersRef, getCollectionDamageScale, challengeDamageMult,
+    challengeComboMult, tryUnlock, frozenR, doEnemyTurn, handleVictory,
+    handleFreeze, _endSession, handlePlayerPartyKo, runAllySupportTurn,
+    setPendingTextAdvanceAction, getActingStarter, logAns, appendSessionEvent,
+    updateAbility: _updateAbility, markCoopRotatePending, sfx,
   });
-  const onAnsImpl = useCallback((choice: number) => {
-    const ctx = onAnsContextRef.current;
-    const answerInput = {
-      answered: ctx.answered,
-      setAnswered: ctx.setAnswered,
-      clearTimer: ctx.clearTimer,
-      pvpAnswerDepsInput: {
-        runtime: {
-          sr: ctx.sr,
-          rand: ctx.rand,
-          chance: ctx.chance,
-          safeTo: ctx.safeTo,
-          sfx,
-          getOtherPvpTurn: ctx.getOtherPvpTurn,
-          setScreen: ctx.setScreenFromString,
-          t: ctx.t,
-        },
-        ui: ctx.uiRef.current,
-        pvp: ctx.pvpStoreRef.current,
-        battleFields: ctx.battleFieldSettersRef.current,
-      },
-      playerDepsArgs: {
-        runtime: {
-          sr: ctx.sr,
-          safeTo: ctx.safeTo,
-          chance: ctx.chance,
-          sfx,
-          getCollectionDamageScale: ctx.getCollectionDamageScale,
-          challengeDamageMult: ctx.challengeDamageMult,
-          challengeComboMult: ctx.challengeComboMult,
-          t: ctx.t,
-        },
-        ui: ctx.uiRef.current,
-        battleFields: ctx.battleFieldSettersRef.current,
-        callbacks: {
-          tryUnlock: ctx.tryUnlock,
-          frozenR: ctx.frozenR,
-          doEnemyTurn: ctx.doEnemyTurn,
-          handleVictory: ctx.handleVictory,
-          handleFreeze: ctx.handleFreeze,
-          _endSession: ctx._endSession,
-          setScreen: ctx.setScreenFromString,
-          handlePlayerPartyKo: ctx.handlePlayerPartyKo,
-          runAllySupportTurn: ctx.runAllySupportTurn,
-          setPendingTextAdvanceAction: ctx.setPendingTextAdvanceAction,
-        },
-      },
-      answerControllerArgsInput: {
-        sr: ctx.sr,
-        getActingStarter: ctx.getActingStarter,
-        logAns: ctx.logAns,
-        appendSessionEvent: ctx.appendSessionEvent,
-        updateAbility: ctx.updateAbility,
-        markCoopRotatePending: ctx.markCoopRotatePending,
-      },
-    };
-    runAnswerWithContext(answerInput, choice);
-  }, [onAnsContextRef]);
-  const onAns = useStableCallback(onAnsImpl);
 
   const { startBattleWithSave, resumeFromSave } = useBattleSaveFlow({
     battleMode,

@@ -1,5 +1,5 @@
-import { Suspense, lazy } from 'react';
-import type { ComponentProps, ReactNode } from 'react';
+import { Component, Suspense, lazy } from 'react';
+import type { ComponentProps, ErrorInfo, ReactNode } from 'react';
 
 import TitleScreen from './screens/TitleScreen';
 import SelectionScreen from './screens/SelectionScreen';
@@ -46,6 +46,52 @@ type AppScreenRouterProps = {
 
 function isDualSelectionPayload(payload: SelectionPayload): payload is DualSelectionPayload {
   return typeof payload === 'object' && payload !== null && 'p1' in payload && 'p2' in payload;
+}
+
+class ChunkErrorBoundary extends Component<
+  { children?: ReactNode; t: (key: string, fallback: string) => string },
+  { hasError: boolean }
+> {
+  constructor(props: { children?: ReactNode; t: (key: string, fallback: string) => string }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): { hasError: boolean } {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[ChunkErrorBoundary] Chunk load failed:', error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          display: 'flex', flexDirection: 'column' as const, alignItems: 'center',
+          justifyContent: 'center', height: '100%', gap: 12, padding: 24,
+          color: 'rgba(255,255,255,0.85)', textAlign: 'center' as const,
+        }}>
+          <div style={{ fontSize: 36 }}>📡</div>
+          <div style={{ fontSize: 16 }}>
+            {this.props.t('app.error.chunkLoad', 'Failed to load. Please check your connection.')}
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '8px 24px', borderRadius: 8, border: 'none',
+              background: 'rgba(255,255,255,0.15)', color: 'white',
+              fontSize: 14, cursor: 'pointer',
+            }}
+          >
+            {this.props.t('app.error.retry', 'Retry')}
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 export default function AppScreenRouter({
@@ -95,9 +141,11 @@ export default function AppScreenRouter({
   );
 
   const withScreenSuspense = (node: ReactNode) => (
-    <Suspense fallback={screenLoadingFallback}>
-      {node}
-    </Suspense>
+    <ChunkErrorBoundary t={t}>
+      <Suspense fallback={screenLoadingFallback}>
+        {node}
+      </Suspense>
+    </ChunkErrorBoundary>
   );
 
   if (S.screen === 'battle') return null;

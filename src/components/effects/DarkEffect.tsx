@@ -1,5 +1,6 @@
 import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
 import { createEffectTemplate } from './createEffectTemplate.ts';
+import { UltimateEffect, type UltimateConfig, type CoreConfig, type RingConfig, type GlowConfig } from './UltimateEffect.tsx';
 
 // SVG 8-pointed star
 const STAR = "M0,-8 L2,-2 L8,0 L2,2 L0,8 L-2,2 L-8,0 L-2,-2Z";
@@ -11,6 +12,59 @@ const darkEffectTemplate = createEffectTemplate({
   duration: ({ idx, lvl }) => 800 + idx * 120 + lvl * 30,
   glow: ({ lvl }) => 4 + lvl * 2,
 });
+
+
+const DARK_CORE: CoreConfig = {
+  svgSize: 160,
+  center: 80,
+  radius: (fxLvl) => 22 + fxLvl * 5,
+  gradientStops: [
+    { offset: '0%', color: '#1e1b4b', opacity: 0.95 },
+    { offset: '30%', color: '#63577e', opacity: 0.62 },
+    { offset: '60%', color: '#9a8dbf', opacity: 0.38 },
+    { offset: '100%', color: '#b6a6d2', opacity: 0 },
+  ],
+  filter: {
+    turbulenceType: 'turbulence',
+    baseFreqValues: '0.82;0.44;0.16',
+    displacement: {
+      xChannel: 'R',
+      yChannel: 'G',
+      scaleValues: (fxLvl) => `0;${10 + fxLvl * 1.6};${2 + fxLvl * 0.5}`,
+    },
+    blurValues: '0;0.62;0.24',
+    colorMatrix: '1.08 0 0 0 0 0 0.86 0 0 0 0.16 0.08 1.22 0 0 0 0 0 1 0',
+  },
+  outerFilter: (glow) => `drop-shadow(0 0 ${glow + 6}px #63577e) drop-shadow(0 0 ${glow + 10}px #9a8dbf)`,
+};
+
+const DARK_RINGS: RingConfig = {
+  count: (fxLvl) => Math.min(12, 3 + fxLvl),
+  svgSize: [160, 160],
+  center: [80, 80],
+  baseRadius: (i) => [16 + i * 9, 16 + i * 9],
+  useCircle: true,
+  strokeColors: ['#9a8dbf', '#b6a6d2'],
+  strokeWidth: (i) => 2.5 - i * 0.2,
+  offset: ['80px', '48px'],
+  delay: (D, i) => D + (i % 3) * 0.04 + Math.floor(i / 3) * 0.065,
+  duration: (_i, fxLvl) => 0.72 + fxLvl * 0.04,
+  ringFilter: (glow) => `drop-shadow(0 0 ${glow}px #9a8dbf)`,
+  opacity: (i) => 0.85 - i * 0.06,
+};
+
+const DARK_GLOW: GlowConfig = {
+  gradient: (T, fxLvl) =>
+    `radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(30,27,75,${0.1 + fxLvl * 0.02}), rgba(99,89,126,${0.035 + fxLvl * 0.01}) 40%, transparent 70%)`,
+  durMultiplier: 1.2,
+};
+
+const DARK_ULTIMATE: UltimateConfig = {
+  D: 0.34,
+  core: DARK_CORE,
+  rings: DARK_RINGS,
+  glow: DARK_GLOW,
+};
 
 export default function DarkEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
   const {
@@ -176,117 +230,77 @@ export default function DarkEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
 
   // --- idx 3: 終極爆破 — softened void core + dark stars ---
   const D = 0.34;
-  const ringN = Math.min(12, 3 + fxLvl);
   const rayN = Math.min(20, 8 + fxLvl * 2);
   const starN = Math.min(18, 6 + fxLvl * 2);
-  const orbId = `dOrb-${uid}`;
-  const coreId = `dVoid-${uid}`;
-  const coreFilterId = `dVoidFilter-${uid}`;
-  const coreSeed = Math.max(1, Math.floor(rr("ult-core-seed", 0, 2, 90)));
+
   return (
-    <div className="move-fx-overlay">
-      {/* Phase 1: Softened void orb approach */}
-      <svg width="36" height="36" viewBox="0 0 36 36"
-        style={{
-          position:"absolute", left:"10%", bottom:"35%",
-          "--fly-x":`${100-T.flyRight-10}vw`,
-          "--fly-y":`${T.flyTop-65}vh`,
-          filter:`drop-shadow(0 0 ${glow}px #8f81b6) drop-shadow(0 0 ${glow+4}px #5f5478)`,
-          animation:`ultApproach 0.55s cubic-bezier(.16,.82,.22,1) forwards`,
-        }}>
-        <defs><radialGradient id={orbId} cx="40%" cy="40%">
-          <stop offset="0%" stopColor="#e9d5ff" stopOpacity="0.6"/>
-          <stop offset="50%" stopColor="#9a8dbf" stopOpacity="0.32"/>
-          <stop offset="100%" stopColor="#63577e" stopOpacity="0"/>
-        </radialGradient></defs>
-        <circle cx="18" cy="18" r="14" fill={`url(#${orbId})`}/>
-      </svg>
-      {/* Phase 2: Softened void core */}
-      <svg width="160" height="160" viewBox="0 0 160 160"
-        style={{
-          position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
-          filter:`drop-shadow(0 0 ${glow+6}px #63577e) drop-shadow(0 0 ${glow+10}px #9a8dbf)`,
-        }}>
-        <defs>
-          <radialGradient id={coreId} cx="50%" cy="50%">
-            <stop offset="0%" stopColor="#1e1b4b" stopOpacity="0.95"/>
-            <stop offset="30%" stopColor="#63577e" stopOpacity="0.62"/>
-            <stop offset="60%" stopColor="#9a8dbf" stopOpacity="0.38"/>
-            <stop offset="100%" stopColor="#b6a6d2" stopOpacity="0"/>
-          </radialGradient>
-          <filter id={coreFilterId} x="-70%" y="-70%" width="240%" height="240%" colorInterpolationFilters="sRGB">
-            <feTurbulence type="turbulence" baseFrequency="0.82" numOctaves="3" seed={coreSeed} result="noise">
-              <animate attributeName="baseFrequency" values="0.82;0.44;0.16" dur={`${dur / 1000}s`} fill="freeze"/>
-            </feTurbulence>
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" result="warp">
-              <animate attributeName="scale" values={`0;${10 + fxLvl * 1.6};${2 + fxLvl * 0.5}`} dur={`${dur / 1000}s`} fill="freeze"/>
-            </feDisplacementMap>
-            <feGaussianBlur in="warp" stdDeviation="0" result="soft">
-              <animate attributeName="stdDeviation" values="0;0.62;0.24" dur={`${dur / 1000}s`} fill="freeze"/>
-            </feGaussianBlur>
-            <feColorMatrix in="soft" type="matrix" values="1.08 0 0 0 0 0 0.86 0 0 0 0.16 0.08 1.22 0 0 0 0 0 1 0"/>
-          </filter>
-        </defs>
-        <circle cx="80" cy="80" r={22+fxLvl*5} fill={`url(#${coreId})`} filter={`url(#${coreFilterId})`}
-          style={{ animation:`fireExpand ${dur/1000}s ease ${D}s forwards` }}/>
-      </svg>
-      {/* Phase 3: Soft void pulse rings */}
-      {Array.from({ length: ringN }, (_, i) => (
-        <svg key={`r${i}`} width="160" height="160" viewBox="0 0 160 160"
+    <UltimateEffect config={DARK_ULTIMATE} ctx={darkEffectTemplate({ idx: moveIdx, lvl, target })}
+      approach={
+        <svg width="36" height="36" viewBox="0 0 36 36"
           style={{
-            position:"absolute", right:T.right, top:T.top, transform:"translate(50%,-30%)",
-            animation:`darkRingExpand ${0.72+fxLvl*0.04}s ease ${D + (i % 3) * 0.04 + Math.floor(i / 3) * 0.065}s forwards`, opacity:0,
+            position:"absolute", left:"10%", bottom:"35%",
+            "--fly-x":`${100-T.flyRight-10}vw`,
+            "--fly-y":`${T.flyTop-65}vh`,
+            filter:`drop-shadow(0 0 ${glow}px #8f81b6) drop-shadow(0 0 ${glow+4}px #5f5478)`,
+            animation:`ultApproach 0.55s cubic-bezier(.16,.82,.22,1) forwards`,
           }}>
-          <circle cx="80" cy="80" r={16+i*9} fill="none"
-            stroke={i%2===0?"#9a8dbf":"#b6a6d2"} strokeWidth={2.5-i*0.2}
-            style={{ filter:`drop-shadow(0 0 ${glow}px #9a8dbf)` }} opacity={0.85-i*0.06}/>
+          <defs><radialGradient id={`dOrb-${uid}`} cx="40%" cy="40%">
+            <stop offset="0%" stopColor="#e9d5ff" stopOpacity="0.6"/>
+            <stop offset="50%" stopColor="#9a8dbf" stopOpacity="0.32"/>
+            <stop offset="100%" stopColor="#63577e" stopOpacity="0"/>
+          </radialGradient></defs>
+          <circle cx="18" cy="18" r="14" fill={`url(#dOrb-${uid})`}/>
         </svg>
-      ))}
-      {/* Phase 4: Soft radial light rays */}
-      {Array.from({ length: rayN }, (_, i) => {
-        const angle = (i / rayN) * 360;
-        const len = 24 + fxLvl * 6;
-        const w = 3.5 + fxLvl * 0.4;
-        const delay = D + 0.06 + (i % 4) * 0.02 + Math.floor(i / 4) * 0.03;
-        return (
-          <svg key={`ray${i}`} width={w+4} height={len} viewBox={`0 0 ${w+4} ${len}`}
-            style={{
-              position:"absolute", right:`calc(${T.right} + ${Math.cos(angle*Math.PI/180)*4}px)`,
-              top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
-              transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
-              opacity:0, filter:`drop-shadow(0 0 ${glow}px #b6a6d2)`,
-              animation:`sparkle ${0.36 + rr("ult-ray-anim", i, 0, 0.24)}s ease ${delay}s both`,
-            }}>
-            <defs><linearGradient id={`dray-${uid}-${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
-              <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.8"/>
-              <stop offset="100%" stopColor="#9a8dbf" stopOpacity="0"/>
-            </linearGradient></defs>
-            <rect x="1" y="0" width={w} height={len} rx={w/2} fill={`url(#dray-${uid}-${i})`}/>
-          </svg>
-        );
-      })}
-      {/* Phase 5: Dark-specific star explosion */}
-      {Array.from({ length: starN }, (_, i) => {
-        const angle = (i / starN) * 360;
-        const dist = 30 + rr("ult-star-dist", i, 0, 55);
-        const delay = D + 0.1 + (i % 4) * 0.022 + Math.floor(i / 4) * 0.032;
-        return (
-          <svg key={`st${i}`} width="22" height="22" viewBox="-10 -10 20 20"
-            style={{
-              position:"absolute", right:T.right, top:T.top,
-              opacity:0, filter:`drop-shadow(0 0 ${glow}px #b6a6d2)`,
-              "--sx":`${Math.cos(angle*Math.PI/180)*dist}px`,
-              "--sy":`${Math.sin(angle*Math.PI/180)*dist}px`,
-              animation:`darkStarSpin ${0.44 + rr("ult-star-anim", i, 0, 0.28)}s ease ${delay}s forwards`,
-            }}>
-            <path d={i%2===0 ? STAR : SPARK4}
-              fill={i%3===0?"#e9d5ff":i%3===1?"#d0c4e3":"#b6a6d2"}
-              opacity={0.7+fxLvl*0.04} transform={`rotate(${angle})`}/>
-          </svg>
-        );
-      })}
-      {/* Phase 6: Soft void glow */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(30,27,75,${0.1+fxLvl*0.02}), rgba(99,89,126,${0.035+fxLvl*0.01}) 40%, transparent 70%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
-    </div>
+      }
+      sweeps={
+        <>
+          {Array.from({ length: rayN }, (_, i) => {
+            const angle = (i / rayN) * 360;
+            const len = 24 + fxLvl * 6;
+            const w = 3.5 + fxLvl * 0.4;
+            const delay = D + 0.06 + (i % 4) * 0.02 + Math.floor(i / 4) * 0.03;
+            return (
+              <svg key={`ray${i}`} width={w+4} height={len} viewBox={`0 0 ${w+4} ${len}`}
+                style={{
+                  position:"absolute", right:`calc(${T.right} + ${Math.cos(angle*Math.PI/180)*4}px)`,
+                  top:`calc(${T.top} + ${Math.sin(angle*Math.PI/180)*4}px)`,
+                  transformOrigin:"center bottom", transform:`rotate(${angle}deg)`,
+                  opacity:0, filter:`drop-shadow(0 0 ${glow}px #b6a6d2)`,
+                  animation:`sparkle ${0.36 + rr("ult-ray-anim", i, 0, 0.24)}s ease ${delay}s both`,
+                }}>
+                <defs><linearGradient id={`dray-${uid}-${i}`} x1="50%" y1="100%" x2="50%" y2="0%">
+                  <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.8"/>
+                  <stop offset="100%" stopColor="#9a8dbf" stopOpacity="0"/>
+                </linearGradient></defs>
+                <rect x="1" y="0" width={w} height={len} rx={w/2} fill={`url(#dray-${uid}-${i})`}/>
+              </svg>
+            );
+          })}
+        </>
+      }
+      burst={
+        <>
+          {Array.from({ length: starN }, (_, i) => {
+            const angle = (i / starN) * 360;
+            const dist = 30 + rr("ult-star-dist", i, 0, 55);
+            const delay = D + 0.1 + (i % 4) * 0.022 + Math.floor(i / 4) * 0.032;
+            return (
+              <svg key={`st${i}`} width="22" height="22" viewBox="-10 -10 20 20"
+                style={{
+                  position:"absolute", right:T.right, top:T.top,
+                  opacity:0, filter:`drop-shadow(0 0 ${glow}px #b6a6d2)`,
+                  "--sx":`${Math.cos(angle*Math.PI/180)*dist}px`,
+                  "--sy":`${Math.sin(angle*Math.PI/180)*dist}px`,
+                  animation:`darkStarSpin ${0.44 + rr("ult-star-anim", i, 0, 0.28)}s ease ${delay}s forwards`,
+                }}>
+                <path d={i%2===0 ? STAR : SPARK4}
+                  fill={i%3===0?"#e9d5ff":i%3===1?"#d0c4e3":"#b6a6d2"}
+                  opacity={0.7+fxLvl*0.04} transform={`rotate(${angle})`}/>
+              </svg>
+            );
+          })}
+        </>
+      }
+    />
   );
 }

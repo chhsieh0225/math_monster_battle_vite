@@ -1,5 +1,6 @@
 import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
 import { createEffectTemplate } from './createEffectTemplate.ts';
+import { UltimateEffect, type UltimateConfig, type CoreConfig, type RingConfig, type GlowConfig } from './UltimateEffect.tsx';
 
 const FLAME = "M10,28 C10,28 2,18 2,12 C2,5 5.5,0 10,0 C14.5,0 18,5 18,12 C18,18 10,28 10,28Z";
 
@@ -9,6 +10,57 @@ const fireEffectTemplate = createEffectTemplate({
   duration: ({ idx, fxLvl }) => 680 + idx * 120 + fxLvl * 24,
   glow: ({ fxLvl }) => 5 + fxLvl * 1.8,
 });
+
+
+const FIRE_CORE: CoreConfig = {
+  svgSize: 190,
+  center: 95,
+  radius: (fxLvl) => 26 + fxLvl * 4,
+  gradientStops: [
+    { offset: '0%', color: '#f5d0fe', opacity: 0.95 },
+    { offset: '22%', color: '#9d8ec3', opacity: 0.64 },
+    { offset: '48%', color: '#f97316', opacity: 0.76 },
+    { offset: '100%', color: '#7f1d1d', opacity: 0 },
+  ],
+  filter: {
+    turbulenceType: 'turbulence',
+    baseFreqValues: '0.75;0.42;0.14',
+    displacement: {
+      xChannel: 'R',
+      yChannel: 'B',
+      scaleValues: (fxLvl) => `0;${10 + fxLvl * 1.7};${2 + fxLvl * 0.45}`,
+    },
+    blurValues: '0;0.68;0.25',
+    colorMatrix: '1.1 0 0 0 0 0 0.88 0 0 0 0 0 1.25 0 0 0 0 0 1 0',
+  },
+  outerFilter: (glow) => `drop-shadow(0 0 ${glow + 7}px rgba(141,125,180,0.5)) drop-shadow(0 0 ${glow + 15}px #ea580c)`,
+};
+
+const FIRE_RINGS: RingConfig = {
+  count: (fxLvl) => Math.min(6, 2 + Math.floor(fxLvl / 2)),
+  svgSize: [220, 120],
+  center: [110, 60],
+  baseRadius: (i) => [62 + i * 24, 18 + i * 6],
+  strokeColors: ['rgba(141,125,180,0.46)', 'rgba(251,113,133,0.5)'],
+  strokeWidth: (i) => 4 - i * 0.65,
+  offset: ['28px', '22px'],
+  delay: (D, i) => D + 0.07 + i * 0.095,
+  duration: (i, _fxLvl) => 0.6 + i * 0.1,
+  ringFilter: (glow) => `drop-shadow(0 0 ${glow + 2}px rgba(141,125,180,0.28))`,
+};
+
+const FIRE_GLOW: GlowConfig = {
+  gradient: (T, fxLvl) =>
+    `radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(141,125,180,${0.07 + fxLvl * 0.018}), rgba(249,115,22,${0.08 + fxLvl * 0.02}) 32%, rgba(127,29,29,${0.05 + fxLvl * 0.015}) 52%, transparent 74%)`,
+  durMultiplier: 1.15,
+};
+
+const FIRE_ULTIMATE: UltimateConfig = {
+  D: 0.3,
+  core: FIRE_CORE,
+  rings: FIRE_RINGS,
+  glow: FIRE_GLOW,
+};
 
 export default function FireEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
   const {
@@ -318,192 +370,123 @@ export default function FireEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
 
   const D = 0.3;
   const meteorN = Math.min(10, 3 + fxLvl);
-  const shockN = Math.min(6, 2 + Math.floor(fxLvl / 2));
   const emberN = Math.min(16, 7 + fxLvl * 2);
   const ashN = Math.min(10, 4 + fxLvl);
-  const darkImpactId = `dark-impact-${uid}`;
-  const darkImpactFilterId = `dark-impact-filter-${uid}`;
-  const darkSeed = Math.max(1, Math.floor(rr("dark-seed", 0, 3, 90)));
 
   return (
-    <div className="move-fx-overlay">
-      {Array.from({ length: meteorN }, (_, i) => {
-        const startLeft = 10 + i * 7 + rr("meteor-left", i, -3, 4);
-        const startTop = 7 + rr("meteor-top", i, -2, 8);
-        const meteorScale = 0.86 + rr("meteor-scale", i, 0, 0.42);
-        const wave = i % 3;
-        const lane = Math.floor(i / 3);
-        const delay = wave * 0.085 + lane * 0.052 + rr("meteor-delay", i, 0, 0.035);
-        return (
-          <svg
-            key={`m${i}`}
-            width="34"
-            height="42"
-            viewBox="0 0 20 30"
-            style={{
-              position: "absolute",
-              left: `${startLeft}%`,
-              top: `${startTop}%`,
-              "--fly-x": `${100 - T.flyRight - startLeft}vw`,
-              "--fly-y": `${T.flyTop - startTop}vh`,
-              opacity: 0,
-              transform: `scale(${meteorScale}) rotate(${rr("meteor-rot", i, -22, 22)}deg)`,
-              filter: `drop-shadow(0 0 ${glow + 3}px #fbbf24) drop-shadow(0 0 ${glow + 9}px #ea580c)`,
-              animation: `flameFly ${0.56 + fxLvl * 0.045 + rr("meteor-dur", i, 0, 0.16)}s cubic-bezier(.18,.82,.34,1) ${delay}s forwards`,
-            }}
-          >
-            <defs>
-              <radialGradient id={`fmtr-${uid}-${i}`} cx="45%" cy="30%">
-                <stop offset="0%" stopColor="#f5d0fe" />
-                <stop offset="25%" stopColor="#9d8ec3" />
-                <stop offset="58%" stopColor="#f97316" />
-                <stop offset="100%" stopColor="#991b1b" />
-              </radialGradient>
-            </defs>
-            <path d={FLAME} fill={`url(#fmtr-${uid}-${i})`} />
-          </svg>
-        );
-      })}
-
-      <svg
-        width="190"
-        height="190"
-        viewBox="0 0 190 190"
-        style={{
-          position: "absolute",
-          right: T.right,
-          top: T.top,
-          transform: "translate(50%,-30%)",
-          filter: `drop-shadow(0 0 ${glow + 7}px rgba(141,125,180,0.5)) drop-shadow(0 0 ${glow + 15}px #ea580c)`,
-        }}
-      >
-        <defs>
-          <radialGradient id={darkImpactId} cx="50%" cy="50%">
-            <stop offset="0%" stopColor="#f5d0fe" stopOpacity="0.95" />
-            <stop offset="22%" stopColor="#9d8ec3" stopOpacity="0.64" />
-            <stop offset="48%" stopColor="#f97316" stopOpacity="0.76" />
-            <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0" />
-          </radialGradient>
-          <filter id={darkImpactFilterId} x="-70%" y="-70%" width="240%" height="240%" colorInterpolationFilters="sRGB">
-            <feTurbulence type="turbulence" baseFrequency="0.75" numOctaves="3" seed={darkSeed} result="noise">
-              <animate attributeName="baseFrequency" values="0.75;0.42;0.14" dur={`${dur / 1000}s`} fill="freeze" />
-            </feTurbulence>
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="B" result="warp">
-              <animate attributeName="scale" values={`0;${10 + fxLvl * 1.7};${2 + fxLvl * 0.45}`} dur={`${dur / 1000}s`} fill="freeze" />
-            </feDisplacementMap>
-            <feGaussianBlur in="warp" stdDeviation="0" result="soft">
-              <animate attributeName="stdDeviation" values="0;0.68;0.25" dur={`${dur / 1000}s`} fill="freeze" />
-            </feGaussianBlur>
-            <feColorMatrix in="soft" type="matrix" values="1.1 0 0 0 0 0 0.88 0 0 0 0 0 1.25 0 0 0 0 0 1 0" />
-          </filter>
-        </defs>
-        <circle
-          cx="95"
-          cy="95"
-          r={26 + fxLvl * 4}
-          fill={`url(#${darkImpactId})`}
-          filter={`url(#${darkImpactFilterId})`}
-          style={{ animation: `fireExpand ${dur / 1000}s ease ${D}s forwards` }}
-        />
-      </svg>
-
-      {Array.from({ length: shockN }, (_, i) => (
-        <svg
-          key={`h${i}`}
-          width="220"
-          height="120"
-          viewBox="0 0 220 120"
-          style={{
-            position: "absolute",
-            right: `calc(${T.right} - 28px)`,
-            top: `calc(${T.top} - 22px)`,
-            opacity: 0,
-            filter: `drop-shadow(0 0 ${glow + 2}px rgba(141,125,180,0.28))`,
-            animation: `fireExpand ${0.6 + i * 0.1 + rr("shock-dur", i, 0, 0.08)}s ease ${D + 0.07 + i * 0.095}s forwards`,
-          }}
-        >
-          <ellipse
-            cx="110"
-            cy="60"
-            rx={62 + i * 24}
-            ry={18 + i * 6}
-            fill="none"
-            stroke={i % 2 === 0 ? "rgba(141,125,180,0.46)" : "rgba(251,113,133,0.5)"}
-            strokeWidth={4 - i * 0.65}
-          />
-        </svg>
-      ))}
-
-      {Array.from({ length: 2 + fxLvl }, (_, i) => (
-        <div
-          key={`w${i}`}
-          style={{
-            position: "absolute",
-            right: `calc(${T.right} - ${30 + i * 8}px)`,
-            top: `calc(${T.top} + ${rr("wind-top", i, -9, 13)}px)`,
-            width: `${120 + fxLvl * 16}px`,
-            height: `${7 + rr("wind-h", i, 0, 4)}px`,
-            borderRadius: 999,
-            background: "linear-gradient(90deg,rgba(255,255,255,0),rgba(141,125,180,0.4),rgba(251,146,60,0.76),rgba(127,29,29,0.48),rgba(255,255,255,0))",
-            opacity: 0,
-            filter: `blur(${0.4 + rr("wind-blur", i, 0, 0.7)}px)`,
-            animation: `windSweep ${0.5 + rr("wind-anim", i, 0, 0.24)}s ease ${D + 0.1 + i * 0.038}s forwards`,
-          }}
-        />
-      ))}
-
-      {Array.from({ length: emberN }, (_, i) => {
-        const angle = i / emberN * 360;
-        const dist = 35 + rr("ember-dist", i, 0, 55);
-        return (
-          <svg
-            key={`e${i}`}
-            width="28"
-            height="34"
-            viewBox="0 0 20 30"
-            style={{
-              position: "absolute",
-              right: T.right,
-              top: T.top,
-              opacity: 0,
-              filter: `drop-shadow(0 0 ${glow}px #fbbf24)`,
-              "--lx": `${Math.cos(angle * Math.PI / 180) * dist}px`,
-              "--ly": `${Math.sin(angle * Math.PI / 180) * dist}px`,
-              animation: `leafSpin ${0.46 + rr("ember-anim", i, 0, 0.34)}s ease ${D + 0.12 + i * 0.03}s forwards`,
-            }}
-          >
-            <path d={FLAME} fill={i % 4 === 0 ? "#b7a3d2" : i % 4 === 1 ? "#fbbf24" : i % 4 === 2 ? "#fb923c" : "#ef4444"} opacity="0.74" />
-          </svg>
-        );
-      })}
-
-      {Array.from({ length: ashN }, (_, i) => (
-        <div
-          key={`a${i}`}
-          style={{
-            position: "absolute",
-            right: `calc(${T.right} + ${rr("ash-r", i, -10, 10)}px)`,
-            top: `calc(${T.top} + ${rr("ash-t", i, -8, 8)}px)`,
-            width: `${22 + rr("ash-sz", i, 0, 16)}px`,
-            height: `${12 + rr("ash-sz2", i, 0, 10)}px`,
-            borderRadius: "50%",
-            background: "radial-gradient(ellipse,rgba(96,84,128,0.34),rgba(30,27,75,0.14),transparent 72%)",
-            opacity: 0,
-            "--lx": `${rr("ash-lx", i, -45, 45)}px`,
-            "--ly": `${rr("ash-ly", i, -60, 20)}px`,
-            animation: `leafSpin ${0.78 + rr("ash-anim", i, 0, 0.46)}s ease ${D + 0.06 + i * 0.046}s forwards`,
-          }}
-        />
-      ))}
-
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(141,125,180,${0.07 + fxLvl * 0.018}), rgba(249,115,22,${0.08 + fxLvl * 0.02}) 32%, rgba(127,29,29,${0.05 + fxLvl * 0.015}) 52%, transparent 74%)`,
-          animation: `ultGlow ${dur / 1000 * 1.15}s ease ${D}s`,
-        }}
-      />
-    </div>
+    <UltimateEffect config={FIRE_ULTIMATE} ctx={fireEffectTemplate({ idx: moveIdx, lvl, target })}
+      approach={
+        <>
+          {Array.from({ length: meteorN }, (_, i) => {
+            const startLeft = 10 + i * 7 + rr("meteor-left", i, -3, 4);
+            const startTop = 7 + rr("meteor-top", i, -2, 8);
+            const meteorScale = 0.86 + rr("meteor-scale", i, 0, 0.42);
+            const wave = i % 3;
+            const lane = Math.floor(i / 3);
+            const delay = wave * 0.085 + lane * 0.052 + rr("meteor-delay", i, 0, 0.035);
+            return (
+              <svg
+                key={`m${i}`}
+                width="34"
+                height="42"
+                viewBox="0 0 20 30"
+                style={{
+                  position: "absolute",
+                  left: `${startLeft}%`,
+                  top: `${startTop}%`,
+                  "--fly-x": `${100 - T.flyRight - startLeft}vw`,
+                  "--fly-y": `${T.flyTop - startTop}vh`,
+                  opacity: 0,
+                  transform: `scale(${meteorScale}) rotate(${rr("meteor-rot", i, -22, 22)}deg)`,
+                  filter: `drop-shadow(0 0 ${glow + 3}px #fbbf24) drop-shadow(0 0 ${glow + 9}px #ea580c)`,
+                  animation: `flameFly ${0.56 + fxLvl * 0.045 + rr("meteor-dur", i, 0, 0.16)}s cubic-bezier(.18,.82,.34,1) ${delay}s forwards`,
+                }}
+              >
+                <defs>
+                  <radialGradient id={`fmtr-${uid}-${i}`} cx="45%" cy="30%">
+                    <stop offset="0%" stopColor="#f5d0fe" />
+                    <stop offset="25%" stopColor="#9d8ec3" />
+                    <stop offset="58%" stopColor="#f97316" />
+                    <stop offset="100%" stopColor="#991b1b" />
+                  </radialGradient>
+                </defs>
+                <path d={FLAME} fill={`url(#fmtr-${uid}-${i})`} />
+              </svg>
+            );
+          })}
+        </>
+      }
+      sweeps={
+        <>
+          {Array.from({ length: 2 + fxLvl }, (_, i) => (
+            <div
+              key={`w${i}`}
+              style={{
+                position: "absolute",
+                right: `calc(${T.right} - ${30 + i * 8}px)`,
+                top: `calc(${T.top} + ${rr("wind-top", i, -9, 13)}px)`,
+                width: `${120 + fxLvl * 16}px`,
+                height: `${7 + rr("wind-h", i, 0, 4)}px`,
+                borderRadius: 999,
+                background: "linear-gradient(90deg,rgba(255,255,255,0),rgba(141,125,180,0.4),rgba(251,146,60,0.76),rgba(127,29,29,0.48),rgba(255,255,255,0))",
+                opacity: 0,
+                filter: `blur(${0.4 + rr("wind-blur", i, 0, 0.7)}px)`,
+                animation: `windSweep ${0.5 + rr("wind-anim", i, 0, 0.24)}s ease ${D + 0.1 + i * 0.038}s forwards`,
+              }}
+            />
+          ))}
+        </>
+      }
+      burst={
+        <>
+          {Array.from({ length: emberN }, (_, i) => {
+            const angle = i / emberN * 360;
+            const dist = 35 + rr("ember-dist", i, 0, 55);
+            return (
+              <svg
+                key={`e${i}`}
+                width="28"
+                height="34"
+                viewBox="0 0 20 30"
+                style={{
+                  position: "absolute",
+                  right: T.right,
+                  top: T.top,
+                  opacity: 0,
+                  filter: `drop-shadow(0 0 ${glow}px #fbbf24)`,
+                  "--lx": `${Math.cos(angle * Math.PI / 180) * dist}px`,
+                  "--ly": `${Math.sin(angle * Math.PI / 180) * dist}px`,
+                  animation: `leafSpin ${0.46 + rr("ember-anim", i, 0, 0.34)}s ease ${D + 0.12 + i * 0.03}s forwards`,
+                }}
+              >
+                <path d={FLAME} fill={i % 4 === 0 ? "#b7a3d2" : i % 4 === 1 ? "#fbbf24" : i % 4 === 2 ? "#fb923c" : "#ef4444"} opacity="0.74" />
+              </svg>
+            );
+          })}
+        </>
+      }
+      shards={
+        <>
+          {Array.from({ length: ashN }, (_, i) => (
+            <div
+              key={`a${i}`}
+              style={{
+                position: "absolute",
+                right: `calc(${T.right} + ${rr("ash-r", i, -10, 10)}px)`,
+                top: `calc(${T.top} + ${rr("ash-t", i, -8, 8)}px)`,
+                width: `${22 + rr("ash-sz", i, 0, 16)}px`,
+                height: `${12 + rr("ash-sz2", i, 0, 10)}px`,
+                borderRadius: "50%",
+                background: "radial-gradient(ellipse,rgba(96,84,128,0.34),rgba(30,27,75,0.14),transparent 72%)",
+                opacity: 0,
+                "--lx": `${rr("ash-lx", i, -45, 45)}px`,
+                "--ly": `${rr("ash-ly", i, -60, 20)}px`,
+                animation: `leafSpin ${0.78 + rr("ash-anim", i, 0, 0.46)}s ease ${D + 0.06 + i * 0.046}s forwards`,
+              }}
+            />
+          ))}
+        </>
+      }
+    />
   );
 }

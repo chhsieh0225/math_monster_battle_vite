@@ -374,7 +374,7 @@ test('runPlayerAnswer correct path ignores stale strike callback after battle en
 
 test('runPlayerAnswer wrong path increments consecutiveWrong', () => {
   let cwValue = 0;
-  const { calls, deps } = createTestContext({
+  const { deps } = createTestContext({
     streak: 1,
     passiveCount: 0,
     burnStack: 0,
@@ -394,7 +394,7 @@ test('runPlayerAnswer wrong path increments consecutiveWrong', () => {
 
 test('runPlayerAnswer correct path resets consecutiveWrong to 0', () => {
   let cwValue = 5;
-  const { calls, deps } = createTestContext({
+  const { deps } = createTestContext({
     streak: 0,
     consecutiveWrong: 5,
   });

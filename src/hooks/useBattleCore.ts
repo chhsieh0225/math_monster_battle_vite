@@ -360,7 +360,6 @@ export function useBattle() {
   }, [collectionPerks]);
 
   const {
-    currentChallengeBattleRule,
     challengeDamageMult,
     challengeComboMult,
     questionTimerSec,
@@ -717,6 +716,8 @@ export function useBattle() {
     frozenRef: frozenR,
     pendingEvolveRef: pendingEvolve,
     t,
+    onDropResolved,
+    onCollectionUpdated,
   });
   const handleVictoryImpl = useCallback((verb?: string) => {
     const ctx = handleVictoryContextRef.current;
@@ -732,8 +733,8 @@ export function useBattle() {
           tryUnlock: ctx.tryUnlock,
           applyVictoryAchievements,
           updateEncDefeated: ctx.updateEncDefeated,
-          onDropResolved,
-          onCollectionUpdated,
+          onDropResolved: ctx.onDropResolved,
+          onCollectionUpdated: ctx.onCollectionUpdated,
           sfx,
           t: ctx.t,
         },

@@ -4,7 +4,6 @@ import {
   normalizeOps,
   resolveEffectiveQuestionOps,
   estimateOpCombinationSpace,
-  estimateMoveQuestionCombinationSpace,
   resolveQuestionRecentWindowSize,
   buildQuestionHistoryKey,
   deduplicateQuestion,

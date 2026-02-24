@@ -45,7 +45,7 @@ const FIRE_RINGS: RingConfig = {
   strokeWidth: (i) => 4 - i * 0.65,
   offset: ['28px', '22px'],
   delay: (D, i) => D + 0.07 + i * 0.095,
-  duration: (i, _fxLvl) => 0.6 + i * 0.1,
+  duration: (i) => 0.6 + i * 0.1,
   ringFilter: (glow) => `drop-shadow(0 0 ${glow + 2}px rgba(141,125,180,0.28))`,
 };
 

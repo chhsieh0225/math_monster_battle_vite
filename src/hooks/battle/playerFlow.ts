@@ -21,6 +21,8 @@ import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
 import { TYPE_EMOJI } from '../../data/elementEmoji.ts';
 import { isCoopBattleMode } from './coopFlow.ts';
 
+const ENCOURAGE_THRESHOLD = 3;
+
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 
@@ -465,6 +467,10 @@ export function runPlayerAnswer({
     setCharge((c) => Math.min(c + 1, 3));
     if (ns > s.maxStreak) setMaxStreak(ns);
 
+    if (typeof setConsecutiveWrong === 'function') {
+      setConsecutiveWrong(0);
+    }
+
     const np = s.passiveCount + 1;
     if (np >= TRAIT_BALANCE.player.specDefComboTrigger) {
       setPassiveCount(0);
@@ -828,6 +834,10 @@ export function runPlayerAnswer({
   setPassiveCount(0);
   setCharge(0);
 
+  if (typeof setConsecutiveWrong === 'function') {
+    setConsecutiveWrong((cw) => cw + 1);
+  }
+
   safeToIfBattleActive(() => {
     const s2 = sr.current;
     if (move.risky) {
@@ -840,7 +850,11 @@ export function runPlayerAnswer({
         state: s2,
         damage: sd,
       });
-      setBText(tr(t, 'battle.risky.backfire', '{move} went out of control! {name} took {damage} damage!', {
+      const cwNow = sr.current.consecutiveWrong ?? 0;
+      const riskyEncourage = cwNow >= ENCOURAGE_THRESHOLD
+        ? tr(t, 'battle.encourage.keepGoing', '💪 Keep going! Learning takes practice!') + '\n'
+        : '';
+      setBText(riskyEncourage + tr(t, 'battle.risky.backfire', '{move} went out of control! {name} took {damage} damage!', {
         move: move.name,
         name: attackerName,
         damage: sd,
@@ -853,7 +867,11 @@ export function runPlayerAnswer({
         else doEnemyTurn();
       });
     } else {
-      let mt = tr(t, 'battle.attack.miss', 'Attack missed!');
+      const cwNow = sr.current.consecutiveWrong ?? 0;
+      const encourageMsg = cwNow >= ENCOURAGE_THRESHOLD
+        ? tr(t, 'battle.encourage.keepGoing', '💪 Keep going! Learning takes practice!') + '\n'
+        : '';
+      let mt = encourageMsg + tr(t, 'battle.attack.miss', 'Attack missed!');
       if (s2.burnStack > 0) {
         const bd = s2.burnStack * TRAIT_BALANCE.player.burnPerStackDamage;
         const nh3 = Math.max(0, s2.eHp - bd);

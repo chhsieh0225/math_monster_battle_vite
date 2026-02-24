@@ -371,3 +371,77 @@ test('runPlayerAnswer correct path ignores stale strike callback after battle en
   assert.equal(calls.doEnemyTurn, 0);
   assert.equal(calls.handleVictory.length, 0);
 });
+
+test('runPlayerAnswer wrong path increments consecutiveWrong', () => {
+  let cwValue = 0;
+  const { calls, deps } = createTestContext({
+    streak: 1,
+    passiveCount: 0,
+    burnStack: 0,
+    consecutiveWrong: 2,
+  });
+  deps.setConsecutiveWrong = (fn) => { cwValue = typeof fn === 'function' ? fn(2) : fn; };
+
+  runPlayerAnswer({
+    correct: false,
+    move: { name: '炎牙', basePower: 12, growth: 2, type: 'fire', risky: false },
+    starter: { name: '火狐', type: 'fire' },
+    ...deps,
+  });
+
+  assert.equal(cwValue, 3);
+});
+
+test('runPlayerAnswer correct path resets consecutiveWrong to 0', () => {
+  let cwValue = 5;
+  const { calls, deps } = createTestContext({
+    streak: 0,
+    consecutiveWrong: 5,
+  });
+  deps.setConsecutiveWrong = (fn) => { cwValue = typeof fn === 'function' ? fn(5) : fn; };
+
+  runPlayerAnswer({
+    correct: true,
+    move: { name: '炎牙', basePower: 12, growth: 2, type: 'fire' },
+    starter: { name: '火狐', type: 'fire' },
+    ...deps,
+  });
+
+  assert.equal(cwValue, 0);
+});
+
+test('runPlayerAnswer wrong non-risky path shows encouragement when consecutiveWrong >= 3', () => {
+  const { calls, deps } = createTestContext({
+    streak: 0,
+    burnStack: 0,
+    consecutiveWrong: 3,
+  });
+
+  runPlayerAnswer({
+    correct: false,
+    move: { name: '炎牙', basePower: 12, growth: 2, type: 'fire', risky: false },
+    starter: { name: '火狐', type: 'fire' },
+    ...deps,
+  });
+
+  const hasEncourageText = calls.bText.some((text) => text.includes('Keep going'));
+  assert.equal(hasEncourageText, true);
+});
+
+test('runPlayerAnswer wrong non-risky path omits encouragement when consecutiveWrong < 3', () => {
+  const { calls, deps } = createTestContext({
+    streak: 0,
+    burnStack: 0,
+    consecutiveWrong: 1,
+  });
+
+  runPlayerAnswer({
+    correct: false,
+    move: { name: '炎牙', basePower: 12, growth: 2, type: 'fire', risky: false },
+    starter: { name: '火狐', type: 'fire' },
+    ...deps,
+  });
+
+  const hasEncourageText = calls.bText.some((text) => text.includes('Keep going'));
+  assert.equal(hasEncourageText, false);
+});

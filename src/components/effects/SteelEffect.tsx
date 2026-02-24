@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
 import { createEffectTemplate } from './createEffectTemplate.ts';
+import { UltimateEffect, type UltimateConfig, type CoreConfig, type RingConfig, type GlowConfig } from './UltimateEffect.tsx';
 
 const BLADE = "M12,1 L16,10 L12,23 L8,10 Z";
 const SHARD = "M0,-8 L3,-2 L8,0 L3,2 L0,8 L-3,2 L-8,0 L-3,-2Z";
@@ -11,6 +12,47 @@ const steelEffectTemplate = createEffectTemplate({
   duration: ({ idx, lvl }) => 650 + idx * 120 + lvl * 28,
   glow: ({ lvl }) => 4 + lvl * 1.8,
 });
+
+
+const STEEL_CORE: CoreConfig = {
+  svgSize: 190,
+  center: 95,
+  radius: (fxLvl) => 24 + fxLvl * 4,
+  gradientStops: [
+    { offset: '0%', color: '#f8fafc', opacity: 0.95 },
+    { offset: '22%', color: '#cbd5e1', opacity: 0.82 },
+    { offset: '52%', color: '#94a3b8', opacity: 0.48 },
+    { offset: '100%', color: '#1e293b', opacity: 0 },
+  ],
+  outerFilter: (glow) => `drop-shadow(0 0 ${glow + 8}px #334155) drop-shadow(0 0 ${glow + 11}px #94a3b8)`,
+};
+
+const STEEL_RINGS: RingConfig = {
+  count: (fxLvl) => Math.min(10, 3 + fxLvl),
+  svgSize: [190, 190],
+  center: [95, 95],
+  useCircle: true,
+  baseRadius: (i) => [22 + i * 10, 22 + i * 10],
+  strokeColors: ['rgba(203,213,225,0.84)', 'rgba(100,116,139,0.66)'],
+  strokeWidth: (i) => 3 - i * 0.2,
+  offset: ['95px', '57px'],
+  delay: (D, i) => D + i * 0.05,
+  duration: (i) => 0.72 + i * 0.08,
+  ringFilter: (glow) => `drop-shadow(0 0 ${glow}px #cbd5e1)`,
+};
+
+const STEEL_GLOW: GlowConfig = {
+  gradient: (T, fxLvl) =>
+    `radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(148,163,184,${0.12 + fxLvl * 0.03}), rgba(30,41,59,${0.05 + fxLvl * 0.01}) 42%, transparent 72%)`,
+  durMultiplier: 1.2,
+};
+
+const STEEL_ULTIMATE: UltimateConfig = {
+  D: 0.3,
+  core: STEEL_CORE,
+  rings: STEEL_RINGS,
+  glow: STEEL_GLOW,
+};
 
 export default function SteelEffect({
   idx: moveIdx = 0,
@@ -196,123 +238,62 @@ export default function SteelEffect({
 
   // idx 3: 鋼域終式 - dark-steel final burst
   const D = 0.3;
-  const ringN = Math.min(10, 3 + fxLvl);
   const shardN = Math.min(18, 8 + fxLvl * 2);
-  const coreId = `steelUltCore-${uid}`;
+
   return (
-    <div className="move-fx-overlay">
-      <svg
-        width="40"
-        height="40"
-        viewBox="0 0 24 24"
-        style={{
-          position: 'absolute',
-          left: '10%',
-          bottom: '35%',
-          '--fly-x': `${100 - T.flyRight - 10}vw`,
-          '--fly-y': `${T.flyTop - 65}vh`,
-          filter: `drop-shadow(0 0 ${glow}px #cbd5e1) drop-shadow(0 0 ${glow + 4}px #334155)`,
-          animation: 'ultApproach 0.56s cubic-bezier(.16,.82,.22,1) forwards',
-        } as CSSProperties}
-      >
-        <path d={BLADE} fill="rgba(226,232,240,0.9)" />
-      </svg>
-
-      <svg
-        width="190"
-        height="190"
-        viewBox="0 0 190 190"
-        style={{
-          position: 'absolute',
-          right: T.right,
-          top: T.top,
-          transform: 'translate(50%,-30%)',
-          filter: `drop-shadow(0 0 ${glow + 8}px #334155) drop-shadow(0 0 ${glow + 11}px #94a3b8)`,
-        }}
-      >
-        <defs>
-          <radialGradient id={coreId} cx="50%" cy="50%">
-            <stop offset="0%" stopColor="#f8fafc" stopOpacity="0.95" />
-            <stop offset="22%" stopColor="#cbd5e1" stopOpacity="0.82" />
-            <stop offset="52%" stopColor="#94a3b8" stopOpacity="0.48" />
-            <stop offset="100%" stopColor="#1e293b" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <circle
-          cx="95"
-          cy="95"
-          r={24 + fxLvl * 4}
-          fill={`url(#${coreId})`}
-          style={{ animation: `fireExpand ${dur / 1000}s ease ${D}s forwards` }}
-        />
-      </svg>
-
-      {Array.from({ length: ringN }, (_, i) => (
+    <UltimateEffect config={STEEL_ULTIMATE} ctx={steelEffectTemplate({ idx: moveIdx, lvl, target })}
+      approach={
         <svg
-          key={`ring-${i}`}
-          width="190"
-          height="190"
-          viewBox="0 0 190 190"
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
           style={{
             position: 'absolute',
-            right: T.right,
-            top: T.top,
-            transform: 'translate(50%,-30%)',
-            opacity: 0,
-            animation: `darkRingExpand ${0.72 + i * 0.08}s ease ${D + i * 0.05}s forwards`,
-          }}
+            left: '10%',
+            bottom: '35%',
+            '--fly-x': `${100 - T.flyRight - 10}vw`,
+            '--fly-y': `${T.flyTop - 65}vh`,
+            filter: `drop-shadow(0 0 ${glow}px #cbd5e1) drop-shadow(0 0 ${glow + 4}px #334155)`,
+            animation: 'ultApproach 0.56s cubic-bezier(.16,.82,.22,1) forwards',
+          } as CSSProperties}
         >
-          <circle
-            cx="95"
-            cy="95"
-            r={22 + i * 10}
-            fill="none"
-            stroke={i % 2 === 0 ? 'rgba(203,213,225,0.84)' : 'rgba(100,116,139,0.66)'}
-            strokeWidth={3 - i * 0.2}
-            style={{ filter: `drop-shadow(0 0 ${glow}px #cbd5e1)` }}
-          />
+          <path d={BLADE} fill="rgba(226,232,240,0.9)" />
         </svg>
-      ))}
-
-      {Array.from({ length: shardN }, (_, i) => {
-        const angle = (i / shardN) * 360;
-        const dist = 26 + rr('ult-dist', i, 0, 52);
-        const delay = D + 0.1 + (i % 4) * 0.02 + Math.floor(i / 4) * 0.03;
-        return (
-          <svg
-            key={`shard-${i}`}
-            width="20"
-            height="20"
-            viewBox="-10 -10 20 20"
-            style={{
-              position: 'absolute',
-              right: T.right,
-              top: T.top,
-              opacity: 0,
-              filter: `drop-shadow(0 0 ${glow}px #cbd5e1)`,
-              '--sx': `${Math.cos(angle * Math.PI / 180) * dist}px`,
-              '--sy': `${Math.sin(angle * Math.PI / 180) * dist}px`,
-              animation: `darkStarSpin ${0.42 + rr('ult-anim', i, 0, 0.24)}s ease ${delay}s forwards`,
-            } as CSSProperties}
-          >
-            <path
-              d={SHARD}
-              fill={i % 2 === 0 ? '#e2e8f0' : '#94a3b8'}
-              opacity={0.7 + fxLvl * 0.03}
-              transform={`rotate(${angle})`}
-            />
-          </svg>
-        );
-      })}
-
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: `radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(148,163,184,${0.12 + fxLvl * 0.03}), rgba(30,41,59,${0.05 + fxLvl * 0.01}) 42%, transparent 72%)`,
-          animation: `ultGlow ${dur / 1000 * 1.2}s ease ${D}s`,
-        }}
-      />
-    </div>
+      }
+      burst={
+        <>
+          {Array.from({ length: shardN }, (_, i) => {
+            const angle = (i / shardN) * 360;
+            const dist = 26 + rr('ult-dist', i, 0, 52);
+            const delay = D + 0.1 + (i % 4) * 0.02 + Math.floor(i / 4) * 0.03;
+            return (
+              <svg
+                key={`shard-${i}`}
+                width="20"
+                height="20"
+                viewBox="-10 -10 20 20"
+                style={{
+                  position: 'absolute',
+                  right: T.right,
+                  top: T.top,
+                  opacity: 0,
+                  filter: `drop-shadow(0 0 ${glow}px #cbd5e1)`,
+                  '--sx': `${Math.cos(angle * Math.PI / 180) * dist}px`,
+                  '--sy': `${Math.sin(angle * Math.PI / 180) * dist}px`,
+                  animation: `darkStarSpin ${0.42 + rr('ult-anim', i, 0, 0.24)}s ease ${delay}s forwards`,
+                } as CSSProperties}
+              >
+                <path
+                  d={SHARD}
+                  fill={i % 2 === 0 ? '#e2e8f0' : '#94a3b8'}
+                  opacity={0.7 + fxLvl * 0.03}
+                  transform={`rotate(${angle})`}
+                />
+              </svg>
+            );
+          })}
+        </>
+      }
+    />
   );
 }

@@ -1,5 +1,6 @@
 import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
 import { createEffectTemplate } from './createEffectTemplate.ts';
+import { UltimateEffect, type UltimateConfig, type CoreConfig, type GlowConfig } from './UltimateEffect.tsx';
 
 // Primary bolt paths (jagged lightning shapes)
 const BOLT_A = "M60,0 L55,30 L70,32 L50,65 L62,42 L48,40 L60,0";
@@ -15,6 +16,43 @@ const elecEffectTemplate = createEffectTemplate({
   duration: ({ idx, lvl }) => 600 + idx * 120 + lvl * 30,
   glow: ({ lvl }) => 4 + lvl * 2,
 });
+
+const ELEC_CORE: CoreConfig = {
+  svgSize: 190,
+  center: 95,
+  radius: (fxLvl) => 20 + fxLvl * 4,
+  gradientStops: [
+    { offset: '0%', color: '#fef9c3', opacity: 0.9 },
+    { offset: '20%', color: '#fbbf24', opacity: 0.78 },
+    { offset: '45%', color: '#9d8ec3', opacity: 0.42 },
+    { offset: '100%', color: '#1e1b4b', opacity: 0 },
+  ],
+  filter: {
+    turbulenceType: 'turbulence',
+    baseFreqValues: '0.88;0.46;0.2',
+    displacement: {
+      xChannel: 'R',
+      yChannel: 'B',
+      scaleValues: (fxLvl) => `0;${11 + fxLvl * 1.7};${3 + fxLvl * 0.5}`,
+    },
+    blurValues: '0;0.72;0.28',
+    colorMatrix: '1.08 0 0 0 0 0.03 0.95 0 0 0 0.2 0.08 1.24 0 0 0 0 0 1 0',
+  },
+  outerFilter: (glow) => `drop-shadow(0 0 ${glow + 4}px rgba(141,125,180,0.45))`,
+};
+
+const ELEC_GLOW: GlowConfig = {
+  gradient: (T, fxLvl) =>
+    `radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(141,125,180,${0.07 + fxLvl * 0.018}), rgba(251,191,36,${0.08 + fxLvl * 0.02}) 30%, rgba(30,27,75,${0.06 + fxLvl * 0.015}) 54%, transparent 72%)`,
+  durMultiplier: 1.2,
+};
+
+const ELEC_ULTIMATE: UltimateConfig = {
+  D: 0.3,
+  core: ELEC_CORE,
+  rings: null,
+  glow: ELEC_GLOW,
+};
 
 export default function ElecEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT_EFFECT_TARGET }: AttackElementEffectProps) {
   const {
@@ -205,136 +243,104 @@ export default function ElecEffect({ idx: moveIdx = 0, lvl = 1, target = DEFAULT
   const sparkN = Math.min(18, 6 + fxLvl * 2);
   const cageN = Math.min(14, 6 + fxLvl);
   const boltPaths = [BOLT_A, BOLT_B, BOLT_C];
-  const coreId = `eCore-${uid}`;
-  const coreFilterId = `eCoreFilter-${uid}`;
-  const coreSeed = Math.max(1, Math.floor(rr("ult-core-seed", 0, 2, 90)));
 
   return (
-    <div className="move-fx-overlay">
-      {/* Phase 1: Dark thunder cage forms around target */}
-      <svg width="190" height="190" viewBox="0 0 190 190"
-        style={{
-          position:"absolute",
-          right:T.right,
-          top:T.top,
-          transform:"translate(50%,-30%)",
-          filter:`drop-shadow(0 0 ${glow + 4}px rgba(141,125,180,0.45))`,
-        }}>
-        <defs>
-          <radialGradient id={coreId} cx="50%" cy="50%">
-            <stop offset="0%" stopColor="#fef9c3" stopOpacity="0.9"/>
-            <stop offset="20%" stopColor="#fbbf24" stopOpacity="0.78"/>
-            <stop offset="45%" stopColor="#9d8ec3" stopOpacity="0.42"/>
-            <stop offset="100%" stopColor="#1e1b4b" stopOpacity="0"/>
-          </radialGradient>
-          <filter id={coreFilterId} x="-70%" y="-70%" width="240%" height="240%" colorInterpolationFilters="sRGB">
-            <feTurbulence type="turbulence" baseFrequency="0.88" numOctaves="3" seed={coreSeed} result="noise">
-              <animate attributeName="baseFrequency" values="0.88;0.46;0.2" dur={`${dur / 1000}s`} fill="freeze"/>
-            </feTurbulence>
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="B" result="warp">
-              <animate attributeName="scale" values={`0;${11 + fxLvl * 1.7};${3 + fxLvl * 0.5}`} dur={`${dur / 1000}s`} fill="freeze"/>
-            </feDisplacementMap>
-            <feGaussianBlur in="warp" stdDeviation="0" result="soft">
-              <animate attributeName="stdDeviation" values="0;0.72;0.28" dur={`${dur / 1000}s`} fill="freeze"/>
-            </feGaussianBlur>
-            <feColorMatrix in="soft" type="matrix" values="1.08 0 0 0 0 0.03 0.95 0 0 0 0.2 0.08 1.24 0 0 0 0 0 1 0"/>
-          </filter>
-        </defs>
-        <circle cx="95" cy="95" r={20 + fxLvl * 4} fill={`url(#${coreId})`} filter={`url(#${coreFilterId})`}
-          style={{ animation:`fireExpand ${dur/1000}s ease ${D}s forwards` }}/>
-      </svg>
-      {Array.from({ length: cageN }, (_, i) => {
-        const angle = (i / cageN) * 360;
-        const len = 34 + fxLvl * 5;
-        const cageDelay = D + (i % 4) * 0.02 + Math.floor(i / 4) * 0.045;
-        return (
-          <svg key={`c${i}`} width="8" height={len} viewBox={`0 0 8 ${len}`}
-            style={{
-              position:"absolute",
-              right:`calc(${T.right} + ${Math.cos(angle * Math.PI / 180) * 8}px)`,
-              top:`calc(${T.top} + ${Math.sin(angle * Math.PI / 180) * 8}px)`,
-              transformOrigin:"center bottom",
-              transform:`rotate(${angle}deg)`,
-              opacity:0,
-              filter:`drop-shadow(0 0 ${glow}px rgba(167,149,199,0.45))`,
-              animation:`sparkle ${0.34 + rr("cage-anim", i, 0, 0.22)}s ease ${cageDelay}s both`,
-            }}>
-            <rect x="2" y="0" width="4" height={len} rx="2" fill={i % 2 === 0 ? "rgba(167,149,199,0.42)" : "rgba(251,191,36,0.72)"} />
-          </svg>
-        );
-      })}
-
-      {/* Phase 2: Vertical thunder punish */}
-      {Array.from({ length: boltN }, (_, i) => {
-        const xOff = rr("bolt-x", i, -8, 10);
-        const yOff = rr("bolt-y", i, -18, 4);
-        const lane = i % 3;
-        const wave = Math.floor(i / 3);
-        return (
-          <svg key={`bl${i}`} width="45" height="65" viewBox="0 0 80 70"
-            style={{
-              position:"absolute",
-              right:`calc(${T.right} + ${xOff}%)`,
-              top:`calc(${T.top} + ${yOff}%)`,
-              transform:`scale(${0.65 + fxLvl * 0.05 + rr("bolt-sc", i, 0, 0.22)}) rotate(${rr("bolt-rot", i, -16, 16)}deg)`,
-              transformOrigin:"center top",
-              filter:`drop-shadow(0 0 ${glow+3}px #fbbf24) drop-shadow(0 0 ${glow+8}px rgba(141,125,180,0.52))`,
-              animation:`lightningStrike ${0.38 + rr("bolt-anim", i, 0, 0.2)}s ease ${D + 0.08 + lane * 0.028 + wave * 0.045}s both`,
-              opacity:0,
-            }}>
-            <path d={boltPaths[i % 3]} fill={i % 2 === 0 ? "#fde68a" : "#c4b5fd"} />
-          </svg>
-        );
-      })}
-
-      {/* Phase 3: Chain arcs */}
-      {Array.from({ length: arcN }, (_, i) => (
-        <svg key={`a${i}`} width="100%" height="58" viewBox="0 0 210 45" preserveAspectRatio="none"
-          style={{
-            position:"absolute",
-            right:`calc(${T.right} - ${14 + i * 4}px)`,
-            top:`calc(${T.top} + ${4 + i * 10}px)`,
-            filter:`drop-shadow(0 0 ${glow+2}px rgba(251,191,36,0.7))`,
-            opacity:0,
-            animation:`lightningStrike 0.58s ease ${D + 0.12 + i * 0.07}s both`,
-          }}>
-          <defs>
-            <linearGradient id={`eArc-${uid}-${i}`} x1="0%" y1="50%" x2="100%" y2="50%">
-              <stop offset="0%" stopColor="rgba(141,125,180,0.32)"/>
-              <stop offset="45%" stopColor="rgba(251,191,36,0.9)"/>
-              <stop offset="100%" stopColor="rgba(236,72,153,0.45)"/>
-            </linearGradient>
-          </defs>
-          <path
-            d={`M0,22 L22,${7+i*2} L45,26 L72,${10+i} L98,24 L123,${8+i*2} L148,25 L176,${12+i} L210,21`}
-            fill="none"
-            stroke={`url(#eArc-${uid}-${i})`}
-            strokeWidth={2.2 + fxLvl * 0.25}
-            strokeLinecap="round"
-            strokeDasharray="220"
-            strokeDashoffset="220"
-            style={{ animation:`arcFlow ${0.5 + rr("arc-flow", i, 0, 0.22)}s ease ${D+0.14+i*0.085}s forwards` }}
-          />
-        </svg>
-      ))}
-
-      {/* Phase 4: Static sparks */}
-      {Array.from({ length: sparkN }, (_, i) => (
-        <svg key={`sk${i}`} width="13" height="13" viewBox="-8 -8 16 16"
-          style={{
-            position:"absolute",
-            right:`calc(${T.right} + ${rr("ult-spark-right", i, -10, 11)}%)`,
-            top:`calc(${T.top} + ${rr("ult-spark-top", i, -8, 13)}%)`,
-            opacity:0,
-            filter:`drop-shadow(0 0 4px #fbbf24) drop-shadow(0 0 6px rgba(141,125,180,0.5))`,
-            animation:`sparkle ${0.32 + rr("sk-anim", i, 0, 0.28)}s ease ${D + 0.14 + (i % 4) * 0.018 + Math.floor(i / 4) * 0.028}s both`,
-          }}>
-          <path d={SPARK} fill={i % 2 === 0 ? "#fde68a" : "#c4b5fd"} opacity="0.72"/>
-        </svg>
-      ))}
-
-      {/* Phase 5: Dark thunder global glow */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at calc(100% - ${T.right}) ${T.top}, rgba(141,125,180,${0.07+fxLvl*0.018}), rgba(251,191,36,${0.08+fxLvl*0.02}) 30%, rgba(30,27,75,${0.06+fxLvl*0.015}) 54%, transparent 72%)`, animation:`ultGlow ${dur/1000*1.2}s ease ${D}s` }}/>
-    </div>
+    <UltimateEffect config={ELEC_ULTIMATE} ctx={elecEffectTemplate({ idx: moveIdx, lvl, target })}
+      approach={
+        <>
+          {Array.from({ length: cageN }, (_, i) => {
+            const angle = (i / cageN) * 360;
+            const len = 34 + fxLvl * 5;
+            const cageDelay = D + (i % 4) * 0.02 + Math.floor(i / 4) * 0.045;
+            return (
+              <svg key={`c${i}`} width="8" height={len} viewBox={`0 0 8 ${len}`}
+                style={{
+                  position:"absolute",
+                  right:`calc(${T.right} + ${Math.cos(angle * Math.PI / 180) * 8}px)`,
+                  top:`calc(${T.top} + ${Math.sin(angle * Math.PI / 180) * 8}px)`,
+                  transformOrigin:"center bottom",
+                  transform:`rotate(${angle}deg)`,
+                  opacity:0,
+                  filter:`drop-shadow(0 0 ${glow}px rgba(167,149,199,0.45))`,
+                  animation:`sparkle ${0.34 + rr("cage-anim", i, 0, 0.22)}s ease ${cageDelay}s both`,
+                }}>
+                <rect x="2" y="0" width="4" height={len} rx="2" fill={i % 2 === 0 ? "rgba(167,149,199,0.42)" : "rgba(251,191,36,0.72)"} />
+              </svg>
+            );
+          })}
+        </>
+      }
+      sweeps={
+        <>
+          {Array.from({ length: boltN }, (_, i) => {
+            const xOff = rr("bolt-x", i, -8, 10);
+            const yOff = rr("bolt-y", i, -18, 4);
+            const lane = i % 3;
+            const wave = Math.floor(i / 3);
+            return (
+              <svg key={`bl${i}`} width="45" height="65" viewBox="0 0 80 70"
+                style={{
+                  position:"absolute",
+                  right:`calc(${T.right} + ${xOff}%)`,
+                  top:`calc(${T.top} + ${yOff}%)`,
+                  transform:`scale(${0.65 + fxLvl * 0.05 + rr("bolt-sc", i, 0, 0.22)}) rotate(${rr("bolt-rot", i, -16, 16)}deg)`,
+                  transformOrigin:"center top",
+                  filter:`drop-shadow(0 0 ${glow+3}px #fbbf24) drop-shadow(0 0 ${glow+8}px rgba(141,125,180,0.52))`,
+                  animation:`lightningStrike ${0.38 + rr("bolt-anim", i, 0, 0.2)}s ease ${D + 0.08 + lane * 0.028 + wave * 0.045}s both`,
+                  opacity:0,
+                }}>
+                <path d={boltPaths[i % 3]} fill={i % 2 === 0 ? "#fde68a" : "#c4b5fd"} />
+              </svg>
+            );
+          })}
+          {Array.from({ length: arcN }, (_, i) => (
+            <svg key={`a${i}`} width="100%" height="58" viewBox="0 0 210 45" preserveAspectRatio="none"
+              style={{
+                position:"absolute",
+                right:`calc(${T.right} - ${14 + i * 4}px)`,
+                top:`calc(${T.top} + ${4 + i * 10}px)`,
+                filter:`drop-shadow(0 0 ${glow+2}px rgba(251,191,36,0.7))`,
+                opacity:0,
+                animation:`lightningStrike 0.58s ease ${D + 0.12 + i * 0.07}s both`,
+              }}>
+              <defs>
+                <linearGradient id={`eArc-${uid}-${i}`} x1="0%" y1="50%" x2="100%" y2="50%">
+                  <stop offset="0%" stopColor="rgba(141,125,180,0.32)"/>
+                  <stop offset="45%" stopColor="rgba(251,191,36,0.9)"/>
+                  <stop offset="100%" stopColor="rgba(236,72,153,0.45)"/>
+                </linearGradient>
+              </defs>
+              <path
+                d={`M0,22 L22,${7+i*2} L45,26 L72,${10+i} L98,24 L123,${8+i*2} L148,25 L176,${12+i} L210,21`}
+                fill="none"
+                stroke={`url(#eArc-${uid}-${i})`}
+                strokeWidth={2.2 + fxLvl * 0.25}
+                strokeLinecap="round"
+                strokeDasharray="220"
+                strokeDashoffset="220"
+                style={{ animation:`arcFlow ${0.5 + rr("arc-flow", i, 0, 0.22)}s ease ${D+0.14+i*0.085}s forwards` }}
+              />
+            </svg>
+          ))}
+        </>
+      }
+      burst={
+        <>
+          {Array.from({ length: sparkN }, (_, i) => (
+            <svg key={`sk${i}`} width="13" height="13" viewBox="-8 -8 16 16"
+              style={{
+                position:"absolute",
+                right:`calc(${T.right} + ${rr("ult-spark-right", i, -10, 11)}%)`,
+                top:`calc(${T.top} + ${rr("ult-spark-top", i, -8, 13)}%)`,
+                opacity:0,
+                filter:`drop-shadow(0 0 4px #fbbf24) drop-shadow(0 0 6px rgba(141,125,180,0.5))`,
+                animation:`sparkle ${0.32 + rr("sk-anim", i, 0, 0.28)}s ease ${D + 0.14 + (i % 4) * 0.018 + Math.floor(i / 4) * 0.028}s both`,
+              }}>
+              <path d={SPARK} fill={i % 2 === 0 ? "#fde68a" : "#c4b5fd"} opacity="0.72"/>
+            </svg>
+          ))}
+        </>
+      }
+    />
   );
 }

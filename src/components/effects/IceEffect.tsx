@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { DEFAULT_EFFECT_TARGET, type AttackElementEffectProps } from './effectTypes.ts';
 import { createEffectTemplate } from './createEffectTemplate.ts';
+import { UltimateEffect, type UltimateConfig, type CoreConfig, type RingConfig } from './UltimateEffect.tsx';
 
 const SHARD = 'M10,0 L18,10 L10,24 L2,10 Z';
 
@@ -10,6 +11,39 @@ const iceEffectTemplate = createEffectTemplate({
   duration: ({ idx, lvl }) => 760 + idx * 120 + lvl * 26,
   glow: ({ lvl }) => 5 + lvl * 1.9,
 });
+
+const ICE_CORE: CoreConfig = {
+  svgSize: 196,
+  center: 98,
+  radius: (fxLvl) => 24 + fxLvl * 4,
+  gradientStops: [
+    { offset: '0%', color: '#f0f9ff', opacity: 0.94 },
+    { offset: '28%', color: '#bae6fd', opacity: 0.78 },
+    { offset: '62%', color: '#38bdf8', opacity: 0.46 },
+    { offset: '100%', color: '#082f49', opacity: 0 },
+  ],
+  outerFilter: (glow) => `drop-shadow(0 0 ${glow + 8}px rgba(56,189,248,0.82))`,
+};
+
+const ICE_RINGS: RingConfig = {
+  count: (fxLvl) => Math.min(8, 3 + fxLvl),
+  svgSize: [236, 118],
+  center: [118, 59],
+  baseRadius: (i) => [58 + i * 24, 16 + i * 5],
+  strokeColors: ['rgba(191,219,254,0.84)', 'rgba(56,189,248,0.68)'],
+  strokeWidth: (i) => 3.6 - i * 0.55,
+  offset: ['34px', '22px'],
+  delay: (D, i) => D + 0.08 + i * 0.07,
+  duration: (i) => 0.72 + i * 0.1,
+  ringFilter: (glow) => `drop-shadow(0 0 ${glow}px rgba(125,211,252,0.8))`,
+};
+
+const ICE_ULTIMATE: UltimateConfig = {
+  D: 0.3,
+  core: ICE_CORE,
+  rings: ICE_RINGS,
+  glow: null,
+};
 
 export default function IceEffect({
   idx: moveIdx = 0,
@@ -159,113 +193,59 @@ export default function IceEffect({
   }
 
   // idx 3: 永凍審判
-  const approachDelay = 0.3;
-  const burstRadius = 24 + fxLvl * 4;
-  const ringCount = Math.min(8, 3 + fxLvl);
+  const D = 0.3;
   const shardCount = Math.min(16, 8 + fxLvl * 2);
-  const coreId = `iceCore-${uid}`;
 
   return (
-    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 80 }}>
-      <svg
-        width="38"
-        height="38"
-        viewBox="0 0 20 24"
-        style={{
-          position: 'absolute',
-          left: '10%',
-          bottom: '35%',
-          '--fly-x': `${100 - T.flyRight - 10}vw`,
-          '--fly-y': `${T.flyTop - 65}vh`,
-          filter: `drop-shadow(0 0 ${glow + 2}px rgba(186,230,253,0.9))`,
-          animation: 'ultApproach 0.56s cubic-bezier(.16,.82,.22,1) forwards',
-        } as CSSProperties}
-      >
-        <path d={SHARD} fill="rgba(224,242,254,0.92)" />
-      </svg>
-
-      <svg
-        width="196"
-        height="196"
-        viewBox="0 0 196 196"
-        style={{
-          position: 'absolute',
-          right: T.right,
-          top: T.top,
-          transform: 'translate(50%,-30%)',
-          filter: `drop-shadow(0 0 ${glow + 8}px rgba(56,189,248,0.82))`,
-        }}
-      >
-        <defs>
-          <radialGradient id={coreId} cx="50%" cy="50%">
-            <stop offset="0%" stopColor="#f0f9ff" stopOpacity="0.94" />
-            <stop offset="28%" stopColor="#bae6fd" stopOpacity="0.78" />
-            <stop offset="62%" stopColor="#38bdf8" stopOpacity="0.46" />
-            <stop offset="100%" stopColor="#082f49" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <circle
-          cx="98"
-          cy="98"
-          r={burstRadius}
-          fill={`url(#${coreId})`}
-          style={{ animation: `fireExpand ${dur / 1000}s ease ${approachDelay}s forwards` }}
-        />
-      </svg>
-
-      {Array.from({ length: ringCount }, (_unused, i) => (
+    <UltimateEffect config={ICE_ULTIMATE} ctx={iceEffectTemplate({ idx: moveIdx, lvl, target })}
+      approach={
         <svg
-          key={`ice-ult-ring-${i}`}
-          width="236"
-          height="118"
-          viewBox="0 0 236 118"
+          width="38"
+          height="38"
+          viewBox="0 0 20 24"
           style={{
             position: 'absolute',
-            right: `calc(${T.right} - 34px)`,
-            top: `calc(${T.top} - 22px)`,
-            opacity: 0,
-            animation: `darkRingExpand ${0.72 + i * 0.1}s ease ${approachDelay + 0.08 + i * 0.07}s forwards`,
-          }}
+            left: '10%',
+            bottom: '35%',
+            '--fly-x': `${100 - T.flyRight - 10}vw`,
+            '--fly-y': `${T.flyTop - 65}vh`,
+            filter: `drop-shadow(0 0 ${glow + 2}px rgba(186,230,253,0.9))`,
+            animation: 'ultApproach 0.56s cubic-bezier(.16,.82,.22,1) forwards',
+          } as CSSProperties}
         >
-          <ellipse
-            cx="118"
-            cy="59"
-            rx={58 + i * 24}
-            ry={16 + i * 5}
-            fill="none"
-            stroke={i % 2 === 0 ? 'rgba(191,219,254,0.84)' : 'rgba(56,189,248,0.68)'}
-            strokeWidth={3.6 - i * 0.55}
-            style={{ filter: `drop-shadow(0 0 ${glow}px rgba(125,211,252,0.8))` }}
-          />
+          <path d={SHARD} fill="rgba(224,242,254,0.92)" />
         </svg>
-      ))}
-
-      {Array.from({ length: shardCount }, (_unused, i) => {
-        const angle = (i / shardCount) * 360;
-        const radius = 18 + fxLvl * 5 + rr('ult-rad', i, 0, 12);
-        const x = Math.cos(angle * Math.PI / 180) * radius;
-        const y = Math.sin(angle * Math.PI / 180) * radius;
-        return (
-          <svg
-            key={`ice-ult-shard-${i}`}
-            width="16"
-            height="22"
-            viewBox="0 0 20 24"
-            style={{
-              position: 'absolute',
-              right: `calc(${T.right} + ${x}px)`,
-              top: `calc(${T.top} + ${y}px)`,
-              opacity: 0,
-              transformOrigin: 'center center',
-              transform: `rotate(${angle + rr('ult-rot', i, -20, 20)}deg)`,
-              filter: `drop-shadow(0 0 4px rgba(186,230,253,0.9))`,
-              animation: `sparkle ${0.52 + rr('ult-anim', i, 0, 0.2)}s ease ${approachDelay + 0.12 + i * 0.018}s both`,
-            }}
-          >
-            <path d={SHARD} fill="rgba(224,242,254,0.88)" />
-          </svg>
-        );
-      })}
-    </div>
+      }
+      burst={
+        <>
+          {Array.from({ length: shardCount }, (_unused, i) => {
+            const angle = (i / shardCount) * 360;
+            const radius = 18 + fxLvl * 5 + rr('ult-rad', i, 0, 12);
+            const x = Math.cos(angle * Math.PI / 180) * radius;
+            const y = Math.sin(angle * Math.PI / 180) * radius;
+            return (
+              <svg
+                key={`ice-ult-shard-${i}`}
+                width="16"
+                height="22"
+                viewBox="0 0 20 24"
+                style={{
+                  position: 'absolute',
+                  right: `calc(${T.right} + ${x}px)`,
+                  top: `calc(${T.top} + ${y}px)`,
+                  opacity: 0,
+                  transformOrigin: 'center center',
+                  transform: `rotate(${angle + rr('ult-rot', i, -20, 20)}deg)`,
+                  filter: `drop-shadow(0 0 4px rgba(186,230,253,0.9))`,
+                  animation: `sparkle ${0.52 + rr('ult-anim', i, 0, 0.2)}s ease ${D + 0.12 + i * 0.018}s both`,
+                }}
+              >
+                <path d={SHARD} fill="rgba(224,242,254,0.88)" />
+              </svg>
+            );
+          })}
+        </>
+      }
+    />
   );
 }

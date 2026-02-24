@@ -197,6 +197,30 @@ test('resolveEnemyAssistStrike applies cap and effectiveness', () => {
   });
 });
 
+test('resolvePlayerStrike returns masteryBoost when collectionDamageScale > 1', () => {
+  withMockRandom(0, () => {
+    const withBoost = resolvePlayerStrike({
+      move: { basePower: 20, growth: 2, type: 'fire' },
+      enemy: { trait: 'normal', mType: 'grass' },
+      moveIdx: 0, moveLvl: 3, didLevel: false,
+      streak: 0, stageBonus: 0, cursed: false,
+      playerHp: 100, bossPhase: 0,
+      collectionDamageScale: 1.05,
+    });
+    assert.deepStrictEqual(withBoost.masteryBoost, { damageType: 'fire', bonusPct: 5 });
+
+    const noBoost = resolvePlayerStrike({
+      move: { basePower: 20, growth: 2, type: 'fire' },
+      enemy: { trait: 'normal', mType: 'grass' },
+      moveIdx: 0, moveLvl: 3, didLevel: false,
+      streak: 0, stageBonus: 0, cursed: false,
+      playerHp: 100, bossPhase: 0,
+      collectionDamageScale: 1,
+    });
+    assert.equal(noBoost.masteryBoost, undefined);
+  });
+});
+
 test('resolveEnemyPrimaryStrike applies shared crit model for non-berserk and berserk floor', () => {
   withMockRandom(0, () => {
     const normalNoCrit = resolveEnemyPrimaryStrike({

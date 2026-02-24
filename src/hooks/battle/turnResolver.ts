@@ -131,6 +131,7 @@ type PlayerStrikeResult = {
   critMultiplier: number;
   antiCritRate: number;
   antiCritDamage: number;
+  masteryBoost?: { damageType: string; bonusPct: number };
 };
 
 type RiskySelfDamageParams = {
@@ -462,6 +463,10 @@ export function resolvePlayerStrike({
   });
   dmg = Math.max(0, Math.round(dmg * crit.critScale));
 
+  const masteryBoost = clampedCollectionScale > 1
+    ? { damageType: move.type ?? 'all', bonusPct: Math.round((clampedCollectionScale - 1) * 100) }
+    : undefined;
+
   return {
     pow,
     eff,
@@ -474,6 +479,7 @@ export function resolvePlayerStrike({
     critMultiplier: crit.critMultiplier,
     antiCritRate: crit.antiCritRate,
     antiCritDamage: crit.antiCritDamage,
+    masteryBoost,
   };
 }
 

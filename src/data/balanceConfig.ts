@@ -444,6 +444,10 @@ export const BALANCE_CONFIG = {
     /** Damage multiplier when link bonus is active */
     linkDamageMult: 1.3,
   },
+  hint: {
+    /** XP cost per hint step revealed */
+    costPerStep: 20,
+  },
 } as const;
 
 validateBalanceConfigSchema(BALANCE_CONFIG);

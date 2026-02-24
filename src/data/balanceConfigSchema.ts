@@ -145,6 +145,8 @@ export function validateBalanceConfigSchema(config: unknown): void {
   checkNumber(config, 'coop.linkStreak', issues, { min: 1, max: 10 });
   checkNumber(config, 'coop.linkDamageMult', issues, { min: 1, max: 3 });
 
+  checkNumber(config, 'hint.costPerStep', issues, { min: 1, max: 100 });
+
   if (issues.length > 0) {
     const message = [
       '[balance-config] Invalid BALANCE_CONFIG detected:',

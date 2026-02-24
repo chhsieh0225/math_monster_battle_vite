@@ -132,6 +132,7 @@ function createTestContext(stateOverrides = {}) {
       calls.pendingTextActionSet += 1;
     },
     handlePlayerPartyKo: (args) => { calls.ko.push(args); return 'handled'; },
+    setConsecutiveWrong: () => {},
   };
 
   return {

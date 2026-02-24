@@ -81,6 +81,7 @@ type BattleRuntimeState = {
   bossCharging: boolean;
   shadowShieldCD: number;
   furyRegenUsed: boolean;
+  consecutiveWrong?: number;
   eHp: number;
   burnStack: number;
   shattered: boolean;
@@ -173,6 +174,7 @@ type RunPlayerAnswerArgs = {
   setCursed: BoolSetter;
   setShadowShieldCD: NumberSetter;
   setFuryRegenUsed: BoolSetter;
+  setConsecutiveWrong?: NumberSetter;
   _endSession: (completed: boolean, reasonOverride?: string | null) => void;
   setScreen: (screen: string) => void;
   setBText: TextSetter;
@@ -362,6 +364,7 @@ export function runPlayerAnswer({
   setCursed,
   setShadowShieldCD,
   setFuryRegenUsed,
+  setConsecutiveWrong,
   _endSession,
   setScreen,
   setBText,

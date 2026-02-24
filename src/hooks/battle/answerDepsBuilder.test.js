@@ -69,6 +69,7 @@ test('buildPlayerAnswerHandlerDeps maps battle/ui/runtime/callback sources corre
     'setSpecDef', 'setMLvls', 'setMLvlUp', 'setMHits', 'setBossCharging',
     'setBurnStack', 'setPHp', 'setPHpSub', 'setFrozen', 'setShattered',
     'setStaticStack', 'setEHp', 'setCursed', 'setShadowShieldCD', 'setFuryRegenUsed',
+    'setConsecutiveWrong',
   ]);
   const callbacks = {
     ...makeFnMap([

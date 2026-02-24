@@ -1,0 +1,15 @@
+export const TYPE_EMOJI: Record<string, string> = {
+  fire: '🔥',
+  water: '💧',
+  electric: '⚡',
+  grass: '🌿',
+  steel: '🗡️',
+  ice: '❄️',
+  light: '☀️',
+  dark: '🌑',
+  ghost: '👻',
+  rock: '🪨',
+  poison: '☠️',
+  dream: '💭',
+  all: '⭐',
+};

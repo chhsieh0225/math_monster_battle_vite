@@ -1,5 +1,6 @@
 import { getStarterStageIdx } from '../../utils/playerHp.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
+import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { fxt } from './battleFxTargets.ts';
 import { isBattleActiveState, scheduleIfBattleActive, tryReturnToMenu } from './menuResetGuard.ts';
 import type { StarterVm } from '../../types/battle';
@@ -78,6 +79,7 @@ type RunCoopAllySupportTurnArgs = {
   delayMs?: number;
   onDone?: () => void;
   t?: Translator;
+  linkActive?: boolean;
 };
 
 type FxTargetKey = 'enemyMain' | 'playerSub';
@@ -104,6 +106,7 @@ type BuildCoopSupportTurnPlanArgs = {
   state: BattleState;
   rand: RandomFn;
   t?: Translator;
+  linkActive?: boolean;
 };
 
 function formatFallback(template: string, params?: TranslatorParams): string {
@@ -150,6 +153,7 @@ export function buildCoopAllySupportTurnPlan({
   state,
   rand,
   t,
+  linkActive,
 }: BuildCoopSupportTurnPlanArgs): CoopSupportTurnPlan | null {
   if (
     !isCoopBattleMode(state.battleMode)
@@ -160,9 +164,18 @@ export function buildCoopAllySupportTurnPlan({
 
   const base = 16 + Math.max(0, (state.pLvl || 1) - 1) * 2;
   const rawDmg = Math.min(28, Math.max(6, Math.round(base * (0.85 + rand() * 0.3))));
-  const damage = applyBossDamageReduction(rawDmg, state.enemy?.id);
+  const linkMult = linkActive ? BALANCE_CONFIG.coop.linkDamageMult : 1;
+  const boostedDmg = Math.round(rawDmg * linkMult);
+  const damage = applyBossDamageReduction(boostedDmg, state.enemy?.id);
   const nextEnemyHp = Math.max(0, (state.eHp || 0) - damage);
-  const effects: CoopSupportTurnEffect[] = [
+  const effects: CoopSupportTurnEffect[] = [];
+  if (linkActive) {
+    effects.push({
+      kind: 'set_text',
+      text: tr(t, 'battle.coop.linkAttack', '🔗 連結攻擊！傷害 +30%'),
+    });
+  }
+  effects.push(
     {
       kind: 'set_text',
       text: tr(t, 'battle.coop.supportAttack', '🤝 {name} launches a support attack!', {
@@ -176,7 +189,7 @@ export function buildCoopAllySupportTurnPlan({
     { kind: 'particle_arc', emoji: 'starter', from: 'playerSub', to: 'enemyMain', count: 3 },
     { kind: 'play_move_sfx', moveType: 'water', moveIdx: 1, fallbackName: 'water' },
     { kind: 'schedule_clear_enemy_anim', delayMs: 450 },
-  ];
+  );
   if (nextEnemyHp <= 0) {
     effects.push({
       kind: 'schedule_victory',
@@ -357,6 +370,7 @@ export function runCoopAllySupportTurn({
   delayMs = 850,
   onDone,
   t,
+  linkActive,
 }: RunCoopAllySupportTurnArgs): boolean {
   const state = sr.current;
   if (!isBattleActiveState(state)) return false;
@@ -366,7 +380,7 @@ export function runCoopAllySupportTurn({
     || (state.pHpSub || 0) <= 0
     || !state.enemy
   ) return false;
-  if (!chance(0.45)) return false;
+  if (!linkActive && !chance(0.45)) return false;
   const safeToIfBattleActive = (fn: () => void, ms: number): void => (
     scheduleIfBattleActive(safeTo, () => sr.current, fn, ms)
   );
@@ -377,6 +391,7 @@ export function runCoopAllySupportTurn({
       state: s2,
       rand,
       t,
+      linkActive,
     });
     if (!plan) {
       if (onDone) onDone();

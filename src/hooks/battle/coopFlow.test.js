@@ -275,3 +275,92 @@ test('runCoopAllySupportTurn ignores stale callback after battle ended', () => {
   assert.equal(onDoneCalls, 0);
   assert.equal(sr.current.eHp, 18);
 });
+
+test('buildCoopAllySupportTurnPlan applies link damage multiplier when linkActive', () => {
+  const base = buildCoopAllySupportTurnPlan({
+    state: {
+      battleMode: "coop",
+      allySub: { name: "火狐" },
+      pHpSub: 20,
+      enemy: { id: "slime", name: "史萊姆" },
+      pLvl: 1,
+      eHp: 100,
+    },
+    rand: () => 0,
+  });
+  const linked = buildCoopAllySupportTurnPlan({
+    state: {
+      battleMode: "coop",
+      allySub: { name: "火狐" },
+      pHpSub: 20,
+      enemy: { id: "slime", name: "史萊姆" },
+      pLvl: 1,
+      eHp: 100,
+    },
+    rand: () => 0,
+    linkActive: true,
+  });
+
+  assert.ok(base);
+  assert.ok(linked);
+  assert.ok(linked.damage > base.damage, `linked ${linked.damage} should be > base ${base.damage}`);
+  assert.ok(linked.effects.some((e) => e.kind === 'set_text' && e.text?.includes('🔗')));
+});
+
+test('runCoopAllySupportTurn skips chance gate when linkActive', () => {
+  const sr = {
+    current: {
+      battleMode: "coop",
+      allySub: { name: "火狐" },
+      pHpSub: 20,
+      enemy: { name: "史萊姆" },
+      pLvl: 1,
+      eHp: 100,
+    },
+  };
+  const out = runCoopAllySupportTurn({
+    sr,
+    safeTo: (fn) => fn(),
+    chance: () => false,
+    rand: () => 0,
+    setBText: () => {},
+    setPhase: () => {},
+    setEAnim: () => {},
+    setEHp: (hp) => { sr.current.eHp = hp; },
+    addD: () => {},
+    addP: () => {},
+    sfx: { play: () => {} },
+    handleVictory: () => {},
+    linkActive: true,
+  });
+  assert.equal(out, true, 'linkActive should bypass chance gate');
+  assert.ok(sr.current.eHp < 100, 'damage should have been applied');
+});
+
+test('runCoopAllySupportTurn respects chance gate when linkActive is false', () => {
+  const sr = {
+    current: {
+      battleMode: "coop",
+      allySub: { name: "火狐" },
+      pHpSub: 20,
+      enemy: { name: "史萊姆" },
+      pLvl: 1,
+      eHp: 100,
+    },
+  };
+  const out = runCoopAllySupportTurn({
+    sr,
+    safeTo: (fn) => fn(),
+    chance: () => false,
+    rand: () => 0,
+    setBText: () => {},
+    setPhase: () => {},
+    setEAnim: () => {},
+    setEHp: () => {},
+    addD: () => {},
+    addP: () => {},
+    sfx: { play: () => {} },
+    handleVictory: () => {},
+  });
+  assert.equal(out, false, 'should be blocked by chance gate');
+});

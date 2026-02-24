@@ -861,6 +861,7 @@ const zhTW = {
   "narrative.preBoss": "📖 黑暗的氣息... 最後的強敵就在前方，準備迎接挑戰！",
   "narrative.victory": "🎊 恭喜！你的數學之力拯救了大陸！",
   "narrative.defeat": "📖 冒險暫時告一段落... 繼續練習，下次一定能走更遠！",
+  "battle.mastery.boost": "{emoji}精通 +{pct}%",
 } as const;
 
 export default zhTW;

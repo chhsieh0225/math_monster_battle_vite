@@ -861,6 +861,7 @@ const enUS = {
   "narrative.preBoss": "📖 A dark presence looms... The ultimate challenge awaits!",
   "narrative.victory": "🎊 Congratulations! Your math power has saved the realm!",
   "narrative.defeat": "📖 The adventure ends for now... Keep practicing, you'll go further next time!",
+  "battle.mastery.boost": "{emoji}Mastery +{pct}%",
 } as const;
 
 export default enUS;

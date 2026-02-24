@@ -93,6 +93,11 @@ type BattleQuestionPanelProps = {
   timerSubscribe?: TimerSubscribe;
   getTimerSnapshot?: () => number;
   onAnswer: (choice: number) => void;
+  hintsRevealed: number;
+  hintSteps: string[];
+  hintCost: number;
+  currentXp: number;
+  onRequestHint: () => void;
 };
 
 export const BattleQuestionPanel = memo(function BattleQuestionPanel({
@@ -108,6 +113,11 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
   timerSubscribe,
   getTimerSnapshot,
   onAnswer,
+  hintsRevealed,
+  hintSteps,
+  hintCost,
+  currentXp,
+  onRequestHint,
 }: BattleQuestionPanelProps) {
   const answerLabel = question.answerLabel ?? feedback?.answer ?? '?';
   const answerUsesFraction = typeof answerLabel === 'string' && answerLabel.includes('/');
@@ -144,6 +154,33 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
           {!hideEqualPrompt ? ' = ?' : ''}
         </div>
       </div>
+
+      {!answered && hintSteps.length > 0 && (
+        <div className="battle-hint-section">
+          {hintsRevealed > 0 && (
+            <div className="battle-hint-steps">
+              {hintSteps.slice(0, hintsRevealed).map((step: string, i: number) => (
+                <div key={i} className="battle-hint-step-row">
+                  <span className="battle-hint-step-index">
+                    {t('battle.hint.step', 'Step {index}.', { index: i + 1 })}
+                  </span>
+                  {renderMathText(step)}
+                </div>
+              ))}
+            </div>
+          )}
+          {hintsRevealed < hintSteps.length && (
+            <button
+              className="battle-hint-btn"
+              onClick={onRequestHint}
+              disabled={currentXp < hintCost}
+              title={currentXp < hintCost ? t('battle.hint.noXp', 'Not enough XP') : ''}
+            >
+              {t('battle.hint.button', '💡 Hint (-{cost} XP)', { cost: hintCost })}
+            </button>
+          )}
+        </div>
+      )}
 
       {feedback && (
         <div className={`battle-feedback ${feedback.correct ? 'is-correct' : 'is-wrong'}`}>

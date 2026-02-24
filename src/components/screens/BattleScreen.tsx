@@ -7,6 +7,7 @@ import { SCENES } from '../../data/scenes';
 import { BG_IMGS_LOW } from '../../data/sprites.ts';
 import { PVP_BALANCE } from '../../data/pvpBalance';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
+import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import TextBox from '../ui/TextBox';
 import type {
   ScreenName,
@@ -1008,6 +1009,11 @@ function BattleScreenComponent({
             timerSubscribe={V.timerSubscribe}
             getTimerSnapshot={V.getTimerLeft}
             onAnswer={A.onAns}
+            hintsRevealed={S.hintsRevealed}
+            hintSteps={question.steps || []}
+            hintCost={BALANCE_CONFIG.hint.costPerStep}
+            currentXp={S.pExp}
+            onRequestHint={A.requestHint}
           />
         )}
 

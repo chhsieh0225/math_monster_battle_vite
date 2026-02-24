@@ -1036,7 +1036,7 @@ export function useBattle() {
     handleVictory,
     t,
   });
-  const runAllySupportTurnImpl = useCallback(({ delayMs = 850, onDone }: { delayMs?: number; onDone?: () => void } = {}) => {
+  const runAllySupportTurnImpl = useCallback(({ delayMs = 850, onDone, linkActive }: { delayMs?: number; onDone?: () => void; linkActive?: boolean } = {}) => {
     const ctx = runAllySupportTurnContextRef.current;
     return runAllySupportTurnWithContext({
       sr: ctx.sr,
@@ -1052,7 +1052,7 @@ export function useBattle() {
       sfx,
       handleVictory: ctx.handleVictory,
       t: ctx.t,
-    }, { delayMs, onDone });
+    }, { delayMs, onDone, linkActive });
   }, [runAllySupportTurnContextRef]);
   const runAllySupportTurn = useStableCallback(runAllySupportTurnImpl);
 

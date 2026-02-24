@@ -26,8 +26,8 @@ type RunAllySupportTurnControllerFn = (
 
 type RunPlayerPartyKoBaseArgs = Omit<RunPlayerPartyKoControllerArgs, 'target' | 'reason'>;
 type RunPlayerPartyKoOptions = Pick<RunPlayerPartyKoControllerArgs, 'target' | 'reason'>;
-type RunAllySupportTurnBaseArgs = Omit<RunAllySupportTurnControllerArgs, 'delayMs' | 'onDone'>;
-type RunAllySupportTurnOptions = Pick<RunAllySupportTurnControllerArgs, 'delayMs' | 'onDone'>;
+type RunAllySupportTurnBaseArgs = Omit<RunAllySupportTurnControllerArgs, 'delayMs' | 'onDone' | 'linkActive'>;
+type RunAllySupportTurnOptions = Pick<RunAllySupportTurnControllerArgs, 'delayMs' | 'onDone' | 'linkActive'>;
 
 export function runQuitGameWithContext(
   args: RunQuitGameControllerArgs,
@@ -71,5 +71,6 @@ export function runAllySupportTurnWithContext(
     ...base,
     delayMs: options.delayMs,
     onDone: options.onDone,
+    linkActive: options.linkActive,
   });
 }

@@ -19,6 +19,7 @@ import { fxt } from './battleFxTargets.ts';
 import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
 import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
 import { TYPE_EMOJI } from '../../data/elementEmoji.ts';
+import { isCoopBattleMode } from './coopFlow.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -125,7 +126,7 @@ type KoTarget = 'main' | 'sub';
 
 type PlayerPartyKoHandler = (args: { target: KoTarget; reason: string }) => unknown;
 
-type AllySupportTurnRunner = (args: { delayMs: number; onDone: () => void }) => boolean;
+type AllySupportTurnRunner = (args: { delayMs: number; onDone: () => void; linkActive?: boolean }) => boolean;
 
 type RunPlayerAnswerArgs = {
   correct: boolean;
@@ -199,6 +200,7 @@ export type PostHitResolutionPlan = {
   unlockOneHit: boolean;
   continueRoute: PostHitContinueRoute | null;
   tryAllySupport: boolean;
+  linkActive: boolean;
 };
 
 type BuildPostHitResolutionPlanArgs = {
@@ -208,6 +210,8 @@ type BuildPostHitResolutionPlanArgs = {
   nextDelayMs: number;
   willFreeze: boolean;
   hasAllySupportRunner: boolean;
+  streak: number;
+  isCoopMode: boolean;
 };
 
 type ApplyPostHitResolutionPlanArgs = {
@@ -267,6 +271,8 @@ export function buildPostHitResolutionPlan({
   nextDelayMs,
   willFreeze,
   hasAllySupportRunner,
+  streak,
+  isCoopMode,
 }: BuildPostHitResolutionPlanArgs): PostHitResolutionPlan {
   const isEnemyDefeated = enemyHpAfterHit <= 0;
   return {
@@ -275,6 +281,7 @@ export function buildPostHitResolutionPlan({
     unlockOneHit: isEnemyDefeated && appliedHitDmg >= enemyMaxHp,
     continueRoute: isEnemyDefeated ? null : (willFreeze ? 'freeze' : 'enemy'),
     tryAllySupport: !isEnemyDefeated && hasAllySupportRunner,
+    linkActive: isCoopMode && streak >= BALANCE_CONFIG.coop.linkStreak,
   };
 }
 
@@ -305,6 +312,7 @@ function applyPostHitResolutionPlan({
     && runAllySupportTurn({
       delayMs: plan.nextDelayMs,
       onDone: continueAfterTurn,
+      linkActive: plan.linkActive,
     })
   ) {
     return;
@@ -792,6 +800,8 @@ export function runPlayerAnswer({
             nextDelayMs: effectTimeline.nextDelay,
             willFreeze,
             hasAllySupportRunner: Boolean(runAllySupportTurn),
+            streak: ns,
+            isCoopMode: isCoopBattleMode(s3.battleMode),
           });
           applyPostHitResolutionPlan({
             plan: postHitPlan,

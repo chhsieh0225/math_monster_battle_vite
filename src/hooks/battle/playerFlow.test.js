@@ -158,6 +158,8 @@ test('buildPostHitResolutionPlan returns victory plan and one-hit unlock on leth
     nextDelayMs: 1100,
     willFreeze: false,
     hasAllySupportRunner: true,
+    streak: 0,
+    isCoopMode: false,
   });
 
   assert.equal(plan.kind, 'victory');
@@ -174,6 +176,8 @@ test('buildPostHitResolutionPlan keeps continue route and ally-support intent wh
     nextDelayMs: 900,
     willFreeze: true,
     hasAllySupportRunner: true,
+    streak: 0,
+    isCoopMode: false,
   });
 
   assert.equal(plan.kind, 'continue');
@@ -190,6 +194,8 @@ test('buildPostHitResolutionPlan does not request ally support when no support r
     nextDelayMs: 700,
     willFreeze: false,
     hasAllySupportRunner: false,
+    streak: 0,
+    isCoopMode: false,
   });
 
   assert.equal(plan.kind, 'continue');

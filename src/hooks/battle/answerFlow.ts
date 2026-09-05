@@ -1,6 +1,7 @@
 import { isCoopBattleMode } from './coopFlow.ts';
 import { handlePvpAnswer } from './pvpFlow.ts';
 import { runPlayerAnswer } from './playerFlow.ts';
+import type { LearningQuestion } from '../../utils/learningProgress.ts';
 
 type MoveLite = {
   name: string;
@@ -19,7 +20,7 @@ type StarterLite = {
   [key: string]: unknown;
 };
 
-type BattleQuestion = {
+type BattleQuestion = LearningQuestion & {
   answer?: number;
   op?: string;
   display?: string;
@@ -56,7 +57,7 @@ type LogSubmittedAnswerArgs = {
   move: MoveLite;
   logAns: (question: BattleQuestion | null | undefined, isCorrect: boolean) => number;
   appendSessionEvent: (name: string, payload: Record<string, unknown>) => void;
-  updateAbility: (op: string | undefined, correct: boolean) => void;
+  updateAbility: (op: string | undefined, correct: boolean, question?: LearningQuestion | null) => void;
   markCoopRotatePending: () => void;
   correct: boolean;
 };
@@ -78,7 +79,7 @@ type RunStandardAnswerFlowArgs = {
   getActingStarter: (state: BattleState) => StarterLite | null;
   logAns: (question: BattleQuestion | null | undefined, isCorrect: boolean) => number;
   appendSessionEvent: (name: string, payload: Record<string, unknown>) => void;
-  updateAbility: (op: string | undefined, correct: boolean) => void;
+  updateAbility: (op: string | undefined, correct: boolean, question?: LearningQuestion | null) => void;
   markCoopRotatePending: () => void;
   handlers: StandardAnswerHandlers;
 };
@@ -139,9 +140,13 @@ export function logSubmittedAnswer({
     timedMode: !!state.timedMode,
     diffLevel: state.diffLevel ?? null,
     round: state.round ?? 0,
+    hintsUsed: state.q?.hintsUsed || 0,
+    assisted: (state.q?.hintsUsed || 0) > 0,
+    learningSkillKey: state.q?.learning?.skillKey ?? null,
+    recovery: state.q?.learning?.isRecovery ?? false,
   });
 
-  updateAbility(state.q?.op, correct);
+  updateAbility(state.q?.op, correct, state.q);
 
   if (isCoopBattleMode(state.battleMode)) {
     markCoopRotatePending();

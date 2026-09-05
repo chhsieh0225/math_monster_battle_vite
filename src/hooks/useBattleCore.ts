@@ -32,6 +32,7 @@ import type {
 } from '../types/battle';
 
 import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
+import { isSoloLearningMode, getLearningHintSteps, getLearningHintCost } from '../utils/learningProgress.ts';
 import { SCENE_NAMES } from '../data/scenes';
 import {
   MAX_MOVE_LVL,
@@ -296,9 +297,19 @@ export function useBattle() {
     abilityModelRef,
     updateAbility: _updateAbility,
     getMoveDiffLevel: _getMoveDiffLevel,
+    prepareLearningQuestion,
   } = useBattleAbilityModel({
     baselineLevel: 2,
     onLevelChange: setDiffLevel,
+    persistent: isSoloLearningMode(battleMode, timedMode, hasChallengeRun),
+    onRecovered: () => {
+      setEffMsg({ text: t('battle.learning.recovered', 'Solved independently!'), color: '#22c55e' });
+      safeTo(() => setEffMsg(null), 1500);
+    },
+    onStorageError: () => {
+      setEffMsg({ text: t('battle.learning.storageError', 'Learning progress could not be saved on this device.'), color: '#f59e0b' });
+      safeTo(() => setEffMsg(null), 2500);
+    },
   });
 
   const getActingStarter = resolveActingStarter;
@@ -368,7 +379,7 @@ export function useBattle() {
   } = useChallengeBattleModifiers({ dailyPlan, towerPlan, round, battleMode });
 
 
-  const genBattleQuestion = useGenBattleQuestion({ rand, recentQuestionDisplaysRef });
+  const genBattleQuestion = useGenBattleQuestion({ rand, recentQuestionDisplaysRef, prepareLearningQuestion });
 
   // ──── Safe timeout (cancelled on async-gate change or unmount) ────
   const { safeTo, invalidateAsyncWork } = useBattleAsyncGate();
@@ -851,17 +862,24 @@ export function useBattle() {
     sr,
     uiRef,
     battleFieldSettersRef,
+    t,
   });
   const requestHintImpl = useCallback(() => {
     const ctx = requestHintContextRef.current;
     const s = ctx.sr.current;
-    const cost = BALANCE_CONFIG.hint.costPerStep;
-    if ((s.pExp || 0) < cost) return;
-    const steps = s.q?.steps;
-    if (!Array.isArray(steps) || steps.length === 0) return;
+    if (s.phase !== 'question' || ctx.uiRef.current.answered || !s.q) return;
     const revealed = ctx.uiRef.current.hintsRevealed;
+    const steps = getLearningHintSteps(s.q, ctx.t);
     if (revealed >= steps.length) return;
-    ctx.battleFieldSettersRef.current.setPExp((s.pExp || 0) - cost);
+    const cost = getLearningHintCost(s.q, revealed, BALANCE_CONFIG.hint.costPerStep);
+    if ((s.pExp || 0) < cost) return;
+    const question = { ...s.q, hintsUsed: revealed + 1 };
+    const nextXp = (s.pExp || 0) - cost;
+    // Keep immediate hint/answer clicks consistent before React commits.
+    ctx.sr.current = { ...s, q: question, pExp: nextXp };
+    ctx.uiRef.current = { ...ctx.uiRef.current, hintsRevealed: revealed + 1 };
+    ctx.uiRef.current.setQ(question);
+    if (cost > 0) ctx.battleFieldSettersRef.current.setPExp(nextXp);
     ctx.uiRef.current.setHintsRevealed(revealed + 1);
   }, [requestHintContextRef]);
   const requestHint = useStableCallback(requestHintImpl);

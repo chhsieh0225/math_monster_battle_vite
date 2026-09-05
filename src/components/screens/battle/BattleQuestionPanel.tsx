@@ -149,6 +149,11 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
           />
         )}
         <div className="battle-question-type">{questionTypeLabel}</div>
+        {question.learning?.isRecovery && (
+          <div className="battle-learning-retry" role="status">
+            {t('battle.learning.retry', 'Fresh practice: try this one without hints')}
+          </div>
+        )}
         <div className="question-expression battle-question-expression">
           {renderMathText(question.display)}
           {!hideEqualPrompt ? ' = ?' : ''}
@@ -176,7 +181,9 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
               disabled={currentXp < hintCost}
               title={currentXp < hintCost ? t('battle.hint.noXp', 'Not enough XP') : ''}
             >
-              {t('battle.hint.button', '💡 Hint (-{cost} XP)', { cost: hintCost })}
+              {hintCost === 0
+                ? t('battle.learning.freeHint', 'First hint is free')
+                : t('battle.hint.button', '💡 Hint (-{cost} XP)', { cost: hintCost })}
             </button>
           )}
         </div>

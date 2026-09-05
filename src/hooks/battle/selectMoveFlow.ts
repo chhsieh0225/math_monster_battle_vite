@@ -122,7 +122,6 @@ export function runSelectMoveFlow({
 
   const lv = getMoveDiffLevel(move);
   const diffMod = diffMods[lv] ?? diffMods[2];
-  setDiffLevel(lv);
   const consecutiveWrong = (state as { consecutiveWrong?: number }).consecutiveWrong ?? 0;
   const adjustedDiffMod = consecutiveWrong >= ENCOURAGE_THRESHOLD
     ? diffMod * WRONG_STREAK_DIFF_DEBUFF
@@ -130,7 +129,10 @@ export function runSelectMoveFlow({
   const allowedOps = Array.isArray(questionAllowedOps) && questionAllowedOps.length > 0
     ? questionAllowedOps
     : undefined;
-  setQ(genQuestion(move, adjustedDiffMod, { t, allowedOps }));
+  const question = genQuestion(move, adjustedDiffMod, { t, allowedOps });
+  if (!question) return false;
+  setDiffLevel(question.learning?.level ?? lv);
+  setQ(question);
   setFb(null);
   setAnswered(false);
   setHintsRevealed(0);

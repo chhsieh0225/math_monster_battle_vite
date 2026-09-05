@@ -1,5 +1,6 @@
 import { readJson, readText, removeKey, writeJson, writeText } from './storage.ts';
 import { randomToken } from './prng.ts';
+import type { LearningQuestionMeta } from './learningProgress.ts';
 
 /**
  * sessionLogger.ts — Per-session learning analytics persistence.
@@ -38,6 +39,10 @@ export type SessionAnswer = {
   correct: boolean;
   op: string;
   timeMs: number;
+  hintsUsed?: number;
+  assisted?: boolean;
+  learningSkillKey?: string | null;
+  recovery?: boolean;
 };
 
 export type SessionLog = {
@@ -69,6 +74,8 @@ type SessionQuestion = {
   op?: string;
   display?: unknown;
   answer?: unknown;
+  hintsUsed?: number;
+  learning?: LearningQuestionMeta;
 } | null | undefined;
 
 export type SessionFinalizeStats = {
@@ -196,6 +203,10 @@ export function logAnswer(
       correct: isCorrect,
       op,
       timeMs,
+      hintsUsed: question.hintsUsed || 0,
+      assisted: (question.hintsUsed || 0) > 0,
+      learningSkillKey: question.learning?.skillKey ?? null,
+      recovery: question.learning?.isRecovery ?? false,
     });
   }
 

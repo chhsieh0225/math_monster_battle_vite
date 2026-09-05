@@ -4,6 +4,22 @@ import { runSelectMoveFlow } from './selectMoveFlow.ts';
 
 const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3];
 
+test('move selection reports the level used by persistent question generation', () => {
+  const q = { learning: { level: 4 } };
+  const { calls, args } = createDeps({ genQuestion: () => q });
+  assert.equal(runSelectMoveFlow(args), true);
+  assert.deepEqual(calls.setDiffLevel, [4]);
+  assert.deepEqual(calls.setQ, [q]);
+  assert.deepEqual(calls.setHintsRevealed, [0]);
+});
+
+test('failed generation does not enter an empty question screen or start a timer', () => {
+  const { calls, args } = createDeps({ genQuestion: () => null, timedMode: true });
+  assert.equal(runSelectMoveFlow(args), false);
+  assert.deepEqual(calls.setPhase, []);
+  assert.equal(calls.startTimer, 0);
+});
+
 function createDeps(overrides = {}) {
   const calls = {
     sfx: [],

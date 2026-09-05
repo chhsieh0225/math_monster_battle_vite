@@ -146,11 +146,12 @@ export function deduplicateQuestion<T extends { display: string }>(args: {
   historyMap: Map<string, string[]>;
   historyKey: string;
   dedupWindow: number;
+  excludeDisplays?: readonly string[];
 }): T {
-  const { generate, historyMap, historyKey, dedupWindow } = args;
+  const { generate, historyMap, historyKey, dedupWindow, excludeDisplays = [] } = args;
 
   // No dedup requested — generate once, return immediately.
-  if (dedupWindow <= 0) {
+  if (dedupWindow <= 0 && excludeDisplays.length === 0) {
     return generate();
   }
 
@@ -160,14 +161,14 @@ export function deduplicateQuestion<T extends { display: string }>(args: {
   let result = generate();
 
   for (let i = 0; i < maxRetries; i++) {
-    if (!history.includes(result.display)) break;
+    if (!history.includes(result.display) && !excludeDisplays.includes(result.display)) break;
     result = generate();
   }
 
   const trimmed = (result.display ?? '').trim();
 
   // Only record non-empty, non-duplicate displays.
-  if (trimmed.length > 0 && !history.includes(result.display)) {
+  if (trimmed.length > 0 && !history.includes(result.display) && !excludeDisplays.includes(result.display)) {
     const updated = [...history, result.display];
     // Trim ring buffer to window size.
     while (updated.length > dedupWindow) {

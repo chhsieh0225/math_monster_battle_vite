@@ -7,6 +7,27 @@ import {
   tryHandlePvpAnswer,
 } from './answerFlow.ts';
 
+test('answer flow forwards hint and recovery metadata to learning and telemetry', () => {
+  const q = { op: '+', answer: 3, display: '1 + 2', hintsUsed: 1,
+    learning: { skillKey: '+:1:10', isRecovery: true } };
+  let loggedQuestion;
+  let learnedQuestion;
+  let event;
+  logSubmittedAnswer({
+    state: { battleMode: 'single', q, selIdx: 0 }, choice: 3, move: {}, correct: true,
+    logAns: (question) => { loggedQuestion = question; return 200; },
+    appendSessionEvent: (_name, payload) => { event = payload; },
+    updateAbility: (_op, _correct, question) => { learnedQuestion = question; },
+    markCoopRotatePending: () => assert.fail('solo should not rotate'),
+  });
+  assert.equal(loggedQuestion, q);
+  assert.equal(learnedQuestion, q);
+  assert.equal(event.assisted, true);
+  assert.equal(event.hintsUsed, 1);
+  assert.equal(event.recovery, true);
+  assert.equal(event.learningSkillKey, '+:1:10');
+});
+
 test('buildAnswerContext resolves move/correctness and coop sub attacker', () => {
   const state = {
     battleMode: 'coop',

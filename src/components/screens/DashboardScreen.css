@@ -229,6 +229,8 @@
 .dash-streak{color:#f97316}
 
 .dash-note-list{margin-top:20px;font-size:0.625rem;opacity:.3;line-height:1.8}
+.dash-learning-note{margin-top:12px;font-size:0.75rem;opacity:1;color:#cbd5e1;text-align:left;line-height:1.65}
+.dash-learning-note>div+div{margin-top:6px}
 .dash-settings-row{display:flex;gap:8px;margin-bottom:6px}
 
 .dash-chart{

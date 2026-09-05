@@ -6,6 +6,7 @@ import type {
   StarterId,
 } from './game';
 import type { EnemyPersonality } from '../data/enemyPersonalities';
+import type { LearningQuestionMeta } from '../utils/learningProgress';
 import type {
   DailyChallengeFeedback,
   DailyChallengePlan,
@@ -123,6 +124,8 @@ export type QuestionVm = {
   choiceLabels?: string[];
   answerLabel?: string;
   steps?: string[];
+  hintsUsed?: number;
+  learning?: LearningQuestionMeta;
 };
 
 export type FeedbackVm = {

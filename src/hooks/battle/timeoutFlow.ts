@@ -10,6 +10,7 @@ type BattleQuestion = {
   steps?: string[];
   op?: string;
   display?: string;
+  hintsUsed?: number;
 };
 
 type BattleState = {
@@ -155,6 +156,8 @@ export function handleTimeoutFlow({
     selectedAnswer: null,
     expectedAnswer: s.q?.answer ?? null,
     answerTimeMs,
+    hintsUsed: s.q?.hintsUsed || 0,
+    assisted: (s.q?.hintsUsed || 0) > 0,
     op: s.q?.op ?? null,
     display: s.q?.display ?? null,
     moveIndex,

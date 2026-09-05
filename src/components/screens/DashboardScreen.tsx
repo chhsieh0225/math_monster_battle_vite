@@ -8,6 +8,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { loadSessions, clearSessions, loadPin, savePin } from '../../utils/sessionLogger.ts';
+import { loadLearningProgress, resetLearningProgress, summarizeLearningProgress } from '../../utils/learningProgress.ts';
+import type { LearningProgress } from '../../utils/learningProgress.ts';
 import { useI18n } from '../../i18n';
 import { localizeStarterDisplayName } from '../../utils/contentLocalization.ts';
 import './DashboardScreen.css';
@@ -205,12 +207,16 @@ export default function DashboardScreen({ onBack }: DashboardScreenProps) {
   const [unlocked, setUnlocked] = useState(false);
   const [tab, setTab] = useState<DashboardTab>('overview');
   const [sessions, setSessions] = useState<DashboardSession[]>(() => loadSessionsTyped());
+  const [learning, setLearning] = useState(() => loadLearningProgress());
   const [pinInput, setPinInput] = useState('');
   const [pinMsg, setPinMsg] = useState('');
 
   if (!unlocked) return <PINGate onUnlock={() => setUnlocked(true)} onBack={onBack} />;
 
-  const refresh = () => setSessions(loadSessionsTyped());
+  const refresh = () => {
+    setSessions(loadSessionsTyped());
+    setLearning(loadLearningProgress());
+  };
   const tabs: Array<{ key: DashboardTab; label: string }> = [
     { key: 'overview', label: `📈 ${t('dashboard.tab.overview', 'Overview')}` },
     { key: 'history', label: `📋 ${t('dashboard.tab.history', 'History')}` },
@@ -239,7 +245,7 @@ export default function DashboardScreen({ onBack }: DashboardScreenProps) {
         ))}
       </div>
 
-      {tab === 'overview' && <OverviewTab sessions={sessions} />}
+      {tab === 'overview' && <OverviewTab sessions={sessions} learning={learning} />}
       {tab === 'history' && <HistoryTab sessions={sessions} />}
       {tab === 'settings' && <SettingsTab pinInput={pinInput} setPinInput={setPinInput} pinMsg={pinMsg} setPinMsg={setPinMsg} sessions={sessions} refresh={refresh} />}
     </div>
@@ -251,9 +257,10 @@ export default function DashboardScreen({ onBack }: DashboardScreenProps) {
 // ═══════════════════════════════════════════════
 type OverviewTabProps = {
   sessions: DashboardSession[];
+  learning: LearningProgress;
 };
 
-function OverviewTab({ sessions }: OverviewTabProps) {
+function OverviewTab({ sessions, learning }: OverviewTabProps) {
   const { t } = useI18n();
   const translate = useCallback<DashboardTranslate>(
     (key, fallback, params) => t(key, fallback, params),
@@ -265,9 +272,23 @@ function OverviewTab({ sessions }: OverviewTabProps) {
   );
   const { overview: stats, weakSuggestions, weeklyReport, practiceTasks } = insights;
   const visibleOps = OPS_TYPED.filter((op) => stats.opData[op]?.attempted > 0 || CORE_OPS.includes(op));
+  const learningSummary = summarizeLearningProgress(learning);
 
   return (
     <div className="dash-full-width">
+      <SectionTitle text={t('dashboard.learning.title', 'Ongoing Solo Learning')} />
+      <div className="dash-grid-two">
+        <Card label={t('dashboard.learning.independent', 'Correct without hints')} value={learningSummary.independent} color="#22c55e" />
+        <Card label={t('dashboard.learning.assisted', 'Correct with hints')} value={learningSummary.assisted} color="#3b82f6" />
+        <Card label={t('dashboard.learning.recovered', 'Independent recoveries')} value={learningSummary.recovered} color="#14b8a6" />
+        <Card label={t('dashboard.learning.pending', 'Skills to revisit')} value={learningSummary.pending} color="#f59e0b" />
+      </div>
+      <div className="dash-note-list dash-learning-note">
+        <div>{t('dashboard.learning.scope', 'One shared profile on this device, for normal untimed solo adventures only. Earlier sessions are not imported.')}</div>
+        <div>{t('dashboard.learning.explain', 'Missed or assisted skills return after at least two other answers when a matching move is chosen. A fresh correct answer without hints clears the retry.')}</div>
+        <div>{t('dashboard.learning.levels', 'Difficulty is tracked separately by operation and number range. Four independent correct answers at a level unlock the next; these are practice signals, not a grade.')}</div>
+      </div>
+      <SectionTitle text={t('dashboard.learning.sessions', 'Completed Session Analytics')} />
       {/* Summary cards */}
       <div className="dash-grid-two">
         <Card label={t('dashboard.card.sessions', 'Total Sessions')} value={stats.totalSessions} color="#6366f1" />
@@ -484,6 +505,8 @@ type SettingsTabProps = {
 function SettingsTab({ pinInput, setPinInput, pinMsg, setPinMsg, sessions, refresh }: SettingsTabProps) {
   const { t } = useI18n();
   const [confirmClear, setConfirmClear] = useState(false);
+  const [confirmLearningReset, setConfirmLearningReset] = useState(false);
+  const [learningResetMsg, setLearningResetMsg] = useState('');
 
   const handlePinChange = () => {
     if (pinInput.length < 4) { setPinMsg(t('dashboard.pin.tooShort', 'PIN must be at least 4 digits')); return; }
@@ -497,6 +520,18 @@ function SettingsTab({ pinInput, setPinInput, pinMsg, setPinMsg, sessions, refre
     clearSessionsTyped();
     refresh();
     setConfirmClear(false);
+  };
+
+  const handleLearningReset = () => {
+    setLearningResetMsg('');
+    if (!confirmLearningReset) { setConfirmLearningReset(true); return; }
+    if (resetLearningProgress()) {
+      refresh();
+      setLearningResetMsg(t('dashboard.learning.resetDone', 'Solo learning progress reset. Session history was kept.'));
+    } else {
+      setLearningResetMsg(t('battle.learning.storageError', 'Learning progress could not be saved on this device.'));
+    }
+    setConfirmLearningReset(false);
   };
 
   return (
@@ -525,6 +560,16 @@ function SettingsTab({ pinInput, setPinInput, pinMsg, setPinMsg, sessions, refre
         {confirmClear ? t('dashboard.settings.clearConfirm', '⚠️ Confirm clear all records?') : t('dashboard.settings.clear', '🗑️ Clear all game records')}
       </button>
       {confirmClear && <button onClick={() => setConfirmClear(false)} aria-label={t('common.cancel', 'Cancel')} className="dash-btn-ghost dash-btn-cancel">{t('common.cancel', 'Cancel')}</button>}
+
+      <SectionTitle text={t('dashboard.learning.title', 'Ongoing Solo Learning')} />
+      <div className="dash-history-total">{t('dashboard.learning.resetNote', 'Reset difficulty and pending retries separately from session history. This affects everyone sharing this device.')}</div>
+      <button onClick={handleLearningReset} className="dash-btn-ghost dash-btn-danger">
+        {confirmLearningReset
+          ? t('dashboard.learning.resetConfirm', 'Confirm reset of solo learning progress?')
+          : t('dashboard.learning.reset', 'Reset solo learning progress')}
+      </button>
+      {confirmLearningReset && <button onClick={() => setConfirmLearningReset(false)} className="dash-btn-ghost dash-btn-cancel">{t('common.cancel', 'Cancel')}</button>}
+      {learningResetMsg && <div className="dash-history-total" role="status">{learningResetMsg}</div>}
 
       <div className="dash-note-list">
         <div>{t('dashboard.settings.note1', '• Game data is stored locally (localStorage)')}</div>

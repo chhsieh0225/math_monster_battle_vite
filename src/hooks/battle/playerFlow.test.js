@@ -151,6 +151,45 @@ function createTestContext(stateOverrides = {}) {
   };
 }
 
+for (const attackerSlot of ['main', 'sub']) {
+  test(`player lunge stays on ${attackerSlot} after a co-op slot change`, () => {
+    const queue = [];
+    const animations = [];
+    const { deps, state } = createTestContext({
+      battleMode: 'coop', coopActiveSlot: attackerSlot,
+      allySub: { name: 'Partner', type: 'water' },
+    });
+    runPlayerAnswer({
+      ...deps, attackerSlot, correct: true,
+      move: { name: 'Strike', basePower: 12, growth: 2, type: 'fire' },
+      starter: state.starter,
+      safeTo: (fn) => queue.push(fn),
+      setPAnim: (value, slot = 'main') => animations.push({ value, slot }),
+    });
+    state.coopActiveSlot = attackerSlot === 'sub' ? 'main' : 'sub';
+    queue.shift()();
+    assert.deepEqual(animations, [{ value: 'attackLunge 0.6s ease', slot: attackerSlot }]);
+    queue.shift()();
+    assert.deepEqual(animations.at(-1), { value: '', slot: attackerSlot });
+  });
+}
+
+test('sub attacker risky self-damage animates the same partner that loses HP', () => {
+  const animations = [];
+  const { deps, state, counters } = createTestContext({
+    battleMode: 'coop', allySub: { name: 'Partner', type: 'water' },
+  });
+  runPlayerAnswer({
+    ...deps, attackerSlot: 'sub', correct: false,
+    move: { name: 'Risky', basePower: 50, growth: 2, type: 'fire', risky: true },
+    starter: state.starter,
+    setPAnim: (value, slot = 'main') => animations.push({ value, slot }),
+  });
+  assert.equal(counters.pHp.calls.length, 0);
+  assert.ok(counters.pHpSub.calls.length > 0);
+  assert.ok(animations.some((event) => event.slot === 'sub' && event.value.startsWith('playerHit')));
+});
+
 test('buildPostHitResolutionPlan returns victory plan and one-hit unlock on lethal full damage', () => {
   const plan = buildPostHitResolutionPlan({
     enemyHpAfterHit: 0,

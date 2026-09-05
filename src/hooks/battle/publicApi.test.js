@@ -92,6 +92,8 @@ function createValidPublicApi() {
       parts: [],
       eAnim: '',
       pAnim: '',
+      eSubAnim: '',
+      pSubAnim: '',
       atkEffect: null,
       effMsg: null,
       burnStack: 0,

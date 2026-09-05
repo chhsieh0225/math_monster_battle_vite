@@ -97,3 +97,15 @@ function hydrateMonster(config: MonsterConfig): HydratedMonster {
 export const SLIME_VARIANTS: HydratedSlimeVariant[] = SLIME_VARIANT_CONFIGS.map(hydrateVariant);
 export const EVOLVED_SLIME_VARIANTS: HydratedSlimeVariant[] = EVOLVED_SLIME_VARIANT_CONFIGS.map(hydrateVariant);
 export const MONSTERS: HydratedMonster[] = MONSTER_CONFIGS.map(hydrateMonster);
+
+const MONSTER_SPRITES_BY_ID = new Map<string, HydratedMonster | HydratedSlimeVariant>(
+  [...SLIME_VARIANTS, ...EVOLVED_SLIME_VARIANTS, ...MONSTERS].map((monster) => [monster.id, monster]),
+);
+
+export function getMonsterSprite(id: string, isEvolved = false, activeSpriteKey?: string): SpriteFn | undefined {
+  if (activeSpriteKey && Object.hasOwn(SPRITE_MAP, activeSpriteKey)) return SPRITE_MAP[activeSpriteKey];
+  const monster = MONSTER_SPRITES_BY_ID.get(id);
+  if (!monster) return undefined;
+  if (isEvolved && 'evolvedSvgFn' in monster && monster.evolvedSvgFn) return monster.evolvedSvgFn;
+  return monster.svgFn;
+}

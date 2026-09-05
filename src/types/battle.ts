@@ -14,6 +14,8 @@ import type {
 } from './challenges';
 
 export type BattleMode = "single" | "coop" | "pvp" | "double";
+export type BattleSlot = 'main' | 'sub';
+export type BattleAnimationSetter = (animation: string, slot?: BattleSlot) => void;
 export type ScreenName =
   | "title"
   | "howto"
@@ -282,6 +284,8 @@ export type UseBattleState = {
   parts: ParticleVm[];
   eAnim: string;
   pAnim: string;
+  eSubAnim: string;
+  pSubAnim: string;
   atkEffect: AttackEffectVm | null;
   effMsg: EffectMsgVm | null;
   burnStack: number;

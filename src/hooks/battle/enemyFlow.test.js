@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runEnemyTurn } from './enemyFlow.ts';
+import { fxt } from './battleFxTargets.ts';
 
 function createBaseArgs(overrides = {}) {
   const calls = {
@@ -20,6 +21,7 @@ function createBaseArgs(overrides = {}) {
     effects: [],
     damage: [],
     particles: [],
+    animations: [],
   };
   const args = {
     sr: {
@@ -52,8 +54,8 @@ function createBaseArgs(overrides = {}) {
     setBossCharging: () => {},
     setBText: (value) => { calls.text.push(value); },
     setPhase: (value) => { calls.phase.push(value); },
-    setEAnim: (value) => { calls.eAnim.push(value); },
-    setPAnim: (value) => { calls.pAnim.push(value); },
+    setEAnim: (value, slot = 'main') => { calls.eAnim.push(value); calls.animations.push({ side: 'enemy', slot, value }); },
+    setPAnim: (value, slot = 'main') => { calls.pAnim.push(value); calls.animations.push({ side: 'player', slot, value }); },
     setPHp: (value) => { calls.pHp.push(value); },
     setPHpSub: (value) => { calls.pHpSub.push(value); },
     setSpecDef: () => {},
@@ -71,6 +73,59 @@ function createBaseArgs(overrides = {}) {
   };
   return { calls, args };
 }
+
+for (const active of ['main', 'sub']) {
+  for (const target of ['main', 'sub']) {
+    test(`co-op enemy hit animates ${target}, not the active ${active} slot`, () => {
+      const { args, calls } = createBaseArgs();
+      Object.assign(args.sr.current, {
+        battleMode: 'coop', coopActiveSlot: active, pHpSub: 100,
+        allySub: { name: 'Partner', type: 'water' },
+      });
+      args.randInt = () => target === 'sub' ? 1 : 0;
+      runEnemyTurn(args);
+      assert.equal(calls[target === 'sub' ? 'pHpSub' : 'pHp'].length, 1);
+      assert.equal(calls[target === 'sub' ? 'pHp' : 'pHpSub'].length, 0);
+      assert.deepEqual(calls.animations.filter((event) => event.side === 'player'), [
+        { side: 'player', slot: target, value: 'playerHit 0.5s ease' },
+        { side: 'player', slot: target, value: '' },
+      ]);
+      const position = target === 'sub' ? fxt().playerSub : fxt().playerMain;
+      assert.equal(calls.particles[0].x, position.x + 20);
+      assert.equal(calls.particles[0].y, position.y + 20);
+    });
+  }
+}
+
+test('enemy assist lunges with the sub enemy and places impact on the damaged ally', () => {
+  const { args, calls } = createBaseArgs();
+  Object.assign(args.sr.current, {
+    pHpSub: 100, allySub: { name: 'Partner', type: 'water' },
+    enemySub: { name: 'Assist', atk: 10, mType: 'water' },
+  });
+  args.randInt = () => 1;
+  args.chance = () => true;
+  runEnemyTurn(args);
+  assert.ok(calls.animations.some((event) => event.side === 'enemy'
+    && event.slot === 'sub' && event.value === 'enemyAttackLunge 0.6s ease'));
+  assert.deepEqual(calls.particles.at(-1), {
+    emoji: 'enemy', x: fxt().playerSub.x + 24, y: fxt().playerSub.y + 16, count: 3,
+  });
+});
+
+test('boss release reacts and emits particles on the sub target', () => {
+  const { args, calls } = createBaseArgs();
+  Object.assign(args.sr.current, {
+    pHpSub: 100, allySub: { name: 'Partner', type: 'water' },
+    enemy: { id: 'boss', atk: 10, maxHp: 100, mType: 'dark' },
+    bossCharging: true, bossPhase: 1,
+  });
+  args.randInt = () => 1;
+  runEnemyTurn(args);
+  assert.ok(calls.animations.some((event) => event.side === 'player'
+    && event.slot === 'sub' && event.value.startsWith('playerHit')));
+  assert.equal(calls.particles[0].x, fxt().playerSub.x + 20);
+});
 
 test('runEnemyTurn returns immediately when enemy or starter is missing', () => {
   const { calls, args } = createBaseArgs({

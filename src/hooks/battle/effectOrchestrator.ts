@@ -1,10 +1,12 @@
+import type { BattleAnimationSetter } from '../../types/battle';
+
 type SafeTo = (fn: () => void, ms: number) => void;
 type TextSetter = (value: string) => void;
 
 type BattleIntroArgs = {
   safeTo: SafeTo;
-  setEAnim: TextSetter;
-  setPAnim: TextSetter;
+  setEAnim: BattleAnimationSetter;
+  setPAnim: BattleAnimationSetter;
 };
 
 type EnemyLungeArgs = {
@@ -34,6 +36,9 @@ type AttackEffectTimelineArgs = {
 
 export const effectOrchestrator = {
   playBattleIntro({ safeTo, setEAnim, setPAnim }: BattleIntroArgs): void {
+    // A prior KO can invalidate scheduled clears. Reset both secondary slots.
+    setEAnim('', 'sub');
+    setPAnim('', 'sub');
     setEAnim('slideInBattle 0.6s ease');
     setPAnim('slideInPlayer 0.6s ease');
     safeTo(() => {

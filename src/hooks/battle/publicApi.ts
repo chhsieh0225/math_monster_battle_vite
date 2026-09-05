@@ -79,6 +79,8 @@ const REQUIRED_STATE_KEYS = [
   'parts',
   'eAnim',
   'pAnim',
+  'eSubAnim',
+  'pSubAnim',
   'atkEffect',
   'effMsg',
   'burnStack',

@@ -1,4 +1,5 @@
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
+import type { BattleAnimationSetter } from '../../types/battle';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { getEff } from '../../data/typeEffectiveness.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
@@ -108,8 +109,8 @@ type RunEnemyTurnArgs = {
   setBossCharging: BoolSetter;
   setBText: TextSetter;
   setPhase: PhaseSetter;
-  setEAnim: TextSetter;
-  setPAnim: TextSetter;
+  setEAnim: BattleAnimationSetter;
+  setPAnim: BattleAnimationSetter;
   setPHp: NumberSetter;
   setPHpSub: NumberSetter;
   setSpecDef: BoolSetter;
@@ -215,9 +216,9 @@ export function runEnemyTurn({
       setPHpSub(nextHp);
     } else {
       setPHp(nextHp);
-      setPAnim('playerHit 0.5s ease');
-      safeToIfBattleActive(() => setPAnim(''), 500);
     }
+    setPAnim('playerHit 0.5s ease', target);
+    safeToIfBattleActive(() => setPAnim('', target), 500);
     addD(label || `-${dmg}`, isSub ? fxt().playerSub.x : fxt().playerMain.x, isSub ? fxt().playerSub.y : fxt().playerMain.y, color);
     return nextHp;
   };
@@ -238,7 +239,7 @@ export function runEnemyTurn({
       setPhase('enemyAtk');
       effectOrchestrator.runEnemyLunge({
         safeTo,
-        setEAnim,
+        setEAnim: (animation) => setEAnim(animation, 'sub'),
         strikeDelay: 380,
         onStrike: () => {
           if (!isBattleActive()) return;
@@ -262,7 +263,8 @@ export function runEnemyTurn({
             color: '#f97316',
           });
           sfx.play('playerHit');
-          addP('enemy', fxt().playerMain.x + 24, fxt().playerMain.y + 16, 3);
+          const impact = target === 'sub' ? fxt().playerSub : fxt().playerMain;
+          addP('enemy', impact.x + 24, impact.y + 16, 3);
           if (nh <= 0) {
             safeToIfBattleActive(() => {
               sfx.play('ko');
@@ -442,7 +444,8 @@ export function runEnemyTurn({
           color: isCrit ? '#ff6b00' : '#ef4444',
         });
         sfx.play('playerHit');
-        addP('enemy', fxt().playerMain.x + 20, fxt().playerMain.y + 20, 4);
+        const impact = target === 'sub' ? fxt().playerSub : fxt().playerMain;
+        addP('enemy', impact.x + 20, impact.y + 20, 4);
         if (isCrit) {
           setEffMsg({ text: tr(t, 'battle.enemy.effect.crit', '🔥 Critical!'), color: '#ff6b00' });
           safeToIfBattleActive(() => setEffMsg(null), 1500);
@@ -532,7 +535,8 @@ export function runEnemyTurn({
                   color: '#eab308',
                 });
                 sfx.play('playerHit');
-                addP('enemy', fxt().playerMain.x + 20, fxt().playerMain.y + 20, 3);
+                const impact2 = target2 === 'sub' ? fxt().playerSub : fxt().playerMain;
+                addP('enemy', impact2.x + 20, impact2.y + 20, 3);
                 if (nh2 <= 0) {
                   safeToIfBattleActive(() => {
                     sfx.play('ko');
@@ -647,7 +651,8 @@ export function runEnemyTurn({
             label: `💀-${bigDmg}`,
             color: '#a855f7',
           });
-          addP('enemy', fxt().playerMain.x + 20, fxt().playerMain.y + 20, 6);
+          const impact = target === 'sub' ? fxt().playerSub : fxt().playerMain;
+          addP('enemy', impact.x + 20, impact.y + 20, 6);
           if (nh <= 0) {
             safeToIfBattleActive(() => {
               if (handlePlayerPartyKo) {

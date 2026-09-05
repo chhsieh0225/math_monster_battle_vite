@@ -154,7 +154,6 @@ export function applyEnemyPersonality<T extends PersonalityReadyEnemy>(
 ): T & { personality: EnemyPersonality } {
   const hpScale = clampScale(personalityDef.hpScale);
   const atkScale = clampScale(personalityDef.atkScale);
-  const incomingDamageScale = clampScale(personalityDef.incomingDamageScale);
 
   const hp = Math.max(1, Math.round(enemy.hp * hpScale));
   const maxHp = Math.max(1, Math.round(enemy.maxHp * hpScale));
@@ -165,18 +164,28 @@ export function applyEnemyPersonality<T extends PersonalityReadyEnemy>(
     hp,
     maxHp,
     atk,
-    personality: {
-      id: personalityDef.id,
-      icon: personalityDef.icon,
-      name: personalityDef.name,
-      nameEn: personalityDef.nameEn,
-      desc: personalityDef.desc,
-      descEn: personalityDef.descEn,
-      hpScale,
-      atkScale,
-      critChanceBonus: clampCritBonus(personalityDef.critChanceBonus),
-      critDamageBonus: clampCritBonus(personalityDef.critDamageBonus),
-      incomingDamageScale,
-    },
+    personality: normalizeEnemyPersonality(personalityDef),
   };
+}
+
+function normalizeEnemyPersonality(personalityDef: EnemyPersonalityDef): EnemyPersonality {
+  return {
+    id: personalityDef.id,
+    icon: personalityDef.icon,
+    name: personalityDef.name,
+    nameEn: personalityDef.nameEn,
+    desc: personalityDef.desc,
+    descEn: personalityDef.descEn,
+    hpScale: clampScale(personalityDef.hpScale),
+    atkScale: clampScale(personalityDef.atkScale),
+    critChanceBonus: clampCritBonus(personalityDef.critChanceBonus),
+    critDamageBonus: clampCritBonus(personalityDef.critDamageBonus),
+    incomingDamageScale: clampScale(personalityDef.incomingDamageScale),
+  };
+}
+
+/** Restore modifiers only; saved HP and ATK already include personality scaling. */
+export function getEnemyPersonality(id: string): EnemyPersonality | undefined {
+  const definition = ENEMY_PERSONALITIES.find((personality) => personality.id === id);
+  return definition ? normalizeEnemyPersonality(definition) : undefined;
 }

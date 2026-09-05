@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { EFX } from '../data/constants';
 import type {
   AttackEffectVm,
+  BattleAnimationSetter,
   FeedbackVm,
   QuestionVm,
 } from '../types/battle';
@@ -57,9 +58,11 @@ type UseBattleUIStateResult = {
   parts: ParticleEffect[];
   setParts: Dispatch<SetStateAction<ParticleEffect[]>>;
   eAnim: string;
-  setEAnim: Dispatch<SetStateAction<string>>;
+  setEAnim: BattleAnimationSetter;
   pAnim: string;
-  setPAnim: Dispatch<SetStateAction<string>>;
+  setPAnim: BattleAnimationSetter;
+  eSubAnim: string;
+  pSubAnim: string;
   atkEffect: AttackEffectState;
   setAtkEffect: Dispatch<SetStateAction<AttackEffectState>>;
   effMsg: EffectMessage;
@@ -82,8 +85,18 @@ export function useBattleUIState({ rand, randInt }: RngDeps): UseBattleUIStateRe
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [dmgs, setDmgs] = useState<DamageIndicator[]>([]);
   const [parts, setParts] = useState<ParticleEffect[]>([]);
-  const [eAnim, setEAnim] = useState('');
-  const [pAnim, setPAnim] = useState('');
+  const [eAnim, setEnemyMainAnim] = useState('');
+  const [pAnim, setPlayerMainAnim] = useState('');
+  const [eSubAnim, setEnemySubAnim] = useState('');
+  const [pSubAnim, setPlayerSubAnim] = useState('');
+  const setEAnim: BattleAnimationSetter = useCallback((animation, slot = 'main') => {
+    if (slot === 'sub') setEnemySubAnim(animation);
+    else setEnemyMainAnim(animation);
+  }, []);
+  const setPAnim: BattleAnimationSetter = useCallback((animation, slot = 'main') => {
+    if (slot === 'sub') setPlayerSubAnim(animation);
+    else setPlayerMainAnim(animation);
+  }, []);
   const [atkEffect, setAtkEffect] = useState<AttackEffectState>(null);
   const [effMsg, setEffMsgRaw] = useState<EffectMessage>(null);
   const effMsgTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -153,6 +166,8 @@ export function useBattleUIState({ rand, randInt }: RngDeps): UseBattleUIStateRe
     setEAnim,
     pAnim,
     setPAnim,
+    eSubAnim,
+    pSubAnim,
     atkEffect,
     setAtkEffect,
     effMsg,

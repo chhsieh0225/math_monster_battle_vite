@@ -9,14 +9,15 @@
  * ──────────────────────
  * `StarterVm` and `EnemyVm` contain `svgFn` (a closure) which is not
  * JSON-serialisable.  We strip functions on write and re-attach them on read
- * by looking up IDs in the static registries (`STARTERS`, `MONSTERS`).
+ * by looking up IDs and active sprite keys in the shared content registries.
  *
  * Storage key: "mathMonsterBattle_save"
  */
 
 import { readJson, writeJson, removeKey } from './storage.ts';
 import { STARTERS } from '../data/starters.ts';
-import { MONSTERS } from '../data/monsters.ts';
+import { getMonsterSprite } from '../data/monsters.ts';
+import { getEnemyPersonality } from '../data/enemyPersonalities.ts';
 import { BOSS_IDS } from '../data/monsterConfigs.ts';
 import type { StarterId } from '../types/game';
 import type { BattleMode, EnemyVm, StarterVm } from '../types/battle';
@@ -30,13 +31,6 @@ const SAVE_VERSION = 1;
 /** Fields kept from EnemyVm (everything except svgFn). */
 type SerialEnemyVm = Omit<EnemyVm, 'svgFn' | 'personality'> & {
   personalityId?: string;
-};
-
-/** Fields kept from StarterVm (everything except stage svgFn). */
-type SerialStarterVm = Omit<StarterVm, 'stages' | 'moves'> & {
-  /** We only need id + selectedStageIdx to reconstruct. */
-  _starterId: string;
-  _stageIdx: number;
 };
 
 /** The complete snapshot written to localStorage. */
@@ -86,10 +80,6 @@ type SerialBattleState = {
   diffLevel: number;
 };
 
-type SaveVersionProbe = {
-  version?: unknown;
-};
-
 // ─── Strip / rehydrate helpers ───────────────────────────────────
 
 function stripEnemy(e: EnemyVm): SerialEnemyVm {
@@ -101,7 +91,10 @@ function stripEnemy(e: EnemyVm): SerialEnemyVm {
   };
 }
 
-function rehydrateEnemySvg(e: SerialEnemyVm): EnemyVm {
+function rehydrateEnemy(e: SerialEnemyVm): EnemyVm | null {
+  const { personalityId, ...fields } = e;
+  const personality = personalityId ? getEnemyPersonality(personalityId) : undefined;
+  if (personalityId && !personality) return null;
   const baseId = e.id.startsWith('pvp_') ? e.id.slice(4) : e.id;
   const isWildStarter = baseId.startsWith('wild_starter_');
   const wildStarterId = isWildStarter ? baseId.replace('wild_starter_', '') : null;
@@ -115,91 +108,98 @@ function rehydrateEnemySvg(e: SerialEnemyVm): EnemyVm {
       const stage = starterConfig.stages[stageIdx] || starterConfig.stages[0];
       if (stage?.svgFn) {
         return {
-          ...e,
+          ...fields,
+          personality,
           svgFn: stage.svgFn,
-        } as EnemyVm;
+        };
       }
     }
   }
 
-  // 2. Try the MONSTERS registry
-  const monster = MONSTERS.find((m) => m.id === baseId);
-  if (monster) {
-    const useEvolved = e.isEvolved && monster.evolvedSvgFn;
+  // Active keys preserve variants; ID lookup also supports older snapshots.
+  const svgFn = getMonsterSprite(baseId, e.isEvolved, e.activeSpriteKey);
+  if (svgFn) {
     return {
-      ...e,
-      svgFn: useEvolved ? monster.evolvedSvgFn! : monster.svgFn,
-    } as EnemyVm;
+      ...fields,
+      personality,
+      svgFn,
+    };
   }
 
-  // 3. Try player starters (used as enemies in some modes)
+  // Try player starters used as enemies in some modes.
   const starterMatch = STARTERS.find((s) => s.id === baseId);
   if (starterMatch) {
     const stageIdx = e.selectedStageIdx ?? 0;
     const stage = starterMatch.stages[stageIdx] || starterMatch.stages[0];
     return {
-      ...e,
+      ...fields,
+      personality,
       svgFn: stage.svgFn,
-    } as EnemyVm;
+    };
   }
 
-  // 4. Fallback: return a no-op svgFn (should never happen if data is consistent)
-  return {
-    ...e,
-    svgFn: () => '',
-  } as EnemyVm;
+  // An unsupported save is safer than an invisible enemy and a poisoned sprite cache.
+  return null;
 }
 
 function rehydrateStarter(id: string, stageIdx: number): StarterVm | null {
   const config = STARTERS.find((s) => s.id === id);
-  if (!config) return null;
+  if (!config || !Number.isInteger(stageIdx) || !config.stages[stageIdx]) return null;
 
   return {
+    ...config,
     id: config.id as StarterId,
-    name: config.name,
-    type: config.type,
-    typeIcon: config.typeIcon,
-    typeName: config.typeName,
-    c1: config.c1,
-    c2: config.c2,
-    stages: config.stages.map((s) => ({
-      name: s.name,
-      emoji: s.emoji,
-      svgFn: s.svgFn,
-    })),
+    stages: config.stages.map((s) => ({ ...s })),
     moves: config.moves.map((m) => ({
-      icon: m.icon,
-      name: m.name,
+      ...m,
       desc: m.desc || '',
       color: m.color || config.c1,
-      basePower: m.basePower,
-      growth: m.growth,
-      range: m.range,
-      type: m.type,
-      ops: m.ops,
-      bg: m.bg,
-      risky: m.risky,
     })),
     selectedStageIdx: stageIdx,
   };
 }
 
-function isSaveVersionProbe(value: unknown): value is SaveVersionProbe {
-  return typeof value === 'object' && value !== null;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isNonNegativeNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return isNonNegativeNumber(value) && Number.isInteger(value);
+}
+
+function isSaveSnapshot(value: unknown): value is SaveSnapshot {
+  if (!isRecord(value) || value.version !== SAVE_VERSION || !isRecord(value.battle)) return false;
+  if (typeof value.battleMode !== 'string' || !['single', 'double', 'coop', 'pvp'].includes(value.battleMode)) return false;
+  if (typeof value.timedMode !== 'boolean' || typeof value.starterId !== 'string') return false;
+  if (value.allySubId !== null && typeof value.allySubId !== 'string') return false;
+  if (value.coopActiveSlot !== 'main' && value.coopActiveSlot !== 'sub') return false;
+  if (!isNonNegativeInteger(value.starterStageIdx) || !isNonNegativeInteger(value.allySubStageIdx)) return false;
+  if (!Array.isArray(value.enemies) || !isNonNegativeInteger(value.nextRound)) return false;
+  if (value.nextRound >= value.enemies.length) return false;
+  const battle = value.battle;
+  const scalarKeys = ['pHp', 'pHpSub', 'pExp', 'pLvl', 'pStg', 'streak', 'passiveCount',
+    'charge', 'tC', 'tW', 'defeated', 'maxStreak', 'diffLevel'] as const;
+  if (!scalarKeys.every((key) => isNonNegativeNumber(battle[key]))) return false;
+  if (![battle.pLvl, battle.pStg, battle.diffLevel].every(isNonNegativeInteger) || battle.pLvl === 0) return false;
+  if (![battle.mHits, battle.mLvls].every((items) => Array.isArray(items) && items.length > 0 && items.every(isNonNegativeInteger))) return false;
+  return value.enemies.every((enemy) => isRecord(enemy)
+    && ['id', 'name', 'mType', 'typeIcon', 'c1', 'c2'].every((key) => typeof enemy[key] === 'string')
+    && isNonNegativeNumber(enemy.maxHp) && enemy.maxHp > 0 && isNonNegativeInteger(enemy.lvl)
+    && ['hp', 'atk'].every((key) => enemy[key] === undefined || isNonNegativeNumber(enemy[key]))
+    && ['personalityId', 'activeSpriteKey', 'spriteKey', 'evolvedSpriteKey'].every((key) => enemy[key] === undefined || typeof enemy[key] === 'string')
+    && (enemy.isEvolved === undefined || typeof enemy.isEvolved === 'boolean')
+    && (enemy.selectedStageIdx === undefined || isNonNegativeInteger(enemy.selectedStageIdx))
+    && (enemy.drops === undefined || (Array.isArray(enemy.drops) && enemy.drops.every((drop) => typeof drop === 'string'))));
 }
 
 // ─── Public API ──────────────────────────────────────────────────
 
 export function hasSave(): boolean {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return false;
-    const parsed: unknown = JSON.parse(raw);
-    if (!isSaveVersionProbe(parsed)) return false;
-    return parsed.version === SAVE_VERSION;
-  } catch {
-    return false;
-  }
+  return loadSave() !== null;
 }
 
 export function writeSave(snapshot: SaveSnapshot): boolean {
@@ -222,17 +222,25 @@ export type LoadedSave = {
 };
 
 export function loadSave(): LoadedSave | null {
-  const snapshot = readJson<SaveSnapshot | null>(SAVE_KEY, null);
-  if (!snapshot || snapshot.version !== SAVE_VERSION) return null;
+  const snapshot = readJson<unknown>(SAVE_KEY, null);
+  if (!isSaveSnapshot(snapshot)) return null;
 
   const starter = rehydrateStarter(snapshot.starterId, snapshot.starterStageIdx);
   if (!starter) return null;
+  if (snapshot.battle.mHits.length !== starter.moves.length || snapshot.battle.mLvls.length !== starter.moves.length) return null;
+  if (snapshot.battle.mLvls.some((level) => level < 1) || !starter.stages[snapshot.battle.pStg]) return null;
 
   const allySub = snapshot.allySubId
     ? rehydrateStarter(snapshot.allySubId, snapshot.allySubStageIdx)
     : null;
+  if (snapshot.allySubId && !allySub) return null;
 
-  const enemies = snapshot.enemies.map(rehydrateEnemySvg);
+  const enemies: EnemyVm[] = [];
+  for (const savedEnemy of snapshot.enemies) {
+    const enemy = rehydrateEnemy(savedEnemy);
+    if (!enemy) return null;
+    enemies.push(enemy);
+  }
 
   return {
     battleMode: snapshot.battleMode,

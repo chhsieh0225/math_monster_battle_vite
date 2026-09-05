@@ -31,6 +31,7 @@ import { BossVictoryOverlay } from './battle/BossVictoryOverlay.tsx';
 import { updateBattleFxTargets, resetBattleFxTargets } from '../../hooks/battle/battleFxTargets';
 import type { BattleFxTargets } from '../../types/battleFx';
 import { DEFAULT_FX_TARGETS } from '../../types/battleFx';
+import { resolveBattleSpriteAnimations } from '../../utils/battleAnimations.ts';
 import {
   resolveBattleLaneSnapshot,
   resolveBattleFallbackTargets,
@@ -93,6 +94,8 @@ const BATTLE_STATE_RENDER_KEYS = [
   'parts',
   'eAnim',
   'pAnim',
+  'eSubAnim',
+  'pSubAnim',
   'atkEffect',
   'effMsg',
   'burnStack',
@@ -440,29 +443,17 @@ function BattleScreenComponent({
   );
   const memoSpriteAnims = useMemo(() => {
     if (!coreStatic) return null;
-    const { enemy, isCoopBattle, showAllySub, coopUsingSub } = coreStatic;
-    const enemyIsBossVisual = BOSS_IDS.has(normalizeBossVisualId(enemy.id));
-    const enemyIdleAnim = enemyIsBossVisual
-      ? "battleBossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite"
-      : enemyLowHpFlag
-        ? "battleFloat 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite"
-        : "battleFloat 3s ease-in-out infinite";
-    const playerMainIdleAnim = UX.lowPerfMode ? "none" : "floatFlip 3s ease-in-out infinite";
-    const playerSubIdleAnim = UX.lowPerfMode ? "none" : "floatFlip 3.8s ease-in-out infinite";
-    const hasSelectableCoopPair = isCoopBattle && showAllySub;
-    const isCoopSubActive = hasSelectableCoopPair && coopUsingSub;
-    const playerMainAnim = isCoopSubActive ? playerMainIdleAnim : (S.pAnim || playerMainIdleAnim);
-    const playerSubAnim = isCoopSubActive ? (S.pAnim || playerSubIdleAnim) : playerSubIdleAnim;
-    return {
-      enemyMain: (enemyDefeatedFlag
-        ? "enemyDissolve .9s ease-out forwards"
-        : S.eAnim || (UX.lowPerfMode ? "none" : enemyIdleAnim)),
-      enemySub: UX.lowPerfMode ? "none" : "battleFloat 3.8s ease-in-out infinite",
-      enemyShadow: enemyIsBossVisual ? "bossShadowPulse 2.5s ease-in-out infinite" : "shadowPulse 3s ease-in-out infinite",
-      playerMain: playerMainAnim,
-      playerSub: playerSubAnim,
-    };
-  }, [coreStatic, S.eAnim, S.pAnim, enemyDefeatedFlag, UX.lowPerfMode, enemyLowHpFlag]);
+    return resolveBattleSpriteAnimations({
+      eAnim: S.eAnim,
+      pAnim: S.pAnim,
+      eSubAnim: S.eSubAnim,
+      pSubAnim: S.pSubAnim,
+      enemyIsBoss: BOSS_IDS.has(normalizeBossVisualId(coreStatic.enemy.id)),
+      enemyDefeated: enemyDefeatedFlag,
+      enemyLowHp: enemyLowHpFlag,
+      lowPerfMode: UX.lowPerfMode,
+    });
+  }, [coreStatic, S.eAnim, S.pAnim, S.eSubAnim, S.pSubAnim, enemyDefeatedFlag, UX.lowPerfMode, enemyLowHpFlag]);
 
   // ── Sprite layout styles (position, size, filter — no animation strings) ──
   const memoSpriteStyles = useMemo(() => {
@@ -832,7 +823,7 @@ function BattleScreenComponent({
         parts={S.parts}
         battleMode={S.battleMode}
         moveLevelUpIdx={S.mLvlUp}
-        starter={starter}
+        starter={activeStarter || starter}
         moveLvls={S.mLvls}
         getPow={V.getPow}
         achPopup={S.achPopup}

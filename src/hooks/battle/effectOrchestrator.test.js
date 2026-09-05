@@ -12,12 +12,16 @@ test('playBattleIntro sets intro anims and schedules clear', () => {
       delays.push(ms);
       fn();
     },
-    setEAnim: (value) => { enemyAnim.push(value); },
-    setPAnim: (value) => { playerAnim.push(value); },
+    setEAnim: (value, slot = 'main') => { enemyAnim.push({ value, slot }); },
+    setPAnim: (value, slot = 'main') => { playerAnim.push({ value, slot }); },
   });
 
-  assert.deepEqual(enemyAnim, ['slideInBattle 0.6s ease', '']);
-  assert.deepEqual(playerAnim, ['slideInPlayer 0.6s ease', '']);
+  assert.deepEqual(enemyAnim, [
+    { value: '', slot: 'sub' }, { value: 'slideInBattle 0.6s ease', slot: 'main' }, { value: '', slot: 'main' },
+  ]);
+  assert.deepEqual(playerAnim, [
+    { value: '', slot: 'sub' }, { value: 'slideInPlayer 0.6s ease', slot: 'main' }, { value: '', slot: 'main' },
+  ]);
   assert.deepEqual(delays, [700]);
 });
 

@@ -14,6 +14,7 @@ import {
 } from '../../utils/effectTiming.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import type { AchievementId } from '../../types/game';
+import type { BattleAnimationSetter } from '../../types/battle';
 import { effectOrchestrator } from './effectOrchestrator.ts';
 import { fxt } from './battleFxTargets.ts';
 import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
@@ -157,7 +158,7 @@ type RunPlayerAnswerArgs = {
   setMLvlUp: NullableNumberSetter;
   setMHits: NumberArraySetter;
   setPhase: PhaseSetter;
-  setPAnim: TextSetter;
+  setPAnim: BattleAnimationSetter;
   setAtkEffect: (value: AttackEffectValue | null) => void;
   setEAnim: TextSetter;
   setEffMsg: (value: EffectMessage | null) => void;
@@ -347,7 +348,7 @@ export function runPlayerAnswer({
   setMLvlUp,
   setMHits,
   setPhase,
-  setPAnim,
+  setPAnim: setPlayerAnimation,
   setAtkEffect,
   setEAnim,
   setEffMsg,
@@ -385,6 +386,8 @@ export function runPlayerAnswer({
   if (!isBattleActiveState(s)) return;
   if (s.selIdx == null || !s.enemy) return;
   const moveIdx = s.selIdx;
+  // Capture the actor once; delayed callbacks must not follow active-slot changes.
+  const setPAnim = (animation: string): void => setPlayerAnimation(animation, attackerSlot);
 
   const isBattleActive = (): boolean => isBattleActiveState(sr.current);
   const safeToIfBattleActive = (fn: () => void, ms: number): void => (
@@ -437,9 +440,9 @@ export function runPlayerAnswer({
       setPHpSub(nextHp);
     } else {
       setPHp(nextHp);
-      setPAnim('playerHit 0.5s ease');
-      safeToIfBattleActive(() => setPAnim(''), 500);
     }
+    setPAnim('playerHit 0.5s ease');
+    safeToIfBattleActive(() => setPAnim(''), 500);
     addD(
       popupText || `-${damage}`,
       isSubAttacker ? fxt().playerSub.x : fxt().playerMain.x,

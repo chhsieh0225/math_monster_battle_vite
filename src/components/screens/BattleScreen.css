@@ -2005,6 +2005,16 @@
   }
 }
 
+@media (orientation:landscape) and (max-height:500px){
+  .battle-info-enemy{right:68%}
+  .battle-info-player{left:68%}
+  .battle-hp-card{padding:4px 6px}
+  .battle-hp-row{gap:4px;margin-bottom:2px;line-height:1.2}
+  .battle-hp-label{font-size:.75rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .battle-hp-value{flex-shrink:0;white-space:nowrap}
+  .battle-hp-track{height:6px}
+}
+
 @media (prefers-reduced-motion: reduce) {
   .battle-impact-contact,.battle-ult-sync{display:none!important}
   .battle-root.battle-impact-freeze .battle-arena,

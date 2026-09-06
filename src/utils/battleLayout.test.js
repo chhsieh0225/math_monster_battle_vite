@@ -13,6 +13,62 @@ import { BOSS_IDS } from '../data/monsterConfigs.ts';
 const overlaps = (a, b) => a.left < b.right - 0.01 && a.right > b.left + 0.01
   && a.top < b.bottom - 0.01 && a.bottom > b.top + 0.01;
 
+test('reserve readability enlarges a tiny lane frame while preserving CSS scale and clearance', () => {
+  const arena = { width: 390, height: 464, rootHeight: 844,
+    enemyHudRight: 203, enemyHudBottom: 109, playerHudLeft: 187, playerHudInset: 96 };
+  const avoid = [{ left: 178, top: 114, right: 376, bottom: 280 },
+    { left: 14, top: 307, right: 173, bottom: 448 }];
+  const placed = resolveBattleSpritePlacement({ arena, side: 'player', frameWidth: 50, minFrameWidth: 76,
+    compensation: 1, desiredCenterX: 122, desiredCenterY: 286, avoid });
+  assert.equal(placed.width, 76);
+  assert.equal(placed.scale, 76 / 50, 'render scale includes the readability request exactly once');
+  assert.equal(placed.height, placed.width * 100 / 120);
+  for (const other of [...avoid, { left: 0, top: 0, right: 203, bottom: 109 },
+    { left: 187, top: 368, right: 390, bottom: 464 }]) assert.equal(overlaps(placed.bounds, other), false);
+});
+
+test('reserve minimum is a request, not permission to cover HUDs on short phones', () => {
+  const arena = { width: 320, height: 312, rootHeight: 568,
+    enemyHudRight: 190, enemyHudBottom: 130, playerHudLeft: 145, playerHudInset: 110 };
+  const placed = resolveBattleSpritePlacement({ arena, side: 'player', frameWidth: 50, minFrameWidth: 240,
+    compensation: 1, desiredCenterX: 80, desiredCenterY: 260 });
+  assert.ok(placed.width < 240);
+  assert.equal(placed.width, 50 * placed.scale);
+  assert.equal(overlaps(placed.bounds, { left: 0, top: 0, right: 190, bottom: 130 }), false);
+  assert.equal(overlaps(placed.bounds, { left: 145, top: 202, right: 320, bottom: 312 }), false);
+});
+
+test('short landscape uses the full-height corridor between narrow HUDs', () => {
+  const arena = { width: 844, height: 214.5, rootHeight: 390,
+    enemyHudRight: 270, enemyHudBottom: 105, playerHudLeft: 574, playerHudInset: 90 };
+  const placed = resolveBattleSpritePlacement({ arena, side: 'enemy', frameWidth: 170,
+    compensation: 1, desiredCenterX: 635, desiredCenterY: 95 });
+  assert.equal(placed.width, 170, 'do not shrink into the thin band above the player HUD');
+  assert.ok(placed.bounds.left >= 284 && placed.bounds.right <= 560);
+  assert.equal(overlaps(placed.bounds, { left: 0, top: 0, right: 270, bottom: 105 }), false);
+  assert.equal(overlaps(placed.bounds, { left: 574, top: 124.5, right: 844, bottom: 214.5 }), false);
+});
+
+test('568x320 compact landscape keeps all four actors clear of HUDs and one another', () => {
+  const arena = { width: 568, height: 176, rootHeight: 320,
+    enemyHudRight: 182, enemyHudBottom: 100, playerHudLeft: 386, playerHudInset: 76 };
+  const occupied = [];
+  const huds = [{ left: 0, top: 0, right: 182, bottom: 100 },
+    { left: 386, top: 100, right: 568, bottom: 176 }];
+  for (const [side, frameWidth, compensation, desiredCenterX, desiredCenterY] of [
+    ['enemy', 240, 1.66, 430, 65], ['enemy', 100, 1.66, 430, 30],
+    ['player', 130, 1, 80, 145], ['player', 126, 1.66, 125, 145],
+  ]) {
+    const placed = resolveBattleSpritePlacement({ arena, side, frameWidth, compensation,
+      desiredCenterX, desiredCenterY, avoid: occupied });
+    assert.ok(placed.width >= 40, `${side} must not collapse into a few pixels`);
+    assert.ok(placed.bounds.left >= 0 && placed.bounds.right <= arena.width);
+    assert.ok(placed.bounds.top >= 0 && placed.bounds.bottom <= arena.height);
+    for (const other of [...huds, ...occupied]) assert.equal(overlaps(placed.bounds, other), false);
+    occupied.push(placed.bounds);
+  }
+});
+
 for (const [width, rootHeight] of [[320, 568], [390, 844], [768, 1024], [1280, 720]]) {
   for (const dual of [false, true]) {
     test(`${width}x${rootHeight} ${dual ? 'dual' : 'solo'} sprites and lunges clear both HUDs and the panel`, () => {

@@ -430,8 +430,8 @@ function BattleScreenComponent({
     const mainDim = showAllySub && coopUsingSub ? (playerComp > 1.3 ? (compactDual ? 0.58 : 0.68) : 0.84) : 1;
     const subDim = showAllySub && !coopUsingSub ? (subComp > 1.3 ? (compactDual ? 0.82 : 0.88) : 0.88) : 1;
     type OccupiedBounds = Array<ReturnType<typeof resolveBattleSpritePlacement>['bounds']>;
-    const fit = (side: 'player' | 'enemy', frameWidth: number, compensation: number, xPct: number, yPct: number, avoid?: OccupiedBounds) => resolveBattleSpritePlacement({
-      arena: arenaGeometry, side, frameWidth, compensation,
+    const fit = (side: 'player' | 'enemy', frameWidth: number, compensation: number, xPct: number, yPct: number, avoid?: OccupiedBounds, minFrameWidth?: number) => resolveBattleSpritePlacement({
+      arena: arenaGeometry, side, frameWidth, minFrameWidth, compensation,
       desiredCenterX: side === 'enemy' ? arenaWidth * (1 - xPct / 100) - frameWidth / 2 : arenaWidth * xPct / 100 + frameWidth / 2,
       desiredCenterY: side === 'enemy' ? arenaGeometry.height * yPct / 100 + frameWidth * 100 / 120 / 2 : arenaGeometry.height * (1 - yPct / 100) - frameWidth * 100 / 120 / 2,
       avoid,
@@ -439,8 +439,12 @@ function BattleScreenComponent({
     const enemyMain = fit('enemy', snapshot.enemyMainWidthPx * arenaScale, enemyComp, snapshot.enemyMainRightPct, snapshot.enemyTopPct);
     const enemySub = fit('enemy', snapshot.enemySubWidthPx * arenaScale, getCompensation(coreStatic.spriteProfiles.enemySub ?? ''), snapshot.enemySubRightPct, snapshot.enemySubTopPct, showEnemySub ? [enemyMain.bounds] : undefined);
     const enemies = showEnemySub ? [enemyMain.bounds, enemySub.bounds] : [enemyMain.bounds];
-    const placeMain = (avoid: OccupiedBounds) => fit('player', snapshot.playerMainWidthPx * arenaScale * mainDim, playerComp, snapshot.playerMainLeftPct, snapshot.playerMainBottomPct, avoid);
-    const placeSub = (avoid: OccupiedBounds) => fit('player', snapshot.playerSubWidthPx * arenaScale * subDim, subComp, snapshot.playerSubLeftPct, snapshot.playerSubBottomPct, avoid);
+    // The old horizontal lane budget can make the reserve tiny even when vertical room remains.
+    const reserveWidth = (comp: number) => Math.min(arenaWidth * 0.34, 76 * Math.max(1, comp));
+    const placeMain = (avoid: OccupiedBounds) => fit('player', snapshot.playerMainWidthPx * arenaScale * mainDim, playerComp, snapshot.playerMainLeftPct, snapshot.playerMainBottomPct, avoid,
+      showAllySub && coopUsingSub ? reserveWidth(playerComp) : undefined);
+    const placeSub = (avoid: OccupiedBounds) => fit('player', snapshot.playerSubWidthPx * arenaScale * subDim, subComp, snapshot.playerSubLeftPct, snapshot.playerSubBottomPct, avoid,
+      showAllySub && !coopUsingSub ? reserveWidth(subComp) : undefined);
     const subIsActive = coopUsingSub && showAllySub;
     const activePlayer = subIsActive ? placeSub(enemies) : placeMain(enemies);
     const playerMain = subIsActive ? placeMain([...enemies, activePlayer.bounds]) : activePlayer;
@@ -555,12 +559,12 @@ function BattleScreenComponent({
       ? "none"
       : mainIsActive
         ? "saturate(1) brightness(1) drop-shadow(0 0 12px rgba(99,102,241,0.7))"
-        : "saturate(0.62) brightness(0.78)";
+        : "saturate(0.82) brightness(0.94)";
     const subFilter = !hasSelectableCoopPair
       ? "none"
       : subIsActive
         ? "saturate(1) brightness(1) drop-shadow(0 0 12px rgba(34,197,94,0.75))"
-        : "saturate(0.62) brightness(0.78)";
+        : "saturate(0.82) brightness(0.94)";
 
     const {
       enemySubScale,
@@ -607,7 +611,7 @@ function BattleScreenComponent({
         "--player-main-filter": mainFilter,
         "--battle-player-main-scale": resolvedPlayerMainScale.toFixed(3),
         "--player-main-z": coopUsingSub ? "4" : "6",
-        "--player-main-opacity": mainIsActive ? "1" : ".52",
+        "--player-main-opacity": mainIsActive ? "1" : ".82",
         "--battle-player-main-dim-scale": mainIsActive
           ? "1"
           : ((playerComp || 1) > 1.3 ? (compactDual ? ".58" : ".68") : ".84"),
@@ -618,7 +622,7 @@ function BattleScreenComponent({
         "--player-sub-filter": subFilter,
         "--battle-player-sub-scale": resolvedPlayerSubScale.toFixed(3),
         "--player-sub-z": coopUsingSub ? "6" : "4",
-        "--player-sub-opacity": subIsActive ? "1" : ".52",
+        "--player-sub-opacity": subIsActive ? "1" : ".82",
         "--battle-player-sub-dim-scale": subIsActive
           ? "1"
           : ((subComp || 1) > 1.3 ? (compactDual ? ".82" : ".88") : ".88"),

@@ -56,9 +56,18 @@ The offline tool requires Pillow and NumPy; no Python/image-processing dependenc
 ## Validation
 
 - All 51 atlases / 408 cells were decoded and checked against their registered bounds, transparent gutters and hashes. New sheets were visually reviewed on dark contact sheets, including wide weapons/wings, white fur and colored details.
-- `npm run lint`, `npm run typecheck`, all **818 tests**, and `npm run build:budget` pass.
+- `npm run lint`, `npm run typecheck`, all **822 tests**, and `npm run build:budget` pass.
 - TypeScript requires complete `Record<SpriteKey, SpriteAnimationAsset>` coverage. Tests cover every factory/profile, all configured enemy/evolved forms in both enemy slots, all selectable PvP stages, Co-op identity independence, separate Boss phase-two files, unchanged PvP identity, and per-pose containment.
-- The existing two/four-actor responsive renderer was verified in earlier batches; that is historical evidence, not a fresh browser pass of this batch. This batch's live browser QA was blocked because the Mac was locked and the UI tool could not unlock it. Full-roster desktop/mobile playback and physical-device performance therefore remain unverified in this update.
+- After the Mac was unlocked, a temporary local fixture mounted the production `BattleScreen` and `BattleSprite` without game-save actions. All **51 forms / 408 poses** passed browser image decoding, computed pose-position and stable frame-size checks, with no browser console errors. The fixture and viewport overrides were removed after the pass.
+- Focused visual checks covered 320x568, 390x844, 768x1024 and 1280x720 portrait/desktop layouts, plus 568x320 and 844x390 landscape layouts. Solo, four-actor Co-op and PvP rendering were sampled, including the Dragon King's independent enemy-slot phase changes, wide wings/weapons, Crazy Dragon, Sword God, Hydra and both active Co-op slots. The sampled layouts had no horizontal page overflow or observed HUD occlusion; this is not an exhaustive playthrough of every encounter combination.
+- Physical main/sub attack ownership, paused attack retention and low-performance attack playback were checked in the browser. An eight-pose solo cycle retained identical actor-frame dimensions and positions throughout the cycle.
+
+### Corrections From Browser QA
+
+- Inactive Co-op partners were too small and dark on phones. A modest reserve-frame readability request now goes through the existing collision/HUD-safe placement solver; it is not a hard minimum that can override clearance. Inactive opacity, brightness and saturation were raised while preserving the active-slot highlight.
+- Wide HUDs left too little space on short landscape screens. Landscape HUDs are now narrower and vertically compact, with single-line truncated names and untruncated HP values. The placement solver can use the full-height space between the two HUDs. Very short landscape layouts still use smaller actors to preserve clearance and control-panel space.
+- Four regression tests cover the reserve sizing ratio, safety when that request cannot fit, the landscape corridor and four-actor clearance at 568x320. These changes do not alter atlas resolution, pose count, damage, turn timing or save data.
+- Browser viewport emulation does not establish physical iPhone/Android FPS, GPU memory or thermal behavior. Those measurements remain outstanding.
 
 ## Quality Boundary
 

@@ -63,6 +63,8 @@ type SafeSpritePlacementInput = {
   arena: BattleArenaGeometry;
   side: 'enemy' | 'player';
   frameWidth: number;
+  /** Optional readability request; HUD/actor clearance can still shrink it. */
+  minFrameWidth?: number;
   compensation: number;
   desiredCenterX: number;
   desiredCenterY: number;
@@ -70,17 +72,20 @@ type SafeSpritePlacementInput = {
 };
 
 export function resolveBattleSpritePlacement({
-  arena, side, frameWidth, compensation, desiredCenterX, desiredCenterY, avoid,
+  arena, side, frameWidth, minFrameWidth = frameWidth, compensation, desiredCenterX, desiredCenterY, avoid,
 }: SafeSpritePlacementInput) {
   const gap = 14;
-  const frameHeight = frameWidth * 100 / 120;
+  const requestedWidth = Math.max(frameWidth, minFrameWidth);
+  const frameHeight = requestedWidth * 100 / 120;
   // Bound the painted image, not the transparent SVG frame. Include tilt,
   // breathing and recoil room without measuring animated DOM rectangles.
-  const bodyWidth = frameWidth * 1.08 + frameHeight * 0.16;
-  const bodyHeight = frameHeight / Math.max(1, compensation) * 1.08 + frameWidth * 0.16;
+  const bodyWidth = requestedWidth * 1.08 + frameHeight * 0.16;
+  const bodyHeight = frameHeight / Math.max(1, compensation) * 1.08 + requestedWidth * 0.16;
   const hudBottom = arena.height - arena.playerHudInset;
   let regions = [
     { left: gap, top: arena.enemyHudBottom + gap, right: arena.width - gap, bottom: hudBottom - gap },
+    // Narrow landscape HUDs leave a full-height corridor between them.
+    { left: arena.enemyHudRight + gap, top: gap, right: arena.playerHudLeft - gap, bottom: arena.height - gap },
     side === 'enemy'
       ? { left: arena.enemyHudRight + gap, top: gap, right: arena.width - gap, bottom: hudBottom - gap }
       : { left: gap, top: arena.enemyHudBottom + gap, right: arena.playerHudLeft - gap, bottom: arena.height - gap },
@@ -112,11 +117,12 @@ export function resolveBattleSpritePlacement({
   const { region, scale, width, height, cx, cy } = placements[0];
   const bounds = { left: cx - width / 2, top: cy - height / 2, right: cx + width / 2, bottom: cy + height / 2 };
   return {
-    left: cx - frameWidth * scale / 2,
+    left: cx - requestedWidth * scale / 2,
     top: cy - frameHeight * scale / 2,
-    width: frameWidth * scale,
+    width: requestedWidth * scale,
     height: frameHeight * scale,
-    scale,
+    // CSS starts from the original lane width, not the larger readability request.
+    scale: scale * requestedWidth / Math.max(1, frameWidth),
     cx,
     cy,
     bounds,

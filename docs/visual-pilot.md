@@ -22,7 +22,7 @@ The trial uses the existing `genQ` and `calcAttackDamage` utilities but delibera
 
 ## Production Rollout: Batch 1
 
-The approved first batch enabled `player_wolf2` and `boss_crazy_dragon` in normal battles, not only the trial route. There are 51 visual forms (21 starter stages, 25 ordinary enemy forms/variants and five Boss forms). Batch 2 subsequently added `player_wolf0` and `player_wolf1`, so current coverage is **4 of 51**, with 47 remaining original. See [Wolf Batch 2](wolf-animation-batch2.md) for its assets, preparation and prompts. Menus, the encyclopedia and Boss intro portraits retain original art. No unlock, progression or save migration is required.
+The approved first batch enabled `player_wolf2` and `boss_crazy_dragon` in normal battles, not only the trial route. There are 51 visual forms (21 starter stages, 25 ordinary enemy forms/variants and five Boss forms). [Wolf Batch 2](wolf-animation-batch2.md) added `player_wolf0` and `player_wolf1`; [Fire Batch 3](fire-animation-batch3.md) added all three fire starter stages. The [complete roster rollout](animation-roster-rollout.md) adds the remaining 44: current coverage is **51 of 51**, including independent dark-dragon phase-two art. The batch documents contain assets, preparation and prompts. Menus, the encyclopedia and Boss intro portraits retain original art. No unlock, progression or save migration is required.
 
 - `src/data/spriteAnimationAssets.ts` is the opt-in registry shared with the trial. Sprite factory identities resolve actual stages, including selectable PvP Bosses; enemy active/evolved keys and dark-dragon phase-2 overrides remain authoritative.
 - `BattleArenaSprites` passes each physical slot's resolved animation to `BattleSprite`. It never infers the attacker from global `playerAtk`, the active co-op role or the player's species. Main/sub and PvP sides can attack or recoil independently.
@@ -36,7 +36,7 @@ Verification: 762 automated tests, TypeScript/lint checks and build budgets pass
 
 ### Further Batches
 
-Add approved eight-pose atlases to the existing registry; do not substitute recolors or whole-image transforms for new drawings. Each future asset needs consistent anatomy/facing, support-foot alignment, one shared scale, transparent edges and measured union bounds. Update the roster coverage expectation and validate every pose against the existing layout before enabling it. Keep versioned filenames for PWA cache invalidation. The wolf family is now complete. Suggested order for the remaining 47 forms: remaining starters by family, common enemy/evolution families, then remaining Boss forms. Those assets are **not yet produced**.
+The current roster is complete; there are no pending existing forms. Future forms must add approved eight-pose atlases to the existing registry, not substitute recolors or whole-image transforms for new drawings. Each asset needs consistent anatomy/facing, reviewed registration, one shared scale, transparent edges and measured union bounds. The registry now requires every `SpriteKey` at compile time, while tests require every profile and configured battle form to resolve. Keep versioned filenames for PWA cache invalidation. The optional two-actor pilot remains a focused comparison, not a gallery of the full production roster.
 
 ## Art Provenance
 
@@ -60,7 +60,7 @@ Current project assets:
 
 ## Known Limitations
 
-This is an eight-key-pose art study with continuous secondary motion, not finished frame-by-frame or skeletal animation. It reduces held-pose stiffness and silhouette-centering jumps, but the drawings themselves still change discretely, especially visible in slow motion. The generated drawings still vary in anatomy and decoration; support-foot registration cannot fix those differences. Precise limb continuity, final edge cleanup and art-direction approval remain necessary before a full-game rollout. The trial currently does not include co-op, production Boss mechanics, production attack FX or sound. Browser responsive checks are not physical-phone performance measurements.
+This is eight-key-pose animation with continuous secondary motion, not finished frame-by-frame or skeletal animation. It reduces held-pose stiffness and silhouette-centering jumps, but drawings still change discretely, especially in slow motion. The generated drawings still vary in anatomy and decoration; registration cannot create missing in-between limb motion. The full production roster now uses this same eight-pose quality tier; it does not claim a frame-perfect animation polish pass. The trial itself does not include co-op, production Boss mechanics, production attack FX or sound. Browser responsive checks are not physical-phone performance measurements.
 
 ## Generation Prompts
 

@@ -7,6 +7,7 @@ import { PVP_SELECTABLE_ROSTER } from '../../../data/pvpRoster.ts';
 import { getSpriteProfileKey } from '../../../data/sprites.ts';
 import { getSpriteAnimationAsset } from '../../../data/spriteAnimationAssets.ts';
 import { createPvpEnemyFromStarter } from '../../../hooks/battle/pvpFlow.ts';
+import { MONSTER_CONFIGS, SLIME_VARIANT_CONFIGS, EVOLVED_SLIME_VARIANT_CONFIGS } from '../../../data/monsterConfigs.ts';
 
 function makeStarter(id = 'fire') {
   return {
@@ -110,6 +111,28 @@ test('production art follows the actual stage, never the current co-op active ro
   assert.equal(core.spriteProfiles.enemySub, undefined);
 });
 
+test('all three fire stages use distinct art in single battles and physical co-op slots', () => {
+  const fire = STARTERS.find((s) => s.id === 'fire');
+  const files = ['fire-hatchling-v1.webp', 'fire-beast-v1.webp', 'fire-dragon-king-v1.webp'];
+  for (let pStg = 0; pStg < fire.stages.length; pStg++) {
+    for (const battleMode of ['single', 'coop']) {
+      for (const coopActiveSlot of ['main', 'sub']) {
+        const subStage = (pStg + 1) % fire.stages.length;
+        const core = buildBattleStaticCore({ scenes: TEST_SCENES, compactUI: true,
+          state: makeState({ starter: fire, pStg, battleMode, coopActiveSlot,
+            allySub: battleMode === 'coop' ? { ...fire, selectedStageIdx: subStage } : null, pHpSub: 80 }),
+        });
+        assert.equal(getSpriteAnimationAsset(core.spriteProfiles.playerMain).art.file, files[pStg]);
+        if (battleMode === 'coop') {
+          assert.equal(getSpriteAnimationAsset(core.spriteProfiles.playerSub).art.file, files[subStage]);
+        } else {
+          assert.equal(core.spriteProfiles.playerSub, undefined);
+        }
+      }
+    }
+  }
+});
+
 test('every PvP selectable stage resolves identically on either side, including boss player forms', () => {
   for (const starter of PVP_SELECTABLE_ROSTER) {
     for (let pStg = 0; pStg < starter.stages.length; pStg++) {
@@ -123,6 +146,8 @@ test('every PvP selectable stage resolves identically on either side, including 
       assert.ok(profileKey);
       assert.equal(core.spriteProfiles.playerMain, profileKey);
       assert.equal(core.spriteProfiles.enemyMain, profileKey);
+      assert.ok(getSpriteAnimationAsset(core.spriteProfiles.playerMain));
+      assert.ok(getSpriteAnimationAsset(core.spriteProfiles.enemyMain));
     }
   }
 });
@@ -134,8 +159,35 @@ test('enemy evolution and dark dragon phase changes retain their own art identit
   ]) {
     const core = buildBattleStaticCore({ scenes: TEST_SCENES, compactUI: true, state: makeState({ enemy, eHp }) });
     assert.equal(core.spriteProfiles.enemyMain, expected);
-    assert.equal(getSpriteAnimationAsset(expected), null);
+    assert.ok(getSpriteAnimationAsset(expected));
   }
+});
+
+test('every configured enemy and evolution has new art in either physical enemy slot', () => {
+  const configurations = [...MONSTER_CONFIGS, ...SLIME_VARIANT_CONFIGS, ...EVOLVED_SLIME_VARIANT_CONFIGS];
+  for (const config of configurations) {
+    for (const activeSpriteKey of [config.spriteKey, config.evolvedSpriteKey].filter(Boolean)) {
+      const enemy = { ...makeEnemy(config.id), spriteKey: config.spriteKey, activeSpriteKey, maxHp: 100 };
+      const core = buildBattleStaticCore({ scenes: TEST_SCENES, compactUI: true,
+        state: makeState({ battleMode: 'coop', enemy, enemySub: enemy, eHp: 100, eHpSub: 100 }),
+      });
+      for (const slot of ['enemyMain', 'enemySub']) {
+        assert.equal(core.spriteProfiles[slot], activeSpriteKey);
+        assert.ok(getSpriteAnimationAsset(core.spriteProfiles[slot]), `${config.id}/${activeSpriteKey}/${slot}`);
+      }
+    }
+  }
+});
+
+test('low HP does not replace a PvP boss selection with the PvE phase-two artwork', () => {
+  const starter = PVP_SELECTABLE_ROSTER.find((candidate) => candidate.id === 'boss');
+  assert.ok(starter);
+  const enemy = createPvpEnemyFromStarter({ ...starter, selectedStageIdx: 0 });
+  const core = buildBattleStaticCore({ scenes: TEST_SCENES, compactUI: true,
+    state: makeState({ starter, pStg: 0, battleMode: 'pvp', enemy, eHp: 1, bossPhase: 3 }),
+  });
+  assert.equal(core.spriteProfiles.enemyMain, 'darkLordSVG');
+  assert.equal(getSpriteAnimationAsset(core.spriteProfiles.enemyMain).art.file, 'boss-v1.webp');
 });
 
 test('buildBattleCore applies sealed/risky lock rules in single battle', () => {
@@ -255,6 +307,8 @@ test('buildBattleCore switches dark dragon to phase-2 sprite when hp is low', ()
   assert.ok(phase2);
   assert.equal(phase1.eSvg.includes('boss_2nd_phase.png'), false);
   assert.equal(phase2.eSvg.includes('boss_2nd_phase.png'), true);
+  assert.equal(getSpriteAnimationAsset(phase1.spriteProfiles.enemyMain).art.file, 'boss-v1.webp');
+  assert.equal(getSpriteAnimationAsset(phase2.spriteProfiles.enemyMain).art.file, 'boss-2nd-phase-v1.webp');
   assert.ok(phase2.layout.enemyComp > phase1.layout.enemyComp);
 });
 
@@ -280,4 +334,5 @@ test('buildBattleCore switches dark dragon sub target in co-op when sub hp is lo
   assert.ok(core);
   assert.ok(core.eSubSvg);
   assert.equal(core.eSubSvg.includes('boss_2nd_phase.png'), true);
+  assert.equal(getSpriteAnimationAsset(core.spriteProfiles.enemySub).art.file, 'boss-2nd-phase-v1.webp');
 });

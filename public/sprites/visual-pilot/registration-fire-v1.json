@@ -1,0 +1,866 @@
+{
+  "cell": [
+    512,
+    384
+  ],
+  "grid": [
+    4,
+    2
+  ],
+  "baseline": 368,
+  "poses": [
+    "idle",
+    "inhale",
+    "anticipation",
+    "strike",
+    "followThrough",
+    "recovery",
+    "recoil",
+    "bracedRecovery"
+  ],
+  "assets": {
+    "fire-hatchling-v1": {
+      "file": "fire-hatchling-v1.webp",
+      "source": "exec-cad382ee-06e8-4ba7-bdd3-6402536c68d2.png",
+      "sourceSha256": "c4c2f22c888a8d7392eb44116cc09dc7fb9434f88c061dc8a42c36e8eed9a1a9",
+      "sha256": "2bf5e65e34cc2f1dfc3b2055a97d5331229bdaf8bd5757602b920cf4594f4ed3",
+      "bytes": 225834,
+      "quality": 92,
+      "uniformScale": 0.95,
+      "footX": 296,
+      "frames": [
+        {
+          "index": 0,
+          "sourceCrop": [
+            20,
+            40,
+            430,
+            425
+          ],
+          "interiorMatteSeeds": [],
+          "sourceFootX": 161.5,
+          "offset": [
+            143,
+            57
+          ],
+          "size": [
+            267,
+            311
+          ],
+          "visibleBounds": [
+            143,
+            57,
+            410,
+            368
+          ]
+        },
+        {
+          "index": 1,
+          "sourceCrop": [
+            470,
+            40,
+            855,
+            425
+          ],
+          "interiorMatteSeeds": [],
+          "sourceFootX": 158,
+          "offset": [
+            146,
+            57
+          ],
+          "size": [
+            273,
+            311
+          ],
+          "visibleBounds": [
+            146,
+            57,
+            419,
+            368
+          ]
+        },
+        {
+          "index": 2,
+          "sourceCrop": [
+            900,
+            40,
+            1280,
+            425
+          ],
+          "interiorMatteSeeds": [],
+          "sourceFootX": 203.5,
+          "offset": [
+            103,
+            122
+          ],
+          "size": [
+            309,
+            246
+          ],
+          "visibleBounds": [
+            103,
+            122,
+            412,
+            368
+          ]
+        },
+        {
+          "index": 3,
+          "sourceCrop": [
+            1320,
+            40,
+            1740,
+            425
+          ],
+          "interiorMatteSeeds": [],
+          "sourceFootX": 272.5,
+          "offset": [
+            37,
+            114
+          ],
+          "size": [
+            337,
+            254
+          ],
+          "visibleBounds": [
+            37,
+            114,
+            374,
+            368
+          ]
+        },
+        {
+          "index": 4,
+          "sourceCrop": [
+            20,
+            460,
+            430,
+            840
+          ],
+          "interiorMatteSeeds": [],
+          "sourceFootX": 229,
+          "offset": [
+            78,
+            149
+          ],
+          "size": [
+            305,
+            219
+          ],
+          "visibleBounds": [
+            78,
+            149,
+            383,
+            368
+          ]
+        },
+        {
+          "index": 5,
+          "sourceCrop": [
+            475,
+            460,
+            850,
+            840
+          ],
+          "interiorMatteSeeds": [],
+          "sourceFootX": 163,
+          "offset": [
+            141,
+            74
+          ],
+          "size": [
+            273,
+            294
+          ],
+          "visibleBounds": [
+            141,
+            74,
+            414,
+            368
+          ]
+        },
+        {
+          "index": 6,
+          "sourceCrop": [
+            900,
+            460,
+            1275,
+            840
+          ],
+          "interiorMatteSeeds": [],
+          "sourceFootX": 88.5,
+          "offset": [
+            212,
+            79
+          ],
+          "size": [
+            277,
+            289
+          ],
+          "visibleBounds": [
+            212,
+            79,
+            489,
+            368
+          ]
+        },
+        {
+          "index": 7,
+          "sourceCrop": [
+            1320,
+            460,
+            1730,
+            840
+          ],
+          "interiorMatteSeeds": [],
+          "sourceFootX": 193,
+          "offset": [
+            113,
+            108
+          ],
+          "size": [
+            293,
+            260
+          ],
+          "visibleBounds": [
+            113,
+            108,
+            406,
+            368
+          ]
+        }
+      ]
+    },
+    "fire-beast-v1": {
+      "file": "fire-beast-v1.webp",
+      "source": "exec-66b6ea8d-630d-49a8-8131-f20eab80f24d.png",
+      "sourceSha256": "2fa69e1b495e01e00333b2721aa8c25013393b4ee0e071f786d50afd0c061652",
+      "sha256": "a815c6301123b7d341d21f8bb7b8dd2846902c9fbdfefb0609fe418fe0ef6e5e",
+      "bytes": 330524,
+      "quality": 92,
+      "uniformScale": 0.9,
+      "footX": 280,
+      "frames": [
+        {
+          "index": 0,
+          "sourceCrop": [
+            35,
+            40,
+            430,
+            425
+          ],
+          "interiorMatteSeeds": [
+            [
+              241,
+              102
+            ],
+            [
+              256,
+              191
+            ]
+          ],
+          "sourceFootX": 189.5,
+          "offset": [
+            109,
+            64
+          ],
+          "size": [
+            310,
+            304
+          ],
+          "visibleBounds": [
+            109,
+            64,
+            419,
+            368
+          ]
+        },
+        {
+          "index": 1,
+          "sourceCrop": [
+            460,
+            40,
+            870,
+            425
+          ],
+          "interiorMatteSeeds": [
+            [
+              260,
+              190
+            ],
+            [
+              143,
+              184
+            ],
+            [
+              326,
+              190
+            ],
+            [
+              343,
+              96
+            ]
+          ],
+          "sourceFootX": 174,
+          "offset": [
+            123,
+            64
+          ],
+          "size": [
+            329,
+            304
+          ],
+          "visibleBounds": [
+            123,
+            64,
+            452,
+            368
+          ]
+        },
+        {
+          "index": 2,
+          "sourceCrop": [
+            900,
+            40,
+            1290,
+            425
+          ],
+          "interiorMatteSeeds": [
+            [
+              215,
+              186
+            ]
+          ],
+          "sourceFootX": 194.5,
+          "offset": [
+            105,
+            114
+          ],
+          "size": [
+            312,
+            254
+          ],
+          "visibleBounds": [
+            105,
+            114,
+            417,
+            368
+          ]
+        },
+        {
+          "index": 3,
+          "sourceCrop": [
+            1295,
+            40,
+            1750,
+            425
+          ],
+          "interiorMatteSeeds": [
+            [
+              328,
+              151
+            ],
+            [
+              396,
+              143
+            ]
+          ],
+          "sourceFootX": 287,
+          "offset": [
+            22,
+            81
+          ],
+          "size": [
+            374,
+            287
+          ],
+          "visibleBounds": [
+            22,
+            81,
+            396,
+            368
+          ]
+        },
+        {
+          "index": 4,
+          "sourceCrop": [
+            20,
+            450,
+            430,
+            835
+          ],
+          "interiorMatteSeeds": [
+            [
+              252,
+              118
+            ],
+            [
+              130,
+              94
+            ],
+            [
+              146,
+              104
+            ]
+          ],
+          "sourceFootX": 261.5,
+          "offset": [
+            45,
+            96
+          ],
+          "size": [
+            320,
+            272
+          ],
+          "visibleBounds": [
+            45,
+            96,
+            365,
+            368
+          ]
+        },
+        {
+          "index": 5,
+          "sourceCrop": [
+            460,
+            450,
+            870,
+            835
+          ],
+          "interiorMatteSeeds": [
+            [
+              242,
+              104
+            ],
+            [
+              255,
+              191
+            ]
+          ],
+          "sourceFootX": 189,
+          "offset": [
+            110,
+            63
+          ],
+          "size": [
+            310,
+            305
+          ],
+          "visibleBounds": [
+            110,
+            63,
+            420,
+            368
+          ]
+        },
+        {
+          "index": 6,
+          "sourceCrop": [
+            875,
+            450,
+            1285,
+            835
+          ],
+          "interiorMatteSeeds": [
+            [
+              266,
+              194
+            ],
+            [
+              200,
+              206
+            ]
+          ],
+          "sourceFootX": 160.5,
+          "offset": [
+            136,
+            85
+          ],
+          "size": [
+            346,
+            283
+          ],
+          "visibleBounds": [
+            136,
+            85,
+            482,
+            368
+          ]
+        },
+        {
+          "index": 7,
+          "sourceCrop": [
+            1320,
+            450,
+            1740,
+            835
+          ],
+          "interiorMatteSeeds": [
+            [
+              118,
+              82
+            ],
+            [
+              151,
+              100
+            ],
+            [
+              192,
+              155
+            ],
+            [
+              217,
+              180
+            ]
+          ],
+          "sourceFootX": 214.5,
+          "offset": [
+            87,
+            110
+          ],
+          "size": [
+            316,
+            258
+          ],
+          "visibleBounds": [
+            87,
+            110,
+            403,
+            368
+          ]
+        }
+      ]
+    },
+    "fire-dragon-king-v1": {
+      "file": "fire-dragon-king-v1.webp",
+      "source": "exec-f7e3b27d-a9f3-4df0-9854-40fb4c82209e.png",
+      "sourceSha256": "c2905ac743fa3eb8188acca96a49ba8589b01b2ec55308e8884c7f349bbf81d8",
+      "sha256": "9cccce51f40b257715e0e1a83b486d0107fc09929329449e4c98768bda103b7f",
+      "bytes": 390780,
+      "quality": 88,
+      "uniformScale": 0.94,
+      "footX": 278,
+      "frames": [
+        {
+          "index": 0,
+          "sourceCrop": [
+            20,
+            40,
+            445,
+            425
+          ],
+          "interiorMatteSeeds": [
+            [
+              327,
+              147
+            ],
+            [
+              243,
+              144
+            ],
+            [
+              90,
+              205
+            ],
+            [
+              201,
+              93
+            ]
+          ],
+          "sourceFootX": 235,
+          "offset": [
+            57,
+            68
+          ],
+          "size": [
+            363,
+            300
+          ],
+          "visibleBounds": [
+            57,
+            68,
+            420,
+            368
+          ]
+        },
+        {
+          "index": 1,
+          "sourceCrop": [
+            450,
+            40,
+            870,
+            425
+          ],
+          "interiorMatteSeeds": [],
+          "sourceFootX": 235.5,
+          "offset": [
+            57,
+            63
+          ],
+          "size": [
+            361,
+            305
+          ],
+          "visibleBounds": [
+            57,
+            63,
+            418,
+            368
+          ]
+        },
+        {
+          "index": 2,
+          "sourceCrop": [
+            890,
+            40,
+            1270,
+            425
+          ],
+          "interiorMatteSeeds": [
+            [
+              245,
+              159
+            ],
+            [
+              102,
+              70
+            ],
+            [
+              178,
+              62
+            ],
+            [
+              187,
+              72
+            ],
+            [
+              283,
+              165
+            ],
+            [
+              252,
+              158
+            ]
+          ],
+          "sourceFootX": 210,
+          "offset": [
+            81,
+            122
+          ],
+          "size": [
+            333,
+            246
+          ],
+          "visibleBounds": [
+            81,
+            122,
+            414,
+            368
+          ]
+        },
+        {
+          "index": 3,
+          "sourceCrop": [
+            1275,
+            40,
+            1750,
+            425
+          ],
+          "interiorMatteSeeds": [
+            [
+              291,
+              191
+            ]
+          ],
+          "sourceFootX": 253.5,
+          "offset": [
+            40,
+            71
+          ],
+          "size": [
+            415,
+            297
+          ],
+          "visibleBounds": [
+            40,
+            71,
+            455,
+            368
+          ]
+        },
+        {
+          "index": 4,
+          "sourceCrop": [
+            20,
+            450,
+            450,
+            830
+          ],
+          "interiorMatteSeeds": [
+            [
+              171,
+              38
+            ],
+            [
+              194,
+              53
+            ],
+            [
+              154,
+              77
+            ],
+            [
+              234,
+              131
+            ],
+            [
+              161,
+              88
+            ],
+            [
+              212,
+              72
+            ]
+          ],
+          "sourceFootX": 271,
+          "offset": [
+            23,
+            96
+          ],
+          "size": [
+            384,
+            272
+          ],
+          "visibleBounds": [
+            23,
+            96,
+            407,
+            368
+          ]
+        },
+        {
+          "index": 5,
+          "sourceCrop": [
+            460,
+            450,
+            875,
+            830
+          ],
+          "interiorMatteSeeds": [
+            [
+              245,
+              148
+            ],
+            [
+              277,
+              19
+            ]
+          ],
+          "sourceFootX": 235.5,
+          "offset": [
+            57,
+            65
+          ],
+          "size": [
+            364,
+            303
+          ],
+          "visibleBounds": [
+            57,
+            65,
+            421,
+            368
+          ]
+        },
+        {
+          "index": 6,
+          "sourceCrop": [
+            890,
+            450,
+            1290,
+            830
+          ],
+          "interiorMatteSeeds": [
+            [
+              216,
+              212
+            ],
+            [
+              271,
+              180
+            ],
+            [
+              290,
+              194
+            ],
+            [
+              110,
+              106
+            ],
+            [
+              271,
+              64
+            ],
+            [
+              68,
+              84
+            ],
+            [
+              252,
+              185
+            ],
+            [
+              200,
+              182
+            ]
+          ],
+          "sourceFootX": 146.5,
+          "offset": [
+            140,
+            75
+          ],
+          "size": [
+            346,
+            293
+          ],
+          "visibleBounds": [
+            140,
+            75,
+            486,
+            368
+          ]
+        },
+        {
+          "index": 7,
+          "sourceCrop": [
+            1300,
+            450,
+            1740,
+            830
+          ],
+          "interiorMatteSeeds": [
+            [
+              261,
+              161
+            ]
+          ],
+          "sourceFootX": 245,
+          "offset": [
+            48,
+            103
+          ],
+          "size": [
+            368,
+            265
+          ],
+          "visibleBounds": [
+            48,
+            103,
+            416,
+            368
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -8,20 +8,47 @@ import { fitSpriteAtlas, getSpriteAnimationAsset, getSpritePosePosition, SPRITE_
 
 const registration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-v2.json', import.meta.url), 'utf8'));
 const wolfRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-wolf-v1.json', import.meta.url), 'utf8'));
-const records = { ...registration.assets, ...wolfRegistration.assets };
+const fireRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-fire-v1.json', import.meta.url), 'utf8'));
+const rosterRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-roster-v1.json', import.meta.url), 'utf8'));
+const records = { ...registration.assets, ...wolfRegistration.assets, ...fireRegistration.assets, ...rosterRegistration.assets };
 
-test('all 51 forms have explicit factory identities; only four opt into new art', () => {
+test('all 51 forms have explicit factory identities and complete eight-pose art', () => {
   assert.equal(Object.keys(sprites.SPRITE_IMGS).length, 51);
   assert.equal(Object.keys(PROFILES).length, 51);
   for (const [key, profile] of Object.entries(PROFILES)) {
     assert.equal(sprites.getSpriteProfileKey(sprites[key]), key);
     assert.ok(profile.imgKey in sprites.SPRITE_IMGS);
+    assert.ok(getSpriteAnimationAsset(key), `${key} must not silently fall back to original art`);
   }
-  assert.deepEqual(Object.keys(SPRITE_ANIMATION_ASSETS).sort(), ['boss_crazy_dragon', 'player_wolf0', 'player_wolf1', 'player_wolf2']);
-  assert.equal(Object.keys(PROFILES).filter((key) => !getSpriteAnimationAsset(key)).length, 47);
+  assert.deepEqual(Object.keys(SPRITE_ANIMATION_ASSETS).sort(), Object.keys(sprites.SPRITE_IMGS).sort());
+  assert.equal(new Set(Object.values(SPRITE_ANIMATION_ASSETS).map((art) => art.file)).size, 51);
+  assert.equal(Object.keys(records).length, 51);
   assert.equal(getSpriteAnimationAsset('missing'), null);
   assert.equal(getSpriteAnimationAsset(), null);
   assert.equal(sprites.getSpriteProfileKey(() => ''), undefined);
+});
+
+test('dark dragon phase two has independent artwork, not a recolored reference to phase one', () => {
+  const first = getSpriteAnimationAsset('darkLordSVG');
+  const second = getSpriteAnimationAsset('bossDarkPhase2SVG');
+  assert.notEqual(first.src, second.src);
+  const recordsByFile = Object.fromEntries(Object.values(records).map((record) => [record.file, record]));
+  assert.notEqual(recordsByFile[first.art.file].sourceSha256, recordsByFile[second.art.file].sourceSha256);
+  assert.notEqual(recordsByFile[first.art.file].sha256, recordsByFile[second.art.file].sha256);
+});
+
+test('new roster sources and decoded pose registrations cover exactly the shipped batch', () => {
+  const sources = JSON.parse(readFileSync(new URL('../../scripts/roster-art-sources.json', import.meta.url), 'utf8')).sources;
+  assert.equal(sources.length, 44);
+  assert.equal(new Set(sources.map((source) => source.key)).size, sources.length);
+  assert.deepEqual(sources.map((source) => source.key).sort(), Object.values(rosterRegistration.assets).map((record) => record.key).sort());
+  for (const record of Object.values(rosterRegistration.assets)) {
+    assert.equal(new Set(record.frames.map((frame) => frame.rgbaSha256)).size, 8);
+    const source = sources.find((item) => item.key === record.key);
+    assert.equal(record.source, source.source);
+    assert.ok(source.prompt.length > 100);
+    assert.deepEqual(record.frames.map((frame) => frame.sourceFootX), source.anchors);
+  }
 });
 
 test('all registered atlases use fixed union bounds inside the original visual envelope in every pose', () => {

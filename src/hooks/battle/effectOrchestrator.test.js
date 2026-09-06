@@ -39,7 +39,7 @@ test('runEnemyLunge uses default strike delay and invokes onStrike', () => {
     onStrike: () => { strikeCalls += 1; },
   });
 
-  assert.deepEqual(enemyAnim, ['enemyAttackLunge 0.6s ease', '']);
+  assert.deepEqual(enemyAnim, ['enemyAttackLunge 0.5s ease', '']);
   assert.deepEqual(delays, [500]);
   assert.equal(strikeCalls, 1);
 });

@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildBattleCore } from './buildBattleCore.ts';
+import { buildBattleCore, buildBattleStaticCore } from './buildBattleCore.ts';
+import { STARTERS } from '../../../data/starters.ts';
+import { PVP_SELECTABLE_ROSTER } from '../../../data/pvpRoster.ts';
+import { getSpriteProfileKey } from '../../../data/sprites.ts';
+import { getSpriteAnimationAsset } from '../../../data/spriteAnimationAssets.ts';
+import { createPvpEnemyFromStarter } from '../../../hooks/battle/pvpFlow.ts';
 
 function makeStarter(id = 'fire') {
   return {
@@ -77,6 +82,61 @@ const TEST_SCENES = {
     platform2: 'p2',
   },
 };
+
+test('production art follows the actual stage, never the current co-op active role', () => {
+  const wolf = STARTERS.find((s) => s.id === 'wolf');
+  const dragon = PVP_SELECTABLE_ROSTER.find((s) => s.id === 'boss_crazy_dragon');
+  const enemy = { ...makeEnemy('boss_crazy_dragon'), svgFn: dragon.stages[0].svgFn,
+    spriteKey: 'bossCrazyDragonSVG', activeSpriteKey: 'bossCrazyDragonSVG' };
+  for (const battleMode of ['coop', 'double']) {
+    for (const coopActiveSlot of ['main', 'sub']) {
+      const core = buildBattleStaticCore({ scenes: TEST_SCENES, compactUI: true,
+        state: makeState({ starter: wolf, pStg: 0, battleMode, coopActiveSlot, enemy, enemySub: enemy,
+          eHpSub: 40, allySub: { ...wolf, selectedStageIdx: 2 }, pHpSub: 80 }),
+      });
+      assert.deepEqual(core.spriteProfiles, {
+        playerMain: 'playerwolf0SVG', playerSub: 'playerwolf2SVG',
+        enemyMain: 'bossCrazyDragonSVG', enemySub: 'bossCrazyDragonSVG',
+      });
+      assert.equal(getSpriteAnimationAsset(core.spriteProfiles.playerMain), null);
+      assert.ok(getSpriteAnimationAsset(core.spriteProfiles.playerSub));
+    }
+  }
+  const core = buildBattleStaticCore({ scenes: TEST_SCENES, compactUI: false,
+    state: makeState({ starter: wolf, pStg: 2, enemy }),
+  });
+  assert.equal(core.spriteProfiles.playerMain, 'playerwolf2SVG');
+  assert.equal(core.spriteProfiles.playerSub, undefined);
+  assert.equal(core.spriteProfiles.enemySub, undefined);
+});
+
+test('every PvP selectable stage resolves identically on either side, including boss player forms', () => {
+  for (const starter of PVP_SELECTABLE_ROSTER) {
+    for (let pStg = 0; pStg < starter.stages.length; pStg++) {
+      const svgFn = starter.stages[pStg].svgFn;
+      const profileKey = getSpriteProfileKey(svgFn);
+      const core = buildBattleStaticCore({ scenes: TEST_SCENES, compactUI: true,
+        state: makeState({ starter, pStg, battleMode: 'pvp',
+          enemy: createPvpEnemyFromStarter({ ...starter, selectedStageIdx: pStg }),
+        }),
+      });
+      assert.ok(profileKey);
+      assert.equal(core.spriteProfiles.playerMain, profileKey);
+      assert.equal(core.spriteProfiles.enemyMain, profileKey);
+    }
+  }
+});
+
+test('enemy evolution and dark dragon phase changes retain their own art identity', () => {
+  for (const [enemy, eHp, expected] of [
+    [{ ...makeEnemy(), activeSpriteKey: 'slimeEvolvedSVG' }, 40, 'slimeEvolvedSVG'],
+    [{ ...makeEnemy('boss'), spriteKey: 'darkLordSVG', activeSpriteKey: 'darkLordSVG', maxHp: 300 }, 1, 'bossDarkPhase2SVG'],
+  ]) {
+    const core = buildBattleStaticCore({ scenes: TEST_SCENES, compactUI: true, state: makeState({ enemy, eHp }) });
+    assert.equal(core.spriteProfiles.enemyMain, expected);
+    assert.equal(getSpriteAnimationAsset(expected), null);
+  }
+});
 
 test('buildBattleCore applies sealed/risky lock rules in single battle', () => {
   const core = buildBattleCore({

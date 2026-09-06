@@ -48,7 +48,8 @@ export const effectOrchestrator = {
   },
 
   runEnemyLunge({ safeTo, setEAnim, onStrike, strikeDelay = 500 }: EnemyLungeArgs): void {
-    setEAnim('enemyAttackLunge 0.6s ease');
+    // Finish the visual recovery before the flow clears this slot's animation.
+    setEAnim(`enemyAttackLunge ${strikeDelay / 1000}s ease`);
     safeTo(() => {
       setEAnim('');
       if (onStrike) onStrike();

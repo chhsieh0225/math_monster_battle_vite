@@ -111,7 +111,7 @@ test('enemy assist lunges with the sub enemy and places impact on the damaged al
   args.chance = () => true;
   runEnemyTurn(args);
   assert.ok(calls.animations.some((event) => event.side === 'enemy'
-    && event.slot === 'sub' && event.value === 'enemyAttackLunge 0.6s ease'));
+    && event.slot === 'sub' && event.value === 'enemyAttackLunge 0.38s ease'));
   assert.deepEqual(calls.particles.at(-1), {
     emoji: 'enemy', x: fxt().playerSub.x + 24, y: fxt().playerSub.y + 16, count: 3,
   });

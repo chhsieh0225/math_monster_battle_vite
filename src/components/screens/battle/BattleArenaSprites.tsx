@@ -1,11 +1,15 @@
 import { memo } from 'react';
 import type { CSSProperties, RefObject } from 'react';
 import type { EnemyVm } from '../../../types/battle';
-import MonsterSprite from '../../ui/MonsterSprite';
+import { BattleSprite } from './BattleSprite';
+import type { BattleCoreStatic } from './buildBattleCore';
+import type { resolveBattleSpriteAnimations } from '../../../utils/battleAnimations';
 import AmbientParticles from '../../effects/AmbientParticles';
 
 type BattleArenaSpritesProps = {
   showHeavyFx: boolean;
+  spriteProfiles: BattleCoreStatic['spriteProfiles'];
+  spriteAnimations: ReturnType<typeof resolveBattleSpriteAnimations>;
   enemy: EnemyVm;
   starterType: string;
   showEnemySub: boolean;
@@ -46,6 +50,8 @@ const FACING_SUB_STYLE: CSSProperties = {
 
 export const BattleArenaSprites = memo(function BattleArenaSprites({
   showHeavyFx,
+  spriteProfiles,
+  spriteAnimations,
   enemy,
   starterType,
   showEnemySub,
@@ -84,7 +90,8 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
       <div ref={enemySpriteRef} className="battle-sprite-anchor" style={enemyMainSpriteStyle}>
         <div className="battle-sprite-enemy-main">
           <div className="battle-sprite-core battle-sprite-core-main battle-sprite-core-enemy">
-            <MonsterSprite svgStr={eSvg} size={eSize} style={enemyMainFacingStyle} />
+            <BattleSprite profileKey={spriteProfiles.enemyMain} animation={spriteAnimations.enemyMain}
+              svgStr={eSvg} size={eSize} style={enemyMainFacingStyle} />
           </div>
           {showHeavyFx && (
             <AmbientParticles
@@ -101,7 +108,8 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
         <div className="battle-sprite-anchor" style={enemySubSpriteStyle}>
           <div className="battle-sprite-enemy-sub">
             <div className="battle-sprite-core battle-sprite-core-sub battle-sprite-core-enemy">
-              <MonsterSprite svgStr={eSubSvg} size={enemySubSize} style={enemySubFacingStyle} />
+              <BattleSprite profileKey={spriteProfiles.enemySub} animation={spriteAnimations.enemySub}
+                svgStr={eSubSvg} size={enemySubSize} style={enemySubFacingStyle} />
             </div>
           </div>
         </div>
@@ -112,7 +120,8 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
       <div ref={playerSpriteRef} className="battle-sprite-anchor" style={playerMainSpriteStyle}>
         <div className="battle-sprite-player-main">
           <div className="battle-sprite-core battle-sprite-core-main battle-sprite-core-player">
-            <MonsterSprite svgStr={pSvg} size={mainPlayerSize} style={playerMainFacingStyle} />
+            <BattleSprite profileKey={spriteProfiles.playerMain} animation={spriteAnimations.playerMain}
+              svgStr={pSvg} size={mainPlayerSize} style={playerMainFacingStyle} />
           </div>
           {showHeavyFx && (
             <AmbientParticles
@@ -129,7 +138,8 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
         <div ref={playerSubSpriteRef} className="battle-sprite-anchor" style={playerSubSpriteStyle}>
           <div className="battle-sprite-player-sub">
             <div className="battle-sprite-core battle-sprite-core-sub battle-sprite-core-player">
-              <MonsterSprite svgStr={pSubSvg} size={subPlayerSize} style={playerSubFacingStyle} />
+              <BattleSprite profileKey={spriteProfiles.playerSub} animation={spriteAnimations.playerSub}
+                svgStr={pSubSvg} size={subPlayerSize} style={playerSubFacingStyle} />
             </div>
           </div>
         </div>

@@ -115,10 +115,18 @@ function makeSvgFromProfile(p: SpriteProfile): SvgFactory {
 }
 
 // Helper to build from a profile key (SVG export name).
+const profileKeys = new WeakMap<SvgFactory, string>();
+
+export function getSpriteProfileKey(factory: SvgFactory): string | undefined {
+  return profileKeys.get(factory);
+}
+
 function fromProfile(name: string): SvgFactory {
   const p = PROFILES[name];
   if (!p) throw new Error(`[sprites] missing profile for "${name}"`);
-  return makeSvgFromProfile(p);
+  const factory = makeSvgFromProfile(p);
+  profileKeys.set(factory, name);
+  return factory;
 }
 
 // ─── Exports — one per sprite ────────────────────────────────────────

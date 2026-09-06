@@ -437,7 +437,7 @@ function BattleScreenComponent({
       avoid,
     });
     const enemyMain = fit('enemy', snapshot.enemyMainWidthPx * arenaScale, enemyComp, snapshot.enemyMainRightPct, snapshot.enemyTopPct);
-    const enemySub = fit('enemy', snapshot.enemySubWidthPx * arenaScale, getCompensation(S.enemySub?.spriteKey ?? ''), snapshot.enemySubRightPct, snapshot.enemySubTopPct, showEnemySub ? [enemyMain.bounds] : undefined);
+    const enemySub = fit('enemy', snapshot.enemySubWidthPx * arenaScale, getCompensation(coreStatic.spriteProfiles.enemySub ?? ''), snapshot.enemySubRightPct, snapshot.enemySubTopPct, showEnemySub ? [enemyMain.bounds] : undefined);
     const enemies = showEnemySub ? [enemyMain.bounds, enemySub.bounds] : [enemyMain.bounds];
     const placeMain = (avoid: OccupiedBounds) => fit('player', snapshot.playerMainWidthPx * arenaScale * mainDim, playerComp, snapshot.playerMainLeftPct, snapshot.playerMainBottomPct, avoid);
     const placeSub = (avoid: OccupiedBounds) => fit('player', snapshot.playerSubWidthPx * arenaScale * subDim, subComp, snapshot.playerSubLeftPct, snapshot.playerSubBottomPct, avoid);
@@ -449,7 +449,7 @@ function BattleScreenComponent({
       ...snapshot,
       safe: { enemyMain, enemySub, playerMain, playerSub },
     };
-  }, [coreStatic, arenaWidth, arenaGeometry, arenaScale, S.enemySub?.id, S.enemySub?.isEvolved, S.enemySub?.spriteKey]);
+  }, [coreStatic, arenaWidth, arenaGeometry, arenaScale, S.enemySub?.id, S.enemySub?.isEvolved]);
 
   const { measuredEnemyTarget, measuredPlayerTarget, measuredPlayerSubTarget } = useSpriteTargets({
     layoutSignal: memoLaneSnapshot,
@@ -847,6 +847,7 @@ function BattleScreenComponent({
       id="main-content"
       ref={battleRootRef}
       className={battleRootClassName}
+      data-paused={S.gamePaused}
       style={impactStyle}
       role={canTapAdvance ? "button" : undefined}
       tabIndex={canTapAdvance ? 0 : -1}
@@ -961,6 +962,8 @@ function BattleScreenComponent({
 
         <BattleArenaSprites
           showHeavyFx={showHeavyFx}
+          spriteProfiles={coreStatic.spriteProfiles}
+          spriteAnimations={memoSpriteAnims!}
           enemy={enemy}
           starterType={starter.type}
           showEnemySub={showEnemySub}

@@ -1,0 +1,49 @@
+.battle-art-sprite{position:relative;display:block;isolation:isolate}
+.battle-art-facing{position:absolute;inset:0}
+.battle-art-atlas{
+  position:absolute;
+  display:block;
+  background-size:400% 200%;
+  background-repeat:no-repeat;
+  background-position:0 0;
+  image-rendering:auto;
+  contain:paint;
+  animation-timing-function:steps(1,end);
+  animation-fill-mode:both;
+}
+/* Existing outer transforms supply continuous motion; only the key drawing steps. */
+[data-clip=attack] .battle-art-atlas{animation-name:battleArtAttack}
+[data-clip=hurt] .battle-art-atlas{animation-name:battleArtHurt}
+[data-clip=brace] .battle-art-atlas{animation-name:battleArtBrace}
+[data-clip=charge] .battle-art-atlas{background-position:66.666667% 0}
+[data-clip=defeat] .battle-art-atlas{background-position:100% 100%}
+@keyframes battleArtAttack{
+  0%{background-position:0 0}
+  6%{background-position:33.333333% 0}
+  14%{background-position:66.666667% 0}
+  36%{background-position:100% 0}
+  60%{background-position:0 100%}
+  78%{background-position:33.333333% 100%}
+  96%,100%{background-position:0 0}
+}
+@keyframes battleArtHurt{
+  0%{background-position:66.666667% 100%}
+  42%{background-position:100% 100%}
+  74%{background-position:33.333333% 100%}
+  96%,100%{background-position:0 0}
+}
+@keyframes battleArtBrace{
+  0%{background-position:100% 100%}
+  70%{background-position:33.333333% 100%}
+  96%,100%{background-position:0 0}
+}
+.battle-impact-freeze .battle-art-atlas{animation-play-state:paused!important}
+.battle-root[data-paused=true] .battle-arena *,
+.battle-root[data-paused=true] .battle-arena *::before,
+.battle-root[data-paused=true] .battle-arena *::after{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){
+  .battle-art-atlas{animation:none!important}
+  [data-clip=attack] .battle-art-atlas{background-position:100% 0}
+  [data-clip=hurt] .battle-art-atlas{background-position:66.666667% 100%}
+  [data-clip=brace] .battle-art-atlas{background-position:100% 100%}
+}

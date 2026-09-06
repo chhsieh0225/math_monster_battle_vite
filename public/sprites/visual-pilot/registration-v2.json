@@ -1,0 +1,329 @@
+{
+  "cell": [
+    512,
+    384
+  ],
+  "grid": [
+    4,
+    2
+  ],
+  "baseline": 368,
+  "poses": [
+    "idle",
+    "inhale",
+    "anticipation",
+    "strike",
+    "followThrough",
+    "recovery",
+    "recoil",
+    "bracedRecovery"
+  ],
+  "assets": {
+    "steel-wolf-v2": {
+      "file": "steel-wolf-v2.webp",
+      "sha256": "b40634004852f79e64556eacdfcbf7a442dc09d865417b3f73cec7b811cf4efe",
+      "bytes": 284968,
+      "uniformScale": 0.95,
+      "footX": 368,
+      "frames": [
+        {
+          "index": 0,
+          "sourceFootX": 288,
+          "offset": [
+            94,
+            123
+          ],
+          "size": [
+            327,
+            245
+          ],
+          "visibleBounds": [
+            96,
+            125,
+            421,
+            368
+          ]
+        },
+        {
+          "index": 1,
+          "sourceFootX": 288.5,
+          "offset": [
+            94,
+            105
+          ],
+          "size": [
+            347,
+            263
+          ],
+          "visibleBounds": [
+            94,
+            107,
+            441,
+            368
+          ]
+        },
+        {
+          "index": 2,
+          "sourceFootX": 296.5,
+          "offset": [
+            86,
+            140
+          ],
+          "size": [
+            347,
+            228
+          ],
+          "visibleBounds": [
+            86,
+            140,
+            433,
+            368
+          ]
+        },
+        {
+          "index": 3,
+          "sourceFootX": 368,
+          "offset": [
+            18,
+            125
+          ],
+          "size": [
+            430,
+            243
+          ],
+          "visibleBounds": [
+            18,
+            125,
+            448,
+            368
+          ]
+        },
+        {
+          "index": 4,
+          "sourceFootX": 238,
+          "offset": [
+            142,
+            121
+          ],
+          "size": [
+            349,
+            247
+          ],
+          "visibleBounds": [
+            142,
+            121,
+            491,
+            368
+          ]
+        },
+        {
+          "index": 5,
+          "sourceFootX": 285,
+          "offset": [
+            97,
+            143
+          ],
+          "size": [
+            330,
+            225
+          ],
+          "visibleBounds": [
+            99,
+            146,
+            425,
+            366
+          ]
+        },
+        {
+          "index": 6,
+          "sourceFootX": 252.5,
+          "offset": [
+            128,
+            109
+          ],
+          "size": [
+            314,
+            259
+          ],
+          "visibleBounds": [
+            128,
+            109,
+            442,
+            368
+          ]
+        },
+        {
+          "index": 7,
+          "sourceFootX": 316,
+          "offset": [
+            68,
+            168
+          ],
+          "size": [
+            351,
+            200
+          ],
+          "visibleBounds": [
+            68,
+            171,
+            419,
+            366
+          ]
+        }
+      ]
+    },
+    "crazy-dragon-v2": {
+      "file": "crazy-dragon-v2.webp",
+      "sha256": "422ee7d14637473ed3351de4b5804e2769b8982d556758aaf1164b8f6741d366",
+      "bytes": 343014,
+      "uniformScale": 1,
+      "footX": 300,
+      "frames": [
+        {
+          "index": 0,
+          "sourceFootX": 206,
+          "offset": [
+            94,
+            107
+          ],
+          "size": [
+            336,
+            261
+          ],
+          "visibleBounds": [
+            94,
+            107,
+            430,
+            368
+          ]
+        },
+        {
+          "index": 1,
+          "sourceFootX": 213,
+          "offset": [
+            87,
+            64
+          ],
+          "size": [
+            349,
+            304
+          ],
+          "visibleBounds": [
+            87,
+            64,
+            436,
+            368
+          ]
+        },
+        {
+          "index": 2,
+          "sourceFootX": 158.5,
+          "offset": [
+            142,
+            51
+          ],
+          "size": [
+            325,
+            317
+          ],
+          "visibleBounds": [
+            142,
+            51,
+            467,
+            368
+          ]
+        },
+        {
+          "index": 3,
+          "sourceFootX": 244,
+          "offset": [
+            56,
+            91
+          ],
+          "size": [
+            416,
+            277
+          ],
+          "visibleBounds": [
+            56,
+            91,
+            472,
+            368
+          ]
+        },
+        {
+          "index": 4,
+          "sourceFootX": 209,
+          "offset": [
+            91,
+            83
+          ],
+          "size": [
+            391,
+            285
+          ],
+          "visibleBounds": [
+            91,
+            83,
+            482,
+            368
+          ]
+        },
+        {
+          "index": 5,
+          "sourceFootX": 208,
+          "offset": [
+            92,
+            97
+          ],
+          "size": [
+            339,
+            271
+          ],
+          "visibleBounds": [
+            92,
+            97,
+            431,
+            368
+          ]
+        },
+        {
+          "index": 6,
+          "sourceFootX": 198.5,
+          "offset": [
+            102,
+            87
+          ],
+          "size": [
+            328,
+            281
+          ],
+          "visibleBounds": [
+            102,
+            87,
+            430,
+            368
+          ]
+        },
+        {
+          "index": 7,
+          "sourceFootX": 211,
+          "offset": [
+            89,
+            109
+          ],
+          "size": [
+            367,
+            259
+          ],
+          "visibleBounds": [
+            89,
+            109,
+            456,
+            368
+          ]
+        }
+      ]
+    }
+  }
+}

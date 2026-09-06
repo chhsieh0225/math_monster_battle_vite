@@ -6,6 +6,7 @@ type RunEnemyTurnArgs = Parameters<typeof runEnemyTurnController>[0];
 
 type BuildSelectMoveFlowArgsArgs = {
   index: number;
+  bossTactic?: RunSelectMoveFlowArgs['bossTactic'];
   sr: { current: RunSelectMoveFlowArgs['state'] };
   runtime: Pick<
     RunSelectMoveFlowArgs,
@@ -60,6 +61,7 @@ type BuildEnemyTurnArgsArgs = {
 
 export function buildSelectMoveFlowArgs({
   index,
+  bossTactic,
   sr,
   runtime,
   ui,
@@ -67,6 +69,7 @@ export function buildSelectMoveFlowArgs({
 }: BuildSelectMoveFlowArgsArgs): RunSelectMoveFlowArgs {
   return {
     index,
+    bossTactic,
     state: sr.current,
     timedMode: runtime.timedMode,
     questionTimeLimitSec: runtime.questionTimeLimitSec,

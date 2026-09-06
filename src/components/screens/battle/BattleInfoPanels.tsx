@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import type { CSSProperties } from 'react';
+import type { CSSProperties, RefObject } from 'react';
 import { hasSpecialTrait } from '../../../utils/traits';
 import HPBar from '../../ui/HPBar';
 import XPBar from '../../ui/XPBar';
@@ -12,6 +12,7 @@ type Translator = (key: string, fallback?: string, params?: TranslatorParams) =>
 const hpFocusClass = (active: boolean): string => `battle-hp-focus ${active ? 'is-active' : 'is-dim'}`;
 
 type BattleEnemyInfoPanelProps = {
+  panelRef?: RefObject<HTMLDivElement | null>;
   t: Translator;
   style: CSSProperties;
   enemy: EnemyVm;
@@ -36,6 +37,7 @@ type BattleEnemyInfoPanelProps = {
 };
 
 export const BattleEnemyInfoPanel = memo(function BattleEnemyInfoPanel({
+  panelRef,
   t,
   style,
   enemy,
@@ -59,7 +61,7 @@ export const BattleEnemyInfoPanel = memo(function BattleEnemyInfoPanel({
   bossCharging,
 }: BattleEnemyInfoPanelProps) {
   return (
-    <div className="battle-info-enemy" style={style}>
+    <div ref={panelRef} className="battle-info-enemy" style={style}>
       <div className={hpFocusClass(pvpEnemyBarActive)}>
         <HPBar
           cur={enemyHp}
@@ -125,6 +127,7 @@ export const BattleEnemyInfoPanel = memo(function BattleEnemyInfoPanel({
 });
 
 type BattlePlayerInfoPanelProps = {
+  panelRef?: RefObject<HTMLDivElement | null>;
   t: Translator;
   style: CSSProperties;
   battleMode: UseBattleState['battleMode'];
@@ -155,6 +158,7 @@ type BattlePlayerInfoPanelProps = {
 };
 
 export const BattlePlayerInfoPanel = memo(function BattlePlayerInfoPanel({
+  panelRef,
   t,
   style,
   battleMode,
@@ -183,7 +187,7 @@ export const BattlePlayerInfoPanel = memo(function BattlePlayerInfoPanel({
   poisoned = false,
 }: BattlePlayerInfoPanelProps) {
   return (
-    <div className="battle-info-player" style={style}>
+    <div ref={panelRef} className="battle-info-player" style={style}>
       <div className={hpFocusClass(mainBarActive)}>
         <HPBar
           cur={pHp}

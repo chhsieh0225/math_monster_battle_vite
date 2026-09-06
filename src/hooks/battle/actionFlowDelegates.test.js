@@ -34,6 +34,7 @@ test('runSelectMoveWithContext forwards index through selectMoveInput', () => {
   let received = null;
   const runner = (args) => { received = args; };
   const baseInput = {
+    bossTactic: 'force',
     sr: { current: {} },
     runtime: { timedMode: false },
     ui: {},
@@ -42,6 +43,7 @@ test('runSelectMoveWithContext forwards index through selectMoveInput', () => {
 
   runSelectMoveWithContext(baseInput, 3, runner);
   assert.equal(received?.selectMoveInput?.index, 3);
+  assert.equal(received?.selectMoveInput?.bossTactic, 'force');
   assert.equal(received?.selectMoveInput?.runtime, baseInput.runtime);
 });
 

@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildPostHitResolutionPlan, runPlayerAnswer } from './playerFlow.ts';
 import { getAttackEffectHitDelay } from '../../utils/effectTiming.ts';
+import { resolvePlayerStrike } from './turnResolver.ts';
+import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
+import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
+import { POWER_CAPS } from '../../data/constants.ts';
+import { withRandomSource } from '../../utils/prng.ts';
 
 function createClock() {
   let now = 0;
@@ -19,6 +24,137 @@ function createClock() {
       now = target;
     },
   };
+}
+
+function prepareBossStrike({ tactic, slot = 'main', state: overrides = {}, chance = () => false, correct = true } = {}) {
+  const sourceClock = createClock();
+  const clock = {
+    schedule: sourceClock.schedule,
+    advance: (target) => withRandomSource(() => 0.5, () => sourceClock.advance(target)),
+  };
+  const ctx = createTestContext({
+    battleMode: slot === 'sub' ? 'coop' : 'single',
+    starter: { name: 'Turtle', type: 'water' },
+    allySub: { name: 'Partner', type: 'water', selectedStageIdx: 0 },
+    enemy: { id: 'boss', maxHp: 500, mType: 'water' },
+    bossCharging: true,
+    q: { answer: 10, bossTactic: tactic },
+    ...overrides,
+  });
+  const move = { name: 'Strike', basePower: 24, growth: 0, type: 'water' };
+  const rawDamage = withRandomSource(() => 0.5, () => resolvePlayerStrike({
+    move, enemy: ctx.state.enemy, moveIdx: 0, moveLvl: 1, didLevel: false,
+    maxPower: POWER_CAPS[0], streak: 1, stageBonus: 0, cursed: false,
+    starterType: 'water', playerHp: slot === 'sub' ? 30 : 100, bossPhase: 0,
+    chance: () => false,
+  }).dmg);
+  runPlayerAnswer({ ...ctx.deps, safeTo: clock.schedule, correct, chance,
+    attackerSlot: slot, move, starter: ctx.state.starter });
+  return { ...ctx, clock, rawDamage };
+}
+
+for (const slot of ['main', 'sub']) {
+  for (const tactic of ['guarded', 'force', undefined]) {
+    test(`${slot} ${tactic ?? 'legacy'} charge break applies configured damage and retaliation to the correct actor`, () => {
+      const { state, clock, rawDamage, calls, counters } = prepareBossStrike({ tactic, slot });
+      const guarded = tactic === 'guarded';
+      const raw = guarded ? Math.round(rawDamage * BALANCE_CONFIG.traits.boss.guardedBreakDamageScale) : rawDamage;
+      const damage = applyBossDamageReduction(raw, 'boss');
+      const retaliation = guarded ? 0 : Math.max(1, Math.round(damage * BALANCE_CONFIG.traits.boss.chargeCounterRatio));
+      clock.advance(579);
+      assert.equal(state.bossCharging, true);
+      clock.advance(5000);
+      assert.equal(state.bossCharging, false);
+      assert.equal(counters.eHp.getValue(), 500 - damage);
+      assert.equal(counters.pHp.getValue(), 100 - (slot === 'main' ? retaliation : 0));
+      assert.equal(counters.pHpSub.getValue(), 30 - (slot === 'sub' ? retaliation : 0));
+      assert.equal(calls.doEnemyTurn, 1, 'a guarded break does not skip the enemy turn');
+    });
+  }
+}
+
+for (const tactic of ['guarded', 'force']) {
+  test(`${tactic} still interrupts a fully shielded hit, without bypassing the shield`, () => {
+    let chanceCalls = 0;
+    const { clock, state, counters, calls } = prepareBossStrike({ tactic, chance: () => ++chanceCalls === 2 });
+    clock.advance(5000);
+    assert.equal(state.bossCharging, false);
+    assert.equal(counters.eHp.getValue(), 500);
+    assert.ok(calls.atkEffect.some((fx) => fx?.impact?.outcome === 'blocked'));
+    assert.equal(counters.pHp.getValue() === 100, tactic === 'guarded');
+    assert.equal(calls.doEnemyTurn, 1);
+  });
+}
+
+for (const [enemyId, blockCall, scale] of [
+  ['boss', 3, BALANCE_CONFIG.traits.boss.shadowShieldPartialDamageScale],
+  ['boss_sword_god', 2, BALANCE_CONFIG.traits.boss.swordParryScale],
+]) {
+  test(`guarded damage stacks with ${enemyId} shield/parry reduction`, () => {
+    let chanceCalls = 0;
+    const { clock, counters, rawDamage } = prepareBossStrike({ tactic: 'guarded',
+      state: { enemy: { id: enemyId, maxHp: 500, mType: 'water' } },
+      chance: () => ++chanceCalls === blockCall });
+    clock.advance(5000);
+    const guarded = Math.round(rawDamage * BALANCE_CONFIG.traits.boss.guardedBreakDamageScale);
+    assert.equal(counters.eHp.getValue(), 500 - applyBossDamageReduction(Math.round(guarded * scale), enemyId));
+    assert.equal(counters.pHp.getValue(), 100);
+  });
+}
+
+test('a captured tactic is not replaced by a later question during attack travel', () => {
+  const { clock, state, counters } = prepareBossStrike({ tactic: 'guarded' });
+  clock.advance(580);
+  state.q = { answer: 20, bossTactic: 'force' };
+  clock.advance(5000);
+  assert.equal(counters.pHp.getValue(), 100);
+});
+
+for (const stateOverride of [{ bossCharging: false }, { enemy: { id: 'slime', maxHp: 500, mType: 'water' } }]) {
+  test(`guarded metadata does not penalize an ineligible target: ${JSON.stringify(stateOverride)}`, () => {
+    const guarded = prepareBossStrike({ tactic: 'guarded' });
+    const force = prepareBossStrike({ tactic: 'force' });
+    for (const ctx of [guarded, force]) {
+      ctx.clock.advance(580);
+      Object.assign(ctx.state, stateOverride);
+      ctx.clock.advance(5000);
+      assert.equal(ctx.counters.pHp.getValue(), 100);
+    }
+    assert.equal(guarded.counters.eHp.getValue(), force.counters.eHp.getValue());
+  });
+}
+
+test('a wrong guarded answer cannot interrupt or skip the enemy turn', () => {
+  const { clock, state, calls, counters, runPendingTextAdvanceAction } = prepareBossStrike({ tactic: 'guarded', correct: false });
+  clock.advance(5000);
+  assert.equal(state.bossCharging, true);
+  assert.equal(counters.eHp.getValue(), 500);
+  assert.equal(runPendingTextAdvanceAction(), true);
+  assert.equal(calls.doEnemyTurn, 1);
+});
+
+test('leaving battle during guarded attack travel does not cancel the boss charge', () => {
+  const { clock, state, counters } = prepareBossStrike({ tactic: 'guarded' });
+  clock.advance(580);
+  state.screen = 'title';
+  clock.advance(5000);
+  assert.equal(state.bossCharging, true);
+  assert.equal(counters.eHp.getValue(), 500);
+});
+
+for (const slot of ['main', 'sub']) {
+  test(`${slot} guarded choice can avoid lethal charge retaliation without granting a free enemy turn skip`, () => {
+    const hp = slot === 'main' ? { pHp: 1 } : { pHpSub: 1 };
+    const guarded = prepareBossStrike({ tactic: 'guarded', slot, state: hp });
+    const force = prepareBossStrike({ tactic: 'force', slot, state: hp });
+    guarded.clock.advance(5000);
+    force.clock.advance(5000);
+    assert.equal(guarded.calls.ko.length, 0);
+    assert.equal(guarded.calls.doEnemyTurn, 1);
+    assert.equal(force.calls.ko.length, 1);
+    assert.equal(force.calls.ko[0].target, slot);
+    assert.equal(force.calls.doEnemyTurn, 0);
+  });
 }
 
 for (const slot of ['main', 'sub']) {
@@ -180,7 +316,7 @@ function createTestContext(stateOverrides = {}) {
     setAtkEffect: (value) => { calls.atkEffect.push(value); },
     setEAnim: (value) => { calls.eAnim.push(value); },
     setEffMsg: (value) => { calls.effMsg.push(value); },
-    setBossCharging: () => {},
+    setBossCharging: (value) => { state.bossCharging = value; },
     setShadowShieldCD: () => {},
     setBurnStack: burn.setter,
     setPHp: pHp.setter,

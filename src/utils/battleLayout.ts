@@ -47,6 +47,90 @@ export type BattleLayoutConfig = {
 
 export type BattleDeviceTier = 'phone' | 'tablet' | 'laptop';
 
+export const BATTLE_ARENA_HEIGHT_SHARE = 0.55;
+
+export type BattleArenaGeometry = {
+  width: number;
+  height: number;
+  rootHeight: number;
+  enemyHudRight: number;
+  enemyHudBottom: number;
+  playerHudLeft: number;
+  playerHudInset: number;
+};
+
+type SafeSpritePlacementInput = {
+  arena: BattleArenaGeometry;
+  side: 'enemy' | 'player';
+  frameWidth: number;
+  compensation: number;
+  desiredCenterX: number;
+  desiredCenterY: number;
+  avoid?: ReadonlyArray<{ left: number; top: number; right: number; bottom: number }>;
+};
+
+export function resolveBattleSpritePlacement({
+  arena, side, frameWidth, compensation, desiredCenterX, desiredCenterY, avoid,
+}: SafeSpritePlacementInput) {
+  const gap = 14;
+  const frameHeight = frameWidth * 100 / 120;
+  // Bound the painted image, not the transparent SVG frame. Include tilt,
+  // breathing and recoil room without measuring animated DOM rectangles.
+  const bodyWidth = frameWidth * 1.08 + frameHeight * 0.16;
+  const bodyHeight = frameHeight / Math.max(1, compensation) * 1.08 + frameWidth * 0.16;
+  const hudBottom = arena.height - arena.playerHudInset;
+  let regions = [
+    { left: gap, top: arena.enemyHudBottom + gap, right: arena.width - gap, bottom: hudBottom - gap },
+    side === 'enemy'
+      ? { left: arena.enemyHudRight + gap, top: gap, right: arena.width - gap, bottom: hudBottom - gap }
+      : { left: gap, top: arena.enemyHudBottom + gap, right: arena.playerHudLeft - gap, bottom: arena.height - gap },
+  ].filter((rect) => rect.right > rect.left && rect.bottom > rect.top);
+  for (const occupied of avoid ?? []) {
+    regions = regions.flatMap((rect) => {
+      if (occupied.right + 6 <= rect.left || occupied.left - 6 >= rect.right
+        || occupied.bottom + 6 <= rect.top || occupied.top - 6 >= rect.bottom) return [rect];
+      return [
+        { ...rect, right: Math.min(rect.right, occupied.left - 6) },
+        { ...rect, left: Math.max(rect.left, occupied.right + 6) },
+        { ...rect, bottom: Math.min(rect.bottom, occupied.top - 6) },
+        { ...rect, top: Math.max(rect.top, occupied.bottom + 6) },
+      ];
+    }).filter((rect) => rect.right > rect.left && rect.bottom > rect.top);
+  }
+  // Normal supported viewports always have an open side lane. Keep malformed
+  // or transient zero-sized layouts finite until the first measurement.
+  const candidates = regions.length ? regions : [{ left: 0, top: 0, right: Math.max(1, arena.width), bottom: Math.max(1, arena.height) }];
+  const placements = candidates.map((region) => {
+    const scale = Math.min(1, (region.right - region.left) / Math.max(1, bodyWidth), (region.bottom - region.top) / Math.max(1, bodyHeight));
+    const width = bodyWidth * scale;
+    const height = bodyHeight * scale;
+    const cx = clampNumber(desiredCenterX, region.left + width / 2, region.right - width / 2);
+    const cy = clampNumber(desiredCenterY, region.top + height / 2, region.bottom - height / 2);
+    return { region, scale, width, height, cx, cy, distance: Math.hypot(cx - desiredCenterX, cy - desiredCenterY) };
+  });
+  placements.sort((a, b) => b.scale - a.scale || a.distance - b.distance);
+  const { region, scale, width, height, cx, cy } = placements[0];
+  const bounds = { left: cx - width / 2, top: cy - height / 2, right: cx + width / 2, bottom: cy + height / 2 };
+  return {
+    left: cx - frameWidth * scale / 2,
+    top: cy - frameHeight * scale / 2,
+    width: frameWidth * scale,
+    height: frameHeight * scale,
+    scale,
+    cx,
+    cy,
+    bounds,
+    lungeX: side === 'enemy'
+      ? -Math.min(60, Math.max(0, bounds.left - region.left + gap - 4))
+      : Math.min(62, Math.max(0, region.right - bounds.right + gap - 4)),
+    lungeY: side === 'enemy'
+      ? Math.min(40, Math.max(0, region.bottom - bounds.bottom + gap - 4))
+      : -Math.min(42, Math.max(0, bounds.top - region.top + gap - 4)),
+    dodgeX: -Math.min(60, Math.max(0, bounds.left - region.left + gap - 4)),
+    dodgeY: -Math.min(20, Math.max(0, bounds.top - region.top + gap - 4)),
+  };
+}
+
 export const BATTLE_ARENA_VIEWPORT = {
   width: 390,
   height: 550,

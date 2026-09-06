@@ -14,8 +14,9 @@ import {
   getAttackEffectNextStepDelay,
 } from '../../utils/effectTiming.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
+import { canChooseBossTactic, getBossTacticProfile } from '../../utils/turnFlow.ts';
 import type { AchievementId } from '../../types/game';
-import type { AttackEffectVm, BattleAnimationSetter } from '../../types/battle';
+import type { AttackEffectVm, BattleAnimationSetter, BossTactic } from '../../types/battle';
 import { effectOrchestrator } from './effectOrchestrator.ts';
 import { fxt } from './battleFxTargets.ts';
 import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
@@ -61,6 +62,7 @@ type BattleEnemy = {
 };
 
 type BattleQuestion = {
+  bossTactic?: BossTactic;
   answer?: number;
   steps?: string[];
 };
@@ -383,6 +385,7 @@ export function runPlayerAnswer({
   if (!isBattleActiveState(s)) return;
   if (s.selIdx == null || !s.enemy) return;
   const moveIdx = s.selIdx;
+  const bossTactic = s.q?.bossTactic;
   // Capture the actor once; delayed callbacks must not follow active-slot changes.
   const setPAnim = (animation: string): void => setPlayerAnimation(animation, attackerSlot);
 
@@ -607,15 +610,25 @@ export function runPlayerAnswer({
             safeToIfBattleActive(() => setEffMsg(null), 1500);
           }
 
-          const wasBossCharging = Boolean(s3.bossCharging && BOSS_IDS.has(s3.enemy.id ?? ''));
+          const wasBossCharging = canChooseBossTactic({
+            battleMode: s3.battleMode,
+            enemyId: s3.enemy.id,
+            bossCharging: s3.bossCharging,
+          });
+          const tacticProfile = getBossTacticProfile(wasBossCharging ? bossTactic : undefined);
+          const tacticalDmg = tacticProfile.damageScale === 1
+            ? dmg : Math.max(1, Math.round(dmg * tacticProfile.damageScale));
           if (wasBossCharging) {
             setBossCharging(false);
-            safeToIfBattleActive(() => addD(tr(t, 'battle.tag.chargeInterrupted', '💥Charge Interrupted!'), fxt().enemyAbove.x, fxt().enemyAbove.y, '#fbbf24'), 400);
+            const interruptText = bossTactic === 'guarded'
+              ? tr(t, 'battle.tag.guardedBreak', 'Guarded Break!')
+              : tr(t, 'battle.tag.chargeInterrupted', '💥Charge Interrupted!');
+            safeToIfBattleActive(() => addD(interruptText, fxt().enemyAbove.x, fxt().enemyAbove.y, '#fbbf24'), 400);
           }
 
           const runChargeCounter = (baseDamage: number): boolean => {
             if (!wasBossCharging) return false;
-            const counterRatio = Math.max(0, TRAIT_BALANCE.boss.chargeCounterRatio);
+            const counterRatio = Math.max(0, tacticProfile.counterRatio);
             if (counterRatio <= 0 || baseDamage <= 0) return false;
             const counterDmg = Math.max(1, Math.round(baseDamage * counterRatio));
             const nextAttackerHp = applyDamageToAttacker({
@@ -638,7 +651,7 @@ export function runPlayerAnswer({
           };
 
           // Dark Dragon King shadow shield: 20% full block, 50% reduce by 40%
-          let finalDmg = dmg;
+          let finalDmg = tacticalDmg;
           if (s3.enemy.id === 'boss') {
             const fullBlock = chance(TRAIT_BALANCE.boss.shadowShieldFullBlockChance);
             const partialBlock = !fullBlock && chance(TRAIT_BALANCE.boss.shadowShieldPartialBlockChance);
@@ -650,7 +663,7 @@ export function runPlayerAnswer({
               setEffMsg({ text: tr(t, 'battle.effect.shadowShield', '🛡️ Shadow Shield absorbed the attack!'), color: '#7c3aed' });
               safeToIfBattleActive(() => setEffMsg(null), 1500);
               addD(tr(t, 'battle.tag.shielded', '🛡️BLOCKED'), fxt().enemyMain.x, fxt().enemyMain.y, '#7c3aed');
-              const chargeCounterKo = runChargeCounter(dmg);
+              const chargeCounterKo = runChargeCounter(tacticalDmg);
               safeToIfBattleActive(() => {
                 setEAnim('');
                 setAtkEffect(null);
@@ -660,7 +673,7 @@ export function runPlayerAnswer({
             }
             if (partialBlock) {
               setShadowShieldCD(1);
-              finalDmg = Math.max(1, Math.round(dmg * TRAIT_BALANCE.boss.shadowShieldPartialDamageScale));
+              finalDmg = Math.max(1, Math.round(tacticalDmg * TRAIT_BALANCE.boss.shadowShieldPartialDamageScale));
               sfx.play('specDef');
               setEffMsg({ text: tr(t, 'battle.effect.shadowShieldPartial', '🛡️ Shadow Shield reduced damage!'), color: '#a78bfa' });
               safeToIfBattleActive(() => setEffMsg(null), 1500);
@@ -672,7 +685,7 @@ export function runPlayerAnswer({
 
           // Sword God parry: 50% chance to halve incoming damage
           if (s3.enemy.id === 'boss_sword_god' && chance(TRAIT_BALANCE.boss.swordParryChance)) {
-            finalDmg = Math.max(1, Math.round(dmg * TRAIT_BALANCE.boss.swordParryScale));
+            finalDmg = Math.max(1, Math.round(tacticalDmg * TRAIT_BALANCE.boss.swordParryScale));
             sfx.play('specDef');
             setEffMsg({ text: tr(t, 'battle.effect.swordParry', '⚔️ Sword Parry! Damage halved!'), color: '#94a3b8' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);

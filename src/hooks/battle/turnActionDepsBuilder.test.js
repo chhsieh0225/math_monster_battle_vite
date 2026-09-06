@@ -73,6 +73,7 @@ test('buildSelectMoveFlowArgs uses battle field diff setter (not UI)', () => {
 
   const args = buildSelectMoveFlowArgs({
     index: 0,
+    bossTactic: 'guarded',
     sr,
     runtime: {
       timedMode: true,
@@ -101,5 +102,6 @@ test('buildSelectMoveFlowArgs uses battle field diff setter (not UI)', () => {
   });
 
   assert.equal(args.setDiffLevel, battleDiffSetter);
+  assert.equal(args.bossTactic, 'guarded');
   assert.notEqual(args.setDiffLevel, uiDiffSetter);
 });

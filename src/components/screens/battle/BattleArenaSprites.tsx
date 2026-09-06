@@ -81,48 +81,56 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
   return (
     <>
       {/* Enemy sprite */}
-      <div ref={enemySpriteRef} className="battle-sprite-enemy-main" style={enemyMainSpriteStyle}>
-        <div className="battle-sprite-core battle-sprite-core-main battle-sprite-core-enemy">
-          <MonsterSprite svgStr={eSvg} size={eSize} style={enemyMainFacingStyle} />
+      <div ref={enemySpriteRef} className="battle-sprite-anchor" style={enemyMainSpriteStyle}>
+        <div className="battle-sprite-enemy-main">
+          <div className="battle-sprite-core battle-sprite-core-main battle-sprite-core-enemy">
+            <MonsterSprite svgStr={eSvg} size={eSize} style={enemyMainFacingStyle} />
+          </div>
+          {showHeavyFx && (
+            <AmbientParticles
+              type={enemy.mType || 'grass'}
+              type2={enemy.mType2}
+              size={eSize}
+              visualScale={enemyMainVisualScale}
+              seed={`e-${enemy.id}`}
+            />
+          )}
         </div>
-        {showHeavyFx && (
-          <AmbientParticles
-            type={enemy.mType || 'grass'}
-            type2={enemy.mType2}
-            size={eSize}
-            visualScale={enemyMainVisualScale}
-            seed={`e-${enemy.id}`}
-          />
-        )}
       </div>
       {showEnemySub && eSubSvg && (
-        <div className="battle-sprite-enemy-sub" style={enemySubSpriteStyle}>
-          <div className="battle-sprite-core battle-sprite-core-sub battle-sprite-core-enemy">
-            <MonsterSprite svgStr={eSubSvg} size={enemySubSize} style={enemySubFacingStyle} />
+        <div className="battle-sprite-anchor" style={enemySubSpriteStyle}>
+          <div className="battle-sprite-enemy-sub">
+            <div className="battle-sprite-core battle-sprite-core-sub battle-sprite-core-enemy">
+              <MonsterSprite svgStr={eSubSvg} size={enemySubSize} style={enemySubFacingStyle} />
+            </div>
           </div>
         </div>
       )}
       {showEnemyShadow && <div className="battle-sprite-enemy-shadow" style={enemyMainShadowStyle} />}
 
       {/* Player sprite */}
-      <div ref={playerSpriteRef} className="battle-sprite-player-main" style={playerMainSpriteStyle}>
-        <div className="battle-sprite-core battle-sprite-core-main battle-sprite-core-player">
-          <MonsterSprite svgStr={pSvg} size={mainPlayerSize} style={playerMainFacingStyle} />
+      <div ref={playerSpriteRef} className="battle-sprite-anchor" style={playerMainSpriteStyle}>
+        <div className="battle-sprite-player-main">
+          <div className="battle-sprite-core battle-sprite-core-main battle-sprite-core-player">
+            <MonsterSprite svgStr={pSvg} size={mainPlayerSize} style={playerMainFacingStyle} />
+          </div>
+          {showHeavyFx && (
+            <AmbientParticles
+              type={starterType || 'grass'}
+              size={mainPlayerSize}
+              visualScale={playerMainVisualScale}
+              seed={`p-${starterType}`}
+              count={5}
+            />
+          )}
         </div>
-        {showHeavyFx && (
-          <AmbientParticles
-            type={starterType || 'grass'}
-            size={mainPlayerSize}
-            visualScale={playerMainVisualScale}
-            seed={`p-${starterType}`}
-            count={5}
-          />
-        )}
       </div>
       {showAllySub && pSubSvg && (
-        <div ref={playerSubSpriteRef} className="battle-sprite-player-sub" style={playerSubSpriteStyle}>
-          <div className="battle-sprite-core battle-sprite-core-sub battle-sprite-core-player">
-            <MonsterSprite svgStr={pSubSvg} size={subPlayerSize} style={playerSubFacingStyle} />
+        <div ref={playerSubSpriteRef} className="battle-sprite-anchor" style={playerSubSpriteStyle}>
+          <div className="battle-sprite-player-sub">
+            <div className="battle-sprite-core battle-sprite-core-sub battle-sprite-core-player">
+              <MonsterSprite svgStr={pSubSvg} size={subPlayerSize} style={playerSubFacingStyle} />
+            </div>
           </div>
         </div>
       )}

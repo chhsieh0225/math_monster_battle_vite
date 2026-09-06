@@ -1,6 +1,7 @@
 import { memo, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import type { CSSProperties } from 'react';
+import { getBossTacticProfile } from '../../../utils/turnFlow.ts';
 import type {
   FeedbackVm,
   MoveVm,
@@ -139,6 +140,17 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
           {timedMode ? t('battle.answer.timed', '⏱️ Timed Answer!') : t('battle.answer.hit', 'Answer correctly to hit')}
         </span>
       </div>
+
+      {question.bossTactic && (
+        <div className="battle-question-tactic">
+          <strong>{t(`battle.tactic.${question.bossTactic}`, question.bossTactic)}</strong>
+          {' · '}
+          {t(`battle.tactic.${question.bossTactic}Detail`, '', {
+            power: Math.round(getBossTacticProfile(question.bossTactic).damageScale * 100),
+            counter: Math.round(getBossTacticProfile(question.bossTactic).counterRatio * 100),
+          })}
+        </div>
+      )}
 
       <div className="battle-question-card">
         {timedMode && !answered && (

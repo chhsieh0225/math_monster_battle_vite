@@ -1,4 +1,5 @@
-import type { MoveVm, QuestionVm, StarterVm } from '../../types/battle';
+import type { BossTactic, MoveVm, QuestionVm, StarterVm } from '../../types/battle';
+import { canChooseBossTactic } from '../../utils/turnFlow.ts';
 import { PVP_TIMER_SEC } from '../../data/constants.ts';
 import { getResolvedPvpCombatant, getResolvedPvpTurn } from './pvpStateSelectors.ts';
 
@@ -11,6 +12,8 @@ type BattleQuestion = QuestionVm;
 type BattleState = {
   phase: string;
   battleMode: string;
+  enemy?: { id?: string } | null;
+  bossCharging?: boolean;
   pvpTurn?: 'p1' | 'p2';
   pvpState?: {
     p1?: {
@@ -52,6 +55,7 @@ type GenQuestion = (
 
 type RunSelectMoveFlowArgs = {
   index: number;
+  bossTactic?: BossTactic;
   state: SafeState;
   timedMode: boolean;
   questionTimeLimitSec?: number | null;
@@ -79,6 +83,7 @@ function isFn(value: unknown): value is (...args: unknown[]) => unknown {
 
 export function runSelectMoveFlow({
   index,
+  bossTactic,
   state,
   timedMode,
   questionTimeLimitSec,
@@ -132,7 +137,13 @@ export function runSelectMoveFlow({
   const question = genQuestion(move, adjustedDiffMod, { t, allowedOps });
   if (!question) return false;
   setDiffLevel(question.learning?.level ?? lv);
-  setQ(question);
+  // Lock the choice to this question; later UI changes cannot alter the strike.
+  const selectedQuestion = { ...question };
+  delete selectedQuestion.bossTactic;
+  if (canChooseBossTactic({ battleMode: state.battleMode, bossCharging: state.bossCharging, enemyId: state.enemy?.id })) {
+    selectedQuestion.bossTactic = bossTactic === 'force' ? 'force' : 'guarded';
+  }
+  setQ(selectedQuestion);
   setFb(null);
   setAnswered(false);
   setHintsRevealed(0);

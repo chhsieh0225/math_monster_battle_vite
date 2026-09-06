@@ -5,8 +5,78 @@ import {
   resolveBattleFallbackTargets,
   resolveBattleLaneSnapshot,
   resolveBattleLayout,
+  resolveBattleSpritePlacement,
+  BATTLE_ARENA_HEIGHT_SHARE,
 } from './battleLayout.ts';
 import { BOSS_IDS } from '../data/monsterConfigs.ts';
+
+const overlaps = (a, b) => a.left < b.right - 0.01 && a.right > b.left + 0.01
+  && a.top < b.bottom - 0.01 && a.bottom > b.top + 0.01;
+
+for (const [width, rootHeight] of [[320, 568], [390, 844], [768, 1024], [1280, 720]]) {
+  for (const dual of [false, true]) {
+    test(`${width}x${rootHeight} ${dual ? 'dual' : 'solo'} sprites and lunges clear both HUDs and the panel`, () => {
+      const arena = {
+        width, rootHeight, height: rootHeight * BATTLE_ARENA_HEIGHT_SHARE,
+        enemyHudRight: width * 0.56, enemyHudBottom: dual ? 110 : 70,
+        playerHudLeft: width * 0.46, playerHudInset: dual ? 110 : 65,
+      };
+      const enemyHud = { left: 0, top: 0, right: arena.enemyHudRight, bottom: arena.enemyHudBottom };
+      const playerHud = { left: arena.playerHudLeft, top: arena.height - arena.playerHudInset, right: width, bottom: arena.height };
+      for (const side of ['enemy', 'player']) {
+        for (const frameWidth of [88, 156, 350, 650]) {
+          for (const compensation of [1, 1.66]) {
+            const input = { arena, side, frameWidth, compensation,
+              desiredCenterX: width * (side === 'enemy' ? 0.75 : 0.25),
+              desiredCenterY: arena.height * (side === 'enemy' ? 0.35 : 0.75) };
+            const placed = resolveBattleSpritePlacement(input);
+            assert.ok(placed.scale > 0 && placed.scale <= 1);
+            assert.deepEqual(resolveBattleSpritePlacement(input), placed, 'rendering another phase cannot change placement');
+            for (const [dx, dy] of [[0, 0], [placed.lungeX * 0.46, placed.lungeY * 0.46],
+              [placed.lungeX, placed.lungeY], [placed.dodgeX, placed.dodgeY]]) {
+              const bounds = { left: placed.bounds.left + dx, right: placed.bounds.right + dx,
+                top: placed.bounds.top + dy, bottom: placed.bounds.bottom + dy };
+              assert.ok(bounds.left >= 0 && bounds.right <= width + 0.01);
+              assert.ok(bounds.top >= 0 && bounds.bottom <= arena.height + 0.01);
+              assert.equal(overlaps(bounds, enemyHud), false, `enemy HUD: ${side} ${frameWidth}`);
+              assert.equal(overlaps(bounds, playerHud), false, `player HUD: ${side} ${frameWidth}`);
+            }
+          }
+        }
+      }
+    });
+    test(`${width}x${rootHeight} ${dual ? 'dual' : 'solo'} large units do not hide one another`, () => {
+      const arena = {
+        width, rootHeight, height: rootHeight * BATTLE_ARENA_HEIGHT_SHARE,
+        enemyHudRight: width * 0.56, enemyHudBottom: dual ? 160 : 84,
+        playerHudLeft: width * 0.46, playerHudInset: dual ? 96 : 68,
+      };
+      const occupied = [];
+      for (const side of dual ? ['enemy', 'enemy', 'player', 'player'] : ['enemy', 'player']) {
+        const placed = resolveBattleSpritePlacement({ arena, side, frameWidth: 500, compensation: 1.66,
+          desiredCenterX: width * (side === 'enemy' ? 0.75 : 0.25),
+          desiredCenterY: arena.height * (side === 'enemy' ? 0.35 : 0.75), avoid: occupied });
+        assert.ok(placed.scale > 0 && placed.scale <= 1);
+        for (const previous of occupied) {
+          assert.equal(overlaps(placed.bounds, previous), false, `${side} must have its own visible space`);
+        }
+        assert.equal(overlaps(placed.bounds, { left: 0, top: 0, right: arena.enemyHudRight, bottom: arena.enemyHudBottom }), false);
+        assert.equal(overlaps(placed.bounds, { left: arena.playerHudLeft, top: arena.height - arena.playerHudInset, right: width, bottom: arena.height }), false);
+        occupied.push(placed.bounds);
+      }
+    });
+  }
+}
+
+test('safe placement retains size when it fits and never enlarges a smaller sprite', () => {
+  const arena = { width: 1280, height: 550, rootHeight: 1000, enemyHudRight: 600, enemyHudBottom: 80, playerHudLeft: 680, playerHudInset: 80 };
+  const placed = resolveBattleSpritePlacement({ arena, side: 'enemy', frameWidth: 160, compensation: 1,
+    desiredCenterX: 900, desiredCenterY: 240 });
+  assert.equal(placed.scale, 1);
+  assert.equal(placed.width, 160);
+  assert.equal(placed.cx, 900);
+  assert.equal(placed.cy, 240);
+});
 
 function getResponsiveSpriteScales(arenaWidth) {
   if (arenaWidth <= 480) {

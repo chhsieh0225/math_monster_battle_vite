@@ -16,6 +16,7 @@ import type {
 } from './challenges';
 
 export type BattleMode = "single" | "coop" | "pvp" | "double";
+export type BossTactic = 'guarded' | 'force';
 export type BattleSlot = 'main' | 'sub';
 export type BattleAnimationSetter = (animation: string, slot?: BattleSlot) => void;
 export type ScreenName =
@@ -118,6 +119,7 @@ export type EnemyVm = {
 };
 
 export type QuestionVm = {
+  bossTactic?: BossTactic;
   display: string;
   op: string;
   answer: number;
@@ -338,7 +340,7 @@ export type UseBattleActions = {
     mode?: BattleMode,
     starter2?: StarterVm | null,
   ) => void;
-  selectMove: (idx: number) => void;
+  selectMove: (idx: number, bossTactic?: BossTactic) => void;
   useItem: (itemId: ItemId) => void;
   onAns: (choice: number) => void;
   requestHint: () => void;

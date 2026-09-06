@@ -36,7 +36,7 @@ export const BattleStatusOverlay = memo(function BattleStatusOverlay({
   bossCharging,
 }: BattleStatusOverlayProps) {
   return (
-    <>
+    <div className="battle-status-dock">
       <div className={`battle-top-right-stack ${lowPerfMode ? 'low-perf' : ''}`} aria-live="polite" aria-atomic="true">
         {streak >= 2 && <div className="battle-pill is-streak">🔥 {t('battle.streak', '{count} combo!', { count: streak })}</div>}
         {passiveCount >= 1 && !specDef && <div className="battle-pill is-passive">🛡️ {passiveCount}/8</div>}
@@ -72,9 +72,9 @@ export const BattleStatusOverlay = memo(function BattleStatusOverlay({
       {bossCharging && <div className="battle-boss-hint" role="status">
         <div>⚠️ {t('battle.bossBreakHint', 'Answer correctly to interrupt charging!')}</div>
         {BALANCE_CONFIG.traits.boss.chargeCounterRatio > 0 && (
-          <div className="battle-boss-hint-detail">{t('battle.bossCounterHint', 'Interrupting still triggers retaliation.')}</div>
+          <div className="battle-boss-hint-detail">{t('battle.bossCounterHint', 'Guarded Break avoids charge retaliation at reduced damage.')}</div>
         )}
       </div>}
-    </>
+    </div>
   );
 });

@@ -23,6 +23,7 @@ import { useState, useEffect, useCallback, useMemo, useReducer } from 'react';
 import { useI18n } from '../i18n';
 import type {
   BattleMode,
+  BossTactic,
   CollectionPopupVm,
   EnemyVm,
   MoveVm,
@@ -834,9 +835,10 @@ export function useBattle() {
     uiRef,
     battleFieldSettersRef,
   });
-  const selectMoveImpl = useCallback((i: number) => {
+  const selectMoveImpl = useCallback((i: number, bossTactic?: BossTactic) => {
     const ctx = selectMoveContextRef.current;
     const selectMoveInput = {
+      bossTactic,
       sr: ctx.sr,
       runtime: {
         timedMode: ctx.timedMode,

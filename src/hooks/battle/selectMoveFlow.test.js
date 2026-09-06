@@ -4,6 +4,37 @@ import { runSelectMoveFlow } from './selectMoveFlow.ts';
 
 const DIFF_MODS = [0.7, 0.85, 1.0, 1.15, 1.3];
 
+for (const bossTactic of ['guarded', 'force', undefined]) {
+  test(`charging boss choice ${bossTactic} is captured without changing the question or difficulty`, () => {
+    const generated = Object.freeze({ display: '5+5', answer: 10, choices: [9, 10], learning: { level: 3 } });
+    const { args, calls } = createDeps({ bossTactic, genQuestion: (_move, mod) => {
+      assert.equal(mod, DIFF_MODS[2]);
+      return generated;
+    } });
+    Object.assign(args.state, { enemy: { id: 'boss' }, bossCharging: true });
+    assert.equal(runSelectMoveFlow(args), true);
+    assert.deepEqual(calls.setQ, [{ ...generated, bossTactic: bossTactic ?? 'guarded' }]);
+    assert.equal(generated.bossTactic, undefined);
+    assert.deepEqual(calls.setDiffLevel, [3]);
+  });
+}
+
+for (const override of [{ enemy: { id: 'slime' } }, { bossCharging: false }, { battleMode: 'pvp' }]) {
+  test(`ineligible selection drops tactic metadata: ${JSON.stringify(override)}`, () => {
+    const { args, calls } = createDeps({ bossTactic: 'guarded', genQuestion: () => ({ bossTactic: 'guarded', answer: 10 }) });
+    Object.assign(args.state, { enemy: { id: 'boss' }, bossCharging: true }, override);
+    assert.equal(runSelectMoveFlow(args), true);
+    assert.deepEqual(calls.setQ, [{ answer: 10 }]);
+  });
+}
+
+test('a tactic does not bypass a sealed move', () => {
+  const { args, calls } = createDeps({ bossTactic: 'guarded' });
+  Object.assign(args.state, { enemy: { id: 'boss' }, bossCharging: true, sealedMove: 1 });
+  assert.equal(runSelectMoveFlow(args), false);
+  assert.deepEqual(calls.setQ, []);
+});
+
 test('move selection reports the level used by persistent question generation', () => {
   const q = { learning: { level: 4 } };
   const { calls, args } = createDeps({ genQuestion: () => q });

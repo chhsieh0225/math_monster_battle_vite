@@ -116,6 +116,7 @@ export function validateBalanceConfigSchema(config: unknown): void {
   checkNumber(config, 'traits.boss.releaseAttackScale', issues, { min: 1 });
   checkNumber(config, 'traits.boss.incomingDamageScale', issues, { min: 0.7, max: 0.8 });
   checkNumber(config, 'traits.boss.chargeCounterRatio', issues, { min: 0, max: 1 });
+  checkNumber(config, 'traits.boss.guardedBreakDamageScale', issues, { min: 0.1, max: 1 });
   checkNumber(config, 'traits.boss.furyRegenThreshold', issues, { min: 0, max: 1 });
   checkNumber(config, 'traits.boss.furyRegenHealRatio', issues, { min: 0, max: 1 });
   checkNumber(config, 'traits.boss.hydraTurnRegenRatio', issues, { min: 0, max: 1 });

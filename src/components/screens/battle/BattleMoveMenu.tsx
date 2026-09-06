@@ -1,6 +1,8 @@
-import { memo, useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback, useState } from 'react';
 import type { CSSProperties } from 'react';
-import type { StarterVm } from '../../../types/battle';
+import type { BossTactic, StarterVm } from '../../../types/battle';
+import { getBossTacticProfile } from '../../../utils/turnFlow.ts';
+import type { BossIntent } from '../../../utils/turnFlow.ts';
 import type { InventoryData, ItemId } from '../../../types/game';
 import { BATTLE_ITEM_ORDER, ITEM_CATALOG } from '../../../data/itemCatalog.ts';
 import type { MoveRuntime } from './buildBattleCore';
@@ -26,7 +28,8 @@ type BattleMoveMenuProps = {
   sealedTurns: number;
   moveRuntime: MoveRuntime[];
   inventory: InventoryData;
-  onSelectMove: (idx: number) => void;
+  bossIntent?: BossIntent | null;
+  onSelectMove: (idx: number, bossTactic?: BossTactic) => void;
   onUseItem: (itemId: ItemId) => void;
   onToggleCoopActive: () => void;
   onTogglePause: () => void;
@@ -61,6 +64,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
   sealedTurns,
   moveRuntime,
   inventory,
+  bossIntent,
   onSelectMove,
   onUseItem,
   onToggleCoopActive,
@@ -68,10 +72,13 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
   onOpenSettings,
   onQuitGame,
 }: BattleMoveMenuProps) {
+  const [bossTactic, setBossTactic] = useState<BossTactic>('guarded');
   const specDefItemName = resolveSpecDefItemName(activeStarter.type, t);
   const handleMoveSelect = useCallback((idx: number, locked: boolean) => {
-    if (!locked) onSelectMove(idx);
-  }, [onSelectMove]);
+    if (locked) return;
+    if (bossIntent?.charging) onSelectMove(idx, bossTactic);
+    else onSelectMove(idx);
+  }, [onSelectMove, bossIntent?.charging, bossTactic]);
   const handleUseItem = useCallback((itemId: ItemId) => {
     onUseItem(itemId);
   }, [onUseItem]);
@@ -121,7 +128,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
   }), [moveRuntime]);
 
   return (
-    <div className="battle-menu-wrap">
+    <div className={`battle-menu-wrap${bossIntent ? ' has-boss-intent' : ''}`}>
       {isCoopBattle && (
         <div className="battle-menu-hint">
           🤝 {t('battle.coopTurn', 'Co-op · Active:')} {activeStarter.typeIcon} {activeStarter.name}
@@ -139,6 +146,36 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
             ? `🛡️${t('battle.status.counterReady', 'Counter Ready')}`
             : `🛡️${pvpActiveCombo}/${pvpComboTrigger}`}
         </div>
+      )}
+
+      {bossIntent && (
+        <section className={`battle-intent ${bossIntent.charging ? 'is-charging' : ''}`} aria-label={t('battle.intent.title', 'Boss forecast')}>
+          <div className="battle-intent-head" role="status">
+            <span className="battle-intent-label">{t('battle.intent.title', 'Boss forecast')}</span>
+            <strong>{t(`battle.intent.${bossIntent.event}`, bossIntent.event)}</strong>
+          </div>
+          {bossIntent.charging ? (
+            <>
+              <div className="battle-tactics" role="group" aria-label={t('battle.tactic.choose', 'Choose how to interrupt, then pick any move')}>
+                {(['guarded', 'force'] as const).map((tactic) => {
+                  const profile = getBossTacticProfile(tactic);
+                  return (
+                    <button type="button" key={tactic} className="battle-tactic" aria-pressed={bossTactic === tactic} onClick={() => setBossTactic(tactic)}>
+                      <strong>{t(`battle.tactic.${tactic}`, tactic)}</strong>
+                      <span>{t(`battle.tactic.${tactic}Detail`, '', {
+                        power: Math.round(profile.damageScale * 100),
+                        counter: Math.round(profile.counterRatio * 100),
+                      })}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="battle-intent-note">{t('battle.tactic.rule', 'Pick any move. Correct hits interrupt; the enemy still takes its turn.')}</p>
+            </>
+          ) : (
+            <p className="battle-intent-note">{t('battle.intent.conditional', 'Based on current state; your hit or freeze may change this.')}</p>
+          )}
+        </section>
       )}
 
       <div className="battle-menu-grid">

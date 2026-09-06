@@ -13,6 +13,7 @@ export type SpriteTarget = {
 };
 
 type UseSpriteTargetsArgs = {
+  layoutSignal?: unknown;
   screen: string;
   phase: string;
   enemyId?: string;
@@ -64,6 +65,7 @@ function shouldUpdateTarget(prev: SpriteTarget | null, next: SpriteTarget): bool
 const NOOP = () => {};
 
 export function useSpriteTargets({
+  layoutSignal,
   screen,
   phase,
   enemyId,
@@ -199,6 +201,7 @@ export function useSpriteTargets({
     playerStageIdx,
     battleMode,
     pvpTurn,
+    layoutSignal,
   ]);
 
   return {

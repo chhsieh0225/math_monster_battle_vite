@@ -1,6 +1,52 @@
 import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
+import type { BossTactic } from '../types/battle';
 
 const BOSS_BALANCE = BALANCE_CONFIG.traits.boss;
+const BOSS_IDS = new Set<string>(BALANCE_CONFIG.monsters.bossIds);
+
+type BossTacticState = {
+  battleMode?: string;
+  enemyId?: string;
+  bossCharging?: boolean;
+};
+
+export function canChooseBossTactic(state: BossTacticState): boolean {
+  return state.battleMode !== 'pvp'
+    && BOSS_IDS.has(state.enemyId ?? '')
+    && state.bossCharging === true;
+}
+
+export function getBossTacticProfile(tactic?: BossTactic) {
+  return tactic === 'guarded'
+    ? { damageScale: BOSS_BALANCE.guardedBreakDamageScale, counterRatio: 0 }
+    : { damageScale: 1, counterRatio: BOSS_BALANCE.chargeCounterRatio };
+}
+
+export type BossIntent = {
+  event: BossTurnEvent | 'frozen';
+  charging: boolean;
+};
+
+export function getBossIntent(state: BossTacticState & {
+  hp: number;
+  maxHp: number;
+  bossTurn: number;
+  sealedMove?: number | null;
+  frozen?: boolean;
+}): BossIntent | null {
+  if (state.battleMode === 'pvp' || !BOSS_IDS.has(state.enemyId ?? '') || state.hp <= 0) return null;
+  return {
+    charging: state.bossCharging === true,
+    event: state.frozen ? 'frozen' : decideBossTurnEvent({
+      isBoss: true,
+      bossCharging: state.bossCharging,
+      turnCount: state.bossTurn + 1,
+      bossPhase: computeBossPhase(state.hp, state.maxHp),
+      sealedMove: state.sealedMove ?? -1,
+      enemyId: state.enemyId,
+    }),
+  };
+}
 
 export function computeBossPhase(
   hp: number | null | undefined,

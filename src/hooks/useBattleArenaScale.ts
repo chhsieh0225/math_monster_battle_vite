@@ -17,12 +17,10 @@ function clamp(value: number, min: number, max: number): number {
 
 function computeScale(arena: HTMLElement | null): number {
   if (!arena) return 1;
-  const rect = arena.getBoundingClientRect();
-  if (rect.width <= 0 || rect.height <= 0) return 1;
-  // Width-only scaling keeps sprite size stable across rounds/phases.
-  // Arena height changes with question/menu panel states and can cause
-  // visible "same character suddenly bigger/smaller" jitter.
-  const byWidth = rect.width / BASE_WIDTH;
+  if (arena.clientWidth <= 0 || arena.clientHeight <= 0) return 1;
+  // Use layout width, not an animated rectangle: camera shake/zoom must not
+  // feed back into sprite scaling. Height constraints are handled by placement.
+  const byWidth = arena.clientWidth / BASE_WIDTH;
   const raw = clamp(byWidth, MIN_SCALE, MAX_SCALE);
   return Math.round(raw / SCALE_STEP) * SCALE_STEP;
 }

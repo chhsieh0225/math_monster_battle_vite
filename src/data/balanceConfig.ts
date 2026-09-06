@@ -421,6 +421,7 @@ export const BALANCE_CONFIG = {
       sealStartsAtPhase: 2,
       // Bosses retaliate while charging when hit
       chargeCounterRatio: 0.2,
+      guardedBreakDamageScale: 0.75,
       /** Crazy Dragon: one-time heal when HP falls below this threshold */
       furyRegenThreshold: 0.3,
       furyRegenHealRatio: 0.5,

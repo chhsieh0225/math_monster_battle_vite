@@ -1,0 +1,35 @@
+.skill-fx{position:absolute;left:0;top:0;overflow:hidden;pointer-events:none;z-index:108;contain:paint;color:var(--skill-tone)}
+.skill-fx path,.skill-fx circle{vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+.skill-charge{fill:none;stroke:var(--skill-tone);stroke-width:2;transform-box:fill-box;transform-origin:center;animation:skillGather var(--skill-flight) ease-out both}
+.skill-charge circle+circle{stroke:var(--skill-accent);stroke-width:1}
+.skill-stream{transform-origin:0 0;animation:skillTravel var(--skill-flight) cubic-bezier(.26,.02,.3,1) both}
+.skill-stream-body{fill:none;stroke:var(--skill-tone);stroke-width:var(--skill-weight);opacity:.8}
+.skill-stream-edge{fill:none;stroke:var(--skill-accent);stroke-width:1;opacity:.95}
+.skill-fx.is-contact .skill-stream{animation:skillTrailFade 260ms ease-out both}
+.skill-contact{animation:skillContactFade 520ms ease-out both;filter:drop-shadow(0 0 4px var(--skill-tone))}
+.skill-impact-heat{animation:skillHeat 440ms ease-out both}
+.skill-impact-ring{fill:none;stroke:var(--skill-tone);stroke-width:2;animation:skillRing 420ms ease-out both}
+.skill-ring-outer{stroke:var(--skill-accent);stroke-width:1;animation-duration:500ms}
+.skill-crest{fill:var(--skill-tone);fill-opacity:.2;stroke:var(--skill-accent);stroke-width:2.5}
+.skill-finisher{fill:var(--skill-tone);fill-opacity:.3;stroke:var(--skill-accent);stroke-width:1;animation:skillSeal 520ms ease-out both}
+.skill-seal{fill:none;stroke:var(--skill-tone);stroke-width:1;opacity:.55;animation:skillSeal 500ms ease-out both}
+.skill-shard{fill:var(--skill-accent);stroke:none;animation:skillShard 480ms ease-out both}
+.skill-boss-crown{fill:none;stroke:var(--skill-tone);stroke-width:3;opacity:.75}
+.skill-block{fill:none;stroke:#e2e8f0;stroke-width:2}
+.skill-fx.is-lite .skill-stream{display:none}
+.skill-fx.is-lite .skill-contact{animation-duration:300ms;filter:none}
+@keyframes skillGather{0%{opacity:0;transform:scale(1.35) rotate(-30deg)}35%{opacity:.8}100%{opacity:0;transform:scale(.55) rotate(35deg)}}
+@keyframes skillTravel{0%{opacity:0;transform:scaleX(.02)}24%{opacity:.6}100%{opacity:.95;transform:scaleX(1)}}
+@keyframes skillTrailFade{from{opacity:.8}to{opacity:0}}
+@keyframes skillContactFade{0%,18%{opacity:1}100%{opacity:0}}
+@keyframes skillHeat{0%{opacity:0;transform:scale(.35)}18%{opacity:.85}100%{opacity:0;transform:scale(1.1)}}
+@keyframes skillRing{0%{opacity:.9;transform:scale(.28)}100%{opacity:0;transform:scale(1.12)}}
+@keyframes skillSeal{from{opacity:.65;transform:rotate(-18deg) scale(.7)}to{opacity:0;transform:rotate(15deg) scale(1.08)}}
+@keyframes skillShard{0%{opacity:0;transform:translateY(12px)}20%{opacity:.9}100%{opacity:0;transform:translateY(-20px)}}
+.battle-root[data-paused=true] .skill-fx *{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){
+  .skill-fx .skill-stream,.skill-fx .skill-charge,.skill-fx .skill-shard,.skill-fx .skill-seal,.skill-fx .skill-boss-crown,.skill-fx .skill-finisher,.skill-fx .skill-impact-heat{display:none}
+  .skill-fx *{animation:none!important}
+  .skill-fx .skill-ring-outer{display:none}
+  .skill-fx .skill-contact{opacity:.65}
+}

@@ -8,6 +8,8 @@ import { getAttackImpactProfile } from '../../../utils/effectTiming.ts';
 import DamagePopup from '../../ui/DamagePopup';
 import Particle from '../../ui/Particle';
 import AttackEffect from '../../effects/AttackEffect';
+import { SkillStrikeEffect } from '../../effects/SkillStrikeEffect.tsx';
+import { getSkillMastery } from '../../../utils/skillPresentation.ts';
 import AchievementPopup from '../../ui/AchievementPopup';
 import CollectionMilestonePopup from '../../ui/CollectionMilestonePopup';
 
@@ -23,6 +25,8 @@ type BattleFxLayerProps = {
   sceneType: string;
   atkEffect: UseBattleState['atkEffect'];
   effectTarget: SpriteTarget;
+  effectSource?: SpriteTarget;
+  arenaSize?: { width: number; height: number };
   dmgs: UseBattleState['dmgs'];
   parts: UseBattleState['parts'];
   battleMode: UseBattleState['battleMode'];
@@ -66,6 +70,8 @@ export const BattleFxLayer = memo(function BattleFxLayer({
   sceneType,
   atkEffect,
   effectTarget,
+  effectSource,
+  arenaSize,
   dmgs,
   parts,
   battleMode,
@@ -85,6 +91,8 @@ export const BattleFxLayer = memo(function BattleFxLayer({
   onDismissCollectionPopup,
 }: BattleFxLayerProps) {
   const isUltimateEffect = Boolean(atkEffect && atkEffect.idx >= 3);
+  const spatialFx = Boolean(effectSource && arenaSize);
+  const levelUp = moveLevelUpIdx === null ? null : getSkillMastery(moveLvls[moveLevelUpIdx]);
   const impact = atkEffect?.impact;
   const hasContact = Boolean(impact && impact.outcome !== 'miss');
   const impactActive = hasContact && impactPhase !== 'idle' && impactPhase !== 'charge';
@@ -109,7 +117,7 @@ export const BattleFxLayer = memo(function BattleFxLayer({
   return (
     <>
       {/* Hit reaction layer */}
-      {showHeavyFx && impactActive && (
+      {showHeavyFx && impactActive && !spatialFx && (
         <div className={`battle-impact-contact is-${impact?.outcome}`} style={contactStyle} aria-hidden="true">
           <div className="battle-impact-contact-core" />
           <div className="battle-impact-contact-ring" />
@@ -148,6 +156,9 @@ export const BattleFxLayer = memo(function BattleFxLayer({
             level: moveLvls[moveLevelUpIdx],
             power: getPow(moveLevelUpIdx),
           })}
+          {levelUp && (levelUp.lvl === 3 || levelUp.lvl === 5) && <div className="battle-skill-unlock">
+            {t(`battle.skill.unlock.${levelUp.tier}`, 'New skill animation unlocked!')}
+          </div>}
         </div>
       )}
 
@@ -160,7 +171,9 @@ export const BattleFxLayer = memo(function BattleFxLayer({
       )}
 
       {/* Attack effects */}
-      {showHeavyFx && (isUltimateEffect || atkEffect) && (
+      {atkEffect && effectSource && arenaSize && <SkillStrikeEffect effect={atkEffect}
+        source={effectSource} target={effectTarget} arena={arenaSize} lowPerf={!showHeavyFx || lowPerfMode} />}
+      {showHeavyFx && !spatialFx && (isUltimateEffect || atkEffect) && (
         <div className={`battle-attack-fx-layer${BRIGHT_SCENES.has(sceneType) ? ' fx-bright-scene' : ''}`} aria-hidden="true">
           {isUltimateEffect && hasContact && impact?.outcome !== 'blocked' && (
             <div className={`battle-ult-sync ${ultimateToneClass}`} style={ultimateSyncStyle}>

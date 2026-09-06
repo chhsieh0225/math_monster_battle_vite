@@ -7,11 +7,28 @@ import {
   resolveBattleLayout,
   resolveBattleSpritePlacement,
   BATTLE_ARENA_HEIGHT_SHARE,
+  getBossFrameRequest,
 } from './battleLayout.ts';
 import { BOSS_IDS } from '../data/monsterConfigs.ts';
 
 const overlaps = (a, b) => a.left < b.right - 0.01 && a.right > b.left + 0.01
   && a.top < b.bottom - 0.01 && a.bottom > b.top + 0.01;
+
+test('boss presence requests exceed the old phone lane budget but remain capped', () => {
+  assert.ok(getBossFrameRequest(390) > 260);
+  assert.ok(getBossFrameRequest(390, false, true) > 240);
+  assert.ok(getBossFrameRequest(390, true) > 140);
+  assert.equal(getBossFrameRequest(1280), 380);
+  assert.equal(getBossFrameRequest(1280, true), 200);
+  for (const [width, height] of [[320, 312], [390, 464], [844, 214]]) {
+    const arena = { width, height, rootHeight: height / .55,
+      enemyHudRight: width * .52, enemyHudBottom: 110, playerHudLeft: width * .48, playerHudInset: 90 };
+    const placed = resolveBattleSpritePlacement({ arena, side: 'enemy', frameWidth: 160,
+      minFrameWidth: getBossFrameRequest(width), compensation: 1, desiredCenterX: width * .75, desiredCenterY: height * .35 });
+    assert.equal(overlaps(placed.bounds, { left: 0, top: 0, right: arena.enemyHudRight, bottom: 110 }), false);
+    assert.equal(overlaps(placed.bounds, { left: arena.playerHudLeft, top: height - 90, right: width, bottom: height }), false);
+  }
+});
 
 test('reserve readability enlarges a tiny lane frame while preserving CSS scale and clearance', () => {
   const arena = { width: 390, height: 464, rootHeight: 844,

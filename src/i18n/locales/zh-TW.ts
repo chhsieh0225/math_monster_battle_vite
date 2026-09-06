@@ -1,4 +1,11 @@
 const zhTW = {
+  "battle.skill.tier.1": "初式",
+  "battle.skill.tier.2": "連環",
+  "battle.skill.tier.3": "精通",
+  "battle.skill.next": "練習至 Lv.{level}，解鎖下一階招式動畫",
+  "battle.skill.complete": "已解鎖最終階招式動畫",
+  "battle.skill.unlock.2": "招式進化：連環軌跡已解鎖！",
+  "battle.skill.unlock.3": "招式精通：終結紋章已解鎖！",
   "common.back": "返回",
   "common.confirm": "確認",
   "common.cancel": "取消",

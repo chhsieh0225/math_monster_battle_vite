@@ -227,12 +227,20 @@ export function getSpriteAnimationAsset(profileKey?: string) {
   return profile && art ? { profile, art, src: `${BASE}sprites/visual-pilot/${art.file}` } : null;
 }
 
-/** Keep every pose inside the original profile's envelope and foot baseline. */
-export function fitSpriteAtlas(profile: SpriteProfile, art: SpriteAnimationAsset) {
-  const originalScale = Math.min(VB_W * (1 - 2 * profile.safePad) / profile.natW,
+export function getSpriteAtlasEnvelope(profile: SpriteProfile) {
+  const scale = Math.min(VB_W * (1 - 2 * profile.safePad) / profile.natW,
     VB_H * (1 - 2 * profile.safePad) / profile.natH);
-  const width = Math.round(profile.natW * originalScale);
-  const height = Math.round(profile.natH * originalScale);
+  return {
+    // The new sword poses are landscape compositions, not the old narrow portrait.
+    // Widen the battle-only envelope; height and fallback portraits stay unchanged.
+    width: profile.imgKey === 'boss_sword_god' ? VB_W * (1 - 2 * profile.safePad) : Math.round(profile.natW * scale),
+    height: Math.round(profile.natH * scale),
+  };
+}
+
+/** Fit the union once: no pose-dependent zoom or foot-baseline changes. */
+export function fitSpriteAtlas(profile: SpriteProfile, art: SpriteAnimationAsset) {
+  const { width, height } = getSpriteAtlasEnvelope(profile);
   const [left, top, right, bottom] = art.bounds;
   const scale = Math.min(width / (right - left), height / (bottom - top));
   return {

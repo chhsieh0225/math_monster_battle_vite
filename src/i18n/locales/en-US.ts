@@ -1,4 +1,11 @@
 const enUS = {
+  "battle.skill.tier.1": "Initiate",
+  "battle.skill.tier.2": "Chain",
+  "battle.skill.tier.3": "Mastery",
+  "battle.skill.next": "Practice to Lv.{level} for the next visual evolution",
+  "battle.skill.complete": "Final visual evolution unlocked",
+  "battle.skill.unlock.2": "Skill evolved: chained trails unlocked!",
+  "battle.skill.unlock.3": "Skill mastered: finisher sigil unlocked!",
   "common.back": "Back",
   "common.confirm": "Confirm",
   "common.cancel": "Cancel",

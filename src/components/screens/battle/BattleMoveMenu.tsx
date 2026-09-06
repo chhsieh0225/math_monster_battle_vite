@@ -5,6 +5,7 @@ import { getBossTacticProfile } from '../../../utils/turnFlow.ts';
 import type { BossIntent } from '../../../utils/turnFlow.ts';
 import type { InventoryData, ItemId } from '../../../types/game';
 import { BATTLE_ITEM_ORDER, ITEM_CATALOG } from '../../../data/itemCatalog.ts';
+import { getSkillMastery } from '../../../utils/skillPresentation.ts';
 import type { MoveRuntime } from './buildBattleCore';
 
 type TranslatorParams = Record<string, string | number>;
@@ -180,6 +181,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
 
       <div className="battle-menu-grid">
         {moveVisuals.map(({ m, i, sealed, locked, lv, pw, atCap, eff, moveBtnStyle, moveLevelBadgeStyle, moveProgressStyle }) => {
+          const mastery = getSkillMastery(lv);
           return (
             <button
               className={`battle-menu-btn ${locked ? 'is-locked' : ''}`}
@@ -225,6 +227,14 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
                   <div className="move-progress-fill" style={moveProgressStyle} />
                 </div>
               )}
+              {battleMode !== 'pvp' && <div className="move-mastery" data-mastery={mastery.tier}
+                title={mastery.nextLevel
+                  ? t('battle.skill.next', 'Lv.{level}: next visual evolution', { level: mastery.nextLevel })
+                  : t('battle.skill.complete', 'Final visual evolution unlocked')}>
+                <span className="move-mastery-pips" aria-hidden="true">{[1, 2, 3].map((tier) => <i key={tier} className={tier <= mastery.tier ? 'is-lit' : ''} />)}</span>
+                <span>{t(`battle.skill.tier.${mastery.tier}`, 'Skill form')}</span>
+                <span className="move-mastery-next">{mastery.nextLevel ? `Lv.${mastery.nextLevel}` : 'MAX'}</span>
+              </div>}
             </button>
           );
         })}

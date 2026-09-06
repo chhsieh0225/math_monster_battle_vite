@@ -164,6 +164,9 @@ export type AttackEffectVm = {
   idx: number;
   lvl: number;
   targetSide?: "enemy" | "player";
+  sourceSlot?: "main" | "sub";
+  targetSlot?: "main" | "sub";
+  signature?: string;
   impact?: AttackImpactEvent;
 };
 

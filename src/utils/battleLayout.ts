@@ -71,6 +71,11 @@ type SafeSpritePlacementInput = {
   avoid?: ReadonlyArray<{ left: number; top: number; right: number; bottom: number }>;
 };
 
+/** Boss presence is a request to the 2D solver, never permission to cover a HUD. */
+export function getBossFrameRequest(arenaWidth: number, secondary = false, dual = false): number {
+  return Math.min(Math.max(0, arenaWidth) * (secondary ? 0.38 : dual ? 0.64 : 0.68), secondary ? 200 : 380);
+}
+
 export function resolveBattleSpritePlacement({
   arena, side, frameWidth, minFrameWidth = frameWidth, compensation, desiredCenterX, desiredCenterY, avoid,
 }: SafeSpritePlacementInput) {

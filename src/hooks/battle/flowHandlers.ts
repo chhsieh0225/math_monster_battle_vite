@@ -26,6 +26,7 @@ export function createEnemyTurnHandlers(deps: EnemyTurnHandlers): EnemyTurnHandl
     setPhase: deps.setPhase,
     setEAnim: deps.setEAnim,
     setPAnim: deps.setPAnim,
+    setAtkEffect: deps.setAtkEffect,
     setPHp: deps.setPHp,
     setPHpSub: deps.setPHpSub,
     setSpecDef: deps.setSpecDef,

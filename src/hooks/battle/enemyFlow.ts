@@ -1,5 +1,7 @@
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
-import type { BattleAnimationSetter } from '../../types/battle';
+import type { AttackEffectVm, BattleAnimationSetter } from '../../types/battle';
+import { createAttackImpact } from '../../utils/effectTiming.ts';
+import { getEnemySkillEffect } from '../../utils/skillPresentation.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { getEff } from '../../data/typeEffectiveness.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
@@ -36,6 +38,7 @@ type BattleAlly = {
 
 type BattleEnemy = {
   id?: string;
+  lvl?: number;
   name?: string;
   atk?: number;
   maxHp?: number;
@@ -52,6 +55,7 @@ type BattleRuntimeState = {
   enemy: BattleEnemy | null;
   enemySub: BattleEnemy | null;
   eHp: number;
+  eHpSub?: number;
   specDef: boolean;
   bossTurn: number;
   bossCharging: boolean;
@@ -113,6 +117,7 @@ type RunEnemyTurnArgs = {
   setPhase: PhaseSetter;
   setEAnim: BattleAnimationSetter;
   setPAnim: BattleAnimationSetter;
+  setAtkEffect: (value: AttackEffectVm | null | ((prev: AttackEffectVm | null) => AttackEffectVm | null)) => void;
   setPHp: NumberSetter;
   setPHpSub: NumberSetter;
   setSpecDef: BoolSetter;
@@ -135,6 +140,10 @@ type ApplyDamageArgs = {
   dmg: number;
   label?: string | null;
   color?: string;
+  attacker?: BattleEnemy;
+  sourceSlot?: TargetSlot;
+  ultimate?: boolean;
+  critical?: boolean;
 };
 
 const TRAIT_BALANCE = BALANCE_CONFIG.traits;
@@ -173,6 +182,7 @@ export function runEnemyTurn({
   setPhase: commitPhase,
   setEAnim,
   setPAnim,
+  setAtkEffect,
   setPHp,
   setPHpSub,
   setSpecDef,
@@ -236,7 +246,7 @@ export function runEnemyTurn({
     return targets[randInt(0, targets.length - 1)];
   };
 
-  const applyDamageToTarget = ({ s, target, dmg, label = null, color = '#ef4444' }: ApplyDamageArgs): number => {
+  const applyDamageToTarget = ({ s, target, dmg, label = null, color = '#ef4444', attacker = s.enemy || {}, sourceSlot = 'main', ultimate = false, critical = false }: ApplyDamageArgs): number => {
     const isSub = target === 'sub';
     const prevHp = isSub ? (s.pHpSub || 0) : (s.pHp || 0);
     const nextHp = Math.max(0, prevHp - dmg);
@@ -248,6 +258,14 @@ export function runEnemyTurn({
     setPAnim('playerHit 0.5s ease', target);
     safeToIfBattleActive(() => setPAnim('', target), 500);
     addD(label || `-${dmg}`, isSub ? fxt().playerSub.x : fxt().playerMain.x, isSub ? fxt().playerSub.y : fxt().playerMain.y, color);
+    const effect: AttackEffectVm = {
+      ...getEnemySkillEffect(attacker, computeBossPhase(sourceSlot === 'sub' ? s.eHpSub ?? attacker.maxHp : s.eHp, attacker.maxHp), ultimate),
+      targetSide: 'player', sourceSlot, targetSlot: target,
+      impact: createAttackImpact(critical ? 'critical' : 'hit'),
+    };
+    setAtkEffect(effect);
+    // A delayed clear may not erase a newer strike or a newly started battle's FX.
+    safeToIfBattleActive(() => setAtkEffect((current) => current === effect ? null : current), 540);
     return nextHp;
   };
 
@@ -289,6 +307,8 @@ export function runEnemyTurn({
             dmg,
             label: `✶-${dmg}`,
             color: '#f97316',
+            attacker: s3.enemySub,
+            sourceSlot: 'sub',
           });
           sfx.play('playerHit');
           const impact = target === 'sub' ? fxt().playerSub : fxt().playerMain;
@@ -467,6 +487,7 @@ export function runEnemyTurn({
           dmg: finalDmg,
           label: isCrit ? `💥-${finalDmg}` : `-${finalDmg}`,
           color: isCrit ? '#ff6b00' : '#ef4444',
+          critical: isCrit,
         });
         sfx.play('playerHit');
         const impact = target === 'sub' ? fxt().playerSub : fxt().playerMain;
@@ -678,6 +699,7 @@ export function runEnemyTurn({
             dmg: bigDmg,
             label: `💀-${bigDmg}`,
             color: '#a855f7',
+            ultimate: true,
           });
           const impact = target === 'sub' ? fxt().playerSub : fxt().playerMain;
           addP('enemy', impact.x + 20, impact.y + 20, 6);

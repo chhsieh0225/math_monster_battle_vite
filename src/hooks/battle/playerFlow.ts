@@ -531,7 +531,7 @@ export function runPlayerAnswer({
           clearDelay: getAttackEffectClearDelay(effectMeta),
           nextDelay: getAttackEffectNextStepDelay(effectMeta),
         };
-        const attackEffect: AttackEffectVm = { type: vfxType, idx: effectMeta.idx, lvl: effectMeta.lvl };
+        const attackEffect: AttackEffectVm = { type: vfxType, idx: effectMeta.idx, lvl: effectMeta.lvl, sourceSlot: attackerSlot };
         setAtkEffect(attackEffect);
         if (typeof sfx.playMove === 'function') sfx.playMove(vfxType, effectMeta.idx);
         else sfx.play(vfxType);

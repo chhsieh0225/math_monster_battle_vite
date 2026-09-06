@@ -51,7 +51,7 @@ type BuildEnemyTurnArgsArgs = {
   >;
   ui: Pick<
     RunEnemyTurnArgs,
-    'setBText' | 'setPhase' | 'setEAnim' | 'setPAnim' | 'setEffMsg' | 'addD' | 'addP'
+    'setBText' | 'setPhase' | 'setEAnim' | 'setPAnim' | 'setAtkEffect' | 'setEffMsg' | 'addD' | 'addP'
   >;
   callbacks: Pick<
     RunEnemyTurnArgs,
@@ -117,6 +117,7 @@ export function buildEnemyTurnArgs({
     setPhase: ui.setPhase,
     setEAnim: ui.setEAnim,
     setPAnim: ui.setPAnim,
+    setAtkEffect: ui.setAtkEffect,
     setPHp: battleFields.setPHp,
     setPHpSub: battleFields.setPHpSub,
     setSpecDef: battleFields.setSpecDef,

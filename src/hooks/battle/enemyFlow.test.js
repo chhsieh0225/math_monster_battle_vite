@@ -24,6 +24,7 @@ function createBaseArgs(overrides = {}) {
     damage: [],
     particles: [],
     animations: [],
+    attackEffects: [],
   };
   const args = {
     pendingTextAdvanceActionRef: { current: null },
@@ -60,6 +61,7 @@ function createBaseArgs(overrides = {}) {
     setPhase: (value) => { calls.phase.push(value); },
     setEAnim: (value, slot = 'main') => { calls.eAnim.push(value); calls.animations.push({ side: 'enemy', slot, value }); },
     setPAnim: (value, slot = 'main') => { calls.pAnim.push(value); calls.animations.push({ side: 'player', slot, value }); },
+    setAtkEffect: (value) => { calls.attackEffects.push(typeof value === 'function' ? value(calls.attackEffects.at(-1) ?? null) : value); },
     setPHp: (value) => { calls.pHp.push(value); },
     setPHpSub: (value) => { calls.pHpSub.push(value); },
     setSpecDef: () => {},
@@ -95,6 +97,11 @@ for (const active of ['main', 'sub']) {
         { side: 'player', slot: target, value: '' },
       ]);
       const position = target === 'sub' ? fxt().playerSub : fxt().playerMain;
+      const effect = calls.attackEffects.find(Boolean);
+      assert.equal(effect.sourceSlot, 'main');
+      assert.equal(effect.targetSlot, target);
+      assert.equal(effect.targetSide, 'player');
+      assert.equal(effect.impact.outcome, 'hit');
       assert.equal(calls.particles[0].x, position.x + 20);
       assert.equal(calls.particles[0].y, position.y + 20);
     });
@@ -115,6 +122,37 @@ test('enemy assist lunges with the sub enemy and places impact on the damaged al
   assert.deepEqual(calls.particles.at(-1), {
     emoji: 'enemy', x: fxt().playerSub.x + 24, y: fxt().playerSub.y + 16, count: 3,
   });
+  assert.equal(calls.attackEffects.filter(Boolean).at(-1).sourceSlot, 'sub');
+  assert.equal(calls.attackEffects.filter(Boolean).at(-1).targetSlot, 'sub');
+});
+
+test('enemy FX begins with actual damage and an old clear cannot erase a newer skill', () => {
+  const queue = [];
+  let effect = null;
+  const { args, calls } = createBaseArgs({
+    safeTo: (fn, ms) => queue.push({ fn, ms }),
+    setAtkEffect: (value) => { effect = typeof value === 'function' ? value(effect) : value; },
+  });
+  runEnemyTurn(args);
+  assert.equal(effect, null);
+  assert.equal(calls.pHp.length, 0);
+  queue.find((task) => task.ms === 500).fn();
+  assert.equal(effect.impact.outcome, 'hit');
+  assert.equal(calls.pHp.length, 1);
+  const newer = { type: 'ice', idx: 0, lvl: 3 };
+  effect = newer;
+  queue.find((task) => task.ms === 540).fn();
+  assert.equal(effect, newer);
+});
+
+test('blocked and dodged enemy strikes do not produce a false skill hit', () => {
+  for (const type of ['water', 'ice', 'fire', 'steel', 'light', 'grass', 'electric']) {
+    const { args, calls } = createBaseArgs();
+    args.sr.current.specDef = true;
+    args.sr.current.starter.type = type;
+    runEnemyTurn(args);
+    assert.equal(calls.attackEffects.length, 0);
+  }
 });
 
 test('boss release reacts and emits particles on the sub target', () => {

@@ -11,6 +11,7 @@ import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { getCompensation } from '../../data/spriteProfiles.ts';
 import { getLearningHintSteps, getLearningHintCost } from '../../utils/learningProgress.ts';
 import { getAttackImpactProfile } from '../../utils/effectTiming.ts';
+import { getSkillActorKeys } from '../../utils/skillPresentation.ts';
 import { getBossIntent } from '../../utils/turnFlow.ts';
 import TextBox from '../ui/TextBox';
 import type {
@@ -38,11 +39,13 @@ import { DEFAULT_FX_TARGETS } from '../../types/battleFx';
 import { resolveBattleSpriteAnimations } from '../../utils/battleAnimations.ts';
 import {
   BATTLE_ARENA_HEIGHT_SHARE,
+  getBossFrameRequest,
   resolveBattleSpritePlacement,
   resolveBattleLaneSnapshot,
 } from '../../utils/battleLayout.ts';
 import type { BattleArenaGeometry, BattleSpriteTarget } from '../../utils/battleLayout.ts';
 import './BattleScreen.css';
+import '../effects/SkillStrikeEffect.css';
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
 
 type TranslatorParams = Record<string, string | number>;
@@ -436,8 +439,10 @@ function BattleScreenComponent({
       desiredCenterY: side === 'enemy' ? arenaGeometry.height * yPct / 100 + frameWidth * 100 / 120 / 2 : arenaGeometry.height * (1 - yPct / 100) - frameWidth * 100 / 120 / 2,
       avoid,
     });
-    const enemyMain = fit('enemy', snapshot.enemyMainWidthPx * arenaScale, enemyComp, snapshot.enemyMainRightPct, snapshot.enemyTopPct);
-    const enemySub = fit('enemy', snapshot.enemySubWidthPx * arenaScale, getCompensation(coreStatic.spriteProfiles.enemySub ?? ''), snapshot.enemySubRightPct, snapshot.enemySubTopPct, showEnemySub ? [enemyMain.bounds] : undefined);
+    const enemyMain = fit('enemy', snapshot.enemyMainWidthPx * arenaScale, enemyComp, snapshot.enemyMainRightPct, snapshot.enemyTopPct, undefined,
+      isBossEnemy ? getBossFrameRequest(arenaWidth, false, hasDualUnits) : undefined);
+    const enemySub = fit('enemy', snapshot.enemySubWidthPx * arenaScale, getCompensation(coreStatic.spriteProfiles.enemySub ?? ''), snapshot.enemySubRightPct, snapshot.enemySubTopPct, showEnemySub ? [enemyMain.bounds] : undefined,
+      enemySubIsBossVisual ? getBossFrameRequest(arenaWidth, true, hasDualUnits) : undefined);
     const enemies = showEnemySub ? [enemyMain.bounds, enemySub.bounds] : [enemyMain.bounds];
     // The old horizontal lane budget can make the reserve tiny even when vertical room remains.
     const reserveWidth = (comp: number) => Math.min(arenaWidth * 0.34, 76 * Math.max(1, comp));
@@ -477,15 +482,19 @@ function BattleScreenComponent({
       cx, cy, right: `${arenaWidth - cx}px`, top: `${cy}px`,
       flyRight: (arenaWidth - cx) / arenaWidth * 100, flyTop: cy / arenaGeometry.rootHeight * 100,
     });
-    return { enemyMain: target(memoLaneSnapshot.safe.enemyMain), playerMain: target(memoLaneSnapshot.safe.playerMain), playerSub: target(memoLaneSnapshot.safe.playerSub) };
+    return { enemyMain: target(memoLaneSnapshot.safe.enemyMain), enemySub: target(memoLaneSnapshot.safe.enemySub), playerMain: target(memoLaneSnapshot.safe.playerMain), playerSub: target(memoLaneSnapshot.safe.playerSub) };
   }, [memoLaneSnapshot, arenaWidth, arenaGeometry.rootHeight]);
 
-  const memoEffectTarget = useMemo(() => {
+  const memoEffectRoute = useMemo(() => {
     if (!memoFallbackTargets) return null;
-    const enemyTarget = measuredEnemyTarget || memoFallbackTargets.enemyMain;
-    const playerTarget = measuredPlayerTarget || memoFallbackTargets.playerMain;
-    return S.atkEffect?.targetSide === "player" ? playerTarget : enemyTarget;
-  }, [memoFallbackTargets, measuredEnemyTarget, measuredPlayerTarget, S.atkEffect?.targetSide]);
+    const targets = { ...memoFallbackTargets,
+      enemyMain: measuredEnemyTarget || memoFallbackTargets.enemyMain,
+      playerMain: measuredPlayerTarget || memoFallbackTargets.playerMain,
+      playerSub: measuredPlayerSubTarget || memoFallbackTargets.playerSub,
+    };
+    const keys = getSkillActorKeys(S.atkEffect || { type: '', idx: 0, lvl: 1 });
+    return { source: targets[keys.source], target: targets[keys.target] };
+  }, [memoFallbackTargets, measuredEnemyTarget, measuredPlayerTarget, measuredPlayerSubTarget, S.atkEffect]);
 
   // ── Compute BattleFxTargets for particle/damage popup positioning ──
   const memoFxTargets = useMemo<BattleFxTargets>(() => {
@@ -793,7 +802,7 @@ function BattleScreenComponent({
   const playerMainVisualScale = Math.max(0.45, Math.min(1.1, 1 / (playerComp || 1)));
   const enemyMainVisualScale = Math.max(0.45, Math.min(1.1, 1 / (enemyComp || 1)));
 
-  const effectTarget = memoEffectTarget!;
+  const effectTarget = memoEffectRoute!.target;
   const selectedMove = activeStarter && S.selIdx != null
     ? activeStarter.moves[S.selIdx]
     : null;
@@ -903,6 +912,8 @@ function BattleScreenComponent({
         sceneType={sceneKey}
         atkEffect={S.atkEffect}
         effectTarget={effectTarget}
+        effectSource={memoEffectRoute!.source}
+        arenaSize={{ width: arenaGeometry.width, height: arenaGeometry.height }}
         dmgs={S.dmgs}
         parts={S.parts}
         battleMode={S.battleMode}

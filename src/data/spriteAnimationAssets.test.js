@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import * as sprites from './sprites.ts';
 import { PROFILES } from './spriteProfiles.ts';
-import { fitSpriteAtlas, getSpriteAnimationAsset, getSpritePosePosition, SPRITE_ANIMATION_ASSETS } from './spriteAnimationAssets.ts';
+import { fitSpriteAtlas, getSpriteAtlasEnvelope, getSpriteAnimationAsset, getSpritePosePosition, SPRITE_ANIMATION_ASSETS } from './spriteAnimationAssets.ts';
 
 const registration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-v2.json', import.meta.url), 'utf8'));
 const wolfRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-wolf-v1.json', import.meta.url), 'utf8'));
@@ -51,7 +51,7 @@ test('new roster sources and decoded pose registrations cover exactly the shippe
   }
 });
 
-test('all registered atlases use fixed union bounds inside the original visual envelope in every pose', () => {
+test('all registered atlases use fixed union bounds inside the battle envelope in every pose', () => {
   for (const key of Object.keys(PROFILES).filter((key) => getSpriteAnimationAsset(key))) {
     const { art, profile, src } = getSpriteAnimationAsset(key);
     assert.ok(src.endsWith(`/sprites/visual-pilot/${art.file}`));
@@ -61,9 +61,7 @@ test('all registered atlases use fixed union bounds inside the original visual e
       Math.max(...poses.map((p) => p.visibleBounds[2])), Math.max(...poses.map((p) => p.visibleBounds[3])),
     ]);
     const frame = fitSpriteAtlas(profile, art);
-    const scale = Math.min(120 * (1 - 2 * profile.safePad) / profile.natW,
-      100 * (1 - 2 * profile.safePad) / profile.natH);
-    const w = Math.round(profile.natW * scale), h = Math.round(profile.natH * scale);
+    const { width: w, height: h } = getSpriteAtlasEnvelope(profile);
     for (const { visibleBounds: [l, t, r, b] } of poses) {
       assert.ok(frame.x + l * frame.scale >= (120 - w) / 2 - .001);
       assert.ok(frame.x + r * frame.scale <= (120 + w) / 2 + .001);
@@ -73,6 +71,17 @@ test('all registered atlases use fixed union bounds inside the original visual e
   }
   assert.equal(getSpriteAnimationAsset('playerwolf2SVG').profile.flip, undefined);
   assert.equal(getSpriteAnimationAsset('bossCrazyDragonSVG').profile.flip, true);
+});
+
+test('Sword God uses a wider battle envelope without changing the original portrait profile', () => {
+  const { profile, art } = getSpriteAnimationAsset('bossSwordGodSVG');
+  const envelope = getSpriteAtlasEnvelope(profile);
+  assert.equal(profile.natW, 409);
+  assert.equal(profile.natH, 610);
+  assert.ok(envelope.width > 110 && envelope.width < 120);
+  assert.equal(envelope.height, 92);
+  const frame = fitSpriteAtlas(profile, art);
+  assert.ok((art.bounds[2] - art.bounds[0]) * frame.scale > 110);
 });
 
 for (const art of Object.values(SPRITE_ANIMATION_ASSETS)) {

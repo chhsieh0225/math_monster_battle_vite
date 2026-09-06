@@ -8,13 +8,14 @@ import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { bestAttackType, freezeChance } from '../../utils/damageCalc.ts';
 import { getLevelMaxHp, getStarterLevelMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import {
+  createAttackImpact,
   getAttackEffectClearDelay,
   getAttackEffectHitDelay,
   getAttackEffectNextStepDelay,
 } from '../../utils/effectTiming.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import type { AchievementId } from '../../types/game';
-import type { BattleAnimationSetter } from '../../types/battle';
+import type { AttackEffectVm, BattleAnimationSetter } from '../../types/battle';
 import { effectOrchestrator } from './effectOrchestrator.ts';
 import { fxt } from './battleFxTargets.ts';
 import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts';
@@ -112,11 +113,7 @@ type FeedbackValue = {
   steps?: string[];
 };
 
-type AttackEffectValue = {
-  type: string;
-  idx: number;
-  lvl: number;
-};
+type AttackEffectValue = AttackEffectVm;
 
 type EffectMessage = {
   text: string;
@@ -466,7 +463,7 @@ export function runPlayerAnswer({
     setFb({ correct: true });
     setTC((c) => c + 1);
     const ns = s.streak + 1;
-    sfx.play(ns >= TRAIT_BALANCE.player.streaks.audioTrigger ? 'crit' : 'hit');
+    sfx.play('correct');
     setStreak(ns);
     setCharge((c) => Math.min(c + 1, 3));
     if (ns > s.maxStreak) setMaxStreak(ns);
@@ -531,7 +528,8 @@ export function runPlayerAnswer({
           clearDelay: getAttackEffectClearDelay(effectMeta),
           nextDelay: getAttackEffectNextStepDelay(effectMeta),
         };
-        setAtkEffect({ type: vfxType, idx: effectMeta.idx, lvl: effectMeta.lvl });
+        const attackEffect: AttackEffectVm = { type: vfxType, idx: effectMeta.idx, lvl: effectMeta.lvl };
+        setAtkEffect(attackEffect);
         if (typeof sfx.playMove === 'function') sfx.playMove(vfxType, effectMeta.idx);
         else sfx.play(vfxType);
 
@@ -570,6 +568,7 @@ export function runPlayerAnswer({
 
           const isPhantom = s3.enemy.trait === 'phantom' && chance(TRAIT_BALANCE.player.phantomDodgeChance);
           if (isPhantom) {
+            setAtkEffect({ ...attackEffect, impact: createAttackImpact('miss') });
             setEAnim('dodgeSlide 0.9s ease');
             setEffMsg({ text: tr(t, 'battle.effect.phantomDodge', '👻 Phantom Dodge!'), color: '#c084fc' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
@@ -584,8 +583,9 @@ export function runPlayerAnswer({
 
           if (wasCursed) setCursed(false);
 
+          let impactSound = 'hit';
           if (isCrit) {
-            sfx.play('crit');
+            impactSound = 'crit';
             setEffMsg({ text: tr(t, 'battle.effect.crit', '💥 Critical!'), color: '#ff6b00' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
           } else if (wasCursed) {
@@ -598,11 +598,11 @@ export function runPlayerAnswer({
             setEffMsg({ text: tr(t, 'battle.effect.lightCourage', '🦁 Courage Heart! ATK↑'), color: '#f59e0b' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
           } else if (eff > 1) {
-            sfx.play('effective');
+            impactSound = 'effective';
             setEffMsg({ text: tr(t, 'battle.effect.super', 'Super effective!'), color: '#22c55e' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
           } else if (eff < 1) {
-            sfx.play('resist');
+            impactSound = 'resist';
             setEffMsg({ text: tr(t, 'battle.effect.notVery', 'Not very effective...'), color: '#94a3b8' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
           }
@@ -643,6 +643,7 @@ export function runPlayerAnswer({
             const fullBlock = chance(TRAIT_BALANCE.boss.shadowShieldFullBlockChance);
             const partialBlock = !fullBlock && chance(TRAIT_BALANCE.boss.shadowShieldPartialBlockChance);
             if (fullBlock) {
+              setAtkEffect({ ...attackEffect, impact: createAttackImpact('blocked') });
               setShadowShieldCD(0);
               sfx.play('specDef');
               setEAnim('enemyShieldPulse 0.8s ease');
@@ -763,6 +764,9 @@ export function runPlayerAnswer({
           }
 
           setEHp(afterHp);
+          setAtkEffect({ ...attackEffect, impact: createAttackImpact(isCrit ? 'critical' : 'hit') });
+          sfx.play(impactSound);
+          if (impactSound === 'effective' || impactSound === 'resist') sfx.play('hit');
           setEAnim(HIT_ANIMS[vfxType] || 'enemyHit 0.5s ease');
           const dmgColor = HIT_COLORS[vfxType] || '#ef4444';
           addD(isCrit ? `💥-${appliedHitDmg}` : `-${appliedHitDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, isCrit ? '#ff6b00' : dmgColor);

@@ -61,7 +61,7 @@ test('runPlayerLunge schedules start and settle with custom delays', () => {
   });
 
   assert.deepEqual(delays, [120, 280]);
-  assert.deepEqual(playerAnim, ['attackLunge 0.6s ease', '']);
+  assert.deepEqual(playerAnim, ['attackLunge 0.28s ease', '']);
   assert.equal(readyCalls, 1);
 });
 

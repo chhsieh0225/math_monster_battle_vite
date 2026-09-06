@@ -20,8 +20,10 @@ const DamagePopup = memo(function DamagePopup({ id, value, x, y, color, onDone }
   return (
     <div style={{
       position: "absolute", left: x, top: y, fontSize: 24, fontWeight: 900, color,
+      // FX coordinates are sprite centers; keep centering independent of dmgPop's transform.
+      translate: "-50% 0", whiteSpace: "nowrap",
       textShadow: `0 2px 8px ${color}88`,
-      animation: "dmgPop 1s ease forwards", pointerEvents: "none", zIndex: 100,
+      animation: "dmgPop 1s ease forwards", pointerEvents: "none", zIndex: 160,
       fontFamily: "'Press Start 2P',monospace"
     }}
       role="status"

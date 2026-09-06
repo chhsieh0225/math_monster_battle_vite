@@ -11,7 +11,40 @@ const HIT_DELAY_MS: Record<string, number> = {
   grass: 280,
   dark: 400,
   light: 300,
+  steel: 300,
+  ice: 300,
 };
+
+export type AttackImpactOutcome = 'hit' | 'critical' | 'blocked' | 'miss';
+export type AttackImpactEvent = { outcome: AttackImpactOutcome; at: number };
+export type ImpactPhase = 'idle' | 'charge' | 'freeze' | 'shake' | 'settle';
+
+export function createAttackImpact(outcome: AttackImpactOutcome, now = performance.now()): AttackImpactEvent {
+  return { outcome, at: now };
+}
+
+export function getAttackImpactProfile(idx = 0, outcome: AttackImpactOutcome = 'hit') {
+  if (outcome === 'miss') return { freezeMs: 0, shakeMs: 0, settleMs: 0, shakePx: 0, scale: 1 };
+  if (outcome === 'blocked') return { freezeMs: 0, shakeMs: 0, settleMs: 220, shakePx: 0, scale: 1 };
+  const tier = clampMoveIndex(idx);
+  const critical = outcome === 'critical';
+  return {
+    freezeMs: (tier >= 3 ? 90 : tier === 2 ? 64 : 42) + (critical ? 16 : 0),
+    shakeMs: tier >= 3 ? 190 : tier === 2 ? 150 : 100,
+    settleMs: tier >= 3 ? 160 : 110,
+    shakePx: (tier >= 3 ? 4 : tier === 2 ? 2.5 : 1.5) + (critical ? 1 : 0),
+    scale: tier >= 3 ? 1.018 : critical ? 1.012 : tier === 2 ? 1.008 : 1,
+  };
+}
+
+export function getAttackImpactPhase(idx: number, outcome: AttackImpactOutcome, elapsedMs: number): ImpactPhase {
+  const profile = getAttackImpactProfile(idx, outcome);
+  const elapsed = Math.max(0, elapsedMs);
+  if (elapsed < profile.freezeMs) return 'freeze';
+  if (elapsed < profile.freezeMs + profile.shakeMs) return 'shake';
+  if (elapsed < profile.freezeMs + profile.shakeMs + profile.settleMs) return 'settle';
+  return 'idle';
+}
 
 const BASE_CLEAR_MS = 760;
 const IDX_CLEAR_BONUS_MS = [0, 90, 230, 620];

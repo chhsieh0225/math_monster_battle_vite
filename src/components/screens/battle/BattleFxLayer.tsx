@@ -3,6 +3,8 @@ import type { CSSProperties } from 'react';
 import type { SpriteTarget } from '../../../hooks/useSpriteTargets';
 import { ACH_MAP } from '../../../data/achievements';
 import type { StarterVm, UseBattleState } from '../../../types/battle';
+import type { ImpactPhase } from '../../../utils/effectTiming.ts';
+import { getAttackImpactProfile } from '../../../utils/effectTiming.ts';
 import DamagePopup from '../../ui/DamagePopup';
 import Particle from '../../ui/Particle';
 import AttackEffect from '../../effects/AttackEffect';
@@ -17,7 +19,7 @@ type BattleFxLayerProps = {
   t: Translator;
   showHeavyFx: boolean;
   lowPerfMode: boolean;
-  impactPhase: string;
+  impactPhase: ImpactPhase;
   sceneType: string;
   atkEffect: UseBattleState['atkEffect'];
   effectTarget: SpriteTarget;
@@ -42,6 +44,10 @@ type BattleFxLayerProps = {
 
 /** Scenes whose backgrounds are bright enough to wash out warm-coloured FX. */
 const BRIGHT_SCENES = new Set(['grass', 'fire', 'rock', 'light', 'heaven', 'burnt_warplace']);
+const IMPACT_TONES: Record<string, string> = {
+  fire: '#fdba74', electric: '#fde047', water: '#7dd3fc', grass: '#86efac',
+  dark: '#c4b5fd', light: '#fef08a', steel: '#e2e8f0', ice: '#a5f3fc',
+};
 
 function resolveUltimateTone(type?: string): string {
   if (type === 'fire') return 'is-fire';
@@ -79,6 +85,18 @@ export const BattleFxLayer = memo(function BattleFxLayer({
   onDismissCollectionPopup,
 }: BattleFxLayerProps) {
   const isUltimateEffect = Boolean(atkEffect && atkEffect.idx >= 3);
+  const impact = atkEffect?.impact;
+  const hasContact = Boolean(impact && impact.outcome !== 'miss');
+  const impactActive = hasContact && impactPhase !== 'idle' && impactPhase !== 'charge';
+  const impactTone = impact?.outcome === 'blocked' ? '#cbd5e1' : IMPACT_TONES[atkEffect?.type || ''] || '#f8fafc';
+  const profile = getAttackImpactProfile(atkEffect?.idx, impact?.outcome);
+  const contactStyle: BattleCssVars = {
+    '--impact-top': effectTarget.top,
+    '--impact-right': effectTarget.right,
+    '--impact-tone': impactTone,
+    '--impact-contact-ms': `${profile.freezeMs + profile.shakeMs + profile.settleMs}ms`,
+    '--impact-size': `${isUltimateEffect ? 168 : impact?.outcome === 'critical' ? 138 : atkEffect?.idx === 2 ? 126 : 104}px`,
+  };
   const ultimateToneClass = resolveUltimateTone(atkEffect?.type);
   const ultimateSyncStyle: BattleCssVars = {
     '--ult-sync-top': effectTarget.top,
@@ -91,8 +109,11 @@ export const BattleFxLayer = memo(function BattleFxLayer({
   return (
     <>
       {/* Hit reaction layer */}
-      {showHeavyFx && impactPhase !== 'idle' && (
-        <div className={`battle-hit-react-layer is-${impactPhase} ${isUltimateEffect ? 'is-ult' : ''}`} aria-hidden="true" />
+      {showHeavyFx && impactActive && (
+        <div className={`battle-impact-contact is-${impact?.outcome}`} style={contactStyle} aria-hidden="true">
+          <div className="battle-impact-contact-core" />
+          <div className="battle-impact-contact-ring" />
+        </div>
       )}
 
       {/* Popups & particles */}
@@ -141,7 +162,7 @@ export const BattleFxLayer = memo(function BattleFxLayer({
       {/* Attack effects */}
       {showHeavyFx && (isUltimateEffect || atkEffect) && (
         <div className={`battle-attack-fx-layer${BRIGHT_SCENES.has(sceneType) ? ' fx-bright-scene' : ''}`} aria-hidden="true">
-          {isUltimateEffect && (
+          {isUltimateEffect && hasContact && impact?.outcome !== 'blocked' && (
             <div className={`battle-ult-sync ${ultimateToneClass}`} style={ultimateSyncStyle}>
               <div className="battle-ult-sync-flash" />
               <div className="battle-ult-sync-core" />

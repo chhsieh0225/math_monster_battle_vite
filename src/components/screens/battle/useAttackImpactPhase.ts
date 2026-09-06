@@ -1,93 +1,37 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { AttackEffectVm } from '../../../types/battle';
-
-export type ImpactPhase = 'idle' | 'charge' | 'freeze' | 'shake' | 'settle';
-
-type ImpactProfile = {
-  chargeMs: number;
-  freezeMs: number;
-  shakeMs: number;
-  settleMs: number;
-};
-
-function resolveImpactProfile(idx = 0, lvl = 1): ImpactProfile {
-  const levelBoost = Math.min(36, Math.max(0, (lvl - 1) * 6));
-  if (idx >= 3) {
-    return {
-      chargeMs: 95 + levelBoost,
-      freezeMs: 100,
-      shakeMs: 230,
-      settleMs: 190,
-    };
-  }
-  if (idx === 2) {
-    return {
-      chargeMs: 75 + levelBoost,
-      freezeMs: 86,
-      shakeMs: 175,
-      settleMs: 150,
-    };
-  }
-  return {
-    chargeMs: 44 + Math.floor(levelBoost * 0.4),
-    freezeMs: 68,
-    shakeMs: 130,
-    settleMs: 116,
-  };
-}
+import { getAttackImpactPhase, getAttackImpactProfile } from '../../../utils/effectTiming.ts';
+import type { AttackImpactEvent, ImpactPhase } from '../../../utils/effectTiming.ts';
 
 type UseAttackImpactPhaseArgs = {
   atkEffect: AttackEffectVm | null;
   enabled: boolean;
 };
 
-export function useAttackImpactPhase({
-  atkEffect,
-  enabled,
-}: UseAttackImpactPhaseArgs): ImpactPhase {
-  const [phase, setPhase] = useState<ImpactPhase>('idle');
-  const timersRef = useRef<number[]>([]);
-  const lastAtkEffectKeyRef = useRef('');
-
-  const clearImpactTimers = useCallback(() => {
-    if (timersRef.current.length === 0) return;
-    timersRef.current.forEach((timerId) => window.clearTimeout(timerId));
-    timersRef.current = [];
-  }, []);
-
-  useEffect(() => () => clearImpactTimers(), [clearImpactTimers]);
+export function useAttackImpactPhase({ atkEffect, enabled }: UseAttackImpactPhaseArgs): ImpactPhase {
+  const impact = enabled ? atkEffect?.impact : undefined;
+  const idx = atkEffect?.idx ?? 0;
+  const [frame, setFrame] = useState<{ impact?: AttackImpactEvent; phase: ImpactPhase }>({ phase: 'idle' });
 
   useEffect(() => {
-    if (!enabled || !atkEffect) {
-      clearImpactTimers();
-      lastAtkEffectKeyRef.current = '';
-      const toIdle = window.setTimeout(() => setPhase('idle'), 0);
-      timersRef.current = [toIdle];
-      return clearImpactTimers;
-    }
+    if (!impact) return;
+    const { freezeMs, shakeMs, settleMs } = getAttackImpactProfile(idx, impact.outcome);
+    const update = () => setFrame({
+      impact,
+      phase: getAttackImpactPhase(idx, impact.outcome, performance.now() - impact.at),
+    });
+    // Catch up to the actual beat after throttled timers, rather than replaying each phase.
+    const elapsed = performance.now() - impact.at;
+    const boundaries = [0, freezeMs, freezeMs + shakeMs, freezeMs + shakeMs + settleMs];
+    const timers = [...new Set(boundaries)].filter((ms) => ms === 0 || ms > elapsed)
+      .map((ms) => window.setTimeout(update, Math.max(0, Math.ceil(ms - elapsed))));
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [impact, idx]);
 
-    const atkKey = `${atkEffect.type}-${atkEffect.idx}-${atkEffect.lvl}-${atkEffect.targetSide || 'enemy'}`;
-    if (lastAtkEffectKeyRef.current === atkKey) return;
-    lastAtkEffectKeyRef.current = atkKey;
-
-    clearImpactTimers();
-    const profile = resolveImpactProfile(atkEffect.idx, atkEffect.lvl);
-
-    const toCharge = window.setTimeout(() => setPhase('charge'), 0);
-    const toFreeze = window.setTimeout(() => setPhase('freeze'), profile.chargeMs);
-    const toShake = window.setTimeout(() => setPhase('shake'), profile.chargeMs + profile.freezeMs);
-    const toSettle = window.setTimeout(
-      () => setPhase('settle'),
-      profile.chargeMs + profile.freezeMs + profile.shakeMs,
-    );
-    const toIdle = window.setTimeout(
-      () => setPhase('idle'),
-      profile.chargeMs + profile.freezeMs + profile.shakeMs + profile.settleMs,
-    );
-
-    timersRef.current = [toCharge, toFreeze, toShake, toSettle, toIdle];
-    return clearImpactTimers;
-  }, [atkEffect, clearImpactTimers, enabled]);
-
-  return phase;
+  if (!enabled || !atkEffect) return 'idle';
+  if (!impact) return 'charge';
+  // Begin on the same render as HP/recoil, rather than one timer tick later.
+  return frame.impact === impact
+    ? frame.phase
+    : getAttackImpactPhase(idx, impact.outcome, 0);
 }

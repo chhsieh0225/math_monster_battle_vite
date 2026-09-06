@@ -59,11 +59,11 @@ export const effectOrchestrator = {
     safeTo,
     setPAnim,
     onReady,
-    startDelay = 600,
+    startDelay = 180,
     settleDelay = 400,
   }: PlayerLungeArgs): void {
     safeTo(() => {
-      setPAnim('attackLunge 0.6s ease');
+      setPAnim(`attackLunge ${settleDelay / 1000}s ease`);
       safeTo(() => {
         setPAnim('');
         if (onReady) onReady();

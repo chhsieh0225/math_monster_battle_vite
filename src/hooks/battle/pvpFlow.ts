@@ -326,6 +326,7 @@ export function handlePvpAnswer({
     return true;
   }
 
+  sfx.play('correct');
   const unlockedSpecDef = applyCorrectTurnProgress({
     currentTurn,
     state,
@@ -353,16 +354,10 @@ export function handlePvpAnswer({
     random: rand,
   });
 
-  showPvpEffectivenessMessage({
-    strike,
-    t,
-    setEffMsg,
-    scheduleClear: safeToIfBattleActive,
-  });
-
   const vfxType = move.risky && move.type2 ? move.type2 : move.type;
   const runStrike = () => {
     executePvpStrikeTurn({
+      onHit: () => showPvpEffectivenessMessage({ strike, t, setEffMsg, scheduleClear: safeToIfBattleActive }),
       sr,
       currentTurn,
       nextTurn,

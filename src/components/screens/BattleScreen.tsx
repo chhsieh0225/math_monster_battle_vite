@@ -9,6 +9,7 @@ import { PVP_BALANCE } from '../../data/pvpBalance';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { getLearningHintSteps, getLearningHintCost } from '../../utils/learningProgress.ts';
+import { getAttackImpactProfile } from '../../utils/effectTiming.ts';
 import TextBox from '../ui/TextBox';
 import type {
   ScreenName,
@@ -194,8 +195,18 @@ function BattleScreenComponent({
   const showHeavyFx = !UX.lowPerfMode;
   const impactPhase = useAttackImpactPhase({
     atkEffect: S.atkEffect,
-    enabled: showHeavyFx,
+    enabled: showHeavyFx && !S.gamePaused,
   });
+  const impactStyle = useMemo(() => {
+    const profile = getAttackImpactProfile(S.atkEffect?.idx, S.atkEffect?.impact?.outcome);
+    return {
+      '--battle-impact-x': `${profile.shakePx}px`,
+      '--battle-impact-y': `${profile.shakePx * 0.4}px`,
+      '--battle-impact-scale': profile.scale,
+      '--battle-impact-shake-ms': `${profile.shakeMs}ms`,
+      '--battle-impact-settle-ms': `${profile.settleMs}ms`,
+    } as BattleCssVars;
+  }, [S.atkEffect?.idx, S.atkEffect?.impact?.outcome]);
   const battleRootRef = useRef<HTMLDivElement | null>(null);
   const battleArenaRef = useRef<HTMLDivElement | null>(null);
   const enemySpriteRef = useRef<HTMLDivElement | null>(null);
@@ -770,6 +781,7 @@ function BattleScreenComponent({
       id="main-content"
       ref={battleRootRef}
       className={battleRootClassName}
+      style={impactStyle}
       role={canTapAdvance ? "button" : undefined}
       tabIndex={canTapAdvance ? 0 : -1}
       aria-label={canTapAdvance ? t("a11y.battle.advance", "Advance to next step") : undefined}

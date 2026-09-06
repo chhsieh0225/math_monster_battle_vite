@@ -1,4 +1,6 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
+import type { AttackEffectVm } from '../../types/battle';
+import { createAttackImpact, getAttackEffectHitDelay } from '../../utils/effectTiming.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { getLevelMaxHp, getStarterLevelMaxHp } from '../../utils/playerHp.ts';
 import { fxt } from './battleFxTargets.ts';
@@ -18,12 +20,7 @@ type BoolSetter = (value: boolean | ((prev: boolean) => boolean)) => void;
 type TextSetter = (value: string) => void;
 type PhaseSetter = (value: string) => void;
 
-type AttackEffect = {
-  type: string;
-  idx: number;
-  lvl: number;
-  targetSide?: 'enemy' | 'player';
-};
+type AttackEffect = AttackEffectVm;
 
 type StarterMove = {
   name: string;
@@ -104,6 +101,7 @@ type ExecutePvpStrikeTurnArgs = {
   setPvpFreezeP2: BoolSetter;
   setPvpStaticP1: NumberSetter;
   setPvpStaticP2: NumberSetter;
+  onHit?: () => void;
 };
 
 const PVP = PVP_BALANCE;
@@ -133,7 +131,22 @@ function tr(
   return formatFallback(fallback, params);
 }
 
-export function executePvpStrikeTurn({
+export function executePvpStrikeTurn(args: ExecutePvpStrikeTurnArgs): void {
+  if (!args.isBattleActive()) return;
+  const moveIdx = args.sr.current.selIdx ?? 0;
+  const effect: AttackEffect = {
+    type: args.vfxType, idx: moveIdx, lvl: 1,
+    targetSide: args.currentTurn === 'p1' ? 'enemy' : 'player',
+  };
+  const sfxKey = args.move.risky && args.move.type2 ? args.move.type2 : args.move.type;
+  if (typeof args.sfx.playMove === 'function') args.sfx.playMove(sfxKey, moveIdx);
+  else args.sfx.play(sfxKey);
+  args.setAtkEffect(effect);
+  if (args.currentTurn === 'p2') args.addP('enemy', fxt().playerMain.x + 24, fxt().playerMain.y + 16, 3);
+  args.safeToIfBattleActive(() => resolvePvpStrikeImpact(args, effect), getAttackEffectHitDelay(args.vfxType));
+}
+
+function resolvePvpStrikeImpact({
   sr,
   currentTurn,
   nextTurn,
@@ -155,7 +168,6 @@ export function executePvpStrikeTurn({
   setPvpSpecDefP1,
   setPvpSpecDefP2,
   setAtkEffect,
-  addP,
   setPvpParalyzeP1,
   setPvpParalyzeP2,
   setPAnim,
@@ -172,29 +184,22 @@ export function executePvpStrikeTurn({
   setPvpFreezeP2,
   setPvpStaticP1,
   setPvpStaticP2,
-}: ExecutePvpStrikeTurnArgs): void {
+  onHit,
+}: ExecutePvpStrikeTurnArgs, effect: AttackEffect): void {
   if (!isBattleActive()) return;
   const s2 = sr.current;
-  const moveIdx = s2.selIdx ?? 0;
-  const sfxKey = move.risky && move.type2 ? move.type2 : move.type;
-  if (typeof sfx.playMove === 'function') sfx.playMove(sfxKey, moveIdx);
-  else sfx.play(sfxKey);
-  if (strike.isCrit) sfx.play('crit');
-  else if (strike.eff > 1) sfx.play('effective');
-  else if (strike.eff < 1) sfx.play('resist');
-
-  if (currentTurn === 'p1') {
-    setAtkEffect({ type: vfxType, idx: moveIdx, lvl: 1, targetSide: 'enemy' });
-  } else {
-    setAtkEffect({ type: vfxType, idx: moveIdx, lvl: 1, targetSide: 'player' });
-    addP('enemy', fxt().playerMain.x + 24, fxt().playerMain.y + 16, 3);
-  }
+  const finishWithWinner = (winner: PvpTurn) => safeToIfBattleActive(() => {
+    declarePvpWinner({ winner, setPvpWinner, setScreen });
+  }, 520);
 
   const hitAnim = PVP_HIT_ANIMS[vfxType] || 'enemyHit 0.45s ease';
   const defenderTurn = currentTurn === 'p1' ? 'p2' : 'p1';
   const attackerTurn = currentTurn;
   const defenderSpecDefReady = getResolvedPvpCombatant(s2, defenderTurn).specDef;
   if (defenderSpecDefReady) {
+    setAtkEffect({ ...effect, impact: createAttackImpact(
+      defender.type === 'water' || defender.type === 'ice' ? 'miss' : 'blocked',
+    ) });
     if (currentTurn === 'p1') setPvpSpecDefP2(false);
     else setPvpSpecDefP1(false);
 
@@ -202,22 +207,21 @@ export function executePvpStrikeTurn({
     const defenderMainY = currentTurn === 'p1' ? fxt().enemyMain.y : fxt().playerMain.y;
     const attackerMainX = currentTurn === 'p1' ? fxt().playerMain.x : fxt().enemyMain.x;
     const attackerMainY = currentTurn === 'p1' ? fxt().playerMain.y : fxt().enemyMain.y;
-    const finishWithTurnSwap = () => {
-      if (!isBattleActive()) return;
+    const finishWithTurnSwap = (delay = 420) => safeToIfBattleActive(() => {
       swapPvpTurnToText({
         nextTurn,
         setPvpTurn,
         setPvpActionCount,
         setPhase,
       });
-    };
+    }, delay);
 
     if (defender.type === 'fire') {
       addD('🛡️BLOCK', defenderMainX, defenderMainY, '#fbbf24');
       sfx.play('specDef');
       setBText(tr(t, 'battle.pvp.specdef.fire', '🛡️ {name} raised a barrier and blocked the hit!', { name: defender.name }));
       safeToIfBattleActive(() => setAtkEffect(null), 380);
-      finishWithTurnSwap();
+      finishWithTurnSwap(380);
       return;
     }
 
@@ -236,7 +240,7 @@ export function executePvpStrikeTurn({
         setPAnim('');
         setAtkEffect(null);
       }, 680);
-      finishWithTurnSwap();
+      finishWithTurnSwap(680);
       return;
     }
 
@@ -256,7 +260,7 @@ export function executePvpStrikeTurn({
         setEAnim('');
         setAtkEffect(null);
       }, 520);
-      finishWithTurnSwap();
+      finishWithTurnSwap(520);
       return;
     }
 
@@ -287,11 +291,7 @@ export function executePvpStrikeTurn({
       setBText(tr(t, 'battle.pvp.specdef.light', '✨ {name} roared and countered!', { name: defender.name }));
       safeToIfBattleActive(() => setAtkEffect(null), 420);
       if (killed) {
-        declarePvpWinner({
-          winner: currentTurn === 'p1' ? 'p2' : 'p1',
-          setPvpWinner,
-          setScreen,
-        });
+        finishWithWinner(currentTurn === 'p1' ? 'p2' : 'p1');
         return;
       }
       finishWithTurnSwap();
@@ -306,11 +306,7 @@ export function executePvpStrikeTurn({
       setBText(tr(t, 'battle.pvp.specdef.steel', '⚙️ {name} triggered Iron Guard and countered!', { name: defender.name }));
       safeToIfBattleActive(() => setAtkEffect(null), 420);
       if (killed) {
-        declarePvpWinner({
-          winner: currentTurn === 'p1' ? 'p2' : 'p1',
-          setPvpWinner,
-          setScreen,
-        });
+        finishWithWinner(currentTurn === 'p1' ? 'p2' : 'p1');
         return;
       }
       finishWithTurnSwap();
@@ -328,17 +324,18 @@ export function executePvpStrikeTurn({
     setBText(tr(t, 'battle.pvp.specdef.grass', '🌿 {name} reflected the attack!', { name: defender.name }));
     safeToIfBattleActive(() => setAtkEffect(null), 420);
     if (killed) {
-      declarePvpWinner({
-        winner: currentTurn === 'p1' ? 'p2' : 'p1',
-        setPvpWinner,
-        setScreen,
-      });
+      finishWithWinner(currentTurn === 'p1' ? 'p2' : 'p1');
       return;
     }
     finishWithTurnSwap();
     return;
   }
 
+  setAtkEffect({ ...effect, impact: createAttackImpact(strike.isCrit ? 'critical' : 'hit') });
+  sfx.play(strike.isCrit ? 'crit' : 'hit');
+  if (!strike.isCrit && strike.eff > 1) sfx.play('effective');
+  else if (!strike.isCrit && strike.eff < 1) sfx.play('resist');
+  onHit?.();
   let totalDmg = strike.dmg;
   const passiveNotes: string[] = [];
   let bonusDmg = 0;
@@ -413,11 +410,7 @@ export function executePvpStrikeTurn({
       setAtkEffect(null);
     }, 520);
     if (nextHp <= 0) {
-      declarePvpWinner({
-        winner: 'p1',
-        setPvpWinner,
-        setScreen,
-      });
+      finishWithWinner('p1');
       return;
     }
   } else {
@@ -443,11 +436,7 @@ export function executePvpStrikeTurn({
       setAtkEffect(null);
     }, 520);
     if (nextHp <= 0) {
-      declarePvpWinner({
-        winner: 'p2',
-        setPvpWinner,
-        setScreen,
-      });
+      finishWithWinner('p2');
       return;
     }
   }
@@ -466,11 +455,7 @@ export function executePvpStrikeTurn({
         setPAnim('playerHit 0.45s ease');
         safeToIfBattleActive(() => setPAnim(''), 520);
         if (attackerNextHp <= 0) {
-          declarePvpWinner({
-            winner: 'p2',
-            setPvpWinner,
-            setScreen,
-          });
+          finishWithWinner('p2');
           return;
         }
       } else {
@@ -481,11 +466,7 @@ export function executePvpStrikeTurn({
         setEAnim('enemyHit 0.45s ease');
         safeToIfBattleActive(() => setEAnim(''), 520);
         if (attackerNextHp <= 0) {
-          declarePvpWinner({
-            winner: 'p1',
-            setPvpWinner,
-            setScreen,
-          });
+          finishWithWinner('p1');
           return;
         }
       }
@@ -507,10 +488,11 @@ export function executePvpStrikeTurn({
     move: move.name,
     notes: allNotes ? ` ${allNotes}` : '',
   }));
-  swapPvpTurnToText({
+  // Do not let a fast next answer overlap the previous effect's cleanup timer.
+  safeToIfBattleActive(() => swapPvpTurnToText({
     nextTurn,
     setPvpTurn,
     setPvpActionCount,
     setPhase,
-  });
+  }), 520);
 }

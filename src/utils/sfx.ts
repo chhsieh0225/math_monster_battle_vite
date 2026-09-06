@@ -711,6 +711,10 @@ function playLight3(): void {
 }
 
 const SOUNDS = {
+  correct: () => {
+    playNote(NOTE_FREQ.E5, DUR['16n'], { type: 'sine', vol: 0.1, attack: 0.004, decay: 0.06, release: 0.06 });
+    setTimeout(() => playNote(NOTE_FREQ.G5, DUR['16n'], { type: 'sine', vol: 0.08, attack: 0.004, decay: 0.06, release: 0.08 }), 55);
+  },
   hit: () => {
     noiseBurst({ dur: 0.045, vol: 0.09, hp: 700, lp: 7600, lpSweepTo: 2600 });
     playNote(NOTE_FREQ.C4, DUR['32n'], { type: 'sine', vol: 0.22, attack: 0.002, decay: 0.04, release: 0.05, sweepToFreq: NOTE_FREQ.G3 });

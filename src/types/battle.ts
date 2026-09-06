@@ -7,6 +7,7 @@ import type {
 } from './game';
 import type { EnemyPersonality } from '../data/enemyPersonalities';
 import type { LearningQuestionMeta } from '../utils/learningProgress';
+import type { AttackImpactEvent } from '../utils/effectTiming';
 import type {
   DailyChallengeFeedback,
   DailyChallengePlan,
@@ -161,6 +162,7 @@ export type AttackEffectVm = {
   idx: number;
   lvl: number;
   targetSide?: "enemy" | "player";
+  impact?: AttackImpactEvent;
 };
 
 export type EffectMsgVm = {

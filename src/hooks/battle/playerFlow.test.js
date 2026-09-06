@@ -1,6 +1,76 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildPostHitResolutionPlan, runPlayerAnswer } from './playerFlow.ts';
+import { getAttackEffectHitDelay } from '../../utils/effectTiming.ts';
+
+function createClock() {
+  let now = 0;
+  const queue = [];
+  return {
+    schedule: (fn, ms) => queue.push({ fn, at: now + ms }),
+    advance: (target) => {
+      queue.sort((a, b) => a.at - b.at);
+      while (queue[0]?.at <= target) {
+        const task = queue.shift();
+        now = task.at;
+        task.fn();
+        queue.sort((a, b) => a.at - b.at);
+      }
+      now = target;
+    },
+  };
+}
+
+for (const slot of ['main', 'sub']) {
+  test(`solo/coop ${slot} impact, recoil and HP settle together, never during travel`, () => {
+    const clock = createClock();
+    const { state, deps, calls, counters } = createTestContext({
+      battleMode: slot === 'sub' ? 'coop' : 'single',
+      allySub: slot === 'sub' ? { name: 'Partner', type: 'fire' } : null,
+    });
+    runPlayerAnswer({ ...deps, safeTo: clock.schedule, attackerSlot: slot, correct: true,
+      move: { name: 'Strike', basePower: 12, growth: 2, type: 'fire' }, starter: state.starter });
+    clock.advance(579);
+    assert.equal(calls.atkEffect.length, 0);
+    clock.advance(580);
+    const launched = calls.atkEffect.at(-1);
+    assert.equal(launched.type, 'fire');
+    assert.equal(launched.impact, undefined);
+    clock.advance(580 + getAttackEffectHitDelay('fire') - 1);
+    assert.equal(counters.eHp.getValue(), 500);
+    assert.equal(calls.eAnim.length, 0);
+    clock.advance(580 + getAttackEffectHitDelay('fire'));
+    assert.ok(counters.eHp.getValue() < 500);
+    assert.ok(['hit', 'critical'].includes(calls.atkEffect.at(-1).impact.outcome));
+    assert.ok(calls.eAnim.at(-1).includes('Hit'));
+    assert.ok(calls.sfx.includes('hit') || calls.sfx.includes('crit'));
+  });
+}
+
+for (const [enemy, outcome] of [[{ trait: 'phantom' }, 'miss'], [{ id: 'boss' }, 'blocked']]) {
+  test(`${outcome} signals no damaging contact, preserves HP and suppresses hit audio`, () => {
+    const clock = createClock();
+    const { state, deps, calls, counters } = createTestContext({ enemy: { maxHp: 500, mType: 'grass', ...enemy } });
+    runPlayerAnswer({ ...deps, safeTo: clock.schedule, chance: () => true, correct: true,
+      move: { name: 'Strike', basePower: 12, growth: 2, type: 'fire' }, starter: state.starter });
+    clock.advance(880);
+    assert.equal(calls.atkEffect.at(-1).impact.outcome, outcome);
+    assert.equal(counters.eHp.getValue(), 500);
+    assert.ok(!calls.sfx.includes('hit') && !calls.sfx.includes('crit'));
+  });
+}
+
+test('leaving battle during projectile travel cancels HP and impact feedback', () => {
+  const clock = createClock();
+  const { state, deps, calls, counters } = createTestContext();
+  runPlayerAnswer({ ...deps, safeTo: clock.schedule, correct: true,
+    move: { name: 'Strike', basePower: 12, growth: 2, type: 'fire' }, starter: state.starter });
+  clock.advance(580);
+  state.screen = 'title';
+  clock.advance(5000);
+  assert.equal(counters.eHp.getValue(), 500);
+  assert.ok(calls.atkEffect.every((fx) => !fx?.impact));
+});
 
 function createNumberSetter(initialValue = 0, onChange = null) {
   let value = initialValue;
@@ -111,6 +181,7 @@ function createTestContext(stateOverrides = {}) {
     setEAnim: (value) => { calls.eAnim.push(value); },
     setEffMsg: (value) => { calls.effMsg.push(value); },
     setBossCharging: () => {},
+    setShadowShieldCD: () => {},
     setBurnStack: burn.setter,
     setPHp: pHp.setter,
     setPHpSub: pHpSub.setter,
@@ -168,7 +239,7 @@ for (const attackerSlot of ['main', 'sub']) {
     });
     state.coopActiveSlot = attackerSlot === 'sub' ? 'main' : 'sub';
     queue.shift()();
-    assert.deepEqual(animations, [{ value: 'attackLunge 0.6s ease', slot: attackerSlot }]);
+    assert.deepEqual(animations, [{ value: 'attackLunge 0.4s ease', slot: attackerSlot }]);
     queue.shift()();
     assert.deepEqual(animations.at(-1), { value: '', slot: attackerSlot });
   });

@@ -23,6 +23,14 @@ React + Vite 教育對戰遊戲專案。
 - 紀錄以裝置共用，非個別兒童帳號，儲存於 `mathMonsterBattle_learning_v1`。不回推舊紀錄，清除瀏覽器資料會遺失。儲存失敗時本次遊戲仍可繼續，但不能保證重新載入後保留。
 - Co-op、PvP、計時、每日挑戰與連勝塔維持原有難度規則，不寫入此學習進度。
 
+## 戰鬥命中演出
+
+- `effectTiming.ts` 定義招式命中延遲與命中回饋強度。戰鬥流程在扣血／格擋／閃避結算時寫入 `atkEffect.impact`，畫面不再從招式開始時間猜測命中。
+- `useAttackImpactPhase.ts` 只控制命中後的停頓、震動與收尾，支援重複施放同一招，並於清除招式、低效能模式或卸載時取消計時器。
+- 答對提示音與真正命中音分開；PvP 等飛行、受擊與特效清除後再交棒，致命攻擊也先保留短暫受擊演出。
+- 局部命中光效取代全戰場明暗濾鏡；普通攻擊不縮放鏡頭，重擊／暴擊使用較強但有上限的回饋。保留原本八屬性特效與角色比例。
+- 本階段不增加新戰鬥規則或角色姿勢素材；既有屬性特效內部的逐粒子飛行軌跡仍沿用原動畫。
+
 ## 目前架構（2026-02）
 
 - `src/App.tsx`
@@ -37,4 +45,3 @@ React + Vite 教育對戰遊戲專案。
   - 目前新增 `useBattleOrchestrationState.ts`、`useBattleFlowState.ts` 收斂 orchestration state。
 
 > battle 領域分層說明：`src/hooks/battle/README.md`
-

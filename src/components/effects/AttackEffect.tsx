@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, memo, Suspense } from 'react';
 import type { SpriteTarget } from '../../hooks/useSpriteTargets';
 import type { AttackElementEffectProps } from './effectTypes.ts';
 
@@ -29,7 +29,7 @@ interface AttackEffectProps {
   target: SpriteTarget;
 }
 
-export default function AttackEffect({ type, idx, lvl, target }: AttackEffectProps) {
+export default memo(function AttackEffect({ type, idx, lvl, target }: AttackEffectProps) {
   const Comp = EFFECT_MAP[type];
   if (!Comp) return null;
   return (
@@ -37,4 +37,4 @@ export default function AttackEffect({ type, idx, lvl, target }: AttackEffectPro
       <Comp idx={idx} lvl={lvl} target={target} />
     </Suspense>
   );
-}
+});

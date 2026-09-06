@@ -4,6 +4,7 @@ import type { SpriteTarget } from '../../hooks/useSpriteTargets.ts';
 import type { AttackEffectVm } from '../../types/battle.ts';
 import { getAttackEffectHitDelay } from '../../utils/effectTiming.ts';
 import { getSkillImpactSize, getSkillMastery } from '../../utils/skillPresentation.ts';
+import { getSkillRecipe } from './skillRecipes.ts';
 
 const ELEMENTS: Record<string, { tone: string; accent: string; trail: string; crest: string }> = {
   fire: { tone: '#fb923c', accent: '#fef08a',
@@ -32,42 +33,67 @@ const ELEMENTS: Record<string, { tone: string; accent: string; trail: string; cr
     crest: 'M0 -43 L27 -10 L18 28 L0 43 L-22 20 L-29 -10Z M0 -43 L0 43 M-29 -10 L27 -10 M-22 20 L0 -10 L18 28' },
 };
 
+export type SkillEffectArena = {
+  width: number;
+  height: number;
+  enemyHudRight?: number;
+  enemyHudBottom?: number;
+  playerHudLeft?: number;
+  playerHudInset?: number;
+};
+
 type Props = {
   effect: AttackEffectVm;
   source: SpriteTarget;
   target: SpriteTarget;
-  arena: { width: number; height: number };
+  arena: SkillEffectArena;
   lowPerf?: boolean;
 };
 
 export const SkillStrikeEffect = memo(function SkillStrikeEffect({ effect, source, target, arena, lowPerf = false }: Props) {
   const uid = `skill-${useId().replace(/[^a-z0-9_-]/gi, '')}`;
   const { tier } = getSkillMastery(effect.lvl);
-  const element = ELEMENTS[effect.type] || ELEMENTS.dark;
+  const recipe = getSkillRecipe(effect.skillId);
+  const baseElement = ELEMENTS[effect.type] || ELEMENTS.dark;
+  const element = { ...baseElement, tone: recipe?.tone || baseElement.tone, accent: recipe?.accent || baseElement.accent };
   const outcome = effect.impact?.outcome;
   if (outcome === 'miss' || arena.width <= 0 || arena.height <= 0) return null;
   const hit = Boolean(outcome);
   const blocked = outcome === 'blocked';
   const boss = Boolean(effect.signature);
   const ultimate = effect.idx >= 3;
-  const radius = getSkillImpactSize(effect.lvl, effect.idx, boss) + (outcome === 'critical' ? 8 : 0);
+  const requestedRadius = getSkillImpactSize(effect.lvl, effect.idx, boss) + (outcome === 'critical' ? 8 : 0);
+  const radius = Math.min(requestedRadius, target.size && target.size > 0 ? Math.max(26, target.size * .7) : requestedRadius);
+  const hasHud = arena.enemyHudRight !== undefined && arena.enemyHudBottom !== undefined
+    && arena.playerHudLeft !== undefined && arena.playerHudInset !== undefined;
+  const clip = hasHud ? `M0 0H${arena.width}V${arena.height}H0Z M0 0H${arena.enemyHudRight}V${arena.enemyHudBottom}H0Z M${arena.playerHudLeft} ${arena.height - arena.playerHudInset!}H${arena.width}V${arena.height}H${arena.playerHudLeft}Z` : undefined;
   const dx = target.cx - source.cx, dy = target.cy - source.cy;
   const distance = Math.max(1, Math.hypot(dx, dy));
   const angle = Math.atan2(dy, dx) * 180 / Math.PI;
   const strands = lowPerf || blocked ? 1 : effect.signature === 'boss_hydra' ? 3 : tier;
+  const fall = recipe?.motion === 'fall';
+  const startX = fall ? Math.min(arena.width - 16, target.cx + 28) : source.cx;
+  const startY = fall ? Math.max(18, target.cy - 130) : source.cy;
+  const trail = recipe?.motion === 'wave' || recipe?.motion === 'lash'
+    ? `M${source.cx} ${source.cy} Q${source.cx + dx * .35} ${source.cy - 65} ${source.cx + dx * .6} ${source.cy + dy * .6} T${target.cx} ${target.cy}`
+    : `M${startX} ${startY} L${target.cx} ${target.cy}`;
   const style = {
     '--skill-tone': blocked ? '#cbd5e1' : element.tone,
     '--skill-accent': element.accent,
     '--skill-flight': `${getAttackEffectHitDelay(effect.type)}ms`,
     '--skill-weight': ultimate ? 5 : 2 + tier,
+    '--skill-dx': `${target.cx - startX}px`, '--skill-dy': `${target.cy - startY}px`,
     width: arena.width, height: arena.height,
   } as CSSProperties;
 
   return <svg className={`skill-fx ${hit ? 'is-contact' : 'is-launch'} ${lowPerf ? 'is-lite' : ''} ${blocked ? 'is-blocked' : ''}`}
     style={style} viewBox={`0 0 ${arena.width} ${arena.height}`} aria-hidden="true"
+    clipPath={hasHud ? `url(#${uid}-arena)` : undefined} data-impact-radius={radius}
     data-skill-tier={tier} data-skill-type={effect.type} data-skill-signature={effect.signature}
+    data-skill-id={recipe ? effect.skillId : undefined} data-skill-motion={recipe?.motion}
     data-source={`${source.cx},${source.cy}`} data-target={`${target.cx},${target.cy}`}>
     <defs>
+      {clip && <clipPath id={`${uid}-arena`}><path d={clip} clipRule="evenodd" /></clipPath>}
       <radialGradient id={uid}>
         <stop offset="0" stopColor={element.accent} stopOpacity=".9" />
         <stop offset=".18" stopColor={element.accent} stopOpacity=".68" />
@@ -82,7 +108,16 @@ export const SkillStrikeEffect = memo(function SkillStrikeEffect({ effect, sourc
         {!lowPerf && tier === 3 && <path d="M0 -48 L42 24 L-42 24Z" />}
       </g>
     </g>}
-    <g transform={`translate(${source.cx} ${source.cy}) rotate(${angle})`}>
+    {recipe ? (!lowPerf && !blocked && <g key={hit ? 'contact' : 'launch'} className="skill-signature-flight">
+      <path className="skill-route" d={trail} pathLength="1" />
+      {!hit && <g transform={`translate(${startX} ${startY})`}>
+        <g className="skill-missile">
+          <g transform={`rotate(${fall ? 20 : angle}) scale(${recipe.motion === 'rush' ? .65 : .42})`}>
+            <path className="skill-glyph" d={recipe.mark} />
+          </g>
+        </g>
+      </g>}
+    </g>) : <g transform={`translate(${source.cx} ${source.cy}) rotate(${angle})`}>
       <g key={hit ? 'contact' : 'launch'} className="skill-stream">
         {Array.from({ length: strands }, (_, i) => <svg key={i} x="0" y={(ultimate ? -38 : -26) + (i - (strands - 1) / 2) * 17}
           width={distance} height={ultimate ? 76 : 52} viewBox="0 0 240 80" preserveAspectRatio="none" overflow="visible">
@@ -90,19 +125,26 @@ export const SkillStrikeEffect = memo(function SkillStrikeEffect({ effect, sourc
           {!lowPerf && <path className="skill-stream-edge" d={element.trail} />}
         </svg>)}
       </g>
-    </g>
+    </g>}
     {hit && <g transform={`translate(${target.cx} ${target.cy})`}>
       <g key={effect.impact?.at} className="skill-contact">
         {blocked ? <path className="skill-block" d="M0 -35 L27 -22 L23 12 Q15 28 0 36 Q-15 28 -23 12 L-27 -22Z" /> : <>
           {!lowPerf && <circle className="skill-impact-heat" r={radius * 1.25} fill={`url(#${uid})`} />}
           <circle className="skill-impact-ring" r={radius * .72} />
           {!lowPerf && (tier >= 2 || ultimate) && <circle className="skill-impact-ring skill-ring-outer" r={radius} strokeDasharray="22 9 4 9" />}
-          <g className="skill-crest" transform={`scale(${radius / 85})`}><path d={element.crest} /></g>
+          {recipe ? <g className="skill-signature" transform={`scale(${radius / 62})`}>
+            {Array.from({ length: lowPerf ? 1 : tier }, (_, i) => <g key={i}
+              opacity={i === 0 ? 1 : .28}
+              transform={`translate(${i * (recipe.motion === 'slash' ? 6 : -4)} ${i * -5}) scale(${1 - i * .13})`}>
+              <path className={`skill-glyph skill-mark ${i > 0 ? 'skill-echo' : ''}`} d={recipe.mark} pathLength="1"
+                style={{ '--skill-beat': `${i * 34}ms` } as CSSProperties} />
+            </g>)}
+          </g> : <g className="skill-crest" transform={`scale(${radius / 85})`}><path d={element.crest} /></g>}
           {!lowPerf && (tier === 3 || ultimate) && <g className="skill-seal">
             <path d={`M0 ${-radius} L${radius * .86} ${radius / 2} L${-radius * .86} ${radius / 2}Z`} />
             <path d={`M0 ${radius} L${radius * .86} ${-radius / 2} L${-radius * .86} ${-radius / 2}Z`} />
           </g>}
-          {!lowPerf && ultimate && <g className="skill-finisher">
+          {!lowPerf && ultimate && !recipe && <g className="skill-finisher">
             {[0, 120, 240].map((turn) => <path key={turn} d={element.crest}
               transform={`rotate(${turn}) translate(0 ${-radius * .72}) scale(.55)`} />)}
           </g>}

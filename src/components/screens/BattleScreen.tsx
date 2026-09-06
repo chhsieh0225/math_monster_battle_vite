@@ -493,8 +493,11 @@ function BattleScreenComponent({
       playerSub: measuredPlayerSubTarget || memoFallbackTargets.playerSub,
     };
     const keys = getSkillActorKeys(S.atkEffect || { type: '', idx: 0, lvl: 1 });
-    return { source: targets[keys.source], target: targets[keys.target] };
-  }, [memoFallbackTargets, measuredEnemyTarget, measuredPlayerTarget, measuredPlayerSubTarget, S.atkEffect]);
+    const bounds = memoLaneSnapshot!.safe[keys.target].bounds;
+    return { source: targets[keys.source], target: {
+      ...targets[keys.target], size: Math.min(bounds.right - bounds.left, bounds.bottom - bounds.top),
+    } };
+  }, [memoFallbackTargets, memoLaneSnapshot, measuredEnemyTarget, measuredPlayerTarget, measuredPlayerSubTarget, S.atkEffect]);
 
   // ── Compute BattleFxTargets for particle/damage popup positioning ──
   const memoFxTargets = useMemo<BattleFxTargets>(() => {
@@ -913,7 +916,7 @@ function BattleScreenComponent({
         atkEffect={S.atkEffect}
         effectTarget={effectTarget}
         effectSource={memoEffectRoute!.source}
-        arenaSize={{ width: arenaGeometry.width, height: arenaGeometry.height }}
+        arenaSize={arenaGeometry}
         dmgs={S.dmgs}
         parts={S.parts}
         battleMode={S.battleMode}

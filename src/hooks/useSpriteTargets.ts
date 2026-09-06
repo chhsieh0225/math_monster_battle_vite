@@ -10,6 +10,8 @@ export type SpriteTarget = {
   cx: number;
   /** Center-y from top edge of battle-root, in pixels. */
   cy: number;
+  /** Optional stable layout size for contact FX, not the animated DOM bounds. */
+  size?: number;
 };
 
 type UseSpriteTargetsArgs = {

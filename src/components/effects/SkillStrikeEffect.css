@@ -16,8 +16,38 @@
 .skill-shard{fill:var(--skill-accent);stroke:none;animation:skillShard 480ms ease-out both}
 .skill-boss-crown{fill:none;stroke:var(--skill-tone);stroke-width:3;opacity:.75}
 .skill-block{fill:none;stroke:#e2e8f0;stroke-width:2}
+.skill-glyph{fill:var(--skill-tone);fill-opacity:.18;stroke:var(--skill-accent);stroke-width:2.5}
+.skill-fx[data-skill-id] .skill-contact{filter:drop-shadow(0 1px 1px #08111f88)}
+.skill-fx[data-skill-id] .skill-impact-heat{animation-name:skillNamedHeat}
+.skill-route{fill:none;stroke:var(--skill-tone);stroke-width:var(--skill-weight);opacity:.65;stroke-dasharray:1;animation:skillRoute var(--skill-flight) ease-out both}
+.skill-missile{animation:skillMissile var(--skill-flight) cubic-bezier(.45,.05,.75,.65) both}
+.skill-fx.is-contact .skill-signature-flight{animation:skillTrailFade 180ms ease-out both}
+.skill-fx.is-contact .skill-route{animation:none}
+.skill-mark{animation:skillMarkBurst 440ms ease-out var(--skill-beat) both;transform-origin:0 0}
+.skill-echo{stroke:var(--skill-tone);fill:none;stroke-width:1;opacity:.45}
+.skill-fx[data-skill-motion=slash] .skill-mark,.skill-fx[data-skill-motion=lash] .skill-mark{stroke-dasharray:1;animation-name:skillCut}
+.skill-fx[data-skill-motion=orbit] .skill-mark{animation-name:skillOrbit}
+.skill-fx[data-skill-motion=field] .skill-mark{animation-name:skillErupt}
+.skill-fx[data-skill-motion=fall] .skill-mark{animation-name:skillFall}
+.skill-fx[data-skill-motion=wave] .skill-mark{animation-name:skillWave}
+.skill-fx[data-skill-motion=rush] .skill-mark{animation-name:skillRush}
+.skill-fx[data-skill-motion=beam] .skill-route{stroke-width:9;stroke:var(--skill-accent);opacity:.35}
+.skill-fx[data-skill-motion=beam] .skill-mark{animation-name:skillBeam}
+.skill-fx[data-skill-motion=orbit] .skill-route{stroke-dasharray:3 8;animation:none}
+.skill-fx.is-lite .skill-mark{animation-duration:280ms}
 .skill-fx.is-lite .skill-stream{display:none}
 .skill-fx.is-lite .skill-contact{animation-duration:300ms;filter:none}
+@keyframes skillRoute{from{opacity:0;stroke-dashoffset:1}to{opacity:.65;stroke-dashoffset:0}}
+@keyframes skillNamedHeat{0%{opacity:0;transform:scale(.35)}18%{opacity:.45}100%{opacity:0;transform:scale(1.05)}}
+@keyframes skillMissile{0%{opacity:0;transform:translate(0,0) scale(.55)}15%{opacity:1}100%{opacity:.9;transform:translate(var(--skill-dx),var(--skill-dy)) scale(1)}}
+@keyframes skillMarkBurst{0%{opacity:0;transform:scale(.5)}18%{opacity:1;transform:scale(1.04)}100%{opacity:0;transform:scale(1.18)}}
+@keyframes skillCut{0%{opacity:0;stroke-dashoffset:1;transform:scale(.88)}14%{opacity:1}52%{stroke-dashoffset:0}100%{opacity:0;stroke-dashoffset:0;transform:scale(1.06)}}
+@keyframes skillOrbit{0%{opacity:0;transform:rotate(-55deg) scale(1.2)}16%{opacity:1}100%{opacity:0;transform:rotate(95deg) scale(.55)}}
+@keyframes skillErupt{0%{opacity:0;transform:translateY(25px) scaleY(.12)}22%{opacity:1;transform:translateY(0) scaleY(1)}100%{opacity:0;transform:translateY(-8px) scaleY(1.1)}}
+@keyframes skillFall{0%{opacity:0;transform:translateY(-28px) scale(.7)}20%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(6px) scale(1.05)}}
+@keyframes skillWave{0%{opacity:0;transform:scaleX(.35) scaleY(.7)}20%{opacity:1}100%{opacity:0;transform:scaleX(1.3) scaleY(1.05)}}
+@keyframes skillRush{0%{opacity:0;transform:scaleX(1.35) scaleY(.55)}16%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.2)}}
+@keyframes skillBeam{0%{opacity:0;transform:scaleX(.12)}12%,35%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(1.15)}}
 @keyframes skillGather{0%{opacity:0;transform:scale(1.35) rotate(-30deg)}35%{opacity:.8}100%{opacity:0;transform:scale(.55) rotate(35deg)}}
 @keyframes skillTravel{0%{opacity:0;transform:scaleX(.02)}24%{opacity:.6}100%{opacity:.95;transform:scaleX(1)}}
 @keyframes skillTrailFade{from{opacity:.8}to{opacity:0}}
@@ -28,7 +58,7 @@
 @keyframes skillShard{0%{opacity:0;transform:translateY(12px)}20%{opacity:.9}100%{opacity:0;transform:translateY(-20px)}}
 .battle-root[data-paused=true] .skill-fx *{animation-play-state:paused!important}
 @media(prefers-reduced-motion:reduce){
-  .skill-fx .skill-stream,.skill-fx .skill-charge,.skill-fx .skill-shard,.skill-fx .skill-seal,.skill-fx .skill-boss-crown,.skill-fx .skill-finisher,.skill-fx .skill-impact-heat{display:none}
+  .skill-fx .skill-stream,.skill-fx .skill-charge,.skill-fx .skill-shard,.skill-fx .skill-seal,.skill-fx .skill-boss-crown,.skill-fx .skill-finisher,.skill-fx .skill-impact-heat,.skill-fx .skill-signature-flight,.skill-fx .skill-echo{display:none}
   .skill-fx *{animation:none!important}
   .skill-fx .skill-ring-outer{display:none}
   .skill-fx .skill-contact{opacity:.65}

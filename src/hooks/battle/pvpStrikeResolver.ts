@@ -1,4 +1,6 @@
 import { PVP_BALANCE } from '../../data/pvpBalance.ts';
+import { BOSS_IDS } from '../../data/monsterConfigs.ts';
+import { getCharacterSkillId } from '../../utils/skillPresentation.ts';
 import type { AttackEffectVm } from '../../types/battle';
 import { createAttackImpact, getAttackEffectHitDelay } from '../../utils/effectTiming.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
@@ -137,6 +139,8 @@ export function executePvpStrikeTurn(args: ExecutePvpStrikeTurnArgs): void {
   const effect: AttackEffect = {
     type: args.vfxType, idx: moveIdx, lvl: 1,
     targetSide: args.currentTurn === 'p1' ? 'enemy' : 'player',
+    skillId: getCharacterSkillId(args.attacker.id, moveIdx),
+    signature: BOSS_IDS.has(args.attacker.id || '') ? args.attacker.id : undefined,
   };
   const sfxKey = args.move.risky && args.move.type2 ? args.move.type2 : args.move.type;
   if (typeof args.sfx.playMove === 'function') args.sfx.playMove(sfxKey, moveIdx);

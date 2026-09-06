@@ -381,6 +381,26 @@ for (const attackerSlot of ['main', 'sub']) {
   });
 }
 
+test('named player strike captures the acting partner, slot and skill before a UI selection change', () => {
+  const clock = createClock();
+  const partner = { id: 'wolf', name: 'Translated wolf', type: 'steel' };
+  const { deps, calls, state } = createTestContext({
+    battleMode: 'coop', allySub: partner, selIdx: 2, coopActiveSlot: 'sub',
+  });
+  runPlayerAnswer({ ...deps, correct: true, starter: partner, attackerSlot: 'sub', safeTo: clock.schedule,
+    move: { name: 'Localized cross cut', type: 'steel', basePower: 12, growth: 2 } });
+  state.coopActiveSlot = 'main';
+  state.selIdx = 0;
+  state.allySub = { id: 'water', name: 'Other', type: 'water' };
+  clock.advance(2000);
+  const effects = calls.atkEffect.filter(Boolean);
+  assert.ok(effects.length >= 2);
+  for (const effect of effects) {
+    assert.equal(effect.skillId, 'wolf:2');
+    assert.equal(effect.sourceSlot, 'sub');
+  }
+});
+
 test('sub attacker risky self-damage animates the same partner that loses HP', () => {
   const animations = [];
   const { deps, state, counters } = createTestContext({

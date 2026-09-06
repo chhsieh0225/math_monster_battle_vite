@@ -9,6 +9,7 @@ import DamagePopup from '../../ui/DamagePopup';
 import Particle from '../../ui/Particle';
 import AttackEffect from '../../effects/AttackEffect';
 import { SkillStrikeEffect } from '../../effects/SkillStrikeEffect.tsx';
+import type { SkillEffectArena } from '../../effects/SkillStrikeEffect.tsx';
 import { getSkillMastery } from '../../../utils/skillPresentation.ts';
 import AchievementPopup from '../../ui/AchievementPopup';
 import CollectionMilestonePopup from '../../ui/CollectionMilestonePopup';
@@ -26,7 +27,7 @@ type BattleFxLayerProps = {
   atkEffect: UseBattleState['atkEffect'];
   effectTarget: SpriteTarget;
   effectSource?: SpriteTarget;
-  arenaSize?: { width: number; height: number };
+  arenaSize?: SkillEffectArena;
   dmgs: UseBattleState['dmgs'];
   parts: UseBattleState['parts'];
   battleMode: UseBattleState['battleMode'];

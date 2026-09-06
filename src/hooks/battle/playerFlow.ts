@@ -23,6 +23,7 @@ import { isBattleActiveState, scheduleIfBattleActive } from './menuResetGuard.ts
 import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
 import { TYPE_EMOJI } from '../../data/elementEmoji.ts';
 import { isCoopBattleMode } from './coopFlow.ts';
+import { getCharacterSkillId } from '../../utils/skillPresentation.ts';
 
 const ENCOURAGE_THRESHOLD = 3;
 
@@ -39,6 +40,7 @@ type BattleMove = {
 };
 
 type BattleStarter = {
+  id?: string;
   name?: string;
   type: string;
 };
@@ -531,7 +533,10 @@ export function runPlayerAnswer({
           clearDelay: getAttackEffectClearDelay(effectMeta),
           nextDelay: getAttackEffectNextStepDelay(effectMeta),
         };
-        const attackEffect: AttackEffectVm = { type: vfxType, idx: effectMeta.idx, lvl: effectMeta.lvl, sourceSlot: attackerSlot };
+        const attackEffect: AttackEffectVm = {
+          type: vfxType, idx: effectMeta.idx, lvl: effectMeta.lvl, sourceSlot: attackerSlot,
+          skillId: getCharacterSkillId(starter?.id, moveIdx),
+        };
         setAtkEffect(attackEffect);
         if (typeof sfx.playMove === 'function') sfx.playMove(vfxType, effectMeta.idx);
         else sfx.play(vfxType);

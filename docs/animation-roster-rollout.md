@@ -83,3 +83,29 @@ This completes the agreed **eight-key-pose** roster, not 3D, skeletal animation,
 - Fresh browser checks sampled the four Boss identities and Dark Dragon King's second form on 390x844, then four-actor Sword God layouts on 1280x720 and 844x390. Mastery tiers and low-performance secondary-source/target routing were inspected without page overflow or console errors. This does not replace physical-device FPS testing or an exhaustive encounter playthrough.
 - The temporary `qa-skills` entry points were removed after validation so they are not left in the repository or exposed by the development server.
 - Final verification: lint, TypeScript, all 832 tests and production bundle budgets pass. Total JavaScript is 945.3 KiB against the 976.6 KiB budget; the battle-effects chunk is 84.8 KiB against 107.4 KiB. These are build-size checks, not measured rendering-performance claims.
+
+## Move-Specific Choreography
+
+The follow-up replaces elemental-only presentation with 44 named recipes: four moves for each of seven player families and four for each of four playable PvP bosses. One recipe table and the existing SVG renderer share drawing primitives, not one component per skill. Identity is captured from the acting character ID and catalog move slot; translated names, evolution artwork and later main/sub selection changes do not determine the effect.
+
+| Family | Move 1 | Move 2 | Move 3 | Move 4 |
+| --- | --- | --- | --- | --- |
+| Fire | Spark projectile | Flame rush | Flame eruption | Dark-fire meteor |
+| Water | Bubble cluster | Rolling wave | Tsunami crest | Inward whirlpool |
+| Grass | Leaf cut | Thorn whip | Leaf cyclone | Rising dark roots |
+| Electric | Charged orb | Falling bolt | Multi-bolt field | Lightning cage |
+| Lion | Hunting claws | Roar wavefronts | Flame pounce | Eclipse roar |
+| Wolf | Judgement cut | Parallel blades | Cross cut | Rising sword domain |
+| Tiger | Crystal projectile | Rotating frost mirror | Ice claws | Falling ice judgement |
+| Dark Dragon King | Thunder claws | Abyss storm | Royal breath | Falling thunder judgement |
+| Hydra | Venom fangs | Poison tide | Serpent coils | Rising swamp heads |
+| Crazy Dragon | Burning bite | Wing rush | Black-flame breath | Falling wing judgement |
+| Sword God | Flash cut | Orbiting blades | Cross-shaped beam | Falling divine sword |
+
+- Ordinary enemies use eleven species recipes. Slime variants share the slime splash shape with their elemental palette; evolved forms retain species identity. Wild starters resolve the matching player recipe. Boss normal attacks and charged releases use different recipes in every phase; phase scaling remains presentation-only.
+- Automatic partner support now uses the partner's second move, elemental sound and captured physical sub slot, instead of a water effect for every partner. Its existing damage, probability and handoff timing are unchanged. Delayed effect cleanup cannot erase a newer strike.
+- Practice tiers retain the main silhouette, then add faint echoes and finishing accents. PvP remains at visual level one. Low-performance mode keeps a single distinctive mark without travel, echoes, shards or filters; reduced-motion styling retains the static mark. No bitmap assets, extra damage events, per-frame React updates or new dependencies were added.
+- Contact radius is bounded by the target's stable layout dimensions, preventing a boss strike from overwhelming a small partner. An SVG clip excludes the existing enemy and player HUD regions, including during arena hit reactions. This does not change actor placement or atlas scale.
+- Automated coverage checks all 44 unique silhouettes, every monster/evolved catalog entry, wild starters, boss phases, physical ownership, stale cleanup, malformed-ID fallback, HUD clipping and reduced detail. Browser checks exercised all 44 named effects, phone and landscape/desktop layouts, secondary targets, live projectiles, pause, low-detail rendering and cleanup. A clean rerun after correcting the temporary QA harness produced no console errors. Temporary entry points and viewport overrides were removed afterward.
+- This is move-specific procedural 2D choreography, not new hand-drawn attack frames or 3D animation. Poison/burn ticks, dodge/parry/counter abilities and the eight-pose body atlases are not redesigned here. Physical-device FPS, thermals and an exhaustive playthrough remain unmeasured.
+- Final local verification: TypeScript, strict lint, all 841 tests and unchanged bundle budgets pass. Total JavaScript is 954.0 KiB / 976.6 KiB; battle-effects is 92.9 KiB / 107.4 KiB. These results do not represent a new remote CI run.

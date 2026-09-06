@@ -3,7 +3,9 @@ import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { fxt } from './battleFxTargets.ts';
 import { isBattleActiveState, scheduleIfBattleActive, tryReturnToMenu } from './menuResetGuard.ts';
-import type { StarterVm } from '../../types/battle';
+import type { AttackEffectVm, BattleAnimationSetter, StarterVm } from '../../types/battle';
+import { createAttackImpact } from '../../utils/effectTiming.ts';
+import { getCharacterSkillId, getSkillMastery } from '../../utils/skillPresentation.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -15,6 +17,7 @@ type BattleState = {
   pHp?: number;
   pHpSub?: number;
   pLvl?: number;
+  mLvls?: number[];
   allySub?: StarterLite | null;
   enemy?: { id?: string; name?: string } | null;
   eHp?: number;
@@ -36,6 +39,7 @@ type NumberSetter = (value: number | ((prev: number) => number)) => void;
 type StarterSetter = (value: StarterLite | null) => void;
 type PhaseSetter = (value: string) => void;
 type TextSetter = (value: string) => void;
+type AttackSetter = (value: AttackEffectVm | null | ((previous: AttackEffectVm | null) => AttackEffectVm | null)) => void;
 type SlotSetter = (value: 'main' | 'sub') => void;
 type SafeTo = (fn: () => void, ms: number) => void;
 type ChanceFn = (probability: number) => boolean;
@@ -68,6 +72,8 @@ type RunCoopAllySupportTurnArgs = {
   setBText: TextSetter;
   setPhase: PhaseSetter;
   setEAnim: TextSetter;
+  setPAnim: BattleAnimationSetter;
+  setAtkEffect: AttackSetter;
   setEHp: NumberSetter;
   addD: (value: string, x: number, y: number, color: string) => void;
   addP: (emoji: string, x: number, y: number, count?: number) => void;
@@ -88,6 +94,7 @@ type CoopSupportTurnEffect =
   | { kind: 'set_text'; text: string }
   | { kind: 'set_phase'; phase: 'playerAtk' }
   | { kind: 'set_enemy_anim'; anim: string }
+  | { kind: 'support_strike'; attack: AttackEffectVm }
   | { kind: 'set_enemy_hp'; hp: number }
   | { kind: 'damage_popup'; text: string; color: string; target: FxTargetKey }
   | { kind: 'particle_arc'; emoji: string; from: FxTargetKey; to: FxTargetKey; count?: number }
@@ -168,6 +175,8 @@ export function buildCoopAllySupportTurnPlan({
   const boostedDmg = Math.round(rawDmg * linkMult);
   const damage = applyBossDamageReduction(boostedDmg, state.enemy?.id);
   const nextEnemyHp = Math.max(0, (state.eHp || 0) - damage);
+  const move = state.allySub.moves?.[1];
+  const type = move?.type || state.allySub.type || 'light';
   const effects: CoopSupportTurnEffect[] = [];
   if (linkActive) {
     effects.push({
@@ -183,11 +192,14 @@ export function buildCoopAllySupportTurnPlan({
       }),
     },
     { kind: 'set_phase', phase: 'playerAtk' },
-    { kind: 'set_enemy_anim', anim: 'enemyWaterHit 0.45s ease' },
+    { kind: 'set_enemy_anim', anim: 'enemyHit 0.45s ease' },
+    { kind: 'support_strike', attack: {
+      type, idx: 1, lvl: getSkillMastery(state.mLvls?.[1]).lvl, sourceSlot: 'sub', targetSide: 'enemy',
+      skillId: getCharacterSkillId(state.allySub.id, 1),
+    } },
     { kind: 'set_enemy_hp', hp: nextEnemyHp },
-    { kind: 'damage_popup', text: `-${damage}`, color: '#60a5fa', target: 'enemyMain' },
-    { kind: 'particle_arc', emoji: 'starter', from: 'playerSub', to: 'enemyMain', count: 3 },
-    { kind: 'play_move_sfx', moveType: 'water', moveIdx: 1, fallbackName: 'water' },
+    { kind: 'damage_popup', text: `-${damage}`, color: move?.color || '#fef08a', target: 'enemyMain' },
+    { kind: 'play_move_sfx', moveType: type, moveIdx: 1, fallbackName: type },
     { kind: 'schedule_clear_enemy_anim', delayMs: 450 },
   );
   if (nextEnemyHp <= 0) {
@@ -207,6 +219,8 @@ type ApplyCoopSupportTurnEffectsArgs = {
   setBText: TextSetter;
   setPhase: PhaseSetter;
   setEAnim: TextSetter;
+  setPAnim: BattleAnimationSetter;
+  setAtkEffect: AttackSetter;
   setEHp: NumberSetter;
   addD: (value: string, x: number, y: number, color: string) => void;
   addP: (emoji: string, x: number, y: number, count?: number) => void;
@@ -224,6 +238,8 @@ function applyCoopSupportTurnEffects({
   setBText,
   setPhase,
   setEAnim,
+  setPAnim,
+  setAtkEffect,
   setEHp,
   addD,
   addP,
@@ -248,6 +264,15 @@ function applyCoopSupportTurnEffects({
       case 'set_enemy_anim':
         setEAnim(effect.anim);
         return;
+      case 'support_strike': {
+        // Support already resolves damage at this beat; do not add a second damage timer.
+        const attack = { ...effect.attack, impact: createAttackImpact('hit') };
+        setPAnim('attackLunge 0.4s ease', 'sub');
+        setAtkEffect(attack);
+        safeToIfBattleActive(() => setPAnim('', 'sub'), 450);
+        safeToIfBattleActive(() => setAtkEffect((current) => current === attack ? null : current), 540);
+        return;
+      }
       case 'set_enemy_hp':
         setEHp(effect.hp);
         return;
@@ -362,6 +387,8 @@ export function runCoopAllySupportTurn({
   setBText,
   setPhase,
   setEAnim,
+  setPAnim,
+  setAtkEffect,
   setEHp,
   addD,
   addP,
@@ -402,6 +429,8 @@ export function runCoopAllySupportTurn({
       setBText,
       setPhase,
       setEAnim,
+      setPAnim,
+      setAtkEffect,
       setEHp,
       addD,
       addP,

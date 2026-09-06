@@ -167,6 +167,7 @@ export type AttackEffectVm = {
   sourceSlot?: "main" | "sub";
   targetSlot?: "main" | "sub";
   signature?: string;
+  skillId?: string;
   impact?: AttackImpactEvent;
 };
 

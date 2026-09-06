@@ -49,6 +49,23 @@ function fixture({ turn = 'p1', defense = false, defenderType = 'grass', critica
 }
 
 for (const turn of ['p1', 'p2']) {
+  test(`PvP ${turn}: named boss strike survives selection and turn changes without practice advantages`, () => {
+    const { args, state, events, advance } = fixture({ turn });
+    args.attacker = { id: 'boss_sword_god', type: 'light', name: 'Localized boss' };
+    state.selIdx = 3;
+    executePvpStrikeTurn(args);
+    state.selIdx = 0;
+    state.pvpState.turn = turn === 'p1' ? 'p2' : 'p1';
+    advance(300);
+    const effects = events.filter(e => e.kind === 'effect').map(e => e.value).filter(Boolean);
+    assert.equal(effects.length, 2);
+    for (const effect of effects) {
+      assert.equal(effect.skillId, 'boss_sword_god:3');
+      assert.equal(effect.signature, 'boss_sword_god');
+      assert.equal(effect.lvl, 1);
+      assert.equal(effect.targetSide, turn === 'p1' ? 'enemy' : 'player');
+    }
+  });
   test(`PvP ${turn}: launch, contact and turn handoff occur on distinct beats`, () => {
     const { args, state, events, advance } = fixture({ turn });
     executePvpStrikeTurn(args);

@@ -14,16 +14,24 @@ export function getSkillImpactSize(level = 1, index = 0, boss = false) {
   return 38 + tier * 10 + move * 9 + (boss ? 12 : 0);
 }
 
-export function getEnemySkillEffect(enemy: { id?: string; mType?: string; lvl?: number }, phase = 1, ultimate = false): Pick<AttackEffectVm, 'type' | 'idx' | 'lvl' | 'signature'> {
+export function getCharacterSkillId(id: string | undefined, index: number): string | undefined {
+  return id && Number.isInteger(index) && index >= 0 && index <= 3 ? `${id}:${index}` : undefined;
+}
+
+export function getEnemySkillEffect(enemy: { id?: string; mType?: string; lvl?: number }, phase = 1, ultimate = false): Pick<AttackEffectVm, 'type' | 'idx' | 'lvl' | 'signature' | 'skillId'> {
   const boss = BOSS_IDS.has(enemy.id || '');
   const bossPhase = Number.isFinite(phase) ? Math.max(1, Math.min(3, Math.floor(phase))) : 1;
   const level = Number.isFinite(enemy.lvl) ? Math.max(1, enemy.lvl!) : 1;
   const lvl = getSkillMastery(boss ? 2 + bossPhase + (ultimate ? 1 : 0) : 1 + Math.floor((level - 1) / 3)).lvl;
+  const idx = ultimate ? 3 : boss ? 2 : level >= 6 ? 1 : 0;
   return {
     type: enemy.id === 'boss_sword_god' ? 'steel' : enemy.mType || 'dark',
-    idx: ultimate ? 3 : boss ? 2 : level >= 6 ? 1 : 0,
+    idx,
     lvl,
     signature: boss ? enemy.id : undefined,
+    skillId: boss ? getCharacterSkillId(enemy.id, idx)
+      : enemy.id?.startsWith('wild_starter_') ? getCharacterSkillId(enemy.id.slice('wild_starter_'.length), idx)
+      : enemy.id ? `monster:${enemy.id.startsWith('slime') ? 'slime' : enemy.id}` : undefined,
   };
 }
 

@@ -8,6 +8,52 @@ import {
   isCoopBattleMode,
   runCoopAllySupportTurn,
 } from './coopFlow.ts';
+import { STARTERS } from '../../data/starters.ts';
+
+test('each partner uses its own second skill and mastery without changing support damage', () => {
+  const damages = new Set();
+  for (const allySub of STARTERS) {
+    const plan = buildCoopAllySupportTurnPlan({
+      state: { battleMode: 'coop', allySub, pHpSub: 30, pLvl: 5, mLvls: [1, 5, 1, 1], enemy: { id: 'slime' }, eHp: 100 },
+      rand: () => .5,
+    });
+    const attack = plan.effects.find(e => e.kind === 'support_strike').attack;
+    assert.equal(attack.skillId, `${allySub.id}:1`);
+    assert.equal(attack.sourceSlot, 'sub');
+    assert.equal(attack.lvl, 5);
+    assert.equal(attack.type, allySub.moves[1].type);
+    const sound = plan.effects.find(e => e.kind === 'play_move_sfx');
+    assert.equal(sound.moveType, allySub.moves[1].type);
+    damages.add(plan.damage);
+  }
+  assert.equal(damages.size, 1);
+});
+
+test('support impact animates the physical sub and cannot clear a newer attack effect', () => {
+  const queue = [];
+  const animations = [];
+  const sr = { current: { screen: 'battle', phase: 'playerAtk', battleMode: 'coop',
+    allySub: STARTERS.find(s => s.id === 'wolf'), pHpSub: 30, enemy: { id: 'slime' }, eHp: 100 } };
+  let effect = null;
+  runCoopAllySupportTurn({ sr, safeTo: (fn, ms) => queue.push({ fn, ms }), chance: () => true, rand: () => .5,
+    setBText: () => {}, setPhase: () => {}, setEAnim: () => {},
+    setPAnim: (value, slot) => animations.push({ value, slot }),
+    setAtkEffect: (value) => { effect = typeof value === 'function' ? value(effect) : value; },
+    setEHp: (value) => { sr.current.eHp = value; }, addD: () => {}, addP: () => {},
+    sfx: { play: () => {} }, handleVictory: () => {},
+  });
+  queue.shift().fn();
+  assert.equal(effect.skillId, 'wolf:1');
+  assert.equal(effect.impact.outcome, 'hit');
+  assert.equal(sr.current.eHp, 84);
+  assert.deepEqual(animations[0], { value: 'attackLunge 0.4s ease', slot: 'sub' });
+  const newer = { type: 'fire', idx: 0, lvl: 1 };
+  effect = newer;
+  queue.find(task => task.ms === 540).fn();
+  assert.equal(effect, newer);
+  queue.find(task => task.ms === 450).fn();
+  assert.deepEqual(animations.at(-1), { value: '', slot: 'sub' });
+});
 
 test('isCoopBattleMode identifies coop and double modes', () => {
   assert.equal(isCoopBattleMode("coop"), true);
@@ -131,6 +177,8 @@ test('runCoopAllySupportTurn can finish the enemy and trigger victory callback',
     setBText: () => {},
     setPhase: () => {},
     setEAnim: () => {},
+    setPAnim: () => {},
+    setAtkEffect: () => {},
     setEHp: (nextHp) => { sr.current.eHp = nextHp; },
     addD: () => {},
     addP: () => {},
@@ -253,6 +301,8 @@ test('runCoopAllySupportTurn ignores stale callback after battle ended', () => {
     setBText: () => {},
     setPhase: () => {},
     setEAnim: () => {},
+    setPAnim: () => {},
+    setAtkEffect: () => {},
     setEHp: (nextHp) => { sr.current.eHp = nextHp; },
     addD: () => {},
     addP: () => {},
@@ -326,6 +376,8 @@ test('runCoopAllySupportTurn skips chance gate when linkActive', () => {
     setBText: () => {},
     setPhase: () => {},
     setEAnim: () => {},
+    setPAnim: () => {},
+    setAtkEffect: () => {},
     setEHp: (hp) => { sr.current.eHp = hp; },
     addD: () => {},
     addP: () => {},
@@ -356,6 +408,8 @@ test('runCoopAllySupportTurn respects chance gate when linkActive is false', () 
     setBText: () => {},
     setPhase: () => {},
     setEAnim: () => {},
+    setPAnim: () => {},
+    setAtkEffect: () => {},
     setEHp: () => {},
     addD: () => {},
     addP: () => {},

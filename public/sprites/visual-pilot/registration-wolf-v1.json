@@ -1,0 +1,431 @@
+{
+  "cell": [
+    512,
+    384
+  ],
+  "grid": [
+    4,
+    2
+  ],
+  "baseline": 368,
+  "poses": [
+    "idle",
+    "inhale",
+    "anticipation",
+    "strike",
+    "followThrough",
+    "recovery",
+    "recoil",
+    "bracedRecovery"
+  ],
+  "assets": {
+    "steel-wolf-cub-v1": {
+      "file": "steel-wolf-cub-v1.webp",
+      "source": "exec-c237a1f8-e4f9-48c3-b5a8-b2939ef951b2.png",
+      "sourceSha256": "cd8df3e28b64f6e9480390c8c9761774a5dd22fbdecbf536c7732af8ac2ca5dd",
+      "sha256": "c50aab38eb7adad30ad202d775910003593a69c35c02afcedba28b4437efff05",
+      "bytes": 170342,
+      "uniformScale": 1.0,
+      "footX": 356,
+      "frames": [
+        {
+          "index": 0,
+          "sourceCrop": [
+            60,
+            70,
+            478,
+            425
+          ],
+          "sourceFootX": 229.5,
+          "offset": [
+            126,
+            79
+          ],
+          "size": [
+            309,
+            289
+          ],
+          "visibleBounds": [
+            126,
+            79,
+            435,
+            368
+          ]
+        },
+        {
+          "index": 1,
+          "sourceCrop": [
+            485,
+            70,
+            855,
+            425
+          ],
+          "sourceFootX": 223,
+          "offset": [
+            133,
+            76
+          ],
+          "size": [
+            292,
+            292
+          ],
+          "visibleBounds": [
+            133,
+            76,
+            425,
+            368
+          ]
+        },
+        {
+          "index": 2,
+          "sourceCrop": [
+            875,
+            70,
+            1278,
+            425
+          ],
+          "sourceFootX": 245.5,
+          "offset": [
+            110,
+            149
+          ],
+          "size": [
+            328,
+            219
+          ],
+          "visibleBounds": [
+            110,
+            149,
+            438,
+            368
+          ]
+        },
+        {
+          "index": 3,
+          "sourceCrop": [
+            1280,
+            70,
+            1750,
+            425
+          ],
+          "sourceFootX": 313.5,
+          "offset": [
+            42,
+            121
+          ],
+          "size": [
+            389,
+            247
+          ],
+          "visibleBounds": [
+            42,
+            121,
+            431,
+            368
+          ]
+        },
+        {
+          "index": 4,
+          "sourceCrop": [
+            45,
+            450,
+            470,
+            810
+          ],
+          "sourceFootX": 255,
+          "offset": [
+            101,
+            90
+          ],
+          "size": [
+            332,
+            278
+          ],
+          "visibleBounds": [
+            101,
+            90,
+            433,
+            368
+          ]
+        },
+        {
+          "index": 5,
+          "sourceCrop": [
+            480,
+            450,
+            860,
+            810
+          ],
+          "sourceFootX": 228,
+          "offset": [
+            128,
+            82
+          ],
+          "size": [
+            298,
+            286
+          ],
+          "visibleBounds": [
+            128,
+            82,
+            426,
+            368
+          ]
+        },
+        {
+          "index": 6,
+          "sourceCrop": [
+            870,
+            450,
+            1280,
+            810
+          ],
+          "sourceFootX": 251,
+          "offset": [
+            105,
+            76
+          ],
+          "size": [
+            345,
+            292
+          ],
+          "visibleBounds": [
+            105,
+            76,
+            450,
+            368
+          ]
+        },
+        {
+          "index": 7,
+          "sourceCrop": [
+            1290,
+            450,
+            1750,
+            810
+          ],
+          "sourceFootX": 270.5,
+          "offset": [
+            86,
+            138
+          ],
+          "size": [
+            327,
+            230
+          ],
+          "visibleBounds": [
+            86,
+            138,
+            413,
+            368
+          ]
+        }
+      ],
+      "recoilSource": "exec-fa34bd63-fdc8-4bee-9c8e-6114d381f3bb.png",
+      "recoilSourceSha256": "2203b0791f591bf4a11bede874a2c80e66ed6a167fabfd4414df8ad6fb949b0e"
+    },
+    "steel-wolf-blade-v1": {
+      "file": "steel-wolf-blade-v1.webp",
+      "source": "exec-55f04dab-a1fb-44f8-a4f5-029cc3c85cbe.png",
+      "sourceSha256": "e5d22fa9cd7142cdac5ef6158b25b789f1b3286c7a222244c7896127aebc5606",
+      "sha256": "4c037c90f8d2e50d34bd94d10d7a06672c9a5f73702edbdf217ce74a9eb79687",
+      "bytes": 179298,
+      "uniformScale": 0.84,
+      "footX": 306,
+      "frames": [
+        {
+          "index": 0,
+          "sourceCrop": [
+            35,
+            60,
+            420,
+            410
+          ],
+          "sourceFootX": 217,
+          "offset": [
+            124,
+            121
+          ],
+          "size": [
+            239,
+            247
+          ],
+          "visibleBounds": [
+            124,
+            121,
+            363,
+            368
+          ]
+        },
+        {
+          "index": 1,
+          "sourceCrop": [
+            440,
+            60,
+            855,
+            410
+          ],
+          "sourceFootX": 211.5,
+          "offset": [
+            128,
+            129
+          ],
+          "size": [
+            264,
+            239
+          ],
+          "visibleBounds": [
+            128,
+            129,
+            392,
+            368
+          ]
+        },
+        {
+          "index": 2,
+          "sourceCrop": [
+            865,
+            60,
+            1270,
+            410
+          ],
+          "sourceFootX": 267.5,
+          "offset": [
+            81,
+            177
+          ],
+          "size": [
+            293,
+            191
+          ],
+          "visibleBounds": [
+            81,
+            177,
+            374,
+            368
+          ]
+        },
+        {
+          "index": 3,
+          "sourceCrop": [
+            1275,
+            60,
+            1750,
+            410
+          ],
+          "sourceFootX": 344.5,
+          "offset": [
+            17,
+            161
+          ],
+          "size": [
+            338,
+            207
+          ],
+          "visibleBounds": [
+            17,
+            161,
+            355,
+            368
+          ]
+        },
+        {
+          "index": 4,
+          "sourceCrop": [
+            10,
+            445,
+            440,
+            810
+          ],
+          "sourceFootX": 268,
+          "offset": [
+            81,
+            166
+          ],
+          "size": [
+            278,
+            202
+          ],
+          "visibleBounds": [
+            81,
+            166,
+            359,
+            368
+          ]
+        },
+        {
+          "index": 5,
+          "sourceCrop": [
+            450,
+            445,
+            865,
+            810
+          ],
+          "sourceFootX": 256.5,
+          "offset": [
+            91,
+            150
+          ],
+          "size": [
+            289,
+            218
+          ],
+          "visibleBounds": [
+            91,
+            150,
+            380,
+            368
+          ]
+        },
+        {
+          "index": 6,
+          "sourceCrop": [
+            875,
+            445,
+            1320,
+            810
+          ],
+          "sourceFootX": 98,
+          "offset": [
+            224,
+            115
+          ],
+          "size": [
+            263,
+            253
+          ],
+          "visibleBounds": [
+            224,
+            115,
+            487,
+            368
+          ]
+        },
+        {
+          "index": 7,
+          "sourceCrop": [
+            1320,
+            445,
+            1750,
+            810
+          ],
+          "sourceFootX": 275.5,
+          "offset": [
+            75,
+            190
+          ],
+          "size": [
+            287,
+            178
+          ],
+          "visibleBounds": [
+            75,
+            190,
+            362,
+            368
+          ]
+        }
+      ]
+    }
+  }
+}

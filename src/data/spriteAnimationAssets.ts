@@ -12,6 +12,14 @@ export type SpriteAnimationAsset = {
 
 export const SPRITE_ATLAS = { width: 512, height: 384, columns: 4, rows: 2 } as const;
 export const SPRITE_ANIMATION_ASSETS = {
+  player_wolf0: {
+    file: 'steel-wolf-cub-v1.webp', footX: 356, hit: { x: 246, y: 236 },
+    bounds: [42, 76, 450, 368],
+  },
+  player_wolf1: {
+    file: 'steel-wolf-blade-v1.webp', footX: 306, hit: { x: 250, y: 260 },
+    bounds: [17, 115, 487, 368],
+  },
   player_wolf2: {
     file: 'steel-wolf-v2.webp', footX: 368, hit: { x: 250, y: 230 },
     bounds: [18, 107, 491, 368],

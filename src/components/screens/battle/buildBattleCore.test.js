@@ -98,8 +98,8 @@ test('production art follows the actual stage, never the current co-op active ro
         playerMain: 'playerwolf0SVG', playerSub: 'playerwolf2SVG',
         enemyMain: 'bossCrazyDragonSVG', enemySub: 'bossCrazyDragonSVG',
       });
-      assert.equal(getSpriteAnimationAsset(core.spriteProfiles.playerMain), null);
-      assert.ok(getSpriteAnimationAsset(core.spriteProfiles.playerSub));
+      assert.equal(getSpriteAnimationAsset(core.spriteProfiles.playerMain).art.file, 'steel-wolf-cub-v1.webp');
+      assert.equal(getSpriteAnimationAsset(core.spriteProfiles.playerSub).art.file, 'steel-wolf-v2.webp');
     }
   }
   const core = buildBattleStaticCore({ scenes: TEST_SCENES, compactUI: false,

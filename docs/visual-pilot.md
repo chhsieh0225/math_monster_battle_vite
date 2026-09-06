@@ -22,7 +22,7 @@ The trial uses the existing `genQ` and `calcAttackDamage` utilities but delibera
 
 ## Production Rollout: Batch 1
 
-The approved first batch is now enabled in normal battles, not only the trial route. There are 51 visual forms (21 starter stages, 25 ordinary enemy forms/variants and five Boss forms). Only `player_wolf2` and `boss_crazy_dragon` have approved eight-pose art; the other 49 remain original. Menus, the encyclopedia and Boss intro portraits also retain original art. No unlock, progression or save migration is required.
+The approved first batch enabled `player_wolf2` and `boss_crazy_dragon` in normal battles, not only the trial route. There are 51 visual forms (21 starter stages, 25 ordinary enemy forms/variants and five Boss forms). Batch 2 subsequently added `player_wolf0` and `player_wolf1`, so current coverage is **4 of 51**, with 47 remaining original. See [Wolf Batch 2](wolf-animation-batch2.md) for its assets, preparation and prompts. Menus, the encyclopedia and Boss intro portraits retain original art. No unlock, progression or save migration is required.
 
 - `src/data/spriteAnimationAssets.ts` is the opt-in registry shared with the trial. Sprite factory identities resolve actual stages, including selectable PvP Bosses; enemy active/evolved keys and dark-dragon phase-2 overrides remain authoritative.
 - `BattleArenaSprites` passes each physical slot's resolved animation to `BattleSprite`. It never infers the attacker from global `playerAtk`, the active co-op role or the player's species. Main/sub and PvP sides can attack or recoil independently.
@@ -36,7 +36,7 @@ Verification: 762 automated tests, TypeScript/lint checks and build budgets pass
 
 ### Further Batches
 
-Add approved eight-pose atlases to the existing registry; do not substitute recolors or whole-image transforms for new drawings. Each future asset needs consistent anatomy/facing, support-foot alignment, one shared scale, transparent edges and measured union bounds. Update the roster coverage expectation and validate every pose against the existing layout before enabling it. Keep versioned filenames for PWA cache invalidation. Suggested order: the wolf's two earlier forms, the remaining starters by family, common enemy/evolution families, then the remaining Boss forms. These assets are **not yet produced**.
+Add approved eight-pose atlases to the existing registry; do not substitute recolors or whole-image transforms for new drawings. Each future asset needs consistent anatomy/facing, support-foot alignment, one shared scale, transparent edges and measured union bounds. Update the roster coverage expectation and validate every pose against the existing layout before enabling it. Keep versioned filenames for PWA cache invalidation. The wolf family is now complete. Suggested order for the remaining 47 forms: remaining starters by family, common enemy/evolution families, then remaining Boss forms. Those assets are **not yet produced**.
 
 ## Art Provenance
 

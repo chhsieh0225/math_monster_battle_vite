@@ -16,7 +16,8 @@ import { useI18n } from './i18n';
 import { useBattle } from './hooks/useBattle';
 import { useMobileExperience } from './hooks/useMobileExperience';
 import { useAudioState } from './hooks/useAudioState';
-import { BOSS_IDS } from './data/monsterConfigs.ts';
+import { getScreenMusic, getEncounterMusic } from './utils/battleMusic.ts';
+import type { BgmTrack } from './utils/sfx/bgm.ts';
 import { BG_IMGS, BG_IMGS_LOW } from './data/sprites.ts';
 
 // Screens
@@ -24,48 +25,6 @@ import AppScreenRouter from './components/AppScreenRouter';
 import type { ScreenName } from './types/battle';
 
 const BattleScreen = lazy(() => import('./components/screens/BattleScreen'));
-
-type BattleBgmTrack =
-  | 'menu'
-  | 'battle'
-  | 'volcano'
-  | 'coast'
-  | 'thunder'
-  | 'ironclad'
-  | 'graveyard'
-  | 'canyon'
-  | 'boss'
-  | 'boss_hydra'
-  | 'boss_crazy_dragon'
-  | 'boss_sword_god'
-  | 'boss_dark_king';
-
-type BgmTier = 'full' | 'core';
-
-function resolveBossTrack(starterId: string | undefined | null): BattleBgmTrack | null {
-  if (starterId === 'boss_hydra') return 'boss_hydra';
-  if (starterId === 'boss_crazy_dragon') return 'boss_crazy_dragon';
-  if (starterId === 'boss_sword_god') return 'boss_sword_god';
-  if (starterId === 'boss') return 'boss_dark_king';
-  return null;
-}
-
-function resolveSceneTrack(sceneType: string): BattleBgmTrack | null {
-  if (sceneType === 'fire') return 'volcano';
-  if (sceneType === 'water') return 'coast';
-  if (sceneType === 'electric') return 'thunder';
-  if (sceneType === 'steel') return 'ironclad';
-  if (sceneType === 'ghost') return 'graveyard';
-  if (sceneType === 'rock') return 'canyon';
-  return null;
-}
-
-function toTieredTrack(track: BattleBgmTrack | null, tier: BgmTier): BattleBgmTrack | null {
-  if (!track || tier === 'full') return track;
-  if (track === 'menu') return 'menu';
-  if (track.startsWith('boss')) return 'boss';
-  return 'battle';
-}
 
 /** Lightweight locale lookup for class components that cannot use hooks. */
 function staticT(_key: string, fallback: string): string {
@@ -271,6 +230,8 @@ function App() {
   const settingsReturnRef = useRef<ScreenName>("title");
   const resumeBattleAfterSettingsRef = useRef(false);
   const conserveNetwork = UX.lowPerfMode || shouldConserveNetwork();
+  const desiredMusic = getScreenMusic(S);
+  const nextEncounterStep = (S.battleMode === 'coop' || S.battleMode === 'double') && S.enemySub ? 2 : 1;
 
   // Tiered background preload:
   // 1) title pool first, 2) non-critical scenes later on non-constrained devices.
@@ -296,8 +257,7 @@ function App() {
     const sceneTypes = new Set<string>();
     const currentSceneType = S.enemy?.sceneMType || S.enemy?.mType;
     const subSceneType = S.enemySub?.sceneMType || S.enemySub?.mType;
-    const roundStep = S.battleMode === 'coop' || S.battleMode === 'double' ? 2 : 1;
-    const nextEnemy = S.enemies?.[(S.round || 0) + roundStep] || null;
+    const nextEnemy = S.enemies?.[(S.round || 0) + nextEncounterStep] || null;
     const nextSceneType = nextEnemy?.sceneMType || nextEnemy?.mType;
 
     if (currentSceneType) sceneTypes.add(currentSceneType);
@@ -317,36 +277,23 @@ function App() {
     S.enemy?.mType,
     S.enemySub?.sceneMType,
     S.enemySub?.mType,
+    nextEncounterStep,
     conserveNetwork,
   ]);
 
   // Tiered BGM prefetch:
   // metadata on constrained devices, aggressive warmup on stable devices.
   useEffect(() => {
-    const bgmTier: BgmTier = conserveNetwork ? 'core' : 'full';
-    const nextTracks = new Set<BattleBgmTrack>();
+    const nextTracks = new Set<BgmTrack>();
     if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge' || S.screen === 'howto') {
       nextTracks.add('menu');
       nextTracks.add('battle');
     } else if (S.screen === 'battle') {
-      const p1BossTrack = resolveBossTrack(S.starter?.id);
-      const p2BossTrack = resolveBossTrack(S.pvpStarter2?.id);
-      const enemyId = S.enemy?.id ?? '';
-      const sceneType = S.enemy?.sceneMType || S.enemy?.mType || '';
-      const enemyBossTrack = resolveBossTrack(enemyId);
-      const sceneTrack = resolveSceneTrack(sceneType);
-      const currentBaseTrack = S.battleMode === 'pvp'
-        ? (p1BossTrack || p2BossTrack || sceneTrack || 'battle')
-        : (enemyBossTrack || sceneTrack || (BOSS_IDS.has(enemyId) ? 'boss' : 'battle'));
-      const currentTrack = toTieredTrack(currentBaseTrack, bgmTier) || 'battle';
-      nextTracks.add(currentTrack);
-
-      const nextEnemy = S.enemies?.[(S.round || 0) + 1] || null;
-      const nextEnemyId = nextEnemy?.id || '';
-      const nextSceneType = nextEnemy?.sceneMType || nextEnemy?.mType || '';
-      const nextBaseTrack = resolveBossTrack(nextEnemyId) || resolveSceneTrack(nextSceneType) || (BOSS_IDS.has(nextEnemyId) ? 'boss' : null);
-      const nextTrack = toTieredTrack(nextBaseTrack, bgmTier);
-      if (nextTrack) nextTracks.add(nextTrack);
+      if (desiredMusic) nextTracks.add(desiredMusic);
+      const step = nextEncounterStep;
+      const nextEnemy = S.enemies?.[(S.round || 0) + step];
+      const nextSub = step === 2 ? S.enemies?.[(S.round || 0) + step + 1] : null;
+      if (nextEnemy) nextTracks.add(getEncounterMusic(nextEnemy, nextSub));
     }
     if (nextTracks.size > 0) {
       V.sfx.prefetchBgm(
@@ -359,11 +306,8 @@ function App() {
     S.battleMode,
     S.round,
     S.enemies,
-    S.enemy?.id,
-    S.enemy?.sceneMType,
-    S.enemy?.mType,
-    S.starter?.id,
-    S.pvpStarter2?.id,
+    desiredMusic,
+    nextEncounterStep,
     V.sfx,
     conserveNetwork,
   ]);
@@ -400,10 +344,13 @@ function App() {
     const initOnce = () => {
       if (sfxInitRef.current) return;
       sfxInitRef.current = true;
-      void V.sfx.init().then(() => setSfxReady(true)).catch(() => {});
-      document.removeEventListener('click', initOnce, true);
-      document.removeEventListener('touchstart', initOnce, true);
-      document.removeEventListener('keydown', initOnce, true);
+      void V.sfx.init().then(() => {
+        if (!V.sfx.ready) { sfxInitRef.current = false; return; }
+        setSfxReady(true);
+        document.removeEventListener('click', initOnce, true);
+        document.removeEventListener('touchstart', initOnce, true);
+        document.removeEventListener('keydown', initOnce, true);
+      }).catch(() => { sfxInitRef.current = false; });
     };
     document.addEventListener('click', initOnce, true);
     document.addEventListener('touchstart', initOnce, true);
@@ -420,45 +367,13 @@ function App() {
 
   // ── BGM driver ──
   useEffect(() => {
-    const bgmTier: BgmTier = conserveNetwork ? 'core' : 'full';
-    if (bgmMuted) { V.sfx.stopBgm(); return; }
-    if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge' || S.screen === 'howto') {
-      const track = toTieredTrack('menu', bgmTier) || 'menu';
-      V.sfx.startBgm(track);
-    } else if (S.screen === 'battle') {
-      const p1BossTrack = resolveBossTrack(S.starter?.id);
-      const p2BossTrack = resolveBossTrack(S.pvpStarter2?.id);
-      const enemyId = S.enemy?.id ?? '';
-      const sceneType = S.enemy?.sceneMType || S.enemy?.mType || '';
-      const enemyBossTrack = resolveBossTrack(enemyId);
-      const sceneTrack = resolveSceneTrack(sceneType);
-
-      // PvP/Double-player: lock to one theme (P1 priority), never mix two boss themes.
-      if (S.battleMode === 'pvp') {
-        const track = toTieredTrack(p1BossTrack || p2BossTrack || sceneTrack || 'battle', bgmTier) || 'battle';
-        V.sfx.startBgm(track);
-      } else {
-        const track = toTieredTrack(
-          enemyBossTrack || sceneTrack || (BOSS_IDS.has(enemyId) ? 'boss' : 'battle'),
-          bgmTier,
-        ) || 'battle';
-        V.sfx.startBgm(track);
-      }
-    } else {
-      V.sfx.stopBgm();
-    }
+    if (desiredMusic) V.sfx.startBgm(desiredMusic);
+    else V.sfx.stopBgm();
   }, [
-    S.screen,
-    S.battleMode,
-    S.starter?.id,
-    S.pvpStarter2?.id,
-    S.enemy?.id,
-    S.enemy?.sceneMType,
-    S.enemy?.mType,
+    desiredMusic,
     bgmMuted,
     V.sfx,
     sfxReady,
-    conserveNetwork,
   ]);
 
   if (S.screen !== "battle") {

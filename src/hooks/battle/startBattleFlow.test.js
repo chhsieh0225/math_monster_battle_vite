@@ -1,6 +1,41 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runStartBattleFlow } from './startBattleFlow.ts';
+import { battleReducer, createInitialBattleState } from './battleReducer.ts';
+import { continueFromVictoryFlow } from './advanceFlow.ts';
+import { getScreenMusic } from '../../utils/battleMusic.ts';
+
+for (const battleMode of ['single', 'coop']) {
+  test(`${battleMode} successive boss encounters advance the roster, scene, intro and music together`, () => {
+    const roster = ['boss', 'boss_hydra', 'boss_crazy_dragon', 'boss_sword_god'].map((id, i) => ({
+      id, name: id, mType: 'dark', sceneMType: ['dark', 'poison', 'burnt_warplace', 'heaven'][i], maxHp: 100,
+    }));
+    let state = { ...createInitialBattleState(), screen: 'battle', battleMode };
+    let phase, finished = false;
+    const dispatchBattle = (action) => { state = battleReducer(state, action); };
+    const setPhase = (value) => { phase = value; };
+    const startBattle = (idx) => runStartBattleFlow({
+      idx, roster, enemies: roster, locale: 'zh-TW', battleMode, allySub: null, starter: { name: 'Hero', moves: [] },
+      sceneNames: {}, localizeEnemy: (e) => e, localizeSceneName: (scene) => scene, dispatchBattle,
+      updateEnc: () => {}, setPhase, setBText: () => {}, setScreen: () => {}, finishGame: () => { finished = true; },
+      resetFrozen: () => {}, playBattleIntro: () => {}, pickIndex: () => 0,
+    });
+    startBattle(0);
+    for (let round = 0; round < roster.length; round++) {
+      assert.equal(state.round, round);
+      assert.equal(state.enemy.id, roster[round].id);
+      assert.equal(state.enemy.sceneMType, roster[round].sceneMType);
+      assert.equal(phase, 'bossIntro');
+      assert.equal(getScreenMusic(state), round === 0 ? 'boss_dark_king' : roster[round].id);
+      continueFromVictoryFlow({ state, enemiesLength: roster.length, dispatchBattle,
+        setScreen: () => {}, localizeEnemy: (e) => e, setBText: () => {}, setPhase,
+        finishGame: () => { finished = true; }, setPHp: () => {}, setPHpSub: () => {},
+        getStageMaxHp: () => 100, getStarterMaxHp: () => 100, startBattle,
+      });
+    }
+    assert.equal(finished, true);
+  });
+}
 
 function createEnemy(name, extra = {}) {
   return {

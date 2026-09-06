@@ -209,3 +209,4 @@
 @keyframes bvFadeout {
   to { opacity: 1; }
 }
+.battle-root[data-paused=true] .boss-victory-overlay *{animation-play-state:paused!important}

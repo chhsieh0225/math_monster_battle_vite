@@ -4,6 +4,7 @@ import './BossVictoryOverlay.css';
 
 type BossVictoryOverlayProps = {
   enemyName: string;
+  paused?: boolean;
   onComplete: () => void;
 };
 
@@ -23,21 +24,28 @@ type BossVictoryOverlayProps = {
  */
 export const BossVictoryOverlay = memo(function BossVictoryOverlay({
   enemyName,
+  paused = false,
   onComplete,
 }: BossVictoryOverlayProps) {
   const { t } = useI18n();
   const completedRef = useRef(false);
+  const remainingMs = useRef(4200);
 
   const finish = useCallback(() => {
-    if (completedRef.current) return;
+    if (paused || completedRef.current) return;
     completedRef.current = true;
     onComplete();
-  }, [onComplete]);
+  }, [onComplete, paused]);
 
   useEffect(() => {
-    const id = window.setTimeout(finish, 4200);
-    return () => clearTimeout(id);
-  }, [finish]);
+    if (paused) return;
+    const started = performance.now();
+    const id = window.setTimeout(finish, remainingMs.current);
+    return () => {
+      clearTimeout(id);
+      remainingMs.current = Math.max(0, remainingMs.current - (performance.now() - started));
+    };
+  }, [finish, paused]);
 
   return (
     <div
@@ -46,9 +54,10 @@ export const BossVictoryOverlay = memo(function BossVictoryOverlay({
       aria-modal="true"
       tabIndex={0}
       aria-label={t('a11y.bossVictory.announce', 'Boss defeated: {name}. Tap to skip', { name: enemyName })}
-      onClick={finish}
+      onClick={(e) => { e.stopPropagation(); finish(); }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+          e.stopPropagation();
           e.preventDefault();
           finish();
         }

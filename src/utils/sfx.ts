@@ -6,6 +6,7 @@
  * Call sfx.init() once after user gesture to unlock AudioContext.
  * Then call sfx.play("hit") etc. anywhere.
  */
+import { resumeAudioContext } from './sfx/transport.ts';
 import { randomFloat } from './prng.ts';
 import { createMixerState, initMixerBus } from './sfx/mixer.ts';
 import { createSeDebounce, resolveMoveSoundName } from './sfx/se.ts';
@@ -933,33 +934,7 @@ declare global {
   }
 }
 
-let resumePromise: Promise<void> | null = null;
-
-function resumeAudioIfNeeded(onReady?: () => void): void {
-  if (!ctx) return;
-  const runReady = () => {
-    if (onReady) {
-      try { onReady(); } catch { /* best-effort */ }
-    }
-  };
-  if (ctx.state === 'running') {
-    runReady();
-    return;
-  }
-  if (resumePromise) {
-    if (onReady) resumePromise.then(runReady).catch(() => {});
-    return;
-  }
-  resumePromise = ctx
-    .resume()
-    .then(() => {
-      resumePromise = null;
-    })
-    .catch(() => {
-      resumePromise = null;
-    });
-  if (onReady) resumePromise.then(runReady).catch(() => {});
-}
+let initPromise: Promise<void> | null = null;
 
 const bgm = createBgmController({
   getCtx: () => ctx,
@@ -970,21 +945,26 @@ const bgm = createBgmController({
   getCachedNoiseBuffer,
 });
 const sfx = {
-  async init(): Promise<void> {
-    if (ready || typeof window === 'undefined') return;
-    try {
-      const webkitCtor = window.webkitAudioContext;
-      const Ctor = window.AudioContext || (isAudioCtor(webkitCtor) ? webkitCtor : null);
-      if (!Ctor) return;
-      ctx = new Ctor();
-      if (ctx.state === 'suspended') await ctx.resume();
-      const bus = initMixerBus(ctx, randomFloat);
-      sfxDest = bus.sfxDest;
-      reverbConvolver = bus.reverbConvolver;
-      ready = true;
-    } catch {
-      // audio not available
-    }
+  init(): Promise<void> {
+    if (ready || typeof window === 'undefined') return Promise.resolve();
+    if (initPromise) return initPromise;
+    initPromise = (async () => {
+      try {
+        const webkitCtor = window.webkitAudioContext;
+        const Ctor = window.AudioContext || (isAudioCtor(webkitCtor) ? webkitCtor : null);
+        if (!Ctor) return;
+        const context = ctx && ctx.state !== 'closed' ? ctx : new Ctor();
+        ctx = context;
+        if (!await resumeAudioContext(context) || ctx !== context) return;
+        const bus = initMixerBus(context, randomFloat);
+        sfxDest = bus.sfxDest;
+        reverbConvolver = bus.reverbConvolver;
+        ready = true;
+      } catch {
+        // A later gesture can retry unavailable or interrupted audio.
+      }
+    })().finally(() => { initPromise = null; });
+    return initPromise;
   },
   play(name: string): void {
     if (!ready || mixer.getSfxMuted()) return;
@@ -992,9 +972,10 @@ const sfx = {
       // Only queue ONE deferred play per name to prevent overlap stacking
       if (!pendingSfx.has(name)) {
         pendingSfx.add(name);
-        resumeAudioIfNeeded(() => {
+        const context = ctx;
+        void resumeAudioContext(context).then((resumed) => {
           pendingSfx.delete(name);
-          sfx.play(name);
+          if (resumed && ctx === context) sfx.play(name);
         });
       }
       return;

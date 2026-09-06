@@ -16,38 +16,104 @@
 .skill-shard{fill:var(--skill-accent);stroke:none;animation:skillShard 480ms ease-out both}
 .skill-boss-crown{fill:none;stroke:var(--skill-tone);stroke-width:3;opacity:.75}
 .skill-block{fill:none;stroke:#e2e8f0;stroke-width:2}
-.skill-glyph{fill:var(--skill-tone);fill-opacity:.18;stroke:var(--skill-accent);stroke-width:2.5}
-.skill-fx[data-skill-id] .skill-contact{filter:drop-shadow(0 1px 1px #08111f88)}
-.skill-fx[data-skill-id] .skill-impact-heat{animation-name:skillNamedHeat}
-.skill-route{fill:none;stroke:var(--skill-tone);stroke-width:var(--skill-weight);opacity:.65;stroke-dasharray:1;animation:skillRoute var(--skill-flight) ease-out both}
-.skill-missile{animation:skillMissile var(--skill-flight) cubic-bezier(.45,.05,.75,.65) both}
-.skill-fx.is-contact .skill-signature-flight{animation:skillTrailFade 180ms ease-out both}
-.skill-fx.is-contact .skill-route{animation:none}
-.skill-mark{animation:skillMarkBurst 440ms ease-out var(--skill-beat) both;transform-origin:0 0}
-.skill-echo{stroke:var(--skill-tone);fill:none;stroke-width:1;opacity:.45}
-.skill-fx[data-skill-motion=slash] .skill-mark,.skill-fx[data-skill-motion=lash] .skill-mark{stroke-dasharray:1;animation-name:skillCut}
-.skill-fx[data-skill-motion=orbit] .skill-mark{animation-name:skillOrbit}
-.skill-fx[data-skill-motion=field] .skill-mark{animation-name:skillErupt}
-.skill-fx[data-skill-motion=fall] .skill-mark{animation-name:skillFall}
-.skill-fx[data-skill-motion=wave] .skill-mark{animation-name:skillWave}
-.skill-fx[data-skill-motion=rush] .skill-mark{animation-name:skillRush}
-.skill-fx[data-skill-motion=beam] .skill-route{stroke-width:9;stroke:var(--skill-accent);opacity:.35}
-.skill-fx[data-skill-motion=beam] .skill-mark{animation-name:skillBeam}
-.skill-fx[data-skill-motion=orbit] .skill-route{stroke-dasharray:3 8;animation:none}
-.skill-fx.is-lite .skill-mark{animation-duration:280ms}
 .skill-fx.is-lite .skill-stream{display:none}
 .skill-fx.is-lite .skill-contact{animation-duration:300ms;filter:none}
-@keyframes skillRoute{from{opacity:0;stroke-dashoffset:1}to{opacity:.65;stroke-dashoffset:0}}
-@keyframes skillNamedHeat{0%{opacity:0;transform:scale(.35)}18%{opacity:.45}100%{opacity:0;transform:scale(1.05)}}
-@keyframes skillMissile{0%{opacity:0;transform:translate(0,0) scale(.55)}15%{opacity:1}100%{opacity:.9;transform:translate(var(--skill-dx),var(--skill-dy)) scale(1)}}
-@keyframes skillMarkBurst{0%{opacity:0;transform:scale(.5)}18%{opacity:1;transform:scale(1.04)}100%{opacity:0;transform:scale(1.18)}}
-@keyframes skillCut{0%{opacity:0;stroke-dashoffset:1;transform:scale(.88)}14%{opacity:1}52%{stroke-dashoffset:0}100%{opacity:0;stroke-dashoffset:0;transform:scale(1.06)}}
-@keyframes skillOrbit{0%{opacity:0;transform:rotate(-55deg) scale(1.2)}16%{opacity:1}100%{opacity:0;transform:rotate(95deg) scale(.55)}}
-@keyframes skillErupt{0%{opacity:0;transform:translateY(25px) scaleY(.12)}22%{opacity:1;transform:translateY(0) scaleY(1)}100%{opacity:0;transform:translateY(-8px) scaleY(1.1)}}
-@keyframes skillFall{0%{opacity:0;transform:translateY(-28px) scale(.7)}20%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(6px) scale(1.05)}}
-@keyframes skillWave{0%{opacity:0;transform:scaleX(.35) scaleY(.7)}20%{opacity:1}100%{opacity:0;transform:scaleX(1.3) scaleY(1.05)}}
-@keyframes skillRush{0%{opacity:0;transform:scaleX(1.35) scaleY(.55)}16%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.2)}}
-@keyframes skillBeam{0%{opacity:0;transform:scaleX(.12)}12%,35%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(1.15)}}
+.sc-contact.skill-contact{animation:scContact 520ms linear both;filter:none}
+.sc-solid,.sc-glass{stroke:var(--skill-accent);stroke-width:1;stroke-opacity:.8}
+.sc-shine,.sc-foam,.sc-edge{fill:none;stroke:var(--skill-accent);stroke-width:2}
+.sc-glass{fill-opacity:.6;stroke-width:1.5}
+.sc-projectile{animation:scTravel var(--skill-flight) cubic-bezier(.42,.06,.68,.6) both}
+.sc-flicker{animation:scFlicker 180ms ease-in-out infinite alternate}
+.sc-wake{stroke:none;opacity:.65;animation:scFlare var(--skill-flight) ease-out both}
+.sc-bloom{animation:scBloom 460ms ease-out both}
+.sc-scatter{animation:scScatter 420ms ease-out var(--sc-delay,0ms) both}
+.sc-pop{animation:scPop 440ms ease-out both}
+.sc-pop-ring{fill:none;stroke:var(--skill-accent);stroke-width:2;animation:scPopRing 450ms ease-out both}
+.sc-cut{animation:scCut 360ms cubic-bezier(.15,.8,.18,1) var(--sc-delay,0ms) both}
+.sc-cut-echo{fill:none;stroke:var(--skill-tone);stroke-width:2;animation:scCut 380ms ease-out 70ms both;opacity:.5}
+.sc-aim{opacity:.45;animation:scAim var(--skill-flight) ease-in both}
+.sc-bite{fill:none;animation:scBite 340ms ease-out both}
+.sc-surge{animation:scSurge var(--skill-flight) ease-out var(--sc-delay,0ms) both}
+.sc-recede{animation:scRecede 460ms ease-out both}
+.sc-contact .sc-surge{animation-duration:250ms}
+.sc-pressure{stroke:var(--skill-accent);stroke-width:1;fill-opacity:.55}
+.sc-corona{fill:none;stroke:var(--skill-tone);stroke-width:9;stroke-dasharray:2 5}
+.sc-eclipse{fill:#17102ddd;stroke:var(--skill-accent);stroke-width:2}
+.sc-eclipse-form{animation:scAim var(--skill-flight) ease-out both}
+.sc-eclipse-release{animation:scEclipse 480ms ease-out both}
+.sc-ground{fill:var(--skill-tone);fill-opacity:.12;stroke:var(--skill-accent);stroke-width:1.5;stroke-dasharray:12 5;animation:scGround 460ms ease-out both}
+.sc-fall-windup{animation:scFallWindup var(--skill-flight) cubic-bezier(.4,0,1,1) both}
+.sc-fall-strike{animation:scFallStrike 350ms cubic-bezier(.14,.8,.26,1) var(--sc-delay,0ms) both}
+.sc-warning-bolt{fill:none;stroke:var(--skill-tone);stroke-width:1;opacity:.25;animation:scAim var(--skill-flight) ease-out both}
+.sc-thunder{stroke:var(--skill-accent);stroke-width:2;fill-opacity:.85;animation:scThunder 380ms linear var(--sc-delay,0ms) both}
+.sc-crater{fill:none;stroke:var(--skill-tone);stroke-width:3;animation:scCrater 470ms ease-out both}
+.sc-cloud{fill:var(--skill-tone);fill-opacity:.22;stroke:var(--skill-accent);stroke-opacity:.35;stroke-width:1;animation:scCloud 460ms ease-out both}
+.sc-blast{stroke:var(--skill-accent);stroke-width:1;animation:scPop 440ms ease-out both}
+.sc-breath{stroke:var(--skill-tone);stroke-width:2}
+.sc-beam-core{fill:var(--skill-accent);opacity:.7}
+.sc-beam-charge{animation:scBeamCharge var(--skill-flight) cubic-bezier(.55,0,.9,.6) both}
+.sc-beam-release{animation:scBeamRelease 460ms ease-out both}
+.sc-flare{animation:scFlare 350ms ease-out var(--sc-delay,0ms) both}
+.sc-rift{animation:scRift 420ms ease-out both}
+.sc-vine{fill:none;stroke:var(--skill-tone);stroke-width:7;stroke-opacity:.85}
+.sc-whip-windup .sc-vine{stroke-dasharray:1;animation:scWhip var(--skill-flight) ease-out both}
+.sc-bind{animation:scBind 440ms ease-out both}
+.sc-bind-windup{animation:scBindWindup var(--skill-flight) ease-out both}
+.sc-chain{fill:none;stroke:var(--skill-accent);stroke-width:5;stroke-dasharray:.035 .025;animation:scChain 400ms ease-out var(--sc-delay,0ms) both}
+.sc-thorns{fill:var(--skill-tone);stroke:var(--skill-accent);stroke-width:1}
+.sc-serpent{animation:scSerpent 370ms ease-out var(--sc-delay,0ms) both}
+.sc-vortex-eye{fill:#10182acc;stroke:var(--skill-tone);stroke-width:3}
+.sc-current{fill:none;stroke:var(--skill-tone);stroke-width:8;stroke-opacity:.8;stroke-linecap:round}
+.sc-vortex-spin{animation:scSpin 640ms linear both}
+.sc-vortex-form{animation:scVortexForm var(--skill-flight) ease-out both}
+.sc-vortex-collapse{animation:scVortexCollapse 480ms ease-in both}
+.sc-orbit-ring{fill:none;stroke:var(--skill-tone);stroke-width:1;stroke-dasharray:12 8;opacity:.4}
+.sc-orbit-spin{animation:scSpin 600ms ease-out var(--sc-delay,0ms) both}
+.sc-launch .sc-orbit-spin,.sc-launch .sc-vortex-spin{animation-name:scGatherSpin;animation-duration:var(--skill-flight);animation-delay:0ms}
+.sc-orbit-open{animation:scOrbitOpen var(--skill-flight) ease-out both}
+.sc-orbit-close{animation:scOrbitClose 480ms cubic-bezier(.5,.05,.25,1) both}
+.sc-erupt{animation:scErupt 400ms cubic-bezier(.15,.75,.2,1) var(--sc-delay,0ms) both}
+.sc-field-windup{opacity:.25;animation:scFieldWindup var(--skill-flight) ease-in both}
+.sc-mastery{animation:scBloom 450ms ease-out 50ms both}
+.sc-glint{fill:var(--skill-accent)}
+.is-lite .sc-flicker{animation:none}
+.is-lite .sc-contact.skill-contact{animation-duration:480ms}
+@keyframes scContact{0%,65%{opacity:1}100%{opacity:0}}
+@keyframes scTravel{0%{opacity:0;transform:translate(0,0) scale(.35)}16%{opacity:1}100%{opacity:1;transform:translate(var(--skill-dx),var(--skill-dy)) scale(1)}}
+@keyframes scFlicker{from{transform:scaleY(.88)}to{transform:scaleY(1.08)}}
+@keyframes scBloom{from{opacity:.85;transform:scale(.6)}to{opacity:0;transform:scale(1.3)}}
+@keyframes scScatter{from{transform:translateX(-20px)}to{transform:translateX(27px)}}
+@keyframes scPop{0%{transform:scale(.6)}28%{opacity:1;transform:scale(1.12)}100%{opacity:0;transform:scale(1.35)}}
+@keyframes scPopRing{from{opacity:.85;transform:scale(.4)}to{opacity:0;transform:scale(1.4)}}
+@keyframes scCut{0%{opacity:0;transform:translate(-20px,-12px) rotate(-22deg) scaleX(.1)}22%{opacity:1;transform:translate(0,0) rotate(0) scaleX(1.07)}65%{opacity:.8}100%{opacity:0;transform:translate(9px,7px) rotate(8deg) scaleX(1.15)}}
+@keyframes scAim{from{opacity:0;transform:scale(1.25) rotate(-12deg)}to{opacity:.55;transform:scale(.8) rotate(0)}}
+@keyframes scBite{from{transform:translateY(22px)}to{opacity:0;transform:translateY(-8px)}}
+@keyframes scSurge{from{transform:scaleX(.35) scaleY(.3)}to{transform:scale(1)}}
+@keyframes scRecede{from{opacity:1;transform:translateX(-15px)}to{opacity:0;transform:translateX(35px) scaleY(.7)}}
+@keyframes scEclipse{0%{transform:scale(.72)}40%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.35)}}
+@keyframes scGround{from{opacity:.1;transform:scaleX(.35)}45%{opacity:.8}to{opacity:.2;transform:scaleX(1.12)}}
+@keyframes scFallWindup{from{opacity:0;transform:translateY(-125px) scale(.5)}30%{opacity:1}to{opacity:1;transform:translateY(-25px) scale(1)}}
+@keyframes scFallStrike{0%{transform:translateY(-25px)}24%{opacity:1;transform:translateY(14px)}100%{opacity:0;transform:translateY(24px) scaleY(.85)}}
+@keyframes scThunder{0%{opacity:0;transform:scaleY(.3)}12%,45%{opacity:1;transform:scaleY(1)}100%{opacity:0;transform:scaleY(1.06)}}
+@keyframes scCrater{from{opacity:.8;transform:scaleX(.4)}to{opacity:0;transform:scaleX(1.3)}}
+@keyframes scCloud{from{opacity:.3;transform:translateY(-12px) scaleX(.5)}40%{opacity:.9}to{opacity:.3;transform:scaleX(1.1)}}
+@keyframes scBeamCharge{0%{opacity:0;transform:scaleX(.02) scaleY(.25)}30%{opacity:.6}100%{opacity:.8;transform:scale(1)}}
+@keyframes scBeamRelease{0%{opacity:1;transform:scaleY(.6)}25%{opacity:1;transform:scaleY(1.2)}100%{opacity:0;transform:scaleY(.18)}}
+@keyframes scFlare{from{opacity:.3;transform:translateX(-16px) scaleY(.4)}50%{opacity:1}to{opacity:.3;transform:translateX(12px) scaleY(1.1)}}
+@keyframes scRift{from{opacity:0;transform:scaleY(.1)}25%{opacity:1;transform:scaleY(1)}to{opacity:0;transform:scaleY(1.15)}}
+@keyframes scWhip{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes scBind{from{transform:scale(1.2) rotate(-18deg)}40%{opacity:1;transform:scale(.85) rotate(0)}to{opacity:0;transform:scale(.75) rotate(15deg)}}
+@keyframes scBindWindup{from{opacity:0;transform:scale(1.45) rotate(-30deg)}to{opacity:.7;transform:scale(1.2) rotate(-18deg)}}
+@keyframes scChain{from{stroke-dashoffset:.3}to{stroke-dashoffset:0}}
+@keyframes scSerpent{from{transform:scaleY(.3)}30%{transform:scaleY(1)}to{transform:scaleY(.9)}}
+@keyframes scSpin{from{transform:rotate(-40deg)}to{transform:rotate(170deg)}}
+@keyframes scGatherSpin{from{transform:rotate(-130deg)}to{transform:rotate(-40deg)}}
+@keyframes scVortexForm{from{opacity:0;transform:scale(.25)}to{opacity:.85;transform:scale(1.15)}}
+@keyframes scVortexCollapse{from{opacity:1;transform:scale(1.15)}55%{opacity:.9}to{opacity:0;transform:scale(.22)}}
+@keyframes scOrbitOpen{from{opacity:0;transform:scale(.25)}to{opacity:.8;transform:scale(1.1)}}
+@keyframes scOrbitClose{from{opacity:1;transform:scale(1.1)}55%{opacity:1;transform:scale(.45)}to{opacity:0;transform:scale(.2)}}
+@keyframes scErupt{from{opacity:0;transform:translateY(38px) scaleY(.1)}25%{opacity:1;transform:translateY(0) scaleY(1)}to{opacity:0;transform:translateY(-14px) scaleY(1.15)}}
+@keyframes scFieldWindup{from{opacity:0;transform:translateY(40px) scaleY(.08)}to{opacity:.4;transform:translateY(25px) scaleY(.3)}}
 @keyframes skillGather{0%{opacity:0;transform:scale(1.35) rotate(-30deg)}35%{opacity:.8}100%{opacity:0;transform:scale(.55) rotate(35deg)}}
 @keyframes skillTravel{0%{opacity:0;transform:scaleX(.02)}24%{opacity:.6}100%{opacity:.95;transform:scaleX(1)}}
 @keyframes skillTrailFade{from{opacity:.8}to{opacity:0}}
@@ -58,8 +124,10 @@
 @keyframes skillShard{0%{opacity:0;transform:translateY(12px)}20%{opacity:.9}100%{opacity:0;transform:translateY(-20px)}}
 .battle-root[data-paused=true] .skill-fx *{animation-play-state:paused!important}
 @media(prefers-reduced-motion:reduce){
-  .skill-fx .skill-stream,.skill-fx .skill-charge,.skill-fx .skill-shard,.skill-fx .skill-seal,.skill-fx .skill-boss-crown,.skill-fx .skill-finisher,.skill-fx .skill-impact-heat,.skill-fx .skill-signature-flight,.skill-fx .skill-echo{display:none}
+  .skill-fx .skill-stream,.skill-fx .skill-charge,.skill-fx .skill-shard,.skill-fx .skill-seal,.skill-fx .skill-boss-crown,.skill-fx .skill-finisher,.skill-fx .skill-impact-heat,.skill-fx .sc-launch{display:none}
   .skill-fx *{animation:none!important}
   .skill-fx .skill-ring-outer{display:none}
   .skill-fx .skill-contact{opacity:.65}
+  .skill-fx .sc-contact{opacity:.7}
+  .skill-fx .sc-mastery,.skill-fx .sc-cut-echo,.skill-fx .sc-bloom{display:none}
 }

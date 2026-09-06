@@ -1,5 +1,6 @@
 import { randomFloat } from '../prng.ts';
 import { DUR, NOTE_FREQ } from './musicTables.ts';
+import { resumeAudioContext } from './transport.ts';
 import { REVERB_WET_BGM } from './mixer.ts';
 
 const PUBLIC_BASE_URL = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL || '/';
@@ -100,21 +101,17 @@ let bgmMediaEl: HTMLAudioElement | null = null;
 let bgmMediaToken = 0;
 let pendingBgmTrack: BgmTrack | null = null;
 let lastBgmTrack: BgmTrack | null = null;   // remember track for mute→unmute resume
-let resumePromise: Promise<void> | null = null;
 let bgmUnlockRetryArmed = false;
 const BGM_SCHEDULE_INTERVAL_MS = 50;
 const BGM_LOOKAHEAD_SEC = 0.12;
 const BGM_FADE_IN_MS = 900;
 const BGM_MEDIA_STOP_FADE_MS = 650;
-const BGM_MEDIA_LOOP_CROSSFADE_SEC = 1.25;
-const BGM_MEDIA_LOOP_START_SEC = 0.05;
-const BGM_MEDIA_LOOP_END_PAD_SEC = 0.08;
-const BGM_MEDIA_LOOP_POLL_MS = 90;
-const bgmMediaRampTimers = new Set<ReturnType<typeof setInterval>>();
+const BGM_MEDIA_LOAD_TIMEOUT_MS = 8000;
+const bgmMediaRampTimers = new Map<HTMLAudioElement, ReturnType<typeof setInterval>>();
 const bgmMediaElements = new Set<HTMLAudioElement>();
 let bgmDisconnectTimer: ReturnType<typeof setTimeout> | null = null;
-let bgmMediaLoopTimer: ReturnType<typeof setInterval> | null = null;
-let bgmMediaLoopRestarting = false;
+let bgmMediaLoadTimer: ReturnType<typeof setTimeout> | null = null;
+let bgmLifecycleArmed = false;
 const bgmWarmupCache = new Map<string, HTMLAudioElement>();
 const BGM_WARMUP_CACHE_LIMIT = 6;
 
@@ -180,7 +177,7 @@ function prefetchBgmTrack(track: BgmTrack, mode: BgmPreloadMode = 'metadata'): v
     return;
   }
   const el = new Audio(src);
-  el.loop = false;
+  el.loop = true;
   el.preload = mode;
   el.volume = 0;
   el.muted = true;
@@ -201,14 +198,14 @@ function createBgmMediaElement(src: string, preload: BgmPreloadMode = 'auto'): H
     } catch {
       // best-effort reset
     }
-    warm.loop = false;
+    warm.loop = true;
     warm.preload = preload;
     warm.muted = false;
     warm.volume = 0;
     return warm;
   }
   const el = new Audio(src);
-  el.loop = false;
+  el.loop = true;
   el.preload = preload;
   el.volume = 0;
   el.setAttribute('playsinline', 'true');
@@ -1051,12 +1048,9 @@ function scheduleBgmLookAhead(track: BgmTrack, pattern: BgmPattern): void {
   }
 }
 
-function clearBgmMediaLoopTimer(): void {
-  if (bgmMediaLoopTimer) {
-    clearInterval(bgmMediaLoopTimer);
-    bgmMediaLoopTimer = null;
-  }
-  bgmMediaLoopRestarting = false;
+function clearBgmMediaLoadTimer(): void {
+  if (bgmMediaLoadTimer !== null) clearTimeout(bgmMediaLoadTimer);
+  bgmMediaLoadTimer = null;
 }
 
 function clampUnit(value: number): number {
@@ -1064,13 +1058,18 @@ function clampUnit(value: number): number {
 }
 
 function clearBgmMediaRampTimers(): void {
-  for (const timer of bgmMediaRampTimers) clearInterval(timer);
+  for (const timer of bgmMediaRampTimers.values()) clearInterval(timer);
   bgmMediaRampTimers.clear();
 }
 
 function stopAndResetMediaElement(el: HTMLAudioElement): void {
   try {
     el.onended = null;
+    el.onpause = null;
+    el.onerror = null;
+    el.onplaying = null;
+    el.onwaiting = null;
+    el.onstalled = null;
     el.pause();
     el.currentTime = 0;
     el.volume = clampUnit(bgmVolume);
@@ -1088,6 +1087,8 @@ function rampMediaVolume(
   durationMs: number,
   onDone?: () => void,
 ): void {
+  const prior = bgmMediaRampTimers.get(el);
+  if (prior !== undefined) clearInterval(prior);
   const start = Date.now();
   const startVol = clampUnit(from);
   const endVol = clampUnit(to);
@@ -1099,71 +1100,17 @@ function rampMediaVolume(
     try { el.volume = clampUnit(vol); } catch { /* best-effort */ }
     if (progress >= 1) {
       clearInterval(timer);
-      bgmMediaRampTimers.delete(timer);
+      bgmMediaRampTimers.delete(el);
       if (onDone) {
         try { onDone(); } catch { /* best-effort */ }
       }
     }
   }, 16);
-  bgmMediaRampTimers.add(timer);
-}
-
-function tuneLoopStartOffset(el: HTMLAudioElement): void {
-  try {
-    const dur = Number.isFinite(el.duration) ? el.duration : 0;
-    if (dur > BGM_MEDIA_LOOP_START_SEC + 0.2) {
-      el.currentTime = BGM_MEDIA_LOOP_START_SEC;
-    }
-  } catch {
-    // best-effort offset seek
-  }
-}
-
-function startBgmMediaLoopMonitor(el: HTMLAudioElement, token: number, track: BgmTrack): void {
-  clearBgmMediaLoopTimer();
-  const src = BGM_FILE_BY_TRACK[track];
-  if (!src) return;
-  bgmMediaLoopTimer = setInterval(() => {
-    if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) return;
-    const dur = Number.isFinite(el.duration) ? el.duration : 0;
-    if (!dur) return;
-    const loopEnd = Math.max(BGM_MEDIA_LOOP_START_SEC + 0.2, dur - BGM_MEDIA_LOOP_END_PAD_SEC);
-    const remain = loopEnd - el.currentTime;
-    if (remain > BGM_MEDIA_LOOP_CROSSFADE_SEC || bgmMediaLoopRestarting) return;
-    bgmMediaLoopRestarting = true;
-    const nextEl = createBgmMediaElement(src, 'auto');
-    bgmMediaElements.add(nextEl);
-    nextEl.volume = 0;
-    const crossfadeMs = Math.round(BGM_MEDIA_LOOP_CROSSFADE_SEC * 1000);
-    const beginCrossfade = () => {
-      if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) {
-        stopAndResetMediaElement(nextEl);
-        bgmMediaLoopRestarting = false;
-        return;
-      }
-      const from = Number.isFinite(el.volume) ? el.volume : clampUnit(bgmVolume);
-      bgmMediaEl = nextEl;
-      rampMediaVolume(el, from, 0, crossfadeMs, () => {
-        stopAndResetMediaElement(el);
-      });
-      rampMediaVolume(nextEl, 0, bgmVolume, crossfadeMs, () => {
-        bgmMediaLoopRestarting = false;
-      });
-      startBgmMediaLoopMonitor(nextEl, token, track);
-    };
-    nextEl.addEventListener('loadedmetadata', () => {
-      tuneLoopStartOffset(nextEl);
-    }, { once: true });
-    const playPromise = nextEl.play();
-    playPromise.then(beginCrossfade).catch(() => {
-      stopAndResetMediaElement(nextEl);
-      bgmMediaLoopRestarting = false;
-    });
-  }, BGM_MEDIA_LOOP_POLL_MS);
+  bgmMediaRampTimers.set(el, timer);
 }
 
 function stopBgmMedia(immediate = false): void {
-  clearBgmMediaLoopTimer();
+  clearBgmMediaLoadTimer();
   clearBgmMediaRampTimers();
   const elements = [...bgmMediaElements];
   bgmMediaEl = null;
@@ -1198,23 +1145,27 @@ function armBgmUnlockRetry(track: BgmTrack): void {
 }
 
 function onBgmUnlockRetryGesture(): void {
-  if (!pendingBgmTrack || bgmMuted) {
+  syncDepsState();
+  if (!pendingBgmTrack || bgmMuted || !lastBgmTrack) {
     disarmBgmUnlockRetry();
     return;
   }
-  const track = pendingBgmTrack;
-  const hasMediaTrack = Boolean(BGM_FILE_BY_TRACK[track]);
-  if (!ready && !hasMediaTrack) return;
-  disarmBgmUnlockRetry();
-  const retry = () => {
-    if (bgmMuted || pendingBgmTrack !== track) return;
-    try { startBgmLoop(track); } catch { /* best-effort */ }
-  };
-  if (ctx && ctx.state !== 'running') {
-    resumeAudioIfNeeded(retry);
-    return;
+  apiStartBgm(lastBgmTrack);
+}
+
+function onBgmForeground(): void {
+  if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+  if (lastBgmTrack) apiStartBgm(lastBgmTrack);
+}
+
+function armBgmLifecycle(): void {
+  if (bgmLifecycleArmed || typeof document === 'undefined') return;
+  bgmLifecycleArmed = true;
+  document.addEventListener('visibilitychange', onBgmForeground);
+  if (typeof window !== 'undefined') {
+    window.addEventListener('pageshow', onBgmForeground);
+    window.addEventListener('focus', onBgmForeground);
   }
-  retry();
 }
 
 function startSynthBgmLoop(track: BgmTrack): void {
@@ -1254,41 +1205,43 @@ function startBgmMedia(track: BgmTrack): boolean {
   const token = ++bgmMediaToken;
   bgmMediaEl = el;
   bgmCurrent = track;
-  // Fallback loop guard: if interval/crossfade misses (e.g. throttled tab), keep looping.
-  el.onended = () => {
-    if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) return;
-    try {
-      tuneLoopStartOffset(el);
-      const retry = el.play();
-      retry.catch(() => {
-        armBgmUnlockRetry(track);
-      });
-    } catch {
-      armBgmUnlockRetry(track);
-    }
-  };
-  const playPromise = el.play();
-  const onReady = () => {
-    if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) return;
-    disarmBgmUnlockRetry();
-    rampMediaVolume(el, 0, bgmVolume, BGM_FADE_IN_MS);
-    startBgmMediaLoopMonitor(el, token, track);
-  };
-  playPromise.then(onReady).catch(() => {
-    // Mobile autoplay blocks can happen; queue a retry on next user gesture.
-    if (bgmMediaToken !== token) return;
+  const isCurrent = () => bgmMediaToken === token && bgmMediaEl === el && !bgmMuted;
+  const fallback = () => {
+    if (!isCurrent()) return;
     stopBgmMedia(true);
     armBgmUnlockRetry(track);
-    if (ctx && ctx.state !== 'running') {
-      resumeAudioIfNeeded(() => {
-        if (!bgmMuted && pendingBgmTrack === track) {
-          try { startSynthBgmLoop(track); } catch { /* best-effort */ }
-        }
-      });
-    } else {
-      try { startSynthBgmLoop(track); } catch { /* best-effort */ }
-    }
-  });
+    syncDepsState();
+    const context = ctx;
+    if (!context) return;
+    void resumeAudioContext(context).then((resumed) => {
+      if (resumed && ctx === context && bgmMediaToken === token && lastBgmTrack === track
+        && !bgmMuted && !bgmGain && !bgmMediaEl) startSynthBgmLoop(track);
+    });
+  };
+  const watchLoading = () => {
+    if (!isCurrent() || bgmMediaLoadTimer !== null) return;
+    bgmMediaLoadTimer = setTimeout(fallback, BGM_MEDIA_LOAD_TIMEOUT_MS);
+  };
+  const onPlaying = () => {
+    if (!isCurrent()) return;
+    clearBgmMediaLoadTimer();
+    pendingBgmTrack = null;
+    disarmBgmUnlockRetry();
+    rampMediaVolume(el, el.volume, bgmVolume, BGM_FADE_IN_MS);
+  };
+  // Native looping survives throttled JS timers and avoids unlocking a new player every loop.
+  el.loop = true;
+  el.onended = () => {
+    if (!isCurrent()) return;
+    try { el.currentTime = 0; void el.play().then(onPlaying, fallback); } catch { fallback(); }
+  };
+  el.onpause = () => { if (isCurrent()) armBgmUnlockRetry(track); };
+  el.onerror = fallback;
+  el.onplaying = onPlaying;
+  el.onwaiting = watchLoading;
+  el.onstalled = watchLoading;
+  watchLoading();
+  try { void el.play().then(onPlaying, fallback); } catch { fallback(); }
   return true;
 }
 
@@ -1332,32 +1285,6 @@ function stopBgmLoop(immediate = false): void {
   bgmFormIndex = 0;
 }
 
-function resumeAudioIfNeeded(onReady?: () => void): void {
-  if (!ctx) return;
-  const runReady = () => {
-    if (onReady) {
-      try { onReady(); } catch { /* best-effort */ }
-    }
-  };
-  if (ctx.state === 'running') {
-    runReady();
-    return;
-  }
-  if (resumePromise) {
-    if (onReady) resumePromise.then(runReady).catch(() => {});
-    return;
-  }
-  resumePromise = ctx
-    .resume()
-    .then(() => {
-      resumePromise = null;
-    })
-    .catch(() => {
-      resumePromise = null;
-    });
-  if (onReady) resumePromise.then(runReady).catch(() => {});
-}
-
 function applyMutedChange(wasMuted: boolean, nextMuted: boolean): void {
   syncDepsState();
   bgmMuted = nextMuted;
@@ -1367,22 +1294,14 @@ function applyMutedChange(wasMuted: boolean, nextMuted: boolean): void {
     stopBgmLoop(true);
   } else if (wasMuted && !nextMuted) {
     const track = lastBgmTrack || pendingBgmTrack;
-    if (track && (ready || Boolean(BGM_FILE_BY_TRACK[track]))) {
-      try { startBgmLoop(track); } catch { /* best-effort */ }
-    }
+    if (track) apiStartBgm(track);
   }
 }
 
 function applyVolumeChange(): void {
   syncDepsState();
-  if (!bgmMuted && bgmMediaElements.size > 0) {
-    for (const el of bgmMediaElements) {
-      try {
-        el.volume = clampUnit(bgmVolume);
-      } catch {
-        // best-effort media element volume update
-      }
-    }
+  if (!bgmMuted && bgmMediaEl) {
+    rampMediaVolume(bgmMediaEl, bgmMediaEl.volume, bgmVolume, 120);
   }
   if (bgmGain && ctx && !bgmMuted) {
     try {
@@ -1397,23 +1316,55 @@ function applyVolumeChange(): void {
 
 function apiStartBgm(track: BgmTrack): void {
   syncDepsState();
+  armBgmLifecycle();
   lastBgmTrack = track;
   if (bgmMuted) return;
   const hasMediaTrack = Boolean(BGM_FILE_BY_TRACK[track]);
-  if (!ready && !hasMediaTrack) return;
-  if (bgmCurrent === track) return;
-  pendingBgmTrack = track;
-  const boot = () => {
-    const canStartMedia = Boolean(BGM_FILE_BY_TRACK[track]);
-    if ((!ready && !canStartMedia) || bgmMuted || pendingBgmTrack !== track) return;
-    try { startBgmLoop(track); } catch { /* best-effort */ }
-    if (bgmCurrent === track) pendingBgmTrack = null;
-  };
-  if (ctx && ctx.state !== 'running') {
-    resumeAudioIfNeeded(boot);
+  if (bgmCurrent === track && bgmMediaEl && !bgmMediaEl.paused && !bgmMediaEl.ended && !bgmMediaEl.error) {
+    pendingBgmTrack = null;
+    disarmBgmUnlockRetry();
     return;
   }
-  boot();
+  if (bgmCurrent === track && bgmMediaEl && !bgmMediaEl.error) {
+    const el = bgmMediaEl;
+    const token = bgmMediaToken;
+    pendingBgmTrack = track;
+    const retryLater = () => {
+      if (bgmMediaToken === token && lastBgmTrack === track && !bgmMuted) armBgmUnlockRetry(track);
+    };
+    try {
+      if (el.ended) el.currentTime = 0;
+      void el.play().then(() => {
+        if (bgmMediaToken !== token || bgmMediaEl !== el || bgmMuted) return;
+        clearBgmMediaLoadTimer();
+        pendingBgmTrack = null;
+        disarmBgmUnlockRetry();
+      }, retryLater);
+    } catch { retryLater(); }
+    return;
+  }
+  if (bgmCurrent === track && bgmGain && !pendingBgmTrack && ctx) {
+    void resumeAudioContext(ctx).then((resumed) => {
+      if (!resumed && lastBgmTrack === track && !bgmMuted) armBgmUnlockRetry(track);
+    });
+    return;
+  }
+  pendingBgmTrack = track;
+  if (!ready && !hasMediaTrack) { armBgmUnlockRetry(track); return; }
+  const boot = () => {
+    if (bgmMuted || pendingBgmTrack !== track || lastBgmTrack !== track) return;
+    try { startBgmLoop(track); } catch { armBgmUnlockRetry(track); }
+    if (bgmCurrent === track && bgmGain) pendingBgmTrack = null;
+  };
+  // HTML media playback does not depend on a successfully resumed Web Audio context.
+  if (!hasMediaTrack && ctx && ctx.state !== 'running') {
+    void resumeAudioContext(ctx).then((resumed) => {
+      if (resumed) boot();
+      else if (lastBgmTrack === track && !bgmMuted) armBgmUnlockRetry(track);
+    });
+  } else {
+    boot();
+  }
 }
 
 function apiPrefetchBgm(
@@ -1432,11 +1383,21 @@ function apiPrefetchBgm(
 
 function apiStopBgm(immediate = false): void {
   syncDepsState();
+  lastBgmTrack = null;
   pendingBgmTrack = null;
   try { stopBgmLoop(immediate); } catch { /* ok */ }
 }
 
 function disposeBgm(): void {
+  if (bgmLifecycleArmed && typeof document !== 'undefined') {
+    document.removeEventListener('visibilitychange', onBgmForeground);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('pageshow', onBgmForeground);
+      window.removeEventListener('focus', onBgmForeground);
+    }
+  }
+  bgmLifecycleArmed = false;
+  lastBgmTrack = null;
   disarmBgmUnlockRetry();
   pendingBgmTrack = null;
   if (bgmDisconnectTimer) {

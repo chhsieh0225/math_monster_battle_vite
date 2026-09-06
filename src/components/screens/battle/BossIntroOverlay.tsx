@@ -9,6 +9,7 @@ type BossIntroOverlayProps = {
   enemySubName?: string;
   enemySubSvg?: string;
   enemySubSize?: number;
+  paused?: boolean;
   onComplete: () => void;
 };
 
@@ -32,13 +33,14 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
   enemySubName,
   enemySubSvg,
   enemySubSize,
+  paused = false,
   onComplete,
 }: BossIntroOverlayProps) {
   const { t } = useI18n();
   const completedRef = useRef(false);
+  const remainingMs = useRef(4600);
   const hasDualSilhouette = Boolean(enemySubName && enemySubSvg);
-  // Intro cinematic should use dedicated display sizes (not in-battle sizes),
-  // otherwise dual-boss overlays on mobile can overflow and get clipped.
+  // Intrinsic fallback dimensions; cinematic CSS fits both actors into a viewport-safe stage.
   const introMainSize = hasDualSilhouette
     ? Math.min(enemySize, 250)
     : Math.min(enemySize, 340);
@@ -47,15 +49,20 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
     : Math.min(enemySubSize ?? enemySize, 300);
 
   const finish = useCallback(() => {
-    if (completedRef.current) return;
+    if (paused || completedRef.current) return;
     completedRef.current = true;
     onComplete();
-  }, [onComplete]);
+  }, [onComplete, paused]);
 
   useEffect(() => {
-    const id = window.setTimeout(finish, 4600);
-    return () => clearTimeout(id);
-  }, [finish]);
+    if (paused) return;
+    const started = performance.now();
+    const id = window.setTimeout(finish, remainingMs.current);
+    return () => {
+      clearTimeout(id);
+      remainingMs.current = Math.max(0, remainingMs.current - (performance.now() - started));
+    };
+  }, [finish, paused]);
 
   return (
     <div
@@ -66,9 +73,10 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
       aria-label={hasDualSilhouette
         ? t('a11y.bossIntro.announceDual', 'Boss intro cinematic: {name}. Tap to skip', { name: enemyName + (enemySubName ? ` + ${enemySubName}` : '') })
         : t('a11y.bossIntro.announce', 'Boss intro cinematic: {name}. Tap to skip', { name: enemyName })}
-      onClick={finish}
+      onClick={(e) => { e.stopPropagation(); finish(); }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+          e.stopPropagation();
           e.preventDefault();
           finish();
         }

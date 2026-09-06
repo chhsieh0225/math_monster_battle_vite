@@ -105,11 +105,11 @@ test('every playable catalog slot has its own silhouette, including the four PvP
         const html = render(effect, low);
         assert.ok(html.includes(`data-skill-id="${skillId}"`));
         assert.ok(html.includes(`data-skill-motion="${recipe.motion}"`));
-        assert.ok(html.includes(`d="${recipe.mark}"`), 'the essential mark survives low quality');
-        assert.equal((html.match(/class="skill-contact"/g) || []).length, 1);
-        assert.ok((html.match(/<(?:svg|g|circle|path)\b/g) || []).length <= (low ? 9 : 48), skillId);
+        assert.ok(html.includes(`data-choreography="${recipe.motion}:${recipe.motif}"`), 'the named mechanism survives low quality');
+        assert.equal((html.match(/class="skill-contact(?: |")/g) || []).length, 1);
+        assert.ok((html.match(/<[a-zA-Z]/g) || []).length <= (low ? 36 : 64), skillId);
         assert.equal(render({ ...effect, impact: { outcome: 'miss', at: 2 } }, low), '');
-        assert.ok(!render({ ...effect, impact: { outcome: 'blocked', at: 2 } }, low).includes('skill-mark'));
+        assert.ok(!render({ ...effect, impact: { outcome: 'blocked', at: 2 } }, low).includes('data-choreography'));
       }
     });
     assert.ok(motions.size >= 2, `${actor.id} needs more than one choreography`);
@@ -157,8 +157,52 @@ test('boss contacts fit small partners and clip both HUD corners without weakeni
     assert.match(html, /clip-path="url\(#skill-[^)]+-arena\)"/);
     assert.match(html, /M0 0H390V464H0Z M0 0H210V110H0Z M180 364H390V464H180Z/);
     assert.match(html, /clip-rule="evenodd"/);
-    assert.ok(html.includes(getSkillRecipe(effect.skillId).mark));
+    assert.match(html, /data-choreography="field:serpent"/);
   }
   const full = render(effect, false, { target: { ...target(208, 230), size: 250 } });
   assert.match(full, /data-impact-radius="107"/);
+});
+
+test('named launches retain real mechanisms at low detail instead of shared route lines', () => {
+  for (const actor of PVP_SELECTABLE_ROSTER) for (let idx = 0; idx < 4; idx++) {
+    const skillId = `${actor.id}:${idx}`;
+    for (const low of [false, true]) {
+      const html = render({ skillId, idx, lvl: 6 }, low);
+      assert.match(html, /data-choreography=/, skillId);
+      assert.ok(!html.includes('skill-route') && !html.includes('skill-stream'), skillId);
+      assert.ok(!html.includes('skill-contact'), 'launch must not create a damage contact');
+      assert.ok((html.match(/<[a-zA-Z]/g) || []).length <= (low ? 36 : 64), skillId);
+      assert.ok(!html.includes('NaN') && !html.includes('feGaussianBlur'), skillId);
+    }
+  }
+});
+
+test('skill names select tidal walls, lightning, nine heads, parallel cuts and divine sword rain', () => {
+  const hit = (skillId, idx, low = false) => render({ skillId, idx, lvl: 1, impact: { outcome: 'hit', at: 1 } }, low);
+  const count = (html, token) => html.split(token).length - 1;
+  assert.equal(count(hit('water:2', 2), 'class="sc-surge"'), 3);
+  assert.match(hit('water:3', 3), /sc-vortex-collapse/);
+  assert.match(hit('electric:1', 1), /sc-thunder/);
+  assert.match(hit('electric:3', 3), /sc-chain/);
+  assert.equal(count(hit('boss_hydra:2', 2), 'class="sc-serpent"'), 9);
+  assert.equal(count(hit('boss_hydra:2', 2, true), 'class="sc-serpent"'), 3);
+  assert.match(hit('boss_hydra:2', 2, true), /rotate\(120\)/);
+  assert.match(hit('boss_hydra:2', 2, true), /rotate\(240\)/);
+  assert.equal(count(hit('wolf:1', 1), 'rotate(-18)'), 2);
+  assert.match(hit('wolf:2', 2), /rotate\(66\)/);
+  assert.match(hit('lion:3', 3), /sc-eclipse-release/);
+  assert.match(hit('tiger:1', 1), /data-choreography="orbit:mirror"/);
+  assert.equal(count(hit('boss_sword_god:3', 3), 'class="sc-fall-strike"'), 3);
+  assert.match(hit('boss_sword_god:2', 2), /class="sc-rift"/);
+});
+
+test('practice increases bounded geometry while PvP and low detail keep the essential mechanism', () => {
+  const count = html => html.split('class="sc-fall-strike"').length - 1;
+  const effect = { skillId: 'boss_sword_god:3', idx: 3, impact: { outcome: 'hit', at: 1 } };
+  assert.deepEqual([1, 3, 5].map(lvl => count(render({ ...effect, lvl }))), [3, 4, 5]);
+  assert.equal(count(render({ ...effect, lvl: 999 }, true)), 1);
+  const source = target(310, 170), victim = { ...target(140, 350), size: 100 };
+  const html = render({ skillId: 'water:2', idx: 2 }, true, { source, target: victim });
+  assert.match(html, /--skill-dx:-170px;--skill-dy:180px/);
+  assert.match(html, /data-source="310,170" data-target="140,350"/);
 });

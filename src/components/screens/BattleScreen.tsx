@@ -874,6 +874,8 @@ function BattleScreenComponent({
       {/* Boss intro cinematic overlay */}
       {S.phase === 'bossIntro' && (
         <BossIntroOverlay
+          key={`${S.round}:${enemy.id}:${S.enemySub?.id || ''}`}
+          paused={S.gamePaused}
           enemyName={enemy.name}
           enemySvg={eSvg}
           enemySize={eSize}
@@ -887,6 +889,8 @@ function BattleScreenComponent({
       {/* Boss victory cinematic overlay */}
       {S.phase === 'bossVictory' && (
         <BossVictoryOverlay
+          key={`${S.round}:${enemy.id}`}
+          paused={S.gamePaused}
           enemyName={enemy.name}
           onComplete={handleAdvance}
         />

@@ -1,3 +1,21 @@
+const resumes = new WeakMap<AudioContext, Promise<boolean>>();
+
+/** Share unlock attempts and never report success after a rejected/interrupted resume. */
+export function resumeAudioContext(ctx: AudioContext): Promise<boolean> {
+  if (ctx.state === 'running') return Promise.resolve(true);
+  if (ctx.state === 'closed') return Promise.resolve(false);
+  const pending = resumes.get(ctx);
+  if (pending) return pending;
+  try {
+    const attempt = ctx.resume().then(() => ctx.state === 'running', () => false)
+      .finally(() => resumes.delete(ctx));
+    resumes.set(ctx, attempt);
+    return attempt;
+  } catch {
+    return Promise.resolve(false);
+  }
+}
+
 export function scheduleSeries(
   count: number,
   baseDelayMs: number,

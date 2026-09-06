@@ -28,7 +28,7 @@ Hydra, Crazy Dragon and Sword God have combat phases but currently no separate s
 - All atlases use RGBA WebP, 2048x768, four columns by two rows; each cell is 512x384.
 - Pose order: idle, inhale, anticipation, strike, follow-through, recovery, recoil, braced recovery.
 - A shared scale per atlas and reviewed contact/support X anchors register the drawings against a y=368 silhouette baseline. Lifted recoil poses may have feet above that baseline; this is not a skeletal foot-lock system.
-- Runtime fits the union of all eight silhouettes once to the original padded profile envelope. It does not resize or recenter each pose. Existing HUD-safe placement, facing, impact anchors and physical-slot action ownership remain unchanged.
+- Runtime fits the union of all eight silhouettes once to a padded battle envelope. Most forms retain the original profile envelope; Sword God's battle-only envelope is wider to accommodate its new sword poses without shrinking the body into the old portrait. It does not resize or recenter each pose. Original menu portraits remain unchanged.
 - The existing CSS step player handles all 51 forms. No new animation library, per-frame React updates, gameplay timer or character-specific rendering component was added.
 - Only actors actually mounted in battle request their atlases. Decode failure or invalid dimensions retains the original image. Pause, impact freeze, reduced-motion and low-performance behavior stay in the shared player.
 - The new 44 atlases total **11,567,358 bytes**. All 51 active atlases total **13,492,118 bytes (12.87 MiB)** on disk, not an initial-page download. Individual active files range from 71,686 to 398,456 bytes, below the 400,000-byte budget.
@@ -56,7 +56,7 @@ The offline tool requires Pillow and NumPy; no Python/image-processing dependenc
 ## Validation
 
 - All 51 atlases / 408 cells were decoded and checked against their registered bounds, transparent gutters and hashes. New sheets were visually reviewed on dark contact sheets, including wide weapons/wings, white fur and colored details.
-- `npm run lint`, `npm run typecheck`, all **822 tests**, and `npm run build:budget` pass.
+- `npm run lint`, `npm run typecheck`, all **832 tests**, and `npm run build:budget` pass (including the Boss presence and skill mastery follow-up below).
 - TypeScript requires complete `Record<SpriteKey, SpriteAnimationAsset>` coverage. Tests cover every factory/profile, all configured enemy/evolved forms in both enemy slots, all selectable PvP stages, Co-op identity independence, separate Boss phase-two files, unchanged PvP identity, and per-pose containment.
 - After the Mac was unlocked, a temporary local fixture mounted the production `BattleScreen` and `BattleSprite` without game-save actions. All **51 forms / 408 poses** passed browser image decoding, computed pose-position and stable frame-size checks, with no browser console errors. The fixture and viewport overrides were removed after the pass.
 - Focused visual checks covered 320x568, 390x844, 768x1024 and 1280x720 portrait/desktop layouts, plus 568x320 and 844x390 landscape layouts. Solo, four-actor Co-op and PvP rendering were sampled, including the Dragon King's independent enemy-slot phase changes, wide wings/weapons, Crazy Dragon, Sword God, Hydra and both active Co-op slots. The sampled layouts had no horizontal page overflow or observed HUD occlusion; this is not an exhaustive playthrough of every encounter combination.
@@ -72,3 +72,14 @@ The offline tool requires Pillow and NumPy; no Python/image-processing dependenc
 ## Quality Boundary
 
 This completes the agreed **eight-key-pose** roster, not 3D, skeletal animation, or dozens of hand-corrected in-between frames. Existing continuous body motion connects the discrete drawings, but some anatomical, accessory and pose-to-pose variation remains visible in slow motion. Static idle uses the existing breathing layer; eight drawings do not imply eight continuously cycling idle frames. No claim of perfectly fluid frame-by-frame motion is made.
+
+## Boss Presence And Skill Mastery Follow-up
+
+- Boss main/sub frame requests now use more available space instead of stopping at the old horizontal lane budget. The existing two-dimensional solver still reduces them where HUD or actor clearance requires it; these are not unconditional scale overrides.
+- Normal player/PvP strikes and direct enemy hits use a shared, arena-clipped SVG effect with eight elemental trail/crest shapes. Physical source/target slots select the coordinates, including Co-op secondary actors. Older effect templates remain available for callers without spatial geometry.
+- Move levels 1-2, 3-4 and 5-6 select three visual tiers: a single trail, chained trails, then a finisher sigil. The move menu displays these milestones; level-up toasts announce levels 3 and 5. This is presentation of existing practice progression, not a new leveling or damage system. PvP retains its existing level-one effect policy.
+- Direct enemy hits scale their presentation from enemy level and Boss phase. Boss release moves receive stronger finishing effects, Sword God uses steel motifs, and Hydra uses three trails. Enemy hit effects begin with actual damage, not before hit resolution, and delayed clears cannot erase a newer effect. Status damage and legacy automatic ally-support particles are not redesigned by this change.
+- A compact low-performance effect omits stream rendering, shards and sigils; reduced-motion styles omit travel and expansion. No new image assets, per-frame React updates or combat timing changes are introduced.
+- Fresh browser checks sampled the four Boss identities and Dark Dragon King's second form on 390x844, then four-actor Sword God layouts on 1280x720 and 844x390. Mastery tiers and low-performance secondary-source/target routing were inspected without page overflow or console errors. This does not replace physical-device FPS testing or an exhaustive encounter playthrough.
+- The temporary `qa-skills` entry points were removed after validation so they are not left in the repository or exposed by the development server.
+- Final verification: lint, TypeScript, all 832 tests and production bundle budgets pass. Total JavaScript is 945.3 KiB against the 976.6 KiB budget; the battle-effects chunk is 84.8 KiB against 107.4 KiB. These are build-size checks, not measured rendering-performance claims.

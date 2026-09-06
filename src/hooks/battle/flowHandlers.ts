@@ -10,6 +10,8 @@ type PvpTurnStartHandlers = Parameters<typeof tryProcessPvpTextAdvance>[0]['hand
 export function createEnemyTurnHandlers(deps: EnemyTurnHandlers): EnemyTurnHandlers {
   return {
     sr: deps.sr,
+    pendingTextAdvanceActionRef: deps.pendingTextAdvanceActionRef,
+    isGamePaused: deps.isGamePaused,
     safeTo: deps.safeTo,
     rand: deps.rand,
     randInt: deps.randInt,

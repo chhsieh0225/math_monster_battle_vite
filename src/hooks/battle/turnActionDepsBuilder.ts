@@ -32,7 +32,7 @@ type BuildEnemyTurnArgsArgs = {
   sr: RunEnemyTurnArgs['sr'];
   runtime: Pick<
     RunEnemyTurnArgs,
-    'safeTo' | 'rand' | 'randInt' | 'chance' | 'sfx' | 'setScreen' | 't'
+    'safeTo' | 'rand' | 'randInt' | 'chance' | 'sfx' | 'setScreen' | 't' | 'pendingTextAdvanceActionRef' | 'isGamePaused'
   >;
   battleFields: Pick<
     RunEnemyTurnArgs,
@@ -98,6 +98,8 @@ export function buildEnemyTurnArgs({
 }: BuildEnemyTurnArgsArgs): RunEnemyTurnArgs {
   return {
     sr,
+    pendingTextAdvanceActionRef: runtime.pendingTextAdvanceActionRef,
+    isGamePaused: runtime.isGamePaused,
     safeTo: runtime.safeTo,
     rand: runtime.rand,
     randInt: runtime.randInt,

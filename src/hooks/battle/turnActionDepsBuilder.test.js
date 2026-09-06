@@ -1,14 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildSelectMoveFlowArgs, buildEnemyTurnArgs } from './turnActionDepsBuilder.ts';
+import { createEnemyTurnHandlers } from './flowHandlers.ts';
 
 test('buildEnemyTurnArgs wires all deps correctly', () => {
   const noop = () => {};
   const sr = { current: {} };
   const safeTo = () => {};
+  const pendingTextAdvanceActionRef = { current: null };
+  const isGamePaused = () => false;
   const args = buildEnemyTurnArgs({
     sr,
     runtime: {
+      pendingTextAdvanceActionRef,
+      isGamePaused,
       safeTo,
       rand: noop,
       randInt: noop,
@@ -47,6 +52,8 @@ test('buildEnemyTurnArgs wires all deps correctly', () => {
   });
   assert.equal(args.sr, sr);
   assert.equal(args.safeTo, safeTo);
+  assert.equal(createEnemyTurnHandlers(args).pendingTextAdvanceActionRef, pendingTextAdvanceActionRef);
+  assert.equal(createEnemyTurnHandlers(args).isGamePaused, isGamePaused);
 });
 
 test('buildSelectMoveFlowArgs uses battle field diff setter (not UI)', () => {
@@ -96,4 +103,3 @@ test('buildSelectMoveFlowArgs uses battle field diff setter (not UI)', () => {
   assert.equal(args.setDiffLevel, battleDiffSetter);
   assert.notEqual(args.setDiffLevel, uiDiffSetter);
 });
-

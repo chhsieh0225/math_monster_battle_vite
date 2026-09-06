@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { BALANCE_CONFIG } from '../../../data/balanceConfig.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -60,7 +61,7 @@ export const BattleStatusOverlay = memo(function BattleStatusOverlay({
       </div>
 
       <div className="battle-left-badge-stack" aria-live="polite" aria-atomic="true">
-        {bossPhase >= 3 && <div className="battle-pill is-last-stand">{t('battle.lastStand', '🔥 Last Stand DMGx1.3')}</div>}
+        {bossPhase >= 3 && <div className="battle-pill is-last-stand">{t('battle.lastStand', '🔥 Last Stand DMGx{multiplier}', { multiplier: BALANCE_CONFIG.traits.player.bossPhase3DamageScale })}</div>}
         {specDef && (
           <div className={`battle-pill is-specdef ${specDefToneClass}`}>
             {specDefReadyLabel} {t('battle.ready', 'Ready!')}
@@ -68,7 +69,12 @@ export const BattleStatusOverlay = memo(function BattleStatusOverlay({
         )}
       </div>
 
-      {bossCharging && <div className="battle-boss-hint">⚠️ {t('battle.bossBreakHint', 'Answer correctly to interrupt charging!')}</div>}
+      {bossCharging && <div className="battle-boss-hint" role="status">
+        <div>⚠️ {t('battle.bossBreakHint', 'Answer correctly to interrupt charging!')}</div>
+        {BALANCE_CONFIG.traits.boss.chargeCounterRatio > 0 && (
+          <div className="battle-boss-hint-detail">{t('battle.bossCounterHint', 'Interrupting still triggers retaliation.')}</div>
+        )}
+      </div>}
     </>
   );
 });

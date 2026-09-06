@@ -19,7 +19,7 @@ export function shouldSkipMenuReset(state: unknown): boolean {
   const current = asResetState(state);
   if (!current) return false;
   if (typeof current.screen === 'string' && current.screen !== 'battle') return true;
-  return current.phase === 'ko' || current.phase === 'victory';
+  return current.phase === 'ko' || current.phase === 'victory' || current.phase === 'bossVictory';
 }
 
 export function isBattleActiveState(state: unknown): boolean {

@@ -4,6 +4,7 @@ import { hasSpecialTrait } from '../../../utils/traits';
 import HPBar from '../../ui/HPBar';
 import XPBar from '../../ui/XPBar';
 import type { EnemyVm, StarterVm, UseBattleState } from '../../../types/battle';
+import { BALANCE_CONFIG } from '../../../data/balanceConfig.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -110,7 +111,9 @@ export const BattleEnemyInfoPanel = memo(function BattleEnemyInfoPanel({
             {staticStack > 0 && <div className="battle-status-chip is-static">⚡ {t('battle.status.staticStack', 'Static x{count}', { count: staticStack })}{staticStack >= 2 ? ' ⚠️' : ''}</div>}
             {bossPhase >= 2 && (
               <div className="battle-status-chip is-boss">
-                {bossPhase >= 3 ? t('battle.status.bossAwaken', '💀 Awaken ATKx2') : t('battle.status.bossRage', '💀 Rage ATKx1.5')}
+                {bossPhase >= 3
+                  ? t('battle.status.bossAwaken', '💀 Awaken ATKx{multiplier}', { multiplier: BALANCE_CONFIG.traits.boss.phase3AttackMultiplier })
+                  : t('battle.status.bossRage', '💀 Rage ATKx{multiplier}', { multiplier: BALANCE_CONFIG.traits.boss.phase2AttackMultiplier })}
               </div>
             )}
             {bossCharging && <div className="battle-status-chip is-charge">⚠️ {t('battle.status.charging', 'Charging!')}</div>}

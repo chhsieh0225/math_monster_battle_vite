@@ -476,6 +476,7 @@ export function useBattle() {
     pauseTimer,
     resumeTimer,
   });
+  const isGamePaused = useStableCallback(() => gamePaused);
   const dismissCollectionPopup = useCallback(() => {
     setCollectionPopup(null);
   }, []);
@@ -887,6 +888,8 @@ export function useBattle() {
   // --- Enemy turn logic (reads from stateRef) ---
   const doEnemyTurnContextRef = useBattleStateRef({
     sr,
+    pendingTextAdvanceActionRef,
+    isGamePaused,
     safeTo,
     rand,
     randInt,
@@ -904,6 +907,8 @@ export function useBattle() {
     const enemyTurnInput = {
       sr: ctx.sr,
       runtime: {
+        pendingTextAdvanceActionRef: ctx.pendingTextAdvanceActionRef,
+        isGamePaused: ctx.isGamePaused,
         safeTo: ctx.safeTo,
         rand: ctx.rand,
         randInt: ctx.randInt,
@@ -1004,6 +1009,7 @@ export function useBattle() {
 
   const advanceContextRef = useBattleStateRef({
     phase,
+    isGamePaused,
     sr,
     setPhase,
     setBText,
@@ -1027,6 +1033,7 @@ export function useBattle() {
     const ctx = advanceContextRef.current;
     const advanceInput = {
       phase: ctx.phase,
+      isGamePaused: ctx.isGamePaused,
       sr: ctx.sr,
       setPhase: ctx.setPhase,
       setBText: ctx.setBText,

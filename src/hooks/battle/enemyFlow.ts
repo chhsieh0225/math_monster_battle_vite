@@ -97,6 +97,8 @@ type SfxApi = {
 
 type RunEnemyTurnArgs = {
   sr: StateRef;
+  pendingTextAdvanceActionRef: { current: (() => void) | null };
+  isGamePaused: () => boolean;
   safeTo: SafeTo;
   rand: RandomFn;
   randInt: RandomIntFn;
@@ -155,6 +157,8 @@ function tr(
 
 export function runEnemyTurn({
   sr,
+  pendingTextAdvanceActionRef,
+  isGamePaused,
   safeTo,
   rand,
   randInt,
@@ -166,7 +170,7 @@ export function runEnemyTurn({
   setBossTurn,
   setBossCharging,
   setBText,
-  setPhase,
+  setPhase: commitPhase,
   setEAnim,
   setPAnim,
   setPHp,
@@ -185,6 +189,11 @@ export function runEnemyTurn({
   t,
 }: RunEnemyTurnArgs): void {
   try {
+  const setPhase: PhaseSetter = (phase) => {
+    // A second input can arrive before React commits the new phase.
+    sr.current = { ...sr.current, phase };
+    commitPhase(phase);
+  };
   const loseToGameOver = (message = tr(t, 'battle.ally.ko', 'Your partner has fallen...')): void => {
     _endSession(false);
     setPhase('ko');
@@ -199,6 +208,25 @@ export function runEnemyTurn({
   const safeToIfBattleActive = (fn: () => void, ms: number): void => (
     scheduleIfBattleActive(safeTo, () => sr.current, fn, ms)
   );
+
+  const continueAfterText = (delayMs: number, next: () => void): void => {
+    let completed = false;
+    const resume = () => {
+      if (completed) return;
+      completed = true;
+      if (!isBattleActive() || sr.current.phase !== 'text') return;
+      setPhase('enemyAtk');
+      next();
+    };
+    pendingTextAdvanceActionRef.current = resume;
+    setPhase('text');
+    safeTo(() => {
+      // A click, replacement prompt, or battle reset invalidates this timer's ownership.
+      if (pendingTextAdvanceActionRef.current !== resume || isGamePaused()) return;
+      pendingTextAdvanceActionRef.current = null;
+      resume();
+    }, delayMs);
+  };
 
   const resolvePlayerTarget = (s: BattleRuntimeState): TargetSlot => {
     const targets: TargetSlot[] = [];
@@ -337,10 +365,7 @@ export function runEnemyTurn({
               setEAnim('');
               setDefAnim(null);
               setBText(tr(t, 'battle.enemy.paralyzedSkip', '⚡ {enemy} is paralyzed and cannot attack!', { enemy: sr.current.enemy?.name || 'Enemy' }));
-              setPhase('text');
-              safeToIfBattleActive(() => {
-                tryReturnToBattleMenu();
-              }, 1500);
+              continueAfterText(1500, tryReturnToBattleMenu);
             }, 1800);
           } else if (st === 'steel') {
             const steelCounterRaw = Math.max(1, Math.round(TRAIT_BALANCE.specDef.steelCounterDamage));
@@ -566,9 +591,9 @@ export function runEnemyTurn({
     });
   }
 
-  function applyVenomDot(bossPhaseVal: number): void {
+  function applyVenomDot(bossPhaseVal: number): boolean {
     const s = sr.current;
-    if (!s.enemy || s.enemy.trait !== 'venom') return;
+    if (!s.enemy || s.enemy.trait !== 'venom') return false;
     const dotBase = TRAIT_BALANCE.enemy.venomDotDamage;
     const dotDmg = bossPhaseVal >= 3
       ? TRAIT_BALANCE.enemy.venomDotPhase3Damage
@@ -600,6 +625,7 @@ export function runEnemyTurn({
       name: target === 'sub' ? (s.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s.starter?.name || tr(t, 'battle.role.main', 'Main')),
     }));
     if (nextHp <= 0) {
+      setPhase('enemyAtk');
       safeToIfBattleActive(() => {
         sfx.play('ko');
         const targetName = target === 'sub' ? (sr.current.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (sr.current.starter?.name || tr(t, 'battle.role.main', 'Main'));
@@ -609,7 +635,9 @@ export function runEnemyTurn({
           loseToGameOver(tr(t, 'battle.ko.venomDot.generic', 'Succumbed to the toxic fog...'));
         }
       }, 800);
+      return true;
     }
+    return false;
   }
 
   function doEnemyTurnInner(): void {
@@ -676,13 +704,11 @@ export function runEnemyTurn({
       sfx.play('bossCharge');
       const bossName = s.enemy?.name || tr(t, 'battle.word.boss', 'Boss');
       setBText(tr(t, 'battle.boss.charge', '⚠️ {name} is charging! It will unleash a big move next turn!', { name: bossName }));
-      setPhase('text');
       setEAnim('bossShake 0.5s ease infinite');
-      safeToIfBattleActive(() => {
-        if (!isBattleActive()) return;
+      continueAfterText(2000, () => {
         tryReturnToBattleMenu();
         setEAnim('');
-      }, 2000);
+      });
       return;
     }
 
@@ -702,11 +728,7 @@ export function runEnemyTurn({
         move: moveName,
         turns: sealTurns,
       }));
-      setPhase('text');
-      safeToIfBattleActive(() => {
-        if (!isBattleActive()) return;
-        doEnemyAttack(bp);
-      }, 1500);
+      continueAfterText(1500, () => doEnemyAttack(bp));
       return;
     }
 
@@ -734,13 +756,11 @@ export function runEnemyTurn({
           : '';
       if (phaseMsg) {
         setBText(phaseMsg);
-        setPhase('text');
         setEAnim('bossShake 0.5s ease');
-        safeToIfBattleActive(() => setEAnim(''), 600);
-        safeToIfBattleActive(() => {
-          if (!isBattleActive()) return;
+        continueAfterText(1500, () => {
+          setEAnim('');
           doEnemyTurnInner();
-        }, 1500);
+        });
         return;
       }
     }
@@ -771,23 +791,15 @@ export function runEnemyTurn({
   // Venom DOT: apply poison damage at the start of the enemy turn
   if (s.enemy.trait === 'venom') {
     const currentBossPhase = isBoss ? computeBossPhase(s.eHp, s.enemy.maxHp || 1) : 0;
-    applyVenomDot(currentBossPhase);
-    // Check if DOT killed the player — if so, the KO handler will take over
-    const sAfterDot = sr.current;
-    const mainAlive = (sAfterDot.pHp || 0) > 0;
-    const subAlive = sAfterDot.allySub ? (sAfterDot.pHpSub || 0) > 0 : false;
-    if (!mainAlive && !subAlive) return; // KO handler already triggered
-    setPhase('text');
-    safeToIfBattleActive(() => {
-      if (!isBattleActive()) return;
-      doEnemyTurnInner();
-    }, 1000);
+    // Resolve a lethal tick before allowing input, without waiting for React's HP commit.
+    if (applyVenomDot(currentBossPhase)) return;
+    continueAfterText(1000, doEnemyTurnInner);
     return;
   }
 
   doEnemyTurnInner();
   } catch (err) {
     console.error('[enemyFlow] runEnemyTurn crashed:', err);
-    try { setScreen('title'); setPhase('idle'); } catch { /* last resort */ }
+    try { setScreen('title'); commitPhase('idle'); } catch { /* last resort */ }
   }
 }

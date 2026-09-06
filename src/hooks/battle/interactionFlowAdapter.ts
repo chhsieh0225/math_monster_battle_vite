@@ -55,6 +55,7 @@ export function runBattleAnswer({
 
 type RunBattleAdvanceArgs = {
   phase: RunAdvanceControllerArgs['phase'];
+  isGamePaused: RunAdvanceControllerArgs['isGamePaused'];
   sr: RunAdvanceControllerArgs['sr'];
   setPhase: RunAdvanceControllerArgs['setPhase'];
   setBText: RunAdvanceControllerArgs['setBText'];
@@ -69,6 +70,7 @@ type RunBattleAdvanceArgs = {
 
 export function runBattleAdvance({
   phase,
+  isGamePaused,
   sr,
   setPhase,
   setBText,
@@ -85,6 +87,7 @@ export function runBattleAdvance({
 
   runAdvanceControllerFn({
     phase,
+    isGamePaused,
     sr,
     pvpTurnStartHandlerDeps,
     setPhase,

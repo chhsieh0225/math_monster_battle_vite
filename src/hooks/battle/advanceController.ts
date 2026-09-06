@@ -10,7 +10,8 @@ type PvpTurnStartHandlers = TryProcessPvpTextAdvanceArgs['handlers'];
 
 type RunAdvanceControllerArgs = {
   phase: string;
-  sr: { current: TryProcessPvpTextAdvanceArgs['state'] };
+  sr: { current: TryProcessPvpTextAdvanceArgs['state'] & { phase?: string; screen?: string } };
+  isGamePaused: () => boolean;
   pvpTurnStartHandlerDeps: PvpTurnStartHandlers;
   setPhase: (value: string) => void;
   setBText: (value: string) => void;
@@ -26,8 +27,9 @@ type RunAdvanceControllerArgs = {
  * This extraction keeps useBattle as a coordinator.
  */
 export function runAdvanceController({
-  phase,
+  phase: renderedPhase,
   sr,
+  isGamePaused = () => false,
   pvpTurnStartHandlerDeps,
   setPhase,
   setBText,
@@ -35,6 +37,9 @@ export function runAdvanceController({
   continueFromVictory,
   consumePendingTextAdvanceAction,
 }: RunAdvanceControllerArgs): void {
+  const state = sr.current;
+  if (isGamePaused() || (state.screen && state.screen !== 'battle')) return;
+  const phase = state.phase ?? renderedPhase;
   // Boss intro overlay completed → reveal text phase
   if (phase === 'bossIntro') {
     setPhase('text');

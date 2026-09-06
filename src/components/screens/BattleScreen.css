@@ -1027,9 +1027,13 @@
   border-radius:12px;
   font-size:0.875rem;
   font-weight:800;
-  animation:popIn .3s ease;
+  width:max-content;
+  max-width:calc(100% - 32px);
+  text-align:center;
+  animation:fadeIn .2s ease;
   box-shadow:0 4px 20px rgba(251,191,36,.6);
 }
+.battle-boss-hint-detail{margin-top:3px;font-size:.75rem;font-weight:600;line-height:1.4}
 
 .battle-panel{
   background:linear-gradient(180deg,var(--battle-panel-top) 0%,var(--battle-panel-mid) 52%,var(--battle-panel-bottom) 100%);

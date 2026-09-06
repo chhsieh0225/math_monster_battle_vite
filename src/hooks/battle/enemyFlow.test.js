@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runEnemyTurn } from './enemyFlow.ts';
 import { fxt } from './battleFxTargets.ts';
+import { runAdvanceController } from './advanceController.ts';
+import { runSelectMoveFlow } from './selectMoveFlow.ts';
 
 function createBaseArgs(overrides = {}) {
   const calls = {
@@ -24,6 +26,8 @@ function createBaseArgs(overrides = {}) {
     animations: [],
   };
   const args = {
+    pendingTextAdvanceActionRef: { current: null },
+    isGamePaused: () => false,
     sr: {
       current: {
         pHp: 100,
@@ -217,9 +221,181 @@ test('runEnemyTurn shows boss phase transition text before next action', () => {
   assert.equal(calls.phase[0], 'text');
   assert.equal(calls.text[0].includes('rage state'), true);
   assert.equal(calls.eAnim[0], 'bossShake 0.5s ease');
-  assert.deepEqual(safeToCalls, [600, 1500]);
+  assert.deepEqual(safeToCalls, [1500]);
   assert.equal(calls.endSession.length, 0);
 });
+
+function createTimedEnemyTurn(scenario = 'charge') {
+  const { args, calls } = createBaseArgs();
+  let now = 0;
+  const queue = [];
+  Object.assign(args.sr.current, {
+    phase: 'enemyAtk', screen: 'battle', battleMode: 'single',
+    enemy: { id: 'boss', name: 'Boss', atk: 10, maxHp: 100, mType: 'dark', trait: '' },
+    eHp: scenario === 'phase' || scenario === 'seal' ? 50 : 100,
+    bossPhase: scenario === 'seal' ? 2 : 1,
+    bossTurn: scenario === 'charge' ? 3 : scenario === 'seal' ? 2 : 0,
+  });
+  if (scenario === 'venom') {
+    args.sr.current.enemy = { ...args.sr.current.enemy, id: 'slime', trait: 'venom' };
+    args.sr.current.bossPhase = 0;
+  }
+  args.safeTo = (fn, ms) => queue.push({ fn, at: now + ms });
+  args.isGamePaused = () => Boolean(args.sr.current.gamePaused);
+  for (const [setter, field] of [
+    ['setPhase', 'phase'], ['setPHp', 'pHp'], ['setBossTurn', 'bossTurn'],
+    ['setBossPhase', 'bossPhase'], ['setBossCharging', 'bossCharging'],
+    ['setSealedTurns', 'sealedTurns'], ['setSealedMove', 'sealedMove'],
+  ]) {
+    const record = args[setter];
+    args[setter] = (value) => {
+      record(value);
+      args.sr.current[field] = typeof value === 'function' ? value(args.sr.current[field]) : value;
+    };
+  }
+  const advance = (phase = args.sr.current.phase) => runAdvanceController({
+    phase, sr: args.sr, setPhase: args.setPhase, setBText: args.setBText,
+    isGamePaused: args.isGamePaused,
+    pvpTurnStartHandlerDeps: {}, pendingEvolutionArgs: {}, continueFromVictory: () => {},
+    consumePendingTextAdvanceAction: () => {
+      const action = args.pendingTextAdvanceActionRef.current;
+      args.pendingTextAdvanceActionRef.current = null;
+      return action;
+    },
+  });
+  const select = () => runSelectMoveFlow({
+    index: 0, state: args.sr.current, timedMode: false, diffMods: [1, 1, 1],
+    getActingStarter: () => args.sr.current.starter, getMoveDiffLevel: () => 2,
+    genQuestion: () => ({ answer: 2 }), startTimer: () => {}, markQStart: () => {}, sfx: args.sfx,
+    ...Object.fromEntries(['setSelIdx', 'setDiffLevel', 'setQ', 'setFb', 'setAnswered', 'setHintsRevealed'].map(k => [k, () => {}])),
+    setPhase: args.setPhase,
+  });
+  const tick = (ms) => {
+    const until = now + ms;
+    while (true) {
+      queue.sort((a, b) => a.at - b.at);
+      if (!queue.length || queue[0].at > until) break;
+      const entry = queue.shift();
+      now = entry.at;
+      entry.fn();
+    }
+    now = until;
+  };
+  return { args, calls, advance, select, tick };
+}
+
+test('fast-forwarding boss charge cannot reset the next question or its animation', () => {
+  const { args, calls, advance, select, tick } = createTimedEnemyTurn();
+  runEnemyTurn(args);
+  advance();
+  assert.equal(args.sr.current.phase, 'menu');
+  assert.equal(select(), true);
+  const animations = calls.eAnim.length;
+  tick(2500);
+  assert.equal(args.sr.current.phase, 'question');
+  assert.equal(calls.eAnim.length, animations);
+  assert.equal(calls.bossTurn.length, 1);
+});
+
+for (const scenario of ['phase', 'seal', 'venom']) {
+  test(`fast-forwarding ${scenario} continues the enemy turn once, never opens the move menu`, () => {
+    const { args, calls, advance, select, tick } = createTimedEnemyTurn(scenario);
+    runEnemyTurn(args);
+    advance();
+    assert.equal(args.sr.current.phase, 'enemyAtk');
+    assert.equal(select(), false);
+    advance('text'); // A repeated event carrying the previous render's phase.
+    assert.equal(args.sr.current.phase, 'enemyAtk');
+    tick(4000);
+    assert.equal(calls.eAnim.filter(a => a.startsWith('enemyAttackLunge')).length, 1);
+    assert.equal(args.sr.current.phase, 'menu');
+    assert.equal(args.pendingTextAdvanceActionRef.current, null);
+  });
+}
+
+for (const scenario of ['charge', 'phase', 'seal', 'venom']) {
+  test(`${scenario} automatically continues without input and does not leave a stale action`, () => {
+    const { args, calls, tick } = createTimedEnemyTurn(scenario);
+    runEnemyTurn(args);
+    tick(5000);
+    assert.equal(args.sr.current.phase, 'menu');
+    assert.equal(args.pendingTextAdvanceActionRef.current, null);
+    assert.equal(calls.eAnim.filter(a => a.startsWith('enemyAttackLunge')).length, scenario === 'charge' ? 0 : 1);
+  });
+}
+
+test('an old phase timer cannot consume the following charge prompt', () => {
+  const { args, advance, tick } = createTimedEnemyTurn('phase');
+  args.sr.current.bossTurn = 3;
+  runEnemyTurn(args);
+  advance();
+  const chargeAction = args.pendingTextAdvanceActionRef.current;
+  assert.equal(typeof chargeAction, 'function');
+  tick(1500);
+  assert.equal(args.pendingTextAdvanceActionRef.current, chargeAction);
+  assert.equal(args.sr.current.phase, 'text');
+  tick(500);
+  assert.equal(args.sr.current.phase, 'menu');
+});
+
+test('resetting a battle invalidates its pending prompt even when a new battle is active', () => {
+  const { args, calls, tick } = createTimedEnemyTurn();
+  runEnemyTurn(args);
+  args.pendingTextAdvanceActionRef.current = null;
+  args.sr.current = { ...args.sr.current, phase: 'text', enemy: { ...args.sr.current.enemy } };
+  const count = calls.phase.length;
+  tick(3000);
+  assert.equal(calls.phase.length, count);
+});
+
+for (const ended of ['title', 'ko', 'victory', 'bossVictory']) {
+  test(`a pending enemy prompt cannot advance after ${ended}`, () => {
+    const { args, calls, tick } = createTimedEnemyTurn();
+    runEnemyTurn(args);
+    if (ended === 'title') args.sr.current.screen = 'title';
+    else args.sr.current.phase = ended;
+    const count = calls.phase.length;
+    tick(3000);
+    assert.equal(calls.phase.length, count);
+  });
+}
+
+test('paused prompt retains its continuation until resumed and clicked', () => {
+  const { args, advance, tick } = createTimedEnemyTurn();
+  runEnemyTurn(args);
+  args.sr.current.gamePaused = true;
+  advance();
+  tick(3000);
+  assert.equal(args.sr.current.phase, 'text');
+  assert.equal(typeof args.pendingTextAdvanceActionRef.current, 'function');
+  args.sr.current.gamePaused = false;
+  advance();
+  assert.equal(args.sr.current.phase, 'menu');
+});
+
+for (const target of ['main', 'sub']) {
+  test(`lethal venom on ${target} waits for KO resolution, even before HP state commits`, () => {
+    const { args, calls, advance, tick } = createTimedEnemyTurn('venom');
+    let koCalls = 0;
+    args.sr.current.pHp = target === 'main' ? 1 : 100;
+    if (target === 'sub') {
+      args.sr.current.allySub = { name: 'Partner', type: 'grass' };
+      args.sr.current.pHpSub = 1;
+      args.randInt = () => 1;
+    }
+    args.setPHp = () => {};
+    args.setPHpSub = () => {};
+    args.handlePlayerPartyKo = (event) => { assert.equal(event.target, target); koCalls++; };
+    runEnemyTurn(args);
+    advance('text');
+    assert.equal(args.sr.current.phase, 'enemyAtk');
+    assert.equal(args.pendingTextAdvanceActionRef.current, null);
+    tick(3000);
+    assert.equal(koCalls, 1);
+    assert.equal(calls.eAnim.filter(a => a.startsWith('enemyAttackLunge')).length, 0);
+    assert.equal(calls.phase.includes('menu'), false);
+  });
+}
 
 test('runEnemyTurn ignores stale delayed menu reset after battle state changed', () => {
   const queue = [];

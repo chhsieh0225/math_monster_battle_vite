@@ -10,6 +10,7 @@ test('shouldSkipMenuReset blocks when battle already left or resolved', () => {
   assert.equal(shouldSkipMenuReset({ phase: 'menu', screen: 'battle' }), false);
   assert.equal(shouldSkipMenuReset({ phase: 'ko', screen: 'battle' }), true);
   assert.equal(shouldSkipMenuReset({ phase: 'victory', screen: 'battle' }), true);
+  assert.equal(shouldSkipMenuReset({ phase: 'bossVictory', screen: 'battle' }), true);
   assert.equal(shouldSkipMenuReset({ phase: 'text', screen: 'gameover' }), true);
 });
 

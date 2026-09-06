@@ -58,6 +58,7 @@ test('runBattleAnswer builds pvp deps and forwards orchestrator payload', () => 
 });
 
 test('runBattleAdvance builds deps and forwards controller payload', () => {
+  const isGamePaused = () => true;
   const builtPvpTurnStartDeps = { marker: 'pvpTurnStartDeps' };
   const builtPendingEvolutionArgs = { marker: 'pendingEvolutionArgs' };
   let pvpBuildInput = null;
@@ -82,6 +83,7 @@ test('runBattleAdvance builds deps and forwards controller payload', () => {
 
   runBattleAdvance({
     phase: 'text',
+    isGamePaused,
     sr: { current: {} },
     setPhase: noop,
     setBText: noop,
@@ -106,5 +108,6 @@ test('runBattleAdvance builds deps and forwards controller payload', () => {
   assert.equal(pendingBuildInput, pendingEvolutionInput);
   assert.equal(controllerInput?.pvpTurnStartHandlerDeps, builtPvpTurnStartDeps);
   assert.equal(controllerInput?.pendingEvolutionArgs, builtPendingEvolutionArgs);
+  assert.equal(controllerInput?.isGamePaused, isGamePaused);
   assert.equal(controllerInput?.phase, 'text');
 });

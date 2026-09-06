@@ -12,6 +12,7 @@ test('runResetRuntimeState resets transient ui/runtime refs to clean run state',
   const frozenRef = { current: true };
   const pendingEvolveRef = { current: true };
   const abilityModelRef = { current: { marker: 'old' } };
+  const pendingTextAdvanceActionRef = { current: () => {} };
 
   runResetRuntimeState({
     setDmgs: (value) => { calls.dmgs.push(value); },
@@ -22,6 +23,7 @@ test('runResetRuntimeState resets transient ui/runtime refs to clean run state',
     abilityModelRef,
     createAbilityModel: (baselineLevel) => ({ marker: `new-${baselineLevel}` }),
     pendingEvolveRef,
+    pendingTextAdvanceActionRef,
   });
 
   assert.deepEqual(calls.dmgs, [[]]);
@@ -31,4 +33,5 @@ test('runResetRuntimeState resets transient ui/runtime refs to clean run state',
   assert.equal(frozenRef.current, false);
   assert.equal(pendingEvolveRef.current, false);
   assert.deepEqual(abilityModelRef.current, { marker: 'new-2' });
+  assert.equal(pendingTextAdvanceActionRef.current, null);
 });

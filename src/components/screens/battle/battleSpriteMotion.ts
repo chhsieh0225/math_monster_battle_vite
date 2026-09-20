@@ -1,4 +1,17 @@
+import type { SpriteKey } from '../../../data/spriteProfiles.ts';
+
 export type BattleSpriteClip = 'idle' | 'attack' | 'hurt' | 'brace' | 'charge' | 'defeat';
+
+export type SpriteBodyMotion = 'grounded' | 'soft' | 'hover' | 'wing' | 'heavy';
+
+/** Material and weight affect presentation only, never battle clocks or slot ownership. */
+export function getSpriteBodyMotion(key: SpriteKey): SpriteBodyMotion {
+  if (key.startsWith('slime') || key === 'candy_monster' || key === 'mushroom') return 'soft';
+  if (key.startsWith('ghost') || key === 'boss_sword_god') return 'hover';
+  if (key === 'colorful_butterfly') return 'wing';
+  if (key.startsWith('boss') || key.startsWith('golumn') || key.startsWith('dragon') || key === 'candy_knight') return 'heavy';
+  return 'grounded';
+}
 
 /** Consume the physical slot's animation, never global phase or the active co-op role. */
 export function resolveBattleSpriteClip(animation: string): { clip: BattleSpriteClip; durationMs: number } {

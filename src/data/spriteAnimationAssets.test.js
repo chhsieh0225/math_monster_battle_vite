@@ -10,7 +10,8 @@ const registration = JSON.parse(readFileSync(new URL('../../public/sprites/visua
 const wolfRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-wolf-v1.json', import.meta.url), 'utf8'));
 const fireRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-fire-v1.json', import.meta.url), 'utf8'));
 const rosterRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-roster-v1.json', import.meta.url), 'utf8'));
-const records = { ...registration.assets, ...wolfRegistration.assets, ...fireRegistration.assets, ...rosterRegistration.assets };
+const refinedRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-refined-v2.json', import.meta.url), 'utf8'));
+const records = { ...registration.assets, ...wolfRegistration.assets, ...fireRegistration.assets, ...rosterRegistration.assets, ...refinedRegistration.assets };
 
 test('all 51 forms have explicit factory identities and complete eight-pose art', () => {
   assert.equal(Object.keys(sprites.SPRITE_IMGS).length, 51);
@@ -22,10 +23,26 @@ test('all 51 forms have explicit factory identities and complete eight-pose art'
   }
   assert.deepEqual(Object.keys(SPRITE_ANIMATION_ASSETS).sort(), Object.keys(sprites.SPRITE_IMGS).sort());
   assert.equal(new Set(Object.values(SPRITE_ANIMATION_ASSETS).map((art) => art.file)).size, 51);
-  assert.equal(Object.keys(records).length, 51);
+  assert.equal(Object.keys(records).length, 53, 'two previous drawings retained for comparison and rollback');
   assert.equal(getSpriteAnimationAsset('missing'), null);
   assert.equal(getSpriteAnimationAsset(), null);
   assert.equal(sprites.getSpriteProfileKey(() => ''), undefined);
+});
+
+test('refined art is versioned, registered and has reviewed idle expressions', () => {
+  const sources = JSON.parse(readFileSync(new URL('../../scripts/refined-art-sources.json', import.meta.url), 'utf8')).sources;
+  assert.deepEqual(sources.map((source) => source.key).sort(), ['ghost', 'player_fire0']);
+  for (const source of sources) {
+    const art = SPRITE_ANIMATION_ASSETS[source.key];
+    const record = records[source.output];
+    assert.equal(art.file, record.file);
+    assert.equal(art.idleExpression, true);
+    assert.equal(new Set(record.frames.map((frame) => frame.rgbaSha256)).size, 8);
+    assert.deepEqual(record.frames.map((frame) => frame.sourceFootX), source.anchors);
+    assert.equal(record.source, source.source);
+    assert.ok(source.prompt.length > 100);
+  }
+  assert.equal(Object.values(SPRITE_ANIMATION_ASSETS).filter((art) => art.idleExpression).length, 2);
 });
 
 test('dark dragon phase two has independent artwork, not a recolored reference to phase one', () => {

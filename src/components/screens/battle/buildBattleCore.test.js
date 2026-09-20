@@ -113,7 +113,7 @@ test('production art follows the actual stage, never the current co-op active ro
 
 test('all three fire stages use distinct art in single battles and physical co-op slots', () => {
   const fire = STARTERS.find((s) => s.id === 'fire');
-  const files = ['fire-hatchling-v1.webp', 'fire-beast-v1.webp', 'fire-dragon-king-v1.webp'];
+  const files = ['fire-hatchling-v2.webp', 'fire-beast-v1.webp', 'fire-dragon-king-v1.webp'];
   for (let pStg = 0; pStg < fire.stages.length; pStg++) {
     for (const battleMode of ['single', 'coop']) {
       for (const coopActiveSlot of ['main', 'sub']) {

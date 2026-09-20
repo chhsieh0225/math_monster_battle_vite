@@ -28,6 +28,10 @@ def digest(data):
 
 def remove_matte(source):
     pixels = np.array(source.convert("RGBA"))
+    # Native transparent generations need no chroma key or edge erosion.
+    if (pixels[:, :, 3] == 0).mean() > .2:
+        pixels[pixels[:, :, 3] < 16] = 0
+        return Image.fromarray(pixels)
     rgb = pixels[:, :, :3].astype(np.int16)
     red, green, blue = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
     # The intentionally saturated key excludes white fur, silver, pink petals and dark violet.
@@ -112,8 +116,8 @@ def poses_for(source, config):
     return poses
 
 
-def prepare(source_dir, analyze=False, preview_dir=None):
-    sources = json.loads(MANIFEST.read_text())["sources"]
+def prepare(source_dir, analyze=False, preview_dir=None, manifest=MANIFEST, registration="registration-roster-v1.json"):
+    sources = json.loads(manifest.read_text())["sources"]
     keys = [item["key"] for item in sources]
     if len(keys) != len(set(keys)):
         raise ValueError("Duplicate source identities")
@@ -158,7 +162,7 @@ def prepare(source_dir, analyze=False, preview_dir=None):
             if analyze:
                 print(f"{key}: crops={[list(p['region']) for p in poses]}; anchors={[p['anchor'] for p in poses]}")
                 continue
-            name = key.replace("_", "-") + "-v1"
+            name = config.get("output", key.replace("_", "-") + "-v1")
             output = OUTPUT / f"{name}.webp"
             for quality in [92, 90, 88, 86, 84, 82, 80]:
                 atlas.save(output, "WEBP", quality=quality, method=6, exact=True)
@@ -188,13 +192,13 @@ def prepare(source_dir, analyze=False, preview_dir=None):
     if errors:
         raise SystemExit("\n".join(errors))
     if not analyze:
-        (OUTPUT / "registration-roster-v1.json").write_text(json.dumps(report, indent=2) + "\n")
+        (OUTPUT / registration).write_text(json.dumps(report, indent=2) + "\n")
 
 
 def verify():
     records = {}
-    for name in ["registration-v2.json", "registration-wolf-v1.json", "registration-fire-v1.json", "registration-roster-v1.json"]:
-        records.update(json.loads((OUTPUT / name).read_text())["assets"])
+    for path in sorted(OUTPUT.glob("registration-*.json")):
+        records.update(json.loads(path.read_text())["assets"])
     for record in records.values():
         path = OUTPUT / record["file"]
         data = path.read_bytes()
@@ -225,10 +229,12 @@ if __name__ == "__main__":
     parser.add_argument("--analyze", action="store_true")
     parser.add_argument("--verify", action="store_true")
     parser.add_argument("--preview-dir", type=Path)
+    parser.add_argument("--manifest", type=Path, default=MANIFEST)
+    parser.add_argument("--registration", default="registration-roster-v1.json")
     args = parser.parse_args()
     if args.verify:
         verify()
     elif args.source_dir:
-        prepare(args.source_dir, args.analyze, args.preview_dir)
+        prepare(args.source_dir, args.analyze, args.preview_dir, args.manifest, args.registration)
     else:
         parser.error("--source-dir is required unless --verify is used")

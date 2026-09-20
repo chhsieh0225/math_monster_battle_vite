@@ -1,8 +1,44 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { decodeBattleSprite, resolveBattleSpriteClip } from './battleSpriteMotion.ts';
+import { decodeBattleSprite, getSpriteBodyMotion, resolveBattleSpriteClip } from './battleSpriteMotion.ts';
+import { SPRITE_ANIMATION_ASSETS } from '../../../data/spriteAnimationAssets.ts';
 import { resolveBattleSpriteAnimations } from '../../../utils/battleAnimations.ts';
 import { effectOrchestrator } from '../../../hooks/battle/effectOrchestrator.ts';
+
+test('body weight follows physical artwork, including variants and the second boss phase', () => {
+  const groups = {};
+  for (const key of Object.keys(SPRITE_ANIMATION_ASSETS)) {
+    const family = getSpriteBodyMotion(key);
+    (groups[family] ||= []).push(key);
+  }
+  assert.deepEqual(Object.fromEntries(Object.entries(groups).map(([key, values]) => [key, values.length])), {
+    grounded: 23, heavy: 9, soft: 14, hover: 4, wing: 1,
+  });
+  for (const key of ['boss', 'boss_2nd_phase', 'boss_hydra', 'boss_crazy_dragon', 'candy_knight']) {
+    assert.equal(getSpriteBodyMotion(key), 'heavy');
+  }
+  assert.equal(getSpriteBodyMotion('player_fire0'), 'grounded');
+  assert.equal(getSpriteBodyMotion('ghost_evolved'), 'hover');
+  assert.equal(getSpriteBodyMotion('boss_sword_god'), 'hover');
+  assert.equal(getSpriteBodyMotion('slime_electric_evolved'), 'soft');
+});
+
+test('body contraction pivots remain inside every registered silhouette', () => {
+  for (const [key, art] of Object.entries(SPRITE_ANIMATION_ASSETS)) {
+    const [left, top, right, bottom] = art.bounds;
+    assert.ok(art.footX >= left && art.footX <= right);
+    assert.equal(bottom, 368);
+    // Contraction and the bounded hover stay inside the same safe envelope.
+    for (const scale of [.9, .92, .944, .96, .975, .988, 1]) {
+      assert.ok(art.footX + (left - art.footX) * scale >= left);
+      assert.ok(art.footX + (right - art.footX) * scale <= right);
+      assert.ok(368 + (top - 368) * scale >= top);
+    }
+    if (getSpriteBodyMotion(key) === 'hover') {
+      assert.ok(368 + (top - 368) * .976 - 384 * .018 >= top);
+    }
+  }
+});
 
 test('each physical slot owns its attack/hit clip even when other slots animate', () => {
   const animations = resolveBattleSpriteAnimations({

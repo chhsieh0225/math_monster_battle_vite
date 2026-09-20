@@ -1,7 +1,32 @@
-.battle-art-sprite{position:relative;display:block;isolation:isolate}
+.battle-art-sprite{
+  position:relative;display:block;isolation:isolate;
+  --art-idle-period:3.6s;
+  --art-rest-x:.994;--art-rest-y:.978;
+  --art-inhale-x:.986;--art-inhale-y:1;
+  --art-windup-x:.985;--art-windup-y:.94;
+}
+.battle-art-sprite[data-body-motion=soft]{
+  --art-idle-period:2.8s;
+  --art-rest-x:1;--art-rest-y:.944;
+  --art-inhale-x:.96;--art-inhale-y:1;
+  --art-windup-x:1;--art-windup-y:.9;
+}
+.battle-art-sprite[data-body-motion=heavy]{
+  --art-idle-period:4.8s;
+  --art-rest-x:.998;--art-rest-y:.988;
+  --art-inhale-x:.995;--art-inhale-y:1;
+  --art-windup-x:.992;--art-windup-y:.975;
+}
+.battle-art-sprite[data-body-motion=hover]{--art-idle-period:4.2s}
+.battle-art-sprite[data-body-motion=wing]{--art-idle-period:2.2s}
 .battle-art-facing{position:absolute;inset:0}
+.battle-art-body{
+  position:absolute;display:block;
+  animation-timing-function:cubic-bezier(.36,0,.24,1);
+  animation-fill-mode:both;
+}
 .battle-art-atlas{
-  position:absolute;
+  position:absolute;inset:0;
   display:block;
   background-size:400% 200%;
   background-repeat:no-repeat;
@@ -11,7 +36,54 @@
   animation-timing-function:steps(1,end);
   animation-fill-mode:both;
 }
-/* Existing outer transforms supply continuous motion; only the key drawing steps. */
+/* Keep all local deformation inside the registered silhouette envelope. */
+[data-clip=idle] .battle-art-body{animation-name:battleBodyBreath;animation-iteration-count:infinite}
+[data-clip=idle][data-body-motion=hover] .battle-art-body{animation-name:battleBodyHover}
+[data-clip=idle][data-body-motion=wing] .battle-art-body{animation-name:battleBodyWing}
+[data-clip=attack] .battle-art-body{animation-name:battleBodyStrike}
+[data-clip=hurt] .battle-art-body{animation-name:battleBodyRecoil}
+[data-clip=brace] .battle-art-body{animation-name:battleBodyBrace}
+[data-clip=charge] .battle-art-body{animation-name:battleBodyBrace;animation-iteration-count:infinite}
+[data-clip=idle][data-expression=true] .battle-art-atlas{animation-name:battleArtExpression;animation-iteration-count:infinite}
+@keyframes battleBodyBreath{
+  0%,100%{transform:scale(var(--art-rest-x),var(--art-rest-y))}
+  46%{transform:scale(var(--art-inhale-x),var(--art-inhale-y))}
+  72%{transform:scale(.992,.99)}
+}
+@keyframes battleBodyHover{
+  0%,100%{transform:translateY(0) scale(.988,.976)}
+  48%{transform:translateY(-1.8%) scale(.972,.976)}
+  76%{transform:translateY(-.4%) scale(.985,.976)}
+}
+@keyframes battleBodyWing{
+  0%,100%{transform:scale(.984,.98)}
+  28%,74%{transform:scale(.92,1)}
+  50%{transform:scale(1,.975)}
+}
+@keyframes battleBodyStrike{
+  0%,100%{transform:scale(1)}
+  14%{transform:scale(var(--art-windup-x),var(--art-windup-y))}
+  36%{transform:scale(.976,1)}
+  60%{transform:scale(1,.96)}
+  78%{transform:scale(.986,.994)}
+}
+@keyframes battleBodyRecoil{
+  0%,100%{transform:scale(1)}
+  18%{transform:scale(.955,.982)}
+  48%{transform:scale(.99,.956)}
+  76%{transform:scale(.988,1)}
+}
+@keyframes battleBodyBrace{
+  0%,100%{transform:scale(1)}
+  36%{transform:scale(var(--art-windup-x),var(--art-windup-y))}
+  74%{transform:scale(.99,.982)}
+}
+/* A short expressive beat, not a dissolve between mismatched silhouettes. */
+@keyframes battleArtExpression{
+  0%,46%,56%,100%{background-position:0 0}
+  48%,54%{background-position:33.333333% 0}
+}
+/* The outer physical slot still owns travel and impact; drawings share its clock. */
 [data-clip=attack] .battle-art-atlas{animation-name:battleArtAttack}
 [data-clip=hurt] .battle-art-atlas{animation-name:battleArtHurt}
 [data-clip=brace] .battle-art-atlas{animation-name:battleArtBrace}
@@ -37,12 +109,25 @@
   70%{background-position:33.333333% 100%}
   96%,100%{background-position:0 0}
 }
-.battle-impact-freeze .battle-art-atlas{animation-play-state:paused!important}
+.battle-impact-freeze .battle-art-atlas,
+.battle-impact-freeze .battle-art-body{animation-play-state:paused!important}
+/* Do not stack the legacy breathing/float enlargement on top of the new body motion. */
+.battle-sprite-core:has(.battle-art-sprite){animation:none;will-change:auto}
+.battle-sprite-anchor>div:has(.battle-art-sprite){
+  --battle-idle-lift:0px;--battle-idle-scale:1;
+}
+.battle-sprite-enemy-main [data-clip=idle] :is(.battle-art-body,.battle-art-atlas){animation-delay:-.7s}
+.battle-sprite-enemy-sub [data-clip=idle] :is(.battle-art-body,.battle-art-atlas){animation-delay:-1.5s}
+.battle-sprite-player-sub [data-clip=idle] :is(.battle-art-body,.battle-art-atlas){animation-delay:-1.1s}
+.battle-root.low-perf [data-clip=idle] .battle-art-body,
+.battle-root.low-perf [data-clip=idle] .battle-art-atlas,
+[data-still=true] .battle-art-body,
+[data-still=true] .battle-art-atlas{animation:none}
 .battle-root[data-paused=true] .battle-arena *,
 .battle-root[data-paused=true] .battle-arena *::before,
 .battle-root[data-paused=true] .battle-arena *::after{animation-play-state:paused!important}
 @media(prefers-reduced-motion:reduce){
-  .battle-art-atlas{animation:none!important}
+  .battle-art-atlas,.battle-art-body{animation:none!important}
   [data-clip=attack] .battle-art-atlas{background-position:100% 0}
   [data-clip=hurt] .battle-art-atlas{background-position:66.666667% 100%}
   [data-clip=brace] .battle-art-atlas{background-position:100% 100%}

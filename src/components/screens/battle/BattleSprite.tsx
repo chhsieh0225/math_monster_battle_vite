@@ -2,7 +2,7 @@ import { memo, useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { fitSpriteAtlas, getSpriteAnimationAsset } from '../../../data/spriteAnimationAssets.ts';
 import MonsterSprite from '../../ui/MonsterSprite';
-import { decodeBattleSprite, resolveBattleSpriteClip } from './battleSpriteMotion.ts';
+import { decodeBattleSprite, getSpriteBodyMotion, resolveBattleSpriteClip } from './battleSpriteMotion.ts';
 import './BattleSprite.css';
 
 type BattleSpriteProps = {
@@ -29,15 +29,23 @@ function AtlasSprite({ asset, svgStr, size, style, animation }: AtlasProps) {
   if (!ready) return <MonsterSprite svgStr={svgStr} size={size} style={style} />;
   const frame = fitSpriteAtlas(asset.profile, asset.art);
   const { clip, durationMs } = resolveBattleSpriteClip(animation);
+  const duration = clip === 'idle' ? 'var(--art-idle-period)' : `${durationMs}ms`;
   return <div className="battle-art-sprite" role="img" aria-label="Monster sprite"
     data-sprite-art={asset.profile.imgKey} data-clip={clip}
+    data-body-motion={getSpriteBodyMotion(asset.profile.imgKey)}
+    data-expression={asset.art.idleExpression || undefined} data-still={animation === 'none' || undefined}
     style={{ ...style, width: size, height: size * 100 / 120 }}>
     <span className="battle-art-facing" style={{ transform: asset.profile.flip ? 'scaleX(-1)' : undefined }}>
-      <span key={animation} className="battle-art-atlas" style={{
+      <span key={animation} className="battle-art-body" style={{
         left: `${frame.x / 120 * 100}%`, top: `${frame.y}%`,
         width: `${frame.width / 120 * 100}%`, height: `${frame.height}%`,
-        backgroundImage: `url("${asset.src}")`, animationDuration: `${durationMs}ms`,
-      }} />
+        transformOrigin: `${asset.art.footX / 512 * 100}% ${368 / 384 * 100}%`,
+        animationDuration: duration,
+      }}>
+        <span className="battle-art-atlas" style={{
+          backgroundImage: `url("${asset.src}")`, animationDuration: duration,
+        }} />
+      </span>
     </span>
   </div>;
 }

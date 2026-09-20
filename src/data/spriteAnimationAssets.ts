@@ -6,6 +6,8 @@ export type SpriteAnimationAsset = {
   footX: number;
   hit: { x: number; y: number };
   mouth?: { x: number; y: number };
+  /** Only enable for reviewed, closely registered idle/inhale drawings. */
+  idleExpression?: boolean;
   /** Union of all eight silhouettes, not the current pose's bounds. */
   bounds: readonly [number, number, number, number];
 };
@@ -13,8 +15,8 @@ export type SpriteAnimationAsset = {
 export const SPRITE_ATLAS = { width: 512, height: 384, columns: 4, rows: 2 } as const;
 export const SPRITE_ANIMATION_ASSETS = {
   player_fire0: {
-    file: 'fire-hatchling-v1.webp', footX: 296, hit: { x: 255, y: 248 },
-    bounds: [37, 57, 489, 368],
+    file: 'fire-hatchling-v2.webp', footX: 301, hit: { x: 255, y: 248 }, idleExpression: true,
+    bounds: [14, 51, 499, 368],
   },
   player_fire1: {
     file: 'fire-beast-v1.webp', footX: 280, hit: { x: 250, y: 245 },
@@ -181,8 +183,8 @@ export const SPRITE_ANIMATION_ASSETS = {
     bounds: [14, 57, 498, 368],
   },
   ghost: {
-    file: 'ghost-v1.webp', footX: 290, hit: { x: 256, y: 225 },
-    bounds: [48, 50, 464, 368],
+    file: 'ghost-v2.webp', footX: 302, hit: { x: 256, y: 225 }, idleExpression: true,
+    bounds: [25, 17, 487, 368],
   },
   ghost_evolved: {
     file: 'ghost-evolved-v1.webp', footX: 335, hit: { x: 256, y: 215 },

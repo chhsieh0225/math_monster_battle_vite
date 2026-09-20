@@ -11,7 +11,8 @@ const wolfRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/v
 const fireRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-fire-v1.json', import.meta.url), 'utf8'));
 const rosterRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-roster-v1.json', import.meta.url), 'utf8'));
 const refinedRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-refined-v2.json', import.meta.url), 'utf8'));
-const records = { ...registration.assets, ...wolfRegistration.assets, ...fireRegistration.assets, ...rosterRegistration.assets, ...refinedRegistration.assets };
+const unifiedRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-unified-v2.json', import.meta.url), 'utf8'));
+const records = { ...registration.assets, ...wolfRegistration.assets, ...fireRegistration.assets, ...rosterRegistration.assets, ...refinedRegistration.assets, ...unifiedRegistration.assets };
 
 test('all 51 forms have explicit factory identities and complete eight-pose art', () => {
   assert.equal(Object.keys(sprites.SPRITE_IMGS).length, 51);
@@ -23,7 +24,7 @@ test('all 51 forms have explicit factory identities and complete eight-pose art'
   }
   assert.deepEqual(Object.keys(SPRITE_ANIMATION_ASSETS).sort(), Object.keys(sprites.SPRITE_IMGS).sort());
   assert.equal(new Set(Object.values(SPRITE_ANIMATION_ASSETS).map((art) => art.file)).size, 51);
-  assert.equal(Object.keys(records).length, 53, 'two previous drawings retained for comparison and rollback');
+  assert.equal(Object.keys(records).length, 102, 'previous drawings retained for comparison and rollback');
   assert.equal(getSpriteAnimationAsset('missing'), null);
   assert.equal(getSpriteAnimationAsset(), null);
   assert.equal(sprites.getSpriteProfileKey(() => ''), undefined);
@@ -43,6 +44,28 @@ test('refined art is versioned, registered and has reviewed idle expressions', (
     assert.ok(source.prompt.length > 100);
   }
   assert.equal(Object.values(SPRITE_ANIMATION_ASSETS).filter((art) => art.idleExpression).length, 2);
+});
+
+test('unified painted art completes the remaining 49 forms with unique sources and reviewed anchors', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../../scripts/unified-art-sources.json', import.meta.url), 'utf8'));
+  const sources = manifest.sources;
+  assert.equal(manifest.generator, 'Built-in image_gen');
+  assert.equal(sources.length, 49);
+  assert.equal(new Set(sources.map((source) => source.source)).size, 49);
+  assert.deepEqual(sources.map((source) => source.key).sort(), Object.keys(SPRITE_ANIMATION_ASSETS)
+    .filter((key) => key !== 'ghost' && key !== 'player_fire0').sort());
+  assert.equal(Object.keys(unifiedRegistration.assets).length, 49);
+  for (const source of sources) {
+    const record = unifiedRegistration.assets[source.output];
+    assert.equal(SPRITE_ANIMATION_ASSETS[source.key].file, record.file);
+    assert.equal(record.key, source.key);
+    assert.equal(record.source, source.source);
+    assert.equal(new Set(record.frames.map((frame) => frame.rgbaSha256)).size, 8);
+    assert.deepEqual(record.frames.map((frame) => frame.sourceFootX), source.anchors);
+    assert.ok(source.prompt.includes('HAND-PAINTED ANIME RPG'));
+    assert.equal(source.normalizeOpaqueAlpha, true);
+    assert.ok(record.quality >= 80);
+  }
 });
 
 test('dark dragon phase two has independent artwork, not a recolored reference to phase one', () => {

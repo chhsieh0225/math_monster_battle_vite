@@ -26,15 +26,3 @@ export function resolveBattleSpriteClip(animation: string): { clip: BattleSprite
   else if (name === 'enemyDissolve') clip = 'defeat';
   return { clip, durationMs };
 }
-
-/** Decode before replacing the original, including on slow/offline connections. */
-export async function decodeBattleSprite(src: string, createImage: () => HTMLImageElement = () => new Image()): Promise<boolean> {
-  try {
-    const img = createImage();
-    img.src = src;
-    await img.decode();
-    return img.naturalWidth === 2048 && img.naturalHeight === 768;
-  } catch {
-    return false;
-  }
-}

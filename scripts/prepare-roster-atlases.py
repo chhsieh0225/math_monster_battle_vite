@@ -8,6 +8,7 @@ Source prompts and optional reviewed crop/anchor overrides live in the JSON mani
 
 import argparse
 import hashlib
+import io
 import json
 from pathlib import Path
 
@@ -73,6 +74,14 @@ def regions_for(image):
 
 def poses_for(source, config):
     cleaned = remove_matte(source)
+    if config.get("normalizeOpaqueAlpha"):
+        # Generated solid surfaces can contain near-opaque noise that bloats lossless alpha.
+        threshold = config.get("opaqueAlphaThreshold", 250)
+        if not isinstance(threshold, int) or not 240 <= threshold <= 255:
+            raise ValueError("Opaque alpha threshold must be an integer between 240 and 255")
+        pixels = np.array(cleaned)
+        pixels[pixels[:, :, 3] >= threshold, 3] = 255
+        cleaned = Image.fromarray(pixels)
     regions = config.get("regions") or regions_for(cleaned)
     if len(regions) != 8:
         raise ValueError("Exactly eight source regions are required")
@@ -116,12 +125,20 @@ def poses_for(source, config):
     return poses
 
 
-def prepare(source_dir, analyze=False, preview_dir=None, manifest=MANIFEST, registration="registration-roster-v1.json"):
+def prepare(source_dir, analyze=False, preview_dir=None, manifest=MANIFEST, registration="registration-roster-v1.json", only=None):
     sources = json.loads(manifest.read_text())["sources"]
     keys = [item["key"] for item in sources]
     if len(keys) != len(set(keys)):
         raise ValueError("Duplicate source identities")
     report = {"cell": list(CELL), "grid": [4, 2], "baseline": BASELINE, "poses": POSES, "assets": {}}
+    if only:
+        unknown = set(only) - set(keys)
+        if unknown:
+            raise ValueError(f"Unknown source identities: {sorted(unknown)}")
+        previous = OUTPUT / registration
+        if previous.exists():
+            report = json.loads(previous.read_text())
+        sources = [config for config in sources if config["key"] in only]
     errors = []
     if preview_dir:
         preview_dir.mkdir(parents=True, exist_ok=True)
@@ -165,12 +182,14 @@ def prepare(source_dir, analyze=False, preview_dir=None, manifest=MANIFEST, regi
             name = config.get("output", key.replace("_", "-") + "-v1")
             output = OUTPUT / f"{name}.webp"
             for quality in [92, 90, 88, 86, 84, 82, 80]:
-                atlas.save(output, "WEBP", quality=quality, method=6, exact=True)
-                if output.stat().st_size < 400_000:
+                encoded = io.BytesIO()
+                atlas.save(encoded, "WEBP", quality=quality, method=6, exact=True)
+                data = encoded.getvalue()
+                if len(data) < 400_000:
                     break
             else:
                 raise ValueError("Atlas exceeds 400 KB even at quality 80; review rather than shrink")
-            decoded = Image.open(output).convert("RGBA")
+            decoded = Image.open(io.BytesIO(data)).convert("RGBA")
             for index, frame in enumerate(frames):
                 x, y = index % 4 * CELL[0], index // 4 * CELL[1]
                 cell = decoded.crop((x, y, x + CELL[0], y + CELL[1]))
@@ -182,6 +201,9 @@ def prepare(source_dir, analyze=False, preview_dir=None, manifest=MANIFEST, regi
             if len({f["rgbaSha256"] for f in frames}) != 8:
                 raise ValueError("Duplicate pose drawings")
             union = [min(f["visibleBounds"][i] for f in frames) if i < 2 else max(f["visibleBounds"][i] for f in frames) for i in range(4)]
+            # Do not replace a previously approved atlas with a failed candidate.
+            output.write_bytes(data)
+            report["assets"] = {name: record for name, record in report["assets"].items() if record["key"] != key}
             report["assets"][name] = {"key": key, "file": output.name, "source": path.name,
                 "sourceSha256": digest(path.read_bytes()), "sha256": digest(output.read_bytes()),
                 "bytes": output.stat().st_size, "quality": quality, "uniformScale": scale, "footX": foot_x,
@@ -189,10 +211,10 @@ def prepare(source_dir, analyze=False, preview_dir=None, manifest=MANIFEST, regi
             print(f"{key}: {output.stat().st_size:,} bytes, quality={quality}, bounds={union}")
         except (ValueError, OSError) as error:
             errors.append(f"{key}: {error}")
-    if errors:
-        raise SystemExit("\n".join(errors))
     if not analyze:
         (OUTPUT / registration).write_text(json.dumps(report, indent=2) + "\n")
+    if errors:
+        raise SystemExit("\n".join(errors))
 
 
 def verify():
@@ -231,10 +253,11 @@ if __name__ == "__main__":
     parser.add_argument("--preview-dir", type=Path)
     parser.add_argument("--manifest", type=Path, default=MANIFEST)
     parser.add_argument("--registration", default="registration-roster-v1.json")
+    parser.add_argument("--only", nargs="+", help="Rebuild selected identities, preserving other registered assets")
     args = parser.parse_args()
     if args.verify:
         verify()
     elif args.source_dir:
-        prepare(args.source_dir, args.analyze, args.preview_dir, args.manifest, args.registration)
+        prepare(args.source_dir, args.analyze, args.preview_dir, args.manifest, args.registration, args.only)
     else:
         parser.error("--source-dir is required unless --verify is used")

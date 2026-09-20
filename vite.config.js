@@ -12,6 +12,8 @@ export default defineConfig({
         // 只預快取 app shell，重資產（音樂/場景/精靈圖）走 runtime cache。
         // 這可大幅降低首次安裝與更新下載量。
         globPatterns: ['**/*.{js,css,html,json,svg,ico,webmanifest}'],
+        // Offline art QA metadata is not used by the game runtime.
+        globIgnores: ['sprites/visual-pilot/registration-*.json'],
         maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
         // Google Fonts：runtime cache，避免 precache 外部資源失敗阻擋安裝
         runtimeCaching: [

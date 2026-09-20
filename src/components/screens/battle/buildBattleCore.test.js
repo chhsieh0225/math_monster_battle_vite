@@ -99,8 +99,8 @@ test('production art follows the actual stage, never the current co-op active ro
         playerMain: 'playerwolf0SVG', playerSub: 'playerwolf2SVG',
         enemyMain: 'bossCrazyDragonSVG', enemySub: 'bossCrazyDragonSVG',
       });
-      assert.equal(getSpriteAnimationAsset(core.spriteProfiles.playerMain).art.file, 'steel-wolf-cub-v1.webp');
-      assert.equal(getSpriteAnimationAsset(core.spriteProfiles.playerSub).art.file, 'steel-wolf-v2.webp');
+      assert.equal(getSpriteAnimationAsset(core.spriteProfiles.playerMain).art.file, 'player-wolf0-refined-v2.webp');
+      assert.equal(getSpriteAnimationAsset(core.spriteProfiles.playerSub).art.file, 'player-wolf2-refined-v2.webp');
     }
   }
   const core = buildBattleStaticCore({ scenes: TEST_SCENES, compactUI: false,
@@ -113,7 +113,7 @@ test('production art follows the actual stage, never the current co-op active ro
 
 test('all three fire stages use distinct art in single battles and physical co-op slots', () => {
   const fire = STARTERS.find((s) => s.id === 'fire');
-  const files = ['fire-hatchling-v2.webp', 'fire-beast-v1.webp', 'fire-dragon-king-v1.webp'];
+  const files = ['fire-hatchling-v2.webp', 'player-fire1-refined-v2.webp', 'player-fire2-refined-v2.webp'];
   for (let pStg = 0; pStg < fire.stages.length; pStg++) {
     for (const battleMode of ['single', 'coop']) {
       for (const coopActiveSlot of ['main', 'sub']) {
@@ -187,7 +187,7 @@ test('low HP does not replace a PvP boss selection with the PvE phase-two artwor
     state: makeState({ starter, pStg: 0, battleMode: 'pvp', enemy, eHp: 1, bossPhase: 3 }),
   });
   assert.equal(core.spriteProfiles.enemyMain, 'darkLordSVG');
-  assert.equal(getSpriteAnimationAsset(core.spriteProfiles.enemyMain).art.file, 'boss-v1.webp');
+  assert.equal(getSpriteAnimationAsset(core.spriteProfiles.enemyMain).art.file, 'boss-refined-v2.webp');
 });
 
 test('buildBattleCore applies sealed/risky lock rules in single battle', () => {
@@ -307,8 +307,8 @@ test('buildBattleCore switches dark dragon to phase-2 sprite when hp is low', ()
   assert.ok(phase2);
   assert.equal(phase1.eSvg.includes('boss_2nd_phase.png'), false);
   assert.equal(phase2.eSvg.includes('boss_2nd_phase.png'), true);
-  assert.equal(getSpriteAnimationAsset(phase1.spriteProfiles.enemyMain).art.file, 'boss-v1.webp');
-  assert.equal(getSpriteAnimationAsset(phase2.spriteProfiles.enemyMain).art.file, 'boss-2nd-phase-v1.webp');
+  assert.equal(getSpriteAnimationAsset(phase1.spriteProfiles.enemyMain).art.file, 'boss-refined-v2.webp');
+  assert.equal(getSpriteAnimationAsset(phase2.spriteProfiles.enemyMain).art.file, 'boss-2nd-phase-refined-v2.webp');
   assert.ok(phase2.layout.enemyComp > phase1.layout.enemyComp);
 });
 
@@ -334,5 +334,5 @@ test('buildBattleCore switches dark dragon sub target in co-op when sub hp is lo
   assert.ok(core);
   assert.ok(core.eSubSvg);
   assert.equal(core.eSubSvg.includes('boss_2nd_phase.png'), true);
-  assert.equal(getSpriteAnimationAsset(core.spriteProfiles.enemySub).art.file, 'boss-2nd-phase-v1.webp');
+  assert.equal(getSpriteAnimationAsset(core.spriteProfiles.enemySub).art.file, 'boss-2nd-phase-refined-v2.webp');
 });

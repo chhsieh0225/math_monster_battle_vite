@@ -217,8 +217,8 @@ test('inspection overrides presentation without removing the paused animations',
   for (const rule of inspectionRules) assert.doesNotMatch(rule, /animation(?:-name)?:/);
 });
 
-test('v2 atlas registration matches the shipped bytes and reserves gutters for every pose', () => {
-  const report = JSON.parse(readFileSync(new URL('../../../public/sprites/visual-pilot/registration-v2.json', import.meta.url), 'utf8'));
+test('active pilot atlas registration matches the shipped bytes and reserves gutters for every pose', () => {
+  const report = JSON.parse(readFileSync(new URL('../../../public/sprites/visual-pilot/registration-unified-v2.json', import.meta.url), 'utf8'));
   assert.deepEqual(report.cell, [512, 384]);
   assert.deepEqual(report.grid, [4, 2]);
   assert.equal(report.baseline, 368);

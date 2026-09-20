@@ -2,7 +2,8 @@ import { memo, useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { fitSpriteAtlas, getSpriteAnimationAsset } from '../../../data/spriteAnimationAssets.ts';
 import MonsterSprite from '../../ui/MonsterSprite';
-import { decodeBattleSprite, getSpriteBodyMotion, resolveBattleSpriteClip } from './battleSpriteMotion.ts';
+import { getSpriteBodyMotion, resolveBattleSpriteClip } from './battleSpriteMotion.ts';
+import { battleSpritePreloader } from '../../../utils/battleSpritePreload.ts';
 import './BattleSprite.css';
 
 type BattleSpriteProps = {
@@ -18,11 +19,16 @@ type AtlasProps = BattleSpriteProps & {
 };
 
 function AtlasSprite({ asset, svgStr, size, style, animation }: AtlasProps) {
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(() => battleSpritePreloader.isReady(asset.src));
   useEffect(() => {
     let active = true;
-    void decodeBattleSprite(asset.src).then((decoded) => { if (active) setReady(decoded); });
-    return () => { active = false; };
+    const unsubscribe = battleSpritePreloader.subscribe(asset.src, () => setReady(true));
+    const load = () => {
+      void battleSpritePreloader.load(asset.src).then((decoded) => { if (active && decoded) setReady(true); });
+    };
+    load();
+    window.addEventListener('online', load);
+    return () => { active = false; unsubscribe(); window.removeEventListener('online', load); };
   }, [asset.src]);
 
   // Retain the same outer 120x100 frame through loading, attacks and hit reactions.

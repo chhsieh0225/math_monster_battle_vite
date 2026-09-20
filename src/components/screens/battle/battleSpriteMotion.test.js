@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { decodeBattleSprite, getSpriteBodyMotion, resolveBattleSpriteClip } from './battleSpriteMotion.ts';
+import { getSpriteBodyMotion, resolveBattleSpriteClip } from './battleSpriteMotion.ts';
+import { decodeBattleSprite } from '../../../utils/battleSpritePreload.ts';
 import { SPRITE_ANIMATION_ASSETS } from '../../../data/spriteAnimationAssets.ts';
 import { resolveBattleSpriteAnimations } from '../../../utils/battleAnimations.ts';
 import { effectOrchestrator } from '../../../hooks/battle/effectOrchestrator.ts';

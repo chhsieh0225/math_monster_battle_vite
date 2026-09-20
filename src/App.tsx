@@ -19,6 +19,7 @@ import { useAudioState } from './hooks/useAudioState';
 import { getScreenMusic, getEncounterMusic } from './utils/battleMusic.ts';
 import type { BgmTrack } from './utils/sfx/bgm.ts';
 import { BG_IMGS, BG_IMGS_LOW } from './data/sprites.ts';
+import { battleSpritePreloader, getBattleSpritePreloadSources } from './utils/battleSpritePreload.ts';
 
 // Screens
 import AppScreenRouter from './components/AppScreenRouter';
@@ -232,6 +233,13 @@ function App() {
   const conserveNetwork = UX.lowPerfMode || shouldConserveNetwork();
   const desiredMusic = getScreenMusic(S);
   const nextEncounterStep = (S.battleMode === 'coop' || S.battleMode === 'double') && S.enemySub ? 2 : 1;
+  const spritePreloadKey = getBattleSpritePreloadSources(S, conserveNetwork).join('\n');
+
+  useEffect(() => {
+    // Selection owns its local picks; battle owns the rolling encounter window.
+    if (S.screen === 'selection') return;
+    battleSpritePreloader.preload(spritePreloadKey ? spritePreloadKey.split('\n') : []);
+  }, [S.screen, spritePreloadKey]);
 
   // Tiered background preload:
   // 1) title pool first, 2) non-critical scenes later on non-constrained devices.

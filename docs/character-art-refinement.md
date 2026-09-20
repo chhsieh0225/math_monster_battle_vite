@@ -2,48 +2,61 @@
 
 ## Shipped Scope
 
-- Fire hatchling (`player_fire0`): smooth painted contours, sculpted horns/scales, warmer highlights, clearer expressions and articulated eight-pose actions.
-- Ghost (`ghost`): cleaner cloth folds, ruby eye highlights, expressive recoil, and consistent eight-pose hood/hand drawings.
-- Both use the built-in `image_gen` tool with the existing atlas as an identity reference. These are new drawings, not a CSS recolor. Their original v1 atlases remain unchanged.
-- All 51 active forms receive body motion chosen by weight/material: grounded, soft, hover, wing or heavy. Only the two reviewed new atlases use the alternate idle expression drawing.
-- This is still eight-key-pose 2D animation, not 3D, skeletal articulation or generated in-between frames. The other 49 forms have not been redrawn in this revision. Menu portraits and boss-introduction portraits are unchanged.
+- All **51 active battle forms / 408 key-pose drawings** now use the unified painted-anime art direction: 21 starter stages, 25 ordinary/evolved monster forms and five boss appearances (including Dark Dragon King's independent second phase).
+- The previous fire hatchling and ghost refinements are the style masters. This batch redraws the other 49 forms with the built-in `image_gen` tool, using each existing atlas as its identity reference. These are new drawings, not CSS recolors.
+- The direction unifies smooth contours, sculpted shading and controlled highlights while retaining species, evolution silhouettes, palettes and material differences. Crazy Dragon retains its right-facing source and existing runtime flip.
+- All forms use the existing weight/material body-motion layer: grounded, soft, hover, wing or heavy. Only fire hatchling and ghost enable the reviewed alternate idle-expression beat; other inhale drawings are used during actions rather than forcing a visibly mismatched idle loop.
+- This remains eight-key-pose **2D** animation, not 3D, skeletal articulation or generated in-between frames. Menu portraits, legacy loading fallbacks and boss-introduction portraits are unchanged. No combat, progression, audio, save or boss-introduction timing changes.
+
+![Unified roster overview](art/unified-roster-v2.webp)
 
 ## Assets And Reproduction
 
-| Identity | Production asset | Bytes |
-| --- | --- | ---: |
-| Fire hatchling | `public/sprites/visual-pilot/fire-hatchling-v2.webp` | 297606 |
-| Ghost | `public/sprites/visual-pilot/ghost-v2.webp` | 326046 |
+- Runtime assets: `public/sprites/visual-pilot/*-refined-v2.webp`, plus `fire-hatchling-v2.webp` and `ghost-v2.webp`.
+- Active file, fixed silhouette bounds and support-pivot registry: `src/data/spriteAnimationAssets.ts`.
+- Full prompts, source identities, generation revisions and reviewed anchors: `scripts/unified-art-sources.json` (49 forms) and `scripts/refined-art-sources.json` (two masters).
+- Output/source hashes, per-pose decoded hashes, crop bounds, scale and offsets: `public/sprites/visual-pilot/registration-unified-v2.json` and `registration-refined-v2.json`.
+- Generated source PNGs remain in the local Codex generated-images directory. Every runtime deliverable is a repository WebP; the game has no dependency on that local source directory or a generation API.
+- Previous atlases are retained for comparison and rollback. Offline verification covers **102 stored atlases / 816 cells**, but the active runtime registry contains exactly 51 distinct files.
 
-The full final prompt set, input identities, generated source filenames and reviewed anchors are in `scripts/refined-art-sources.json`. Source PNGs were generated in the local Codex generated-images directory; the game uses only the repository WebPs.
+The offline Pillow/NumPy pipeline preserves native alpha, removes near-transparent noise below alpha 16, and optionally normalizes near-opaque generated surface noise (threshold 250, or the reviewed 240 override for fire dragon king). Transparent edges and texture resolution are retained. The earlier magenta-matte extraction path remains available for old sources.
 
-The offline Pillow/NumPy pipeline preserves native alpha rather than eroding the whole sprite. It removes near-transparent noise below alpha 16, packs the cells at one uniform scale, aligns the support/hover baseline and records hashes, alpha bounds and offsets. Existing magenta-matte sources retain their previous extraction path.
+Every set uses one uniform scale, a registered support/hover baseline, and transparent gutters. Large crowded source layouts were regenerated rather than cutting off wings, tails or props. Manual support-foot overrides exclude tail, cape and electrical-effect pixels that otherwise make recoil slide sideways. Output encoding remains quality 80-92 with a strict 400,000-byte ceiling; rejected candidates do not overwrite an approved atlas.
 
 ```sh
 python3 scripts/prepare-roster-atlases.py \
   --source-dir /path/to/generated_images \
-  --manifest scripts/refined-art-sources.json \
-  --registration registration-refined-v2.json \
-  --preview-dir /tmp/refined-art-review
+  --manifest scripts/unified-art-sources.json \
+  --registration registration-unified-v2.json \
+  --preview-dir /tmp/unified-art-review
+
+# Incremental rebuild, preserving other registered forms:
+python3 scripts/prepare-roster-atlases.py \
+  --source-dir /path/to/generated_images \
+  --manifest scripts/unified-art-sources.json \
+  --registration registration-unified-v2.json \
+  --only mushroom
+
 python3 scripts/prepare-roster-atlases.py --verify
 ```
 
-`public/sprites/visual-pilot/registration-refined-v2.json` registers the new files. Verification covers 53 stored atlases / 424 cells, including the two retained older versions; active battle coverage remains 51 forms / 408 cells.
+## Motion And Loading
 
-## Motion And Safety
-
-- The existing physical slot still owns facing, attack travel, hit reactions and action duration. No damage, turn, progression or save behavior changes.
-- One body wrapper contracts and settles around the registered support pivot. Hover lift is bounded by the space recovered through contraction. Idle motion never enlarges the registered silhouette.
-- The old generic breath layer is disabled only once atlas art has decoded. Legacy outer idle enlargement/lift is suppressed for atlas actors, but attack/hit transforms and low-HP/boss filter cues remain.
-- Main/sub slots have offset idle beats rather than synchronized breathing. Body and pose animations share the action duration and pause together during game pause or impact freeze.
-- Low-performance mode stops idle motion and expression changes while retaining short attack/recoil motion. Reduced-motion CSS disables both animation layers and retains static action poses.
-- No new particles, blur filters, timers, per-frame React state or runtime dependencies. Texture dimensions remain 2048x768 and each actor still uses one atlas. The two replacements total about 236 KiB more transfer than their previous versions and load on demand, not on every game launch. Physical-device FPS and thermals are not measured.
+- Physical slots still own facing, attack travel, impact and duration. Co-op active-role changes never redirect an animation to the other physical actor.
+- The union of all eight silhouettes is fitted once into the existing battle envelope. Pose changes do not change the outer frame, zoom or baseline. Existing boss sizing and layout constraints are retained.
+- Body and pose layers pause together. Low-performance mode disables idle motion but retains short action/recoil animations. Reduced-motion rules disable both animated layers and retain static action poses.
+- Selection preloads only selected characters. Battle preloads a rolling window of the active party, current enemies, next encounter and next evolution. Dark Dragon King's second phase is warmed before the HP threshold, including when it occupies the secondary enemy slot.
+- Visible actors share and outrank speculative requests. At most two decode requests run concurrently; the LRU retains eight decoded image references (about 48 MiB of RGBA pixels, **not** a hard limit on all browser/GPU memory).
+- Low-performance/save-data/slow-connection mode omits speculative future encounters and evolutions. Obsolete speculation is canceled, failures/timeouts leave the legacy fallback visible, and a later online event can retry. Ready images render without another loading-state swap.
+- No new particles, blur layers, per-frame React state or runtime dependencies. Atlases stay 2048x768, one per actor. The active set is **15,381,246 bytes**, up **1,648,450 bytes (12.0%)** from the accepted baseline. These are on-demand assets, not a full-roster startup download.
+- PWA image caching remains request-driven. Offline registration/audit JSON is excluded from service-worker precaching because gameplay does not use it. Retained old files increase repository/package size but are not requested by the active registry.
 
 ## Validation
 
-- All 51 forms decoded in a browser fixture mounting production `BattleSprite`; all eight pose positions and stable outer dimensions were verified.
-- Production `BattleScreen` was sampled in solo and four-actor Co-op, with the new art, narrow portrait and short landscape layouts, Crazy Dragon, Sword God and independently resolved Dragon King phase-two art. No horizontal overflow or observed actor/HUD occlusion in the sampled static poses.
-- Viewport overrides were requested at 390x844, 844x390, 320x568, 568x320 and 1280x720. The browser reported CSS viewports 354x767, 767x354, 291x516, 516x291 and 1163x654; these are emulated checks, not physical-phone testing.
-- Live computed styles confirmed idle movement, removal of stacked breathing, the secondary actor's exclusive attack clip, exact retained matrices while paused, and low-performance idle-off / attack-on behavior. Reduced-motion rules were reviewed, not OS-preference-emulated.
-- The temporary QA entry points are removed after verification; no game-save actions or audio settings were used.
-- TypeScript, strict lint, all 861 tests, `git diff --check` and production bundle budgets pass. Total JavaScript is 964.3 KiB / 976.6 KiB; BattleScreen is 78.7 KiB / 83.0 KiB. No budget thresholds were increased. This is local verification, not a new remote CI run.
+- Final local checks passed: TypeScript, ESLint with zero warnings, all 874 tests, offline atlas verification and `git diff --check`. `build:budget` passed at 967.4 KB total JavaScript against the unchanged 976.6 KB limit. This is local validation, not a remote CI result.
+- All 51 final forms decoded in a browser fixture mounting production `BattleSprite`. Every form switched through all eight positions, with a stable 200x166.66 CSS-pixel outer frame in the gallery.
+- Production `BattleScreen` was sampled in solo and four-actor Co-op, including Crazy Dragon, Sword God, Hydra and independent Dragon King phase-two art. Narrow portrait and short landscape views were checked for clipping and actor/HUD occlusion.
+- Requested CSS viewport checks: 390x844, 320x568, 844x390, 568x320 and 1280x720. No horizontal overflow was observed. These are emulated browser checks, not physical-phone FPS, memory or thermal measurements.
+- Computed styles confirmed the secondary player's exclusive attack clip, paused body/pose layers, and low-performance idle-off/action-on behavior. Reduced-motion CSS was reviewed, not OS-preference-emulated.
+- The preload tests cover all factory identities, variants, Co-op round lookahead, boss phases, constrained networks, request deduplication, queue priority, LRU eviction, cancellation, timeout, retry and malformed images.
+- Temporary QA entry points are removed after verification. QA does not modify game saves or audio settings.

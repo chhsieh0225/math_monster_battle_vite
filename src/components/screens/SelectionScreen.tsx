@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters.ts';
@@ -12,6 +12,7 @@ import type {
 import { useI18n } from '../../i18n';
 import { localizeStarterList } from '../../utils/contentLocalization.ts';
 import { isPvpBossLockedForSelection } from './selectionBossUnlock.ts';
+import { battleSpritePreloader, getStarterSpriteSource } from '../../utils/battleSpritePreload.ts';
 import './SelectionScreen.css';
 
 type StarterDesc = {
@@ -219,6 +220,11 @@ export default function SelectionScreen({
   const [picked1, setPicked1] = useState<StarterSelectable | null>(null);
   const [picked2, setPicked2] = useState<StarterSelectable | null>(null);
   const [focusSlot, setFocusSlot] = useState<'p1' | 'p2'>('p1');
+
+  useEffect(() => {
+    const selected = isDual ? [picked1, picked2] : [picked];
+    battleSpritePreloader.preload(selected.map((unit) => getStarterSpriteSource(unit)).filter((src) => src !== null));
+  }, [isDual, picked, picked1, picked2]);
 
   const handlePick = (starter: StarterSelectable) => {
     if (isPvpBossLockedForSelection(mode, starter.id, encData)) return;

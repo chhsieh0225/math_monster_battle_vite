@@ -1,0 +1,860 @@
+{
+  "generator": "Built-in image_gen",
+  "style": "Unified painted anime RPG, fire-hatchling-v2 and ghost-v2 masters",
+  "sources": [
+    {
+      "key": "player_fire1",
+      "output": "player-fire1-refined-v2",
+      "source": "exec-2149f9ea-477c-4e4b-a0b7-4bac60697aa5.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character. Identity: Adolescent athletic orange fire dragon beast, longer muzzle and fierce amber eyes, TWO swept BLACK horns, ivory segmented belly, black claws, flame crest and dorsal spikes, long orange tail with large amber flame. TWO arms and TWO legs, NO wings. Clearly older than the hatchling style reference.\nRevision: Use case: background-extraction. Edit this EIGHT-pose fire beast game atlas. Keep ALL eight characters, their exact pose, anatomy, paint, scales, colors and sharp contour. REMOVE the entire orange/brown gradient and ALL diffuse ambient glow between figures. Background must be genuinely transparent RGBA with alpha ZERO outside character silhouettes. Flame itself remains bright and sharply shaped, but NO orange haze, no colored background, no shadow. Do not add any pixels outside the silhouettes. If true alpha cannot be created, use ONE absolutely uniform pure #ff00ff magenta color instead of any gradient. Expand/reflow canvas into a FOUR COLUMN TWO ROW 2048x1024 atlas with 40 pixel fully EMPTY gutters between ALL figures and around edges; preserve relative character scales. No cropped fingers/flames. No checkerboard pattern. This is an isolated cutout asset, never an illustrated scene.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        212,
+        196.5,
+        224,
+        322.5,
+        310.5,
+        221.5,
+        187,
+        260
+      ]
+    },
+    {
+      "key": "player_fire2",
+      "output": "player-fire2-refined-v2",
+      "source": "exec-2cca3788-ef25-4d7c-ab16-3a49af782b80.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions. Identity: Huge mature fire dragon king, fierce elongated muzzle, horned red-gold flame crown, lava-orange armored scales, dark CHARCOAL segmented chest and belly, two arms two legs and exactly TWO enormous red-orange bat wings edged in attached gold fire, curled tail with spiral flame. Wings bend subtly, must not disappear, same size in all poses. Not a cute baby.",
+      "normalizeOpaqueAlpha": true,
+      "opaqueAlphaThreshold": 240,
+      "anchors": [
+        244.5,
+        244,
+        243.5,
+        289,
+        287,
+        246.5,
+        188.5,
+        263
+      ]
+    },
+    {
+      "key": "player_wolf0",
+      "output": "player-wolf0-refined-v2",
+      "source": "exec-74cabe5d-ee9c-463e-9219-69c24fe09988.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions. Identity: Cute silver-gray wolf CUB, expressive cyan eyes, white muzzle/chest/paws/tail tip, triangular ears, red BANDANA tied at neck, fluffy raised tail. FOUR legs in all frames. No armor, rune markings or cape. Attack is low left forepaw/bite thrust, rear paws stay grounded. Fine soft painted fur tufts.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        294,
+        296,
+        315,
+        377,
+        362,
+        304,
+        273,
+        343.5
+      ]
+    },
+    {
+      "key": "player_wolf1",
+      "output": "player-wolf1-refined-v2",
+      "source": "exec-17c0f891-51e4-4d1c-9d53-3c1efc1b710e.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions. Identity: Athletic adolescent silver-gray wolf, longer muzzle than cub, sharp cyan eyes, white cheek ruff/chest/paws/tail tip, triangular ears, RED BANDANA, large curled fluffy tail. FOUR legs in all frames, no human stance, no armor/runes/cape. Attack low left forepaw/bite thrust, rear paws grounded. Refined layered painted fur.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        270.5,
+        260,
+        326.5,
+        387.5,
+        350.5,
+        290,
+        129,
+        346
+      ]
+    },
+    {
+      "key": "player_wolf2",
+      "output": "player-wolf2-refined-v2",
+      "source": "exec-35005f98-29a4-4a22-b60b-3a5243ba93c0.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions. Identity: Majestic mature steel wolf king, thick silver-white layered spiky fur mane, steel-gray muscular body, luminous CYAN runes on forehead/flanks/shoulders, blue eyes, ornate RED royal CAPE embroidered GOLD with turquoise jewel clasps and gold collar. FOUR legs, large bushy graywhite tail. No extra armor/weapons. Attack low left foreclaw/bite thrust, rear paws grounded; cape follows naturally; recoil small and still quadrupedal.\nRevision: Use case: precise-object-edit. Preserve this painted wolf king character and ALL its eight poses and costume exactly. REPACK as FOUR columns TWO rows 2048x1024 with much wider EMPTY TRANSPARENT gutters. Reduce each entire wolf+cape within its cell to 75% of current size, SAME scale reduction for all eight. No pose should touch another column or any canvas edge. Whole capes, tails, paws must be fully visible. Strict generous 50px empty transparent gap per cell. Maintain pure zero-alpha transparent background, NO colored glow/particles/background. Do not duplicate or remove any pose; eight different poses, unchanged face and red-gold cape.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        274.5,
+        262.5,
+        274,
+        317,
+        302,
+        279,
+        236,
+        321
+      ]
+    },
+    {
+      "key": "boss",
+      "output": "boss-refined-v2",
+      "source": "exec-b9f7a8b3-e756-4144-843d-803ca31a21a9.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions. Identity: FIRST FORM dark dragon, charcoal-black quadruped with FOUR legs, bone horns and armor spikes, red eyes, exactly TWO ragged black-purple bat wings, curled heavy tail and small tight violet flames along back. No lightning. Strong legible cool highlights on dark limbs. Attack foreclaw and bite, recoil only modest flinch, all four legs remain beneath torso, never stand on hind legs. Preserve reference anatomy.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        298.5,
+        298.5,
+        316.5,
+        385.5,
+        344,
+        297,
+        176,
+        325
+      ]
+    },
+    {
+      "key": "boss_2nd_phase",
+      "output": "boss-2nd-phase-refined-v2",
+      "source": "exec-688833e1-a34f-4b75-922b-b973267a3f1b.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  AWAKENED SECOND FORM of the DARK DRAGON, not its base form. Black/violet quadrupedal dragon, red glowing eyes, numerous ivory horns and armor spikes, TWO huge ragged black wings, thick curled tail, powerful FOUR clawed legs. Distinct SECOND-FORM branching electric VIOLET LIGHTNING tightly attached across wing membranes, limbs and tail, stronger purple energy than base. Preserve the enlarged armored build and electric patterns of reference. Same form in all8cells. One hind foot stays planted during strike and recoil; recoil is a modest backward lean, NOT a fall on its tail and NOT standing upright like a person. No detached lightning outside silhouette. Wings articulate, do not disappear. Mouth and gaze stay LEFT.\nRevision: Use case: precise-object-edit. Preserve this painted dark purple lightning demon dragon boss SECOND PHASE, keep two wings, ivory horns, dark scales and red eyes and its eight articulated poses. REPACK into FOUR equal columns TWO rows in landscape 2048x1024. Reduce each entire figure inside its cell to 65% of current size, SAME scale reduction for all eight. Every head, wingtip, tail and claw must be fully visible with generous 60px completely empty transparent gutters. Absolutely no overlap between cells or canvas edges. No symbols/grid/text/ground/particles/haze/bloom; genuinely zero-alpha transparent background. Keep smooth painted anime contours and warm highlights. Eight poses in identical order, LEFT facing always. Main change is much smaller figures with much more space around EACH figure; no cropped appendages.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        275.5,
+        271.5,
+        244.5,
+        307.5,
+        289.5,
+        272.5,
+        216,
+        270.5
+      ]
+    },
+    {
+      "key": "boss_hydra",
+      "output": "boss-hydra-refined-v2",
+      "source": "exec-b99c87eb-4db1-4e17-aa2c-d92583249eb7.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions. Identity: Nine-headed abyss HYDRA, green-black scales and GOLD plated bellies/necks, cyan veins, dark-gold bat wings, FOUR dragon legs and curled tail. EXACTLY NINE separate heads in each pose, same stacked fan as input. No missing, merged or extra heads; count nine. Same torso camera in every cell. Subtle small neck fan articulation only, left bite preparation and foreclaw step, never leap or rear. Preserve distinct blue and orange inner mouth glow tightly inside mouths, no breath projectiles.\nRevision: Use case: precise-object-edit. Preserve this painted green-gold multi-headed hydra boss with fire and ice heads, keep wing and tail, ensure NINE visible complete heads with nine distinct necks in EVERY pose, including one additional visible small head behind the central neck cluster and its eight articulated poses. REPACK into FOUR equal columns TWO rows in landscape 2048x1024. Reduce each entire figure inside its cell to 65% of current size, SAME scale reduction for all eight. Every head, wingtip, tail and claw must be fully visible with generous 60px completely empty transparent gutters. Absolutely no overlap between cells or canvas edges. No symbols/grid/text/ground/particles/haze/bloom; genuinely zero-alpha transparent background. Keep smooth painted anime contours and warm highlights. Eight poses in identical order, LEFT facing always. Main change is much smaller figures with much more space around EACH figure; no cropped appendages.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        285,
+        287,
+        188,
+        305.5,
+        207,
+        288.5,
+        214.1,
+        186.5
+      ],
+      "anchorReview": "Manual support-foot correction: exclude tail, wing and effect pixels; preserve the same planted limb across poses."
+    },
+    {
+      "key": "boss_sword_god",
+      "output": "boss-sword-god-refined-v2",
+      "source": "exec-5b3dcdf8-3166-4ce3-99bd-471efa858881.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Boss-tier armored sword god, majestic BLUE AND GOLD samurai plate armor, horned blue helmet, stern masked face, WHITE FUR collar, gold rune ornamentation, tall boots and hanging darkblue tabard. A circular halo/fan of small ornate blue-gold swords floats behind his shoulders. BOTH HANDS hold the SAME huge BLUE two-edged broadsword with GOLD LIGHTNING RUNES in EVERY frame. Do not change sword count/weapon identity or armor. Pose0neutral guard sword diagonally left,1breathingguard,2windup,3left downward sword strike,4sword low followthrough,5guard recovery,6SMALL upright hit flinch still holding sword firmly TWO HANDS,7lower guard. NOT falling or sitting. Keep ENTIRE sword/halo/boots inside every cell. Smaller subject (max280x310 per cell) so all sword tips have ample margin. ",
+      "anchorMode": "hover",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        235,
+        233,
+        337,
+        394.5,
+        177,
+        226.5,
+        316,
+        345
+      ]
+    },
+    {
+      "key": "boss_crazy_dragon",
+      "output": "boss-crazy-dragon-refined-v2",
+      "source": "exec-36217b6d-5492-4fdb-83e6-78e89d1bfa03.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face RIGHT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact RIGHT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward LEFT recoil with nose still RIGHT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions. Identity: Single-winged crazy lava dragon, RIGHT FACING unlike the style reference. Heavy black-charcoal armored FOUR-LEGGED dragon, glowing red lava cracks, horned long muzzle, jagged horns/spines, orange-red mouth, exactly ONE huge red-black bat wing and opposite damaged stump, long curved tail. Never add a second full wing. Low feral RIGHT bite/claw thrust, rear paw anchored on LEFT, recoil only modest LEFT flinch while gaze/muzzle remains RIGHT; four legs stay beneath body. No bipedal stance. Leave extra generous margin: each FULL figure including wing and tail fits INSIDE the middle 75% of its equal cell; never touch canvas edges or neighbors.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        98.5,
+        98.5,
+        97.4,
+        97.4,
+        94.1,
+        96.3,
+        113.8,
+        121.4
+      ],
+      "anchorReview": "Manual support-foot correction: exclude tail, wing and effect pixels; preserve the same planted limb across poses."
+    },
+    {
+      "key": "player_water0",
+      "output": "player-water0-refined-v2",
+      "source": "exec-28207771-8f5d-4949-aab5-f0bd33bfbc4d.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: FIRST water starter, cute small blue bipedal dragon hatchling, large GOLD eyes, ivory short swept horns, cream belly, round snout, tiny arms and short hind legs, curved blue tail tipped by an attached cyan-blue watery flame. NO wings, no armor. Same baby proportions throughout. Attack one little claw thrust LEFT, recovery retracts arms. Preserve tail water glow without independent water projectiles.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        204.5,
+        204,
+        249,
+        305.5,
+        247.5,
+        206,
+        151.5,
+        263
+      ]
+    },
+    {
+      "key": "player_water1",
+      "output": "player-water1-refined-v2",
+      "source": "exec-d49cb990-9cae-4ed2-92e1-941e8677a88d.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: SECOND water starter, mature angular teal-blue bipedal dragon, long black swept-back horns, cyan fin crest and fin-spikes on forearms/shoulders/back, pale icy blue segmented chest plates, muscular hindlegs, black claws. Long curling tail ends in a large attached curling blue-white WAVE crest. NO wings yet. Two arms and two legs. More athletic and longer neck/muzzle than baby. Attack forward claw slash LEFT, mild backward recoil still facing LEFT. Water crest flexes with tail but remains inside cell, no detached spray.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        195,
+        196,
+        277,
+        337.5,
+        225.5,
+        203.5,
+        123,
+        323
+      ]
+    },
+    {
+      "key": "player_water2",
+      "output": "player-water2-refined-v2",
+      "source": "exec-43fabb76-0988-4409-a528-cdfc4a859d4a.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: FINAL water starter Sea Dragon King. Muscular teal-blue bipedal dragon with pale blue segmented armored belly/long neck, swept black/cyan horns, white/cyan fin crest, TWO enormous blue webbed wings edged in pale aqua like ocean spray, fin-spikes on shoulders and forearms, dark claws, curled tail on RIGHT ending in a blue-white curling wave. Two arms/two legs/two wings always. Preserve strong mature proportions and full wings, not the wingless second stage. Attack claw slash LEFT; wings fold/extend subtly in rhythm, tail wave follows through. Recoil keeps LEFT-facing muzzle. No detached slash trails or water projectiles.\nRevision: Use case: precise-object-edit. Preserve this painted turquoise water dragon king with white armor, large blue wings and curling ocean wave tail and ALL eight poses and character details. REPACK as FOUR equal columns TWO rows 2048x1024 with much wider EMPTY TRANSPARENT gutters. Reduce each entire figure inside its cell to 65% of current size, SAME scale reduction for all eight. Every appendage must be fully visible with generous 60px empty transparent gaps. No pose should touch another column or any canvas edge. Maintain pure zero-alpha transparent background, NO colored glow/particles/background. Keep all eight different poses in original order and LEFT facing. Main change is much smaller figures and more space around EACH figure.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        199,
+        198.5,
+        181.5,
+        241,
+        207.5,
+        202,
+        29,
+        197.5
+      ],
+      "anchorReview": "Manual support-foot correction: exclude tail, wing and effect pixels; preserve the same planted limb across poses."
+    },
+    {
+      "key": "player_grass0",
+      "output": "player-grass0-refined-v2",
+      "source": "exec-5738d404-6ae2-46e5-abd7-2aea8685c49f.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: FIRST grass starter small cute green bipedal dragon hatchling, large warm brown eyes, short green horns and leaf-shaped forehead crest, pale yellow-green segmented belly, short claw arms and legs, leaflike small dorsal scales, long curved green tail tipped with ONE broad upright fresh green leaf. No wings, no flowers or armor. Baby round head and body, friendly expression. Tail leaf bends gently with motion, remains attached. Attack tiny LEFT claw thrust; recoil nose remains LEFT.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        200,
+        199.5,
+        261.5,
+        331.5,
+        279,
+        207.5,
+        153,
+        272
+      ]
+    },
+    {
+      "key": "player_grass1",
+      "output": "player-grass1-refined-v2",
+      "source": "exec-0aa338b2-5270-4d08-a07b-1a953e8a648d.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: SECOND grass starter leaf beast, athletic mature GREEN bipedal dragon, two tall tan/brown wooden horns, green leaf-shaped crest, pale olive segmented armor belly, leaf plates on shoulders and arms, woody beige claws, leaf dorsal spines, curled green vine-like tail ending in a large green leaf with curling tendrils. NO wings, no baby proportions, no flowers. Two arms/two legs. Attack compact claw slash LEFT, leaf tail sways, recoil slight backward lean with muzzle LEFT. No detached foliage.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        219.5,
+        218.5,
+        228,
+        330,
+        269,
+        218.5,
+        117.5,
+        260
+      ]
+    },
+    {
+      "key": "player_grass2",
+      "output": "player-grass2-refined-v2",
+      "source": "exec-7e2b5379-45ef-4df5-a006-a87419679ac6.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: FINAL grass starter Forest King. Mature muscular forest-green bipedal dragon, tall branching WOODEN antler horns and leaf crest, two large green leaf-membrane wings with tan woody ribs, pale sage segmented armored chest, wooden shoulder/forearm spikes, brown claws. A coiled green vine tail with fine vine lattice and small PINK FLOWERS on its curl. Keep flowers visible and same identity. No flame or water. Two arms/two legs/two wings. Attack compact left claw thrust; wings and vine tail flex with anticipation and recovery, no detached trail or breath mist. Same fully visible antlers, wings, tail across all8.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        235.6,
+        244.2,
+        249.6,
+        319.9,
+        232.3,
+        249.6,
+        112.4,
+        260.4
+      ],
+      "anchorReview": "Manual support-foot correction: exclude tail, wing and effect pixels; preserve the same planted limb across poses."
+    },
+    {
+      "key": "player_electric0",
+      "output": "player-electric0-refined-v2",
+      "source": "exec-f527ecec-8190-4407-941e-c45571097f0d.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: FIRST electric starter cute golden yellow bipedal baby dragon, yellow eyes, ivory cream belly, short golden horns, spiky lightning-bolt crest, small clawed arms/feet, curved tail with lightning-bolt shaped golden tip. Short white-yellow arcs close to body, not a giant aura. NO wings. Preserve cute round face, no fire flame. Attack one claw punch LEFT. Same two arms/two legs in all poses, tail bolt twitches. No detached effects outside character margin.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        181,
+        175.5,
+        247,
+        300.5,
+        265,
+        178.5,
+        144.6,
+        252.5
+      ],
+      "anchorReview": "Manual support-foot correction: exclude tail, wing and effect pixels; preserve the same planted limb across poses."
+    },
+    {
+      "key": "player_electric1",
+      "output": "player-electric1-refined-v2",
+      "source": "exec-163e23ed-517b-4b58-bcc8-e38476dc3829.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: SECOND electric starter athletic golden bipedal dragon with long gold horns and spiky lightning crown crest, pale yellow segmented belly armor, thick golden thighs and forearms, black claws, golden back spines and curved tail ending in a bright small lightning star/orb with short jagged yellow-white arcs. NO wings. Two arms and two legs, long mature snout and determined eyes. Attack left claw strike, arms retract in recovery, recoil no head-turn. Keep electric accents tightly bounded, no detached beams or trails.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        209.5,
+        209.5,
+        238,
+        314.5,
+        289.5,
+        210.5,
+        142.5,
+        247.5
+      ]
+    },
+    {
+      "key": "player_electric2",
+      "output": "player-electric2-refined-v2",
+      "source": "exec-98efb232-e80f-4135-b547-c9782e4c90f1.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: FINAL electric starter Thunder Dragon King: majestic golden bipedal dragon, two golden bat wings edged with small white-yellow lightning, long swept gold horns and gold spike crest, pale yellow armored segmented belly and neck, gold armored shoulders/forearms/thighs, dark claws, thick curved tail with gold spikes. Bright golden lightning arcs remain tight to body and wing edges, no flame. Same two arms/two legs/two wings throughout. Attack a compact left claw strike, wings flex back and tail balances; guard wings partially tuck but both remain visible. No detached lightning beams or effects.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        227,
+        226,
+        239.5,
+        324.5,
+        276,
+        227,
+        137.4,
+        238
+      ],
+      "anchorReview": "Manual support-foot correction: exclude tail, wing and effect pixels; preserve the same planted limb across poses."
+    },
+    {
+      "key": "player_lion0",
+      "output": "player-lion0-refined-v2",
+      "source": "exec-6209549f-015b-4971-8406-d0d05a82491c.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: FIRST light lion starter, a cute golden-brown lion CUB, round ears, big warm brown eyes, cream muzzle and small cream chest bib, subtle darker markings, short four-legged body, thin upcurving tail with small brown tuft. NO mane yet, no armor, no magic runes. Keep juvenile feline anatomy, not a dragon or wolf. Same FOUR legs. Calm standing idle, inhale, crouched pounce preparation, grounded LEFT forepaw swat, low follow-through, paws retract, recoil with ears slightly back and nose still LEFT, low four-paw brace. Rear supporting paw stays grounded. Refined soft sculpted fur, crisp silhouette.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        272.5,
+        282,
+        313,
+        369.5,
+        328,
+        274.5,
+        81.5,
+        314
+      ]
+    },
+    {
+      "key": "player_lion1",
+      "output": "player-lion1-refined-v2",
+      "source": "exec-d5252fe0-2bda-4b00-a145-a4dc3ff3755e.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: SECOND lion starter, adolescent golden lion with full medium brown fluffy MANE around neck and cheeks, rounded feline ears, brown eyes, tan muzzle/chest, athletic four-legged golden body with subtle darker marks, thin tail curving up with brown tuft. No armor, no glowing runes, not a baby and not the heavily decorated final lion king. Maintain FOUR paws. Attack LEFT forepaw swipe with planted hindpaw, mane sways, follow-through drops forepaw, recoil small backward shoulder lean with paws near ground; muzzle stays LEFT. Keep mane, paws and tail fully visible.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        289.5,
+        296.5,
+        332.5,
+        381.5,
+        348.5,
+        300,
+        130.5,
+        334
+      ]
+    },
+    {
+      "key": "player_lion2",
+      "output": "player-lion2-refined-v2",
+      "source": "exec-44cfc00c-a3a7-41ae-959b-54149d7702d2.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: FINAL light lion king: majestic FOUR-LEGGED gold lion, huge dark brown/gold sculpted mane edged with golden fire, stern gold eyes, pale muzzle, GOLD SHOULDER ARMOR, golden glowing runic stripe markings on flanks and legs, unusually large curled dark-gold tail tuft. Preserve shoulder plate, mane volume and body runes in all poses. Refined hand-painted fur, not blocky enlarged pixels. Attack powerful LEFT forepaw swipe with hind paws grounded, mane and tail tuft flex, recoil short backwards lean facing LEFT. Never becomes bipedal humanoid, no wings, no extra limbs, no objects added.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        302.5,
+        303.5,
+        339,
+        388.5,
+        356.5,
+        296.5,
+        100.5,
+        315
+      ]
+    },
+    {
+      "key": "player_tiger0",
+      "output": "player-tiger0-refined-v2",
+      "source": "exec-fdd22f9f-2d2c-4756-b5a2-a5bc1ea65923.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: FIRST ice tiger starter, cute small WHITE tiger cub with charcoal gray stripes, big bright CYAN BLUE eyes, round ears, short rounded muzzle, small four-legged body, long curved striped tail with dark tip. White fur fully opaque and softly shaded, pink-gray nose, no clothing, no ice armor/gems yet. Preserve forehead stripes and kitten proportions. Idle seated/low on four paws as reference; anticipation lowers chest, attack a tiny LEFT forepaw swat, recoil remains LEFT facing. Four legs and no wings. Refined illustrated fur rather than blocky pixels.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        222,
+        235,
+        328.5,
+        334.5,
+        324,
+        226,
+        75.5,
+        331
+      ]
+    },
+    {
+      "key": "player_tiger1",
+      "output": "player-tiger1-refined-v2",
+      "source": "exec-8979e594-7d34-4ff2-990f-53b64b432a9f.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: SECOND ice tiger starter, athletic adult white tiger with fine BLACK/charcoal stripes, piercing cyan BLUE eyes, broad pink nose, white whiskers and cheek fur, substantial paws, long striped tail with black tip curling upward. FOUR-legged feline throughout, no mane, no armor, no crystals yet. Same stripe placement, head size and long body in every pose. Fine hand-painted fur shading, no enlarged pixel blocks. Attack low LEFT forepaw swat, back and tail flex, recoil low backward lean with nose still LEFT. Do not sit upright like a human, keep rear paws grounded.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        299.5,
+        300.5,
+        324.5,
+        398.5,
+        375,
+        303,
+        125,
+        356.5
+      ]
+    },
+    {
+      "key": "player_tiger2",
+      "output": "player-tiger2-refined-v2",
+      "source": "exec-d7eac7db-5eb5-43f3-9b58-ec0779656e68.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: FINAL ice tiger king, immense muscular WHITE tiger with charcoal stripes and cyan eyes, long fangs, bright blue forehead diamond marking, ornate ICY CYAN armored collar with hanging blue chest gem and shoulder crystals, glowing cyan runic marks on shoulders, blue frost ribbons curling around forelegs/hindlegs and striped tail. Preserve all icy ornaments and FOUR-legged tiger anatomy, no wings. Refined crisp fur/crystal illustration. Attack fierce LEFT forepaw slash, collar and tail flex; recoil small backward shift with front paw protecting head, not an upright human stance. Keep same muzzle, body length and stripe family. Frost stays tight to body, no detached ice projectiles.\nRevision: Use case: precise-object-edit. Preserve this painted white tiger king with dark stripes, glowing cyan runes, blue jeweled collar and flowing cyan energy ribbons and ALL eight poses and character details. REPACK as FOUR equal columns TWO rows 2048x1024 with much wider EMPTY TRANSPARENT gutters. Reduce each entire figure inside its cell to 65% of current size, SAME scale reduction for all eight. Every appendage must be fully visible with generous 60px empty transparent gaps. No pose should touch another column or any canvas edge. Maintain pure zero-alpha transparent background, NO colored glow/particles/background. Keep all eight different poses in original order and LEFT facing. Main change is much smaller figures and more space around EACH figure.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        272.1,
+        273.2,
+        268.9,
+        303.2,
+        247.5,
+        273.2,
+        157.5,
+        282.8
+      ],
+      "anchorReview": "Manual support-foot correction: exclude tail, wing and effect pixels; preserve the same planted limb across poses."
+    },
+    {
+      "key": "slime",
+      "output": "slime-refined-v2",
+      "source": "exec-806bb884-3749-419a-a473-f95effeb53ae.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Bright mint GREEN jelly slime with a pointed droplet tip, glossy pale mint highlight, two big black eyes with white rims and tiny pink cheeks. Keep simple friendly expression, no crown/accessories.\nSLIME OVERRIDE: no arms, legs, wings, weapons or nose. Same legless blob in all8cells. Instead of claw actions use real squash/stretch:0round idle;1slightly tall inhale;2squat anticipation;3elastic LEFT body shove;4low left follow-through;5settling round;6lean back RIGHT with eyes still LEFT and squint;7low braced shape. Foot anchor means center of jelly ground-contact, stable baseline. Do not add mouth attacks, detached splashes or shadows.",
+      "anchorMode": "hover",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        146.5,
+        129,
+        155,
+        177,
+        179,
+        141,
+        120,
+        162
+      ]
+    },
+    {
+      "key": "slime_fire",
+      "output": "slime-fire-refined-v2",
+      "source": "exec-c3d4807a-8d65-4090-8b9f-7f700af0087d.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Fiery RED/ORANGE magma jelly slime, teardrop tip carrying tiny attached yellow flame, dark red outer shell and luminous golden inner body, large orange-gold eyes with dark outlines. Preserve distinct flame patterns, not ordinary green jelly.\nSLIME OVERRIDE: no arms, legs, wings, weapons or nose. Same legless blob in all8cells. Instead of claw actions use real squash/stretch:0round idle;1slightly tall inhale;2squat anticipation;3elastic LEFT body shove;4low left follow-through;5settling round;6lean back RIGHT with eyes still LEFT and squint;7low braced shape. Foot anchor means center of jelly ground-contact, stable baseline. Do not add mouth attacks, detached splashes or shadows.",
+      "anchorMode": "hover",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        139,
+        131,
+        144,
+        185,
+        179,
+        138,
+        125,
+        181.5
+      ]
+    },
+    {
+      "key": "slime_water",
+      "output": "slime-water-refined-v2",
+      "source": "exec-08295d69-2b64-45a7-ae0b-aa365c5a458e.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: AQUA BLUE glossy water jelly slime, pointed droplet tip, two large navy BLUE eyes with opaque white rims, pale blue rounded highlights and light blue cheeks. Clean smooth jelly surface, do NOT copy the reference's accidental checkerboard texture into body.\nSLIME OVERRIDE: no limbs/wings/weapons/nose. Row-major poses:0round idle,1slightly taller inhale,2squat anticipation,3elastic LEFT body shove,4low LEFT follow-through,5round settle,6backward RIGHT recoil eyes still LEFT squinting,7low brace. Preserve body volume while squashing, same jelly scale. Ground-contact center is registration anchor. No detached droplets or objects. Refined smooth illustration, not enlarged coarse pixel art.",
+      "anchorMode": "hover",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        137,
+        133,
+        151,
+        162,
+        164,
+        139,
+        139,
+        158
+      ]
+    },
+    {
+      "key": "slime_electric",
+      "output": "slime-electric-refined-v2",
+      "source": "exec-e7c17662-0f3f-422b-b784-4f4faaf4667e.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: GOLDEN YELLOW electric jelly slime, lightning BOLT tip, large cyan/yellow eyes with pale rims, small cyan crack markings and short yellow arcs tight to sides. Metallic golden underside, no flame.\nSLIME OVERRIDE: no limbs/wings/weapons/nose. Row-major poses:0round idle,1slightly taller inhale,2squat anticipation,3elastic LEFT body shove,4low LEFT follow-through,5round settle,6backward RIGHT recoil eyes still LEFT squinting,7low brace. Preserve body volume while squashing, same jelly scale. Ground-contact center is registration anchor. No detached droplets or objects. Refined smooth illustration, not enlarged coarse pixel art.",
+      "anchorMode": "hover",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        149,
+        149,
+        156,
+        251.5,
+        167,
+        148,
+        123,
+        157
+      ]
+    },
+    {
+      "key": "slime_dark",
+      "output": "slime-dark-refined-v2",
+      "source": "exec-0cdc0494-1c6b-4e77-94a8-f1aa0e4bfb2e.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Deep dark indigo/purple jelly slime with pointed droplet tip, muted lavender glossy highlights, large very dark navy eyes with bright opaque white rims. No horns or flames. Maintain readable contour, not black silhouette.\nSLIME OVERRIDE: no limbs/wings/weapons/nose. Order0round idle;1taller inhale;2squat;3elastic LEFT body shove;4low LEFT follow-through;5settle round;6backward RIGHT recoil, eyes stay LEFT squint;7low brace. Body volume conserved, not rescaled copies. Anchor at ground-contact center. No detached droplets or scenery; smooth refined illustration.",
+      "anchorMode": "hover",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        151,
+        139.5,
+        170,
+        219,
+        178,
+        145,
+        114,
+        150
+      ]
+    },
+    {
+      "key": "slime_steel",
+      "output": "slime-steel-refined-v2",
+      "source": "exec-a349e34b-a239-45de-a0d9-8cf8d66836e7.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Rounded SILVER steel slime, pointed droplet tip, reflective brushed silver/gray panels and white highlights, big slate-blue eyes. Looks like flexible liquid metal, not stone or gold; no added bolts/armor.\nSLIME OVERRIDE: no limbs/wings/weapons/nose. Order0round idle;1taller inhale;2squat;3elastic LEFT body shove;4low LEFT follow-through;5settle round;6backward RIGHT recoil, eyes stay LEFT squint;7low brace. Body volume conserved, not rescaled copies. Anchor at ground-contact center. No detached droplets or scenery; smooth refined illustration.",
+      "anchorMode": "hover",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        142,
+        139,
+        155,
+        204,
+        192,
+        139,
+        132,
+        153
+      ]
+    },
+    {
+      "key": "slime_evolved",
+      "output": "slime-evolved-refined-v2",
+      "source": "exec-697b7699-f910-4579-bccc-3ad8c1d7fdaf.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Evolved GREEN forest slime troll, stocky bipedal gel humanoid, sharp green LEAF CROWN, angular narrow pale eyes, large leaf breastplate and shoulder leaves, vine tendrils growing from forearms, curved vine tail. Two long clawed arms and two thick short legs; glossy green body, no extra weapon.\nSame short bulky proportions in all poses. Idle firmly planted; inhale chest lift; crouch anticipate; LEFT claw punch; follow-through arm lowers; recover; recoil leans back slightly with arms guarding and face LEFT; low brace. Never becomes round slime or tall human. Fine illustrated shading, no external trails or detached particles.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        235,
+        230.5,
+        293.5,
+        364.5,
+        300,
+        237,
+        149.5,
+        309
+      ]
+    },
+    {
+      "key": "slime_electric_evolved",
+      "output": "slime-electric-evolved-refined-v2",
+      "source": "exec-eb38e8b5-819c-4eaa-ae6a-9480c34aa143.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Evolved GOLD electric slime titan, stocky bipedal golden gel humanoid, tall jagged lightning crown, narrow white glowing eyes, gold angular chest/shoulder plates, clawed arms, two thick short legs and curved tail. Short cyan electric cracks/arcs attached to body and crown, no fire. Retain reference lightning silhouette.\nSame short bulky proportions in all poses. Idle firmly planted; inhale chest lift; crouch anticipate; LEFT claw punch; follow-through arm lowers; recover; recoil leans back slightly with arms guarding and face LEFT; low brace. Never becomes round slime or tall human. Fine illustrated shading, no external trails or detached particles.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        237.5,
+        239.5,
+        280,
+        352,
+        256.5,
+        232,
+        194.5,
+        265.5
+      ]
+    },
+    {
+      "key": "slime_fire_evolved",
+      "output": "slime-fire-evolved-refined-v2",
+      "source": "exec-26a7f54a-9671-44ae-ac5e-11f558469367.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Evolved RED magma slime titan, stocky bipedal red molten humanoid with a dark gold crown holding bright orange flame, gold-and-black flame-shaped chest armor and pauldrons, yellow eyes, flame tendrils on forearms, two thick clawed legs and fiery curled tail. Preserve ornate chest plates, not plain round fire slime.\nSame bulky short proportions with two arms/two legs. Attack compact LEFT fist/claw strike, torso and attached tendrils follow, recoil modest backwards facing LEFT. No new limbs, no growth/shrink between drawings. No external trails/beams or scenery; polished painted fantasy creature.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        225.5,
+        225.5,
+        272.5,
+        341,
+        303,
+        227.5,
+        167,
+        338
+      ]
+    },
+    {
+      "key": "slime_water_evolved",
+      "output": "slime-water-evolved-refined-v2",
+      "source": "exec-198cb0ee-66d7-4a1e-a591-fa403afa9a8c.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Evolved BLUE ocean slime titan, stocky bipedal liquid-blue humanoid with pointed ice-blue crown, narrow cyan eyes, pale blue swirl-patterned chest plates, blue shoulder armor with small PINK CORAL branches, water tendrils on forearms, curved watery tail, two thick legs. Keep coral pink and white water highlights opaque.\nSame bulky short proportions with two arms/two legs. Attack compact LEFT fist/claw strike, torso and attached tendrils follow, recoil modest backwards facing LEFT. No new limbs, no growth/shrink between drawings. No external trails/beams or scenery; polished painted fantasy creature.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        239,
+        238,
+        253,
+        373,
+        342.5,
+        218.5,
+        156,
+        271.5
+      ]
+    },
+    {
+      "key": "slime_steel_evolved",
+      "output": "slime-steel-evolved-refined-v2",
+      "source": "exec-304252c2-ae52-43de-9e4d-114182e11a66.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Evolved STEEL slime knight, short bulky humanoid fully encased in silver riveted helmet and segmented steel breastplate, black visor slit with white eyes, gear-like shoulder pauldrons, riveted cuffs, black/silver claw hands, thick plated legs and armored segmented curved tail. Chains attached to forearm cuffs curve upwards. Keep helmet and all armor, no additional sword/shield. Metal rigid joints animate, not wobbly jelly.\nTwo arms/two legs only, fixed proportions. Attack short LEFT fist thrust, attached chains/tendrils follow through, then recover; hit response turns neither head nor body to RIGHT. Rear foot stays planted. No detached particles or props, all appendages inside frame.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        241.5,
+        243.5,
+        259,
+        333,
+        302.5,
+        235,
+        226,
+        280
+      ]
+    },
+    {
+      "key": "slime_dark_evolved",
+      "output": "slime-dark-evolved-refined-v2",
+      "source": "exec-aef780b7-84a0-416c-a728-3deed33268fb.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Evolved DARK slime shadow titan, short broad bipedal black-violet humanoid with jagged crown, intense RED eyes, dark purple embossed swirl chest armor, spiky shoulders/forearms, thick clawed legs and curved tail, thin violet tendrils attached behind shoulders. Preserve red eyes and readable charcoal highlights, not round slime. No bright magenta body highlights.\nTwo arms/two legs only, fixed proportions. Attack short LEFT fist thrust, attached chains/tendrils follow through, then recover; hit response turns neither head nor body to RIGHT. Rear foot stays planted. No detached particles or props, all appendages inside frame.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        252,
+        249,
+        276.5,
+        396.5,
+        264,
+        254,
+        140.5,
+        326.5
+      ]
+    },
+    {
+      "key": "fire",
+      "output": "fire-refined-v2",
+      "source": "exec-763f1a56-9282-4c11-913e-9a998628777e.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Orange-red armored fire lizard, long muzzle, golden slit eyes, two small swept horns, jagged fiery back spines, orange segmented chest plates, powerful hind legs, two clawed forearms, long curled reptile tail. NO wings, NOT a player hatchling. Mature but not giant. Keep close-fitting back flames. Attack is left foreclaw strike with hind foot planted.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        279,
+        286.5,
+        285,
+        373.5,
+        320.5,
+        291,
+        184.5,
+        306
+      ]
+    },
+    {
+      "key": "fire_evolved",
+      "output": "fire-evolved-refined-v2",
+      "source": "exec-68db6a08-de08-461e-b10d-47fdb1d8a488.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Advanced blazing orange-red fire beast, large fierce elongated toothy dragon snout, black-red horns, jagged red armor scales, bright golden chest plates, intense golden orange flames along back and curled tail. Large biped reptile with two forearms and two hind legs, NO WINGS. More powerful than base fire beast. Attack left claw swipe, no breath projectile. All eight are same evolved character.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        314.5,
+        309,
+        341,
+        393.5,
+        347.5,
+        308,
+        216.5,
+        356
+      ]
+    },
+    {
+      "key": "dragon",
+      "output": "dragon-refined-v2",
+      "source": "exec-ea2f8123-0096-4c57-bcdb-e0751857cc16.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Small baby MECHANICAL dragon, steel-blue metallic segmented armor, round friendly blue eyes, two blue metal horns, glowing cyan forehead and chest gem, large articulated steel plate wings, circular riveted shoulder/elbow joints, segmented curled tail ending in cyan spike. Biped with two clawed arms and two feet. Keep wings partly folded to fit cells with ample margin. Small cyan electrical arcs only close to body. Same baby proportions in all eight poses.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        200.5,
+        246.5,
+        288,
+        297.3,
+        275.5,
+        199.5,
+        81.8,
+        290.5
+      ],
+      "anchorReview": "Manual support-foot correction: exclude tail, wing and effect pixels; preserve the same planted limb across poses."
+    },
+    {
+      "key": "dragon_evolved",
+      "output": "dragon-evolved-refined-v2",
+      "source": "exec-1f374689-5b5c-4234-8e6d-91a29f230e1c.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Mature evolved MECHANICAL dragon with fierce narrow blue eyes, long armored snout and neck, swept blade-metal horns, steel-blue segmented armor, large articulated riveted metal batlike wings, glowing cyan chest reactor, mechanical joint wheels, long coiled segmented tail ending in cyan spear tip. Biped with two forearms, two hindfeet. Not cute baby. Attack left claw strike. Wings folded enough to fit each cell, maintain consistent silhouette and proportions.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        222.5,
+        221.5,
+        257.5,
+        336.5,
+        309.5,
+        218,
+        119.6,
+        285.5
+      ],
+      "anchorReview": "Manual support-foot correction: exclude tail, wing and effect pixels; preserve the same planted limb across poses."
+    },
+    {
+      "key": "ghost_evolved",
+      "output": "ghost-evolved-refined-v2",
+      "source": "exec-764d5781-6b27-4029-b556-986c1a479ea0.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Menacing tall violet wraith, deep purple pointed hood, pitch black face opening containing ONLY two angular glowing red eyes, skeletal pale purple hands with long fingers, torn layered cloak and long flowing wispy robe tails, violet flames tight to body. No feet or legs. Float all poses on stable hover baseline; attack is a claw reach LEFT, recovery robe settles, recoil backward RIGHT still eyes left. Do not become a cute round baby. Keep tendrils within each cell.",
+      "normalizeOpaqueAlpha": true,
+      "anchorMode": "contactCenter",
+      "anchors": [
+        257,
+        249,
+        228,
+        352,
+        355,
+        218,
+        163,
+        213
+      ]
+    },
+    {
+      "key": "ghost_lantern",
+      "output": "ghost-lantern-refined-v2",
+      "source": "exec-62b6704d-fa7a-4716-bf67-613a59c574fa.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Ancient gray green stone Japanese shrine lantern with a curved moss-covered pagoda roof and stone finial, square open chamber, round hanging stone base. A mischievous CYAN BLUE flame ghost with small dark eyes and mouth lives inside; tiny blue wisps near it. NO arms, legs, weapons, chain or hanging support. The ENTIRE lantern hovers independently. Animate flame expression and flicker, roof tilt and modest leftward lantern lunge; architecture stays consistent. All eight full lanterns with intact roof and base, including recoil and recovery. Use consistent hover baseline. Do not create a humanoid.",
+      "normalizeOpaqueAlpha": true,
+      "anchorMode": "contactCenter",
+      "anchors": [
+        159,
+        158,
+        186,
+        265,
+        151,
+        163,
+        144,
+        207
+      ]
+    },
+    {
+      "key": "mushroom",
+      "output": "mushroom-refined-v2",
+      "source": "exec-efa3d85f-90b7-4acf-8d6e-be182fca4526.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Mushroom forest wizard monster, enormous conical red-brown cap with cream spots and visible gills, mischievous beige wrinkled face with glowing yellow eyes, squat beige woody body with two short legs and two arms, dark green leaf-cloth cloak clasped under chin, gnarled wooden staff topped with blue cyan glowing spores held in one hand. Preserve staff, cloak and SAME cap size in all 8 poses. Attack is a staff thrust LEFT, follow-through and retract, recoil remains standing. Do not shoot projectiles. Small close spores only. FULL staff and cap within cell.\nRevision: Use case: precise-object-edit. Preserve this hand-painted mushroom wizard and ALL eight poses and costume. REPACK as FOUR equal columns TWO rows 2048x1024 with wider EMPTY TRANSPARENT gutters. Reduce each entire wizard+staff+cape inside its cell to 65% of current size, SAME scale reduction for all eight. No pose should touch another column or canvas edge. Whole staff, cape and mushroom cap must be fully visible with 60px clear gaps all around. Zero-alpha transparent background, no colored haze, glow, detached particles, grid or text. Keep eight poses, LEFT facing, staff held in all poses. Main change is smaller figures and more empty space around EACH figure.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        191,
+        193,
+        208,
+        279,
+        248,
+        198,
+        128,
+        205
+      ],
+      "anchorReview": "Manual support-foot correction: exclude cape and staff ends from the contact anchor."
+    },
+    {
+      "key": "golumn",
+      "output": "golumn-refined-v2",
+      "source": "exec-052a0205-ebd3-451b-b2a9-5098f9d291f4.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Massive humanoid STONE golem made of angular stacked slate-gray boulders, moss seams, glowing cyan rune cracks and cyan eyes in a squared rock helmet face. Huge blocky fists, slab shoulder spikes, two articulated rocky legs with wide feet. Exactly two arms/two legs. Lean left and punch left with massive leading fist, trailing fist guards, planted rear foot. Recoil modest lean not sitting or melting. Detailed rock texture consistent throughout.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        263.5,
+        264,
+        294.5,
+        407.5,
+        389.5,
+        265.5,
+        177,
+        270.5
+      ]
+    },
+    {
+      "key": "golumn_mud",
+      "output": "golumn-mud-refined-v2",
+      "source": "exec-6ea2160d-9e93-4cc7-889d-115c52f74ff0.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Mud and earthen golem, massive humanoid made of chunky ochre brown clay and rocky plates, angular block helmet with glowing GOLD AMBER eyes, cracks and dangling thin tree roots, jagged slab shoulders, huge fists and blocky clawed fingers, two thick jointed legs with broad stone feet. No cyan or metal. Same earthy humanoid in all eight poses. Attack left punch, body rotates subtly, trailing fist guards, rear foot stays planted. A modest hit flinch, NOT leaning almost flat or falling down. Keep shoulders/helmet shape and scale stable. No debris.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        260.5,
+        258,
+        275,
+        368,
+        335,
+        259,
+        192.5,
+        309
+      ]
+    },
+    {
+      "key": "candy_knight",
+      "output": "candy-knight-refined-v2",
+      "source": "exec-e9f778ca-9dc4-4184-a078-893a603eefbc.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: the SAME compact red-and-white peppermint knight. Keep the red-white spiral helmet and spiral breastplate, pointed shoulder armor, exactly ONE round peppermint shield in the near LEFT hand and exactly ONE striped spiral lance in the far RIGHT hand through all eight poses. LEFT lance thrust, shield guard. Preserve short sturdy armored legs, two arms. No extra weapons, no missing shield or lance, no extra props. Hand-painted cel-shaded candy armor, not plastic 3D.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        328,
+        325.5,
+        358.5,
+        409,
+        394.5,
+        334,
+        313,
+        387
+      ]
+    },
+    {
+      "key": "candy_monster",
+      "output": "candy-monster-refined-v2",
+      "source": "exec-f0a70a99-d2e4-4f4f-bf30-6a11ebef1a01.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Friendly stocky candy golem with a large round gummy bear HEAD, two small round ears, huge glossy dark happy eyes and smiling mouth. Face is patchwork translucent cyan and pink sugar candy, body covered in colorful gummy bears and marshmallow bands, two chunky fists and short legs. Several small lollipops sticking from shoulders/back; large candy sword strapped on BACK. Attack LEFT with gummy fist, not wielding sword. Preserve candy construction and face through all poses; no new limbs. Do not key out pink candy colors; background pure saturated #ff00ff but character pink should be pale coral/rose.",
+      "normalizeOpaqueAlpha": true,
+      "anchors": [
+        194.5,
+        198,
+        222,
+        314.5,
+        325.5,
+        187,
+        109.5,
+        236
+      ]
+    },
+    {
+      "key": "colorful_butterfly",
+      "output": "colorful-butterfly-refined-v2",
+      "source": "exec-5a2f943d-c009-4dc5-a4f0-58a1e20204cc.png",
+      "prompt": "Use case: style-transfer. Production battle animation atlas for the SAME RPG as image 2. Image 1 is the exact character identity and 8-pose edit target; image 2 is STYLE ONLY, never transfer its dragon anatomy/accessories. Redraw image 1 into premium HAND-PAINTED ANIME RPG art: smooth crisp anti-aliased contours, sculpted cel shading with controlled soft transitions, warm upper-left light and restrained cool bounce rim, readable clean silhouettes at phone size, rich material details without noisy pixel texture. No coarse pixels, no plastic 3D. Preserve palette, age, species, limb count, costume and distinguishing features. Keep same head/body scale and three-quarter camera in all poses. Exactly EIGHT full-body articulated drawings in FOUR equal columns by TWO rows, landscape 2048x1024. All face LEFT, including hit reaction. Row-major poses: 0 neutral alert idle; 1 subtle inhale, almost identical planted feet to 0; 2 crouched anticipation; 3 powerful compact LEFT strike; 4 low follow-through; 5 settling recovery close to 0; 6 modest backward RIGHT recoil with nose still LEFT, never sitting/falling; 7 low protective brace. Anatomy stays consistent; limbs, fur/cloth, tail articulate naturally, not eight copies. Keep rear support foot planted, same support baseline. Every entire figure fits inside own cell with generous 40px CLEAR gutters and equal scale. NO scenery, ground shadows, labels, grid, text, beams, detached particles. Background genuinely transparent RGBA. If alpha is unavailable use perfectly flat #ff00ff magenta only, never checkerboard/white/gray. Keep magenta out of character.  IMPORTANT: zero-alpha empty background outside SHARP silhouettes. Absolutely NO ambient glow/haze/bloom/backdrop, including near flames. Four-by-two 2048x1024 layout takes precedence over input atlas dimensions.  Each entire figure including every appendage MUST fit within the middle 75% of its equal cell, same scale in all eight poses, wide clear gaps. Do not copy the tight layout of input image 1. Identity: Magical floral butterfly fairy insect from reference, slim mint green feminine insect body with small face, violet eyes, two curly purple antennae, pink flower petal collar and overlapping petal skirt, leaf-shaped lower body. FOUR enormous butterfly wings made of layered overlapping colorful leaves and petals, vivid red outer top tips, purple blue yellow green inner panels, pink purple lower wings. No human legs, no weapons. HOVER in all poses. Face and slim torso turned toward LEFT, wing anatomy remains exactly consistent, articulated opening, partly folded anticipation, quick forward wing sweep attack, recoil with fluttering wings, recovery. Keep wing tips fully inside generous margins. Pink/purple petal colors NOT pure magenta; reserve flat #ff00ff exclusively for background.",
+      "normalizeOpaqueAlpha": true,
+      "anchorMode": "contactCenter",
+      "anchors": [
+        181,
+        328,
+        331,
+        289,
+        253,
+        187,
+        212,
+        180
+      ]
+    }
+  ]
+}

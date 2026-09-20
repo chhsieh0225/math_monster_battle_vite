@@ -23,6 +23,8 @@ test('runVictoryFlow no-ops when enemy is missing', () => {
     tryUnlock: () => {},
     applyVictoryAchievements: () => { touched = true; },
     updateEncDefeated: () => { touched = true; },
+    setEnemyExposed: () => {},
+    setTideStack: () => { touched = true; },
     setBurnStack: () => { touched = true; },
     setStaticStack: () => { touched = true; },
     setFrozen: () => { touched = true; },
@@ -52,6 +54,7 @@ test('runVictoryFlow settles exp, evolve state, drops, and victory text', () => 
   const defeated = createSetterRecorder(2);
   const calls = {
     burned: [],
+    tide: [],
     static: [],
     frozen: [],
     cursed: [],
@@ -96,6 +99,8 @@ test('runVictoryFlow settles exp, evolve state, drops, and victory text', () => 
     tryUnlock: () => {},
     applyVictoryAchievements: ({ state: s }) => { calls.achievements.push(s.enemy?.name || ''); },
     updateEncDefeated: (enemy) => { calls.encDefeated.push(enemy.name); },
+    setEnemyExposed: () => {},
+    setTideStack: (value) => { calls.tide.push(value); },
     setBurnStack: (value) => { calls.burned.push(value); },
     setStaticStack: (value) => { calls.static.push(value); },
     setFrozen: (value) => { calls.frozen.push(value); },
@@ -119,6 +124,7 @@ test('runVictoryFlow settles exp, evolve state, drops, and victory text', () => 
   });
 
   assert.deepEqual(calls.burned, [0]);
+  assert.deepEqual(calls.tide, [0]);
   assert.deepEqual(calls.static, [0]);
   assert.deepEqual(calls.frozen, [false]);
   assert.deepEqual(calls.cursed, [false]);

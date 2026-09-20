@@ -322,6 +322,13 @@ function createTimedEnemyTurn(scenario = 'charge') {
   return { args, calls, advance, select, tick };
 }
 
+test('Dark Dragon repeat seals leave the lowest-difficulty move available', () => {
+  const { args, tick } = createTimedEnemyTurn('seal');
+  runEnemyTurn(args);
+  tick(5000);
+  assert.ok([1, 2].includes(args.sr.current.sealedMove));
+});
+
 test('fast-forwarding boss charge cannot reset the next question or its animation', () => {
   const { args, calls, advance, select, tick } = createTimedEnemyTurn();
   runEnemyTurn(args);

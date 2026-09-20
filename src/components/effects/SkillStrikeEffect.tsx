@@ -75,7 +75,7 @@ export const SkillStrikeEffect = memo(function SkillStrikeEffect({ effect, sourc
   const style = {
     '--skill-tone': blocked ? '#cbd5e1' : element.tone,
     '--skill-accent': element.accent,
-    '--skill-flight': `${getAttackEffectHitDelay(effect.type)}ms`,
+    '--skill-flight': `${effect.flightMs ?? getAttackEffectHitDelay(effect.type)}ms`,
     '--skill-weight': ultimate ? 5 : 2 + tier,
     '--skill-dx': `${dx}px`, '--skill-dy': `${dy}px`,
     width: arena.width, height: arena.height,

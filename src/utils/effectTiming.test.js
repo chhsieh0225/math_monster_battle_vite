@@ -3,7 +3,23 @@ import test from 'node:test';
 import {
   createAttackImpact, getAttackEffectHitDelay, getAttackEffectClearDelay,
   getAttackEffectNextStepDelay, getAttackImpactProfile, getAttackImpactPhase,
+  getPlayerSkillMotion,
 } from './effectTiming.ts';
+
+test('tactical starter contact matches the atlas strike pose and recovers before the next turn', () => {
+  for (const mode of ['single', 'coop', 'double']) {
+    for (const id of ['fire', 'water', 'electric']) for (let idx = 0; idx < 4; idx++) {
+      const motion = getPlayerSkillMotion(`${id}:${idx}`, mode);
+      assert.ok(motion.releaseMs >= 0);
+      assert.equal(motion.releaseMs + motion.flightMs, Math.round(motion.durationMs * .36));
+      assert.ok(motion.releaseMs + getAttackEffectNextStepDelay({ idx }) > motion.durationMs);
+      assert.equal(getPlayerSkillMotion(`${id}:${idx}`, 'pvp'), null);
+    }
+  }
+  assert.equal(getPlayerSkillMotion('fire:1', 'pvp'), null);
+  assert.equal(getPlayerSkillMotion('wolf:1', 'coop'), null);
+  assert.equal(getPlayerSkillMotion(undefined), null);
+});
 
 test('all eight element contact times precede effect cleanup', () => {
   for (const type of ['fire', 'electric', 'water', 'grass', 'dark', 'light', 'steel', 'ice']) {

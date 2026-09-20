@@ -6,6 +6,7 @@ import { isBattleActiveState, scheduleIfBattleActive, tryReturnToMenu } from './
 import type { AttackEffectVm, BattleAnimationSetter, StarterVm } from '../../types/battle';
 import { createAttackImpact } from '../../utils/effectTiming.ts';
 import { getCharacterSkillId, getSkillMastery } from '../../utils/skillPresentation.ts';
+import { getShadowWard } from '../../utils/combatTactics.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -19,7 +20,8 @@ type BattleState = {
   pLvl?: number;
   mLvls?: number[];
   allySub?: StarterLite | null;
-  enemy?: { id?: string; name?: string } | null;
+  enemy?: { id?: string; name?: string; maxHp?: number } | null;
+  shadowShieldCD?: number;
   eHp?: number;
   phase?: string;
   screen?: string;
@@ -173,7 +175,10 @@ export function buildCoopAllySupportTurnPlan({
   const rawDmg = Math.min(28, Math.max(6, Math.round(base * (0.85 + rand() * 0.3))));
   const linkMult = linkActive ? BALANCE_CONFIG.coop.linkDamageMult : 1;
   const boostedDmg = Math.round(rawDmg * linkMult);
-  const damage = applyBossDamageReduction(boostedDmg, state.enemy?.id);
+  const ward = getShadowWard(state.enemy.id, state.battleMode, state.shadowShieldCD, state.eHp ?? 0, state.enemy.maxHp ?? 1);
+  // Automatic support respects the shield but leaves the next answer's opening intact.
+  const wardScale = ward && !ward.open ? ward.damageScale : 1;
+  const damage = applyBossDamageReduction(Math.round(boostedDmg * wardScale), state.enemy?.id);
   const nextEnemyHp = Math.max(0, (state.eHp || 0) - damage);
   const move = state.allySub.moves?.[1];
   const type = move?.type || state.allySub.type || 'light';

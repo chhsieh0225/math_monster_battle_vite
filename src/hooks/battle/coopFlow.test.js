@@ -9,6 +9,23 @@ import {
   runCoopAllySupportTurn,
 } from './coopFlow.ts';
 import { STARTERS } from '../../data/starters.ts';
+import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
+import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
+
+test('automatic support respects wards without breaking them or consuming a selected-hit opening', () => {
+  const state = { battleMode: 'coop', allySub: { id: 'fire', name: 'Fire', type: 'fire' }, pHpSub: 30, pLvl: 5,
+    mLvls: [1, 1, 1, 1], enemy: { id: 'boss', maxHp: 500 }, eHp: 500, enemyExposed: true,
+    tideStack: 3, staticStack: 2 };
+  const base = buildCoopAllySupportTurnPlan({ state: { ...state, enemy: { id: 'slime' } }, rand: () => .5 });
+  for (const id of ['fire', 'water', 'electric']) for (const shadowShieldCD of [2, 1, 0]) {
+    const source = { ...state, shadowShieldCD, allySub: { id, name: id, type: id } };
+    const original = structuredClone(source);
+    const plan = buildCoopAllySupportTurnPlan({ state: source, rand: () => .5 });
+    const scale = shadowShieldCD ? BALANCE_CONFIG.tactics.shadowWard.guardedScale : 1;
+    assert.equal(plan.damage, applyBossDamageReduction(Math.round(base.damage * scale), 'boss'));
+    assert.deepEqual(source, original);
+  }
+});
 
 test('each partner uses its own second skill and mastery without changing support damage', () => {
   const damages = new Set();

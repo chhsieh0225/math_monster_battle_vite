@@ -15,6 +15,24 @@ const HIT_DELAY_MS: Record<string, number> = {
   ice: 300,
 };
 
+const PLAYER_SKILL_BEATS: Record<string, [number, number]> = {
+  'fire:0': [800, 220], 'fire:1': [900, 120],
+  'fire:2': [1100, 240], 'fire:3': [1400, 380],
+  'water:0': [850, 240], 'water:1': [950, 270],
+  'water:2': [1150, 320], 'water:3': [1400, 400],
+  'electric:0': [760, 170], 'electric:1': [800, 120],
+  'electric:2': [1050, 220], 'electric:3': [1350, 330],
+};
+
+/** Keep the atlas strike pose (36%) and projectile contact on the same clock. */
+export function getPlayerSkillMotion(skillId: string | undefined, mode?: string) {
+  if (mode === 'pvp') return null;
+  const beat = skillId ? PLAYER_SKILL_BEATS[skillId] : undefined;
+  if (!beat) return null;
+  const [durationMs, flightMs] = beat;
+  return { durationMs, flightMs, releaseMs: Math.round(durationMs * .36) - flightMs };
+}
+
 export type AttackImpactOutcome = 'hit' | 'critical' | 'blocked' | 'miss';
 export type AttackImpactEvent = { outcome: AttackImpactOutcome; at: number };
 export type ImpactPhase = 'idle' | 'charge' | 'freeze' | 'shake' | 'settle';

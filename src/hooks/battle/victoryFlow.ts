@@ -54,6 +54,8 @@ type RunVictoryFlowArgs = {
   applyVictoryAchievements: (args: { state: BattleState; tryUnlock: (id: AchievementId) => void }) => void;
   updateEncDefeated: (enemy: EnemyLite) => void;
   setBurnStack: NumberSetter;
+  setTideStack: NumberSetter;
+  setEnemyExposed: BoolSetter;
   setStaticStack: NumberSetter;
   setFrozen: BoolSetter;
   setShattered: BoolSetter;
@@ -102,6 +104,8 @@ export function runVictoryFlow({
   applyVictoryAchievements,
   updateEncDefeated,
   setBurnStack,
+  setTideStack,
+  setEnemyExposed,
   setStaticStack,
   setFrozen,
   setShattered,
@@ -129,6 +133,8 @@ export function runVictoryFlow({
   if (!enemy) return;
 
   setBurnStack(0);
+  setTideStack(0);
+  setEnemyExposed(false);
   setStaticStack(0);
   setFrozen(false);
   setShattered(false);

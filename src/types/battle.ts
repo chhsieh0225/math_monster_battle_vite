@@ -168,6 +168,7 @@ export type AttackEffectVm = {
   targetSlot?: "main" | "sub";
   signature?: string;
   skillId?: string;
+  flightMs?: number;
   impact?: AttackImpactEvent;
 };
 
@@ -300,6 +301,8 @@ export type UseBattleState = {
   atkEffect: AttackEffectVm | null;
   effMsg: EffectMsgVm | null;
   burnStack: number;
+  tideStack: number;
+  enemyExposed: boolean;
   frozen: boolean;
   shattered: boolean;
   staticStack: number;

@@ -84,6 +84,8 @@ const REQUIRED_STATE_KEYS = [
   'atkEffect',
   'effMsg',
   'burnStack',
+  'tideStack',
+  'enemyExposed',
   'frozen',
   'shattered',
   'staticStack',

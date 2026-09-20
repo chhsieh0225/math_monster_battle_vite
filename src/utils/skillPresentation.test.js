@@ -8,6 +8,11 @@ import { CHARACTER_SKILL_RECIPES, getSkillRecipe } from '../components/effects/s
 import { PVP_SELECTABLE_ROSTER } from '../data/pvpRoster.ts';
 import { MONSTER_CONFIGS, SLIME_VARIANT_CONFIGS, EVOLVED_SLIME_VARIANT_CONFIGS } from '../data/monsterConfigs.ts';
 
+test('strike visuals use the flow-owned flight time and preserve legacy timing otherwise', () => {
+  assert.match(render({ skillId: 'fire:1', type: 'fire', flightMs: 120 }), /--skill-flight:120ms/);
+  assert.match(render({ skillId: 'fire:1', type: 'fire' }), /--skill-flight:300ms/);
+});
+
 test('practice levels have three deterministic visual milestones and bounded sizes', () => {
   assert.deepEqual([1, 2, 3, 4, 5, 6].map((lvl) => getSkillMastery(lvl).tier), [1, 1, 2, 2, 3, 3]);
   assert.deepEqual([1, 3, 5].map((lvl) => getSkillMastery(lvl).nextLevel), [3, 5, null]);

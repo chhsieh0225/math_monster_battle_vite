@@ -19,7 +19,7 @@ test('buildVictoryFlowArgs maps runtime/ui/battle deps and writes pending evolve
     t: undefined,
   };
   const battleFields = makeFnMap([
-    'setBurnStack', 'setStaticStack', 'setFrozen', 'setShattered', 'setCursed',
+    'setBurnStack', 'setTideStack', 'setEnemyExposed', 'setStaticStack', 'setFrozen', 'setShattered', 'setCursed',
     'setBossPhase', 'setBossTurn', 'setBossCharging', 'setSealedMove', 'setSealedTurns',
     'setPExp', 'setPLvl', 'setPHp', 'setDefeated',
   ]);
@@ -39,6 +39,8 @@ test('buildVictoryFlowArgs maps runtime/ui/battle deps and writes pending evolve
 
   assert.equal(args.randInt, runtime.randInt);
   assert.equal(args.setPHp, battleFields.setPHp);
+  assert.equal(args.setTideStack, battleFields.setTideStack);
+  assert.equal(args.setEnemyExposed, battleFields.setEnemyExposed);
   assert.equal(args.setBText, ui.setBText);
   assert.equal(args.frozenRef, frozenRef);
   assert.equal(typeof args.setPendingEvolve, 'function');

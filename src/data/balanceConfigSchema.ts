@@ -122,16 +122,26 @@ export function validateBalanceConfigSchema(config: unknown): void {
   checkNumber(config, 'traits.boss.hydraTurnRegenRatio', issues, { min: 0, max: 1 });
   checkNumber(config, 'traits.boss.swordParryChance', issues, { min: 0, max: 1 });
   checkNumber(config, 'traits.boss.swordParryScale', issues, { min: 0, max: 1 });
-  const shadowFullBlock = checkNumber(config, 'traits.boss.shadowShieldFullBlockChance', issues, { min: 0, max: 1 });
-  const shadowPartialBlock = checkNumber(config, 'traits.boss.shadowShieldPartialBlockChance', issues, { min: 0, max: 1 });
-  checkNumber(config, 'traits.boss.shadowShieldPartialDamageScale', issues, { min: 0, max: 1 });
-  if (
-    shadowFullBlock != null
-    && shadowPartialBlock != null
-    && shadowFullBlock + shadowPartialBlock > 1
-  ) {
-    issues.push('traits.boss.shadowShieldFullBlockChance + traits.boss.shadowShieldPartialBlockChance must be <= 1');
+  checkNumber(config, 'tactics.exposedScale', issues, { min: 1, max: 1.5 });
+  checkNumber(config, 'tactics.shadowWard.guardedScale', issues, { min: 0.1, max: 1 });
+  checkNumber(config, 'tactics.shadowWard.openingScale', issues, { min: 1, max: 1.5 });
+  for (const field of ['layers', 'enragedLayers']) {
+    const count = checkNumber(config, `tactics.shadowWard.${field}`, issues, { min: 1, max: 3 });
+    if (count !== null && !Number.isInteger(count)) issues.push(`tactics.shadowWard.${field} must be an integer`);
   }
+  for (const field of ['kindleStacks', 'rushStacks', 'detonatePerStack', 'finisherPerStack']) {
+    checkNumber(config, `tactics.fire.${field}`, issues, { min: 1, max: 10 });
+  }
+  for (const path of ['water.maxTide', 'water.surgeStacks', 'electric.stormStacks', 'electric.finisherWardAt']) {
+    const value = checkNumber(config, `tactics.${path}`, issues, { min: 1, max: 3 });
+    if (value != null && !Number.isInteger(value)) issues.push(`tactics.${path} must be an integer`);
+  }
+  checkNumber(config, 'tactics.water.surgeDamageScale', issues, { min: 0.5, max: 1 });
+  for (const path of ['water.tsunamiPerStack', 'water.vortexPerStack', 'electric.pulseBonus', 'electric.finisherPerStack']) {
+    checkNumber(config, `tactics.${path}`, issues, { min: 1, max: 20 });
+  }
+  checkMinMax(config, 'tactics.water.surgeStacks', 'tactics.water.maxTide', issues);
+  checkMinMax(config, 'tactics.electric.finisherWardAt', 'traits.player.staticMaxStacks', issues);
 
   const pressureFloors = checkNonEmptyArray(config, 'challenges.tower.pressureBands.floors', issues);
   const pressureHp = checkNonEmptyArray(config, 'challenges.tower.pressureBands.hpBonus', issues);

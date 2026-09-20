@@ -1,5 +1,6 @@
 import { PLAYER_MAX_HP } from '../../data/constants.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
+import { getShadowWardMax } from '../../utils/combatTactics.ts';
 import type { EnemyVm, StarterVm } from '../../types/battle';
 
 type BattleEntity = EnemyVm | null;
@@ -33,6 +34,8 @@ export type BattleState = {
 
   // Status effects
   burnStack: number;
+  tideStack: number;
+  enemyExposed: boolean;
   frozen: boolean;
   shattered: boolean;
   staticStack: number;
@@ -49,7 +52,7 @@ export type BattleState = {
   bossCharging: boolean;
   sealedMove: number;
   sealedTurns: number;
-  /** Dark Lord shadow-shield cooldown: counts down each player attack, triggers at 0 */
+  /** Remaining ward layers; zero exposes the next selected hit. */
   shadowShieldCD: number;
   /** Crazy Dragon fury regen: true once the one-time heal has fired */
   furyRegenUsed: boolean;
@@ -126,7 +129,8 @@ const BASE_STATE: BattleState = {
   mLvlUp: null,
 
   // Status effects
-  burnStack: 0,
+  burnStack: 0, tideStack: 0,
+  enemyExposed: false,
   frozen: false,
   shattered: false,
   staticStack: 0,
@@ -224,7 +228,8 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         enemySub,
         eHpSub: enemyHp(enemySub),
         round: action.round ?? state.round,
-        burnStack: 0,
+        burnStack: 0, tideStack: 0,
+        enemyExposed: false,
         staticStack: 0,
         frozen: false,
         shattered: false,
@@ -235,7 +240,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         bossCharging: false,
         sealedMove: action.sealedMove ?? -1,
         sealedTurns: action.sealedTurns ?? 0,
-        shadowShieldCD: enemy?.id === 'boss' ? 3 : -1,
+        shadowShieldCD: enemy?.id === 'boss' ? getShadowWardMax(enemyHp(enemy), enemy.maxHp) : -1,
         furyRegenUsed: false,
         consecutiveWrong: 0,
       };
@@ -251,7 +256,8 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         enemySub: null,
         eHpSub: 0,
         round: state.round + 1,
-        burnStack: 0,
+        burnStack: 0, tideStack: 0,
+        enemyExposed: false,
         staticStack: 0,
         frozen: false,
         shattered: false,
@@ -261,7 +267,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         bossTurn: 0,
         bossCharging: false,
         sealedMove: -1,
-        shadowShieldCD: promoted?.id === 'boss' ? 3 : -1,
+        shadowShieldCD: promoted?.id === 'boss' ? getShadowWardMax(state.eHpSub, promoted.maxHp) : -1,
         sealedTurns: 0,
         furyRegenUsed: false,
         consecutiveWrong: 0,

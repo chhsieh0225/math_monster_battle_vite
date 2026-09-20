@@ -8,17 +8,20 @@ test('createBattleFieldSetters maps setter calls to set_field actions', () => {
   const {
     setPHp,
     setBossTurn,
+    setTideStack,
     setBattleField,
   } = createBattleFieldSetters(dispatchBattle);
 
   setPHp(88);
   setBossTurn(3);
   setBattleField('sealedMove', 1);
+  setTideStack(3);
 
   assert.deepEqual(actions, [
     { type: 'set_field', key: 'pHp', value: 88 },
     { type: 'set_field', key: 'bossTurn', value: 3 },
     { type: 'set_field', key: 'sealedMove', value: 1 },
+    { type: 'set_field', key: 'tideStack', value: 3 },
   ]);
 });
 

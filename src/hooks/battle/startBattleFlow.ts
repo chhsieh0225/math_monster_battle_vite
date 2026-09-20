@@ -1,5 +1,6 @@
 import type { BattleMode, BattlePhase, EnemyVm, ScreenName, StarterVm } from '../../types/battle';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
+import { getBossSealPool } from '../../utils/combatTactics.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { randomInt } from '../../utils/prng.ts';
 import { getNarrativeBeat } from '../../data/narrativeScript.ts';
@@ -111,7 +112,7 @@ export function runStartBattleFlow({
   // Boss first-move intimidation: seal a random move at battle start
   const isBoss = BOSS_IDS.has(enemy.id ?? '');
   const isBossEncounter = isBoss || BOSS_IDS.has(enemySub?.id ?? '');
-  const sealPool = BALANCE_CONFIG.traits.boss.sealMovePool;
+  const sealPool = getBossSealPool(enemy.id);
   const sealIdx = isBoss
     ? sealPool[(pickIndex && sealPool.length > 0)
       ? pickIndex(sealPool.length)

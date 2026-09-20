@@ -130,6 +130,8 @@ export function buildPlayerAnswerHandlerDeps({
     setEffMsg: ui.setEffMsg,
     setBossCharging: battleFields.setBossCharging,
     setBurnStack: battleFields.setBurnStack,
+    setTideStack: battleFields.setTideStack,
+    setEnemyExposed: battleFields.setEnemyExposed,
     setPHp: battleFields.setPHp,
     setPHpSub: battleFields.setPHpSub,
     setFrozen: battleFields.setFrozen,

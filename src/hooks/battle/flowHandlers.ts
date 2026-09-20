@@ -114,6 +114,8 @@ export function createPlayerAnswerHandlers(deps: PlayerAnswerHandlers): PlayerAn
     setEffMsg: deps.setEffMsg,
     setBossCharging: deps.setBossCharging,
     setBurnStack: deps.setBurnStack,
+    setTideStack: deps.setTideStack,
+    setEnemyExposed: deps.setEnemyExposed,
     setPHp: deps.setPHp,
     setPHpSub: deps.setPHpSub,
     setFrozen: deps.setFrozen,

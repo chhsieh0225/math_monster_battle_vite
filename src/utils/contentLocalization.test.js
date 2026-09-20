@@ -13,6 +13,14 @@ const EN = "en-US";
 const ZH = "zh-TW";
 const CJK_RE = /[\u3400-\u9fff]/;
 
+test('Dark Dragon ward rules are localized without applying them to other tyrants', () => {
+  const boss = { id: 'boss', trait: 'tyrant', traitDesc: '護盾規則' };
+  assert.match(localizeEnemy(boss, EN).traitDesc, /2-layer.*3 layers.*35%/);
+  assert.equal(localizeEnemy(boss, ZH).traitDesc, boss.traitDesc);
+  assert.match(localizeEncyclopediaEnemyEntries([boss], EN)[0].traitDesc, /never the basic move/);
+  assert.doesNotMatch(localizeEnemy({ ...boss, id: 'boss_sword_god' }, EN).traitDesc, /shadow ward/);
+});
+
 function hasCjk(text) {
   return CJK_RE.test(String(text || ""));
 }

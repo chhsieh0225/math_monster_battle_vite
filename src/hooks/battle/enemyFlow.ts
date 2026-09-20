@@ -1,4 +1,5 @@
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
+import { getBossSealPool } from '../../utils/combatTactics.ts';
 import type { AttackEffectVm, BattleAnimationSetter } from '../../types/battle';
 import { createAttackImpact } from '../../utils/effectTiming.ts';
 import { getEnemySkillEffect } from '../../utils/skillPresentation.ts';
@@ -735,7 +736,7 @@ export function runEnemyTurn({
     }
 
     if (bossEvent === 'seal_move') {
-      const sealPool: readonly number[] = TRAIT_BALANCE.boss.sealMovePool;
+      const sealPool = getBossSealPool(s.enemy?.id);
       const fallbackPool: readonly number[] = [0, 1, 2];
       const effectivePool: readonly number[] = sealPool.length > 0 ? sealPool : fallbackPool;
       const sealIdx = effectivePool[randInt(0, effectivePool.length - 1)] ?? 0;

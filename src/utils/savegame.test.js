@@ -30,6 +30,14 @@ function snapshot(enemies = buildRoster(() => 0, 'double'), overrides = {}) {
   });
 }
 
+test('between-battle saves exclude tide, electric charge and shared tactical openings', () => {
+  const save = snapshot(undefined, { battle: { ...createInitialBattleState(), tideStack: 3,
+    staticStack: 2, enemyExposed: true, shadowShieldCD: 0 } });
+  for (const field of ['tideStack', 'staticStack', 'enemyExposed', 'shadowShieldCD']) {
+    assert.equal(Object.hasOwn(save.battle, field), false);
+  }
+});
+
 function roundTrip(enemies, overrides) {
   const save = snapshot(enemies, overrides);
   assert.equal(writeSave(save), true);

@@ -601,8 +601,10 @@ function localizeTraitDesc(
   traitId: string | null | undefined,
   traitDesc: string | null | undefined,
   locale: LocaleCode,
+  enemyId?: string | null,
 ): string | null | undefined {
   if (!isEnglishLocale(locale)) return traitDesc;
+  if (enemyId === 'boss') return 'A multi-phase tyrant with a 2-layer shadow ward, reforming with 3 layers from phase two. Correct hits break 1 layer; Flame Rush breaks 2. After breaking it, the next answer attack gains 35% damage. Charges and seals skills, but never the basic move.';
   return (traitId ? TRAIT_TEXT_EN_BY_ID[traitId]?.desc : undefined) || traitDesc;
 }
 
@@ -748,7 +750,7 @@ export function localizeEnemy<T>(enemy: T, locale: LocaleCode): T {
     typeName: localizeTypeName(enemyData.typeName || enemyData.mType, locale),
     typeName2: localizeTypeName(enemyData.typeName2 || enemyData.mType2, locale),
     traitName: localizeTraitName(enemyData.trait, enemyData.traitName, locale),
-    traitDesc: localizeTraitDesc(enemyData.trait, enemyData.traitDesc, locale),
+    traitDesc: localizeTraitDesc(enemyData.trait, enemyData.traitDesc, locale, enemyId),
     personality: localizedPersonality,
   } as T;
 }
@@ -802,7 +804,7 @@ export function localizeEncyclopediaEnemyEntry<T>(entry: T, locale: LocaleCode):
     desc: MONSTER_DESC_EN[key] || enemyEntry.desc,
     habitat: MONSTER_HABITAT_EN[key] || enemyEntry.habitat,
     traitName: localizeTraitName(enemyEntry.trait, enemyEntry.traitName, locale),
-    traitDesc: localizeTraitDesc(enemyEntry.trait, enemyEntry.traitDesc, locale),
+    traitDesc: localizeTraitDesc(enemyEntry.trait, enemyEntry.traitDesc, locale, enemyEntry.id || key),
   } as T;
 }
 

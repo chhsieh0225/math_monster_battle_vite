@@ -67,7 +67,7 @@ test('buildPlayerAnswerHandlerDeps maps battle/ui/runtime/callback sources corre
   const battleFields = makeFnMap([
     'setTC', 'setTW', 'setStreak', 'setPassiveCount', 'setCharge', 'setMaxStreak',
     'setSpecDef', 'setMLvls', 'setMLvlUp', 'setMHits', 'setBossCharging',
-    'setBurnStack', 'setPHp', 'setPHpSub', 'setFrozen', 'setShattered',
+    'setBurnStack', 'setTideStack', 'setEnemyExposed', 'setPHp', 'setPHpSub', 'setFrozen', 'setShattered',
     'setStaticStack', 'setEHp', 'setCursed', 'setShadowShieldCD', 'setFuryRegenUsed',
     'setConsecutiveWrong',
   ]);
@@ -90,6 +90,8 @@ test('buildPlayerAnswerHandlerDeps maps battle/ui/runtime/callback sources corre
   assert.equal(deps.challengeDamageMult, runtime.challengeDamageMult);
   assert.equal(deps.setTW, battleFields.setTW);
   assert.equal(deps.setShattered, battleFields.setShattered);
+  assert.equal(deps.setTideStack, battleFields.setTideStack);
+  assert.equal(deps.setEnemyExposed, battleFields.setEnemyExposed);
   assert.equal(deps.setBText, ui.setBText);
   assert.equal(deps.tryUnlock, callbacks.tryUnlock);
   assert.equal(deps.runAllySupportTurn, callbacks.runAllySupportTurn);

@@ -28,6 +28,8 @@ type BuildVictoryFlowArgsArgs = {
   battleFields: Pick<
     BattleFieldSetters,
     | 'setBurnStack'
+    | 'setTideStack'
+    | 'setEnemyExposed'
     | 'setStaticStack'
     | 'setFrozen'
     | 'setShattered'
@@ -86,6 +88,8 @@ export function buildVictoryFlowArgs({
     onCollectionUpdated: runtime.onCollectionUpdated,
     onDropResolved: runtime.onDropResolved,
     setBurnStack: battleFields.setBurnStack,
+    setTideStack: battleFields.setTideStack,
+    setEnemyExposed: battleFields.setEnemyExposed,
     setStaticStack: battleFields.setStaticStack,
     setFrozen: battleFields.setFrozen,
     setShattered: battleFields.setShattered,

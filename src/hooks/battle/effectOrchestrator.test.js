@@ -85,3 +85,22 @@ test('runAttackEffectTimeline only schedules provided callbacks', () => {
   assert.deepEqual(calls, ['hit', 'next']);
   assert.deepEqual(delays, [100, 300]);
 });
+
+test('player releases a projectile during the lunge without firing twice on recovery', () => {
+  const queue = [];
+  const events = [];
+  effectOrchestrator.runPlayerLunge({
+    safeTo: (fn, ms) => queue.push({ fn, ms }),
+    setPAnim: (value) => events.push(value),
+    onReady: () => events.push('release'),
+    settleDelay: 900, releaseDelay: 204,
+  });
+  assert.equal(queue[0].ms, 180);
+  queue.shift().fn();
+  queue.sort((a, b) => a.ms - b.ms);
+  assert.deepEqual(queue.map(task => task.ms), [204, 900]);
+  queue.shift().fn();
+  assert.deepEqual(events, ['attackLunge 0.9s ease', 'release']);
+  queue.shift().fn();
+  assert.deepEqual(events, ['attackLunge 0.9s ease', 'release', '']);
+});

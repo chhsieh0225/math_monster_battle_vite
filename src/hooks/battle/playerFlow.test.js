@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildPostHitResolutionPlan, runPlayerAnswer } from './playerFlow.ts';
-import { getAttackEffectHitDelay } from '../../utils/effectTiming.ts';
+import { getAttackEffectHitDelay, getPlayerSkillMotion } from '../../utils/effectTiming.ts';
 import { resolvePlayerStrike } from './turnResolver.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { POWER_CAPS } from '../../data/constants.ts';
 import { withRandomSource } from '../../utils/prng.ts';
+import { STARTERS } from '../../data/starters.ts';
 
 function createClock() {
   let now = 0;
@@ -59,7 +60,7 @@ for (const slot of ['main', 'sub']) {
       const { state, clock, rawDamage, calls, counters } = prepareBossStrike({ tactic, slot });
       const guarded = tactic === 'guarded';
       const raw = guarded ? Math.round(rawDamage * BALANCE_CONFIG.traits.boss.guardedBreakDamageScale) : rawDamage;
-      const damage = applyBossDamageReduction(raw, 'boss');
+      const damage = applyBossDamageReduction(Math.round(raw * BALANCE_CONFIG.tactics.shadowWard.guardedScale), 'boss');
       const retaliation = guarded ? 0 : Math.max(1, Math.round(damage * BALANCE_CONFIG.traits.boss.chargeCounterRatio));
       clock.advance(579);
       assert.equal(state.bossCharging, true);
@@ -74,20 +75,20 @@ for (const slot of ['main', 'sub']) {
 }
 
 for (const tactic of ['guarded', 'force']) {
-  test(`${tactic} still interrupts a fully shielded hit, without bypassing the shield`, () => {
-    let chanceCalls = 0;
-    const { clock, state, counters, calls } = prepareBossStrike({ tactic, chance: () => ++chanceCalls === 2 });
+  test(`${tactic} interrupts through a ward and always makes shield progress`, () => {
+    const { clock, state, counters, calls } = prepareBossStrike({ tactic });
     clock.advance(5000);
     assert.equal(state.bossCharging, false);
-    assert.equal(counters.eHp.getValue(), 500);
-    assert.ok(calls.atkEffect.some((fx) => fx?.impact?.outcome === 'blocked'));
+    assert.ok(counters.eHp.getValue() < 500);
+    assert.equal(state.shadowShieldCD, 1);
+    assert.ok(calls.atkEffect.some((fx) => fx?.impact?.outcome === 'hit'));
     assert.equal(counters.pHp.getValue() === 100, tactic === 'guarded');
     assert.equal(calls.doEnemyTurn, 1);
   });
 }
 
 for (const [enemyId, blockCall, scale] of [
-  ['boss', 3, BALANCE_CONFIG.traits.boss.shadowShieldPartialDamageScale],
+  ['boss', 3, BALANCE_CONFIG.tactics.shadowWard.guardedScale],
   ['boss_sword_god', 2, BALANCE_CONFIG.traits.boss.swordParryScale],
 ]) {
   test(`guarded damage stacks with ${enemyId} shield/parry reduction`, () => {
@@ -183,7 +184,7 @@ for (const slot of ['main', 'sub']) {
   });
 }
 
-for (const [enemy, outcome] of [[{ trait: 'phantom' }, 'miss'], [{ id: 'boss' }, 'blocked']]) {
+for (const [enemy, outcome] of [[{ trait: 'phantom' }, 'miss']]) {
   test(`${outcome} signals no damaging contact, preserves HP and suppresses hit audio`, () => {
     const clock = createClock();
     const { state, deps, calls, counters } = createTestContext({ enemy: { maxHp: 500, mType: 'grass', ...enemy } });
@@ -248,6 +249,9 @@ function createTestContext(stateOverrides = {}) {
     cursed: false,
     bossPhase: 0,
     bossCharging: false,
+    shadowShieldCD: 2,
+    enemyExposed: false,
+    tideStack: 0,
     eHp: 500,
     burnStack: 0,
     staticStack: 0,
@@ -317,8 +321,10 @@ function createTestContext(stateOverrides = {}) {
     setEAnim: (value) => { calls.eAnim.push(value); },
     setEffMsg: (value) => { calls.effMsg.push(value); },
     setBossCharging: (value) => { state.bossCharging = value; },
-    setShadowShieldCD: () => {},
+    setShadowShieldCD: (value) => { state.shadowShieldCD = value; },
     setBurnStack: burn.setter,
+    setTideStack: (value) => { state.tideStack = value; },
+    setEnemyExposed: (value) => { state.enemyExposed = value; },
     setPHp: pHp.setter,
     setPHpSub: pHpSub.setter,
     setFrozen: frozen.setter,
@@ -710,4 +716,233 @@ test('runPlayerAnswer wrong non-risky path omits encouragement when consecutiveW
 
   const hasEncourageText = calls.bText.some((text) => text.includes('Keep going'));
   assert.equal(hasEncourageText, false);
+});
+
+function fireStrike(index, overrides = {}, { correct = true, slot = 'main', chance = () => false } = {}) {
+  const actor = { id: 'fire', name: 'Fire', type: 'fire' };
+  const ctx = createTestContext({ starter: actor, battleMode: slot === 'sub' ? 'coop' : 'single',
+    mHits: [0, 0, 0, 0], mLvls: [1, 1, 1, 1], selIdx: index,
+    enemy: { id: 'slime', mType: 'fire', maxHp: 2000 }, eHp: 2000, ...overrides });
+  withRandomSource(() => .5, () => runPlayerAnswer({ ...ctx.deps, correct, chance, attackerSlot: slot,
+    starter: actor, move: { name: 'Fire', type: 'fire', basePower: 20, growth: 0, risky: index === 3 } }));
+  return ctx;
+}
+
+test('selected fire moves build, expose and spend burn at contact, including the physical sub slot', () => {
+  for (const slot of ['main', 'sub']) {
+    const kindle = fireStrike(0, {}, { slot });
+    assert.equal(kindle.state.burnStack, 2);
+    const rush = fireStrike(1, { burnStack: 2 }, { slot });
+    assert.equal(rush.state.burnStack, 3);
+    assert.equal(rush.state.enemyExposed, true);
+    for (const [index, bonus] of [[2, 18], [3, 27]]) {
+      const baseline = fireStrike(index, {}, { slot });
+      const charged = fireStrike(index, { burnStack: 3 }, { slot });
+      assert.equal(baseline.state.eHp - charged.state.eHp, bonus);
+      assert.equal(charged.state.burnStack, 0);
+      assert.equal(charged.state.enemyExposed, false);
+      assert.ok(charged.calls.atkEffect.some(fx => fx?.impact?.outcome === 'hit'));
+    }
+  }
+});
+
+test('wrong answers and phantom misses do not consume tactical resources', () => {
+  for (const correct of [false, true]) {
+    const ctx = fireStrike(2, { burnStack: 3, enemyExposed: true,
+      enemy: { id: 'ghost', trait: 'phantom', mType: 'ghost', maxHp: 2000 } }, { correct, chance: () => true });
+    assert.equal(ctx.state.burnStack, 3);
+    assert.equal(ctx.state.enemyExposed, true);
+  }
+});
+
+test('opening is shared with the next chosen ally and then consumed', () => {
+  const run = (exposed) => {
+    const ctx = createTestContext({ enemyExposed: exposed, battleMode: 'coop',
+      starter: { id: 'water', type: 'water' }, enemy: { id: 'slime', mType: 'water', maxHp: 500 } });
+    withRandomSource(() => .5, () => runPlayerAnswer({ ...ctx.deps, correct: true, starter: ctx.state.starter,
+      attackerSlot: 'sub', move: { name: 'Water', type: 'water', basePower: 24, growth: 0 } }));
+    return ctx;
+  };
+  const normal = run(false), empowered = run(true);
+  assert.ok(empowered.state.eHp < normal.state.eHp);
+  assert.equal(empowered.state.enemyExposed, false);
+  assert.equal(empowered.counters.pHp.getValue(), normal.counters.pHp.getValue());
+});
+
+test('ward and burn spending resolve at the same contact, not during windup', () => {
+  const clock = createClock();
+  const ctx = createTestContext({ starter: { id: 'fire', type: 'fire' }, selIdx: 1,
+    enemy: { id: 'boss', mType: 'dark', maxHp: 500 }, shadowShieldCD: 2, burnStack: 2 });
+  runPlayerAnswer({ ...ctx.deps, safeTo: clock.schedule, correct: true, starter: ctx.state.starter,
+    move: { name: 'Rush', type: 'fire', basePower: 20, growth: 0 } });
+  const motion = getPlayerSkillMotion('fire:1', 'single');
+  const hitAt = 180 + motion.releaseMs + motion.flightMs;
+  clock.advance(hitAt - 1);
+  assert.equal(ctx.state.shadowShieldCD, 2);
+  assert.equal(ctx.state.burnStack, 2);
+  clock.advance(hitAt);
+  assert.equal(ctx.state.shadowShieldCD, 0);
+  assert.equal(ctx.state.burnStack, 3);
+  assert.equal(ctx.state.enemyExposed, true);
+  assert.match(ctx.calls.pAnim.at(-1), /attackLunge/);
+  assert.equal(ctx.calls.atkEffect.at(-1).flightMs, motion.flightMs);
+  clock.advance(180 + motion.durationMs);
+  assert.equal(ctx.calls.pAnim.at(-1), '');
+});
+
+test('leaving battle after an early fire release cancels damage, resources and animation callbacks', () => {
+  const clock = createClock();
+  const ctx = createTestContext({ starter: { id: 'fire', type: 'fire' }, selIdx: 2,
+    enemy: { id: 'boss', maxHp: 500, mType: 'dark' }, shadowShieldCD: 0, burnStack: 3, enemyExposed: true });
+  runPlayerAnswer({ ...ctx.deps, safeTo: clock.schedule, correct: true, starter: ctx.state.starter,
+    move: { name: 'Burst', type: 'fire', basePower: 20, growth: 0 } });
+  clock.advance(180 + getPlayerSkillMotion('fire:2').releaseMs);
+  assert.equal(ctx.calls.atkEffect.at(-1).skillId, 'fire:2');
+  const animations = ctx.calls.pAnim.length;
+  ctx.state.screen = 'title';
+  clock.advance(5000);
+  assert.equal(ctx.calls.pAnim.length, animations);
+  assert.equal(ctx.state.eHp, 500);
+  assert.equal(ctx.state.burnStack, 3);
+  assert.equal(ctx.state.enemyExposed, true);
+  assert.equal(ctx.state.shadowShieldCD, 0);
+  assert.ok(ctx.calls.atkEffect.every(fx => !fx?.impact));
+  assert.equal(ctx.calls.doEnemyTurn, 0);
+});
+
+test('basic moves open the boss ward on schedule and never randomly lose all damage', () => {
+  for (const layers of [2, 1, 0]) {
+    const { state, clock, counters } = prepareBossStrike({ state: { shadowShieldCD: layers, bossCharging: false } });
+    clock.advance(5000);
+    assert.ok(counters.eHp.getValue() < 500);
+    assert.equal(state.shadowShieldCD, layers > 0 ? layers - 1 : 2);
+  }
+});
+
+test('an opening hit crossing into phase two reforms the stronger ward immediately', () => {
+  const { state, clock } = prepareBossStrike({ state: { shadowShieldCD: 0, bossCharging: false, eHp: 305 } });
+  clock.advance(5000);
+  assert.ok(state.eHp <= 300);
+  assert.equal(state.shadowShieldCD, 3);
+});
+
+function elementStrike(id, index, overrides = {}, options = {}) {
+  const actor = STARTERS.find(s => s.id === id);
+  const slot = options.slot ?? 'main';
+  const ctx = createTestContext({ starter: actor, allySub: slot === 'sub' ? actor : null,
+    battleMode: slot === 'sub' ? 'coop' : 'single', coopActiveSlot: slot,
+    mHits: [0, 0, 0, 0], mLvls: [1, 1, 1, 1], selIdx: index,
+    enemy: { id: 'slime', mType: id, maxHp: 2000 }, eHp: 2000, ...overrides });
+  const deps = { ...ctx.deps, correct: true, starter: actor, move: actor.moves[index],
+    attackerSlot: slot, ...options };
+  withRandomSource(() => .5, () => runPlayerAnswer(deps));
+  return ctx;
+}
+
+for (const slot of ['main', 'sub']) {
+  test(`water builds, bursts and guarantees full-tide control from ${slot}`, () => {
+    assert.equal(elementStrike('water', 0, {}, { slot }).state.tideStack, 1);
+    assert.equal(elementStrike('water', 1, { tideStack: 1 }, { slot }).state.tideStack, 3);
+    for (const [idx, bonus] of [[2, 24], [3, 15]]) {
+      const empty = elementStrike('water', idx, {}, { slot });
+      const full = elementStrike('water', idx, { tideStack: 3 }, { slot });
+      assert.equal(empty.state.eHp - full.state.eHp, bonus);
+      assert.equal(full.state.tideStack, 0);
+      assert.equal(full.calls.handleFreeze, idx === 3 ? 1 : 0);
+      assert.equal(full.calls.doEnemyTurn, idx === 3 ? 0 : 1);
+      assert.equal(empty.calls.handleFreeze, 0);
+      assert.equal(full.state.shattered, empty.state.shattered, 'water control must not grant ice shatter');
+    }
+  });
+
+  test(`electric automatic discharge and selected spending are mutually exclusive for ${slot}`, () => {
+    for (const [idx, before] of [[0, 2], [2, 1]]) {
+      const empty = elementStrike('electric', idx, {}, { slot });
+      const charged = elementStrike('electric', idx, { staticStack: before }, { slot });
+      assert.equal(empty.state.eHp - charged.state.eHp, 12);
+      assert.equal(charged.state.staticStack, 0);
+      assert.equal(charged.calls.sfx.filter(s => s === 'staticDischarge').length, 1);
+    }
+    for (const [idx, bonus, remaining] of [[1, 10, 1], [3, 24, 0]]) {
+      const empty = elementStrike('electric', idx, {}, { slot });
+      const charged = elementStrike('electric', idx, { staticStack: 2 }, { slot });
+      assert.equal(empty.state.eHp - charged.state.eHp, bonus);
+      assert.equal(charged.state.staticStack, remaining);
+      assert.ok(!charged.calls.sfx.includes('staticDischarge'));
+    }
+  });
+}
+
+test('water and electric spenders only break extra ward layers when their requirements are met', () => {
+  for (const [id, idx, field, full] of [['water', 2, 'tideStack', 3], ['electric', 3, 'staticStack', 2]]) {
+    for (const [resource, expected] of [[0, 1], [full - 1, 1], [full, 0]]) {
+      const ctx = elementStrike(id, idx, { [field]: resource, shadowShieldCD: 2,
+        enemy: { id: 'boss', mType: id, maxHp: 2000 } });
+      assert.equal(ctx.state.shadowShieldCD, expected);
+      assert.equal(ctx.state[field], 0);
+    }
+  }
+});
+
+test('faster tide building really trades 15 percent direct damage instead of granting free resources', () => {
+  const legacy = elementStrike('water', 1, {}, { starter: { type: 'water' } });
+  const surge = elementStrike('water', 1);
+  assert.equal(2000 - surge.state.eHp, Math.round((2000 - legacy.state.eHp) * .85));
+  assert.equal(surge.state.tideStack, 2);
+});
+
+test('wrong answers, misses and non-element partners preserve tide and electric resources', () => {
+  for (const id of ['water', 'electric']) {
+    for (const missed of [false, true]) {
+      const ctx = elementStrike(id, 3, { tideStack: 3, staticStack: 2, enemyExposed: true, shadowShieldCD: 2,
+        enemy: { id: 'ghost', trait: 'phantom', mType: id, maxHp: 2000 } },
+      { correct: missed, chance: () => missed });
+      assert.equal(ctx.state.tideStack, 3);
+      assert.equal(ctx.state.staticStack, 2);
+      assert.equal(ctx.state.shadowShieldCD, 2);
+      assert.equal(ctx.state.enemyExposed, true);
+      assert.equal(ctx.calls.handleFreeze, 0);
+    }
+  }
+  const other = elementStrike('grass', 0, { tideStack: 3, staticStack: 2 });
+  assert.equal(other.state.tideStack, 3);
+  assert.equal(other.state.staticStack, 2);
+});
+
+test('new element contact uses the captured physical sub actor and never spends resources during travel', () => {
+  for (const [id, idx, field, before] of [['water', 3, 'tideStack', 3], ['electric', 3, 'staticStack', 2]]) {
+    const clock = createClock();
+    const animations = [];
+    const ctx = elementStrike(id, idx, { [field]: before }, { slot: 'sub', safeTo: clock.schedule,
+      setPAnim: (value, slot) => animations.push({ value, slot }) });
+    const motion = getPlayerSkillMotion(`${id}:${idx}`);
+    const contact = 180 + motion.releaseMs + motion.flightMs;
+    ctx.state.coopActiveSlot = 'main';
+    clock.advance(contact - 1);
+    assert.equal(ctx.state[field], before);
+    assert.equal(ctx.state.eHp, 2000);
+    assert.equal(ctx.calls.atkEffect.at(-1).sourceSlot, 'sub');
+    assert.equal(ctx.calls.atkEffect.at(-1).skillId, `${id}:${idx}`);
+    clock.advance(contact);
+    assert.equal(ctx.state[field], 0);
+    assert.ok(ctx.state.eHp < 2000);
+    assert.equal(animations.at(-1).slot, 'sub');
+    assert.match(animations.at(-1).value, /attackLunge/);
+  }
+});
+
+test('leaving during new element travel cancels resources, control and damage', () => {
+  for (const id of ['water', 'electric']) {
+    const clock = createClock();
+    const ctx = elementStrike(id, 3, { tideStack: 3, staticStack: 2 }, { safeTo: clock.schedule });
+    clock.advance(180 + getPlayerSkillMotion(`${id}:3`).releaseMs);
+    ctx.state.screen = 'title';
+    clock.advance(5000);
+    assert.equal(ctx.state.tideStack, 3);
+    assert.equal(ctx.state.staticStack, 2);
+    assert.equal(ctx.state.eHp, 2000);
+    assert.equal(ctx.calls.handleFreeze, 0);
+    assert.equal(ctx.calls.doEnemyTurn, 0);
+    assert.ok(ctx.calls.atkEffect.every(fx => !fx?.impact));
+  }
 });

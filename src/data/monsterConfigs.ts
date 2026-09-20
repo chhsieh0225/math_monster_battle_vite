@@ -282,7 +282,7 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     typeName2: "電",
     trait: "tyrant",
     traitName: "霸王",
-    traitDesc: "操控暗雷之力的多階段王者。能蓄力釋放毀滅大招、封印對手技能。暗影護盾有20%機率完全格擋，並有50%機率額外減傷。暗/電雙屬性讓水系與電系攻擊大幅削弱。",
+    traitDesc: "操控暗雷之力的多階段王者。暗影護盾有兩層，第二階段起重建為三層；任一招答對可破一層，烈焰衝可破兩層。破盾後下一次作答攻擊傷害提高35%，之後重建護盾。可蓄力、封招，但不封印基本招式。",
     nameEn: "Dark Dragon King",
     descEn: "The legendary ruler of the abyss. Only top trainers can challenge this tyrant.",
     habitatEn: "💀 Abyssal Depths",

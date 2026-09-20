@@ -6,6 +6,9 @@ import type { BossIntent } from '../../../utils/turnFlow.ts';
 import type { InventoryData, ItemId } from '../../../types/game';
 import { BATTLE_ITEM_ORDER, ITEM_CATALOG } from '../../../data/itemCatalog.ts';
 import { getSkillMastery } from '../../../utils/skillPresentation.ts';
+import { getFireTactic, planFireTactic, planElementTactic } from '../../../utils/combatTactics.ts';
+import type { getShadowWard } from '../../../utils/combatTactics.ts';
+import { BALANCE_CONFIG } from '../../../data/balanceConfig.ts';
 import type { MoveRuntime } from './buildBattleCore';
 
 type TranslatorParams = Record<string, string | number>;
@@ -30,6 +33,11 @@ type BattleMoveMenuProps = {
   moveRuntime: MoveRuntime[];
   inventory: InventoryData;
   bossIntent?: BossIntent | null;
+  shadowWard?: ReturnType<typeof getShadowWard>;
+  burnStack?: number;
+  tideStack?: number;
+  staticStack?: number;
+  enemyExposed?: boolean;
   onSelectMove: (idx: number, bossTactic?: BossTactic) => void;
   onUseItem: (itemId: ItemId) => void;
   onToggleCoopActive: () => void;
@@ -66,6 +74,11 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
   moveRuntime,
   inventory,
   bossIntent,
+  shadowWard,
+  burnStack = 0,
+  tideStack = 0,
+  staticStack = 0,
+  enemyExposed = false,
   onSelectMove,
   onUseItem,
   onToggleCoopActive,
@@ -75,6 +88,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
 }: BattleMoveMenuProps) {
   const [bossTactic, setBossTactic] = useState<BossTactic>('guarded');
   const specDefItemName = resolveSpecDefItemName(activeStarter.type, t);
+  const resource = planElementTactic(activeStarter.id, battleMode, 0, tideStack, staticStack);
   const handleMoveSelect = useCallback((idx: number, locked: boolean) => {
     if (locked) return;
     if (bossIntent?.charging) onSelectMove(idx, bossTactic);
@@ -130,6 +144,11 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
 
   return (
     <div className={`battle-menu-wrap${bossIntent ? ' has-boss-intent' : ''}`}>
+      {battleMode !== 'pvp' && (activeStarter.id === 'fire' || resource || enemyExposed) && <div className="battle-menu-hint battle-tactic-state" data-element={resource?.kind} role="status">
+        {activeStarter.id === 'fire' && <span>{t('battle.tactics.burn', 'Burn: {stacks}/{max}', { stacks: burnStack, max: BALANCE_CONFIG.traits.player.burnMaxStacks })}</span>}
+        {resource && <span>{t(`battle.tactics.${resource.kind}.resource`, '{stacks}/{max}', { stacks: resource.before, max: resource.max })}</span>}
+        {enemyExposed && <strong>{t('battle.tactics.exposed', 'Opening: next answer attack +{bonus}%', { bonus: Math.round((BALANCE_CONFIG.tactics.exposedScale - 1) * 100) })}</strong>}
+      </div>}
       {isCoopBattle && (
         <div className="battle-menu-hint">
           🤝 {t('battle.coopTurn', 'Co-op · Active:')} {activeStarter.typeIcon} {activeStarter.name}
@@ -155,6 +174,14 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
             <span className="battle-intent-label">{t('battle.intent.title', 'Boss forecast')}</span>
             <strong>{t(`battle.intent.${bossIntent.event}`, bossIntent.event)}</strong>
           </div>
+          {shadowWard && <div className={`battle-ward ${shadowWard.open ? 'is-open' : ''}`} role="status">
+            <strong>{shadowWard.open
+              ? t('battle.ward.open', 'Ward broken: next answer attack +{bonus}%', { bonus: Math.round((shadowWard.damageScale - 1) * 100) })
+              : t('battle.ward.guard', 'Shadow ward: {layers} layers', { layers: shadowWard.layers })}</strong>
+            <span className="battle-ward-pips" aria-hidden="true">{Array.from({ length: shadowWard.max }, (_, i) => <i key={i} className={i < shadowWard.layers ? 'is-lit' : ''} />)}</span>
+            <p>{shadowWard.open ? t('battle.ward.openHelp', 'Use a strong hit; the ward then reforms.')
+              : t('battle.ward.help', 'Correct hits break 1 layer; marked moves break 2. The basic move cannot be sealed.')}</p>
+          </div>}
           {bossIntent.charging ? (
             <>
               <div className="battle-tactics" role="group" aria-label={t('battle.tactic.choose', 'Choose how to interrupt, then pick any move')}>
@@ -182,6 +209,9 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
       <div className="battle-menu-grid">
         {moveVisuals.map(({ m, i, sealed, locked, lv, pw, atCap, eff, moveBtnStyle, moveLevelBadgeStyle, moveProgressStyle }) => {
           const mastery = getSkillMastery(lv);
+          const fireTactic = getFireTactic(activeStarter.id, battleMode, i);
+          const tactic = planFireTactic(fireTactic, burnStack, enemyExposed);
+          const element = planElementTactic(activeStarter.id, battleMode, i, tideStack, staticStack);
           return (
             <button
               className={`battle-menu-btn ${locked ? 'is-locked' : ''}`}
@@ -227,7 +257,22 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
                   <div className="move-progress-fill" style={moveProgressStyle} />
                 </div>
               )}
-              {battleMode !== 'pvp' && <div className="move-mastery" data-mastery={mastery.tier}
+              {fireTactic ? <div className="move-tactic" data-ready={tactic.consumedStacks > 0 || undefined}>
+                {t(`battle.tactics.move.${fireTactic}`, fireTactic, {
+                  bonus: tactic.bonusDamage, stacks: tactic.consumedStacks,
+                  add: fireTactic === 'kindle' ? BALANCE_CONFIG.tactics.fire.kindleStacks : BALANCE_CONFIG.tactics.fire.rushStacks,
+                  expose: Math.round((BALANCE_CONFIG.tactics.exposedScale - 1) * 100),
+                })}
+              </div> : element ? <div className="move-tactic" data-ready={element.spent > 0 || element.dischargeDamage > 0 || undefined}>
+                {t(`battle.tactics.${element.kind}.move.${i}`, '', {
+                  stacks: element.spent, add: element.added, bonus: element.bonusDamage, max: element.max,
+                  power: Math.round(element.powerScale * 100), discharge: element.dischargeDamage,
+                  ward: element.wardBreak === 2 ? t('battle.tactics.twoLayers', ' · Break 2 layers') : '',
+                  control: element.guaranteedFreeze ? t('battle.tactics.freezeReady', ' · Guaranteed freeze')
+                    : t('battle.tactics.freezeAtMax', ' · Full tide: guaranteed freeze'),
+                })}
+                {element.dischargeDamage > 0 && <strong> · {t('battle.tactics.dischargeReady', 'Discharge +{damage}', { damage: element.dischargeDamage })}</strong>}
+              </div> : battleMode !== 'pvp' && <div className="move-mastery" data-mastery={mastery.tier}
                 title={mastery.nextLevel
                   ? t('battle.skill.next', 'Lv.{level}: next visual evolution', { level: mastery.nextLevel })
                   : t('battle.skill.complete', 'Final visual evolution unlocked')}>

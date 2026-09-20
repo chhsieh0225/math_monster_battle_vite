@@ -22,6 +22,7 @@ type PlayerLungeArgs = {
   onReady?: () => void;
   startDelay?: number;
   settleDelay?: number;
+  releaseDelay?: number;
 };
 
 type AttackEffectTimelineArgs = {
@@ -62,13 +63,15 @@ export const effectOrchestrator = {
     onReady,
     startDelay = 180,
     settleDelay = 400,
+    releaseDelay,
   }: PlayerLungeArgs): void {
     safeTo(() => {
       setPAnim(`attackLunge ${settleDelay / 1000}s ease`);
       safeTo(() => {
         setPAnim('');
-        if (onReady) onReady();
+        if (releaseDelay === undefined && onReady) onReady();
       }, settleDelay);
+      if (releaseDelay !== undefined && onReady) safeTo(onReady, releaseDelay);
     }, startDelay);
   },
 

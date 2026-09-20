@@ -13,6 +13,7 @@ import { getLearningHintSteps, getLearningHintCost } from '../../utils/learningP
 import { getAttackImpactProfile } from '../../utils/effectTiming.ts';
 import { getSkillActorKeys } from '../../utils/skillPresentation.ts';
 import { getBossIntent } from '../../utils/turnFlow.ts';
+import { getShadowWard } from '../../utils/combatTactics.ts';
 import TextBox from '../ui/TextBox';
 import type {
   ScreenName,
@@ -108,12 +109,15 @@ const BATTLE_STATE_RENDER_KEYS = [
   'atkEffect',
   'effMsg',
   'burnStack',
+  'tideStack',
+  'enemyExposed',
   'frozen',
   'staticStack',
   'specDef',
   'cursed',
   'bossPhase',
   'bossTurn',
+  'shadowShieldCD',
   'bossCharging',
   'sealedMove',
   'sealedTurns',
@@ -1083,6 +1087,11 @@ function BattleScreenComponent({
             moveRuntime={moveRuntime}
             inventory={S.inventory}
             bossIntent={bossIntent}
+            shadowWard={getShadowWard(S.enemy?.id, S.battleMode, S.shadowShieldCD, S.eHp, S.enemy?.maxHp ?? 0)}
+            burnStack={S.burnStack}
+            tideStack={S.tideStack}
+            staticStack={S.staticStack}
+            enemyExposed={S.enemyExposed}
             onSelectMove={A.selectMove}
             onUseItem={A.useItem}
             onToggleCoopActive={A.toggleCoopActive}

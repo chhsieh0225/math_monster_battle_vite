@@ -24,6 +24,7 @@ for (const battleMode of ['single', 'coop']) {
     for (let round = 0; round < roster.length; round++) {
       assert.equal(state.round, round);
       assert.equal(state.enemy.id, roster[round].id);
+      if (state.enemy.id === 'boss') assert.notEqual(state.sealedMove, 0);
       assert.equal(state.enemy.sceneMType, roster[round].sceneMType);
       assert.equal(phase, 'bossIntro');
       assert.equal(getScreenMusic(state), round === 0 ? 'boss_dark_king' : roster[round].id);

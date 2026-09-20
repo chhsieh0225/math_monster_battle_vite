@@ -12,6 +12,7 @@ import {
   getAttackEffectClearDelay,
   getAttackEffectHitDelay,
   getAttackEffectNextStepDelay,
+  getPlayerSkillMotion,
 } from '../../utils/effectTiming.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { canChooseBossTactic, getBossTacticProfile } from '../../utils/turnFlow.ts';
@@ -24,6 +25,7 @@ import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
 import { TYPE_EMOJI } from '../../data/elementEmoji.ts';
 import { isCoopBattleMode } from './coopFlow.ts';
 import { getCharacterSkillId } from '../../utils/skillPresentation.ts';
+import { getFireTactic, planFireTactic, planElementTactic, getShadowWard, getShadowWardMax, hitShadowWard } from '../../utils/combatTactics.ts';
 
 const ENCOURAGE_THRESHOLD = 3;
 
@@ -93,6 +95,8 @@ type BattleRuntimeState = {
   consecutiveWrong?: number;
   eHp: number;
   burnStack: number;
+  tideStack?: number;
+  enemyExposed?: boolean;
   shattered: boolean;
   staticStack: number;
   q: BattleQuestion | null;
@@ -165,6 +169,8 @@ type RunPlayerAnswerArgs = {
   setEffMsg: (value: EffectMessage | null) => void;
   setBossCharging: BoolSetter;
   setBurnStack: NumberSetter;
+  setTideStack: NumberSetter;
+  setEnemyExposed: BoolSetter;
   setPHp: NumberSetter;
   setPHpSub?: NumberSetter;
   setFrozen: BoolSetter;
@@ -355,6 +361,8 @@ export function runPlayerAnswer({
   setEffMsg,
   setBossCharging,
   setBurnStack,
+  setTideStack,
+  setEnemyExposed,
   setPHp,
   setPHpSub,
   setFrozen,
@@ -388,6 +396,8 @@ export function runPlayerAnswer({
   if (s.selIdx == null || !s.enemy) return;
   const moveIdx = s.selIdx;
   const bossTactic = s.q?.bossTactic;
+  const skillId = getCharacterSkillId(starter.id, moveIdx);
+  const motion = getPlayerSkillMotion(skillId, s.battleMode);
   // Capture the actor once; delayed callbacks must not follow active-slot changes.
   const setPAnim = (animation: string): void => setPlayerAnimation(animation, attackerSlot);
 
@@ -515,8 +525,10 @@ export function runPlayerAnswer({
 
     setPhase('playerAtk');
     effectOrchestrator.runPlayerLunge({
-      safeTo,
+      safeTo: safeToIfBattleActive,
       setPAnim,
+      settleDelay: motion?.durationMs,
+      releaseDelay: motion?.releaseMs,
       onReady: () => {
         if (!isBattleActive()) return;
         const s2 = sr.current;
@@ -529,13 +541,14 @@ export function runPlayerAnswer({
           lvl: s2.mLvls[moveIdx],
         };
         const effectTimeline = {
-          hitDelay: getAttackEffectHitDelay(vfxType),
+          hitDelay: motion?.flightMs ?? getAttackEffectHitDelay(vfxType),
           clearDelay: getAttackEffectClearDelay(effectMeta),
           nextDelay: getAttackEffectNextStepDelay(effectMeta),
         };
         const attackEffect: AttackEffectVm = {
           type: vfxType, idx: effectMeta.idx, lvl: effectMeta.lvl, sourceSlot: attackerSlot,
-          skillId: getCharacterSkillId(starter?.id, moveIdx),
+          skillId,
+          ...(motion ? { flightMs: motion.flightMs } : {}),
         };
         setAtkEffect(attackEffect);
         if (typeof sfx.playMove === 'function') sfx.playMove(vfxType, effectMeta.idx);
@@ -621,8 +634,13 @@ export function runPlayerAnswer({
             bossCharging: s3.bossCharging,
           });
           const tacticProfile = getBossTacticProfile(wasBossCharging ? bossTactic : undefined);
-          const tacticalDmg = tacticProfile.damageScale === 1
-            ? dmg : Math.max(1, Math.round(dmg * tacticProfile.damageScale));
+          const fireTactic = getFireTactic(starter.id, s3.battleMode, moveIdx);
+          const hadOpening = Boolean(s3.enemyExposed);
+          const tactics = planFireTactic(fireTactic, s3.burnStack, hadOpening);
+          const elementTactic = planElementTactic(starter.id, s3.battleMode, moveIdx, s3.tideStack, s3.staticStack);
+          const tacticalDmg = Math.max(1, Math.round(
+            (dmg * tactics.damageScale * (elementTactic?.powerScale ?? 1) + tactics.bonusDamage + (elementTactic?.bonusDamage ?? 0)) * tacticProfile.damageScale,
+          ));
           if (wasBossCharging) {
             setBossCharging(false);
             const interruptText = bossTactic === 'guarded'
@@ -655,37 +673,17 @@ export function runPlayerAnswer({
             return false;
           };
 
-          // Dark Dragon King shadow shield: 20% full block, 50% reduce by 40%
           let finalDmg = tacticalDmg;
-          if (s3.enemy.id === 'boss') {
-            const fullBlock = chance(TRAIT_BALANCE.boss.shadowShieldFullBlockChance);
-            const partialBlock = !fullBlock && chance(TRAIT_BALANCE.boss.shadowShieldPartialBlockChance);
-            if (fullBlock) {
-              setAtkEffect({ ...attackEffect, impact: createAttackImpact('blocked') });
-              setShadowShieldCD(0);
-              sfx.play('specDef');
-              setEAnim('enemyShieldPulse 0.8s ease');
-              setEffMsg({ text: tr(t, 'battle.effect.shadowShield', '🛡️ Shadow Shield absorbed the attack!'), color: '#7c3aed' });
-              safeToIfBattleActive(() => setEffMsg(null), 1500);
-              addD(tr(t, 'battle.tag.shielded', '🛡️BLOCKED'), fxt().enemyMain.x, fxt().enemyMain.y, '#7c3aed');
-              const chargeCounterKo = runChargeCounter(tacticalDmg);
-              safeToIfBattleActive(() => {
-                setEAnim('');
-                setAtkEffect(null);
-              }, effectTimeline.clearDelay);
-              if (!chargeCounterKo) safeToIfBattleActive(() => doEnemyTurn(), effectTimeline.nextDelay);
-              return;
-            }
-            if (partialBlock) {
-              setShadowShieldCD(1);
-              finalDmg = Math.max(1, Math.round(tacticalDmg * TRAIT_BALANCE.boss.shadowShieldPartialDamageScale));
-              sfx.play('specDef');
-              setEffMsg({ text: tr(t, 'battle.effect.shadowShieldPartial', '🛡️ Shadow Shield reduced damage!'), color: '#a78bfa' });
-              safeToIfBattleActive(() => setEffMsg(null), 1500);
-              addD(tr(t, 'battle.tag.parry', '⚔️PARRY'), fxt().enemyAbove.x, fxt().enemyAbove.y, '#a78bfa');
-            } else {
-              setShadowShieldCD(-1);
-            }
+          const ward = getShadowWard(s3.enemy.id, s3.battleMode, s3.shadowShieldCD, s3.eHp, s3.enemy.maxHp);
+          if (ward) {
+            const nextWard = hitShadowWard(ward, elementTactic?.wardBreak ?? tactics.wardBreak);
+            if (!ward.open) setShadowShieldCD(nextWard);
+            finalDmg = Math.max(1, Math.round(finalDmg * ward.damageScale));
+            sfx.play(ward.open || nextWard === 0 ? 'effective' : 'specDef');
+            setEffMsg({ text: tr(t, ward.open ? 'battle.ward.strike' : nextWard === 0 ? 'battle.ward.break' : 'battle.ward.chip',
+              ward.open ? 'Opening exploited!' : nextWard === 0 ? 'Ward broken! Next answer attack is empowered.' : 'Ward cracked: {layers} left',
+              { layers: nextWard }), color: ward.open || nextWard === 0 ? '#fbbf24' : '#a78bfa' });
+            safeToIfBattleActive(() => setEffMsg(null), 1500);
           }
 
           // Sword God parry: 50% chance to halve incoming damage
@@ -720,14 +718,33 @@ export function runPlayerAnswer({
           }
           let afterHp = Math.max(0, s3.eHp - appliedHitDmg - shatterDmg);
 
-          let newBurn = s3.burnStack;
+          setEnemyExposed(tactics.nextExposed);
+          if (fireTactic === 'kindle' || fireTactic === 'breach' || tactics.consumedStacks > 0 || hadOpening) {
+            const event = tactics.consumedStacks > 0 ? 'detonate' : fireTactic === 'breach' ? 'breach'
+              : hadOpening ? 'exploit' : 'kindle';
+            safeToIfBattleActive(() => addD(tr(t, `battle.tactics.feedback.${event}`, event,
+              { stacks: tactics.consumedStacks || tactics.nextBurn }), fxt().enemyAbove.x, fxt().enemyAbove.y,
+              event === 'breach' || event === 'exploit' ? '#fbbf24' : '#fb923c'), 220);
+          }
+          let newBurn = fireTactic ? tactics.nextBurn : s3.burnStack;
+          if (elementTactic) {
+            const { kind, next, spent, added, dischargeDamage } = elementTactic;
+            if (kind === 'water') setTideStack(next);
+            else setStaticStack(next);
+            if (added > 0 || spent > 0) safeToIfBattleActive(() => addD(tr(t, `battle.tactics.${kind}.${dischargeDamage > 0 ? 'discharge' : spent > 0 ? 'spent' : 'built'}`,
+              spent > 0 ? 'Spent {stacks}' : 'Stored {stacks}', { stacks: spent || next }),
+              fxt().enemyAbove.x, fxt().enemyAbove.y, kind === 'water' ? '#38bdf8' : '#facc15'), 220);
+          }
+          if (fireTactic) setBurnStack(newBurn);
           if (starter.type === 'fire' && afterHp > 0) {
-            newBurn = Math.min(s3.burnStack + 1, TRAIT_BALANCE.player.burnMaxStacks);
-            setBurnStack(newBurn);
+            if (!fireTactic) {
+              newBurn = Math.min(s3.burnStack + 1, TRAIT_BALANCE.player.burnMaxStacks);
+              setBurnStack(newBurn);
+            }
             const burnRawDmg = newBurn * TRAIT_BALANCE.player.burnPerStackDamage;
             const burnDmg = applyBossDamageReduction(burnRawDmg, s3.enemy.id);
             afterHp = Math.max(0, afterHp - burnDmg);
-            safeToIfBattleActive(() => addD(`🔥-${burnDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#f97316'), 500);
+            if (burnDmg > 0) safeToIfBattleActive(() => addD(`🔥-${burnDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#f97316'), 500);
           }
 
           if (starter.type === 'grass') {
@@ -740,7 +757,7 @@ export function runPlayerAnswer({
           let willFreeze = false;
           if ((starter.type === 'water' || starter.type === 'ice') && afterHp > 0) {
             const isIce = starter.type === 'ice';
-            if (chance(freezeChance(s3.mLvls[moveIdx], isIce && move.risky))) {
+            if (elementTactic?.guaranteedFreeze || chance(freezeChance(s3.mLvls[moveIdx], isIce && move.risky))) {
               willFreeze = true;
               setFrozen(true);
               frozenR.current = true;
@@ -751,13 +768,14 @@ export function runPlayerAnswer({
           }
 
           if (starter.type === 'electric' && afterHp > 0) {
-            const newStatic = Math.min(s3.staticStack + 1, TRAIT_BALANCE.player.staticMaxStacks);
-            setStaticStack(newStatic);
-            if (newStatic >= TRAIT_BALANCE.player.staticMaxStacks) {
-              const staticRawDmg = TRAIT_BALANCE.player.staticDischargeDamage;
+            const newStatic = elementTactic?.next ?? Math.min(s3.staticStack + 1, TRAIT_BALANCE.player.staticMaxStacks);
+            if (!elementTactic) setStaticStack(newStatic);
+            const staticRawDmg = elementTactic?.dischargeDamage
+              ?? (newStatic >= TRAIT_BALANCE.player.staticMaxStacks ? TRAIT_BALANCE.player.staticDischargeDamage : 0);
+            if (staticRawDmg > 0) {
               const staticDmg = applyBossDamageReduction(staticRawDmg, s3.enemy.id);
               afterHp = Math.max(0, afterHp - staticDmg);
-              setStaticStack(0);
+              if (!elementTactic) setStaticStack(0);
               sfx.play('staticDischarge');
               safeToIfBattleActive(() => addD(`⚡-${staticDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#fbbf24'), 500);
             }
@@ -781,6 +799,7 @@ export function runPlayerAnswer({
             }, 600);
           }
 
+          if (ward?.open) setShadowShieldCD(getShadowWardMax(afterHp, s3.enemy.maxHp));
           setEHp(afterHp);
           setAtkEffect({ ...attackEffect, impact: createAttackImpact(isCrit ? 'critical' : 'hit') });
           sfx.play(impactSound);

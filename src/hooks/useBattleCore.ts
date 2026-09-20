@@ -214,7 +214,7 @@ export function useBattle() {
     round, enemy, eHp, enemySub, eHpSub,
     streak, passiveCount, charge, tC, tW, defeated, maxStreak,
     mHits, mLvls, mLvlUp,
-    burnStack, frozen, shattered, staticStack, specDef, defAnim, cursed,
+    burnStack, tideStack, enemyExposed, frozen, shattered, staticStack, specDef, defAnim, cursed,
     diffLevel,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, shadowShieldCD, furyRegenUsed,
   } = battle;
@@ -325,7 +325,7 @@ export function useBattle() {
   // ──── State ref — always points at latest committed values ────
   const sr = useBattleStateRef({
     enemy, enemySub, starter, allySub, eHp, eHpSub, pHp, pHpSub, pExp, pLvl, pStg,
-    streak, passiveCount, charge, burnStack, frozen, shattered, staticStack, specDef, cursed,
+    streak, passiveCount, charge, burnStack, tideStack, enemyExposed, frozen, shattered, staticStack, specDef, cursed,
     mHits, mLvls, selIdx, phase, round, q,
     screen, timedMode, battleMode, diffLevel,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, shadowShieldCD, furyRegenUsed,
@@ -1140,7 +1140,7 @@ export function useBattle() {
     mHits, mLvls, mLvlUp,
     phase, selIdx, q, fb, bText, answered,
     dmgs, parts, eAnim, pAnim, eSubAnim, pSubAnim, atkEffect, effMsg,
-    burnStack, frozen, shattered, staticStack, specDef, defAnim, cursed,
+    burnStack, tideStack, enemyExposed, frozen, shattered, staticStack, specDef, defAnim, cursed,
     bossPhase, bossTurn, bossCharging, sealedMove, sealedTurns, shadowShieldCD, furyRegenUsed, diffLevel,
     gamePaused,
     questionTimerSec,

@@ -19,6 +19,13 @@ const CRIT_BY_TYPE = {
 } as const;
 
 export const BALANCE_CONFIG = {
+  tactics: {
+    exposedScale: 1.2,
+    fire: { kindleStacks: 2, rushStacks: 1, detonatePerStack: 6, finisherPerStack: 9 },
+    water: { maxTide: 3, surgeStacks: 2, surgeDamageScale: 0.85, tsunamiPerStack: 8, vortexPerStack: 5 },
+    electric: { pulseBonus: 10, stormStacks: 2, finisherPerStack: 12, finisherWardAt: 2 },
+    shadowWard: { layers: 2, enragedLayers: 3, guardedScale: 0.6, openingScale: 1.35 },
+  },
   /** Cap for dual-type effectiveness multiplier (prevents 1.5×1.5 = 2.25× OHKO) */
   dualTypeEffCap: 1.8,
 
@@ -427,10 +434,6 @@ export const BALANCE_CONFIG = {
       furyRegenHealRatio: 0.5,
       /** Hydra: passive regeneration every enemy turn */
       hydraTurnRegenRatio: 0.1,
-      /** Dark Dragon King shadow shield */
-      shadowShieldFullBlockChance: 0.2,
-      shadowShieldPartialBlockChance: 0.5,
-      shadowShieldPartialDamageScale: 0.6,
       /** Sword God: chance to halve incoming damage */
       swordParryChance: 0.5,
       swordParryScale: 0.5,
@@ -451,4 +454,5 @@ export const BALANCE_CONFIG = {
   },
 } as const;
 
-validateBalanceConfigSchema(BALANCE_CONFIG);
+// Validate authored data in development and Node/CI, not on every production boot.
+if (import.meta.env?.DEV !== false) validateBalanceConfigSchema(BALANCE_CONFIG);

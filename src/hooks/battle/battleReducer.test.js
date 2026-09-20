@@ -103,3 +103,16 @@ test('promote_enemy_sub resets consecutiveWrong to 0', () => {
   const result = battleReducer(state, { type: 'promote_enemy_sub' });
   assert.equal(result.consecutiveWrong, 0);
 });
+
+test('new encounters, enemy promotion and run reset clear openings and initialise wards', () => {
+  const state = { ...createInitialBattleState(), enemyExposed: true, shadowShieldCD: 0, tideStack: 3,
+    enemySub: { id: 'boss', maxHp: 200 }, eHpSub: 200 };
+  for (const action of [{ type: 'start_battle', enemy: state.enemySub }, { type: 'promote_enemy_sub' }]) {
+    const next = battleReducer(state, action);
+    assert.equal(next.enemyExposed, false);
+    assert.equal(next.tideStack, 0);
+    assert.equal(next.shadowShieldCD, 2);
+  }
+  assert.equal(battleReducer(state, { type: 'reset_run' }).enemyExposed, false);
+  assert.equal(battleReducer(state, { type: 'reset_run' }).tideStack, 0);
+});

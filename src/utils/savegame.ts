@@ -22,6 +22,7 @@ import { BOSS_IDS } from '../data/monsterConfigs.ts';
 import type { StarterId } from '../types/game';
 import type { BattleMode, EnemyVm, StarterVm } from '../types/battle';
 import type { BattleState } from '../hooks/battle/battleReducer.ts';
+import { isSerialExpeditionRun, type ExpeditionRun, type SerialExpeditionRun } from './expeditionRun.ts';
 
 const SAVE_KEY = 'mathMonsterBattle_save';
 const SAVE_VERSION = 1;
@@ -55,6 +56,9 @@ export type SaveSnapshot = {
 
   // Enemy roster for the run (stripped of functions)
   enemies: SerialEnemyVm[];
+
+  // World-map expedition (single / timed play); absent for other runs and older saves.
+  expedition?: SerialExpeditionRun<SerialEnemyVm> | null;
 };
 
 /**
@@ -186,14 +190,23 @@ function isSaveSnapshot(value: unknown): value is SaveSnapshot {
   if (!scalarKeys.every((key) => isNonNegativeNumber(battle[key]))) return false;
   if (![battle.pLvl, battle.pStg, battle.diffLevel].every(isNonNegativeInteger) || battle.pLvl === 0) return false;
   if (![battle.mHits, battle.mLvls].every((items) => Array.isArray(items) && items.length > 0 && items.every(isNonNegativeInteger))) return false;
-  return value.enemies.every((enemy) => isRecord(enemy)
+  if (!value.enemies.every(isSerialEnemy)) return false;
+  if (value.expedition === undefined || value.expedition === null) return true;
+  const expedition = value.expedition;
+  if (!isSerialExpeditionRun(expedition) || !expedition.lanes.every((lane) => lane.every(isSerialEnemy))) return false;
+  // On the map the player is about to enter floor path.length; mid-battle they are on its last entry.
+  return value.nextRound === expedition.path.length - (expedition.atMap ? 0 : 1);
+}
+
+function isSerialEnemy(enemy: unknown): enemy is SerialEnemyVm {
+  return isRecord(enemy)
     && ['id', 'name', 'mType', 'typeIcon', 'c1', 'c2'].every((key) => typeof enemy[key] === 'string')
     && isNonNegativeNumber(enemy.maxHp) && enemy.maxHp > 0 && isNonNegativeInteger(enemy.lvl)
     && ['hp', 'atk'].every((key) => enemy[key] === undefined || isNonNegativeNumber(enemy[key]))
-    && ['personalityId', 'activeSpriteKey', 'spriteKey', 'evolvedSpriteKey'].every((key) => enemy[key] === undefined || typeof enemy[key] === 'string')
+    && ['personalityId', 'activeSpriteKey', 'spriteKey', 'evolvedSpriteKey', 'campaignRegion'].every((key) => enemy[key] === undefined || typeof enemy[key] === 'string')
     && (enemy.isEvolved === undefined || typeof enemy.isEvolved === 'boolean')
     && (enemy.selectedStageIdx === undefined || isNonNegativeInteger(enemy.selectedStageIdx))
-    && (enemy.drops === undefined || (Array.isArray(enemy.drops) && enemy.drops.every((drop) => typeof drop === 'string'))));
+    && (enemy.drops === undefined || (Array.isArray(enemy.drops) && enemy.drops.every((drop) => typeof drop === 'string')));
 }
 
 // ─── Public API ──────────────────────────────────────────────────
@@ -219,7 +232,18 @@ export type LoadedSave = {
   coopActiveSlot: 'main' | 'sub';
   battle: SerialBattleState;
   enemies: EnemyVm[];
+  expedition: ExpeditionRun | null;
 };
+
+function rehydrateEnemies(list: SerialEnemyVm[]): EnemyVm[] | null {
+  const enemies: EnemyVm[] = [];
+  for (const savedEnemy of list) {
+    const enemy = rehydrateEnemy(savedEnemy);
+    if (!enemy) return null;
+    enemies.push(enemy);
+  }
+  return enemies;
+}
 
 export function loadSave(): LoadedSave | null {
   const snapshot = readJson<unknown>(SAVE_KEY, null);
@@ -235,11 +259,24 @@ export function loadSave(): LoadedSave | null {
     : null;
   if (snapshot.allySubId && !allySub) return null;
 
-  const enemies: EnemyVm[] = [];
-  for (const savedEnemy of snapshot.enemies) {
-    const enemy = rehydrateEnemy(savedEnemy);
-    if (!enemy) return null;
-    enemies.push(enemy);
+  const enemies = rehydrateEnemies(snapshot.enemies);
+  if (!enemies) return null;
+
+  let expedition: ExpeditionRun | null = null;
+  if (snapshot.expedition) {
+    const lanes: EnemyVm[][] = [];
+    for (const lane of snapshot.expedition.lanes) {
+      const restored = rehydrateEnemies(lane);
+      if (!restored) return null;
+      lanes.push(restored);
+    }
+    expedition = {
+      expeditionId: snapshot.expedition.expeditionId,
+      plan: snapshot.expedition.plan,
+      lanes,
+      path: [...snapshot.expedition.path],
+      atMap: snapshot.expedition.atMap,
+    };
   }
 
   return {
@@ -251,6 +288,7 @@ export function loadSave(): LoadedSave | null {
     coopActiveSlot: snapshot.coopActiveSlot,
     battle: snapshot.battle,
     enemies,
+    expedition,
   };
 }
 
@@ -267,6 +305,7 @@ export function buildSaveSnapshot(args: {
   coopActiveSlot: 'main' | 'sub';
   battle: BattleState;
   enemies: EnemyVm[];
+  expedition?: ExpeditionRun | null;
 }): SaveSnapshot {
   return {
     version: SAVE_VERSION,
@@ -297,5 +336,14 @@ export function buildSaveSnapshot(args: {
       diffLevel: args.battle.diffLevel,
     },
     enemies: args.enemies.map(stripEnemy),
+    expedition: args.expedition
+      ? {
+        expeditionId: args.expedition.expeditionId,
+        plan: args.expedition.plan,
+        lanes: args.expedition.lanes.map((lane) => lane.map(stripEnemy)),
+        path: [...args.expedition.path],
+        atMap: args.expedition.atMap,
+      }
+      : null,
   };
 }

@@ -15,9 +15,9 @@ import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 test('automatic support respects wards without breaking them or consuming a selected-hit opening', () => {
   const state = { battleMode: 'coop', allySub: { id: 'fire', name: 'Fire', type: 'fire' }, pHpSub: 30, pLvl: 5,
     mLvls: [1, 1, 1, 1], enemy: { id: 'boss', maxHp: 500 }, eHp: 500, enemyExposed: true,
-    tideStack: 3, staticStack: 2 };
+    tideStack: 3, staticStack: 2, shattered: true };
   const base = buildCoopAllySupportTurnPlan({ state: { ...state, enemy: { id: 'slime' } }, rand: () => .5 });
-  for (const id of ['fire', 'water', 'electric']) for (const shadowShieldCD of [2, 1, 0]) {
+  for (const id of ['fire', 'water', 'electric', 'grass', 'tiger']) for (const shadowShieldCD of [2, 1, 0]) {
     const source = { ...state, shadowShieldCD, allySub: { id, name: id, type: id } };
     const original = structuredClone(source);
     const plan = buildCoopAllySupportTurnPlan({ state: source, rand: () => .5 });

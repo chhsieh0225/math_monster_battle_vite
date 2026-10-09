@@ -152,7 +152,7 @@ const SCENE_NAME_EN: Dict<string> = {
   electric: "⚡ Thunder Wasteland",
   ghost: "🌙 Gloom Graveyard",
   steel: "⚙️ Iron Fortress",
-  light: "☁️ Celestial Sanctum",
+  light: "✨ Radiant Shrine",
   dark: "💀 Abyssal Depths",
   rock: "🪨 Rocky Canyon",
   poison: "☠️ Toxic Mire",

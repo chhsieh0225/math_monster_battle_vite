@@ -1,0 +1,32 @@
+Tool: built-in image_gen
+Output: world-map-handpainted-v1.png
+Actual output size: 1536 x 1024 pixels
+Status: standalone art draft, not integrated into the game or App.
+
+Use case: stylized-concept.
+Asset type: a production-quality standalone hand-painted fantasy RPG WORLD MAP illustration for an existing family-friendly monster battle game. This is an image file, not a UI mockup. Create ONE large, richly illustrated LANDSCAPE map, approximately 3:2 aspect ratio, highest available resolution (prefer 3072 x 2048 or larger). Make it beautiful enough to explore by zooming.
+
+Primary request: A coherent explorable continent with naturally connected battle biomes, plus genuinely UNEXPLORED FOG-OF-WAR regions reserved for future expansions. All regions belong to one believable world, NOT separate panels, NOT a rectangular biome patchwork. Slightly elevated bird's-eye cartographic view, consistent scale and perspective. Winding cream-colored footpaths, stone bridges, mountain passes, rivers and a few delicate sea routes connect recognizable landmarks. Leave quiet clearings near landmarks so clickable stage markers can be overlaid later; do NOT draw UI markers.
+
+Art direction: exquisite hand-drawn storybook fantasy atlas, fine warm sepia ink contour lines, expressive watercolor and opaque gouache, visible subtle paper grain, tiny lovingly painted trees, cliffs, waterfalls, rooftops, ruined arches and stonework. Crisp readable silhouettes and disciplined detail hierarchy; luminous jewel-like colors, natural earthy greens and ochres, turquoise water, restrained warm highlights. Hand-painted illustration throughout, not 3D, not photorealism, not pixel art, not plastic mobile-game rendering. Light ivory paper-toned atmosphere without a thick ornamental frame. Adventurous, welcoming and mysterious, darker areas atmospheric rather than gory.
+
+Existing battle locations that must be recognizable and connected in the map, without written labels:
+1. Grasslands: inviting emerald meadows, woodland, a little windmill settlement and a river crossing, the clear starting area in the lower-left interior.
+2. Water/coast: a sweeping turquoise bay with reefs, sandy coves, waterfalls and a small harbor along the southern coast.
+3. Fire: a striking red-orange active volcano, terraced black lava rock and glowing lava channels in the northwest interior.
+4. Rock: layered warm sandstone mesas, a deep winding canyon and a natural stone bridge, transitioning from the volcanic foothills toward grasslands.
+5. Electric: high blue-grey crags with gold crystal spires and a compact dramatic thundercloud, a few elegant lightning forks, in the upper-middle highlands.
+6. Steel: an imposing but charming iron-and-stone citadel with aqueducts, bridges and forge towers in the central pass.
+7. Candy: a small enchanting pastel confectionery kingdom in a sheltered southern valley; gingerbread roofs and candy-shaped groves integrated into natural hills, not a huge standalone icon.
+8. Ghost: a misty blue-grey ancient graveyard and ruined gothic abbey in a dark forest east of the central citadel.
+9. Poison: jade and moss-colored bogs, tangled roots, glowing pools and a three-arched ancient hydra sanctuary beyond the graveyard.
+10. Burnt battlefield: a distinct ash-colored scarred plateau with charred trees, shattered battlements and dragon-claw-shaped gouges on the upper-eastern approach; visually different from the volcano.
+11. Heaven: elegant white-and-gold East Asian celestial sword temples on floating mountain islands high over the central-northern range, wisps of cloud and slender sky bridges, extraordinary but still mapped at the same world scale.
+12. Light: a separate sunlit ivory shrine, radiant pale-gold woodland and crystal terraces below the celestial islands, visibly distinct from the sky temples.
+13. Dark: a formidable obsidian demon-king fortress at the far northeastern end of the revealed land, deep crimson windows, dark jagged peaks and a winding final causeway. Keep it readable, not lost in black.
+
+Composition: a flowing asymmetric continent with a central mountain spine and branching journeys. Landforms smoothly transition; rivers descend from mountain sources to the coast. The main revealed region fills roughly 75-80% of useful map space. Each of the thirteen landmarks should read as a place the player can travel to, not a detached emblem. The many small hand-painted paths form coherent connected branches between regions, rather than one rigid linear board-game track. Ocean waves and shore hatching match the ink-and-gouache medium.
+
+MANDATORY FUTURE EXPANSION RESERVES: dedicate roughly 20-25% of the image to THREE substantial unexplored regions around the outer continent: one beyond the far western ridge, one beyond the far northeastern frontier, and one southeastern offshore landmass. These are intentionally occluded by broad, soft, overlapping ivory/silver-blue FOG-OF-WAR banks. Draw only a few fading mountain or coastline silhouettes beneath the mist, leaving their interiors genuinely unspecified and uncluttered so new maps can later replace the fog. At least two existing roads and one faint maritime route must visibly continue into and disappear under these fog banks, making the world feel larger than the revealed map. Do not cover the thirteen current landmarks with the expansion fog. Make these reserved areas substantial, not tiny decorative corner clouds.
+
+Constraints: Entire map visible, useful terrain never cut off accidentally. No text whatsoever, no region names, no numbers, no letters, no labels, no title, no legend, no compass lettering, no watermarks or signature. No character portraits, no floating UI, no buttons, no bright route pins, no modern vehicles. No large blank banner. One unified, polished, collectible hand-painted game atlas.

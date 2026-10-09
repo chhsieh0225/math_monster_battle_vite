@@ -257,3 +257,24 @@
   .dash-history-head{flex-direction:column;align-items:flex-start}
   .dash-settings-row,.dash-pin-row{flex-wrap:wrap;justify-content:center}
 }
+
+.dash-grade-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.dash-grade-btn {
+  margin: 0;
+}
+
+.dash-playtest-status {
+  width: 100%;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}

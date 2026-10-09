@@ -52,7 +52,7 @@ export function runAdvanceController({
     return;
   }
 
-  if (phase === 'text') {
+  if (phase === 'text' || phase === 'review') {
     const pendingAction = consumePendingTextAdvanceAction?.() || null;
     if (pendingAction) {
       pendingAction();

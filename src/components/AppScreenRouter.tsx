@@ -4,6 +4,8 @@ import type { ComponentProps, ErrorInfo, ReactNode } from 'react';
 import TitleScreen from './screens/TitleScreen';
 import SelectionScreen from './screens/SelectionScreen';
 import { hasSave as checkHasSave } from '../utils/savegame.ts';
+import { getLevelMaxHp } from '../utils/playerHp.ts';
+import { expeditionBattleCount } from '../utils/expeditionRun.ts';
 import type {
   ScreenName,
   UseBattleActions,
@@ -22,6 +24,9 @@ const SettingsScreen = lazy(() => import('./screens/SettingsScreen'));
 const PvpResultScreen = lazy(() => import('./screens/PvpResultScreen'));
 const DailyChallengeScreen = lazy(() => import('./screens/DailyChallengeScreen'));
 const HowToPlayScreen = lazy(() => import('./screens/HowToPlayScreen'));
+const WorldMapScreen = lazy(() => import('./screens/WorldMapScreen'));
+const PlacementScreen = lazy(() => import('./screens/PlacementScreen'));
+const ReviewSpringScreen = lazy(() => import('./screens/ReviewSpringScreen'));
 
 type SelectionPayload = Parameters<ComponentProps<typeof SelectionScreen>['onSelect']>[0];
 type DualSelectionPayload = Extract<SelectionPayload, { p1: unknown; p2: unknown }>;
@@ -115,6 +120,8 @@ export default function AppScreenRouter({
 
   // Check for mid-run save on every render when screen is title (cheap sync read)
   const savedGameExists = S.screen === 'title' ? checkHasSave() : false;
+  // First play: a short placement check sets the child's grade before choosing a monster.
+  const needsPlacement = S.playerGrade === null;
 
   const wrapMain = (node: ReactNode) => (
     <div id="main-content" className="screen-transition" key={S.screen} style={{ height: '100%' }}>
@@ -157,19 +164,19 @@ export default function AppScreenRouter({
           A.clearChallengeRun();
           A.setTimedMode(false);
           A.setBattleMode('single');
-          A.setScreen('selection');
+          A.setScreen(needsPlacement ? 'placement' : 'selection');
         }}
         onStartTimed={() => {
           A.clearChallengeRun();
           A.setTimedMode(true);
           A.setBattleMode('single');
-          A.setScreen('selection');
+          A.setScreen(needsPlacement ? 'placement' : 'selection');
         }}
         onStartCoop={() => {
           A.clearChallengeRun();
           A.setTimedMode(false);
           A.setBattleMode('coop');
-          A.setScreen('selection');
+          A.setScreen(needsPlacement ? 'placement' : 'selection');
         }}
         onStartPvp={() => {
           A.clearChallengeRun();
@@ -239,7 +246,11 @@ export default function AppScreenRouter({
   if (S.screen === 'dashboard') {
     return wrapMain(
       withScreenSuspense(
-        <DashboardScreen onBack={() => A.setScreen('title')} />,
+        <DashboardScreen
+          onBack={() => A.setScreen('title')}
+          playerGrade={S.playerGrade}
+          onRetakePlacement={() => A.setScreen('placement')}
+        />,
       ),
     );
   }
@@ -276,6 +287,7 @@ export default function AppScreenRouter({
     return wrapMain(
       <SelectionScreen
         mode={S.battleMode}
+        playerGrade={S.battleMode === 'pvp' ? null : S.playerGrade}
         encData={S.encData}
         onSelect={(payload: SelectionPayload) => {
           void V.sfx.init().catch(() => {});
@@ -294,10 +306,71 @@ export default function AppScreenRouter({
             return;
           }
           A.setStarter(payload);
+          if (S.worldMapEnabled) {
+            // Normal / timed single play: pick an expedition on the world map first.
+            A.openWorldMap();
+            return;
+          }
           A.startGame(payload, S.battleMode);
         }}
         onBack={() => A.setScreen('title')}
       />,
+    );
+  }
+
+  if (S.screen === 'placement') {
+    // A retake (grade already set) comes from the parent dashboard and returns there.
+    const retake = S.playerGrade !== null;
+    return wrapMain(
+      withScreenSuspense(
+        <PlacementScreen
+          currentGrade={S.playerGrade}
+          onDone={(profile) => {
+            A.setPlayerProfile(profile);
+            A.setScreen(retake ? 'dashboard' : 'selection');
+          }}
+          onCancel={() => A.setScreen(retake ? 'dashboard' : 'title')}
+        />,
+      ),
+    );
+  }
+
+  if (S.screen === 'spring') {
+    return wrapMain(
+      withScreenSuspense(
+        <ReviewSpringScreen
+          starter={S.starter}
+          grade={S.playerGrade}
+          persistentLearning={S.battleMode === 'single' && !S.timedMode}
+          pHp={S.pHp}
+          maxHp={getLevelMaxHp(S.pLvl, S.pStg)}
+          pLvl={S.pLvl}
+          onFinish={A.finishSpring}
+        />,
+      ),
+    );
+  }
+
+  if (S.screen === 'worldmap') {
+    return wrapMain(
+      withScreenSuspense(
+        <WorldMapScreen
+          progress={S.worldProgress}
+          run={S.expeditionRun}
+          starter={S.starter}
+          stageIdx={S.pStg}
+          pHp={S.pHp}
+          maxHp={getLevelMaxHp(S.pLvl, S.pStg)}
+          pLvl={S.pLvl}
+          onStartExpedition={(id) => {
+            void V.sfx.init().catch(() => {});
+            A.startExpedition(id);
+          }}
+          onChooseRoute={A.chooseRoute}
+          onBack={() => A.setScreen('selection')}
+          onPause={A.pauseExpedition}
+        />,
+      ),
     );
   }
 
@@ -330,7 +403,7 @@ export default function AppScreenRouter({
       withScreenSuspense(
         <GameOverScreen
           defeated={S.defeated}
-          totalEnemies={S.enemies.length}
+          totalEnemies={S.expeditionRun ? expeditionBattleCount(S.expeditionRun) : S.enemies.length}
           tC={S.tC}
           tW={S.tW}
           wrongQuestions={S.wrongQuestions}
@@ -343,7 +416,11 @@ export default function AppScreenRouter({
           getPow={V.getPow}
           dailyChallengeFeedback={S.dailyChallengeFeedback}
           towerChallengeFeedback={S.towerChallengeFeedback}
-          onRestart={() => S.starter && A.startGame()}
+          onRestart={() => {
+            if (!S.starter) return;
+            if (S.worldMapEnabled) A.openWorldMap();
+            else A.startGame();
+          }}
           onLeaderboard={() => A.setScreen('leaderboard')}
           onHome={() => A.setScreen('title')}
         />,

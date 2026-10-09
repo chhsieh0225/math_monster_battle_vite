@@ -238,3 +238,21 @@
   margin-top: 2px;
   opacity: 0.82;
 }
+
+.daily-honor-line {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  margin-top: 4px;
+}
+
+.daily-honor-names {
+  display: block;
+  font-size: 0.6875rem;
+  opacity: 0.7;
+}
+
+.daily-honor-hint {
+  font-size: 0.6875rem;
+  opacity: 0.7;
+  margin-top: 6px;
+}

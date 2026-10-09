@@ -120,7 +120,7 @@ export const DAILY_CHALLENGE_BLUEPRINTS: DailyChallengeBlueprint[] = [
     rewards: {
       clear: [
         { type: 'achievement_point', key: 'daily_unknown_clear', amount: 70, label: 'Unknown Route +70 AP' },
-        { type: 'resource', key: 'daily_unknown_token', amount: 1, label: 'Unknown Token x1' },
+        { type: 'resource', key: 'shield', amount: 1, label: 'Shield Charm x1' },
       ],
       streak: [
         { type: 'title', key: 'daily_unknown_weekly', label: 'Title: Equation Hunter' },

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { isStarterRecommended, type Grade } from '../../data/gradeCurriculum.ts';
 import type { CSSProperties } from 'react';
 import MonsterSprite from '../ui/MonsterSprite';
 import { STARTERS } from '../../data/starters.ts';
@@ -199,6 +200,8 @@ type SelectionScreenProps = {
   encData?: EncyclopediaData;
   onSelect: (payload: StarterSelectable | DualSelectionPayload) => void;
   onBack: () => void;
+  /** The child's grade; questions follow it whichever monster is chosen. */
+  playerGrade?: Grade | null;
 };
 
 export default function SelectionScreen({
@@ -206,6 +209,7 @@ export default function SelectionScreen({
   encData,
   onSelect,
   onBack,
+  playerGrade = null,
 }: SelectionScreenProps) {
   const { t, locale } = useI18n();
   const DESCS = buildStarterDescs(t);
@@ -484,7 +488,13 @@ export default function SelectionScreen({
                     </div>
                   ) : (
                     <>
-                      {gradeHint && (
+                      {playerGrade ? (
+                        <div className={`selection-card-grade-hint${isStarterRecommended(starter.gradeRange, playerGrade) ? ' is-recommended' : ''}`}>
+                          {isStarterRecommended(starter.gradeRange, playerGrade)
+                            ? t('selection.grade.recommended', '⭐ Made for grade {n}', { n: playerGrade })
+                            : t('selection.grade.adapted', 'Questions adapt to grade {n}', { n: playerGrade })}
+                        </div>
+                      ) : gradeHint && (
                         <div className="selection-card-grade-hint">
                           {gradeHint}
                         </div>

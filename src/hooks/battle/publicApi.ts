@@ -112,6 +112,11 @@ const REQUIRED_STATE_KEYS = [
   'collectionPopup',
   'encData',
   'hintsRevealed',
+  'worldMapEnabled',
+  'worldProgress',
+  'expeditionRun',
+  'enemyFinisherType',
+  'playerGrade',
 ] as const satisfies ReadonlyArray<keyof UseBattleState>;
 
 type MissingStateKey = Exclude<keyof UseBattleState, (typeof REQUIRED_STATE_KEYS)[number]>;
@@ -141,6 +146,12 @@ const REQUIRED_ACTION_KEYS = [
   'rmP',
   'resumeFromSave',
   'requestHint',
+  'openWorldMap',
+  'startExpedition',
+  'chooseRoute',
+  'pauseExpedition',
+  'setPlayerProfile',
+  'finishSpring',
 ] as const satisfies ReadonlyArray<keyof UseBattleActions>;
 
 type MissingActionKey = Exclude<keyof UseBattleActions, (typeof REQUIRED_ACTION_KEYS)[number]>;

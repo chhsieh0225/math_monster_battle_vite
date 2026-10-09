@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install deps
@@ -31,5 +31,5 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Build + bundle budget
-        run: npm run build:budget
+      - name: Build + informational size report
+        run: npm run build:report

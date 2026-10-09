@@ -8,6 +8,7 @@
  *   3. Orientation-lock wrapper (GameShell)
  */
 import { Suspense, lazy, useState, useEffect, useRef, Component } from 'react';
+import { notePlaytestLowPerf, savePlaytestReport, savePlaytestReportSync, startPlaytestRecorder, trackPlaytestScreen } from './utils/playtestLog.ts';
 import type { ReactNode } from 'react';
 import './App.css';
 import { useI18n } from './i18n';
@@ -235,6 +236,21 @@ function App() {
   const nextEncounterStep = (S.battleMode === 'coop' || S.battleMode === 'double') && S.enemySub ? 2 : 1;
   const spritePreloadKey = getBattleSpritePreloadSources(S, conserveNetwork).join('\n');
 
+  // Playtest log: frame pacing and time per screen; the Mac app saves it after each run.
+  useEffect(() => {
+    startPlaytestRecorder();
+    const onUnload = () => savePlaytestReportSync();
+    window.addEventListener('beforeunload', onUnload);
+    return () => window.removeEventListener('beforeunload', onUnload);
+  }, []);
+  useEffect(() => { notePlaytestLowPerf(UX.lowPerfMode); }, [UX.lowPerfMode]);
+  useEffect(() => {
+    trackPlaytestScreen(S.screen);
+    if (S.screen === 'gameover' || S.screen === 'worldmap' || S.screen === 'title') {
+      void savePlaytestReport({ force: S.screen === 'gameover' });
+    }
+  }, [S.screen]);
+
   useEffect(() => {
     // Selection owns its local picks; battle owns the rolling encounter window.
     if (S.screen === 'selection') return;
@@ -293,7 +309,7 @@ function App() {
   // metadata on constrained devices, aggressive warmup on stable devices.
   useEffect(() => {
     const nextTracks = new Set<BgmTrack>();
-    if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge' || S.screen === 'howto') {
+    if (S.screen === 'title' || S.screen === 'selection' || S.screen === 'daily_challenge' || S.screen === 'howto' || S.screen === 'worldmap' || S.screen === 'placement' || S.screen === 'spring') {
       nextTracks.add('menu');
       nextTracks.add('battle');
     } else if (S.screen === 'battle') {

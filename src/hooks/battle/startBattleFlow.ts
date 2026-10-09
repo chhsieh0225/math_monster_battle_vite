@@ -4,6 +4,7 @@ import { getBossSealPool } from '../../utils/combatTactics.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { randomInt } from '../../utils/prng.ts';
 import { getNarrativeBeat } from '../../data/narrativeScript.ts';
+import { isExpeditionEnemy } from '../../utils/expeditionRun.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -39,6 +40,9 @@ type RunStartBattleFlowArgs = {
     round: number;
     sealedMove?: number;
     sealedTurns?: number;
+  } | {
+    type: 'route_event';
+    event: NonNullable<ExistingEnemy['campaignEventTag']>;
   }) => void;
   updateEnc: (enemy: ExistingEnemy) => void;
   setPhase: (phase: BattlePhase) => void;
@@ -65,6 +69,35 @@ function tr(
 ): string {
   if (typeof t === 'function') return t(key, fallback, params);
   return formatFallback(fallback, params);
+}
+
+/** Expedition floor / elite / event lines shown above the battle intro. */
+export function buildRouteIntroLines(enemy: ExistingEnemy, t?: Translator): string[] {
+  if (!isExpeditionEnemy(enemy)) return [];
+  const lines: string[] = [];
+  if (enemy.campaignNodeIndex && enemy.campaignNodeTotal) {
+    lines.push(enemy.campaignTier === 'boss'
+      ? tr(t, 'battle.route.bossFloor', '🏰 Final floor {step}/{total}: the boss awaits!', {
+        step: enemy.campaignNodeIndex,
+        total: enemy.campaignNodeTotal,
+      })
+      : tr(t, 'battle.route.floor', '🗺️ Expedition floor {step}/{total}', {
+        step: enemy.campaignNodeIndex,
+        total: enemy.campaignNodeTotal,
+      }));
+  }
+  if (enemy.campaignTier === 'elite') {
+    lines.push(tr(t, 'battle.route.elite', '⚔️ Elite: tougher foe, but EXP ×1.5 and an extra drop'));
+  }
+  const event = enemy.campaignEventTag;
+  if (event === 'healing_spring') {
+    lines.push(tr(t, 'battle.route.event.healing_spring', '💧 Healing spring: you drink and recover HP!'));
+  } else if (event === 'focus_surge') {
+    lines.push(tr(t, 'battle.route.event.focus_surge', '✨ Focus blessing: your guard is up and blocks the first attack!'));
+  } else if (event === 'hazard_ambush') {
+    lines.push(tr(t, 'battle.route.event.hazard_ambush', '⚠️ Ambush! You take a hit, but winning earns an extra drop'));
+  }
+  return lines;
 }
 
 export function runStartBattleFlow({
@@ -121,6 +154,11 @@ export function runStartBattleFlow({
   const sealTurns = isBoss ? BALANCE_CONFIG.traits.boss.sealDurationTurns : undefined;
 
   dispatchBattle({ type: 'start_battle', enemy, enemySub, round: idx, sealedMove: sealIdx, sealedTurns: sealTurns });
+  // Expedition events act on the run's real HP/level inside the reducer, so a
+  // resumed save (written before the battle) replays them identically.
+  if (!isTeamMode && isExpeditionEnemy(enemy) && enemy.campaignEventTag) {
+    dispatchBattle({ type: 'route_event', event: enemy.campaignEventTag });
+  }
   resetFrozen();
 
   updateEnc(enemy);
@@ -139,9 +177,11 @@ export function runStartBattleFlow({
 
   // Narrative beat: inject story text before the battle intro at key rounds.
   const narrativeBeat = getNarrativeBeat(idx, battleMode);
-  const narrativePrefix = narrativeBeat
-    ? tr(t, narrativeBeat.textKey, narrativeBeat.fallback) + '\n'
-    : '';
+  const routeLines = isTeamMode ? [] : buildRouteIntroLines(enemy, t);
+  const narrativePrefix = [
+    ...(narrativeBeat ? [tr(t, narrativeBeat.textKey, narrativeBeat.fallback)] : []),
+    ...routeLines,
+  ].map((line) => line + '\n').join('');
 
   if (enemySub) {
     if (allySub) {

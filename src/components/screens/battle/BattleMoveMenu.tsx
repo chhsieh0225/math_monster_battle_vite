@@ -1,4 +1,6 @@
 import { memo, useMemo, useCallback, useState } from 'react';
+import { alignOpsToGrade, type Grade } from '../../../data/gradeCurriculum.ts';
+import { opDisplayName } from '../../../data/opNames.ts';
 import type { CSSProperties } from 'react';
 import type { BossTactic, StarterVm } from '../../../types/battle';
 import { getBossTacticProfile } from '../../../utils/turnFlow.ts';
@@ -6,7 +8,7 @@ import type { BossIntent } from '../../../utils/turnFlow.ts';
 import type { InventoryData, ItemId } from '../../../types/game';
 import { BATTLE_ITEM_ORDER, ITEM_CATALOG } from '../../../data/itemCatalog.ts';
 import { getSkillMastery } from '../../../utils/skillPresentation.ts';
-import { getFireTactic, planFireTactic, planElementTactic } from '../../../utils/combatTactics.ts';
+import { getFireTactic, planFireTactic, planElementTactic, planNatureTactic } from '../../../utils/combatTactics.ts';
 import type { getShadowWard } from '../../../utils/combatTactics.ts';
 import { BALANCE_CONFIG } from '../../../data/balanceConfig.ts';
 import type { MoveRuntime } from './buildBattleCore';
@@ -14,6 +16,22 @@ import type { MoveRuntime } from './buildBattleCore';
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
+
+/** A move outside the child's grade practises an earlier skill; say which. */
+function describeMoveForGrade(
+  move: { desc: string; ops?: string[] },
+  grade: Grade | null,
+  battleMode: string,
+  t: Translator,
+): string {
+  if (!grade || battleMode === 'pvp' || !move.ops?.length) return move.desc;
+  const aligned = alignOpsToGrade(move.ops, grade);
+  if (aligned.length === move.ops.length && aligned.every((op, i) => op === move.ops?.[i])) return move.desc;
+  return t('battle.move.gradeAligned', 'Grade {grade}: {skills}', {
+    grade,
+    skills: aligned.map((op) => opDisplayName(op, t)).join('、'),
+  });
+}
 
 type BattleMoveMenuProps = {
   t: Translator;
@@ -38,22 +56,25 @@ type BattleMoveMenuProps = {
   tideStack?: number;
   staticStack?: number;
   enemyExposed?: boolean;
+  shattered?: boolean;
   onSelectMove: (idx: number, bossTactic?: BossTactic) => void;
   onUseItem: (itemId: ItemId) => void;
   onToggleCoopActive: () => void;
   onTogglePause: () => void;
   onOpenSettings: () => void;
   onQuitGame: () => void;
+  /** The child's grade; moves whose operations are not taught yet show what they practise instead. */
+  playerGrade?: Grade | null;
 };
 
 function resolveSpecDefItemName(starterType: string, t: Translator): string {
-  if (starterType === 'fire') return t('battle.specDef.fire', '🛡️ Shield');
-  if (starterType === 'water') return t('battle.specDef.water', '💨 Perfect Dodge');
-  if (starterType === 'ice') return t('battle.specDef.ice', '🧊 Ice Shift');
-  if (starterType === 'electric') return t('battle.specDef.electric', '⚡ Paralysis');
-  if (starterType === 'steel') return t('battle.specDef.steel', '🛡️ Iron Guard');
-  if (starterType === 'light') return t('battle.specDef.light', '✨ Lion Roar');
-  return t('battle.specDef.grass', '🌿 Reflect');
+  if (starterType === 'fire') return t('battle.specDef.fire');
+  if (starterType === 'water') return t('battle.specDef.water');
+  if (starterType === 'ice') return t('battle.specDef.ice');
+  if (starterType === 'electric') return t('battle.specDef.electric');
+  if (starterType === 'steel') return t('battle.specDef.steel');
+  if (starterType === 'light') return t('battle.specDef.light');
+  return t('battle.specDef.grass');
 }
 
 export const BattleMoveMenu = memo(function BattleMoveMenu({
@@ -79,12 +100,14 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
   tideStack = 0,
   staticStack = 0,
   enemyExposed = false,
+  shattered = false,
   onSelectMove,
   onUseItem,
   onToggleCoopActive,
   onTogglePause,
   onOpenSettings,
   onQuitGame,
+  playerGrade = null,
 }: BattleMoveMenuProps) {
   const [bossTactic, setBossTactic] = useState<BossTactic>('guarded');
   const specDefItemName = resolveSpecDefItemName(activeStarter.type, t);
@@ -144,47 +167,48 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
 
   return (
     <div className={`battle-menu-wrap${bossIntent ? ' has-boss-intent' : ''}`}>
-      {battleMode !== 'pvp' && (activeStarter.id === 'fire' || resource || enemyExposed) && <div className="battle-menu-hint battle-tactic-state" data-element={resource?.kind} role="status">
-        {activeStarter.id === 'fire' && <span>{t('battle.tactics.burn', 'Burn: {stacks}/{max}', { stacks: burnStack, max: BALANCE_CONFIG.traits.player.burnMaxStacks })}</span>}
+      {battleMode !== 'pvp' && (activeStarter.id === 'fire' || resource || enemyExposed || shattered) && <div className="battle-menu-hint battle-tactic-state" data-element={resource?.kind} role="status">
+        {activeStarter.id === 'fire' && <span>{t('battle.tactics.burn', undefined, { stacks: burnStack, max: BALANCE_CONFIG.traits.player.burnMaxStacks })}</span>}
         {resource && <span>{t(`battle.tactics.${resource.kind}.resource`, '{stacks}/{max}', { stacks: resource.before, max: resource.max })}</span>}
-        {enemyExposed && <strong>{t('battle.tactics.exposed', 'Opening: next answer attack +{bonus}%', { bonus: Math.round((BALANCE_CONFIG.tactics.exposedScale - 1) * 100) })}</strong>}
+        {enemyExposed && <strong>{t('battle.tactics.exposed', undefined, { bonus: Math.round((BALANCE_CONFIG.tactics.exposedScale - 1) * 100) })}</strong>}
+        {shattered && <span>{t('battle.tactics.frost')}</span>}
       </div>}
       {isCoopBattle && (
         <div className="battle-menu-hint">
-          🤝 {t('battle.coopTurn', 'Co-op · Active:')} {activeStarter.typeIcon} {activeStarter.name}
+          🤝 {t('battle.coopTurn')} {activeStarter.typeIcon} {activeStarter.name}
         </div>
       )}
       {battleMode === 'pvp' && (
         <div className="battle-menu-hint">
-          {pvpTurn === 'p1' ? t('battle.pvpTurn.p1', '🔵 Player 1 Turn') : t('battle.pvpTurn.p2', '🔴 Player 2 Turn')}
+          {pvpTurn === 'p1' ? t('battle.pvpTurn.p1') : t('battle.pvpTurn.p2')}
           {' · '}
           {activeStarter.typeIcon} {activeStarter.name}
           {' · '}
           ⚡{pvpActiveCharge}/3
           {' · '}
           {pvpActiveSpecDefReady
-            ? `🛡️${t('battle.status.counterReady', 'Counter Ready')}`
+            ? `🛡️${t('battle.status.counterReady')}`
             : `🛡️${pvpActiveCombo}/${pvpComboTrigger}`}
         </div>
       )}
 
       {bossIntent && (
-        <section className={`battle-intent ${bossIntent.charging ? 'is-charging' : ''}`} aria-label={t('battle.intent.title', 'Boss forecast')}>
+        <section className={`battle-intent ${bossIntent.charging ? 'is-charging' : ''}`} aria-label={t('battle.intent.title')}>
           <div className="battle-intent-head" role="status">
-            <span className="battle-intent-label">{t('battle.intent.title', 'Boss forecast')}</span>
+            <span className="battle-intent-label">{t('battle.intent.title')}</span>
             <strong>{t(`battle.intent.${bossIntent.event}`, bossIntent.event)}</strong>
           </div>
           {shadowWard && <div className={`battle-ward ${shadowWard.open ? 'is-open' : ''}`} role="status">
             <strong>{shadowWard.open
-              ? t('battle.ward.open', 'Ward broken: next answer attack +{bonus}%', { bonus: Math.round((shadowWard.damageScale - 1) * 100) })
-              : t('battle.ward.guard', 'Shadow ward: {layers} layers', { layers: shadowWard.layers })}</strong>
+              ? t('battle.ward.open', undefined, { bonus: Math.round((shadowWard.damageScale - 1) * 100) })
+              : t('battle.ward.guard', undefined, { layers: shadowWard.layers })}</strong>
             <span className="battle-ward-pips" aria-hidden="true">{Array.from({ length: shadowWard.max }, (_, i) => <i key={i} className={i < shadowWard.layers ? 'is-lit' : ''} />)}</span>
-            <p>{shadowWard.open ? t('battle.ward.openHelp', 'Use a strong hit; the ward then reforms.')
-              : t('battle.ward.help', 'Correct hits break 1 layer; marked moves break 2. The basic move cannot be sealed.')}</p>
+            <p>{shadowWard.open ? t('battle.ward.openHelp')
+              : t('battle.ward.help')}</p>
           </div>}
           {bossIntent.charging ? (
             <>
-              <div className="battle-tactics" role="group" aria-label={t('battle.tactic.choose', 'Choose how to interrupt, then pick any move')}>
+              <div className="battle-tactics" role="group" aria-label={t('battle.tactic.choose')}>
                 {(['guarded', 'force'] as const).map((tactic) => {
                   const profile = getBossTacticProfile(tactic);
                   return (
@@ -198,10 +222,10 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
                   );
                 })}
               </div>
-              <p className="battle-intent-note">{t('battle.tactic.rule', 'Pick any move. Correct hits interrupt; the enemy still takes its turn.')}</p>
+              <p className="battle-intent-note">{t('battle.tactic.rule')}</p>
             </>
           ) : (
-            <p className="battle-intent-note">{t('battle.intent.conditional', 'Based on current state; your hit or freeze may change this.')}</p>
+            <p className="battle-intent-note">{t('battle.intent.conditional')}</p>
           )}
         </section>
       )}
@@ -212,6 +236,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
           const fireTactic = getFireTactic(activeStarter.id, battleMode, i);
           const tactic = planFireTactic(fireTactic, burnStack, enemyExposed);
           const element = planElementTactic(activeStarter.id, battleMode, i, tideStack, staticStack);
+          const nature = planNatureTactic(activeStarter.id, battleMode, i, lv, enemyExposed, shattered);
           return (
             <button
               className={`battle-menu-btn ${locked ? 'is-locked' : ''}`}
@@ -222,7 +247,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
               {sealed && (
                 <div className="move-sealed-mask">
                   <span className="move-sealed-text">
-                    {t('battle.sealed', '🔮 Sealed ({turns})', { turns: sealedTurns })}
+                    {t('battle.sealed', undefined, { turns: sealedTurns })}
                   </span>
                 </div>
               )}
@@ -235,22 +260,22 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
                     Lv{lv}
                   </div>
                 )}
-                {eff > 1 && <div className="move-badge move-badge-up">{t('battle.effect.up', 'Effect Up')}</div>}
-                {eff < 1 && <div className="move-badge move-badge-down">{t('battle.effect.down', 'Effect Down')}</div>}
+                {eff > 1 && <div className="move-badge move-badge-up">{t('battle.effect.up')}</div>}
+                {eff < 1 && <div className="move-badge move-badge-down">{t('battle.effect.down')}</div>}
               </div>
               <div className="move-name-row">
                 <span className="move-icon">{m.icon}</span>
                 <span className="move-name">{m.name}</span>
               </div>
               <div className="move-desc-row">
-                {m.desc} · {t('battle.power', 'Power')} <b className="move-power">{pw}</b>
+                {describeMoveForGrade(m, playerGrade, battleMode, t)} · {t('battle.power')} <b className="move-power">{pw}</b>
                 {eff > 1 ? ' ×1.5' : eff < 1 ? ' ×0.6' : ''}
-                {m.risky && battleMode === 'pvp' && !chargeReadyDisplay && ` ${t('battle.risky.lockedPvp', '🔒Need 3 correct')}`}
-                {m.risky && battleMode === 'pvp' && chargeReadyDisplay && ` ${t('battle.risky.readyPvp', '⚡Cast Ready')}`}
-                {m.risky && !chargeReady && battleMode !== 'pvp' && ` ${t('battle.risky.locked', '🔒')}`}
-                {m.risky && chargeReady && battleMode !== 'pvp' && ` ${t('battle.risky.ready', '⚡Charge Ready!')}`}
+                {m.risky && battleMode === 'pvp' && !chargeReadyDisplay && ` ${t('battle.risky.lockedPvp')}`}
+                {m.risky && battleMode === 'pvp' && chargeReadyDisplay && ` ${t('battle.risky.readyPvp')}`}
+                {m.risky && !chargeReady && battleMode !== 'pvp' && ` ${t('battle.risky.locked')}`}
+                {m.risky && chargeReady && battleMode !== 'pvp' && ` ${t('battle.risky.ready')}`}
                 {battleMode !== 'pvp' && !m.risky && !atCap && lv > 1 && ' ↑'}
-                {battleMode !== 'pvp' && atCap && ` ${t('battle.max', '✦MAX')}`}
+                {battleMode !== 'pvp' && atCap && ` ${t('battle.max')}`}
               </div>
               {battleMode !== 'pvp' && !m.risky && !atCap && (
                 <div className="move-progress-track">
@@ -267,15 +292,22 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
                 {t(`battle.tactics.${element.kind}.move.${i}`, '', {
                   stacks: element.spent, add: element.added, bonus: element.bonusDamage, max: element.max,
                   power: Math.round(element.powerScale * 100), discharge: element.dischargeDamage,
-                  ward: element.wardBreak === 2 ? t('battle.tactics.twoLayers', ' · Break 2 layers') : '',
-                  control: element.guaranteedFreeze ? t('battle.tactics.freezeReady', ' · Guaranteed freeze')
-                    : t('battle.tactics.freezeAtMax', ' · Full tide: guaranteed freeze'),
+                  ward: element.wardBreak === 2 ? t('battle.tactics.twoLayers') : '',
+                  control: element.guaranteedFreeze ? t('battle.tactics.freezeReady')
+                    : t('battle.tactics.freezeAtMax'),
                 })}
-                {element.dischargeDamage > 0 && <strong> · {t('battle.tactics.dischargeReady', 'Discharge +{damage}', { damage: element.dischargeDamage })}</strong>}
+                {element.dischargeDamage > 0 && <strong> · {t('battle.tactics.dischargeReady', undefined, { damage: element.dischargeDamage })}</strong>}
+              </div> : nature ? <div className="move-tactic" data-ready={nature.ready || undefined}>
+                {t(`battle.tactics.${nature.kind}.move.${i}${nature.kind === 'grass' && nature.ready ? '.ready' : ''}`, '', {
+                  heal: nature.heal, power: Math.round(nature.powerScale * 100),
+                  multiplier: BALANCE_CONFIG.tactics.grass.openingHealScale,
+                  expose: Math.round((BALANCE_CONFIG.tactics.exposedScale - 1) * 100),
+                  shatter: Math.round((nature.shatterScale - 1) * 100),
+                })}
               </div> : battleMode !== 'pvp' && <div className="move-mastery" data-mastery={mastery.tier}
                 title={mastery.nextLevel
-                  ? t('battle.skill.next', 'Lv.{level}: next visual evolution', { level: mastery.nextLevel })
-                  : t('battle.skill.complete', 'Final visual evolution unlocked')}>
+                  ? t('battle.skill.next', undefined, { level: mastery.nextLevel })
+                  : t('battle.skill.complete')}>
                 <span className="move-mastery-pips" aria-hidden="true">{[1, 2, 3].map((tier) => <i key={tier} className={tier <= mastery.tier ? 'is-lit' : ''} />)}</span>
                 <span>{t(`battle.skill.tier.${mastery.tier}`, 'Skill form')}</span>
                 <span className="move-mastery-next">{mastery.nextLevel ? `Lv.${mastery.nextLevel}` : 'MAX'}</span>
@@ -285,7 +317,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
         })}
       </div>
 
-      <div className="battle-item-row" role="group" aria-label={t('a11y.battle.items', 'Battle items')}>
+      <div className="battle-item-row" role="group" aria-label={t('a11y.battle.items')}>
         {BATTLE_ITEM_ORDER.map((itemId) => {
           const item = ITEM_CATALOG[itemId];
           const count = inventory[itemId] || 0;
@@ -300,7 +332,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
               className="battle-item-btn"
               onClick={() => handleUseItem(itemId)}
               disabled={disabled}
-              aria-label={t('a11y.battle.useItem', 'Use {item}', {
+              aria-label={t('a11y.battle.useItem', undefined, {
                 item: itemDisplayName,
               })}
             >
@@ -312,7 +344,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
         })}
         {battleMode === 'pvp' && (
           <span className="battle-item-note">
-            {t('battle.item.use.disabledPvpShort', 'Items disabled in PvP')}
+            {t('battle.item.use.disabledPvpShort')}
           </span>
         )}
       </div>
@@ -320,17 +352,17 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
       <div className="battle-util-row">
         {isCoopBattle && (
           <button className="battle-util-btn" onClick={onToggleCoopActive} disabled={!coopCanSwitch}>
-            🔁 {coopUsingSub ? t('battle.coop.mainTurn', 'Main Turn') : t('battle.coop.subTurn', 'Sub Turn')}
+            🔁 {coopUsingSub ? t('battle.coop.mainTurn') : t('battle.coop.subTurn')}
           </button>
         )}
-        <button className="battle-util-btn" aria-label={t('a11y.battle.pause', 'Pause game')} onClick={onTogglePause}>
-          ⏸️ {t('battle.pause', 'Pause')}
+        <button className="battle-util-btn" aria-label={t('a11y.battle.pause')} onClick={onTogglePause}>
+          ⏸️ {t('battle.pause')}
         </button>
-        <button className="battle-util-btn" aria-label={t('a11y.battle.settings', 'Open battle settings')} onClick={onOpenSettings}>
-          ⚙️ {t('battle.settings', 'Settings')}
+        <button className="battle-util-btn" aria-label={t('a11y.battle.settings')} onClick={onOpenSettings}>
+          ⚙️ {t('battle.settings')}
         </button>
-        <button className="battle-util-btn battle-util-btn-danger" aria-label={t('a11y.battle.run', 'Run from battle')} onClick={onQuitGame}>
-          🏳️ {t('battle.run', 'Run')}
+        <button className="battle-util-btn battle-util-btn-danger" aria-label={t('a11y.battle.run')} onClick={onQuitGame}>
+          🏳️ {t('battle.run')}
         </button>
       </div>
     </div>

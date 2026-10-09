@@ -279,3 +279,34 @@ test('runTimeoutController tolerates missing doEnemyTurnRef callback', () => {
 
   assert.equal(answered, true);
 });
+
+test('runAdvanceController review phase runs the pending action on tap', () => {
+  const phases = [];
+  let pendingActionCalls = 0;
+
+  runAdvanceController({
+    phase: 'review',
+    sr: { current: { battleMode: 'single', phase: 'review' } },
+    pvpTurnStartHandlerDeps: {},
+    setPhase: (value) => { phases.push(value); },
+    setBText: noop,
+    pendingEvolutionArgs: {
+      pendingEvolveRef: { current: false },
+      setPStg: noop,
+      tryUnlock: noop,
+      getStageMaxHp: () => 100,
+      setPHp: noop,
+      setAllySub: noop,
+      setPHpSub: noop,
+      getStarterMaxHp: () => 100,
+      setMLvls: noop,
+      maxMoveLvl: 10,
+      setScreen: noop,
+    },
+    continueFromVictory: noop,
+    consumePendingTextAdvanceAction: () => () => { pendingActionCalls += 1; },
+  });
+
+  assert.equal(pendingActionCalls, 1);
+  assert.deepEqual(phases, []);
+});

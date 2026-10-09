@@ -23,6 +23,6 @@ export function resolveBattleSpriteClip(animation: string): { clip: BattleSprite
   else if (/^(?:player|enemy)(?:Fire|Grass|Water|Elec|Dark|Light|Steel|Ice)?Hit$/.test(name)) clip = 'hurt';
   else if (name === 'dodgeSlide' || name === 'enemyShieldPulse') clip = 'brace';
   else if (name === 'bossShake') clip = 'charge';
-  else if (name === 'enemyDissolve') clip = 'defeat';
+  else if (name === 'enemyDissolve' || name.startsWith('enemyDeath')) clip = 'defeat';
   return { clip, durationMs };
 }

@@ -43,6 +43,8 @@ type ContinueFromVictoryFlowArgs = {
   getStarterMaxHp: (starter: StarterLite | null | undefined) => number;
   startBattle: (idx: number) => void;
   t?: Translator;
+  /** Extra HP restored after each win (challenge titles). */
+  victoryHealBonus?: number;
 };
 
 type HandlePendingEvolutionArgs = {
@@ -98,6 +100,7 @@ export function continueFromVictoryFlow({
   getStarterMaxHp,
   startBattle,
   t,
+  victoryHealBonus = 0,
 }: ContinueFromVictoryFlowArgs): void {
   if (isCoopBattleMode(state.battleMode) && state.enemySub) {
     setScreen('battle');
@@ -116,9 +119,10 @@ export function continueFromVictoryFlow({
     return;
   }
 
-  setPHp((prev) => Math.min(prev + 10, getStageMaxHp(state.pStg || 0)));
+  const healBonus = Math.max(0, Math.floor(victoryHealBonus) || 0);
+  setPHp((prev) => Math.min(prev + 10 + healBonus, getStageMaxHp(state.pStg || 0)));
   if (isCoopBattleMode(state.battleMode) && state.allySub && (state.pHpSub || 0) > 0) {
-    setPHpSub((prev) => Math.min(prev + 8, getStarterMaxHp(state.allySub)));
+    setPHpSub((prev) => Math.min(prev + 8 + healBonus, getStarterMaxHp(state.allySub)));
   }
   startBattle(nextRound);
 }

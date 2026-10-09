@@ -1,1 +1,0 @@
-This folder is a fun math game for kids to study elemetnary addition, subtraction, multiplication, and division. 

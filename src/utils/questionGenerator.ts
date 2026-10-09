@@ -10,6 +10,10 @@ type Translator = (key: string, fallback: string, params?: TemplateParams) => st
 export type QuestionGeneratorOptions = {
   t?: Translator;
   allowedOps?: string[];
+  /** Grade alignment: largest operand per operation after difficulty scaling. */
+  maxOperandByOp?: Readonly<Record<string, number>>;
+  /** Before the ÷ sign is taught (grade 2), missing-factor questions use × only. */
+  noDivisionSign?: boolean;
 };
 
 export type QuestionGeneratorMove = {
@@ -23,11 +27,13 @@ type QuestionDraft = {
   op: string;
   steps: string[];
   distractorCandidates?: number[];
+  /** Skip the same-ones-digit distractor guarantee in makeChoices. */
+  skipOnesDigitGuard?: boolean;
   choiceLabels?: string[];
   answerLabel?: string;
 };
 
-export type GeneratedQuestion = QuestionDraft & {
+export type GeneratedQuestion = Omit<QuestionDraft, 'skipOnesDigitGuard'> & {
   choices: number[];
 };
 
@@ -983,17 +989,21 @@ function genUnknown1(range: [number, number], depth = 0): QuestionDraft {
  * unknown2: ? × b = c  or  ? ÷ b = c  (乘除求未知)
  * e.g. ? × 4 = 28 → ans = 7
  */
-function genUnknown2(range: [number, number]): QuestionDraft {
-  const op = chance(0.5) ? "×" : "÷";
+function genUnknown2(range: [number, number], multiplyOnly = false, tr?: Translator): QuestionDraft {
+  const op = multiplyOnly || chance(0.5) ? "×" : "÷";
   if (op === "×") {
     const ans = rr(range[0], range[1]);
     const b = Math.max(2, rr(range[0], range[1]));
     const c = ans * b;
+    // Before the ÷ sign is taught, explain by counting up the times table.
+    const steps = multiplyOnly && tr
+      ? [tr("question.step.think", "Think: {expr}", { expr: `${b} × ? = ${c}` }), `${b} × ${ans} = ${c}`, `? = ${ans}`]
+      : [`? × ${b} = ${c}`, `? = ${c} ÷ ${b}`, `? = ${ans}`];
     return {
       display: `? × ${b} = ${c}`,
       answer: ans,
       op: "unknown2",
-      steps: [`? × ${b} = ${c}`, `? = ${c} ÷ ${b}`, `? = ${ans}`],
+      steps,
     };
   }
 
@@ -1109,44 +1119,258 @@ function genUnknown4(range: [number, number], depth = 0): QuestionDraft {
 }
 
 // ── Basic arithmetic generators (extracted from genQ switch) ──
+//
+// Solution steps double as paid hints, so each strategy keeps the final
+// answer in its last step only (make-ten, place value, derived facts).
 
-function genAdd(range: [number, number]): QuestionDraft {
+function addSteps(a: number, b: number, tr: Translator): string[] {
+  const ans = a + b;
+  const big = Math.max(a, b);
+  const small = Math.min(a, b);
+  if (big < 10) {
+    if (ans <= 10) {
+      return [
+        tr('question.step.addCountOn', 'Start at {big} and count on {small}.', { big, small }),
+        `${big} + ${small} = ${ans}`,
+      ];
+    }
+    const need = 10 - big;
+    const rest = small - need;
+    return [
+      tr('question.step.addSplit', 'Split {small} into {need} and {rest}.', { small, need, rest }),
+      tr('question.step.addMakeTen', 'Make ten: {big} + {need} = 10', { big, need }),
+      `10 + ${rest} = ${ans}`,
+    ];
+  }
+  if (small < 10) {
+    const ones = big % 10;
+    const tens = big - ones;
+    if (ones === 0) {
+      return [
+        tr('question.step.addPlaceValue', '{tens} tens and {ones} ones make {result}', { tens: tens / 10, ones: small, result: ans }),
+      ];
+    }
+    if (ones + small === 10) {
+      return [
+        tr('question.step.addOnes', 'Add the ones: {a} + {b} = {result}', { a: ones, b: small, result: 10 }),
+        tr('question.step.combine', 'Put them together: {a} + {b} = {result}', { a: tens, b: 10, result: ans }),
+      ];
+    }
+    if (ones + small > 10) {
+      const need = 10 - ones;
+      const rest = small - need;
+      const nextTen = big + need;
+      return [
+        tr('question.step.addSplit', 'Split {small} into {need} and {rest}.', { small, need, rest }),
+        tr('question.step.addToNextTen', 'Make the next ten: {a} + {need} = {ten}', { a: big, need, ten: nextTen }),
+        `${nextTen} + ${rest} = ${ans}`,
+      ];
+    }
+    return [
+      tr('question.step.addOnes', 'Add the ones: {a} + {b} = {result}', { a: ones, b: small, result: ones + small }),
+      tr('question.step.combine', 'Put them together: {a} + {b} = {result}', { a: tens, b: ones + small, result: ans }),
+    ];
+  }
+  const aOnes = a % 10;
+  const bOnes = b % 10;
+  const tensSum = (a - aOnes) + (b - bOnes);
+  const onesSum = aOnes + bOnes;
+  const steps = [
+    tr('question.step.addTens', 'Add the tens: {a} + {b} = {result}', { a: a - aOnes, b: b - bOnes, result: tensSum }),
+  ];
+  if (onesSum === 0) return steps;
+  if (aOnes > 0 && bOnes > 0) {
+    steps.push(tr('question.step.addOnes', 'Add the ones: {a} + {b} = {result}', { a: aOnes, b: bOnes, result: onesSum }));
+  }
+  steps.push(tr('question.step.combine', 'Put them together: {a} + {b} = {result}', { a: tensSum, b: onesSum, result: ans }));
+  return steps;
+}
+
+function subtractOnesSteps(a: number, b: number, tr: Translator): string[] {
+  // a - b with b < 10, written so any borrow goes through the ten.
+  const ans = a - b;
+  const ones = a % 10;
+  const tens = a - ones;
+  if (a <= 10) {
+    return [
+      tr('question.step.subCountBack', 'Start at {a} and count back {b}.', { a, b }),
+      `${a} - ${b} = ${ans}`,
+    ];
+  }
+  if (ones >= b) {
+    return [
+      tr('question.step.subOnes', 'Subtract the ones: {a} - {b} = {result}', { a: ones, b, result: ones - b }),
+      tr('question.step.combine', 'Put them together: {a} + {b} = {result}', { a: tens, b: ones - b, result: ans }),
+    ];
+  }
+  if (ones === 0) {
+    return [
+      tr('question.step.subFromTen', 'Take one ten: 10 - {b} = {result}', { b, result: 10 - b }),
+      tr('question.step.combine', 'Put them together: {a} + {b} = {result}', { a: tens - 10, b: 10 - b, result: ans }),
+    ];
+  }
+  const rest = b - ones;
+  return [
+    tr('question.step.subSplit', 'Split {b} into {first} and {rest}.', { b, first: ones, rest }),
+    tr('question.step.subToTen', 'Subtract down to the ten: {a} - {first} = {ten}', { a, first: ones, ten: tens }),
+    `${tens} - ${rest} = ${ans}`,
+  ];
+}
+
+function subSteps(a: number, b: number, tr: Translator): string[] {
+  if (b < 10) return subtractOnesSteps(a, b, tr);
+  const bOnes = b % 10;
+  const bTens = b - bOnes;
+  const mid = a - bTens;
+  const steps = [
+    tr('question.step.subTens', 'Subtract the tens: {a} - {b} = {result}', { a, b: bTens, result: mid }),
+  ];
+  if (bOnes === 0) return steps;
+  const midOnes = mid % 10;
+  if (midOnes >= bOnes || midOnes === 0) {
+    steps.push(tr('question.step.subOnesFrom', 'Then subtract the ones: {a} - {b} = {result}', {
+      a: mid, b: bOnes, result: mid - bOnes,
+    }));
+    return steps;
+  }
+  steps.push(
+    tr('question.step.subToTen', 'Subtract down to the ten: {a} - {first} = {ten}', { a: mid, first: midOnes, ten: mid - midOnes }),
+    `${mid - midOnes} - ${bOnes - midOnes} = ${mid - bOnes}`,
+  );
+  return steps;
+}
+
+function mulSteps(a: number, b: number, tr: Translator): string[] {
+  const ans = a * b;
+  const big = Math.max(a, b);
+  const small = Math.min(a, b);
+  if (big >= 10) {
+    const ones = big % 10;
+    const tens = big - ones;
+    if (ones === 0) {
+      return [
+        tr('question.step.mulTens', 'Multiply by {tens}: {n} × {factor} = {part}, then add a 0.', {
+          tens, n: small, factor: tens / 10, part: small * (tens / 10),
+        }),
+        `${small} × ${tens} = ${ans}`,
+      ];
+    }
+    return [
+      tr('question.step.mulSplit', 'Split {n} into {tens} and {ones}.', { n: big, tens, ones }),
+      `${small} × ${tens} = ${small * tens}`,
+      `${small} × ${ones} = ${small * ones}`,
+      tr('question.step.combine', 'Put them together: {a} + {b} = {result}', { a: small * tens, b: small * ones, result: ans }),
+    ];
+  }
+  if (small === 1) {
+    return [
+      tr('question.step.mulOne', 'Any number times 1 stays the same.'),
+      `${big} × 1 = ${ans}`,
+    ];
+  }
+  const fewer = big * (small - 1);
+  return [
+    tr('question.step.mulOneLess', 'One group fewer: {big} × {n} = {result}', { big, n: small - 1, result: fewer }),
+    tr('question.step.mulAddGroup', 'Add one more {big}: {a} + {big} = {result}', { a: fewer, big, result: ans }),
+  ];
+}
+
+/**
+ * Place-value square: ±10 and ±1 around the answer, so neither the ones digit
+ * nor the tens digit alone identifies the correct choice. `tensShift` points
+ * the ±10 pair toward the typical mistake (forgotten carry / forgotten borrow).
+ */
+function buildPlaceValueDistractors(answer: number, tensShift: 10 | -10): number[] {
+  const tens = answer + tensShift >= 0 ? tensShift : 10;
+  // Keep the ±1 pair inside the same tens so the tens digit stays ambiguous too.
+  const onesDigit = answer % 10;
+  const onesShift = onesDigit === 0 ? 1 : onesDigit === 9 ? -1 : (chance(0.5) ? -1 : 1);
+  return [answer + tens, answer + onesShift, answer + tens + onesShift];
+}
+
+/** Pick the ±10 direction: the typical slip when it is still plausible, otherwise any plausible side. */
+function pickTensShift(preferred: 10 | -10 | null, plusOk: boolean, minusOk: boolean): 10 | -10 {
+  if (preferred === 10 && plusOk) return 10;
+  if (preferred === -10 && minusOk) return -10;
+  if (plusOk && minusOk) return chance(0.5) ? 10 : -10;
+  return minusOk ? -10 : 10;
+}
+
+function buildSmallAnswerDistractors(answer: number): number[] {
+  // Single-digit results: nearby counting slips are the realistic mistakes.
+  const around = [answer - 1, answer + 1, answer - 2, answer + 2].filter((value) => value >= 0);
+  shuffleInPlace(around);
+  return around;
+}
+
+function genAdd(range: [number, number], tr: Translator): QuestionDraft {
   const a = rr(range[0], range[1]);
   const b = rr(range[0], range[1]);
   const ans = a + b;
+  // Single-digit addends: knowing the ones digit already means knowing the fact,
+  // so nearby counting slips are the realistic distractors.
+  if (a < 10 && b < 10) {
+    return {
+      display: `${a} + ${b}`,
+      answer: ans,
+      op: '+',
+      steps: addSteps(a, b, tr),
+      distractorCandidates: buildSmallAnswerDistractors(ans),
+      skipOnesDigitGuard: true,
+    };
+  }
+  const carried = (a % 10) + (b % 10) >= 10;
+  // A sum below either addend is not a believable answer.
+  const tensShift = pickTensShift(carried ? -10 : null, true, ans - 10 >= Math.max(a, b));
   return {
     display: `${a} + ${b}`,
     answer: ans,
     op: '+',
-    steps: [`${a} + ${b} = ${ans}`],
+    steps: addSteps(a, b, tr),
+    distractorCandidates: ans >= 10 ? buildPlaceValueDistractors(ans, tensShift) : buildSmallAnswerDistractors(ans),
   };
 }
 
-function genSub(range: [number, number]): QuestionDraft {
+function genSub(range: [number, number], tr: Translator): QuestionDraft {
   const x = rr(range[0], range[1]);
   let y = rr(range[0], range[1]);
   if (x === y) y = Math.min(range[1], y + 1);
   const a = Math.max(x, y);
   const b = Math.min(x, y);
   const ans = a - b;
+  const borrowed = (a % 10) < (b % 10);
+  // A difference larger than the starting number is not a believable answer.
+  const tensShift = pickTensShift(borrowed ? 10 : null, ans + 10 <= a, ans - 10 >= 0);
   return {
     display: `${a} - ${b}`,
     answer: ans,
     op: '-',
-    steps: [`${a} - ${b} = ${ans}`],
+    steps: subSteps(a, b, tr),
+    distractorCandidates: ans >= 10 ? buildPlaceValueDistractors(ans, tensShift) : buildSmallAnswerDistractors(ans),
   };
 }
 
-function genMul(range: [number, number]): QuestionDraft {
+function genMul(range: [number, number], tr: Translator): QuestionDraft {
   const a = rr(range[0], range[1]);
   const b = rr(range[0], range[1]);
   const ans = a * b;
+  const distractorCandidates = buildMultiplicationDistractors(a, b, ans);
+  if (a >= 10 && b >= 10) {
+    // Two-digit × two-digit: the classic "tens×tens + ones×ones" slip (missing
+    // cross terms) shares the answer's ones digit.
+    const partial = (a - (a % 10)) * (b - (b % 10)) + (a % 10) * (b % 10);
+    if (partial !== ans) distractorCandidates.unshift(partial);
+  } else if (a >= 10 || b >= 10) {
+    distractorCandidates.unshift(ans - 10 > 0 && chance(0.5) ? ans - 10 : ans + 10);
+  }
   return {
     display: `${a} × ${b}`,
     answer: ans,
     op: '×',
-    steps: [`${a} × ${b} = ${ans}`],
-    distractorCandidates: buildMultiplicationDistractors(a, b, ans),
+    steps: mulSteps(a, b, tr),
+    distractorCandidates,
+    // Single-digit facts: the ones digit already requires knowing the fact.
+    skipOnesDigitGuard: a < 10 && b < 10,
   };
 }
 
@@ -1168,9 +1392,9 @@ function genDiv(range: [number, number], tr: Translator): QuestionDraft {
 
 // ── Question Registry ──
 
-QUESTION_REGISTRY.set('+', (range) => makeChoices(genAdd(range)));
-QUESTION_REGISTRY.set('-', (range) => makeChoices(genSub(range)));
-QUESTION_REGISTRY.set('×', (range) => makeChoices(genMul(range)));
+QUESTION_REGISTRY.set('+', (range, tr) => makeChoices(genAdd(range, tr)));
+QUESTION_REGISTRY.set('-', (range, tr) => makeChoices(genSub(range, tr)));
+QUESTION_REGISTRY.set('×', (range, tr) => makeChoices(genMul(range, tr)));
 QUESTION_REGISTRY.set('÷', (range, tr) => makeChoices(genDiv(range, tr)));
 
 QUESTION_REGISTRY.set('mixed2', (range) => makeChoices(genMixed2(range)));
@@ -1217,6 +1441,15 @@ export function genQ(
     : (allowedOps.length > 0 ? allowedOps : baseOps);
   const op = pickOne(ops) ?? "+";
 
+  // Keep operands inside the child's grade, however hard the move or level.
+  const cap = options.maxOperandByOp?.[op];
+  if (typeof cap === 'number' && Number.isFinite(cap) && cap >= 2) {
+    range[1] = Math.min(range[1], Math.floor(cap));
+    range[0] = Math.max(1, Math.min(range[0], range[1] - 1));
+  }
+
+  if (op === 'unknown2' && options.noDivisionSign) return makeChoices(genUnknown2(range, true, tr));
+
   // Registry lookup
   const generator = QUESTION_REGISTRY.get(op);
   if (generator) return generator(range, tr, diffMod);
@@ -1234,14 +1467,28 @@ function makeChoices({
   op,
   steps,
   distractorCandidates,
+  skipOnesDigitGuard,
   choiceLabels,
   answerLabel,
 }: QuestionDraft): GeneratedQuestion {
   const spread = Math.max(5, Math.ceil(Math.abs(answer) * 0.2));
   const ch = new Set<number>([answer]);
+  const candidates = Array.isArray(distractorCandidates) ? [...distractorCandidates] : [];
 
-  if (Array.isArray(distractorCandidates) && distractorCandidates.length > 0) {
-    for (const value of distractorCandidates) {
+  // Multi-digit answers: make sure some distractor shares the ones digit, so the
+  // answer cannot be picked by computing only the ones column.
+  if (!skipOnesDigitGuard && Number.isInteger(answer) && answer >= 10) {
+    const hasSameOnes = candidates.slice(0, 3).some((value) => (
+      Number.isFinite(value) && Math.round(value) !== answer && Math.round(value) >= 0
+      && Math.round(value) % 10 === answer % 10
+    ));
+    if (!hasSameOnes) {
+      candidates.unshift(answer - 10 >= 0 && chance(0.5) ? answer - 10 : answer + 10);
+    }
+  }
+
+  if (candidates.length > 0) {
+    for (const value of candidates) {
       if (!Number.isFinite(value)) continue;
       const normalized = Math.max(0, Math.round(value));
       if (normalized === answer) continue;

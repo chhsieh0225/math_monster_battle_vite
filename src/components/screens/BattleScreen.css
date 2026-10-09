@@ -46,6 +46,25 @@
 }
 @keyframes struggle{0%,100%{filter:brightness(1) saturate(1.3)}50%{filter:brightness(0.85) saturate(1.8) hue-rotate(-10deg)}}
 @keyframes enemyDissolve{0%{opacity:1;filter:brightness(1);transform:translateY(0) var(--battle-sprite-base-transform,scale(1))}30%{filter:brightness(2.5) saturate(0);transform:translateY(-6px) var(--battle-sprite-base-transform,scale(1)) scale(1.06)}60%{opacity:.5;filter:brightness(1.8) saturate(0) blur(2px);transform:translateY(-12px) var(--battle-sprite-base-transform,scale(1)) scale(1.02)}100%{opacity:0;filter:brightness(3) saturate(0) blur(6px);transform:translateY(-30px) var(--battle-sprite-base-transform,scale(1)) scale(0.7)}}
+/* ── Defeats by finishing element (the wrapper's origin is top-right, so scale/rotate are re-centred) ── */
+@keyframes enemyDeathBurn{0%{opacity:1;filter:none;transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,95%) scale(1) translate(50%,-95%)}20%{filter:brightness(1.6) sepia(1) saturate(4) hue-rotate(-20deg)}45%{opacity:.95;filter:brightness(2.2) sepia(1) saturate(6) hue-rotate(-25deg) drop-shadow(0 0 12px #f97316);transform:translateY(-4px) var(--battle-sprite-base-transform,scale(1)) translate(-50%,95%) scale(1,.96) translate(50%,-95%)}70%{opacity:.6;filter:brightness(.55) sepia(1) saturate(3) drop-shadow(0 -8px 14px #ef4444);transform:translateY(-10px) var(--battle-sprite-base-transform,scale(1)) translate(-50%,95%) scale(.96,.84) translate(50%,-95%)}100%{opacity:0;filter:brightness(.12) blur(3px);transform:translateY(-28px) var(--battle-sprite-base-transform,scale(1)) translate(-50%,95%) scale(.82,.6) translate(50%,-95%)}}
+@keyframes enemyDeathMelt{0%{opacity:1;filter:none;transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,98%) scale(1) translate(50%,-98%)}30%{filter:hue-rotate(160deg) saturate(1.6) brightness(1.2);transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,98%) scale(1.05,.95) translate(50%,-98%)}65%{opacity:.75;filter:hue-rotate(180deg) saturate(2) brightness(1.1) blur(1.5px);transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,98%) scale(1.2,.6) translate(50%,-98%)}100%{opacity:0;filter:hue-rotate(190deg) saturate(2) blur(4px);transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,98%) scale(1.4,.1) translate(50%,-98%)}}
+@keyframes enemyDeathZap{0%{opacity:1;filter:none;transform:var(--battle-sprite-base-transform,scale(1))}8%{filter:brightness(2.6) saturate(0) drop-shadow(0 0 10px #fde047);transform:translateX(-3px) var(--battle-sprite-base-transform,scale(1))}14%{filter:brightness(.6) contrast(2);transform:translateX(3px) var(--battle-sprite-base-transform,scale(1))}22%{filter:brightness(2.8) saturate(0) drop-shadow(0 0 14px #facc15);transform:translateX(-2px) var(--battle-sprite-base-transform,scale(1))}30%{filter:invert(1) brightness(1.4);transform:translateX(2px) var(--battle-sprite-base-transform,scale(1))}38%{filter:brightness(2.4) saturate(0);transform:var(--battle-sprite-base-transform,scale(1))}55%{opacity:.85;filter:brightness(3) saturate(0) drop-shadow(0 0 18px #fde047);transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) scale(1.06) translate(50%,-55%)}70%{opacity:.6;filter:brightness(4) saturate(0) blur(1px)}100%{opacity:0;filter:brightness(5) saturate(0) blur(6px);transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) scale(.25,1.35) translate(50%,-55%)}}
+@keyframes enemyDeathWither{0%{opacity:1;filter:none;transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,95%) rotate(0deg) translate(50%,-95%)}35%{filter:sepia(.8) saturate(.6) brightness(.85);transform:translateY(4px) var(--battle-sprite-base-transform,scale(1)) translate(-50%,95%) rotate(-5deg) translate(50%,-95%)}70%{opacity:.7;filter:sepia(1) saturate(.3) brightness(.6);transform:translateY(14px) var(--battle-sprite-base-transform,scale(1)) translate(-50%,95%) rotate(-12deg) scale(.92) translate(50%,-95%)}100%{opacity:0;filter:sepia(1) saturate(.2) brightness(.4) blur(2px);transform:translateY(34px) var(--battle-sprite-base-transform,scale(1)) translate(-50%,95%) rotate(-20deg) scale(.8) translate(50%,-95%)}}
+@keyframes enemyDeathFreeze{0%{opacity:1;filter:none;transform:var(--battle-sprite-base-transform,scale(1))}25%{filter:saturate(.3) brightness(1.5) hue-rotate(170deg) drop-shadow(0 0 8px #67e8f9)}58%{opacity:1;filter:saturate(.2) brightness(1.8) hue-rotate(175deg) drop-shadow(0 0 12px #a5f3fc);transform:var(--battle-sprite-base-transform,scale(1))}64%{transform:translateX(-2px) var(--battle-sprite-base-transform,scale(1))}70%{transform:translateX(2px) var(--battle-sprite-base-transform,scale(1))}80%{opacity:.85;filter:brightness(2.6) saturate(0) drop-shadow(0 0 16px #e0f2fe);transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) scale(1.05) translate(50%,-55%)}100%{opacity:0;filter:brightness(3.5) saturate(0) blur(5px);transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) scale(1.28) translate(50%,-55%)}}
+@keyframes enemyDeathAscend{0%{opacity:1;filter:none;transform:translateY(0) var(--battle-sprite-base-transform,scale(1))}40%{filter:brightness(2) sepia(.4) saturate(2) drop-shadow(0 0 14px #fde68a);transform:translateY(-8px) var(--battle-sprite-base-transform,scale(1))}100%{opacity:0;filter:brightness(4) saturate(0) blur(4px);transform:translateY(-64px) var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) scale(.9) translate(50%,-55%)}}
+@keyframes enemyDeathVoid{0%{opacity:1;filter:none;transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) rotate(0deg) scale(1) translate(50%,-55%)}35%{filter:brightness(.35) saturate(1.5) hue-rotate(250deg) drop-shadow(0 0 10px #7c3aed);transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) rotate(-6deg) scale(.95) translate(50%,-55%)}75%{opacity:.85;filter:brightness(.12) drop-shadow(0 0 16px #6d28d9);transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) rotate(-45deg) scale(.45) translate(50%,-55%)}100%{opacity:0;filter:brightness(0);transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) rotate(-100deg) scale(.04) translate(50%,-55%)}}
+@keyframes enemyDeathKnockout{0%{opacity:1;filter:none;transform:var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) rotate(0deg) translate(50%,-55%)}18%{filter:brightness(1.8) saturate(.5);transform:translateX(10px) var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) rotate(8deg) translate(50%,-55%)}60%{opacity:.9;filter:brightness(1.1);transform:translate(48px,-22px) var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) rotate(70deg) scale(.9) translate(50%,-55%)}100%{opacity:0;filter:brightness(.8) blur(2px);transform:translate(110px,10px) var(--battle-sprite-base-transform,scale(1)) translate(-50%,55%) rotate(160deg) scale(.7) translate(50%,-55%)}}
+/* Boss: two white flashes, a white-hot break, then shards fall away (see .battle-enemy-shard). */
+@keyframes enemyDeathBoss{0%{filter:none;transform:var(--battle-sprite-base-transform,scale(1))}6%{filter:brightness(4) saturate(0) drop-shadow(0 0 18px #fff)}14%{filter:none}22%{filter:brightness(4) saturate(0) drop-shadow(0 0 22px #fff)}30%{filter:none}36%{filter:brightness(2.2) saturate(.4) drop-shadow(0 0 14px #fff7d6)}39%{filter:brightness(3) saturate(0) drop-shadow(0 0 20px #fff)}100%{filter:brightness(1.3) drop-shadow(0 0 8px #fde68a);transform:var(--battle-sprite-base-transform,scale(1))}}
+@keyframes enemyDeathBossLite{0%{opacity:1;filter:none;transform:var(--battle-sprite-base-transform,scale(1))}10%{filter:brightness(4) saturate(0)}20%{filter:none}32%{filter:brightness(4) saturate(0)}45%{opacity:1;filter:brightness(2) saturate(0)}100%{opacity:0;filter:brightness(3) saturate(0);transform:var(--battle-sprite-base-transform,scale(1))}}
+@keyframes enemyShatterHide{to{opacity:0}}
+@keyframes enemyShardShow{to{opacity:1}}
+@keyframes enemyShardFly{0%{opacity:1;transform:none;filter:brightness(2.4) saturate(.3)}25%{opacity:1}100%{opacity:0;transform:translate(var(--shard-dx,0%),var(--shard-dy,40%)) rotate(var(--shard-rot,0deg)) scale(.85);filter:brightness(1.1) blur(1px)}}
+.battle-sprite-enemy-main.is-shattering>.battle-sprite-core{animation:enemyShatterHide .01s linear .9s forwards}
+.battle-enemy-shard{position:absolute;inset:0;opacity:0;pointer-events:none;will-change:transform,opacity;animation:enemyShardShow .01s linear .9s forwards,enemyShardFly 1.1s cubic-bezier(.3,.55,.4,1) calc(.9s + var(--shard-delay,0s)) forwards}
+.battle-enemy-shard>.battle-sprite-core{animation:none}
+@media (prefers-reduced-motion:reduce){.battle-enemy-shard{display:none}}
 @keyframes slideInBattle{0%{transform:translateX(120px) var(--battle-sprite-base-transform,scale(1));opacity:0}100%{transform:translateX(0) var(--battle-sprite-base-transform,scale(1));opacity:1}}
 @keyframes slideInPlayer{0%{transform:translateX(-120px) var(--battle-sprite-base-transform,scale(1));opacity:0}100%{transform:translateX(0) var(--battle-sprite-base-transform,scale(1));opacity:1}}
 @keyframes battleFloat{0%,100%{transform:translateY(0) var(--battle-sprite-base-transform,scale(1))}50%{transform:translateY(var(--battle-idle-lift,-8px)) var(--battle-sprite-base-transform,scale(1)) scale(var(--battle-idle-scale,1.03))}}
@@ -1406,6 +1425,40 @@
 }
 .battle-feedback.is-correct{color:#22c55e}
 .battle-feedback.is-wrong{color:#ef4444}
+/* Answer review: the battle message sits above the explanation until the player taps. */
+.battle-review-bar{
+  position:sticky;
+  top:0;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 0 8px;
+  padding:8px 12px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:10px;
+  background:linear-gradient(90deg,rgba(15,23,42,.97),rgba(30,41,59,.97));
+  color:#fff;
+  animation:fadeSlide .25s ease;
+}
+.battle-review-message{
+  font-size:.95rem;
+  font-weight:600;
+  line-height:1.5;
+  white-space:pre-line;
+}
+.battle-review-continue{
+  flex-shrink:0;
+  font-size:.75rem;
+  color:rgba(255,255,255,.6);
+  white-space:nowrap;
+  animation:battleReviewNudge 1.4s ease-in-out infinite;
+}
+/* Disabled buttons swallow taps; let them fall through to the screen's tap-to-continue. */
+.battle-question-wrap.is-review .battle-answer-btn{pointer-events:none}
+@keyframes battleReviewNudge{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+@media (prefers-reduced-motion:reduce){.battle-review-continue{animation:none}}
 .battle-feedback-steps{
   background:rgba(239,68,68,.08);
   border:1px solid rgba(239,68,68,.2);

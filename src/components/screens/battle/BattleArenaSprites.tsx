@@ -5,6 +5,7 @@ import { BattleSprite } from './BattleSprite';
 import type { BattleCoreStatic } from './buildBattleCore';
 import type { resolveBattleSpriteAnimations } from '../../../utils/battleAnimations';
 import AmbientParticles from '../../effects/AmbientParticles';
+import { BOSS_SHARDS } from './battleShatter.ts';
 
 type BattleArenaSpritesProps = {
   showHeavyFx: boolean;
@@ -35,6 +36,8 @@ type BattleArenaSpritesProps = {
   playerMainShadowStyle: CSSProperties;
   showEnemyShadow: boolean;
   showPlayerShadow: boolean;
+  /** A defeated boss: after two white flashes the sprite breaks into shards. */
+  enemyShatter?: boolean;
 };
 
 const FACING_MAIN_STYLE: CSSProperties = {
@@ -77,6 +80,7 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
   playerMainShadowStyle,
   showEnemyShadow,
   showPlayerShadow,
+  enemyShatter = false,
 }: BattleArenaSpritesProps) {
   // Safe padding is now baked into SVG via spriteProfiles.ts — no CSS scale hack needed.
   const enemyMainFacingStyle = FACING_MAIN_STYLE;
@@ -88,12 +92,26 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
     <>
       {/* Enemy sprite */}
       <div ref={enemySpriteRef} className="battle-sprite-anchor" style={enemyMainSpriteStyle}>
-        <div className="battle-sprite-enemy-main">
+        <div className={`battle-sprite-enemy-main${enemyShatter ? ' is-shattering' : ''}`}>
           <div className="battle-sprite-core battle-sprite-core-main battle-sprite-core-enemy">
             <BattleSprite profileKey={spriteProfiles.enemyMain} animation={spriteAnimations.enemyMain}
               svgStr={eSvg} size={eSize} style={enemyMainFacingStyle} />
           </div>
-          {showHeavyFx && (
+          {enemyShatter && BOSS_SHARDS.map((shard, index) => (
+            <div key={index} className="battle-enemy-shard" aria-hidden="true" style={{
+              clipPath: shard.clip,
+              '--shard-dx': `${shard.dx}%`,
+              '--shard-dy': `${shard.dy}%`,
+              '--shard-rot': `${shard.rotate}deg`,
+              '--shard-delay': `${shard.delay}s`,
+            } as CSSProperties}>
+              <div className="battle-sprite-core battle-sprite-core-enemy">
+                <BattleSprite profileKey={spriteProfiles.enemyMain} animation={spriteAnimations.enemyMain}
+                  svgStr={eSvg} size={eSize} style={enemyMainFacingStyle} />
+              </div>
+            </div>
+          ))}
+          {showHeavyFx && !enemyShatter && (
             <AmbientParticles
               type={enemy.mType || 'grass'}
               type2={enemy.mType2}

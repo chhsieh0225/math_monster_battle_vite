@@ -309,3 +309,62 @@ test('handleTimeoutFlow does not trigger delayed enemy turn after battle ended',
 
   assert.equal(enemyTurnCalls, 0);
 });
+
+test('handleTimeoutFlow keeps the answer on screen until the player taps when a tap hook is provided', () => {
+  let phase = 'question';
+  let fb = null;
+  let pending = null;
+  let enemyTurnCalls = 0;
+  const delays = [];
+  const phases = [];
+  const sr = {
+    current: {
+      battleMode: 'single',
+      phase: 'question',
+      screen: 'battle',
+      selIdx: 0,
+      timedMode: true,
+      q: { answer: 56, steps: ['One group fewer: 8 × 6 = 48', 'Add one more 8: 48 + 8 = 56'], op: '×', display: '7 × 8' },
+    },
+  };
+
+  handleTimeoutFlow({
+    sr,
+    getPvpTurnName: () => '',
+    getOtherPvpTurn: () => 'p1',
+    setAnswered: noop,
+    setFb: (value) => { fb = value; },
+    setTW: noopNum,
+    setPvpChargeP1: noop,
+    setPvpChargeP2: noop,
+    setPvpComboP1: noop,
+    setPvpComboP2: noop,
+    setBText: noop,
+    setPvpTurn: noop,
+    setPvpActionCount: noop,
+    setPhase: (value) => { phase = value; phases.push(value); },
+    sfx: { play: noop },
+    setStreak: noopNum,
+    setPassiveCount: noopNum,
+    setCharge: noopNum,
+    logAns: () => 0,
+    updateAbility: noop,
+    getActingStarter: () => ({ moves: [{ name: 'A' }] }),
+    appendSessionEvent: noop,
+    markCoopRotatePending: noop,
+    safeTo: (fn, ms) => { delays.push(ms); fn(); },
+    doEnemyTurn: () => { enemyTurnCalls += 1; },
+    setPendingTextAdvanceAction: (action) => { pending = action; },
+  });
+
+  // The explanation is visible and the enemy waits for the tap.
+  assert.deepEqual(fb, { correct: false, answer: 56, steps: sr.current.q.steps });
+  assert.deepEqual(delays, [1500]);
+  assert.deepEqual(phases, ['review']);
+  assert.equal(phase, 'review');
+  assert.equal(enemyTurnCalls, 0);
+  assert.equal(typeof pending, 'function');
+
+  pending();
+  assert.equal(enemyTurnCalls, 1);
+});

@@ -4,6 +4,7 @@ import type { BattleMode, EnemyVm, ScreenName, StarterVm } from '../../types/bat
 import type { BattleAction, BattleState } from './battleReducer.ts';
 import { buildSaveSnapshot, loadSave, writeSave } from '../../utils/savegame.ts';
 import { useBattleStateRef, useStableCallback } from '../useBattleRuntime.ts';
+import { expeditionRoster, type ExpeditionRun } from '../../utils/expeditionRun.ts';
 
 type SaveRuntimeState = {
   allySub?: StarterVm | null;
@@ -31,10 +32,14 @@ type UseBattleSaveFlowArgs = {
   initSession: (starter: StarterVm, timedMode: boolean) => void;
   setScreen: (screen: ScreenName) => void;
   startBattle: (idx: number, roster?: EnemyVm[]) => void;
+  getExpeditionRun: () => ExpeditionRun | null;
+  setExpeditionRun: (run: ExpeditionRun | null) => void;
 };
 
 type UseBattleSaveFlowResult = {
   startBattleWithSave: (idx: number, roster?: EnemyVm[]) => void;
+  /** Persist the run so it can resume at `nextRound` (a battle, or the map when the expedition is there). */
+  saveMidRun: (nextRound: number, roster?: EnemyVm[]) => void;
   resumeFromSave: () => void;
 };
 
@@ -48,8 +53,9 @@ export function useBattleSaveFlow(args: UseBattleSaveFlowArgs): UseBattleSaveFlo
     coopActiveSlot: args.coopActiveSlot,
     enemies: args.enemies,
     sr: args.sr,
+    getExpeditionRun: args.getExpeditionRun,
   });
-  const saveMidRunImpl = useCallback((nextRound: number) => {
+  const saveMidRunImpl = useCallback((nextRound: number, roster?: EnemyVm[]) => {
     const ctx = saveMidRunContextRef.current;
     if (ctx.battleMode === 'pvp' || ctx.hasChallengeRun) return;
     if (!ctx.starter) return;
@@ -61,13 +67,14 @@ export function useBattleSaveFlow(args: UseBattleSaveFlowArgs): UseBattleSaveFlo
       allySub: ctx.sr.current.allySub ?? null,
       coopActiveSlot: ctx.coopActiveSlot,
       battle: ctx.battle,
-      enemies: ctx.enemies,
+      enemies: roster ?? ctx.enemies,
+      expedition: ctx.battleMode === 'single' ? ctx.getExpeditionRun() : null,
     }));
   }, [saveMidRunContextRef]);
   const saveMidRun = useStableCallback(saveMidRunImpl);
 
   const startBattleWithSave = useStableCallback((idx: number, roster?: EnemyVm[]) => {
-    if (idx > 0) saveMidRun(idx);
+    if (idx > 0) saveMidRun(idx, roster);
     args.startBattle(idx, roster);
   });
 
@@ -85,15 +92,19 @@ export function useBattleSaveFlow(args: UseBattleSaveFlowArgs): UseBattleSaveFlo
     initSession: args.initSession,
     setScreen: args.setScreen,
     startBattle: args.startBattle,
+    setExpeditionRun: args.setExpeditionRun,
   });
   const resumeFromSaveImpl = useCallback(() => {
     const saved = loadSave();
     if (!saved) return;
     const ctx = resumeFromSaveContextRef.current;
 
+    const expedition = saved.battleMode === 'single' ? saved.expedition : null;
+    const enemies = expedition ? expeditionRoster(expedition) : saved.enemies;
     ctx.setBattleMode(saved.battleMode);
     ctx.setTimedMode(saved.timedMode);
-    ctx.setEnemies(saved.enemies);
+    ctx.setExpeditionRun(expedition);
+    ctx.setEnemies(enemies);
     ctx.setStarter(saved.starter);
     ctx.setCoopActiveSlot(saved.coopActiveSlot);
 
@@ -130,13 +141,19 @@ export function useBattleSaveFlow(args: UseBattleSaveFlowArgs): UseBattleSaveFlo
     ctx.clearTimer();
     ctx.resetRunRuntimeState();
     ctx.initSession(saved.starter, saved.timedMode);
+    if (expedition?.atMap) {
+      // Saved while choosing a route: return to the map, not into a battle.
+      ctx.setScreen('worldmap');
+      return;
+    }
     ctx.setScreen('battle');
-    ctx.startBattle(saved.nextRound, saved.enemies);
+    ctx.startBattle(saved.nextRound, enemies);
   }, [resumeFromSaveContextRef]);
   const resumeFromSave = useStableCallback(resumeFromSaveImpl);
 
   return {
     startBattleWithSave,
+    saveMidRun,
     resumeFromSave,
   };
 }

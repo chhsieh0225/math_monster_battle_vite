@@ -22,6 +22,7 @@ type TimeoutRuntimeDeps = Pick<
   | 'markCoopRotatePending'
   | 'safeTo'
   | 'doEnemyTurnRef'
+  | 'setPendingTextAdvanceAction'
 >;
 
 type BuildTimeoutControllerArgsArgs = {
@@ -72,6 +73,7 @@ export function buildTimeoutControllerArgs({
     markCoopRotatePending: runtime.markCoopRotatePending,
     safeTo: runtime.safeTo,
     doEnemyTurnRef: runtime.doEnemyTurnRef,
+    setPendingTextAdvanceAction: runtime.setPendingTextAdvanceAction,
   };
 }
 

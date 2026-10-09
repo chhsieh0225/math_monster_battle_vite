@@ -334,6 +334,10 @@ export function handleCoopPartyKo({
   t,
 }: HandleCoopPartyKoArgs): 'gameover' | 'sub_down' | 'promoted' {
   const tryReturnToBattleMenu = (): void => {
+    // A tap may already have moved on (possibly into the next question);
+    // this timer may only close the knockout message itself.
+    const livePhase = stateRef?.current?.phase;
+    if (typeof livePhase === 'string' && livePhase !== 'text') return;
     tryReturnToMenu(() => stateRef?.current || state, setPhase, setBText);
   };
   const safeToIfBattleActive = (fn: () => void, ms: number): void => (

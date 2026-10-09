@@ -1,4 +1,5 @@
 import { memo, useSyncExternalStore } from 'react';
+import { renderMathText } from '../../ui/MathText';
 import type { ReactNode } from 'react';
 import type { CSSProperties } from 'react';
 import { getBossTacticProfile } from '../../../utils/turnFlow.ts';
@@ -16,38 +17,6 @@ const ZERO_SNAPSHOT = (): number => 0;
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 type BattleCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
-const FRACTION_TOKEN_RE = /(-?\d+)\s*\/\s*(-?\d+)/g;
-
-function renderMathText(value: string | number): ReactNode {
-  const text = String(value ?? '');
-  if (!text.includes('/')) return text;
-  const parts: ReactNode[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null = null;
-  FRACTION_TOKEN_RE.lastIndex = 0;
-
-  while ((match = FRACTION_TOKEN_RE.exec(text)) !== null) {
-    const idx = match.index;
-    if (idx > lastIndex) parts.push(text.slice(lastIndex, idx));
-    const numerator = match[1];
-    const denominator = match[2];
-    parts.push(
-      <span
-        key={`frac-${idx}-${numerator}-${denominator}`}
-        className="battle-math-frac"
-        aria-label={`${numerator}/${denominator}`}
-      >
-        <span className="battle-math-frac-top">{numerator}</span>
-        <span className="battle-math-frac-line" />
-        <span className="battle-math-frac-bottom">{denominator}</span>
-      </span>,
-    );
-    lastIndex = idx + match[0].length;
-  }
-  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
-  return parts;
-}
-
 type QuestionTimerHudProps = {
   timerSec: number;
   subscribe?: TimerSubscribe;
@@ -99,6 +68,11 @@ type BattleQuestionPanelProps = {
   hintCost: number;
   currentXp: number;
   onRequestHint: () => void;
+  /**
+   * Review phase (wrong answer / timeout): the battle message to show above the
+   * explanation. The whole battle screen advances on tap while it is set.
+   */
+  reviewMessage?: string;
 };
 
 export const BattleQuestionPanel = memo(function BattleQuestionPanel({
@@ -119,6 +93,7 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
   hintCost,
   currentXp,
   onRequestHint,
+  reviewMessage,
 }: BattleQuestionPanelProps) {
   const answerLabel = question.answerLabel ?? feedback?.answer ?? '?';
   const answerUsesFraction = typeof answerLabel === 'string' && answerLabel.includes('/');
@@ -128,8 +103,18 @@ export const BattleQuestionPanel = memo(function BattleQuestionPanel({
       || (question.op && (question.op.startsWith('unknown') || question.op === 'frac_cmp')),
   );
 
+  const isReview = reviewMessage !== undefined;
+
   return (
-    <div className="battle-question-wrap">
+    <div className={`battle-question-wrap${isReview ? ' is-review' : ''}`}>
+      {isReview && (
+        <div className="battle-review-bar" role="status" aria-live="polite">
+          <span className="battle-review-message">{reviewMessage}</span>
+          <span className="battle-review-continue" aria-hidden="true">
+            {t('battle.review.continue', 'Tap to continue')} ▼
+          </span>
+        </div>
+      )}
       <div className="battle-question-head">
         <span className="battle-question-icon">{selectedMove.icon}</span>
         <span className="battle-question-title">{selectedMove.name}！</span>

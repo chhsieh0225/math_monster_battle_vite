@@ -1,10 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { pruneRetiredAtlases } from './scripts/prune-retired-atlases.ts'
 
 export default defineConfig({
   plugins: [
     react(),
+    pruneRetiredAtlases(),
     VitePWA({
       registerType: 'autoUpdate',   // SW 自動更新，使用者永遠拿到最新版
       includeAssets: ['icon-192.png', 'icon-512.png'],
@@ -18,8 +20,8 @@ export default defineConfig({
         // Google Fonts：runtime cache，避免 precache 外部資源失敗阻擋安裝
         runtimeCaching: [
           {
-            // 場景圖與精靈圖：首次請求後快取，之後離線可用。
-            urlPattern: /\/(?:backgrounds|sprites)\/.*\.(?:png|jpg|jpeg|webp|svg)$/i,
+            // 場景圖、精靈圖與世界地圖：首次請求後快取，之後離線可用。
+            urlPattern: /\/(?:backgrounds|sprites|maps)\/.*\.(?:png|jpg|jpeg|webp|svg)$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'game-visual-assets',

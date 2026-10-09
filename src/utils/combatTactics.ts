@@ -1,4 +1,5 @@
 import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
+import { MAX_MOVE_LVL } from '../data/constants.ts';
 import { computeBossPhase } from './turnFlow.ts';
 
 export type FireTactic = 'kindle' | 'breach' | 'detonate' | 'finisher';
@@ -7,6 +8,28 @@ const TACTICS = BALANCE_CONFIG.tactics;
 
 function boundedStacks(value: number, max: number): number {
   return Number.isFinite(value) ? Math.max(0, Math.min(max, Math.floor(value))) : 0;
+}
+
+/** Grass and tiger reuse the existing party opening and enemy frost mark. */
+export function planNatureTactic(id: string | undefined, mode: string | undefined, index: number,
+  level = 1, exposed = false, shattered = false) {
+  if (mode === 'pvp' || (id !== 'grass' && id !== 'tiger') || !Number.isInteger(index) || index < 0 || index > 3) return null;
+  const grass = id === 'grass';
+  const healScale = index === 0 ? TACTICS.grass.leafHealScale : index === 3 ? TACTICS.grass.finisherHealScale
+    : index === 2 && exposed ? TACTICS.grass.openingHealScale : 1;
+  return {
+    kind: id,
+    heal: grass ? BALANCE_CONFIG.traits.player.grassHealPerMoveLevel * Math.max(1, boundedStacks(level, MAX_MOVE_LVL)) * healScale : 0,
+    powerScale: grass && index === 0 ? TACTICS.grass.leafDamageScale : 1,
+    nextExposed: grass && index === 1,
+    // Crystal sets a mark, Mirror trades it for control, Claw trades it for damage.
+    nextShattered: !grass && index === 0,
+    shatterScale: grass ? 1 : index < 2 ? 0 : index === 2 ? TACTICS.tiger.clawShatterScale : 1,
+    guaranteedFreeze: !grass && shattered && (index === 1 || index === 3),
+    allowFreezeRoll: !grass && index === 3 && !shattered,
+    wardBreak: !grass && index === 2 && shattered ? 2 : 1,
+    ready: grass ? index === 2 && exposed : shattered && index > 0,
+  };
 }
 
 /** Preview and resolution share the same landed-hit plan; no RNG or state writes. */

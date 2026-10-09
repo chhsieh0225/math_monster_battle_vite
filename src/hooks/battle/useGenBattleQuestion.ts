@@ -6,6 +6,7 @@ import type { LearningQuestionPlan } from '../../utils/learningProgress.ts';
 import { DIFF_MODS } from './partnerStarter.ts';
 import { genQ } from '../../utils/questionGenerator.ts';
 import { withRandomSource } from '../../utils/prng.ts';
+import { alignOpsToGrade, gradeOperandCaps, isOpTaught, type Grade } from '../../data/gradeCurriculum.ts';
 import {
   resolveQuestionRecentWindowSize,
   buildQuestionHistoryKey,
@@ -22,6 +23,23 @@ type GenerateArgs = {
   options?: QuestionGeneratorOptions;
   learningPlan?: LearningQuestionPlan | null;
 };
+
+/** The move as a child of this grade meets it: operations they have learned. */
+export function alignMoveToGrade<T extends Pick<MoveVm, 'ops'>>(move: T, grade: Grade | null | undefined): T {
+  if (!grade) return move;
+  const ops = alignOpsToGrade(move.ops || ['+', '-'], grade);
+  return { ...move, ops };
+}
+
+/** Grade-capped options: allowed operations translated and operands bounded. */
+export function alignOptionsToGrade(
+  options: QuestionGeneratorOptions | undefined,
+  grade: Grade | null | undefined,
+): QuestionGeneratorOptions | undefined {
+  if (!grade) return options;
+  const allowedOps = options?.allowedOps?.length ? alignOpsToGrade(options.allowedOps, grade) : options?.allowedOps;
+  return { ...options, allowedOps, maxOperandByOp: gradeOperandCaps(grade), noDivisionSign: !isOpTaught('÷', grade) };
+}
 
 export function generateBattleQuestion({ rand, historyMap, move, diffMod, options, learningPlan }: GenerateArgs) {
   if (!move) return null;
@@ -54,16 +72,23 @@ export function generateBattleQuestion({ rand, historyMap, move, diffMod, option
   } };
 }
 
-export function useGenBattleQuestion({ rand, recentQuestionDisplaysRef, prepareLearningQuestion }: {
+export function useGenBattleQuestion({ rand, recentQuestionDisplaysRef, prepareLearningQuestion, getGrade }: {
   rand: RandFn;
   recentQuestionDisplaysRef: MutableRefObject<Map<string, string[]>>;
   prepareLearningQuestion?: (move: MoveVm, random: RandFn) => LearningQuestionPlan | null;
+  /** The child's grade, or null when questions should not be grade-aligned (e.g. PvP). */
+  getGrade?: () => Grade | null;
 }) {
   return useCallback(
-    (move: MoveVm | undefined, diffMod: number, options?: QuestionGeneratorOptions) => generateBattleQuestion({
-      rand, historyMap: recentQuestionDisplaysRef.current, move, diffMod, options,
-      learningPlan: move && !options?.allowedOps?.length ? prepareLearningQuestion?.(move, rand) : null,
-    }),
-    [rand, recentQuestionDisplaysRef, prepareLearningQuestion],
+    (rawMove: MoveVm | undefined, diffMod: number, rawOptions?: QuestionGeneratorOptions) => {
+      const grade = getGrade?.() ?? null;
+      const move = rawMove ? alignMoveToGrade(rawMove, grade) : rawMove;
+      const options = alignOptionsToGrade(rawOptions, grade);
+      return generateBattleQuestion({
+        rand, historyMap: recentQuestionDisplaysRef.current, move, diffMod, options,
+        learningPlan: move && !options?.allowedOps?.length ? prepareLearningQuestion?.(move, rand) : null,
+      });
+    },
+    [rand, recentQuestionDisplaysRef, prepareLearningQuestion, getGrade],
   );
 }

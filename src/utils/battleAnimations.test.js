@@ -41,3 +41,21 @@ test('boss idle, low-HP feedback, and defeat dissolve remain intact', () => {
   assert.match(resolveBattleSpriteAnimations({ ...idle, enemyLowHp: true }).enemyMain, /struggle/);
   assert.match(resolveBattleSpriteAnimations({ ...idle, enemyDefeated: true, eAnim: 'enemyHit' }).enemyMain, /enemyDissolve/);
 });
+
+test('the finishing element picks the defeat; bosses flash and shatter', async () => {
+  const { resolveEnemyDefeat } = await import('./battleAnimations.ts');
+  const defeated = { ...idle, enemyDefeated: true };
+  const expected = {
+    fire: /enemyDeathBurn/, water: /enemyDeathMelt/, electric: /enemyDeathZap/, grass: /enemyDeathWither/,
+    ice: /enemyDeathFreeze/, light: /enemyDeathAscend/, dark: /enemyDeathVoid/, steel: /enemyDeathKnockout/,
+    poison: /enemyDissolve/, [String(null)]: /enemyDissolve/,
+  };
+  for (const [type, pattern] of Object.entries(expected)) {
+    assert.match(resolveBattleSpriteAnimations({ ...defeated, enemyFinisherType: type }).enemyMain, pattern, type);
+  }
+  assert.match(resolveBattleSpriteAnimations({ ...defeated, enemyIsBoss: true, enemyFinisherType: 'fire' }).enemyMain, /enemyDeathBoss /);
+  assert.equal(resolveEnemyDefeat({ isBoss: true, finisherType: 'fire', lowPerfMode: false }).shatter, true);
+  assert.deepEqual(resolveEnemyDefeat({ isBoss: true, lowPerfMode: true }), { animation: 'enemyDeathBossLite 1.6s linear forwards', shatter: false });
+  assert.match(resolveBattleSpriteAnimations({ ...defeated, lowPerfMode: true, enemyFinisherType: 'fire' }).enemyMain, /enemyDissolve/);
+  assert.match(resolveBattleSpriteAnimations({ ...idle, enemyFinisherType: 'fire' }).enemyMain, /battleFloat/, 'only a defeated enemy dies');
+});

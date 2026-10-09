@@ -11,6 +11,8 @@ import {
   loadTowerProgress,
   startTowerRun,
 } from '../../utils/challengeProgress.ts';
+import { getChallengePerks } from '../../utils/challengeRewards.ts';
+import { badgeName, percent, titleName } from './challengeRewardText.ts';
 import './DailyChallengeScreen.css';
 
 type DailyChallengeScreenProps = {
@@ -60,6 +62,7 @@ export default function DailyChallengeScreen({
   const { locale, t } = useI18n();
   const [dailyProgress, setDailyProgress] = useState(() => loadDailyChallengeProgress());
   const [towerProgress, setTowerProgress] = useState(() => loadTowerProgress());
+  const [honor] = useState(() => getChallengePerks());
   const dailyPlan = useMemo(() => buildDailyChallengePlan(), []);
   const towerPlan = useMemo(
     () => buildStreakTowerPlan({
@@ -126,6 +129,37 @@ export default function DailyChallengeScreen({
           </div>
         </div>
       </header>
+
+      <section className="daily-card daily-card-gap daily-honor" aria-label={t('honor.title', 'My Honors')}>
+        <div className="daily-card-title">🏆 {t('honor.title', 'My Honors')}</div>
+        <div className="daily-honor-line">
+          {t('honor.points', '⭐ Honor {honor} (every 200 earns a potion, {left} to go)', {
+            honor: honor.honor,
+            left: honor.honorToNextPotion,
+          })}
+        </div>
+        <div className="daily-honor-line">
+          {t('honor.badges', '🏅 {count} badges: permanent damage +{pct}%', {
+            count: honor.badges.length,
+            pct: percent(honor.damageBonus),
+          })}
+          {honor.badges.length > 0 && (
+            <span className="daily-honor-names">{honor.badges.map((key) => badgeName(key, t)).join('、')}</span>
+          )}
+        </div>
+        <div className="daily-honor-line">
+          {t('honor.titles', '🎖️ {count} titles: +{hp} HP after every win', {
+            count: honor.titles.length,
+            hp: honor.victoryHeal,
+          })}
+          {honor.titles.length > 0 && (
+            <span className="daily-honor-names">{honor.titles.map((key) => titleName(key, t)).join('、')}</span>
+          )}
+        </div>
+        {honor.badges.length === 0 && honor.titles.length === 0 && (
+          <div className="daily-honor-hint">{t('honor.hint', 'Clear daily challenges and tower floors to earn badges and titles!')}</div>
+        )}
+      </section>
 
       <section className="daily-card daily-card-gap">
         <div className="daily-row daily-row-between">

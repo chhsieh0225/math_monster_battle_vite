@@ -8,7 +8,7 @@ import {
 
 test('tactical starter contact matches the atlas strike pose and recovers before the next turn', () => {
   for (const mode of ['single', 'coop', 'double']) {
-    for (const id of ['fire', 'water', 'electric']) for (let idx = 0; idx < 4; idx++) {
+    for (const id of ['fire', 'water', 'electric', 'grass', 'tiger']) for (let idx = 0; idx < 4; idx++) {
       const motion = getPlayerSkillMotion(`${id}:${idx}`, mode);
       assert.ok(motion.releaseMs >= 0);
       assert.equal(motion.releaseMs + motion.flightMs, Math.round(motion.durationMs * .36));

@@ -22,6 +22,7 @@
 import { useState, useEffect, useCallback, useMemo, useReducer } from 'react';
 import { useI18n } from '../i18n';
 import type {
+  SpringResult,
   BattleMode,
   BossTactic,
   CollectionPopupVm,
@@ -58,6 +59,10 @@ import { useAchievements } from './useAchievements';
 import { useEncyclopedia } from './useEncyclopedia';
 import { useSessionLog } from './useSessionLog';
 import { getCollectionPerks, loadCollection, type CollectionPerks } from '../utils/collectionStore.ts';
+import { getChallengePerks, type ChallengeClaim, type ChallengePerks } from '../utils/challengeRewards.ts';
+import { loadPlayerProfile, savePlayerProfile, type PlayerProfile } from '../utils/playerProfile.ts';
+import { appendEvent } from '../utils/eventLogger.ts';
+import { routeMatchup } from '../utils/expeditionPlanner.ts';
 import {
   loadInventory,
 } from '../utils/inventoryStore.ts';
@@ -98,7 +103,9 @@ import {
 } from './battle/turnHelpers';
 import {
   canSwitchCoopActiveSlot,
+  isCoopBattleMode,
 } from './battle/coopFlow';
+import { isBattleActiveState } from './battle/menuResetGuard.ts';
 import {
   applyVictoryAchievements,
 } from './battle/achievementFlow';
@@ -133,6 +140,26 @@ import {
 import {
   clearSave,
 } from '../utils/savegame.ts';
+import { EXPEDITION_FLOORS, REGION_IDS, START_REGION, getExpedition, type ExpeditionId, type RegionId } from '../data/worldMap.ts';
+import {
+  arriveAtMap,
+  chooseExpeditionRoute,
+  chosenOption,
+  expeditionRoster,
+  isExpeditionEnemy,
+  isSpringOption,
+} from '../utils/expeditionRun.ts';
+import { springRewards } from '../utils/reviewSpring.ts';
+import {
+  isExpeditionUnlocked,
+  loadWorldProgress,
+  recordExpeditionClear,
+  recordExpeditionFloor,
+  recordRegionVisit,
+  recordRegionWin,
+  saveWorldProgress,
+  type WorldProgress,
+} from '../utils/worldProgress.ts';
 import { useBattleAbilityModel } from './battle/useBattleAbilityModel.ts';
 import { useBattleItemActions } from './battle/useBattleItemActions.ts';
 import {
@@ -156,6 +183,31 @@ export function useBattle() {
   const [collectionPerks, setCollectionPerks] = useState<CollectionPerks>(() => getCollectionPerks(loadCollection()));
   const [collectionPopup, setCollectionPopup] = useState<CollectionPopupVm | null>(null);
   const [inventory, setInventory] = useState(() => loadInventory());
+  // Daily challenge / streak tower badges and titles: permanent damage and post-win healing.
+  const [challengePerks, setChallengePerks] = useState<ChallengePerks>(() => getChallengePerks());
+  const onRewardsClaimed = useCallback((claim: ChallengeClaim) => {
+    setChallengePerks(claim.perks);
+    setInventory(claim.inventory);
+  }, []);
+  const [worldProgress, setWorldProgress] = useState<WorldProgress>(() => loadWorldProgress());
+  // The child's grade keeps every PvE question inside their curriculum.
+  const [playerProfile, setPlayerProfileState] = useState<PlayerProfile | null>(() => loadPlayerProfile());
+  const playerProfileRef = useBattleStateRef(playerProfile);
+  const setPlayerProfile = useStableCallback((profile: PlayerProfile) => {
+    appendEvent('placement_done', { grade: profile.grade, selfGrade: profile.selfGrade, method: profile.method, quiz: profile.quiz });
+    savePlayerProfile(profile);
+    playerProfileRef.current = profile;
+    setPlayerProfileState(profile);
+  });
+  const worldProgressRef = useBattleStateRef(worldProgress);
+  const updateWorldProgress = useCallback((change: (prev: WorldProgress) => WorldProgress) => {
+    const prev = worldProgressRef.current;
+    const next = change(prev);
+    if (next === prev) return;
+    worldProgressRef.current = next;
+    saveWorldProgress(next);
+    setWorldProgress(next);
+  }, [worldProgressRef]);
 
   const {
     queuedChallenge,
@@ -172,7 +224,7 @@ export function useBattle() {
     towerPlan,
     settleRunAsFailed,
     settleRunAsCleared,
-  } = useDailyChallengeRun();
+  } = useDailyChallengeRun({ onRewardsClaimed });
   const {
     screen,
     timedMode,
@@ -194,6 +246,10 @@ export function useBattle() {
     coopActiveSlot,
     setCoopActiveSlot,
     getCampaignNodeMeta,
+    expeditionRun,
+    expeditionRunRef,
+    setExpeditionRun,
+    queueExpedition,
   } = useBattleRosterState({
     pickIndex,
     locale,
@@ -252,6 +308,7 @@ export function useBattle() {
     pAnim, setPAnim,
     eSubAnim, pSubAnim,
     atkEffect, setAtkEffect,
+    enemyFinisherType,
     effMsg, setEffMsg,
     addD, rmD,
     addP, rmP,
@@ -345,12 +402,12 @@ export function useBattle() {
     appendQuitEventIfOpen,
   } = useBattleSessionLifecycle({ reseed, endSession });
 
-  const getPlayerMaxHp = useCallback((stageIdx = 0, levelOverride?: number) => {
+  const getPlayerMaxHp = useStableCallback((stageIdx: number = 0, levelOverride?: number): number => {
     const resolvedLevel = Number.isFinite(levelOverride)
       ? Number(levelOverride)
       : Number(sr.current?.pLvl || 1);
     return getLevelMaxHp(resolvedLevel, stageIdx);
-  }, [sr]);
+  });
 
   // ──── Computed ────
   const expNext = pLvl * 30;
@@ -369,8 +426,8 @@ export function useBattle() {
     const normalizedType = String(attackType || '');
     const allBonus = Number(collectionPerks.allDamageBonus || 0);
     const typeBonus = Number(collectionPerks.damageBonusByType[normalizedType] || 0);
-    return 1 + allBonus + typeBonus;
-  }, [collectionPerks]);
+    return 1 + allBonus + typeBonus + challengePerks.damageBonus;
+  }, [collectionPerks, challengePerks]);
 
   const {
     challengeDamageMult,
@@ -380,7 +437,12 @@ export function useBattle() {
   } = useChallengeBattleModifiers({ dailyPlan, towerPlan, round, battleMode });
 
 
-  const genBattleQuestion = useGenBattleQuestion({ rand, recentQuestionDisplaysRef, prepareLearningQuestion });
+  const getQuestionGrade = useStableCallback(
+    () => (sr.current.battleMode === 'pvp' ? null : playerProfileRef.current?.grade ?? null),
+  );
+  const genBattleQuestion = useGenBattleQuestion({
+    rand, recentQuestionDisplaysRef, prepareLearningQuestion, getGrade: getQuestionGrade,
+  });
 
   // ──── Safe timeout (cancelled on async-gate change or unmount) ────
   const { safeTo, invalidateAsyncWork } = useBattleAsyncGate();
@@ -410,6 +472,7 @@ export function useBattle() {
     markCoopRotatePending,
     safeTo,
     doEnemyTurnRef,
+    setPendingTextAdvanceAction,
     uiRef,
     pvpStoreRef,
     battleFieldSettersRef,
@@ -430,6 +493,7 @@ export function useBattle() {
         markCoopRotatePending: ctx.markCoopRotatePending,
         safeTo: ctx.safeTo,
         doEnemyTurnRef: ctx.doEnemyTurnRef,
+        setPendingTextAdvanceAction: ctx.setPendingTextAdvanceAction,
       },
       ui: ctx.uiRef.current,
       pvp: ctx.pvpStoreRef.current,
@@ -528,6 +592,8 @@ export function useBattle() {
   // --- Shared game-completion logic (achievements + session save) ---
   const finishGameContextRef = useBattleStateRef({
     settleRunAsCleared,
+    expeditionRunRef,
+    updateWorldProgress,
     sr,
     tryUnlock,
     setEncData,
@@ -537,6 +603,11 @@ export function useBattle() {
   const finishGameImpl = useCallback(() => {
     const ctx = finishGameContextRef.current;
     ctx.settleRunAsCleared();
+    const run = ctx.expeditionRunRef.current;
+    if (run && ctx.sr.current.battleMode === 'single' && run.path.length >= EXPEDITION_FLOORS) {
+      // Beating the boss clears the expedition and unlocks the next one.
+      ctx.updateWorldProgress((prev) => recordExpeditionClear(prev, run.expeditionId));
+    }
     runFinishGameController({
       sr: ctx.sr,
       tryUnlock: ctx.tryUnlock,
@@ -732,10 +803,16 @@ export function useBattle() {
     t,
     onDropResolved,
     onCollectionUpdated,
+    updateWorldProgress,
   });
   const handleVictoryImpl = useCallback((verb?: string) => {
     const ctx = handleVictoryContextRef.current;
     const resolvedVerb = verb ?? ctx.t("battle.victory.verb.defeated", "was defeated");
+    const defeatedEnemy = ctx.sr.current.enemy;
+    const region = defeatedEnemy?.campaignRegion as RegionId | undefined;
+    if (ctx.sr.current.battleMode === 'single' && isExpeditionEnemy(defeatedEnemy) && region && REGION_IDS.includes(region)) {
+      ctx.updateWorldProgress((prev) => recordRegionWin(prev, region));
+    }
     runBattleVictory({
       victoryInput: {
         verb: resolvedVerb,
@@ -949,7 +1026,8 @@ export function useBattle() {
     updateAbility: _updateAbility, markCoopRotatePending, sfx,
   });
 
-  const { startBattleWithSave, resumeFromSave } = useBattleSaveFlow({
+  const getExpeditionRun = useCallback(() => expeditionRunRef.current, [expeditionRunRef]);
+  const { startBattleWithSave, saveMidRun, resumeFromSave } = useBattleSaveFlow({
     battleMode,
     hasChallengeRun,
     starter,
@@ -971,7 +1049,177 @@ export function useBattle() {
     initSession,
     setScreen,
     startBattle,
+    getExpeditionRun,
+    setExpeditionRun,
   });
+
+  // ═══════════════════════════════════════════════════════════════
+  //  WORLD MAP EXPEDITIONS (normal + timed single play)
+  // ═══════════════════════════════════════════════════════════════
+  const worldMapEnabled = battleMode === 'single' && !hasChallengeRun;
+
+  // After a win the expedition returns to the map instead of the next battle.
+  const nextBattleContextRef = useBattleStateRef({
+    sr,
+    expeditionRunRef,
+    setExpeditionRun,
+    setScreen,
+    startBattleWithSave,
+  });
+  const startNextBattleImpl = useCallback((nextRound: number) => {
+    const ctx = nextBattleContextRef.current;
+    const run = ctx.expeditionRunRef.current;
+    if (run && ctx.sr.current.battleMode === 'single' && nextRound === run.path.length && nextRound < EXPEDITION_FLOORS) {
+      ctx.setExpeditionRun(arriveAtMap(run));
+      ctx.setScreen('worldmap');
+      return;
+    }
+    ctx.startBattleWithSave(nextRound);
+  }, [nextBattleContextRef]);
+  const startNextBattle = useStableCallback(startNextBattleImpl);
+
+  // Save on arrival at the map, once the post-victory heal has rendered.
+  useEffect(() => {
+    if (screen !== 'worldmap' || !expeditionRun?.atMap || battleMode !== 'single') return;
+    saveMidRun(expeditionRun.path.length, expeditionRoster(expeditionRun));
+  }, [screen, expeditionRun, battleMode, saveMidRun]);
+
+  const openWorldMap = useStableCallback(() => {
+    // Opening the map from selection / game over starts fresh; an in-progress run lives in the save.
+    queueExpedition(null);
+    setExpeditionRun(null);
+    setScreen('worldmap');
+  });
+
+  const startExpeditionContextRef = useBattleStateRef({
+    sr,
+    appendSessionEvent,
+    worldProgressRef,
+    hasChallengeRun,
+    queueExpedition,
+    updateWorldProgress,
+    startGame,
+  });
+  const startExpeditionImpl = useCallback((id: ExpeditionId) => {
+    const ctx = startExpeditionContextRef.current;
+    const expedition = getExpedition(id);
+    if (!expedition || ctx.hasChallengeRun || !ctx.sr.current.starter) return;
+    if (!isExpeditionUnlocked(ctx.worldProgressRef.current, expedition.id)) return;
+    ctx.updateWorldProgress((prev) => recordExpeditionFloor(recordRegionVisit(prev, START_REGION), expedition.id, 1));
+    ctx.queueExpedition(expedition.id);
+    ctx.startGame(ctx.sr.current.starter, 'single');
+    ctx.appendSessionEvent('expedition_started', { expeditionId: expedition.id });
+  }, [startExpeditionContextRef]);
+  const startExpedition = useStableCallback(startExpeditionImpl);
+
+  const chooseRouteContextRef = useBattleStateRef({
+    sr,
+    appendSessionEvent,
+    expeditionRunRef,
+    setExpeditionRun,
+    setEnemies,
+    updateWorldProgress,
+    startBattleWithSave,
+    setScreen,
+  });
+  const chooseRouteImpl = useCallback((lane: number) => {
+    const ctx = chooseRouteContextRef.current;
+    const run = ctx.expeditionRunRef.current;
+    if (!run || ctx.sr.current.screen !== 'worldmap' || ctx.sr.current.battleMode !== 'single') return;
+    const next = chooseExpeditionRoute(run, lane);
+    if (!next) return;
+    const floor = next.path.length - 1;
+    const option = chosenOption(next, floor);
+    const roster = expeditionRoster(next);
+    const starterType = ctx.sr.current.starter?.type;
+    const describe = (laneIndex: number) => {
+      const routeOption = next.plan.floors[floor].options[laneIndex];
+      const enemy = next.lanes[laneIndex]?.[floor];
+      return {
+        lane: laneIndex, kind: routeOption.kind ?? 'battle', region: routeOption.region, tier: routeOption.tier,
+        event: routeOption.event, enemyId: enemy?.id ?? null,
+        matchup: isSpringOption(routeOption) ? null : routeMatchup(starterType, enemy).verdict,
+      };
+    };
+    ctx.appendSessionEvent('route_chosen', {
+      expeditionId: next.expeditionId,
+      floor: floor + 1,
+      hp: ctx.sr.current.pHp,
+      chosen: describe(lane),
+      offered: next.plan.floors[floor].options.map((_, laneIndex) => describe(laneIndex)),
+    });
+    ctx.setExpeditionRun(next);
+    ctx.setEnemies(roster);
+    if (option) {
+      ctx.updateWorldProgress((prev) => recordExpeditionFloor(recordRegionVisit(prev, option.region), next.expeditionId, floor + 1));
+    }
+    if (isSpringOption(option)) {
+      // Review spring: no battle on this floor; the spring screen returns to the map.
+      ctx.setScreen('spring');
+      return;
+    }
+    ctx.startBattleWithSave(floor, roster);
+  }, [chooseRouteContextRef]);
+  const chooseRoute = useStableCallback(chooseRouteImpl);
+
+  // Leaving the review spring: heal and EXP for correct answers, then back to the map.
+  const finishSpringContextRef = useBattleStateRef({
+    sr,
+    expeditionRunRef,
+    setExpeditionRun,
+    setScreen,
+    getPlayerMaxHp,
+    battleFieldSettersRef,
+    appendSessionEvent,
+  });
+  const finishSpringImpl = useCallback((result: SpringResult) => {
+    const ctx = finishSpringContextRef.current;
+    const run = ctx.expeditionRunRef.current;
+    if (!run || ctx.sr.current.screen !== 'spring') return;
+    const s = ctx.sr.current;
+    const correct = result.answers.filter((answer) => answer.correct).length;
+    const maxHp = ctx.getPlayerMaxHp(s.pStg || 0);
+    const reward = springRewards(correct, maxHp, s.pLvl || 1);
+    const fields = ctx.battleFieldSettersRef.current;
+    fields.setPHp((prev) => Math.min(maxHp, prev + reward.heal));
+    // EXP stops just short of a level-up; the next victory settles levels and evolution.
+    fields.setPExp((prev) => Math.min(Math.max(0, (s.pLvl || 1) * 30 - 1), prev + reward.exp));
+    fields.setTC((prev) => prev + correct);
+    fields.setTW((prev) => prev + (result.answers.length - correct));
+    result.answers.forEach((answer) => ctx.appendSessionEvent('question_answered', {
+      outcome: answer.correct ? 'correct' : 'wrong',
+      correct: answer.correct,
+      op: answer.op,
+      display: answer.display,
+      answerTimeMs: answer.answerTimeMs,
+      source: 'review_spring',
+      reason: answer.reason,
+    }));
+    ctx.appendSessionEvent('spring_finished', {
+      expeditionId: run.expeditionId, correct, total: result.answers.length, heal: reward.heal, exp: reward.exp,
+    });
+    ctx.setExpeditionRun(arriveAtMap(run));
+    ctx.setScreen('worldmap');
+  }, [finishSpringContextRef]);
+  const finishSpring = useStableCallback(finishSpringImpl);
+
+  // Leave the map mid-expedition: keep the save (resume from the title) but close the learning session.
+  const pauseExpeditionContextRef = useBattleStateRef({
+    sr,
+    endSessionOnce,
+    setScreen,
+  });
+  const pauseExpeditionImpl = useCallback(() => {
+    const ctx = pauseExpeditionContextRef.current;
+    runEndSessionController({
+      sr: ctx.sr,
+      endSessionOnce: ctx.endSessionOnce,
+      isCompleted: false,
+      reasonOverride: 'map_pause',
+    });
+    ctx.setScreen('title');
+  }, [pauseExpeditionContextRef]);
+  const pauseExpedition = useStableCallback(pauseExpeditionImpl);
 
   // --- Advance from text / victory phase ---
   const continueFromVictoryContextRef = useBattleStateRef({
@@ -986,7 +1234,8 @@ export function useBattle() {
     battleFieldSettersRef,
     uiRef,
     _finishGame,
-    startBattleWithSave,
+    startNextBattle,
+    victoryHealBonus: challengePerks.victoryHeal,
   });
   const continueFromVictoryImpl = useCallback(() => {
     const ctx = continueFromVictoryContextRef.current;
@@ -1001,12 +1250,13 @@ export function useBattle() {
         getStageMaxHp: ctx.getPlayerMaxHp,
         getStarterMaxHp: ctx.getStarterMaxHp,
         t: ctx.t,
+        victoryHealBonus: ctx.victoryHealBonus,
       },
       battleFields: ctx.battleFieldSettersRef.current,
       ui: ctx.uiRef.current,
       callbacks: {
         finishGame: ctx._finishGame,
-        startBattle: ctx.startBattleWithSave,
+        startBattle: ctx.startNextBattle,
       },
     };
     runContinueWithContext({ continueFromVictoryInput });
@@ -1091,6 +1341,32 @@ export function useBattle() {
   }, [toggleCoopActiveContextRef]);
   const toggleCoopActive = useStableCallback(toggleCoopActiveImpl);
 
+  // Using an item spends the turn: after the player reads the result, the enemy acts.
+  const endTurnAfterItemContextRef = useBattleStateRef({
+    sr,
+    frozenR,
+    setPhase,
+    setPendingTextAdvanceAction,
+    markCoopRotatePending,
+    handleFreeze,
+    doEnemyTurn,
+  });
+  const endTurnAfterItemImpl = useCallback(() => {
+    const ctx = endTurnAfterItemContextRef.current;
+    if (isCoopBattleMode(ctx.sr.current.battleMode)) ctx.markCoopRotatePending();
+    ctx.setPhase('text');
+    ctx.setPendingTextAdvanceAction(() => {
+      if (!isBattleActiveState(ctx.sr.current)) return;
+      if (ctx.frozenR.current) ctx.handleFreeze();
+      else ctx.doEnemyTurn();
+    });
+  }, [endTurnAfterItemContextRef]);
+  const endTurnAfterItem = useStableCallback(endTurnAfterItemImpl);
+  const logItemUsed = useStableCallback((itemId: string) => {
+    const s = sr.current;
+    appendSessionEvent('item_used', { itemId, round: s.round ?? 0, pHp: s.pHp, enemyId: s.enemy?.id ?? null, bossCharging: Boolean(s.bossCharging) });
+  });
+
   const useItem = useBattleItemActions({
     phase,
     battleMode,
@@ -1114,6 +1390,8 @@ export function useBattle() {
     setDefAnim,
     safeTo,
     setInventory,
+    endTurn: endTurnAfterItem,
+    onItemUsed: logItemUsed,
     t,
     sfx,
   });
@@ -1151,6 +1429,11 @@ export function useBattle() {
     achUnlocked, achPopup, collectionPopup, encData,
     wrongQuestions,
     hintsRevealed,
+    worldMapEnabled,
+    worldProgress,
+    expeditionRun,
+    enemyFinisherType,
+    playerGrade: playerProfile?.grade ?? null,
   });
 
   const actions = buildUseBattleActions({
@@ -1177,6 +1460,12 @@ export function useBattle() {
     rmD,
     rmP,
     resumeFromSave,
+    openWorldMap,
+    startExpedition,
+    chooseRoute,
+    pauseExpedition,
+    setPlayerProfile,
+    finishSpring,
   });
 
   const view = useMemo(() => buildUseBattleView({

@@ -20,6 +20,7 @@ import {
   createTowerChallengeFeedback,
   getDailyChallengeEnemyTotal,
 } from './battle/challengeRuntime.ts';
+import { claimChallengeRewards, type ChallengeClaim } from '../utils/challengeRewards.ts';
 
 export type DailyChallengeRunState = Extract<ChallengeRunState, { kind: 'daily' }>;
 export type TowerChallengeRunState = Extract<ChallengeRunState, { kind: 'tower' }>;
@@ -47,7 +48,12 @@ function resolveTowerStartFloor(plan: StreakTowerPlan): number {
   return Math.max(1, Math.floor(Number(plan.startFloor) || 1));
 }
 
-export function useDailyChallengeRun(): UseDailyChallengeRunApi {
+type UseDailyChallengeRunOptions = {
+  /** Called after a cleared run's rewards are saved (bag and perks changed). */
+  onRewardsClaimed?: (claim: ChallengeClaim) => void;
+};
+
+export function useDailyChallengeRun({ onRewardsClaimed }: UseDailyChallengeRunOptions = {}): UseDailyChallengeRunApi {
   const [queuedChallenge, setQueuedChallenge] = useState<ChallengeRunState | null>(null);
   const [activeChallenge, setActiveChallenge] = useState<ChallengeRunState | null>(null);
   const [dailyChallengeFeedback, setDailyChallengeFeedback] = useState<DailyChallengeFeedback | null>(null);
@@ -131,33 +137,46 @@ export function useDailyChallengeRun(): UseDailyChallengeRunApi {
       const totalBattles = Math.max(1, getDailyChallengeEnemyTotal(activeChallenge.plan));
       const progressBefore = loadDailyChallengeProgress();
       const progressAfter = markDailyChallengeCleared(activeChallenge.plan, totalBattles);
-      setDailyChallengeFeedback(createDailyChallengeFeedback({
+      const feedback = createDailyChallengeFeedback({
         plan: activeChallenge.plan,
         before: progressBefore,
         after: progressAfter,
         outcome: 'cleared',
         battlesCleared: totalBattles,
-      }));
+      });
+      // One claim per challenge per day: replaying a cleared daily cannot farm rewards.
+      const claim = claimChallengeRewards(
+        feedback.earnedRewards ?? [],
+        `daily:${activeChallenge.plan.challengeId}:${activeChallenge.plan.dateKey}`,
+      );
+      setDailyChallengeFeedback({ ...feedback, granted: claim.granted, rewardsAlreadyClaimed: claim.alreadyClaimed });
       setTowerChallengeFeedback(null);
+      onRewardsClaimed?.(claim);
     }
 
     if (activeChallenge.kind === 'tower' && activeChallenge.plan) {
       const floor = resolveTowerStartFloor(activeChallenge.plan);
       const progressBefore = loadTowerProgress();
       const progressAfter = recordTowerFloorClear(floor);
-      setTowerChallengeFeedback(createTowerChallengeFeedback({
+      const feedback = createTowerChallengeFeedback({
         plan: activeChallenge.plan,
         before: progressBefore,
         after: progressAfter,
         outcome: 'cleared',
         floor,
-      }));
+      });
+      const claim = claimChallengeRewards(
+        feedback.earnedRewards ?? [],
+        `tower:${activeChallenge.plan.seasonId}:${activeChallenge.plan.runId}:${floor}`,
+      );
+      setTowerChallengeFeedback({ ...feedback, granted: claim.granted, rewardsAlreadyClaimed: claim.alreadyClaimed });
       setDailyChallengeFeedback(null);
+      onRewardsClaimed?.(claim);
     }
 
     setActiveChallenge(null);
     setQueuedChallenge(null);
-  }, [activeChallenge]);
+  }, [activeChallenge, onRewardsClaimed]);
 
   return {
     queuedChallenge,

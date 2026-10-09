@@ -139,3 +139,26 @@ test('runHandleFreezeController ignores stale menu reset after battle ended', ()
   assert.equal(phaseCalls.includes('menu'), false);
   assert.equal(textCalls[textCalls.length - 1], '❄️ {enemy} is frozen and cannot attack!');
 });
+
+test('runHandleFreezeController timer does not close a question the player already started', () => {
+  const queue = [];
+  const state = { enemy: { name: 'Slime' }, phase: 'enemyAtk', screen: 'battle' };
+  const phaseCalls = [];
+
+  runHandleFreezeController({
+    sr: { current: state },
+    frozenRef: { current: true },
+    setFrozen: () => {},
+    setBText: () => {},
+    setPhase: (value) => { phaseCalls.push(value); state.phase = value; },
+    safeTo: (fn) => { queue.push(fn); },
+    t: undefined,
+  });
+
+  // The player tapped through the freeze message and picked a move.
+  state.phase = 'question';
+  queue[0]();
+
+  assert.deepEqual(phaseCalls, ['text']);
+  assert.equal(state.phase, 'question');
+});

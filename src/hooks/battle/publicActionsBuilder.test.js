@@ -34,6 +34,12 @@ test('buildUseBattleActions maps localized starter setters into public action na
     rmD: createFn('rmD', calls),
     rmP: createFn('rmP', calls),
     resumeFromSave: createFn('resumeFromSave', calls),
+    openWorldMap: createFn('openWorldMap', calls),
+    startExpedition: createFn('startExpedition', calls),
+    chooseRoute: createFn('chooseRoute', calls),
+    pauseExpedition: createFn('pauseExpedition', calls),
+    setPlayerProfile: createFn('setPlayerProfile', calls),
+    finishSpring: createFn('finishSpring', calls),
   };
 
   const actions = buildUseBattleActions(deps);
@@ -72,16 +78,26 @@ test('buildUseBattleActions exposes full expected public action surface', () => 
     rmD: noop,
     rmP: noop,
     resumeFromSave: noop,
+    openWorldMap: noop,
+    startExpedition: noop,
+    chooseRoute: noop,
+    pauseExpedition: noop,
+    setPlayerProfile: noop,
+    finishSpring: noop,
   });
 
   const keys = Object.keys(actions).sort();
   assert.deepEqual(keys, [
     'advance',
+    'chooseRoute',
     'clearChallengeRun',
     'continueAfterEvolve',
     'dismissAch',
     'dismissCollectionPopup',
+    'finishSpring',
     'onAns',
+    'openWorldMap',
+    'pauseExpedition',
     'queueDailyChallenge',
     'queueTowerChallenge',
     'quitGame',
@@ -91,10 +107,12 @@ test('buildUseBattleActions exposes full expected public action surface', () => 
     'rmP',
     'selectMove',
     'setBattleMode',
+    'setPlayerProfile',
     'setPvpStarter2',
     'setScreen',
     'setStarter',
     'setTimedMode',
+    'startExpedition',
     'startGame',
     'toggleCoopActive',
     'togglePause',

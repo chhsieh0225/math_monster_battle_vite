@@ -8,6 +8,9 @@ import {
   resolveCampaignPresetConfig,
 } from '../../utils/campaignPlanner.ts';
 import type { CampaignPreset } from '../../utils/campaignPlanner.ts';
+import { getExpedition, type ExpeditionId } from '../../data/worldMap.ts';
+import { buildExpeditionLanes, buildExpeditionPlan } from '../../utils/expeditionPlanner.ts';
+import { createExpeditionRun, expeditionRoster, type ExpeditionRun } from '../../utils/expeditionRun.ts';
 
 type PickIndex = (length: number) => number;
 
@@ -35,6 +38,17 @@ export function useBattleRosterState({
   hasChallengeRun,
 }: UseBattleRosterStateArgs) {
   const campaignPlanRef = useRef<ReturnType<typeof buildCampaignRunPlan> | null>(null);
+  // World-map expedition: queued by the map screen, consumed by the next single-mode roster build.
+  const pendingExpeditionIdRef = useRef<ExpeditionId | null>(null);
+  const expeditionRunRef = useRef<ExpeditionRun | null>(null);
+  const [expeditionRun, setExpeditionRunState] = useState<ExpeditionRun | null>(null);
+  const setExpeditionRun = useCallback((run: ExpeditionRun | null) => {
+    expeditionRunRef.current = run;
+    setExpeditionRunState(run);
+  }, []);
+  const queueExpedition = useCallback((id: ExpeditionId | null) => {
+    pendingExpeditionIdRef.current = id;
+  }, []);
   const [enemies, setEnemies] = useState<EnemyVm[]>(
     () => localizeEnemyRoster(buildRoster(pickIndex, 'single'), locale),
   );
@@ -44,9 +58,13 @@ export function useBattleRosterState({
     (mode: BattleMode = 'single', options: BuildRosterOptions = {}): EnemyVm[] => {
       const rosterMode = mode === 'coop' || mode === 'double' ? 'double' : 'single';
 
+      const pendingExpedition = getExpedition(pendingExpeditionIdRef.current);
+      pendingExpeditionIdRef.current = null;
+
       // Double / co-op mode: unchanged path (no campaign planner)
       if (rosterMode === 'double') {
         campaignPlanRef.current = null;
+        setExpeditionRun(null);
         return localizeEnemyRoster(
           buildRoster(pickIndex, 'double', {
             enableStarterEncounters: !hasChallengeRun,
@@ -55,6 +73,19 @@ export function useBattleRosterState({
           locale,
         );
       }
+
+      // World-map expedition (normal and timed single play).
+      if (pendingExpedition && !hasChallengeRun) {
+        campaignPlanRef.current = null;
+        const excluded = options.excludeStarterIds || [];
+        const plan = buildExpeditionPlan(pendingExpedition, pickIndex, excluded);
+        const lanes = buildExpeditionLanes(plan, pendingExpedition, pickIndex, excluded)
+          .map((lane) => localizeEnemyRoster(lane, locale));
+        const run = createExpeditionRun(plan, lanes);
+        setExpeditionRun(run);
+        return expeditionRoster(run);
+      }
+      setExpeditionRun(null);
 
       // Single mode: always use campaign planner; preset controls branching / events / flags
       const preset: CampaignPreset = hasChallengeRun ? 'timed' : 'normal';
@@ -72,7 +103,7 @@ export function useBattleRosterState({
 
       return localizeEnemyRoster(applyCampaignPlanToRoster(roster, campaignPlan), locale);
     },
-    [pickIndex, locale, hasChallengeRun],
+    [pickIndex, locale, hasChallengeRun, setExpeditionRun],
   );
 
   const getCampaignNodeMeta = useCallback((roundIndex: number): CampaignNodeMeta | null => {
@@ -94,5 +125,9 @@ export function useBattleRosterState({
     coopActiveSlot,
     setCoopActiveSlot,
     getCampaignNodeMeta,
+    expeditionRun,
+    expeditionRunRef,
+    setExpeditionRun,
+    queueExpedition,
   };
 }

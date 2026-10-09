@@ -137,6 +137,10 @@ export function validateBalanceConfigSchema(config: unknown): void {
     if (value != null && !Number.isInteger(value)) issues.push(`tactics.${path} must be an integer`);
   }
   checkNumber(config, 'tactics.water.surgeDamageScale', issues, { min: 0.5, max: 1 });
+  checkNumber(config, 'tactics.grass.leafDamageScale', issues, { min: 0.5, max: 1 });
+  for (const path of ['grass.leafHealScale', 'grass.openingHealScale', 'grass.finisherHealScale', 'tiger.clawShatterScale']) {
+    checkNumber(config, `tactics.${path}`, issues, { min: 1, max: 4 });
+  }
   for (const path of ['water.tsunamiPerStack', 'water.vortexPerStack', 'electric.pulseBonus', 'electric.finisherPerStack']) {
     checkNumber(config, `tactics.${path}`, issues, { min: 1, max: 20 });
   }

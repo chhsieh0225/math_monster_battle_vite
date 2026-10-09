@@ -87,6 +87,27 @@ export function applyDropsToInventory(
   };
 }
 
+/** Add items directly (respecting per-item caps); `grants` lists what actually fit. */
+export function applyItemGrants(
+  inventory: InventoryData,
+  grantMap: Partial<Record<ItemId, number>>,
+  source = 'reward',
+): InventoryMutationResult {
+  const nextInventory = normalizeInventory(inventory);
+  const grants: InventoryGrant[] = [];
+  for (const itemId of BATTLE_ITEM_ORDER) {
+    const amount = Math.max(0, Math.floor(Number(grantMap[itemId] || 0)));
+    if (amount <= 0) continue;
+    const current = nextInventory[itemId];
+    const next = clampInventoryCount(itemId, current + amount);
+    const granted = Math.max(0, next - current);
+    if (granted <= 0) continue;
+    nextInventory[itemId] = next;
+    grants.push({ id: itemId, amount: granted, sourceDrop: source });
+  }
+  return { inventory: nextInventory, grants, changed: grants.length > 0 };
+}
+
 export function addDropsToInventory(drops: readonly string[]): InventoryMutationResult {
   const current = loadInventory();
   const result = applyDropsToInventory(current, drops);

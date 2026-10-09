@@ -37,7 +37,7 @@ import { BossVictoryOverlay } from './battle/BossVictoryOverlay.tsx';
 import { updateBattleFxTargets, resetBattleFxTargets } from '../../hooks/battle/battleFxTargets';
 import type { BattleFxTargets } from '../../types/battleFx';
 import { DEFAULT_FX_TARGETS } from '../../types/battleFx';
-import { resolveBattleSpriteAnimations } from '../../utils/battleAnimations.ts';
+import { BOSS_DEFEAT_MS, resolveBattleSpriteAnimations, resolveEnemyDefeat } from '../../utils/battleAnimations.ts';
 import {
   BATTLE_ARENA_HEIGHT_SHARE,
   getBossFrameRequest,
@@ -106,11 +106,14 @@ const BATTLE_STATE_RENDER_KEYS = [
   'pAnim',
   'eSubAnim',
   'pSubAnim',
+  'enemyFinisherType',
+  'playerGrade',
   'atkEffect',
   'effMsg',
   'burnStack',
   'tideStack',
   'enemyExposed',
+  'shattered',
   'frozen',
   'staticStack',
   'specDef',
@@ -535,7 +538,20 @@ function BattleScreenComponent({
   // Animation CSS variables are separated from layout styles so that frequent
   // state changes (eHp, phase) don't cause the browser to re-assign identical
   // animation strings, which would restart running CSS animations mid-cycle.
-  const enemyDefeatedFlag = S.eHp === 0 && (S.phase === "ko" || S.phase === "victory");
+  const enemyDefeatedFlag = S.eHp === 0 && (S.phase === "ko" || S.phase === "victory" || S.phase === "bossVictory");
+  const enemyIsBossFlag = Boolean(coreStatic && BOSS_IDS.has(normalizeBossVisualId(coreStatic.enemy.id)));
+  const enemyShatter = enemyDefeatedFlag
+    && resolveEnemyDefeat({ isBoss: enemyIsBossFlag, finisherType: S.enemyFinisherType, lowPerfMode: UX.lowPerfMode }).shatter;
+  // A defeated boss first flashes and shatters on the battlefield; the victory cinematic follows.
+  const bossVictoryKey = S.phase === 'bossVictory' ? `${S.round}:${coreStatic?.enemy.id ?? ''}` : '';
+  const [bossCinematicKey, setBossCinematicKey] = useState('');
+  useEffect(() => {
+    if (!bossVictoryKey) return;
+    const delay = enemyShatter ? BOSS_DEFEAT_MS - 300 : 700;
+    const id = window.setTimeout(() => setBossCinematicKey(bossVictoryKey), delay);
+    return () => window.clearTimeout(id);
+  }, [bossVictoryKey, enemyShatter]);
+  const showBossCinematic = Boolean(bossVictoryKey) && bossCinematicKey === bossVictoryKey;
   const enemyLowHpFlag = Boolean(
     coreStatic && coreStatic.enemy.maxHp > 0 && S.eHp > 0 && S.eHp / coreStatic.enemy.maxHp < 0.25,
   );
@@ -546,12 +562,13 @@ function BattleScreenComponent({
       pAnim: S.pAnim,
       eSubAnim: S.eSubAnim,
       pSubAnim: S.pSubAnim,
-      enemyIsBoss: BOSS_IDS.has(normalizeBossVisualId(coreStatic.enemy.id)),
+      enemyIsBoss: enemyIsBossFlag,
       enemyDefeated: enemyDefeatedFlag,
       enemyLowHp: enemyLowHpFlag,
+      enemyFinisherType: S.enemyFinisherType,
       lowPerfMode: UX.lowPerfMode,
     });
-  }, [coreStatic, S.eAnim, S.pAnim, S.eSubAnim, S.pSubAnim, enemyDefeatedFlag, UX.lowPerfMode, enemyLowHpFlag]);
+  }, [coreStatic, S.eAnim, S.pAnim, S.eSubAnim, S.pSubAnim, enemyDefeatedFlag, UX.lowPerfMode, enemyLowHpFlag, enemyIsBossFlag, S.enemyFinisherType]);
 
   // ── Sprite layout styles (position, size, filter — no animation strings) ──
   const memoSpriteStyles = useMemo(() => {
@@ -679,7 +696,9 @@ function BattleScreenComponent({
     dualEff,
   ]);
 
-  const canTapAdvance = S.phase === "text" || S.phase === "victory" || S.phase === "bossVictory";
+  const isAnswerReview = S.phase === "review";
+  // While the boss shatters, taps wait; the cinematic itself can be skipped.
+  const canTapAdvance = S.phase === "text" || isAnswerReview || S.phase === "victory" || (S.phase === "bossVictory" && showBossCinematic);
   const handleAdvance = A.advance;
   const handleAdvanceKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
     if (!canTapAdvance) return;
@@ -711,39 +730,39 @@ function BattleScreenComponent({
   const feedback = S.fb;
   const questionTypeLabel = useMemo(() => (!question
     ? ""
-    : question.op === "×" ? t("battle.qtype.mul", "Multiplication")
-    : question.op === "÷" ? t("battle.qtype.div", "Division")
-    : question.op === "+" ? t("battle.qtype.add", "Addition")
-    : question.op === "-" ? t("battle.qtype.sub", "Subtraction")
-    : question.op === "mixed2" ? t("battle.qtype.mixed2", "Add/Sub Mix")
-    : question.op === "mixed3" ? t("battle.qtype.mixed3", "Mul/Add Mix")
-    : question.op === "mixed4" ? t("battle.qtype.mixed4", "Four Ops")
-    : question.op === "unknown1" ? t("battle.qtype.unknown1", "Unknown Add/Sub")
-    : question.op === "unknown2" ? t("battle.qtype.unknown2", "Unknown Mul/Div")
-    : question.op === "unknown3" ? t("battle.qtype.unknown3", "Unknown Large Number")
-    : question.op === "unknown4" ? t("battle.qtype.unknown4", "Unknown Mixed")
-    : question.op === "frac_cmp" ? t("battle.qtype.fracCmp", "Fraction Compare")
-    : question.op === "frac_same" ? t("battle.qtype.fracSame", "Same Denominator")
-    : question.op === "frac_diff" ? t("battle.qtype.fracDiff", "Different Denominator")
-    : question.op === "frac_muldiv" ? t("battle.qtype.fracMulDiv", "Fraction Mul/Div")
-    : question.op === "dec_add" ? t("battle.qtype.decAdd", "Decimal Add/Sub")
-    : question.op === "dec_frac" ? t("battle.qtype.decFrac", "Decimal/Fraction Convert")
-    : question.op === "dec_mul" ? t("battle.qtype.decMul", "Decimal Multiplication")
-    : question.op === "dec_div" ? t("battle.qtype.decDiv", "Decimal Division")
-    : t("battle.qtype.mixed", "Mixed")), [question, t]);
+    : question.op === "×" ? t("battle.qtype.mul")
+    : question.op === "÷" ? t("battle.qtype.div")
+    : question.op === "+" ? t("battle.qtype.add")
+    : question.op === "-" ? t("battle.qtype.sub")
+    : question.op === "mixed2" ? t("battle.qtype.mixed2")
+    : question.op === "mixed3" ? t("battle.qtype.mixed3")
+    : question.op === "mixed4" ? t("battle.qtype.mixed4")
+    : question.op === "unknown1" ? t("battle.qtype.unknown1")
+    : question.op === "unknown2" ? t("battle.qtype.unknown2")
+    : question.op === "unknown3" ? t("battle.qtype.unknown3")
+    : question.op === "unknown4" ? t("battle.qtype.unknown4")
+    : question.op === "frac_cmp" ? t("battle.qtype.fracCmp")
+    : question.op === "frac_same" ? t("battle.qtype.fracSame")
+    : question.op === "frac_diff" ? t("battle.qtype.fracDiff")
+    : question.op === "frac_muldiv" ? t("battle.qtype.fracMulDiv")
+    : question.op === "dec_add" ? t("battle.qtype.decAdd")
+    : question.op === "dec_frac" ? t("battle.qtype.decFrac")
+    : question.op === "dec_mul" ? t("battle.qtype.decMul")
+    : question.op === "dec_div" ? t("battle.qtype.decDiv")
+    : t("battle.qtype.mixed")), [question, t]);
   const impactPhaseClass = showHeavyFx ? `battle-impact-${impactPhase}` : "battle-impact-idle";
   const battleRootClassName = useMemo(() => (
     `battle-root ${UX.compactUI ? "compact-ui" : ""} ${UX.lowPerfMode ? "low-perf" : ""} ${canTapAdvance ? "battle-root-advance" : ""} ${S.phase === "bossIntro" ? "boss-intro-active" : ""} ${S.phase === "bossVictory" ? "boss-victory-active" : ""} ${impactPhaseClass}`
   ), [UX.compactUI, UX.lowPerfMode, canTapAdvance, impactPhaseClass, S.phase]);
   const battlePanelClassName = useMemo(
-    () => `battle-panel ${S.phase === "question" ? "is-question" : "is-normal"}`,
+    () => `battle-panel ${S.phase === "question" || S.phase === "review" ? "is-question" : "is-normal"}`,
     [S.phase],
   );
 
   if (!coreStatic) return (
     <div className="battle-loading-wrap">
       <div className="battle-loading-icon">⚔️</div>
-      <div className="battle-loading-text">{t("app.loading.battle", "Preparing battle...")}</div>
+      <div className="battle-loading-text">{t("app.loading.battle")}</div>
     </div>
   );
 
@@ -814,18 +833,18 @@ function BattleScreenComponent({
     ? activeStarter.moves[S.selIdx]
     : null;
   const specDefReadyLabel = starter.type === "fire"
-    ? t("battle.specDef.fire", "🛡️ Shield")
+    ? t("battle.specDef.fire")
     : starter.type === "water"
-      ? t("battle.specDef.water", "💨 Perfect Dodge")
+      ? t("battle.specDef.water")
       : starter.type === "ice"
-        ? t("battle.specDef.ice", "🧊 Ice Shift")
+        ? t("battle.specDef.ice")
       : starter.type === "electric"
-        ? t("battle.specDef.electric", "⚡ Paralysis")
+        ? t("battle.specDef.electric")
         : starter.type === "steel"
-          ? t("battle.specDef.steel", "🛡️ Iron Guard")
+          ? t("battle.specDef.steel")
         : starter.type === "light"
-          ? t("battle.specDef.light", "✨ Lion Roar")
-          : t("battle.specDef.grass", "🌿 Reflect");
+          ? t("battle.specDef.light")
+          : t("battle.specDef.grass");
   const specDefToneClass = starter.type === "fire"
     ? "battle-pill-specdef-fire"
     : starter.type === "water"
@@ -871,7 +890,7 @@ function BattleScreenComponent({
       style={impactStyle}
       role={canTapAdvance ? "button" : undefined}
       tabIndex={canTapAdvance ? 0 : -1}
-      aria-label={canTapAdvance ? t("a11y.battle.advance", "Advance to next step") : undefined}
+      aria-label={canTapAdvance ? t("a11y.battle.advance") : undefined}
       onKeyDown={handleAdvanceKeyDown}
       onClick={canTapAdvance ? handleAdvance : undefined}
     >
@@ -891,7 +910,7 @@ function BattleScreenComponent({
       )}
 
       {/* Boss victory cinematic overlay */}
-      {S.phase === 'bossVictory' && (
+      {S.phase === 'bossVictory' && showBossCinematic && (
         <BossVictoryOverlay
           key={`${S.round}:${enemy.id}`}
           paused={S.gamePaused}
@@ -911,8 +930,8 @@ function BattleScreenComponent({
         onClick={A.togglePause}
       >
         <div className="battle-pause-icon">⏸️</div>
-        <div id="battle-pause-title" className="battle-pause-title">{t("app.pause.title", "Game Paused")}</div>
-        <div className="battle-pause-hint">{t("app.pause.hint", "Tap anywhere to resume")}</div>
+        <div id="battle-pause-title" className="battle-pause-title">{t("app.pause.title")}</div>
+        <div className="battle-pause-hint">{t("app.pause.hint")}</div>
       </div>}
 
       <BattleFxLayer
@@ -1013,7 +1032,8 @@ function BattleScreenComponent({
           playerMainSpriteStyle={playerMainSpriteStyle}
           playerSubSpriteStyle={playerSubSpriteStyle}
           playerMainShadowStyle={playerMainShadowStyle}
-          showEnemyShadow={!S.eAnim && !UX.lowPerfMode}
+          enemyShatter={enemyShatter}
+          showEnemyShadow={!S.eAnim && !UX.lowPerfMode && !enemyDefeatedFlag}
           showPlayerShadow={!S.pAnim && !UX.lowPerfMode}
         />
 
@@ -1065,7 +1085,7 @@ function BattleScreenComponent({
           bossPhase={S.bossPhase}
           specDefToneClass={specDefToneClass}
           specDefReadyLabel={specDefReadyLabel}
-          bossCharging={S.bossCharging && S.phase !== 'menu' && S.phase !== 'question' && S.phase !== 'playerAtk'}
+          bossCharging={S.bossCharging && S.phase !== 'menu' && S.phase !== 'question' && S.phase !== 'review' && S.phase !== 'playerAtk'}
         />
         {/* Move menu */}
         {S.phase === 'menu' && activeStarter && (
@@ -1085,6 +1105,7 @@ function BattleScreenComponent({
             chargeReady={S.chargeReady}
             sealedTurns={S.sealedTurns}
             moveRuntime={moveRuntime}
+            playerGrade={S.playerGrade}
             inventory={S.inventory}
             bossIntent={bossIntent}
             shadowWard={getShadowWard(S.enemy?.id, S.battleMode, S.shadowShieldCD, S.eHp, S.enemy?.maxHp ?? 0)}
@@ -1092,6 +1113,7 @@ function BattleScreenComponent({
             tideStack={S.tideStack}
             staticStack={S.staticStack}
             enemyExposed={S.enemyExposed}
+            shattered={S.shattered}
             onSelectMove={A.selectMove}
             onUseItem={A.useItem}
             onToggleCoopActive={A.toggleCoopActive}
@@ -1102,11 +1124,12 @@ function BattleScreenComponent({
         )}
 
         {/* Question panel */}
-        {S.phase === 'question' && question && activeStarter && selectedMove && (
+        {(S.phase === 'question' || isAnswerReview) && question && activeStarter && selectedMove && (
           <BattleQuestionPanel
             t={t}
             question={question}
             feedback={feedback}
+            reviewMessage={isAnswerReview ? S.bText : undefined}
             activeStarter={activeStarter}
             selectedMove={selectedMove}
             questionTypeLabel={questionTypeLabel}
@@ -1125,7 +1148,8 @@ function BattleScreenComponent({
         )}
 
         {/* Text box */}
-        {(S.phase === "text" || S.phase === "playerAtk" || S.phase === "enemyAtk" || S.phase === "victory" || S.phase === "ko")
+        {(S.phase === "text" || S.phase === "playerAtk" || S.phase === "enemyAtk" || S.phase === "victory" || S.phase === "ko"
+          || (isAnswerReview && !(question && activeStarter && selectedMove)))
           && <TextBox text={S.bText} onClick={canTapAdvance ? handleAdvance : undefined} />}
       </div>
     </div>

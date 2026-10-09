@@ -623,7 +623,7 @@ export const SCENE_NAMES = {
   electric:"⚡ 雷電荒原",
   ghost:"🌙 幽暗墓地",
   steel:"⚙️ 鋼鐵要塞",
-  light:"☁️ 天界聖域",
+  light:"✨ 聖光神殿",
   dark:"💀 暗黑深淵",
   poison:"☠️ 毒沼禁域",
   rock:"🪨 岩石峽谷",

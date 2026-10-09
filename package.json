@@ -9,22 +9,24 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:budget": "vite build && node scripts/bundle-budget.mjs",
-    "test": "node --import tsx --test --experimental-specifier-resolution=node",
-    "test:coverage": "node --import tsx --test --experimental-specifier-resolution=node --experimental-test-coverage",
-    "test:coverage:gate": "node --import tsx --test --experimental-specifier-resolution=node --experimental-test-coverage --test-coverage-lines=80 --test-coverage-branches=60 --test-coverage-functions=70",
+    "build:report": "vite build && node --import tsx scripts/bundle-report.ts",
+    "build:budget": "npm run build:report",
+    "test": "node --import tsx --test --experimental-specifier-resolution=node \"src/**/*.test.js\" \"scripts/**/*.test.js\"",
+    "test:coverage": "node --import tsx --test --experimental-specifier-resolution=node --experimental-test-coverage \"src/**/*.test.js\" \"scripts/**/*.test.js\"",
+    "test:coverage:gate": "node --import tsx --test --experimental-specifier-resolution=node --experimental-test-coverage --test-coverage-lines=80 --test-coverage-branches=60 --test-coverage-functions=70 \"src/**/*.test.js\" \"scripts/**/*.test.js\"",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.tools.json",
     "electron:dev": "vite build && electron .",
     "electron:build": "vite build && electron-builder --mac --win",
-    "electron:build:mac": "vite build && electron-builder --mac",
+    "electron:build:mac": "npm run package:release",
     "electron:build:win": "vite build && electron-builder --win",
     "cap:sync": "vite build && cap sync",
     "cap:open:ios": "cap open ios",
-    "release:all": "vite build && electron-builder --mac && cap sync",
+    "release:all": "npm run package:release",
     "prerelease": "npm run lint && npm run typecheck && npm test",
-    "ship": "bash scripts/ship.sh"
+    "ship": "bash scripts/ship.sh",
+    "package:release": "node --import tsx scripts/package-release.ts"
   },
   "dependencies": {
     "@capacitor/core": "^8.1.0",
@@ -63,9 +65,9 @@
     "mac": {
       "category": "public.app-category.education-games",
       "icon": "dist/icon-512.png",
-      "identity": null,
+      "identity": "-",
       "target": [
-        "dmg"
+        "dir"
       ]
     },
     "win": {
@@ -73,7 +75,10 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ]
     },

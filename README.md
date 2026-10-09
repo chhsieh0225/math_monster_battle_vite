@@ -13,6 +13,37 @@ React + Vite 教育對戰遊戲專案。
 - `npm run test:coverage` : 輸出 coverage 報告
 - `npm run test:coverage:gate` : coverage 門檻檢查（lines 80% / branches 60% / functions 70%）
 
+## 新版 App 打包
+
+完成新版後執行 `npm run package:release`（打包者需 Mac、Node.js 22+，玩家不需要）。指令先執行型別、零警告 lint、全部測試及正式建置，成功後：
+
+1. 把 **`Math Monster Brawl.app`** 安裝到這台電腦的 **`~/Applications`**（取代同名舊版，失敗保留舊版）。雙擊或從 Launchpad 開啟就能玩，不用啟動 Vite、安裝 Node.js 或掛載 DMG。
+2. 在遊戲專案根目錄放一份 **`Math Monster Brawl.zip`**，給其他電腦使用。
+
+App 不放在專案資料夾，是因為 Dropbox／iCloud 同步不會保留 App 內框架的捷徑（symlink），同步後的 App 會缺檔而無法啟動；zip 是單一檔案，同步不會損壞。打包流程會檢查安裝的 App 與 zip 解壓後的框架捷徑都完整才發布。
+
+**其他電腦**：把專案裡的 `Math Monster Brawl.zip` 先拖到桌面或「下載」（不要在 Dropbox 資料夾裡解壓縮），雙擊解壓後把 App 拖進「應用程式」。若 macOS 擋下，到「系統設定 › 隱私權與安全性」按「強制打開」。
+
+- **單一 Mac App**：預設為目前電腦架構；Intel 可用 `--arch=x64`，通用版可用 `--arch=universal`（zip 要給不同晶片的電腦用時建議通用版）。只保留打包工具的本機 ad-hoc 簽署，不使用 Apple 帳號、付費憑證、公證或額外的簽署驗證。給其他人下載時可能遇到 macOS 安全提示，流程不會變更系統安全設定。不額外產生 DMG、網頁 ZIP 或 iOS 專案包。
+- **只出貨用得到的素材**：建置時只保留戰鬥實際載入的 51 張動畫圖集；舊版 v1 圖集、試玩比較圖與作畫紀錄 JSON 留在 `public/` 供回復與測試，但不會進入 App、iOS 或網頁版。
+- **沒有固定容量門檻**：以好玩、畫面品質與實際流暢度為優先。`npm run build:report` 只報告 JS 大小，超過 976 KiB 或任何舊單檔門檻都不會阻擋建置；舊 `build:budget` 指令保留為相同報告的相容別名。型別、測試與 lint 仍須通過。
+- **正式版內容**：正式戰鬥保留所有畫面效果與素材；`?visual=pilot` 的開發用比較頁只在 `npm run dev` 提供，不隨正式安裝包出貨。
+- **自動打包**：提交這份 workflow 後，`main` 的 CI 通過便會觸發 `Package Apps`，以 CI 實際通過的 commit 建立同時支援 Apple Silicon 與 Intel 的單一 App，並上傳同一份經驗證的 `Math Monster Brawl.zip`；解壓後就是 App，產物保留 90 天。本機只更新同一個 App。
+- **安全發布**：`npm run ship -- "訊息"` 要先自行 `git add` 指定要發布的檔案；完成封存才 commit／push，不再自動把所有變更加入提交。單純 `package:release` 不會提交或推送。
+- **建置紀錄**：`release/latest.json` 記錄最新成功安裝的 App 與 zip；工程用檢查紀錄、來源指紋與遊戲內容雜湊保存在 `release/.receipts/`。打包在系統暫存目錄執行，安裝前在 `~/Applications` 旁暫存，避開雲端同步。Electron 與打包工具的下載快取放在 `~/Library/Caches/math-monster-battle/`，不佔 Dropbox 空間。失敗、按 Ctrl+C 中斷或打包途中來源改動，都不會更新已安裝的 App 與 zip（兩者一起替換，失敗一起還原）。同一使用者同時只能有一個打包程序安裝 App。若替換途中被強制終止而留下 `~/Applications/.Math Monster Brawl.previous-app`，下次打包會自動判斷：已安裝的是最新版就清掉舊副本，否則停下來請你保留能用的那份。殘留的 `release/.package-lock` 或 `~/Library/Caches/math-monster-battle/install.lock`，確認沒有其他打包程序後再移除重試。
+
+Mac、iPhone 與瀏覽器各自保留存檔，不會自動互通。更新使用相同 App ID，避免另建遊戲身分。原生包不啟用網頁 Service Worker 更新，以免混用兩個版本的快取。
+
+Mac 的 `.app` 不能直接安裝到 iPhone。手機原生版需另走 iOS 簽署與安裝流程，不把 Xcode 原始碼包當成可玩的 App 交付；目前本指令只打包 Mac。iOS 環境要求見 [Capacitor iOS 文件](https://capacitorjs.com/docs/ios)。
+
+## 舊版歸檔
+
+- 最新原始碼、素材、開發工具與根目錄的 `Math Monster Brawl.zip` 保持原位；可玩的 App 安裝在 `~/Applications`。
+- 舊安裝包、失敗打包產物、損壞的下載暫存、舊補丁與獨立流程示意稿移至 `old/整理時間/`；每次歸檔保留 `manifest.json`，記錄原始位置與歸檔位置，沒有直接刪除檔案。
+- `old/` 僅作本機歸檔，不納入 Git 或 lint；測試只搜尋 `src/` 與 `scripts/`，不會執行歸檔中的舊測試。[Node.js 測試路徑說明](https://github.com/nodejs/node/blob/v22.0.0/doc/api/test.md#running-tests-from-the-command-line)。
+- 保留 `release/latest.json` 與最新版建置紀錄。單純整理檔案不改動遊戲內容或重新打包 App。
+- `old/` 在 Dropbox 裡仍會同步；確定不需要舊安裝包時可整個刪除，或在終端機執行 `xattr -w 'com.apple.fileprovider.ignore#P' 1 old` 讓 Dropbox 只保留本機副本（會從雲端與其他電腦移除）。
+
 ## 作畫動畫試玩
 
 - 正式戰鬥已啟用 **全部 51 / 51 個外觀型態** 的八格新版素材，涵蓋七個主角家族的三階、一般怪物與進化／變種，以及魔王；**暗黑龍王第二型態使用獨立八格圖集**。支援單人、Co-op 主副將與 PvP 雙方，按出場角色載入，失敗時保留原圖。[全名冊素材與驗證紀錄](docs/animation-roster-rollout.md)。

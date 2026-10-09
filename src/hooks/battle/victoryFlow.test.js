@@ -147,3 +147,28 @@ test('runVictoryFlow settles exp, evolve state, drops, and victory text', () => 
   assert.equal(calls.text[0].includes('🍖'), true);
   assert.deepEqual(calls.phase, ['victory']);
 });
+
+test('expedition elites grant 1.5x EXP and an extra drop', () => {
+  const recorded = { exp: [], drops: [], text: [] };
+  const run = (enemy) => runVictoryFlow({
+    sr: { current: { enemy, pExp: 0, pLvl: 1, pStg: 0 } },
+    verb: 'was defeated',
+    randInt: () => 0,
+    resolveLevelProgress: ({ gainExp }) => { recorded.exp.push(gainExp); return { nextExp: gainExp, nextLevel: 1, hpBonus: 0, evolveCount: 0 }; },
+    getStageMaxHp: () => 100, tryUnlock: () => {}, applyVictoryAchievements: () => {}, updateEncDefeated: () => {},
+    setEnemyExposed: () => {}, setTideStack: () => {}, setBurnStack: () => {}, setStaticStack: () => {}, setFrozen: () => {},
+    setShattered: () => {}, frozenRef: { current: false }, setCursed: () => {}, setBossPhase: () => {}, setBossTurn: () => {},
+    setBossCharging: () => {}, setSealedMove: () => {}, setSealedTurns: () => {}, setPExp: () => {}, setPLvl: () => {},
+    setPHp: () => {}, setDefeated: () => {}, setBText: (value) => recorded.text.push(value), setPhase: () => {},
+    sfx: { play: () => {} }, setPendingEvolve: () => {}, onDropResolved: (drop) => recorded.drops.push(drop),
+  });
+  const enemy = { id: 'golumn_mud', lvl: 4, name: 'Mud', drops: ['🍖'], mType: 'rock', sceneMType: 'rock' };
+
+  run({ ...enemy, campaignRegion: 'rock', campaignTier: 'elite' });
+  assert.deepEqual(recorded.exp, [90]);
+  assert.equal(recorded.drops.length, 2);
+
+  run({ ...enemy, campaignTier: 'elite' });
+  assert.deepEqual(recorded.exp, [90, 60], 'non-expedition elites are unchanged');
+  assert.equal(recorded.drops.length, 3);
+});

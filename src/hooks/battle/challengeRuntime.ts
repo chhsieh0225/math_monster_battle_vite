@@ -241,14 +241,15 @@ export function createDailyChallengeFeedback({
     && streakDelta > 0
     && streakAfter > 0
     && streakAfter % streakWindowDays === 0;
-  const rewardLabels = outcome === 'cleared'
+  const earnedRewards = outcome === 'cleared'
     ? [
-      ...(Array.isArray(plan.rewards?.clear) ? plan.rewards.clear : []).map((reward) => reward.label),
+      ...(Array.isArray(plan.rewards?.clear) ? plan.rewards.clear : []),
       ...(streakRewardUnlocked
-        ? (Array.isArray(plan.rewards?.streak) ? plan.rewards.streak : []).map((reward) => reward.label)
+        ? (Array.isArray(plan.rewards?.streak) ? plan.rewards.streak : [])
         : []),
     ]
     : [];
+  const rewardLabels = earnedRewards.map((reward) => reward.label);
 
   return {
     challengeId: plan.challengeId,
@@ -262,6 +263,7 @@ export function createDailyChallengeFeedback({
     streakDelta,
     streakWindowDays,
     rewardLabels,
+    earnedRewards,
     streakRewardUnlocked,
     preservedClear: outcome === 'failed' && persistedStatus === 'cleared',
   };
@@ -288,6 +290,7 @@ export function createTowerChallengeFeedback({
   const bestFloorAfter = Math.max(0, Number(after?.bestFloor) || 0);
   const totalClearsBefore = Math.max(0, Number(before?.totalClears) || 0);
   const totalClearsAfter = Math.max(0, Number(after?.totalClears) || 0);
+  const towerRewards = outcome === 'cleared' && Array.isArray(activeFloor?.rewards) ? activeFloor.rewards : [];
 
   return {
     seasonId: plan.seasonId,
@@ -304,9 +307,8 @@ export function createTowerChallengeFeedback({
     totalClearsBefore,
     totalClearsAfter,
     totalClearsDelta: totalClearsAfter - totalClearsBefore,
-    rewardLabels: outcome === 'cleared'
-      ? (Array.isArray(activeFloor?.rewards) ? activeFloor.rewards : []).map((reward) => reward.label)
-      : [],
+    rewardLabels: towerRewards.map((reward) => reward.label),
+    earnedRewards: towerRewards,
     checkpointReached: outcome === 'cleared' && Boolean(activeFloor?.checkpoint),
   };
 }

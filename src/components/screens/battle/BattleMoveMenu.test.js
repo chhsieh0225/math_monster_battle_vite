@@ -7,6 +7,17 @@ import { STARTERS } from '../../../data/starters.ts';
 import { getShadowWard } from '../../../utils/combatTactics.ts';
 import zh from '../../../i18n/locales/zh-TW.ts';
 import en from '../../../i18n/locales/en-US.ts';
+import { readFileSync } from 'node:fs';
+
+test('battle UI literal translation keys exist in both dictionaries without inline duplicates', () => {
+  for (const path of ['./BattleMoveMenu.tsx', '../BattleScreen.tsx']) {
+    const source = readFileSync(new URL(path, import.meta.url), 'utf8');
+    for (const [, key] of source.matchAll(/\bt\(['"]([^'"]+)['"]/g)) {
+      assert.ok(zh[key], `Missing zh-TW: ${key}`);
+      assert.ok(en[key], `Missing en-US: ${key}`);
+    }
+  }
+});
 
 function renderMenu(overrides = {}, strings = zh) {
   const starter = overrides.activeStarter ?? STARTERS.find(s => s.id === 'fire');
@@ -51,9 +62,9 @@ test('ward counters and the post-break bonus match the shared combat rules', () 
 test('PvP hides PvE tactics and other starters keep their mastery descriptions', () => {
   const pvp = renderMenu({ battleMode: 'pvp', burnStack: 3, enemyExposed: true });
   assert.doesNotMatch(pvp, /燃燒 3\/5|引爆威力|battle-tactic-state/);
-  const grass = renderMenu({ activeStarter: STARTERS.find(s => s.id === 'grass') });
-  assert.match(grass, /move-mastery/);
-  assert.doesNotMatch(grass, /引爆威力/);
+  const wolf = renderMenu({ activeStarter: STARTERS.find(s => s.id === 'wolf') });
+  assert.match(wolf, /move-mastery/);
+  assert.doesNotMatch(wolf, /引爆威力/);
 });
 
 test('water previews distinguish fast build, burst and full-tide control in both locales', () => {
@@ -80,5 +91,27 @@ test('electric previews predict auto-discharge versus spending and stay hidden i
   for (const id of ['water', 'electric']) {
     const html = renderMenu({ activeStarter: STARTERS.find(s => s.id === id), battleMode: 'pvp', tideStack: 3, staticStack: 2 });
     assert.doesNotMatch(html, /battle-tactic-state|class="move-tactic"/);
+  }
+});
+
+test('nature previews share mastery healing, frost readiness and PvP exclusions in both locales', () => {
+  for (const strings of [zh, en]) {
+    const starter = STARTERS.find(s => s.id === 'grass');
+    const grass = renderMenu({ activeStarter: starter, enemyExposed: true,
+      moveRuntime: starter.moves.map((m, i) => ({ m, i, lv: 3, pw: m.basePower, eff: 1, moveProgressPct: 0 })) }, strings);
+    for (const heal of [12, 6, 18, 24]) assert.ok(grass.includes(`${heal} HP`));
+    assert.match(grass, /85%/);
+    assert.match(grass, /data-ready="true"/);
+    const tiger = STARTERS.find(s => s.id === 'tiger');
+    const frosted = renderMenu({ activeStarter: tiger, shattered: true }, strings);
+    assert.equal((frosted.match(/data-ready="true"/g) || []).length, 3);
+    assert.match(frosted, /\+50%/);
+    assert.doesNotMatch(grass + frosted, /undefined|NaN/);
+    const empty = renderMenu({ activeStarter: tiger }, strings);
+    assert.doesNotMatch(empty, /data-ready="true"/);
+    for (const activeStarter of [starter, tiger]) {
+      const pvp = renderMenu({ activeStarter, battleMode: 'pvp', shattered: true, enemyExposed: true }, strings);
+      assert.doesNotMatch(pvp, /battle-tactic-state|class="move-tactic"/);
+    }
   }
 });

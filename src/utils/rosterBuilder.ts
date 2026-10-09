@@ -45,6 +45,8 @@ type BuildRosterOptions = {
   disableRandomSwap?: boolean;
   enableStarterEncounters?: boolean;
   excludedStarterIds?: readonly string[];
+  /** Use a wave's boss ID as given (world-map expeditions) instead of drawing a random boss. */
+  fixedBossIds?: boolean;
 };
 
 function normalizePickIndex(raw: number, length: number): number {
@@ -252,6 +254,13 @@ for (const starterId of STARTER_IDS) {
   }
 }
 
+/** True when a scene can field a wild monster other than the excluded starters. */
+export function sceneHasWildMonster(sceneType: string, excludedStarterIds: readonly string[] = []): boolean {
+  const mType = SCENE_MTYPE_MAP[sceneType] || sceneType;
+  const excluded = new Set(excludedStarterIds.map((id) => `${STARTER_MIRROR_WAVE_PREFIX}${id}`));
+  return (MONSTERS_BY_MTYPE.get(mType) || []).some((id) => !excluded.has(id));
+}
+
 /**
  * Resolve a monsterId for a wave that only specifies sceneType.
  * Returns a random non-boss monster whose mType matches the scene,
@@ -425,7 +434,7 @@ export function buildRoster(
     // Resolve monsterId: explicit → boss pool → scene-based random draw
     let baseMonsterId: string;
     if (wave.monsterId) {
-      baseMonsterId = BOSS_IDS.has(wave.monsterId)
+      baseMonsterId = BOSS_IDS.has(wave.monsterId) && !options.fixedBossIds
         ? (forcedDoubleFinalBossByWaveIndex.get(i)
           || BOSS_ID_LIST[normalizePickIndex(pickIndex(BOSS_ID_LIST.length), BOSS_ID_LIST.length)]
           || wave.monsterId)

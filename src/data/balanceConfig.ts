@@ -24,6 +24,8 @@ export const BALANCE_CONFIG = {
     fire: { kindleStacks: 2, rushStacks: 1, detonatePerStack: 6, finisherPerStack: 9 },
     water: { maxTide: 3, surgeStacks: 2, surgeDamageScale: 0.85, tsunamiPerStack: 8, vortexPerStack: 5 },
     electric: { pulseBonus: 10, stormStacks: 2, finisherPerStack: 12, finisherWardAt: 2 },
+    grass: { leafHealScale: 2, leafDamageScale: 0.85, openingHealScale: 3, finisherHealScale: 4 },
+    tiger: { clawShatterScale: 1.5 },
     shadowWard: { layers: 2, enragedLayers: 3, guardedScale: 0.6, openingScale: 1.35 },
   },
   /** Cap for dual-type effectiveness multiplier (prevents 1.5×1.5 = 2.25× OHKO) */

@@ -1,6 +1,9 @@
 import { PLAYER_MAX_HP } from '../../data/constants.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { getShadowWardMax } from '../../utils/combatTactics.ts';
+import { getLevelMaxHp } from '../../utils/playerHp.ts';
+import { routeEventHpDelta } from '../../utils/expeditionRun.ts';
+import type { RouteEvent } from '../../utils/expeditionPlanner.ts';
 import type { EnemyVm, StarterVm } from '../../types/battle';
 
 type BattleEntity = EnemyVm | null;
@@ -94,12 +97,19 @@ type PromoteEnemySubAction = {
   type: "promote_enemy_sub";
 };
 
+/** Expedition route event, applied right after start_battle so it sees the run's real HP/level. */
+type RouteEventAction = {
+  type: "route_event";
+  event: RouteEvent;
+};
+
 export type BattleAction =
   | SetFieldAction
   | PatchAction
   | ResetRunAction
   | StartBattleAction
-  | PromoteEnemySubAction;
+  | PromoteEnemySubAction
+  | RouteEventAction;
 
 const BASE_STATE: BattleState = {
   // Player
@@ -272,6 +282,12 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         furyRegenUsed: false,
         consecutiveWrong: 0,
       };
+    }
+
+    case 'route_event': {
+      if (action.event === 'focus_surge') return state.specDef ? state : { ...state, specDef: true };
+      const delta = routeEventHpDelta(action.event, state.pHp, getLevelMaxHp(state.pLvl, state.pStg));
+      return delta === 0 ? state : { ...state, pHp: state.pHp + delta };
     }
 
     default:

@@ -6,6 +6,8 @@ import type { LeaderboardEntry } from '../../types/game';
 import type { DailyChallengeFeedback, TowerChallengeFeedback } from '../../types/challenges';
 import type { WrongQuestionReviewVm } from '../../types/battle';
 import { useI18n } from '../../i18n';
+import { getChallengePerks } from '../../utils/challengeRewards.ts';
+import { describeGrantedReward } from './challengeRewardText.ts';
 import './GameOverScreen.css';
 
 type StarterMoveLite = {
@@ -65,6 +67,30 @@ export default function GameOverScreen({
   onHome,
 }: GameOverScreenProps) {
   const { t } = useI18n();
+  // This screen mounts after the claim was saved, so new badges/titles show their updated totals.
+  const [challengePerks] = useState(() => getChallengePerks());
+  const renderChallengeRewards = (feedback: DailyChallengeFeedback | TowerChallengeFeedback, claimedKey: string, claimedFallback: string) => {
+    if (feedback.rewardsAlreadyClaimed) {
+      return (
+        <div className="game-over-result-rewards">
+          <div className="game-over-result-reward-label">{t('daily.result.rewards', 'Rewards')}</div>
+          <div className="game-over-result-reward-item">{t(claimedKey, claimedFallback)}</div>
+        </div>
+      );
+    }
+    const lines = feedback.granted
+      ? feedback.granted.map((reward) => describeGrantedReward(reward, challengePerks, t))
+      : feedback.rewardLabels;
+    if (lines.length === 0) return null;
+    return (
+      <div className="game-over-result-rewards">
+        <div className="game-over-result-reward-label">{t('daily.result.rewards', 'Rewards')}</div>
+        {lines.map((line, idx) => (
+          <div key={`${line}-${idx}`} className="game-over-result-reward-item">{line}</div>
+        ))}
+      </div>
+    );
+  };
   const won = defeated >= totalEnemies;
   const finalScore = calcScore(defeated, tC, tW, pLvl, timedMode, maxStreak);
   const [lastRank, setLastRank] = useState(-1);
@@ -163,16 +189,7 @@ export default function GameOverScreen({
               {t('daily.result.preserved', 'Today was already cleared. Streak is preserved.')}
             </div>
           )}
-          {dailyChallengeFeedback.rewardLabels.length > 0 && (
-            <div className="game-over-result-rewards">
-              <div className="game-over-result-reward-label">{t('daily.result.rewards', 'Rewards')}</div>
-              {dailyChallengeFeedback.rewardLabels.map((label, idx) => (
-                <div key={`${label}-${idx}`} className="game-over-result-reward-item">
-                  • {label}
-                </div>
-              ))}
-            </div>
-          )}
+          {renderChallengeRewards(dailyChallengeFeedback, 'reward.alreadyClaimed.daily', "Today's rewards were already claimed. Come back tomorrow!")}
         </div>
       )}
 
@@ -209,16 +226,7 @@ export default function GameOverScreen({
               {t('daily.tower.result.checkpoint', 'Checkpoint reached!')}
             </div>
           )}
-          {towerChallengeFeedback.rewardLabels.length > 0 && (
-            <div className="game-over-result-rewards">
-              <div className="game-over-result-reward-label">{t('daily.result.rewards', 'Rewards')}</div>
-              {towerChallengeFeedback.rewardLabels.map((label, idx) => (
-                <div key={`${label}-${idx}`} className="game-over-result-reward-item">
-                  • {label}
-                </div>
-              ))}
-            </div>
-          )}
+          {renderChallengeRewards(towerChallengeFeedback, 'reward.alreadyClaimed.tower', 'This floor reward was already claimed in this run.')}
         </div>
       )}
 

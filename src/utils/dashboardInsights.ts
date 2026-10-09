@@ -1,3 +1,5 @@
+import { OP_NAME_FALLBACKS, OP_NAME_KEYS } from '../data/opNames.ts';
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 type TemplateParams = Record<string, string | number>;
@@ -185,50 +187,6 @@ const OP_ICONS: Record<string, string> = {
   frac_same: '🧩',
   frac_diff: '🧩',
   frac_muldiv: '🧩',
-};
-
-const OP_NAME_FALLBACKS: Record<string, string> = {
-  '+': 'Addition',
-  '-': 'Subtraction',
-  '×': 'Multiplication',
-  '÷': 'Division',
-  dec_add: 'Decimal Add/Sub',
-  dec_frac: 'Decimal/Fraction Convert',
-  dec_mul: 'Decimal Multiplication',
-  dec_div: 'Decimal Division',
-  mixed2: 'Add/Sub Mix',
-  mixed3: 'Mul/Add Mix',
-  mixed4: 'Four Ops Mix',
-  unknown1: 'Unknown Add/Sub',
-  unknown2: 'Unknown Mul/Div',
-  unknown3: 'Unknown Large Number',
-  unknown4: 'Unknown Mixed',
-  frac_cmp: 'Fraction Compare',
-  frac_same: 'Same Denominator',
-  frac_diff: 'Different Denominator',
-  frac_muldiv: 'Fraction Mul/Div',
-};
-
-const OP_NAME_KEYS: Record<string, string> = {
-  '+': 'dashboard.op.name.add',
-  '-': 'dashboard.op.name.sub',
-  '×': 'dashboard.op.name.mul',
-  '÷': 'dashboard.op.name.div',
-  dec_add: 'dashboard.op.name.decAdd',
-  dec_frac: 'dashboard.op.name.decFrac',
-  dec_mul: 'dashboard.op.name.decMul',
-  dec_div: 'dashboard.op.name.decDiv',
-  mixed2: 'dashboard.op.name.mixed2',
-  mixed3: 'dashboard.op.name.mixed3',
-  mixed4: 'dashboard.op.name.mixed4',
-  unknown1: 'dashboard.op.name.unknown1',
-  unknown2: 'dashboard.op.name.unknown2',
-  unknown3: 'dashboard.op.name.unknown3',
-  unknown4: 'dashboard.op.name.unknown4',
-  frac_cmp: 'dashboard.op.name.fracCmp',
-  frac_same: 'dashboard.op.name.fracSame',
-  frac_diff: 'dashboard.op.name.fracDiff',
-  frac_muldiv: 'dashboard.op.name.fracMulDiv',
 };
 
 const WEAK_ACTIONS: Record<string, string> = {

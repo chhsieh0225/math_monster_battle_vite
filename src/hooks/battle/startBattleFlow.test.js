@@ -220,3 +220,31 @@ test('runStartBattleFlow enters boss intro when coop sub enemy is a boss', () =>
 
   assert.equal(phase, 'bossIntro');
 });
+
+test('expedition battles announce the floor and apply their route event to the real run state', () => {
+  const base = { id: 'golumn_mud', name: 'Mud', mType: 'rock', sceneMType: 'rock', maxHp: 80, lvl: 4,
+    campaignRegion: 'rock', campaignNodeIndex: 3, campaignNodeTotal: 10, campaignTier: 'elite', campaignEventTag: 'healing_spring' };
+  let state = { ...createInitialBattleState(), pLvl: 3, pHp: 20 };
+  let text = '';
+  const run = (enemy, battleMode = 'single') => runStartBattleFlow({
+    idx: 0, roster: [enemy], enemies: [enemy], locale: 'zh-TW', battleMode, allySub: null, starter: { name: 'Hero', moves: [] },
+    sceneNames: {}, localizeEnemy: (e) => e, localizeSceneName: () => 'Canyon',
+    dispatchBattle: (action) => { state = battleReducer(state, action); },
+    updateEnc: () => {}, setPhase: () => {}, setBText: (value) => { text = value; }, setScreen: () => {},
+    finishGame: () => {}, resetFrozen: () => {}, playBattleIntro: () => {}, pickIndex: () => 0,
+  });
+
+  run(base);
+  assert.ok(state.pHp > 20, 'healing spring restores HP');
+  assert.match(text, /3\/10/);
+  assert.match(text, /EXP ×1\.5/);
+  assert.match(text, /Healing spring/);
+
+  run({ ...base, campaignTier: 'normal', campaignEventTag: 'focus_surge' });
+  assert.equal(state.specDef, true, 'focus blessing survives start_battle resetting the guard');
+
+  const before = state.pHp;
+  run({ ...base, campaignRegion: undefined, campaignEventTag: 'hazard_ambush' });
+  assert.equal(state.pHp, before, 'old campaign event tags stay cosmetic');
+  assert.doesNotMatch(text, /floor/);
+});

@@ -59,7 +59,12 @@ type TimeoutFlowArgs = {
   markCoopRotatePending: () => void;
   safeTo: (fn: () => void, ms: number) => void;
   doEnemyTurn: () => void;
+  /** When provided, the answer stays on screen until the player taps (review phase). */
+  setPendingTextAdvanceAction?: (action: (() => void) | null) => void;
 };
+
+/** Time the correct answer is shown before the tap-to-continue prompt appears. */
+const TIMEOUT_REVIEW_DELAY_MS = 1500;
 
 function formatFallback(template: string, params?: TranslatorParams): string {
   if (!params) return template;
@@ -103,6 +108,7 @@ export function handleTimeoutFlow({
   markCoopRotatePending,
   safeTo,
   doEnemyTurn,
+  setPendingTextAdvanceAction,
 }: TimeoutFlowArgs): void {
   const s = sr.current;
   if (!isBattleActiveState(s)) return;
@@ -173,6 +179,18 @@ export function handleTimeoutFlow({
   }
 
   setBText(tr(t, 'battle.timeoutMiss', "⏰ Time's up! Too late to attack!"));
+  if (setPendingTextAdvanceAction) {
+    // The question panel (now showing the answer and steps) stays in the
+    // 'question' phase briefly, then waits for a tap before the enemy acts.
+    scheduleIfBattleActive(safeTo, () => sr.current, () => {
+      setPhase('review');
+      setPendingTextAdvanceAction(() => {
+        if (!isBattleActiveState(sr.current)) return;
+        doEnemyTurn();
+      });
+    }, TIMEOUT_REVIEW_DELAY_MS);
+    return;
+  }
   setPhase('text');
-  scheduleIfBattleActive(safeTo, () => sr.current, doEnemyTurn, 1500);
+  scheduleIfBattleActive(safeTo, () => sr.current, doEnemyTurn, TIMEOUT_REVIEW_DELAY_MS);
 }

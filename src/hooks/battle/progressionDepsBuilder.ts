@@ -61,6 +61,7 @@ type BuildContinueFromVictoryFlowArgsArgs = {
     | 'getStageMaxHp'
     | 'getStarterMaxHp'
     | 't'
+    | 'victoryHealBonus'
   >;
   battleFields: Pick<BattleFieldSetters, 'setPHp' | 'setPHpSub'>;
   ui: Pick<BattleUiState, 'setBText' | 'setPhase'>;
@@ -136,5 +137,6 @@ export function buildContinueFromVictoryFlowArgs({
     getStarterMaxHp: runtime.getStarterMaxHp,
     startBattle: callbacks.startBattle,
     t: runtime.t,
+    victoryHealBonus: runtime.victoryHealBonus,
   };
 }

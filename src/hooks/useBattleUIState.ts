@@ -65,6 +65,8 @@ type UseBattleUIStateResult = {
   pSubAnim: string;
   atkEffect: AttackEffectState;
   setAtkEffect: Dispatch<SetStateAction<AttackEffectState>>;
+  /** Element of the last attack that connected with an enemy (drives its defeat animation). */
+  enemyFinisherType: string | null;
   effMsg: EffectMessage;
   setEffMsg: Dispatch<SetStateAction<EffectMessage>>;
   addD: (value: string, x: number, y: number, color: string) => void;
@@ -97,7 +99,17 @@ export function useBattleUIState({ rand, randInt }: RngDeps): UseBattleUIStateRe
     if (slot === 'sub') setPlayerSubAnim(animation);
     else setPlayerMainAnim(animation);
   }, []);
-  const [atkEffect, setAtkEffect] = useState<AttackEffectState>(null);
+  const [atkEffect, setAtkEffectState] = useState<AttackEffectState>(null);
+  const [enemyFinisherType, setEnemyFinisherType] = useState<string | null>(null);
+  const setAtkEffect: Dispatch<SetStateAction<AttackEffectState>> = useCallback((next) => {
+    // Hits are always set as values with an impact; clears and updaters only remove effects.
+    const outcome = next && typeof next !== 'function' ? next.impact?.outcome : undefined;
+    if (next && typeof next !== 'function' && (outcome === 'hit' || outcome === 'critical')
+      && next.targetSide !== 'player' && next.type) {
+      setEnemyFinisherType(next.type);
+    }
+    setAtkEffectState(next);
+  }, []);
   const [effMsg, setEffMsgRaw] = useState<EffectMessage>(null);
   const effMsgTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -170,6 +182,7 @@ export function useBattleUIState({ rand, randInt }: RngDeps): UseBattleUIStateRe
     pSubAnim,
     atkEffect,
     setAtkEffect,
+    enemyFinisherType,
     effMsg,
     setEffMsg,
     addD,

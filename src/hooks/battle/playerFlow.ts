@@ -25,7 +25,7 @@ import { resolvePlayerStrike, resolveRiskySelfDamage } from './turnResolver.ts';
 import { TYPE_EMOJI } from '../../data/elementEmoji.ts';
 import { isCoopBattleMode } from './coopFlow.ts';
 import { getCharacterSkillId } from '../../utils/skillPresentation.ts';
-import { getFireTactic, planFireTactic, planElementTactic, getShadowWard, getShadowWardMax, hitShadowWard } from '../../utils/combatTactics.ts';
+import { getFireTactic, planFireTactic, planElementTactic, planNatureTactic, getShadowWard, getShadowWardMax, hitShadowWard } from '../../utils/combatTactics.ts';
 
 const ENCOURAGE_THRESHOLD = 3;
 
@@ -436,13 +436,16 @@ export function runPlayerAnswer({
       : getLevelMaxHp(state.pLvl || 1, state.pStg || 0)
   );
 
-  const healAttacker = (heal: number): void => {
+  const healAttacker = (heal: number): number => {
     const maxHp = getAttackerMaxHp(sr.current);
+    const actual = Math.max(0, Math.min(heal, maxHp - getAttackerHp(sr.current)));
+    if (actual === 0) return 0;
     if (isSubAttacker && typeof setPHpSub === 'function') {
-      setPHpSub((h) => Math.min(h + heal, maxHp));
-      return;
+      setPHpSub((h) => Math.min(h + actual, maxHp));
+    } else {
+      setPHp((h) => Math.min(h + actual, maxHp));
     }
-    setPHp((h) => Math.min(h + heal, maxHp));
+    return actual;
   };
 
   const applyDamageToAttacker = ({ state, damage, popupText = null, color = '#ef4444' }: ApplyDamageArgs): number => {
@@ -638,8 +641,11 @@ export function runPlayerAnswer({
           const hadOpening = Boolean(s3.enemyExposed);
           const tactics = planFireTactic(fireTactic, s3.burnStack, hadOpening);
           const elementTactic = planElementTactic(starter.id, s3.battleMode, moveIdx, s3.tideStack, s3.staticStack);
+          const nature = planNatureTactic(starter.id, s3.battleMode, moveIdx, s3.mLvls[moveIdx], hadOpening, s3.shattered);
+          const attackerHpAtContact = getAttackerHp(s3);
+          let healedAtContact = 0;
           const tacticalDmg = Math.max(1, Math.round(
-            (dmg * tactics.damageScale * (elementTactic?.powerScale ?? 1) + tactics.bonusDamage + (elementTactic?.bonusDamage ?? 0)) * tacticProfile.damageScale,
+            (dmg * tactics.damageScale * (elementTactic?.powerScale ?? nature?.powerScale ?? 1) + tactics.bonusDamage + (elementTactic?.bonusDamage ?? 0)) * tacticProfile.damageScale,
           ));
           if (wasBossCharging) {
             setBossCharging(false);
@@ -654,8 +660,9 @@ export function runPlayerAnswer({
             const counterRatio = Math.max(0, tacticProfile.counterRatio);
             if (counterRatio <= 0 || baseDamage <= 0) return false;
             const counterDmg = Math.max(1, Math.round(baseDamage * counterRatio));
+            // React batches the heal and counter; the ref can still hold pre-heal HP.
             const nextAttackerHp = applyDamageToAttacker({
-              state: s3,
+              state: { ...s3, [isSubAttacker ? 'pHpSub' : 'pHp']: attackerHpAtContact + healedAtContact },
               damage: counterDmg,
               popupText: `⚠️-${counterDmg}`,
               color: '#fb923c',
@@ -676,7 +683,7 @@ export function runPlayerAnswer({
           let finalDmg = tacticalDmg;
           const ward = getShadowWard(s3.enemy.id, s3.battleMode, s3.shadowShieldCD, s3.eHp, s3.enemy.maxHp);
           if (ward) {
-            const nextWard = hitShadowWard(ward, elementTactic?.wardBreak ?? tactics.wardBreak);
+            const nextWard = hitShadowWard(ward, elementTactic?.wardBreak ?? nature?.wardBreak ?? tactics.wardBreak);
             if (!ward.open) setShadowShieldCD(nextWard);
             finalDmg = Math.max(1, Math.round(finalDmg * ward.damageScale));
             sfx.play(ward.open || nextWard === 0 ? 'effective' : 'specDef');
@@ -705,22 +712,25 @@ export function runPlayerAnswer({
 
           const appliedHitDmg = applyBossDamageReduction(finalDmg, s3.enemy.id);
 
-          // Ice shatter: bonus damage when attacking a shattered (previously frozen) enemy
+          // Mirror consumes frost for control instead of also receiving shatter damage.
           let shatterDmg = 0;
-          if (s3.shattered) {
+          const shatterScale = nature?.shatterScale ?? 1;
+          if (s3.shattered && shatterScale > 0) {
             const rawShatter = Math.min(
-              Math.round(appliedHitDmg * TRAIT_BALANCE.player.iceShatterBonusRatio),
-              TRAIT_BALANCE.player.iceShatterBonusCap,
+              Math.round(appliedHitDmg * TRAIT_BALANCE.player.iceShatterBonusRatio * shatterScale),
+              Math.round(TRAIT_BALANCE.player.iceShatterBonusCap * shatterScale),
             );
             shatterDmg = applyBossDamageReduction(rawShatter, s3.enemy.id);
-            setShattered(false);
             safeToIfBattleActive(() => addD(tr(t, 'battle.tag.shatter', '💎Shatter'), fxt().enemyAbove.x, fxt().enemyAbove.y, '#22d3ee'), 400);
           }
           let afterHp = Math.max(0, s3.eHp - appliedHitDmg - shatterDmg);
+          if (s3.shattered || nature?.kind === 'tiger') setShattered(Boolean(nature?.nextShattered && afterHp > 0));
+          if (nature?.nextShattered && afterHp > 0) safeToIfBattleActive(() => addD(tr(t, 'battle.tactics.frost', 'Frost marked'),
+            fxt().enemyAbove.x, fxt().enemyAbove.y, '#67e8f9'), 220);
 
-          setEnemyExposed(tactics.nextExposed);
-          if (fireTactic === 'kindle' || fireTactic === 'breach' || tactics.consumedStacks > 0 || hadOpening) {
-            const event = tactics.consumedStacks > 0 ? 'detonate' : fireTactic === 'breach' ? 'breach'
+          setEnemyExposed(tactics.nextExposed || Boolean(nature?.nextExposed));
+          if (fireTactic === 'kindle' || fireTactic === 'breach' || nature?.nextExposed || tactics.consumedStacks > 0 || hadOpening) {
+            const event = tactics.consumedStacks > 0 ? 'detonate' : fireTactic === 'breach' || nature?.nextExposed ? 'breach'
               : hadOpening ? 'exploit' : 'kindle';
             safeToIfBattleActive(() => addD(tr(t, `battle.tactics.feedback.${event}`, event,
               { stacks: tactics.consumedStacks || tactics.nextBurn }), fxt().enemyAbove.x, fxt().enemyAbove.y,
@@ -748,20 +758,22 @@ export function runPlayerAnswer({
           }
 
           if (starter.type === 'grass') {
-            const heal = TRAIT_BALANCE.player.grassHealPerMoveLevel * s3.mLvls[moveIdx];
-            healAttacker(heal);
-            sfx.play('heal');
-            safeToIfBattleActive(() => addD(`+${heal}`, isSubAttacker ? fxt().playerSub.x : fxt().playerMain.x - 10, isSubAttacker ? fxt().playerSub.y : fxt().playerMain.y - 5, '#22c55e'), 500);
+            healedAtContact = healAttacker(nature?.heal ?? TRAIT_BALANCE.player.grassHealPerMoveLevel * s3.mLvls[moveIdx]);
+            if (healedAtContact > 0) {
+              sfx.play('heal');
+              safeToIfBattleActive(() => addD(`+${healedAtContact}`, isSubAttacker ? fxt().playerSub.x : fxt().playerMain.x - 10, isSubAttacker ? fxt().playerSub.y : fxt().playerMain.y - 5, '#22c55e'), 500);
+            }
           }
 
           let willFreeze = false;
           if ((starter.type === 'water' || starter.type === 'ice') && afterHp > 0) {
             const isIce = starter.type === 'ice';
-            if (elementTactic?.guaranteedFreeze || chance(freezeChance(s3.mLvls[moveIdx], isIce && move.risky))) {
+            if (elementTactic?.guaranteedFreeze || nature?.guaranteedFreeze
+              || ((nature?.allowFreezeRoll ?? true) && chance(freezeChance(s3.mLvls[moveIdx], isIce && move.risky)))) {
               willFreeze = true;
               setFrozen(true);
               frozenR.current = true;
-              if (isIce) setShattered(true);
+              if (isIce && nature?.kind !== 'tiger') setShattered(true);
               sfx.play('freeze');
               safeToIfBattleActive(() => addD(tr(t, 'battle.tag.freeze', '❄️Frozen'), fxt().enemyMain.x, fxt().enemyMain.y, '#38bdf8'), 600);
             }
@@ -883,6 +895,10 @@ export function runPlayerAnswer({
     setConsecutiveWrong((cw) => cw + 1);
   }
 
+  // Keep the explanation panel on screen until the player taps ('review').
+  // Without a tap-advance hook, fall back to the plain text phase.
+  const reviewPhase = setPendingTextAdvanceAction ? 'review' : 'text';
+
   safeToIfBattleActive(() => {
     const s2 = sr.current;
     if (move.risky) {
@@ -904,7 +920,7 @@ export function runPlayerAnswer({
         name: attackerName,
         damage: sd,
       }));
-      setPhase('text');
+      setPhase(reviewPhase);
       setPendingTextAdvanceAction?.(() => {
         if (!isBattleActive()) return;
         if (nh2 <= 0) resolveActiveKo(tr(t, 'battle.ko.fallen', '{name} has fallen...', { name: attackerName }));
@@ -925,7 +941,7 @@ export function runPlayerAnswer({
         mt += tr(t, 'battle.burn.tickShort', ' Burn -{damage}!', { damage: bd });
         if (nh3 <= 0) {
           setBText(mt);
-          setPhase('text');
+          setPhase(reviewPhase);
           setPendingTextAdvanceAction?.(() => {
             if (!isBattleActive()) return;
             handleVictory(tr(t, 'battle.victory.verb.burned', 'was burned down'));
@@ -934,7 +950,7 @@ export function runPlayerAnswer({
         }
       }
       setBText(mt);
-      setPhase('text');
+      setPhase(reviewPhase);
       setPendingTextAdvanceAction?.(() => {
         if (!isBattleActive()) return;
         if (frozenR.current) handleFreeze();

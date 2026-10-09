@@ -1,5 +1,6 @@
 import type { BattleMode } from './battle';
 import type { StarterId } from './game';
+import type { GrantedReward } from '../utils/challengeRewards';
 
 export type ChallengeDifficulty = 'normal' | 'hard' | 'expert' | 'master';
 
@@ -153,6 +154,11 @@ export type DailyChallengeFeedback = {
   streakDelta: number;
   streakWindowDays: number;
   rewardLabels: string[];
+  /** Rewards earned by this result (before checking whether they were already claimed). */
+  earnedRewards?: ChallengeReward[];
+  /** What was actually granted; empty when this result was already claimed. */
+  granted?: GrantedReward[];
+  rewardsAlreadyClaimed?: boolean;
   streakRewardUnlocked: boolean;
   preservedClear: boolean;
 };
@@ -173,6 +179,9 @@ export type TowerChallengeFeedback = {
   totalClearsAfter: number;
   totalClearsDelta: number;
   rewardLabels: string[];
+  earnedRewards?: ChallengeReward[];
+  granted?: GrantedReward[];
+  rewardsAlreadyClaimed?: boolean;
   checkpointReached: boolean;
 };
 

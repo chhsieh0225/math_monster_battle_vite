@@ -202,3 +202,21 @@ test('tryProcessPvpTextAdvance returns false for non-pvp state', () => {
   });
   assert.equal(out, false);
 });
+
+test('challenge titles add to the post-win heal, still capped at max HP', () => {
+  let hp = 30;
+  const run = (victoryHealBonus) => continueFromVictoryFlow({
+    state: { battleMode: 'single', round: 0, pStg: 0 },
+    enemiesLength: 3,
+    setScreen: noop, dispatchBattle: noop, localizeEnemy: (enemy) => enemy, setBText: noop, setPhase: noop,
+    finishGame: noop, setPHp: (value) => { hp = typeof value === 'function' ? value(hp) : value; }, setPHpSub: noop,
+    getStageMaxHp: () => 100, getStarterMaxHp: () => 100, startBattle: noop, victoryHealBonus,
+  });
+  run(12);
+  assert.equal(hp, 52);
+  run(undefined);
+  assert.equal(hp, 62);
+  hp = 95;
+  run(12);
+  assert.equal(hp, 100);
+});

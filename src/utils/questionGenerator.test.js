@@ -295,3 +295,65 @@ test('genQ multiplication distractors prioritize neighboring table values', () =
   const distractors = q.choices.filter((value) => value !== q.answer).sort((a, b) => a - b);
   assert.deepEqual(distractors, [48, 54, 63]);
 });
+
+const STEP_OPS = { '+': (x, y) => x + y, '-': (x, y) => x - y, '×': (x, y) => x * y };
+
+test('genQ multi-digit answers always include a distractor with the same ones digit', () => {
+  const moves = [
+    { range: [20, 99], ops: ['+', '-'] },
+    { range: [5, 30], ops: ['-'] },
+    { range: [4, 16], ops: ['×'] },
+    { range: [2, 15], ops: ['mixed2'] },
+    { range: [4, 50], ops: ['unknown3'] },
+  ];
+  for (const move of moves) {
+    for (let i = 0; i < 300; i += 1) {
+      const q = genQ(move, 1);
+      if (q.answer < 10) continue;
+      const [a, b] = q.op === '×' ? q.display.split(' × ').map(Number) : [10, 10];
+      if (q.op === '×' && a < 10 && b < 10) continue; // single-digit facts keep neighbouring products
+      const sameOnes = q.choices.filter((value) => value !== q.answer && value % 10 === q.answer % 10);
+      assert.equal(sameOnes.length > 0, true, `${q.display} -> ${q.choices.join(',')}`);
+    }
+  }
+});
+
+test('genQ +, - and × steps are correct and only the last step reveals the answer', () => {
+  const moves = [
+    { range: [2, 10], ops: ['+'] },
+    { range: [5, 30], ops: ['-'] },
+    { range: [20, 99], ops: ['+', '-'] },
+    { range: [2, 12], ops: ['×'] },
+    { range: [4, 16], ops: ['×'] },
+  ];
+  for (const move of moves) {
+    for (let i = 0; i < 400; i += 1) {
+      const q = genQ(move, 1);
+      assert.equal(q.steps.length > 0, true);
+      for (const step of q.steps) {
+        for (const m of step.matchAll(/(\d+) ([+\-×]) (\d+) = (\d+)/g)) {
+          assert.equal(STEP_OPS[m[2]](Number(m[1]), Number(m[3])), Number(m[4]), `${q.display}: ${step}`);
+        }
+      }
+      const revealsAnswer = (step) => new RegExp(`(= |make )${q.answer}(\\D|$)`).test(step);
+      assert.equal(revealsAnswer(q.steps[q.steps.length - 1]), true, `${q.display}: ${q.steps.join(' | ')}`);
+      if (q.steps.length > 1) {
+        assert.equal(q.steps.slice(0, -1).some(revealsAnswer), false, `${q.display}: ${q.steps.join(' | ')}`);
+      }
+    }
+  }
+});
+
+test('genQ addition uses make-ten steps for single-digit sums over ten', () => {
+  const q = withRandomSource(() => 0.99, () => genQ({ range: [8, 9], ops: ['+'] }, 1));
+  assert.equal(q.display, '9 + 9');
+  assert.deepEqual(q.steps, ['Split 9 into 1 and 8.', 'Make ten: 9 + 1 = 10', '10 + 8 = 18']);
+});
+
+test('genQ two-digit multiplication offers the missing-cross-terms slip', () => {
+  const q = withRandomSource(() => 0.5, () => genQ({ range: [12, 13], ops: ['×'] }, 1));
+  const [a, b] = q.display.split(' × ').map(Number);
+  const slip = (a - (a % 10)) * (b - (b % 10)) + (a % 10) * (b % 10);
+  if (slip !== q.answer) assert.equal(q.choices.includes(slip), true);
+  assert.equal(q.steps.length, 4);
+});

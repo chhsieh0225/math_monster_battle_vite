@@ -135,6 +135,10 @@ export function runHandleFreezeController({
   setBText(tr(t, 'battle.freeze.enemySkip', '❄️ {enemy} is frozen and cannot attack!', { enemy: state.enemy?.name || '' }));
   setPhase('text');
   safeTo(() => {
+    // A tap may already have moved on (possibly into the next question);
+    // this timer may only close the freeze message itself.
+    const phase = sr.current?.phase;
+    if (typeof phase === 'string' && phase !== 'text') return;
     tryReturnToMenu(() => sr.current, setPhase, setBText);
   }, 1500);
 }

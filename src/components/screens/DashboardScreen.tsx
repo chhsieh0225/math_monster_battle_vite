@@ -1,3 +1,4 @@
+import { exportPlaytestReport } from '../../utils/playtestLog.ts';
 /**
  * DashboardScreen — Parent analytics dashboard.
  *
@@ -200,12 +201,15 @@ function PINGate({ onUnlock, onBack }: PINGateProps) {
 // ─── Main Dashboard ───
 type DashboardScreenProps = {
   onBack: () => void;
+  playerGrade?: number | null;
+  onRetakePlacement?: () => void;
 };
 
-export default function DashboardScreen({ onBack }: DashboardScreenProps) {
+export default function DashboardScreen({ onBack, playerGrade = null, onRetakePlacement }: DashboardScreenProps) {
   const { t } = useI18n();
   const [unlocked, setUnlocked] = useState(false);
   const [tab, setTab] = useState<DashboardTab>('overview');
+  const [playtestStatus, setPlaytestStatus] = useState<string | null>(null);
   const [sessions, setSessions] = useState<DashboardSession[]>(() => loadSessionsTyped());
   const [learning, setLearning] = useState(() => loadLearningProgress());
   const [pinInput, setPinInput] = useState('');
@@ -229,6 +233,41 @@ export default function DashboardScreen({ onBack }: DashboardScreenProps) {
       <div className="dash-header">
         <button className="back-touch-btn dash-back-btn" onClick={onBack} aria-label={t('a11y.common.backToTitle', 'Back to title')}>←</button>
         <div className="dash-header-title">📊 {t('dashboard.title', 'Parent Dashboard')}</div>
+      </div>
+
+      {/* Grade alignment: every PvE question stays inside this grade */}
+      <div className="dash-grade-row">
+        <span>
+          {playerGrade
+            ? t('dashboard.grade.current', '🎓 Questions match grade {n}', { n: playerGrade })
+            : t('dashboard.grade.none', '🎓 Grade not set yet (a short check runs before the first game)')}
+        </span>
+        {onRetakePlacement && (
+          <button type="button" className="dash-btn-ghost dash-grade-btn" onClick={onRetakePlacement}>
+            {t('dashboard.grade.retake', 'Change grade / retake check')}
+          </button>
+        )}
+      </div>
+      <div className="dash-grade-row">
+        <span>{t('dashboard.playtest.label', '🧪 Playtest log (stays on this device)')}</span>
+        <button
+          type="button"
+          className="dash-btn-ghost dash-grade-btn"
+          onClick={() => {
+            void exportPlaytestReport().then((result) => setPlaytestStatus(result));
+          }}
+        >
+          {t('dashboard.playtest.export', 'Export playtest log')}
+        </button>
+        {playtestStatus && (
+          <span className="dash-playtest-status">
+            {playtestStatus === 'saved'
+              ? t('dashboard.playtest.saved', 'Saved to the playtest folder.')
+              : playtestStatus === 'failed'
+                ? t('dashboard.playtest.failed', 'Could not export. Please try again.')
+                : t('dashboard.playtest.exported', 'Exported. Put the file in the project\'s playtest folder.')}
+          </span>
+        )}
       </div>
 
       {/* Tab bar */}

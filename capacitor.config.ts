@@ -5,12 +5,12 @@ const config: CapacitorConfig = {
   appName: 'Math Monster Brawl',
   webDir: 'dist',              // Vite build 產出目錄
   server: {
-    // iOS WKWebView 用 file:// 載入，不需要 localhost server
+    // Native builds serve bundled files; never point a release at the dev server.
     androidScheme: 'https',
   },
   ios: {
     contentInset: 'automatic',  // 自動處理 safe area
-    scheme: 'MathMonsterBattle',
+    scheme: 'App',
   },
 };
 

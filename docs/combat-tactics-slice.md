@@ -1,6 +1,6 @@
 # Combat Tactics: First Playable Slice
 
-Scope: fire, water and electric starters (all evolution stages) and Dark Dragon King in single,
+Scope: fire, water, electric, grass and ice tiger starters (all evolution stages) and Dark Dragon King in single,
 co-op and double battles. PvP rules and other characters' individual move
 mechanics remain unchanged. No new persistent progression or art assets.
 
@@ -58,12 +58,46 @@ The menu derives its forecasts from the same pure `planElementTactic` used at
 contact. Full-tide control, accelerated charge and extra ward breaking are shown
 on the relevant moves. No new particle, atlas or effect rendering path is added.
 
+## Grass and Ice Tiger Rollout
+
+No new counter: grass reuses the party opening, and tiger reuses the existing
+enemy `shattered` flag as a frost mark. A mark is not itself a skipped turn.
+The menu and landed-hit resolution share `planNatureTactic`.
+
+Grass healing below is multiplied by the move's current mastery level.
+
+| Grass slot | Landed selected-hit behavior |
+| --- | --- |
+| 0: Leaf Slash | Heals up to 4 HP per level, at 85% direct damage. |
+| 1: Vine Whip | Heals up to 2 HP per level and creates a shared +20% next-hit opening. |
+| 2: Forest Tempest | Heals up to 2 HP per level, or 6 when consuming an existing opening. |
+| 3: Umbral Briarfall | Heals up to 8 HP per level; keeps charge and wrong-answer risk. |
+
+Healing goes to the physical acting slot, never the inactive partner. Popups
+show actual recovery after the HP cap, and full HP does not emit a heal popup.
+Same-hit boss retaliation uses the healed HP even when React batches updates.
+Opening healing forecasts already include the multiplier when ready.
+
+| Tiger slot | Landed selected-hit behavior |
+| --- | --- |
+| 0: Crystal Shot | Sets/preserves frost without shattering or rolling freeze. |
+| 1: Frost Mirror | Spends frost for one guaranteed frozen turn, with no shatter damage. No frost means a normal hit. |
+| 2: Glacial Claw | Spends frost for 1.5x normal shatter damage/cap and breaks 2 ward layers. Does not freeze. |
+| 3: Permafrost Judgment | Spends frost for normal shatter plus guaranteed freeze. Without frost, retains the existing risky freeze chance. |
+
+Mirror, Claw and Judgment never reapply frost, including on random freeze.
+Thus repeated Mirror cannot indefinitely lock an enemy; another setup hit is
+needed. A defeated enemy receives neither a new mark nor control. Other selected
+party attacks can consume frost for the legacy shatter bonus. Automatic support
+neither builds nor consumes frost/openings. Misses and wrong answers grant no
+healing/control and retain these states. PvP continues through its original rules.
+
 ## Dark Dragon Ward
 
 - Replaces random full blocks with visible, deterministic layers.
 - Begins with 2 layers. From phase two (60% HP), reforms with 3 layers.
 - Any correctly answered landed move breaks 1 layer; Flame Rush, full-tide
-  Tsunami and Chain spending at least 2 charge break 2.
+  Tsunami, Chain spending at least 2 charge and frost-consuming Glacial Claw break 2.
 - Shielded selected hits still deal 60% of their otherwise applicable damage.
 - The breaking hit remains shielded. The next selected hit gets a 1.35 multiplier
   instead of 0.6, then reforms the ward using the post-hit HP phase.
@@ -84,14 +118,19 @@ churn, but now means remaining layers; zero means an available opening.
 
 Fire body motion uses 800/900/1100/1400 ms timelines; water uses
 850/950/1150/1400 ms and electric uses 760/800/1050/1350 ms. The existing atlas strike
-pose at 36% is aligned with projectile arrival and actual damage. Timing travels
-with the attack effect; other starters and PvP timing retain the existing path.
+pose at 36% is aligned with projectile arrival and actual damage. Grass uses
+800/900/1100/1400 ms and tiger uses 800/950/1000/1400 ms on the same clock.
+Timing travels with the attack effect; wolf, lion and PvP retain the existing path.
 No added animation loop, particle population, dependency or sprite download.
 
 Authored balance data is validated at module load in development and Node/CI.
 The production build tree-shakes the validator, rather than paying for a complete
 schema walk on every startup. The normal test suite still imports and validates
 the entire config, including the new resource thresholds.
+
+Battle UI strings use the eager default dictionary instead of duplicate inline
+translations. Tests verify all literal keys exist in both locales; no locale,
+effect quality or bundle ceiling is removed to make room for the new rules.
 
 ## Validation
 
@@ -107,6 +146,11 @@ the entire config, including the new resource thresholds.
   one frozen turn. Electric sub-slot 1 spends one charge, 2 auto-discharges and
   resets, and charged 3 breaks two ward layers; small-screen English card text
   stays within its buttons. Enemy turns and audio are still fixture stubs.
+- Third rollout: tiger 0 -> 1 -> 1 yields two enemy turns and exactly one frozen
+  turn using the real freeze controller. Grass sub-slot 1 -> 2 heals 60 -> 66 -> 84
+  at mastery 3, leaves the main at 100 and consumes the opening. DOM inspection
+  confirms the physical sub is attacking while the main remains idle. English
+  cards fit at 320x568; 390x844, 568x320 and 1280x720 keep actors clear of menus.
 - No horizontal page overflow in those viewports. On short screens the operation
   panel scrolls independently, leaving actors and HP bars visible.
 - The fixture is temporary and does not write game saves. It stubs enemy turns

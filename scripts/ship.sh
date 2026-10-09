@@ -9,20 +9,21 @@ if [ -z "$MSG" ]; then
   exit 1
 fi
 
-# ── 2. 品質檢查 ─────────────────────────────────────────────
-echo "🔍 Running lint + typecheck + tests..."
-npm run lint
-npm run typecheck
-npm test
+# Stage only the intended source changes before shipping. Packaging comes first,
+# so a failed quality gate/build must not publish a broken revision.
+if git diff --cached --quiet; then
+  echo "Stage the intended changes with git add before running ship."
+  exit 1
+fi
+if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+  echo "Unstaged changes exist. Stage only the intended release before shipping."
+  exit 1
+fi
+npm run package:release
 
 # ── 3. Git commit + push ────────────────────────────────────
 echo "📦 Committing & pushing..."
-git add -A
 git commit -m "$MSG"
 git push
-
-# ── 4. Release builds ──────────────────────────────────────
-echo "🚀 Building release targets..."
-npm run release:all
 
 echo "✅ Ship complete!"

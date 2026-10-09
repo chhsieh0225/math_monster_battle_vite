@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getFireTactic, planFireTactic, planElementTactic, getShadowWard, hitShadowWard, getBossSealPool } from './combatTactics.ts';
+import { getFireTactic, planFireTactic, planElementTactic, planNatureTactic, getShadowWard, hitShadowWard, getBossSealPool } from './combatTactics.ts';
 import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
 import { validateBalanceConfigSchema } from '../data/balanceConfigSchema.ts';
 
@@ -128,6 +128,43 @@ test('new tactics reject invalid slots, ignore PvP/other actors and bound malfor
 test('new resource balance validates integer capacities, power bounds and reachable thresholds', () => {
   for (const [kind, key, value] of [['water', 'maxTide', 0], ['water', 'surgeStacks', 1.5],
     ['water', 'surgeDamageScale', 2], ['electric', 'pulseBonus', Infinity], ['electric', 'finisherWardAt', 4]]) {
+    const config = structuredClone(BALANCE_CONFIG);
+    config.tactics[kind][key] = value;
+    assert.throws(() => validateBalanceConfigSchema(config), /tactics/);
+  }
+});
+
+test('grass choices trade damage for healing and reward existing openings without new counters', () => {
+  for (const mode of ['single', 'coop', 'double']) {
+    assert.equal(planNatureTactic('grass', mode, 0, 3).heal, 12);
+    assert.equal(planNatureTactic('grass', mode, 0, 3).powerScale, .85);
+    assert.equal(planNatureTactic('grass', mode, 1, 3).nextExposed, true);
+    assert.equal(planNatureTactic('grass', mode, 2, 3).heal, 6);
+    assert.equal(planNatureTactic('grass', mode, 2, 3, true).heal, 18);
+    assert.equal(planNatureTactic('grass', mode, 3, 3).heal, 24);
+  }
+});
+
+test('tiger chooses setup, control or shatter; guaranteed control spends frost and never renews it', () => {
+  for (const marked of [false, true]) {
+    const plans = [0, 1, 2, 3].map(i => planNatureTactic('tiger', 'single', i, 1, false, marked));
+    assert.deepEqual(plans.map(p => p.nextShattered), [true, false, false, false]);
+    assert.deepEqual(plans.map(p => p.shatterScale), [0, 0, 1.5, 1]);
+    assert.deepEqual(plans.map(p => p.guaranteedFreeze), [false, marked, false, marked]);
+    assert.deepEqual(plans.map(p => p.allowFreezeRoll), [false, false, false, !marked]);
+    assert.equal(plans[2].wardBreak, marked ? 2 : 1);
+  }
+});
+
+test('nature plans exclude PvP/unknown actors, reject invalid slots, and bound healing levels', () => {
+  for (const id of ['grass', 'tiger']) {
+    assert.equal(planNatureTactic(id, 'pvp', 0), null);
+    for (const idx of [-1, 4, NaN, .5]) assert.equal(planNatureTactic(id, 'single', idx), null);
+  }
+  assert.equal(planNatureTactic('wolf', 'single', 0), null);
+  for (const level of [-1, NaN, Infinity]) assert.equal(planNatureTactic('grass', 'single', 0, level).heal, 4);
+  assert.equal(planNatureTactic('grass', 'single', 3, 99).heal, 48);
+  for (const [kind, key, value] of [['grass', 'leafHealScale', Infinity], ['grass', 'leafDamageScale', 2], ['tiger', 'clawShatterScale', 0]]) {
     const config = structuredClone(BALANCE_CONFIG);
     config.tactics[kind][key] = value;
     assert.throws(() => validateBalanceConfigSchema(config), /tactics/);

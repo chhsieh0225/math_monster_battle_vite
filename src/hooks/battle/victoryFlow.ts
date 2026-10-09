@@ -2,6 +2,7 @@ import type { AchievementId } from '../../types/game';
 import { addToCollection, type CollectionAddResult } from '../../utils/collectionStore.ts';
 import { resolveBattleDrop } from '../../utils/dropResolver.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
+import { expeditionBonusDrops, expeditionXpMult } from '../../utils/expeditionRun.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -21,6 +22,9 @@ type EnemyLite = {
   mType?: string;
   sceneMType?: string;
   campaignBranch?: 'left' | 'right';
+  campaignRegion?: string;
+  campaignTier?: 'normal' | 'elite' | 'boss';
+  campaignEventTag?: 'healing_spring' | 'focus_surge' | 'hazard_ambush' | null;
 };
 
 type BattleState = {
@@ -146,7 +150,8 @@ export function runVictoryFlow({
   setSealedMove(-1);
   setSealedTurns(0);
 
-  const xp = (enemy.lvl || 1) * 15;
+  // Expedition elites pay more EXP for the extra risk.
+  const xp = Math.round((enemy.lvl || 1) * 15 * expeditionXpMult(enemy));
   const progress = resolveLevelProgress({
     currentExp: s.pExp || 0,
     currentLevel: s.pLvl || 1,
@@ -172,21 +177,27 @@ export function runVictoryFlow({
   applyVictoryAchievements({ state: s, tryUnlock });
 
   const dropPool = Array.isArray(enemy.drops) && enemy.drops.length > 0 ? enemy.drops : [''];
-  const dropResult = resolveBattleDrop({
-    enemyId: enemy.id,
-    enemyDrops: dropPool,
-    campaignBranch: enemy.campaignBranch ?? null,
-    sceneType: enemy.sceneMType || enemy.mType || null,
-    randInt,
-  });
-  const drop = dropResult.drop;
-  if (drop && typeof onDropResolved === 'function') {
-    onDropResolved(drop);
+  // Expedition elites and ambushes pay out extra drops.
+  const dropCount = 1 + expeditionBonusDrops(enemy);
+  const drops: string[] = [];
+  for (let i = 0; i < dropCount; i += 1) {
+    const dropResult = resolveBattleDrop({
+      enemyId: enemy.id,
+      enemyDrops: dropPool,
+      campaignBranch: enemy.campaignBranch ?? null,
+      sceneType: enemy.sceneMType || enemy.mType || null,
+      randInt,
+    });
+    if (dropResult.drop) drops.push(dropResult.drop);
+  }
+  const drop = drops.join('');
+  if (typeof onDropResolved === 'function') {
+    drops.forEach((item) => onDropResolved(item));
   }
 
-  // Persist the drop to the collection store (best-effort).
-  if (drop) {
-    const result = addToCollection([drop]);
+  // Persist the drops to the collection store (best-effort).
+  if (drops.length > 0) {
+    const result = addToCollection(drops);
     if (typeof onCollectionUpdated === 'function') {
       onCollectionUpdated(result);
     }

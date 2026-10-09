@@ -252,6 +252,7 @@ function createTestContext(stateOverrides = {}) {
     shadowShieldCD: 2,
     enemyExposed: false,
     tideStack: 0,
+    shattered: false,
     eHp: 500,
     burnStack: 0,
     staticStack: 0,
@@ -328,7 +329,7 @@ function createTestContext(stateOverrides = {}) {
     setPHp: pHp.setter,
     setPHpSub: pHpSub.setter,
     setFrozen: frozen.setter,
-    setShattered: () => {},
+    setShattered: (value) => { state.shattered = value; },
     frozenR: { current: false },
     setStaticStack: staticStack.setter,
     setEHp: eHp.setter,
@@ -530,7 +531,9 @@ test('runPlayerAnswer wrong non-risky path resets streak and calls enemy turn', 
   assert.equal(counters.charge.getValue(), 0);
   assert.equal(calls.sfx.includes('wrong'), true);
   assert.equal(calls.bText.includes('Attack missed!'), true);
-  assert.equal(calls.phase.includes('text'), true);
+  // The explanation stays on screen (review phase) until the player taps.
+  assert.equal(calls.phase.includes('review'), true);
+  assert.equal(calls.phase.includes('text'), false);
   assert.equal(calls.doEnemyTurn, 0);
   assert.equal(hasPendingTextAdvanceAction(), true);
   assert.equal(runPendingTextAdvanceAction(), true);
@@ -577,7 +580,7 @@ test('runPlayerAnswer wrong path tolerates missing question payload', () => {
 
   assert.deepEqual(calls.fb[0], { correct: false, answer: undefined, steps: [] });
   assert.equal(counters.tw.getValue(), 1);
-  assert.equal(calls.phase.includes('text'), true);
+  assert.equal(calls.phase.includes('review'), true);
   assert.equal(calls.doEnemyTurn, 0);
   assert.equal(hasPendingTextAdvanceAction(), true);
   assert.equal(runPendingTextAdvanceAction(), true);
@@ -611,6 +614,7 @@ test('runPlayerAnswer wrong path ignores stale delayed callback after battle end
 
   assert.equal(calls.doEnemyTurn, 0);
   assert.equal(calls.phase.includes('text'), false);
+  assert.equal(calls.phase.includes('review'), false);
   assert.equal(calls.bText.length, 0);
   assert.equal(hasPendingTextAdvanceAction(), false);
   assert.equal(runPendingTextAdvanceAction(), false);
@@ -944,5 +948,128 @@ test('leaving during new element travel cancels resources, control and damage', 
     assert.equal(ctx.calls.handleFreeze, 0);
     assert.equal(ctx.calls.doEnemyTurn, 0);
     assert.ok(ctx.calls.atkEffect.every(fx => !fx?.impact));
+  }
+});
+
+for (const slot of ['main', 'sub']) {
+  test(`grass healing belongs to the physical ${slot}, grows with mastery, and exploits openings once`, () => {
+    for (const level of [1, 3, 6]) for (const [idx, opening, expected] of [[0, false, 4], [1, false, 2], [2, false, 2], [2, true, 6], [3, false, 8]]) {
+      const ctx = elementStrike('grass', idx, { pHp: 30, pHpSub: 30, mLvls: Array(4).fill(level), enemyExposed: opening }, { slot });
+      assert.equal(ctx.state[slot === 'main' ? 'pHp' : 'pHpSub'], 30 + expected * level);
+      assert.equal(ctx.state[slot === 'main' ? 'pHpSub' : 'pHp'], 30);
+      assert.equal(ctx.state.enemyExposed, idx === 1);
+    }
+  });
+
+  test(`grass heals actual missing HP for ${slot}, including before batched boss retaliation`, () => {
+    const capped = elementStrike('grass', 3, { pHp: 104, pHpSub: 104 }, { slot });
+    assert.equal(capped.state[slot === 'main' ? 'pHp' : 'pHpSub'], 105);
+    assert.ok(capped.calls.damage.some(d => d.value === '+1'));
+    assert.ok(!capped.calls.damage.some(d => d.value === '+8'));
+    const full = elementStrike('grass', 3, { pHp: 105, pHpSub: 105 }, { slot });
+    assert.ok(!full.calls.sfx.includes('heal'));
+    let hp = 30;
+    const history = [];
+    const ctx = elementStrike('grass', 3, { pHp: 30, pHpSub: 30, bossCharging: true,
+      enemy: { id: 'boss', mType: 'grass', maxHp: 2000 } }, {
+      slot, [slot === 'main' ? 'setPHp' : 'setPHpSub']: (value) => {
+        hp = typeof value === 'function' ? value(hp) : value;
+        history.push(hp);
+      },
+    });
+    const counter = ctx.calls.damage.find(d => d.value.startsWith('⚠️-'));
+    assert.equal(history[0], 38);
+    assert.equal(hp, 38 - Number(counter.value.split('-')[1]));
+  });
+
+  test(`tiger ${slot} converts frost into one freeze or enhanced shatter, never both on Mirror`, () => {
+    const setup = elementStrike('tiger', 0, {}, { slot });
+    assert.equal(setup.state.shattered, true);
+    assert.equal(setup.calls.handleFreeze, 0);
+    assert.equal(setup.calls.doEnemyTurn, 1);
+    const repeat = elementStrike('tiger', 0, { shattered: true }, { slot });
+    assert.equal(repeat.state.eHp, setup.state.eHp);
+    assert.equal(repeat.state.shattered, true);
+    for (const idx of [1, 2, 3]) {
+      const empty = elementStrike('tiger', idx, {}, { slot });
+      const marked = elementStrike('tiger', idx, { shattered: true }, { slot });
+      const bonus = idx === 1 ? 0 : Math.min(Math.round((2000 - empty.state.eHp) * .25 * (idx === 2 ? 1.5 : 1)), idx === 2 ? 24 : 16);
+      assert.equal(empty.state.eHp - marked.state.eHp, bonus);
+      assert.equal(marked.state.shattered, false);
+      assert.equal(marked.calls.handleFreeze, idx === 2 ? 0 : 1);
+      assert.equal(marked.calls.doEnemyTurn, idx === 2 ? 1 : 0);
+      assert.equal(empty.calls.handleFreeze, 0);
+    }
+  });
+}
+
+test('grass recovery basic trades damage; vine opening can be exploited by a different party member', () => {
+  const legacy = elementStrike('grass', 0, {}, { starter: { type: 'grass' } });
+  const leaf = elementStrike('grass', 0);
+  assert.equal(2000 - leaf.state.eHp, Math.round((2000 - legacy.state.eHp) * .85));
+  const vine = elementStrike('grass', 1);
+  const followup = elementStrike('tiger', 2, { enemyExposed: vine.state.enemyExposed });
+  const baseline = elementStrike('tiger', 2);
+  assert.ok(followup.state.eHp < baseline.state.eHp);
+  assert.equal(followup.state.enemyExposed, false);
+});
+
+test('tiger claw breaks two ward layers only with frost; defeated enemies cannot receive new control/marks', () => {
+  for (const marked of [false, true]) {
+    const ctx = elementStrike('tiger', 2, { shattered: marked, enemy: { id: 'boss', mType: 'ice', maxHp: 2000 } });
+    assert.equal(ctx.state.shadowShieldCD, marked ? 0 : 1);
+    assert.equal(ctx.state.shattered, false);
+  }
+  for (const idx of [0, 1, 3]) {
+    const dead = elementStrike('tiger', idx, { eHp: 1, shattered: true });
+    assert.equal(dead.calls.handleVictory.length, 1);
+    assert.equal(dead.calls.handleFreeze, 0);
+    assert.equal(dead.state.shattered, false);
+  }
+});
+
+test('frost can be shattered by another chosen actor; tiger finishers do not recreate frost on random freeze', () => {
+  const normal = elementStrike('grass', 1);
+  const frosted = elementStrike('grass', 1, { shattered: true });
+  assert.ok(frosted.state.eHp < normal.state.eHp);
+  assert.equal(frosted.state.shattered, false);
+  const freeze = elementStrike('tiger', 3, {}, { chance: () => true });
+  assert.equal(freeze.calls.handleFreeze, 1);
+  assert.equal(freeze.state.shattered, false);
+});
+
+test('wrong answers and misses preserve frost/openings and never heal or freeze', () => {
+  for (const id of ['grass', 'tiger']) for (const missed of [false, true]) {
+    const ctx = elementStrike(id, 1, { pHp: 30, shattered: true, enemyExposed: true,
+      enemy: { id: 'ghost', trait: 'phantom', maxHp: 2000 } }, { correct: missed, chance: () => missed });
+    assert.equal(ctx.state.pHp, 30);
+    assert.equal(ctx.state.shattered, true);
+    assert.equal(ctx.state.enemyExposed, true);
+    assert.equal(ctx.state.eHp, 2000);
+    assert.equal(ctx.calls.handleFreeze, 0);
+  }
+});
+
+test('nature contact captures sub actor; leaving during travel prevents all tactical changes', () => {
+  for (const id of ['grass', 'tiger']) for (const exit of [false, true]) {
+    const clock = createClock();
+    const animations = [];
+    const ctx = elementStrike(id, 1, { shattered: true, pHpSub: 30 }, {
+      slot: 'sub', safeTo: clock.schedule, setPAnim: (value, slot) => animations.push({ value, slot }),
+    });
+    const motion = getPlayerSkillMotion(`${id}:1`);
+    const contact = 180 + motion.releaseMs + motion.flightMs;
+    ctx.state.coopActiveSlot = 'main';
+    clock.advance(contact - 1);
+    assert.equal(ctx.state.shattered, true);
+    assert.equal(ctx.state.pHpSub, 30);
+    if (exit) ctx.state.screen = 'title';
+    clock.advance(5000);
+    assert.ok(animations.every(a => a.slot === 'sub'));
+    assert.equal(ctx.state.shattered, exit);
+    assert.equal(ctx.state.pHpSub, !exit && id === 'grass' ? 32 : 30);
+    assert.equal(ctx.state.enemyExposed, !exit && id === 'grass');
+    assert.equal(ctx.calls.handleFreeze, !exit && id === 'tiger' ? 1 : 0);
+    assert.equal(ctx.calls.atkEffect.some(fx => fx?.impact), !exit);
   }
 });

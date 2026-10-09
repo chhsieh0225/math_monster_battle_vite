@@ -10,6 +10,9 @@ export default defineConfig([
     'dist',
     'dist_temp',
     'dist_temp2',
+    'release',
+    'old',
+    '**/*.app/**',
     'ios',
     'android',
     '.claude',
@@ -53,5 +56,16 @@ export default defineConfig([
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
+  },
+  {
+    files: ['scripts/*.ts'],
+    languageOptions: {
+      globals: globals.node,
+      parserOptions: { projectService: false, project: './tsconfig.tools.json' },
+    },
+  },
+  {
+    files: ['scripts/*.test.js'],
+    languageOptions: { globals: globals.node },
   },
 ])

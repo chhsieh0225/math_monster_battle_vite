@@ -22,6 +22,10 @@ const PLAYER_SKILL_BEATS: Record<string, [number, number]> = {
   'water:2': [1150, 320], 'water:3': [1400, 400],
   'electric:0': [760, 170], 'electric:1': [800, 120],
   'electric:2': [1050, 220], 'electric:3': [1350, 330],
+  'grass:0': [800, 210], 'grass:1': [900, 140],
+  'grass:2': [1100, 300], 'grass:3': [1400, 390],
+  'tiger:0': [800, 220], 'tiger:1': [950, 260],
+  'tiger:2': [1000, 130], 'tiger:3': [1400, 400],
 };
 
 /** Keep the atlas strike pose (36%) and projectile contact on the same clock. */

@@ -44,11 +44,16 @@ type UseBattleItemActionsArgs = {
   setDefAnim: (value: string | null) => void;
   safeTo: (fn: () => void, ms: number) => void;
   setInventory: Dispatch<SetStateAction<InventoryData>>;
+  /** Using an item spends the player's turn: the enemy acts after the player taps. */
+  endTurn: () => void;
+  /** Called once per successful use (playtest log). */
+  onItemUsed?: (itemId: ItemId) => void;
   t: Translator;
   sfx: SfxApi;
 };
 
-export function useBattleItemActions({
+/** Apply one item use. Pure aside from the injected setters, so it can be tested directly. */
+export function runUseItem({
   phase,
   battleMode,
   coopActiveSlot,
@@ -71,10 +76,11 @@ export function useBattleItemActions({
   setDefAnim,
   safeTo,
   setInventory,
+  endTurn,
+  onItemUsed,
   t,
   sfx,
-}: UseBattleItemActionsArgs) {
-  return useCallback((itemId: ItemId) => {
+}: UseBattleItemActionsArgs, itemId: ItemId): void {
     if (phase !== 'menu') return;
 
     const itemDef = ITEM_CATALOG[itemId];
@@ -93,6 +99,7 @@ export function useBattleItemActions({
     const itemName = itemId === 'shield'
       ? specDefItemName
       : t(itemDef.nameKey, itemDef.nameFallback);
+    const turnUsedText = '\n' + t('battle.item.turnUsed', '⏳ That used your turn. The opponent moves next!');
     const spendItem = (): boolean => {
       const result = consumeInventory(inventory, itemId, 1);
       if (!result.consumed) return false;
@@ -144,7 +151,7 @@ export function useBattleItemActions({
       setBText(t('battle.item.use.potion.heal', '{item} restored {hp} HP!', {
         item: itemName,
         hp: restored,
-      }));
+      }) + turnUsedText);
       setEffMsg({
         text: t('battle.item.use.potion.heal', '{item} restored {hp} HP!', {
           item: itemName,
@@ -153,6 +160,8 @@ export function useBattleItemActions({
         color: '#22c55e',
       });
       sfx.play('heal');
+      onItemUsed?.(itemId);
+      endTurn();
       return;
     }
 
@@ -191,7 +200,7 @@ export function useBattleItemActions({
       setBText(t('battle.item.use.candy.heal', '{item} restored {hp} HP!', {
         item: itemName,
         hp: restored,
-      }));
+      }) + turnUsedText);
       setEffMsg({
         text: t('battle.item.use.candy.heal', '{item} restored {hp} HP!', {
           item: itemName,
@@ -200,6 +209,8 @@ export function useBattleItemActions({
         color: '#22c55e',
       });
       sfx.play('heal');
+      onItemUsed?.(itemId);
+      endTurn();
       return;
     }
 
@@ -223,7 +234,7 @@ export function useBattleItemActions({
       safeTo(() => setDefAnim(null), 280);
       setBText(t('battle.item.use.shield.ready', '{item} activated! Next hit will be blocked.', {
         item: itemName,
-      }));
+      }) + turnUsedText);
       setEffMsg({
         text: t('battle.item.use.shield.ready', '{item} activated! Next hit will be blocked.', {
           item: itemName,
@@ -231,6 +242,8 @@ export function useBattleItemActions({
         color: '#22c55e',
       });
       sfx.play('specDef');
+      onItemUsed?.(itemId);
+      endTurn();
       return;
     }
 
@@ -238,7 +251,10 @@ export function useBattleItemActions({
       text: t('battle.item.use.none', 'No {item} left.', { item: itemName }),
       color: '#ef4444',
     });
-  }, [
+}
+
+export function useBattleItemActions(args: UseBattleItemActionsArgs) {
+  const {
     phase,
     battleMode,
     coopActiveSlot,
@@ -261,6 +277,63 @@ export function useBattleItemActions({
     setDefAnim,
     safeTo,
     setInventory,
+    endTurn,
+    onItemUsed,
+    t,
+    sfx,
+  } = args;
+  return useCallback((itemId: ItemId) => runUseItem({
+    phase,
+    battleMode,
+    coopActiveSlot,
+    allySub,
+    pHpSub,
+    pHp,
+    pLvl,
+    pStg,
+    inventory,
+    specDef,
+    starter,
+    sr,
+    getActingStarter,
+    getPlayerMaxHp,
+    setPHpSub,
+    setPHp,
+    setBText,
+    setEffMsg,
+    setSpecDef,
+    setDefAnim,
+    safeTo,
+    setInventory,
+    endTurn,
+    onItemUsed,
+    t,
+    sfx,
+  }, itemId), [
+    phase,
+    battleMode,
+    coopActiveSlot,
+    allySub,
+    pHpSub,
+    pHp,
+    pLvl,
+    pStg,
+    inventory,
+    specDef,
+    starter,
+    sr,
+    getActingStarter,
+    getPlayerMaxHp,
+    setPHpSub,
+    setPHp,
+    setBText,
+    setEffMsg,
+    setSpecDef,
+    setDefAnim,
+    safeTo,
+    setInventory,
+    endTurn,
+    onItemUsed,
     t,
     sfx,
   ]);

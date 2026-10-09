@@ -8,6 +8,11 @@ import type {
 import type { EnemyPersonality } from '../data/enemyPersonalities';
 import type { LearningQuestionMeta } from '../utils/learningProgress';
 import type { AttackImpactEvent } from '../utils/effectTiming';
+import type { ExpeditionRun } from '../utils/expeditionRun';
+import type { WorldProgress } from '../utils/worldProgress';
+import type { ExpeditionId } from '../data/worldMap';
+import type { Grade } from '../data/gradeCurriculum';
+import type { PlayerProfile } from '../utils/playerProfile';
 import type {
   DailyChallengeFeedback,
   DailyChallengePlan,
@@ -32,6 +37,9 @@ export type ScreenName =
   | "leaderboard"
   | "pvp_result"
   | "evolve"
+  | "worldmap"
+  | "placement"
+  | "spring"
   | "gameover";
 
 export type BattlePhase =
@@ -39,6 +47,8 @@ export type BattlePhase =
   | "bossIntro"
   | "bossVictory"
   | "question"
+  /** Wrong answer / timeout: explanation stays on screen until the player taps. */
+  | "review"
   | "text"
   | "playerAtk"
   | "enemyAtk"
@@ -116,6 +126,8 @@ export type EnemyVm = {
   campaignBranch?: 'left' | 'right';
   campaignEventTag?: 'healing_spring' | 'focus_surge' | 'hazard_ambush' | null;
   campaignPathKey?: string;
+  /** World-map region of an expedition enemy; unset outside expeditions. */
+  campaignRegion?: string;
 };
 
 export type QuestionVm = {
@@ -329,6 +341,14 @@ export type UseBattleState = {
   collectionPopup: CollectionPopupVm | null;
   encData: EncyclopediaData;
   hintsRevealed: number;
+  /** Normal / timed single play goes through the world map. */
+  worldMapEnabled: boolean;
+  worldProgress: WorldProgress;
+  expeditionRun: ExpeditionRun | null;
+  /** Element of the last hit that connected with the enemy; picks its defeat animation. */
+  enemyFinisherType: string | null;
+  /** The child's grade from the placement check; null until placed. */
+  playerGrade: Grade | null;
 };
 
 export type UseBattleActions = {
@@ -359,6 +379,17 @@ export type UseBattleActions = {
   rmD: (id: number) => void;
   rmP: (id: number) => void;
   resumeFromSave: () => void;
+  openWorldMap: () => void;
+  startExpedition: (id: ExpeditionId) => void;
+  chooseRoute: (lane: number) => void;
+  pauseExpedition: () => void;
+  setPlayerProfile: (profile: PlayerProfile) => void;
+  finishSpring: (result: SpringResult) => void;
+};
+
+/** What happened at the review spring. */
+export type SpringResult = {
+  answers: Array<{ correct: boolean; op: string; display: string; answerTimeMs: number; reason: string }>;
 };
 
 export type UseBattleView = {

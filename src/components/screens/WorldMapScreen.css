@@ -126,6 +126,18 @@
   -webkit-user-drag: none;
 }
 
+.wm-map-tile {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  -webkit-user-drag: none;
+}
+
+.wm-map-tile.is-loaded {
+  opacity: 1;
+}
+
 .wm-lines {
   position: absolute;
   inset: 0;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
-import MonsterSprite from '../ui/MonsterSprite';
+import MonsterPortrait from '../ui/MonsterPortrait';
+import { getSpriteProfileKey } from '../../data/sprites.ts';
 import { STARTERS } from '../../data/starters.ts';
 import { VERSION } from '../../data/constants';
 import { BG_IMGS, BG_IMGS_LOW } from '../../data/sprites.ts';
@@ -202,7 +203,7 @@ export default function TitleScreen({
           {row1.map((s, i) => (
             <div key={s.id} className={`title-monster-float title-monster-float-${i}`}>
               <div className={`title-monster-face${spriteRandomConfig.flipById[s.id] ? ' is-flipped' : ''}`}>
-                <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={(['wolf', 'tiger', 'lion'].includes(s.id)) ? 78 : 60} ariaLabel={`${s.name} ${t('a11y.sprite.default', 'Monster sprite')}`} noFilter />
+                <MonsterPortrait profileKey={getSpriteProfileKey(s.stages[0].svgFn)} svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={(['wolf', 'tiger', 'lion'].includes(s.id)) ? 78 : 60} ariaLabel={`${s.name} ${t('a11y.sprite.default', 'Monster sprite')}`} />
               </div>
             </div>
           ))}
@@ -211,7 +212,7 @@ export default function TitleScreen({
           {row2.map((s, i) => (
             <div key={s.id} className={`title-monster-float title-monster-float-${i + 3}`}>
               <div className={`title-monster-face${spriteRandomConfig.flipById[s.id] ? ' is-flipped' : ''}`}>
-                <MonsterSprite svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={(['wolf', 'tiger', 'lion'].includes(s.id)) ? 78 : 60} ariaLabel={`${s.name} ${t('a11y.sprite.default', 'Monster sprite')}`} noFilter />
+                <MonsterPortrait profileKey={getSpriteProfileKey(s.stages[0].svgFn)} svgStr={s.stages[0].svgFn(s.c1, s.c2)} size={(['wolf', 'tiger', 'lion'].includes(s.id)) ? 78 : 60} ariaLabel={`${s.name} ${t('a11y.sprite.default', 'Monster sprite')}`} />
               </div>
             </div>
           ))}

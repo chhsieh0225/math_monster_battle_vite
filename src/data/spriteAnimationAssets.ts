@@ -226,7 +226,13 @@ const BASE = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL || '
 export function getSpriteAnimationAsset(profileKey?: string) {
   const profile = profileKey ? getProfile(profileKey) : undefined;
   const art = profile ? registry[profile.imgKey] : undefined;
-  return profile && art ? { profile, art, src: `${BASE}sprites/visual-pilot/${art.file}` } : null;
+  return profile && art ? {
+    profile,
+    art,
+    src: `${BASE}sprites/visual-pilot/${art.file}`,
+    /** Idle pose alone (cell 0), small: for menus, the encyclopedia and the map. */
+    portrait: `${BASE}sprites/portraits/${art.file}`,
+  } : null;
 }
 
 export function getSpriteAtlasEnvelope(profile: SpriteProfile) {

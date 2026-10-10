@@ -117,8 +117,9 @@ function makeSvgFromProfile(p: SpriteProfile): SvgFactory {
 // Helper to build from a profile key (SVG export name).
 const profileKeys = new WeakMap<SvgFactory, string>();
 
-export function getSpriteProfileKey(factory: SvgFactory): string | undefined {
-  return profileKeys.get(factory);
+/** Profile key of a sprite factory (any svgFn signature); undefined for non-registry art. */
+export function getSpriteProfileKey(factory: unknown): string | undefined {
+  return typeof factory === 'function' ? profileKeys.get(factory as SvgFactory) : undefined;
 }
 
 function fromProfile(name: string): SvgFactory {

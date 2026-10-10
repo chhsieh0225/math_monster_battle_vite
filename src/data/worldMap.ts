@@ -19,10 +19,18 @@ export type WorldRegion = {
   y: number;
 };
 
+export type MapTileLevel = { width: number; height: number; cols: number; rows: number; dir: string };
+
 export const WORLD_MAP_ART = {
   src: 'maps/world-map-v1.webp',
   width: 1536,
   height: 1024,
+  /** Sharper levels: a Real-ESRGAN x4plus upscale of the painting, cut into 512px tiles loaded only where you look. */
+  tileSize: 512,
+  levels: [
+    { width: 3072, height: 2048, cols: 6, rows: 4, dir: 'maps/world-map-v1/l1' },
+    { width: 6144, height: 4096, cols: 12, rows: 8, dir: 'maps/world-map-v1/l2' },
+  ] as readonly MapTileLevel[],
 } as const;
 
 export const WORLD_REGIONS: Record<RegionId, WorldRegion> = {

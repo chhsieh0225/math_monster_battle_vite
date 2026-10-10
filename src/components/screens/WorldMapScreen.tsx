@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import MonsterSprite from '../ui/MonsterSprite';
+import MonsterPortrait from '../ui/MonsterPortrait';
+import { getSpriteProfileKey } from '../../data/sprites.ts';
 import { useI18n } from '../../i18n';
 import { SCENE_NAMES } from '../../data/scenes';
 import { MONSTER_CONFIGS } from '../../data/monsterConfigs.ts';
@@ -26,6 +27,7 @@ import { createSecretQuestion } from '../../utils/secretLock.ts';
 import type { GeneratedQuestion } from '../../utils/questionGenerator.ts';
 import { needsEqualPrompt, renderMathText } from '../ui/MathText';
 import { useMapZoom } from './useMapZoom.ts';
+import { useMapTiles } from './useMapTiles.ts';
 import type { StarterVm } from '../../types/battle';
 import {
   buildExpeditionCards,
@@ -67,6 +69,7 @@ function bossInfo(bossId: string, locale: string) {
   return {
     name: (isEnglishLocale(locale) ? config?.nameEn : config?.name) || bossId,
     svg: sprite && config ? sprite(config.c1, config.c2) : '',
+    spriteKey: config?.spriteKey,
   };
 }
 
@@ -109,6 +112,8 @@ export default function WorldMapScreen({
   const { zoom, zoomIn, zoomOut, reset: resetZoom } = useMapZoom(viewportRef);
   // View mode hides the choice panel so the whole illustration can be enjoyed.
   const [viewOnly, setViewOnly] = useState(false);
+  // Sharper tiles of the painting for whatever part is on screen at this zoom.
+  const sharp = useMapTiles(viewportRef, BASE_URL, [zoom, viewOnly]);
   const focusRegion: RegionId | null = routeMode
     ? selectedChoice?.option.region ?? currentRegion
     : activeExpedition?.region ?? null;
@@ -134,6 +139,7 @@ export default function WorldMapScreen({
   const starterSvg = starter?.stages?.[stageIdx]?.svgFn
     ? starter.stages[stageIdx].svgFn(starter.c1, starter.c2)
     : '';
+  const starterProfileKey = starter?.stages?.[stageIdx]?.svgFn ? getSpriteProfileKey(starter.stages[stageIdx].svgFn) : undefined;
   const tokenRegion: RegionId = routeMode ? currentRegion ?? 'grass' : 'grass';
   const hpPct = Math.max(0, Math.min(100, (pHp / Math.max(1, maxHp)) * 100));
 
@@ -238,7 +244,7 @@ export default function WorldMapScreen({
         {enemy && (
           <span className="wm-choice-enemy">
             <span className="wm-choice-sprite">
-              <MonsterSprite svgStr={enemy.svgFn(enemy.c1, enemy.c2)} size={52} ariaLabel={enemy.name} />
+              <MonsterPortrait profileKey={enemy.activeSpriteKey ?? enemy.spriteKey} svgStr={enemy.svgFn(enemy.c1, enemy.c2)} size={52} ariaLabel={enemy.name} />
             </span>
             <span className="wm-choice-enemy-text">
               <span className="wm-choice-enemy-name">{enemy.name}</span>
@@ -342,6 +348,24 @@ export default function WorldMapScreen({
       <div className={`wm-viewport${zoom > 1 ? ' is-zoomed' : ''}`} ref={viewportRef}>
         <div className="wm-map" style={{ aspectRatio: `${WORLD_MAP_ART.width} / ${WORLD_MAP_ART.height}`, height: `${zoom * 100}%` }}>
           <img className="wm-map-art" src={MAP_SRC} alt="" draggable={false} decoding="async" />
+          {sharp.tiles.map((tile) => (
+            <img
+              key={tile.key}
+              className="wm-map-tile"
+              src={tile.src}
+              alt=""
+              draggable={false}
+              decoding="async"
+              onLoad={(event) => event.currentTarget.classList.add('is-loaded')}
+              style={{
+                left: `${tile.left * 100}%`,
+                top: `${tile.top * 100}%`,
+                // A hair of overlap hides sub-pixel seams between neighbours.
+                width: `${tile.width * 100 + 0.04}%`,
+                height: `${tile.height * 100 + 0.06}%`,
+              }}
+            />
+          ))}
           <svg className="wm-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {traveled.length > 1 && (
               <polyline className="wm-line-traveled" points={traveled.map(point).join(' ')} />
@@ -364,7 +388,7 @@ export default function WorldMapScreen({
               style={{ left: `${WORLD_REGIONS[tokenRegion].x}%`, top: `${WORLD_REGIONS[tokenRegion].y}%` }}
               aria-label={t('world.you', 'You are here')}
             >
-              <MonsterSprite svgStr={starterSvg} size={46} ariaLabel={starter?.name || ''} />
+              <MonsterPortrait profileKey={starterProfileKey} svgStr={starterSvg} size={46} ariaLabel={starter?.name || ''} />
             </div>
           )}
           {WORLD_SECRETS.map((item) => {
@@ -443,7 +467,7 @@ export default function WorldMapScreen({
                     aria-pressed={selected}
                   >
                     <span className="wm-exp-sprite">
-                      {boss.svg && <MonsterSprite svgStr={boss.svg} size={54} ariaLabel={boss.name} />}
+                      {boss.svg && <MonsterPortrait profileKey={boss.spriteKey} svgStr={boss.svg} size={54} ariaLabel={boss.name} />}
                     </span>
                     <span className="wm-exp-text">
                       <span className="wm-exp-chapter">{t('world.expedition.chapter', 'Chapter {n}', { n: card.order })}</span>

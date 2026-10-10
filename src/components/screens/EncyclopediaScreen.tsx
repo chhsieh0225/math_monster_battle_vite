@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
-import MonsterSprite from '../ui/MonsterSprite';
+import MonsterPortrait from '../ui/MonsterPortrait';
+import { getSpriteProfileKey } from '../../data/sprites.ts';
 import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia.ts';
 
 import { useI18n } from '../../i18n';
@@ -265,7 +266,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                     className={`enc-card ${seen ? 'is-seen' : 'is-hidden'} ${killed ? 'is-killed' : ''}`}
                   >
                     <div className={`enc-card-sprite-wrap ${seen ? '' : 'is-hidden'} ${getCompensation(e.spriteKey) > 1.1 ? 'is-large' : ''}`}>
-                      <MonsterSprite svgStr={e.svgFn(e.c1, e.c2)} size={encCardSpriteSize(e.spriteKey)} ariaLabel={seen
+                      <MonsterPortrait profileKey={e.spriteKey} svgStr={e.svgFn(e.c1, e.c2)} size={encCardSpriteSize(e.spriteKey)} ariaLabel={seen
                         ? t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: e.name })
                         : t('encyclopedia.a11y.unknownEnemySprite', 'Unknown monster sprite')} />
                     </div>
@@ -303,7 +304,8 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
                 >
                   <div className="enc-card-sprite-wrap">
                     <div className={`enc-starter-sprite-inner ${isBladewolfEntry(e) ? 'is-bladewolf' : ''}`}>
-                      <MonsterSprite
+                      <MonsterPortrait
+                        profileKey={getSpriteProfileKey(e.svgFn) ?? e.spriteKey}
                         svgStr={e.svgFn(e.c1, e.c2)}
                         size={encCardSpriteSize(e.spriteKey)}
                         style={starterFacingStyle()}
@@ -436,7 +438,7 @@ function DetailModal({ entry, enc, def, onClose }: DetailModalProps) {
           <div className="enc-modal-rarity">{entry.rarity}</div>
 
           <div className="enc-modal-sprite-wrap">
-            <MonsterSprite svgStr={entry.svgFn(entry.c1, entry.c2)} size={encModalSpriteSize(entry.spriteKey)} ariaLabel={t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: entry.name })} />
+            <MonsterPortrait profileKey={entry.spriteKey} svgStr={entry.svgFn(entry.c1, entry.c2)} size={encModalSpriteSize(entry.spriteKey)} ariaLabel={t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: entry.name })} />
           </div>
 
           <div className="enc-modal-name-wrap">
@@ -600,7 +602,8 @@ function StarterDetailModal({ entry, onClose }: StarterDetailModalProps) {
 
           <div className="enc-modal-sprite-wrap">
             <div className={`enc-starter-sprite-inner ${isBladewolfEntry(entry) ? 'is-bladewolf' : ''}`}>
-              <MonsterSprite
+              <MonsterPortrait
+                profileKey={getSpriteProfileKey(entry.svgFn) ?? entry.spriteKey}
                 svgStr={entry.svgFn(entry.c1, entry.c2)}
                 size={encModalSpriteSize(entry.spriteKey)}
                 style={starterFacingStyle()}

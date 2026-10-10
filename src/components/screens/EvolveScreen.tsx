@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
-import MonsterSprite from '../ui/MonsterSprite';
+import MonsterPortrait from '../ui/MonsterPortrait';
+import { getSpriteProfileKey } from '../../data/sprites.ts';
 import type { StarterLite } from '../../types/game';
 import { useI18n } from '../../i18n';
 import './EvolveScreen.css';
@@ -89,7 +90,7 @@ export default function EvolveScreen({ starter, stageIdx, onContinue }: EvolveSc
       <div className="evolve-front">
         <div className="evolve-title">{t("evolve.title", "Congrats! Your partner evolved!")}</div>
         <div className="evolve-emoji">{st.emoji}</div>
-        <div className="evolve-sprite-wrap"><div className="evolve-sprite-glow"><MonsterSprite svgStr={st.svgFn(starter.c1,starter.c2)} size={180}/></div></div>
+        <div className="evolve-sprite-wrap"><div className="evolve-sprite-glow"><MonsterPortrait profileKey={getSpriteProfileKey(st.svgFn)} svgStr={st.svgFn(starter.c1,starter.c2)} size={180}/></div></div>
         <div className="evolve-name">{st.name}</div>
         <div className="evolve-buff">{t("evolve.buff", "Attack up! HP recovered!")}</div>
         <button className="touch-btn evolve-continue-btn evolve-continue-btn-animated" onClick={onContinue} aria-label={t("a11y.common.continueBattle", "Continue battle")}>

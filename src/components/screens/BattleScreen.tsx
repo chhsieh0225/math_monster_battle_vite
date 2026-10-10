@@ -901,9 +901,11 @@ function BattleScreenComponent({
           paused={S.gamePaused}
           enemyName={enemy.name}
           enemySvg={eSvg}
+          enemyProfileKey={coreStatic.spriteProfiles.enemyMain}
           enemySize={eSize}
           enemySubName={coOpBossSubIntro ? S.enemySub?.name : undefined}
           enemySubSvg={coOpBossSubIntro ? (eSubSvg ?? undefined) : undefined}
+          enemySubProfileKey={coOpBossSubIntro ? coreStatic.spriteProfiles.enemySub : undefined}
           enemySubSize={coOpBossSubIntro ? enemySubSize : undefined}
           onComplete={handleAdvance}
         />

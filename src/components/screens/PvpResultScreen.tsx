@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
-import MonsterSprite from '../ui/MonsterSprite';
+import MonsterPortrait from '../ui/MonsterPortrait';
+import { getSpriteProfileKey } from '../../data/sprites.ts';
 import type { StarterLite, StarterStage } from '../../types/game';
 import { useI18n } from '../../i18n';
 import './PvpResultScreen.css';
@@ -109,7 +110,7 @@ export default function PvpResultScreen({
         </div>
         <div className="pvp-result-winner-sprite-wrap">
           <div className="pvp-result-winner-sprite-glow">
-            <MonsterSprite svgStr={winnerStage?.svgFn?.(winnerStarter?.c1 || "#6366f1", winnerStarter?.c2 || "#a855f7") || ""} size={180} ariaLabel={`${t("pvpResult.title", "🏆 Winner")} ${winnerName}`} />
+            <MonsterPortrait profileKey={winnerStage?.svgFn ? getSpriteProfileKey(winnerStage.svgFn) : undefined} svgStr={winnerStage?.svgFn?.(winnerStarter?.c1 || "#6366f1", winnerStarter?.c2 || "#a855f7") || ""} size={180} ariaLabel={`${t("pvpResult.title", "🏆 Winner")} ${winnerName}`} />
           </div>
         </div>
       </div>
@@ -118,7 +119,7 @@ export default function PvpResultScreen({
         <div className="pvp-result-loser-wrap">
           <div className="pvp-result-loser-label">{t("pvpResult.opponent", "Opponent")}</div>
           <div className="pvp-result-loser-row">
-            <MonsterSprite svgStr={loserStage.svgFn(loserStarter?.c1 || "#64748b", loserStarter?.c2 || "#475569")} size={58} ariaLabel={`${t("pvpResult.opponent", "Opponent")} ${loserName}`} />
+            <MonsterPortrait profileKey={getSpriteProfileKey(loserStage.svgFn)} svgStr={loserStage.svgFn(loserStarter?.c1 || "#64748b", loserStarter?.c2 || "#475569")} size={58} ariaLabel={`${t("pvpResult.opponent", "Opponent")} ${loserName}`} />
             <div className="pvp-result-loser-name">{loserStarter?.typeIcon} {loserName}</div>
           </div>
         </div>

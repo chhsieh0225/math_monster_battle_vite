@@ -1,13 +1,15 @@
 import { memo, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '../../../i18n';
-import MonsterSprite from '../../ui/MonsterSprite.tsx';
+import MonsterPortrait from '../../ui/MonsterPortrait';
 
 type BossIntroOverlayProps = {
   enemyName: string;
   enemySvg: string;
+  enemyProfileKey?: string;
   enemySize: number;
   enemySubName?: string;
   enemySubSvg?: string;
+  enemySubProfileKey?: string;
   enemySubSize?: number;
   paused?: boolean;
   onComplete: () => void;
@@ -29,9 +31,11 @@ type BossIntroOverlayProps = {
 export const BossIntroOverlay = memo(function BossIntroOverlay({
   enemyName,
   enemySvg,
+  enemyProfileKey,
   enemySize,
   enemySubName,
   enemySubSvg,
+  enemySubProfileKey,
   enemySubSize,
   paused = false,
   onComplete,
@@ -93,14 +97,16 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
         <div className="boss-intro-silhouette boss-intro-silhouette-main">
           <div className="boss-intro-sprite-stack">
             <div className="boss-intro-sprite boss-intro-sprite-shadow">
-              <MonsterSprite
+              <MonsterPortrait
+                profileKey={enemyProfileKey}
                 svgStr={enemySvg}
                 size={introMainSize}
                 decorative
               />
             </div>
             <div className="boss-intro-sprite boss-intro-sprite-color">
-              <MonsterSprite
+              <MonsterPortrait
+                profileKey={enemyProfileKey}
                 svgStr={enemySvg}
                 size={introMainSize}
                 decorative
@@ -112,14 +118,16 @@ export const BossIntroOverlay = memo(function BossIntroOverlay({
           <div className="boss-intro-silhouette boss-intro-silhouette-sub">
             <div className="boss-intro-sprite-stack">
               <div className="boss-intro-sprite boss-intro-sprite-shadow">
-                <MonsterSprite
+                <MonsterPortrait
+                  profileKey={enemySubProfileKey}
                   svgStr={enemySubSvg}
                   size={introSubSize}
                   decorative
                 />
               </div>
               <div className="boss-intro-sprite boss-intro-sprite-color">
-                <MonsterSprite
+                <MonsterPortrait
+                  profileKey={enemySubProfileKey}
                   svgStr={enemySubSvg}
                   size={introSubSize}
                   decorative

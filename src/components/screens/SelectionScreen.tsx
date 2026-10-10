@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { isStarterRecommended, type Grade } from '../../data/gradeCurriculum.ts';
 import type { CSSProperties } from 'react';
-import MonsterSprite from '../ui/MonsterSprite';
+import MonsterPortrait from '../ui/MonsterPortrait';
+import { getSpriteProfileKey } from '../../data/sprites.ts';
 import { STARTERS } from '../../data/starters.ts';
 import { PVP_SELECTABLE_ROSTER } from '../../data/pvpRoster.ts';
 import type {
@@ -457,7 +458,8 @@ export default function SelectionScreen({
                     key={`${starter.id}_stage_${selectedStageIdx}_${selected ? 'selected' : 'idle'}`}
                     className={`selection-card-sprite-inner ${selected && selectedStageIdx > 0 ? 'is-evolved-flip' : ''}`}
                   >
-                    <MonsterSprite
+                    <MonsterPortrait
+                      profileKey={getSpriteProfileKey(selectedStage.svgFn)}
                       svgStr={selectedStage.svgFn(starter.c1, starter.c2)}
                       size={spriteSize}
                       ariaLabel={locked

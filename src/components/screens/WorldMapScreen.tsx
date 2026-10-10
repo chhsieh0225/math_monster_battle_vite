@@ -17,7 +17,15 @@ import {
 } from '../../data/worldMap.ts';
 import { isEnglishLocale, localizeSceneName } from '../../utils/contentLocalization.ts';
 import { isSpringOption, nextExpeditionFloor, type ExpeditionRun } from '../../utils/expeditionRun.ts';
-import { isRegionDiscovered, type WorldProgress } from '../../utils/worldProgress.ts';
+import { isRegionDiscovered, isSecretFound, type WorldProgress } from '../../utils/worldProgress.ts';
+import { SECRET_REVEAL_ZOOM, WORLD_SECRETS, getSecret, type SecretId } from '../../data/worldSecrets.ts';
+import { ITEM_CATALOG } from '../../data/itemCatalog.ts';
+import type { Grade } from '../../data/gradeCurriculum.ts';
+import type { ItemId } from '../../types/game';
+import { createSecretQuestion } from '../../utils/secretLock.ts';
+import type { GeneratedQuestion } from '../../utils/questionGenerator.ts';
+import { needsEqualPrompt, renderMathText } from '../ui/MathText';
+import { useMapZoom } from './useMapZoom.ts';
 import type { StarterVm } from '../../types/battle';
 import {
   buildExpeditionCards,
@@ -45,6 +53,8 @@ type WorldMapScreenProps = {
   onChooseRoute: (lane: number) => void;
   onBack: () => void;
   onPause: () => void;
+  grade?: Grade | null;
+  onDiscoverSecret?: (id: SecretId) => void;
 };
 
 function regionEmoji(region: RegionId): string {
@@ -72,6 +82,8 @@ export default function WorldMapScreen({
   onChooseRoute,
   onBack,
   onPause,
+  grade = null,
+  onDiscoverSecret,
 }: WorldMapScreenProps) {
   const { t, locale } = useI18n();
   const routeMode = Boolean(run?.atMap);
@@ -94,6 +106,9 @@ export default function WorldMapScreen({
   // Keep the focus (chosen route, or the selected boss) in view on narrow screens.
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const firstScrollRef = useRef(true);
+  const { zoom, zoomIn, zoomOut, reset: resetZoom } = useMapZoom(viewportRef);
+  // View mode hides the choice panel so the whole illustration can be enjoyed.
+  const [viewOnly, setViewOnly] = useState(false);
   const focusRegion: RegionId | null = routeMode
     ? selectedChoice?.option.region ?? currentRegion
     : activeExpedition?.region ?? null;
@@ -106,10 +121,12 @@ export default function WorldMapScreen({
       ? ((WORLD_REGIONS[currentRegion].x / 100) * map.offsetWidth + focusX) / 2
       : focusX;
     const left = Math.max(0, anchorX - viewport.clientWidth / 2);
+    const top = Math.max(0, (WORLD_REGIONS[focusRegion].y / 100) * map.offsetHeight - viewport.clientHeight / 2);
     if (typeof viewport.scrollTo === 'function') {
-      viewport.scrollTo({ left, behavior: firstScrollRef.current ? 'auto' : 'smooth' });
+      viewport.scrollTo({ left, top, behavior: firstScrollRef.current ? 'auto' : 'smooth' });
     } else {
       viewport.scrollLeft = left;
+      viewport.scrollTop = top;
     }
     firstScrollRef.current = false;
   }, [focusRegion, routeMode, currentRegion]);
@@ -255,6 +272,36 @@ export default function WorldMapScreen({
 
   const selectedCard = cards.find((card) => card.id === selectedId) ?? cards[0];
 
+  // ── Hidden spots: shimmer when zoomed in, open with a small math lock ──
+  const secretsFound = WORLD_SECRETS.filter((secret) => isSecretFound(progress, secret.id)).length;
+  const [openSecret, setOpenSecret] = useState<SecretId | null>(null);
+  const [lockQuestion, setLockQuestion] = useState<GeneratedQuestion | null>(null);
+  const [lockPicked, setLockPicked] = useState<number | null>(null);
+  const [unlocked, setUnlocked] = useState(false);
+  const openLock = (id: SecretId) => {
+    setOpenSecret(id);
+    setLockPicked(null);
+    const found = isSecretFound(progress, id);
+    setUnlocked(found);
+    setLockQuestion(found ? null : createSecretQuestion(grade, Math.random, t));
+  };
+  const answerLock = (choiceIndex: number) => {
+    if (!lockQuestion || lockPicked !== null || !openSecret) return;
+    setLockPicked(choiceIndex);
+    if (lockQuestion.choices[choiceIndex] === lockQuestion.answer) {
+      setUnlocked(true);
+      onDiscoverSecret?.(openSecret);
+    }
+  };
+  const retryLock = () => {
+    setLockPicked(null);
+    setLockQuestion(createSecretQuestion(grade, Math.random, t));
+  };
+  const rewardText = (reward: Partial<Record<ItemId, number>>) => Object.entries(reward)
+    .map(([item, amount]) => `${ITEM_CATALOG[item as ItemId].icon} ${t(ITEM_CATALOG[item as ItemId].nameKey, ITEM_CATALOG[item as ItemId].nameFallback)} ×${amount}`)
+    .join('、');
+  const secret = getSecret(openSecret);
+
   return (
     <div className={`wm-screen${routeMode ? ' is-route' : ' is-select'}`}>
       <header className="wm-header">
@@ -280,6 +327,9 @@ export default function WorldMapScreen({
               : t('world.subtitle.select', 'Pick an expedition and defeat its guardian')}
           </div>
         </div>
+        <div className="wm-secret-count" title={t('world.secret.count', 'Hidden spots found')}>
+          🗝️ {secretsFound}/{WORLD_SECRETS.length}
+        </div>
         {routeMode && (
           <div className="wm-hp" aria-label={`HP ${Math.ceil(pHp)}/${maxHp}`}>
             <span className="wm-hp-text">Lv.{pLvl} · HP {Math.ceil(pHp)}/{maxHp}</span>
@@ -288,8 +338,9 @@ export default function WorldMapScreen({
         )}
       </header>
 
-      <div className="wm-viewport" ref={viewportRef}>
-        <div className="wm-map" style={{ aspectRatio: `${WORLD_MAP_ART.width} / ${WORLD_MAP_ART.height}` }}>
+      <div className="wm-stage">
+      <div className={`wm-viewport${zoom > 1 ? ' is-zoomed' : ''}`} ref={viewportRef}>
+        <div className="wm-map" style={{ aspectRatio: `${WORLD_MAP_ART.width} / ${WORLD_MAP_ART.height}`, height: `${zoom * 100}%` }}>
           <img className="wm-map-art" src={MAP_SRC} alt="" draggable={false} decoding="async" />
           <svg className="wm-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {traveled.length > 1 && (
@@ -316,9 +367,38 @@ export default function WorldMapScreen({
               <MonsterSprite svgStr={starterSvg} size={46} ariaLabel={starter?.name || ''} />
             </div>
           )}
+          {WORLD_SECRETS.map((item) => {
+            const found = isSecretFound(progress, item.id);
+            if (!found && zoom < SECRET_REVEAL_ZOOM) return null;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`wm-secret${found ? ' is-found' : ' is-hidden'}`}
+                style={{ left: `${item.x}%`, top: `${item.y}%` }}
+                onClick={() => openLock(item.id)}
+                aria-label={found ? t(`world.secret.${item.id}.name`, item.id) : t('world.secret.shimmer', 'Something shimmers here')}
+              >
+                {found ? item.icon : '✨'}
+              </button>
+            );
+          })}
         </div>
       </div>
+      <div className="wm-zoom" role="group" aria-label={t('world.zoom.label', 'Map zoom')}>
+        {zoom === 1 && secretsFound < WORLD_SECRETS.length && (
+          <span className="wm-zoom-hint">{t('world.zoom.hint', 'Zoom in to find hidden spots!')}</span>
+        )}
+        <button type="button" onClick={zoomIn} disabled={zoom >= 3} aria-label={t('world.zoom.in', 'Zoom in')}>＋</button>
+        <button type="button" onClick={zoomOut} disabled={zoom <= 1} aria-label={t('world.zoom.out', 'Zoom out')}>－</button>
+        <button type="button" onClick={() => { setViewOnly((value) => !value); if (viewOnly) resetZoom(); }}
+          aria-pressed={viewOnly} aria-label={viewOnly ? t('world.view.exit', 'Back to choosing') : t('world.view.enter', 'Admire the map')}>
+          {viewOnly ? '✕' : '🖼️'}
+        </button>
+      </div>
+      </div>
 
+      {!viewOnly && (
       <section className="wm-panel">
         {routeMode ? (
           <>
@@ -388,6 +468,51 @@ export default function WorldMapScreen({
           </>
         )}
       </section>
+      )}
+
+      {secret && (
+        <div className="wm-secret-modal" role="dialog" aria-modal="true" aria-label={t(`world.secret.${secret.id}.name`, secret.id)}>
+          <div className="wm-secret-card">
+            <div className="wm-secret-title">{unlocked ? secret.icon : '🔐'} {t(`world.secret.${secret.id}.name`, secret.id)}</div>
+            <p className="wm-secret-text">{t(`world.secret.${secret.id}.story`, '')}</p>
+            {!unlocked && lockQuestion && (
+              <>
+                <p className="wm-secret-lock">{t('world.secret.lock', 'A number lock guards it. Solve it to open!')}</p>
+                <div className="wm-secret-question">
+                  {renderMathText(lockQuestion.display)}
+                  {needsEqualPrompt(lockQuestion.display, lockQuestion.op) ? ' = ?' : ''}
+                </div>
+                <div className="wm-secret-choices">
+                  {lockQuestion.choices.map((choice, i) => {
+                    const state = lockPicked === null ? '' : choice === lockQuestion.answer ? ' is-correct' : lockPicked === i ? ' is-wrong' : '';
+                    return (
+                      <button key={i} type="button" className={`wm-secret-choice${state}`} disabled={lockPicked !== null}
+                        onClick={() => answerLock(i)}>
+                        {renderMathText(lockQuestion.choiceLabels?.[i] ?? choice)}
+                      </button>
+                    );
+                  })}
+                </div>
+                {lockPicked !== null && (
+                  <button type="button" className="wm-secret-btn" onClick={retryLock}>
+                    {t('world.secret.retry', 'Try another lock')}
+                  </button>
+                )}
+              </>
+            )}
+            {unlocked && (
+              <p className="wm-secret-reward">
+                {lockPicked !== null
+                  ? t('world.secret.found', '🎉 Found it! You got {reward}', { reward: rewardText(secret.reward) })
+                  : t('world.secret.already', 'You already found this spot.')}
+              </p>
+            )}
+            <button type="button" className="wm-secret-btn is-close" onClick={() => setOpenSecret(null)}>
+              {t('world.secret.close', 'Close')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

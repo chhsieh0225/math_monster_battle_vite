@@ -12,6 +12,7 @@ import type { ExpeditionRun } from '../utils/expeditionRun';
 import type { WorldProgress } from '../utils/worldProgress';
 import type { ExpeditionId } from '../data/worldMap';
 import type { Grade } from '../data/gradeCurriculum';
+import type { SecretId } from '../data/worldSecrets';
 import type { PlayerProfile } from '../utils/playerProfile';
 import type {
   DailyChallengeFeedback,
@@ -385,6 +386,7 @@ export type UseBattleActions = {
   pauseExpedition: () => void;
   setPlayerProfile: (profile: PlayerProfile) => void;
   finishSpring: (result: SpringResult) => void;
+  discoverSecret: (id: SecretId) => void;
 };
 
 /** What happened at the review spring. */

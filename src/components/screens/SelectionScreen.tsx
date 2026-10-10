@@ -202,6 +202,8 @@ type SelectionScreenProps = {
   onBack: () => void;
   /** The child's grade; questions follow it whichever monster is chosen. */
   playerGrade?: Grade | null;
+  /** Opens the grade check again (change grade). */
+  onChangeGrade?: () => void;
 };
 
 export default function SelectionScreen({
@@ -210,6 +212,7 @@ export default function SelectionScreen({
   onSelect,
   onBack,
   playerGrade = null,
+  onChangeGrade,
 }: SelectionScreenProps) {
   const { t, locale } = useI18n();
   const DESCS = buildStarterDescs(t);
@@ -310,6 +313,12 @@ export default function SelectionScreen({
               : t('selection.subtitle.single', 'Tap a role to view details')}
           </div>
         </div>
+        {onChangeGrade && (
+          <button type="button" className="selection-grade-chip" onClick={onChangeGrade}
+            aria-label={t('selection.grade.change', 'Change grade')}>
+            🎓 {playerGrade ? t('selection.grade.chip', 'Grade {n}', { n: playerGrade }) : t('selection.grade.set', 'Set grade')} ✎
+          </button>
+        )}
       </div>
 
       {isDual && (

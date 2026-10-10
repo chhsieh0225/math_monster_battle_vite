@@ -40,6 +40,7 @@ test('buildUseBattleActions maps localized starter setters into public action na
     pauseExpedition: createFn('pauseExpedition', calls),
     setPlayerProfile: createFn('setPlayerProfile', calls),
     finishSpring: createFn('finishSpring', calls),
+    discoverSecret: createFn('discoverSecret', calls),
   };
 
   const actions = buildUseBattleActions(deps);
@@ -84,6 +85,7 @@ test('buildUseBattleActions exposes full expected public action surface', () => 
     pauseExpedition: noop,
     setPlayerProfile: noop,
     finishSpring: noop,
+    discoverSecret: noop,
   });
 
   const keys = Object.keys(actions).sort();
@@ -92,6 +94,7 @@ test('buildUseBattleActions exposes full expected public action surface', () => 
     'chooseRoute',
     'clearChallengeRun',
     'continueAfterEvolve',
+    'discoverSecret',
     'dismissAch',
     'dismissCollectionPopup',
     'finishSpring',

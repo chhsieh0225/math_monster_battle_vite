@@ -1,4 +1,4 @@
-import { Component, Suspense, lazy } from 'react';
+import { Component, Suspense, lazy, useRef } from 'react';
 import type { ComponentProps, ErrorInfo, ReactNode } from 'react';
 
 import TitleScreen from './screens/TitleScreen';
@@ -117,6 +117,12 @@ export default function AppScreenRouter({
   const S = state;
   const A = actions;
   const V = view;
+  // Where the grade check returns to: first play → monster selection, otherwise where it was opened.
+  const placementFromRef = useRef<'first' | 'selection' | 'dashboard'>('first');
+  const openPlacement = (from: 'first' | 'selection' | 'dashboard') => {
+    placementFromRef.current = from;
+    A.setScreen('placement');
+  };
 
   // Check for mid-run save on every render when screen is title (cheap sync read)
   const savedGameExists = S.screen === 'title' ? checkHasSave() : false;
@@ -164,19 +170,22 @@ export default function AppScreenRouter({
           A.clearChallengeRun();
           A.setTimedMode(false);
           A.setBattleMode('single');
-          A.setScreen(needsPlacement ? 'placement' : 'selection');
+          if (needsPlacement) openPlacement('first');
+          else A.setScreen('selection');
         }}
         onStartTimed={() => {
           A.clearChallengeRun();
           A.setTimedMode(true);
           A.setBattleMode('single');
-          A.setScreen(needsPlacement ? 'placement' : 'selection');
+          if (needsPlacement) openPlacement('first');
+          else A.setScreen('selection');
         }}
         onStartCoop={() => {
           A.clearChallengeRun();
           A.setTimedMode(false);
           A.setBattleMode('coop');
-          A.setScreen(needsPlacement ? 'placement' : 'selection');
+          if (needsPlacement) openPlacement('first');
+          else A.setScreen('selection');
         }}
         onStartPvp={() => {
           A.clearChallengeRun();
@@ -249,7 +258,7 @@ export default function AppScreenRouter({
         <DashboardScreen
           onBack={() => A.setScreen('title')}
           playerGrade={S.playerGrade}
-          onRetakePlacement={() => A.setScreen('placement')}
+          onRetakePlacement={() => openPlacement('dashboard')}
         />,
       ),
     );
@@ -288,6 +297,7 @@ export default function AppScreenRouter({
       <SelectionScreen
         mode={S.battleMode}
         playerGrade={S.battleMode === 'pvp' ? null : S.playerGrade}
+        onChangeGrade={S.battleMode === 'pvp' ? undefined : () => openPlacement('selection')}
         encData={S.encData}
         onSelect={(payload: SelectionPayload) => {
           void V.sfx.init().catch(() => {});
@@ -319,17 +329,16 @@ export default function AppScreenRouter({
   }
 
   if (S.screen === 'placement') {
-    // A retake (grade already set) comes from the parent dashboard and returns there.
-    const retake = S.playerGrade !== null;
+    const from = placementFromRef.current;
     return wrapMain(
       withScreenSuspense(
         <PlacementScreen
           currentGrade={S.playerGrade}
           onDone={(profile) => {
             A.setPlayerProfile(profile);
-            A.setScreen(retake ? 'dashboard' : 'selection');
+            A.setScreen(from === 'dashboard' ? 'dashboard' : 'selection');
           }}
-          onCancel={() => A.setScreen(retake ? 'dashboard' : 'title')}
+          onCancel={() => A.setScreen(from === 'first' ? 'title' : from)}
         />,
       ),
     );
@@ -369,6 +378,8 @@ export default function AppScreenRouter({
           onChooseRoute={A.chooseRoute}
           onBack={() => A.setScreen('selection')}
           onPause={A.pauseExpedition}
+          grade={S.playerGrade}
+          onDiscoverSecret={A.discoverSecret}
         />,
       ),
     );

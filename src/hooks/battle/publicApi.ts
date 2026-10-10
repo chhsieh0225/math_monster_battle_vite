@@ -152,6 +152,7 @@ const REQUIRED_ACTION_KEYS = [
   'pauseExpedition',
   'setPlayerProfile',
   'finishSpring',
+  'discoverSecret',
 ] as const satisfies ReadonlyArray<keyof UseBattleActions>;
 
 type MissingActionKey = Exclude<keyof UseBattleActions, (typeof REQUIRED_ACTION_KEYS)[number]>;

@@ -3,6 +3,7 @@ import type { ItemId } from '../../types/game';
 import type { DailyChallengePlan, StreakTowerPlan } from '../../types/challenges';
 import type { ExpeditionId } from '../../data/worldMap';
 import type { PlayerProfile } from '../../utils/playerProfile';
+import type { SecretId } from '../../data/worldSecrets';
 
 export type BuildUseBattleActionsArgs = {
   dismissAch: () => void;
@@ -38,6 +39,7 @@ export type BuildUseBattleActionsArgs = {
   pauseExpedition: () => void;
   setPlayerProfile: (profile: PlayerProfile) => void;
   finishSpring: (result: SpringResult) => void;
+  discoverSecret: (id: SecretId) => void;
 };
 
 /**
@@ -75,5 +77,6 @@ export function buildUseBattleActions(args: BuildUseBattleActionsArgs): UseBattl
     pauseExpedition: args.pauseExpedition,
     setPlayerProfile: args.setPlayerProfile,
     finishSpring: args.finishSpring,
+    discoverSecret: args.discoverSecret,
   };
 }

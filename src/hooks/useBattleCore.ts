@@ -64,8 +64,11 @@ import { loadPlayerProfile, savePlayerProfile, type PlayerProfile } from '../uti
 import { appendEvent } from '../utils/eventLogger.ts';
 import { routeMatchup } from '../utils/expeditionPlanner.ts';
 import {
+  applyItemGrants,
   loadInventory,
+  saveInventory,
 } from '../utils/inventoryStore.ts';
+import { getSecret, type SecretId } from '../data/worldSecrets.ts';
 import { useBattleRng } from './useBattleRng';
 import { useBattleUIState } from './useBattleUIState';
 import { useDailyChallengeRun } from './useDailyChallengeRun';
@@ -157,6 +160,8 @@ import {
   recordExpeditionFloor,
   recordRegionVisit,
   recordRegionWin,
+  recordSecretFound,
+  isSecretFound,
   saveWorldProgress,
   type WorldProgress,
 } from '../utils/worldProgress.ts';
@@ -1203,6 +1208,17 @@ export function useBattle() {
   }, [finishSpringContextRef]);
   const finishSpring = useStableCallback(finishSpringImpl);
 
+  // A hidden spot opened on the map: remember it and pay its one-time reward.
+  const discoverSecret = useStableCallback((id: SecretId) => {
+    const secret = getSecret(id);
+    if (!secret || isSecretFound(worldProgressRef.current, secret.id)) return;
+    updateWorldProgress((prev) => recordSecretFound(prev, secret.id));
+    const result = applyItemGrants(loadInventory(), secret.reward, `secret:${secret.id}`);
+    if (result.changed) saveInventory(result.inventory);
+    setInventory(result.inventory);
+    appendEvent('secret_found', { id: secret.id, reward: secret.reward });
+  });
+
   // Leave the map mid-expedition: keep the save (resume from the title) but close the learning session.
   const pauseExpeditionContextRef = useBattleStateRef({
     sr,
@@ -1466,6 +1482,7 @@ export function useBattle() {
     pauseExpedition,
     setPlayerProfile,
     finishSpring,
+    discoverSecret,
   });
 
   const view = useMemo(() => buildUseBattleView({

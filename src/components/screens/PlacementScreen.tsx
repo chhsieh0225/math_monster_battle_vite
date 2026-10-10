@@ -69,6 +69,13 @@ export default function PlacementScreen({ currentGrade, onDone, onCancel }: Plac
     }, correct ? 550 : 1100);
   };
 
+  // Back steps through the check (so the grade can be re-picked) and only leaves from the first step.
+  const back = () => {
+    if (step === 'grade') onCancel();
+    else if (step === 'intro' || step === 'result') setStep('grade');
+    else setStep('intro');
+  };
+
   const recommended = profile
     ? STARTERS.filter((starter) => isStarterRecommended(starter.gradeRange, profile.grade))
       .map((starter) => localizeStarterDisplayName(starter.name, starter.id, locale))
@@ -77,7 +84,7 @@ export default function PlacementScreen({ currentGrade, onDone, onCancel }: Plac
   return (
     <main className="placement-screen">
       <header className="placement-header">
-        <button type="button" className="placement-back" onClick={onCancel} aria-label={t('placement.back', 'Back')}>←</button>
+        <button type="button" className="placement-back" onClick={back} aria-label={t('placement.back', 'Back')}>←</button>
         <h1 className="placement-title">🎓 {t('placement.title', 'Find your level')}</h1>
       </header>
 
@@ -170,6 +177,9 @@ export default function PlacementScreen({ currentGrade, onDone, onCancel }: Plac
           )}
           <button type="button" className="placement-primary" onClick={() => onDone(profile)}>
             {t('placement.go', "Let's go!")}
+          </button>
+          <button type="button" className="placement-secondary" onClick={() => setStep('grade')}>
+            {t('placement.rechoose', 'Choose a different grade')}
           </button>
         </section>
       )}

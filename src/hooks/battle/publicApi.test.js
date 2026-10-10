@@ -160,6 +160,7 @@ function createValidPublicApi() {
       pauseExpedition: noop,
       setPlayerProfile: noop,
       finishSpring: noop,
+      discoverSecret: noop,
     },
     view: {
       timerSubscribe: noopUnsub,

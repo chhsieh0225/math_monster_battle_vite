@@ -4,6 +4,7 @@
  */
 import { EXPEDITIONS, REGION_IDS, type ExpeditionId, type RegionId } from '../data/worldMap.ts';
 import { readJson, writeJson } from './storage.ts';
+import { SECRET_IDS, type SecretId } from '../data/worldSecrets.ts';
 
 const STORAGE_KEY = 'mathMonsterBattle_world_v1';
 
@@ -14,10 +15,12 @@ export type WorldProgress = {
   version: 1;
   regions: Partial<Record<RegionId, RegionRecord>>;
   expeditions: Partial<Record<ExpeditionId, ExpeditionRecord>>;
+  /** Hidden spots found on the map (added later; older saves have none). */
+  secrets: SecretId[];
 };
 
 export function createWorldProgress(): WorldProgress {
-  return { version: 1, regions: {}, expeditions: {} };
+  return { version: 1, regions: {}, expeditions: {}, secrets: [] };
 }
 
 function count(value: unknown, max = 1_000_000): number {
@@ -42,6 +45,9 @@ export function normalizeWorldProgress(raw: unknown): WorldProgress {
       const record = raw.expeditions[id];
       if (isRecord(record)) progress.expeditions[id] = { clears: count(record.clears), bestFloor: count(record.bestFloor, 10) };
     }
+  }
+  if (Array.isArray(raw.secrets)) {
+    progress.secrets = SECRET_IDS.filter((id) => (raw.secrets as unknown[]).includes(id));
   }
   return progress;
 }
@@ -95,4 +101,13 @@ export function isExpeditionUnlocked(progress: WorldProgress, id: ExpeditionId):
 
 export function isRegionDiscovered(progress: WorldProgress, region: RegionId): boolean {
   return (progress.regions[region]?.visits ?? 0) > 0;
+}
+
+export function recordSecretFound(progress: WorldProgress, id: SecretId): WorldProgress {
+  if (progress.secrets.includes(id) || !SECRET_IDS.includes(id)) return progress;
+  return { ...progress, secrets: [...progress.secrets, id] };
+}
+
+export function isSecretFound(progress: WorldProgress, id: SecretId): boolean {
+  return progress.secrets.includes(id);
 }

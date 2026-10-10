@@ -9,6 +9,8 @@ import type { RefObject } from 'react';
 export const MAP_ZOOM_MIN = 1;
 export const MAP_ZOOM_MAX = 3;
 export const MAP_ZOOM_STEP = 1.4;
+/** Mouse movement (px) still treated as a click rather than a drag. */
+export const MAP_DRAG_SLOP_PX = 8;
 
 export function clampZoom(value: number): number {
   if (!Number.isFinite(value)) return MAP_ZOOM_MIN;
@@ -101,26 +103,39 @@ export function useMapZoom(viewportRef: RefObject<HTMLDivElement | null>) {
       if (event.touches.length < 2) pinch = null;
     };
 
-    // Mouse drag pans (touch already scrolls natively); clicks on markers still work.
+    // Mouse drag pans from anywhere, even from a marker (touch already scrolls
+    // natively). A small wobble is still a click; a real drag swallows the click
+    // so letting go over a marker doesn't open it.
     let drag: { x: number; y: number; left: number; top: number; moved: boolean } | null = null;
+    let swallowClick = false;
     const onPointerDown = (event: PointerEvent) => {
       if (event.pointerType !== 'mouse' || event.button !== 0) return;
-      if ((event.target as HTMLElement | null)?.closest('button')) return;
       drag = { x: event.clientX, y: event.clientY, left: viewport.scrollLeft, top: viewport.scrollTop, moved: false };
     };
     const onPointerMove = (event: PointerEvent) => {
       if (!drag) return;
       const dx = event.clientX - drag.x;
       const dy = event.clientY - drag.y;
-      if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+      if (!drag.moved && Math.hypot(dx, dy) < MAP_DRAG_SLOP_PX) return;
       drag.moved = true;
       viewport.classList.add('is-dragging');
       viewport.scrollLeft = drag.left - dx;
       viewport.scrollTop = drag.top - dy;
     };
     const onPointerUp = () => {
+      if (drag?.moved) {
+        swallowClick = true;
+        // The click (if any) is dispatched right after pointerup, before this timer.
+        window.setTimeout(() => { swallowClick = false; }, 0);
+      }
       drag = null;
       viewport.classList.remove('is-dragging');
+    };
+    const onClickCapture = (event: MouseEvent) => {
+      if (!swallowClick) return;
+      swallowClick = false;
+      event.stopPropagation();
+      event.preventDefault();
     };
 
     viewport.addEventListener('wheel', onWheel, { passive: false });
@@ -129,6 +144,7 @@ export function useMapZoom(viewportRef: RefObject<HTMLDivElement | null>) {
     viewport.addEventListener('touchend', onTouchEnd);
     viewport.addEventListener('touchcancel', onTouchEnd);
     viewport.addEventListener('pointerdown', onPointerDown);
+    viewport.addEventListener('click', onClickCapture, true);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
     return () => {
@@ -138,6 +154,7 @@ export function useMapZoom(viewportRef: RefObject<HTMLDivElement | null>) {
       viewport.removeEventListener('touchend', onTouchEnd);
       viewport.removeEventListener('touchcancel', onTouchEnd);
       viewport.removeEventListener('pointerdown', onPointerDown);
+      viewport.removeEventListener('click', onClickCapture, true);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
     };

@@ -19,8 +19,36 @@ export type WorldSecret = {
   reward: Partial<Record<ItemId, number>>;
 };
 
-/** Zoom at which undiscovered secrets start to shimmer. */
-export const SECRET_REVEAL_ZOOM = 1.6;
+/** Zoom at which undiscovered secrets start to shimmer: one ＋ press (×1.4) is enough. */
+export const SECRET_REVEAL_ZOOM = 1.3;
+
+/** A tap this close to a visible spot (screen px from its centre) opens it. */
+export const SECRET_TAP_RADIUS_PX = 48;
+
+/**
+ * The visible spot nearest a tap on the map, if it is within `radiusPx` on screen.
+ * `tap` is in percent of the map; `map` is the map's on-screen size in px.
+ */
+export function findSecretNear(
+  tap: { x: number; y: number },
+  map: { width: number; height: number },
+  candidates: readonly WorldSecret[],
+  radiusPx: number = SECRET_TAP_RADIUS_PX,
+): WorldSecret | null {
+  let best: WorldSecret | null = null;
+  let bestDistance = radiusPx;
+  for (const secret of candidates) {
+    const distance = Math.hypot(
+      ((secret.x - tap.x) / 100) * map.width,
+      ((secret.y - tap.y) / 100) * map.height,
+    );
+    if (distance <= bestDistance) {
+      best = secret;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
 
 export const WORLD_SECRETS: readonly WorldSecret[] = [
   { id: 'lone_islet', icon: '🌳', x: 37.4, y: 5.8, reward: { candy: 2 } },

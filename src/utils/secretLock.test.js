@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, test } from 'node:test';
-import { WORLD_SECRETS, SECRET_IDS } from '../data/worldSecrets.ts';
+import { MAP_ZOOM_STEP } from '../components/screens/useMapZoom.ts';
+import { SECRET_REVEAL_ZOOM, SECRET_TAP_RADIUS_PX, WORLD_SECRETS, SECRET_IDS, findSecretNear } from '../data/worldSecrets.ts';
 import { WORLD_REGIONS } from '../data/worldMap.ts';
 import { GRADE_OPERAND_CAPS } from '../data/gradeCurriculum.ts';
 import { createSecretQuestion } from './secretLock.ts';
@@ -48,4 +49,20 @@ test('found spots are remembered once and survive older saves', () => {
   assert.deepEqual(loadWorldProgress().secrets, ['mist_temple']);
   assert.deepEqual(normalizeWorldProgress({ version: 1, regions: {}, expeditions: {} }).secrets, [], 'older saves');
   assert.deepEqual(normalizeWorldProgress({ version: 1, secrets: ['mist_temple', 'moon_base', 3] }).secrets, ['mist_temple']);
+});
+
+test('one zoom-in press is enough to reveal hidden spots', () => {
+  assert.ok(MAP_ZOOM_STEP >= SECRET_REVEAL_ZOOM);
+});
+
+test('a tap near a spot opens it; the nearest spot wins; far taps miss', () => {
+  const map = { width: 1500, height: 1000 };
+  const [a] = WORLD_SECRETS;
+  const nudge = (px) => ({ x: a.x + (px / map.width) * 100, y: a.y });
+  assert.equal(findSecretNear({ x: a.x, y: a.y }, map, WORLD_SECRETS)?.id, a.id);
+  assert.equal(findSecretNear(nudge(SECRET_TAP_RADIUS_PX - 2), map, [a])?.id, a.id);
+  assert.equal(findSecretNear(nudge(SECRET_TAP_RADIUS_PX + 2), map, [a]), null);
+  assert.equal(findSecretNear({ x: a.x, y: a.y }, map, []), null);
+  const twin = { ...a, id: 'storm_eye', x: a.x + 2 };
+  assert.equal(findSecretNear({ x: a.x + 1.5, y: a.y }, map, [a, twin])?.id, 'storm_eye');
 });

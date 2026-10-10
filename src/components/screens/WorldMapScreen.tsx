@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { MouseEvent } from 'react';
 
 import MonsterPortrait from '../ui/MonsterPortrait';
 import { getSpriteProfileKey } from '../../data/sprites.ts';
@@ -19,7 +20,7 @@ import {
 import { isEnglishLocale, localizeSceneName } from '../../utils/contentLocalization.ts';
 import { isSpringOption, nextExpeditionFloor, type ExpeditionRun } from '../../utils/expeditionRun.ts';
 import { isRegionDiscovered, isSecretFound, type WorldProgress } from '../../utils/worldProgress.ts';
-import { SECRET_REVEAL_ZOOM, WORLD_SECRETS, getSecret, type SecretId } from '../../data/worldSecrets.ts';
+import { SECRET_REVEAL_ZOOM, WORLD_SECRETS, findSecretNear, getSecret, type SecretId } from '../../data/worldSecrets.ts';
 import { ITEM_CATALOG } from '../../data/itemCatalog.ts';
 import type { Grade } from '../../data/gradeCurriculum.ts';
 import type { ItemId } from '../../types/game';
@@ -307,6 +308,19 @@ export default function WorldMapScreen({
     .map(([item, amount]) => `${ITEM_CATALOG[item as ItemId].icon} ${t(ITEM_CATALOG[item as ItemId].nameKey, ITEM_CATALOG[item as ItemId].nameFallback)} ×${amount}`)
     .join('、');
   const secret = getSecret(openSecret);
+  const visibleSecrets = WORLD_SECRETS.filter((item) => zoom >= SECRET_REVEAL_ZOOM || isSecretFound(progress, item.id));
+  // A near miss on the painting still counts: open the closest visible spot within reach.
+  const onMapTap = (event: MouseEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement | null)?.closest('button')) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    const hit = findSecretNear(
+      { x: ((event.clientX - rect.left) / rect.width) * 100, y: ((event.clientY - rect.top) / rect.height) * 100 },
+      { width: rect.width, height: rect.height },
+      visibleSecrets,
+    );
+    if (hit) openLock(hit.id);
+  };
 
   return (
     <div className={`wm-screen${routeMode ? ' is-route' : ' is-select'}`}>
@@ -346,7 +360,11 @@ export default function WorldMapScreen({
 
       <div className="wm-stage">
       <div className={`wm-viewport${zoom > 1 ? ' is-zoomed' : ''}`} ref={viewportRef}>
-        <div className="wm-map" style={{ aspectRatio: `${WORLD_MAP_ART.width} / ${WORLD_MAP_ART.height}`, height: `${zoom * 100}%` }}>
+        <div
+          className="wm-map"
+          style={{ aspectRatio: `${WORLD_MAP_ART.width} / ${WORLD_MAP_ART.height}`, height: `${zoom * 100}%` }}
+          onClick={onMapTap}
+        >
           <img className="wm-map-art" src={MAP_SRC} alt="" draggable={false} decoding="async" />
           {sharp.tiles.map((tile) => (
             <img
@@ -391,9 +409,8 @@ export default function WorldMapScreen({
               <MonsterPortrait profileKey={starterProfileKey} svgStr={starterSvg} size={46} ariaLabel={starter?.name || ''} />
             </div>
           )}
-          {WORLD_SECRETS.map((item) => {
+          {visibleSecrets.map((item) => {
             const found = isSecretFound(progress, item.id);
-            if (!found && zoom < SECRET_REVEAL_ZOOM) return null;
             return (
               <button
                 key={item.id}
@@ -403,7 +420,7 @@ export default function WorldMapScreen({
                 onClick={() => openLock(item.id)}
                 aria-label={found ? t(`world.secret.${item.id}.name`, item.id) : t('world.secret.shimmer', 'Something shimmers here')}
               >
-                {found ? item.icon : '✨'}
+                <span className="wm-secret-glyph" aria-hidden="true">{found ? item.icon : '✨'}</span>
               </button>
             );
           })}

@@ -16,6 +16,16 @@
 .skill-shard{fill:var(--skill-accent);stroke:none;animation:skillShard 480ms ease-out both}
 .skill-boss-crown{fill:none;stroke:var(--skill-tone);stroke-width:3;opacity:.75}
 .skill-block{fill:none;stroke:#e2e8f0;stroke-width:2}
+.skill-ritual-ring,.skill-ritual-runes,.skill-ritual-shock{fill:none;stroke:var(--skill-accent);stroke-width:1.2;stroke-opacity:.8}
+.skill-ritual-ring{stroke:var(--skill-tone);stroke-width:2;stroke-dasharray:55 8 8 8}
+.skill-ritual-glow{opacity:.28}
+.skill-ritual-runes{stroke-opacity:.65}
+.skill-ritual-gather{animation:skillRitualGather var(--skill-flight) cubic-bezier(.2,.7,.3,1) both}
+.skill-ritual-release{animation:skillRitualRelease 470ms cubic-bezier(.12,.7,.2,1) both}
+.skill-ritual-sparks{fill:var(--skill-accent);fill-opacity:.72;stroke:none}
+.skill-ritual-shock{stroke-width:1.8;stroke:var(--skill-tone)}
+@keyframes skillRitualGather{0%{opacity:0;transform:rotate(-40deg) scale(1.2)}28%{opacity:.8;transform:rotate(-10deg) scale(1)}68%{opacity:.7}100%{opacity:0;transform:rotate(25deg) scale(.55)}}
+@keyframes skillRitualRelease{0%{opacity:0;transform:scale(.3)}18%{opacity:.9;transform:scale(.7)}100%{opacity:0;transform:translateX(12px) scale(1.2)}}
 .skill-fx.is-lite .skill-stream{display:none}
 .skill-fx.is-lite .skill-contact{animation-duration:300ms;filter:none}
 .sc-contact.skill-contact{animation:scContact 520ms linear both;filter:none}
@@ -124,6 +134,7 @@
 @keyframes skillShard{0%{opacity:0;transform:translateY(12px)}20%{opacity:.9}100%{opacity:0;transform:translateY(-20px)}}
 .battle-root[data-paused=true] .skill-fx *{animation-play-state:paused!important}
 @media(prefers-reduced-motion:reduce){
+  .skill-fx .skill-ritual{display:none}
   .skill-fx .skill-stream,.skill-fx .skill-charge,.skill-fx .skill-shard,.skill-fx .skill-seal,.skill-fx .skill-boss-crown,.skill-fx .skill-finisher,.skill-fx .skill-impact-heat,.skill-fx .sc-launch{display:none}
   .skill-fx *{animation:none!important}
   .skill-fx .skill-ring-outer{display:none}

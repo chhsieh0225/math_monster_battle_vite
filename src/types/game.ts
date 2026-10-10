@@ -202,6 +202,7 @@ export type MonsterRace =
   | "golumn"
   | "candy"
   | "butterfly"
+  | "guardian"
   | "boss"
   // starter races (我方角色種族)
   | "dragon_kin"   // 龍族 — 小火/小水/小草/小雷

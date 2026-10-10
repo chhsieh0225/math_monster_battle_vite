@@ -4,6 +4,7 @@ import {
   fireEvolvedSVG, ghostEvolvedSVG, dragonEvolvedSVG,
   slimeRedSVG, slimeBlueSVG, slimeYellowSVG, slimeDarkSVG, slimeSteelSVG,
   candyKnightSVG, candyMonsterSVG, colorfulButterflySVG,
+  limitKnightSVG, topologyKnightSVG, algebraKnightSVG, blueButterflySVG,
 } from './sprites.ts';
 import type {
   HydratedMonster,
@@ -37,6 +38,10 @@ export const SPRITE_MAP: Record<string, SpriteFn> = {
   candyKnightSVG,
   candyMonsterSVG,
   colorfulButterflySVG,
+  limitKnightSVG,
+  topologyKnightSVG,
+  algebraKnightSVG,
+  blueButterflySVG,
   slimeEvolvedSVG,
   slimeElectricEvolvedSVG,
   slimeFireEvolvedSVG,

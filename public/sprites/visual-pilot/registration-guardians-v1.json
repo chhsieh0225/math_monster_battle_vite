@@ -1,0 +1,1091 @@
+{
+  "cell": [
+    512,
+    384
+  ],
+  "grid": [
+    4,
+    2
+  ],
+  "baseline": 368,
+  "poses": [
+    "idle",
+    "inhale",
+    "anticipation",
+    "strike",
+    "followThrough",
+    "recovery",
+    "recoil",
+    "bracedRecovery"
+  ],
+  "assets": {
+    "limit-knight-v1": {
+      "key": "limit_knight",
+      "file": "limit-knight-v1.webp",
+      "source": "limit_knight-separated.png",
+      "sourceSha256": "26c01b43a34482dc17588b70aa2cf3789113c3030bbc0a81de65198b9f153b8c",
+      "sha256": "600f805f5043dc41fe0e143b8079633c4c387fdbc2dc80df9761d5887f7652c5",
+      "bytes": 379180,
+      "quality": 90,
+      "uniformScale": 0.9918032786885246,
+      "footX": 217,
+      "bounds": [
+        14,
+        30,
+        497,
+        368
+      ],
+      "frames": [
+        {
+          "index": 0,
+          "sourceCrop": [
+            0,
+            0,
+            449,
+            465
+          ],
+          "tightCrop": [
+            46,
+            85,
+            421,
+            426
+          ],
+          "sourceFootX": 189,
+          "offset": [
+            30,
+            30
+          ],
+          "size": [
+            372,
+            338
+          ],
+          "visibleBounds": [
+            31,
+            30,
+            401,
+            367
+          ],
+          "rgbaSha256": "cb425aa3bcbb5a7a983bb247d1038be52179c27e1765f2fb842ed58827ad2a28"
+        },
+        {
+          "index": 1,
+          "sourceCrop": [
+            448,
+            0,
+            895,
+            465
+          ],
+          "tightCrop": [
+            476,
+            84,
+            854,
+            426
+          ],
+          "sourceFootX": 190,
+          "offset": [
+            29,
+            29
+          ],
+          "size": [
+            375,
+            339
+          ],
+          "visibleBounds": [
+            29,
+            30,
+            404,
+            367
+          ],
+          "rgbaSha256": "f57b6f9bf53602488b25a08a78898c444fc256136c23b78741219aa79d1750e5"
+        },
+        {
+          "index": 2,
+          "sourceCrop": [
+            894,
+            0,
+            1285,
+            465
+          ],
+          "tightCrop": [
+            934,
+            73,
+            1235,
+            409
+          ],
+          "sourceFootX": 161,
+          "offset": [
+            57,
+            35
+          ],
+          "size": [
+            299,
+            333
+          ],
+          "visibleBounds": [
+            57,
+            36,
+            355,
+            367
+          ],
+          "rgbaSha256": "d6d2427c122fd4b4b9aa1f170f976c9467cad3f9304c17cb39000411ecd6cdd5"
+        },
+        {
+          "index": 3,
+          "sourceCrop": [
+            1284,
+            0,
+            1774,
+            465
+          ],
+          "tightCrop": [
+            1334,
+            93,
+            1748,
+            405
+          ],
+          "sourceFootX": 131,
+          "offset": [
+            87,
+            59
+          ],
+          "size": [
+            411,
+            309
+          ],
+          "visibleBounds": [
+            87,
+            59,
+            497,
+            368
+          ],
+          "rgbaSha256": "aaa8957f700965038bdeebb2e72f3ace67145138c266be4647a4e39b2670a7b2"
+        },
+        {
+          "index": 4,
+          "sourceCrop": [
+            0,
+            464,
+            463,
+            887
+          ],
+          "tightCrop": [
+            61,
+            502,
+            439,
+            830
+          ],
+          "sourceFootX": 174,
+          "offset": [
+            44,
+            43
+          ],
+          "size": [
+            375,
+            325
+          ],
+          "visibleBounds": [
+            44,
+            44,
+            418,
+            367
+          ],
+          "rgbaSha256": "dd2b743cced404dd1e9e740c4799fb2be8f0db0db3c9fbf10319a143f8ea9bdd"
+        },
+        {
+          "index": 5,
+          "sourceCrop": [
+            462,
+            464,
+            881,
+            887
+          ],
+          "tightCrop": [
+            485,
+            505,
+            847,
+            834
+          ],
+          "sourceFootX": 184,
+          "offset": [
+            35,
+            42
+          ],
+          "size": [
+            359,
+            326
+          ],
+          "visibleBounds": [
+            36,
+            45,
+            394,
+            367
+          ],
+          "rgbaSha256": "34b0958f688c29f730ddcb9427ca11a1eb8538dd74e74180a2dd65929159375e"
+        },
+        {
+          "index": 6,
+          "sourceCrop": [
+            880,
+            464,
+            1326,
+            887
+          ],
+          "tightCrop": [
+            915,
+            517,
+            1278,
+            815
+          ],
+          "sourceFootX": 205,
+          "offset": [
+            14,
+            72
+          ],
+          "size": [
+            360,
+            296
+          ],
+          "visibleBounds": [
+            14,
+            76,
+            374,
+            368
+          ],
+          "rgbaSha256": "25d033c649c925b7ba299009e44a4cd05eb117a131e3f2cdc0a493936b0faa40"
+        },
+        {
+          "index": 7,
+          "sourceCrop": [
+            1325,
+            464,
+            1774,
+            887
+          ],
+          "tightCrop": [
+            1372,
+            520,
+            1712,
+            812
+          ],
+          "sourceFootX": 173,
+          "offset": [
+            45,
+            78
+          ],
+          "size": [
+            337,
+            290
+          ],
+          "visibleBounds": [
+            46,
+            78,
+            381,
+            367
+          ],
+          "rgbaSha256": "018acf5fdfec0db7a70a541103df2b51bcf1d4dccfaa196aef2a198e6b448041"
+        }
+      ]
+    },
+    "topology-knight-v1": {
+      "key": "topology_knight",
+      "file": "topology-knight-v1.webp",
+      "source": "topology_knight.png",
+      "sourceSha256": "bc15dd1ee2a7de9f3d6a9b75199a869e604054ba7c9e6432342de7a942471f01",
+      "sha256": "65f14db4d4627916ff62e72e8a98c77f1b3c1f0d68d20bee672d4760c59e92fb",
+      "bytes": 389440,
+      "quality": 90,
+      "uniformScale": 0.9166666666666666,
+      "footX": 237,
+      "bounds": [
+        28,
+        16,
+        485,
+        368
+      ],
+      "frames": [
+        {
+          "index": 0,
+          "sourceCrop": [
+            0,
+            0,
+            430,
+            463
+          ],
+          "tightCrop": [
+            30,
+            79,
+            391,
+            427
+          ],
+          "sourceFootX": 194,
+          "offset": [
+            59,
+            49
+          ],
+          "size": [
+            331,
+            319
+          ],
+          "visibleBounds": [
+            59,
+            50,
+            389,
+            367
+          ],
+          "rgbaSha256": "d7a0fbfea3ce96fd5cbf6e5776efc5a1003f7773436b1269338410cfcd1e7a39"
+        },
+        {
+          "index": 1,
+          "sourceCrop": [
+            429,
+            0,
+            867,
+            463
+          ],
+          "tightCrop": [
+            469,
+            49,
+            826,
+            433
+          ],
+          "sourceFootX": 194,
+          "offset": [
+            59,
+            16
+          ],
+          "size": [
+            327,
+            352
+          ],
+          "visibleBounds": [
+            59,
+            16,
+            385,
+            368
+          ],
+          "rgbaSha256": "2af945a9263e89de6fad375f78a88d06c16107ec4c4606d4ab2d10c5d36c31cc"
+        },
+        {
+          "index": 2,
+          "sourceCrop": [
+            866,
+            0,
+            1285,
+            463
+          ],
+          "tightCrop": [
+            909,
+            69,
+            1232,
+            426
+          ],
+          "sourceFootX": 186,
+          "offset": [
+            66,
+            41
+          ],
+          "size": [
+            296,
+            327
+          ],
+          "visibleBounds": [
+            66,
+            42,
+            362,
+            367
+          ],
+          "rgbaSha256": "014552f0d241408ebe5efa353ba78f981dc2c6c4e6a152848a77df6aa94f57d2"
+        },
+        {
+          "index": 3,
+          "sourceCrop": [
+            1284,
+            0,
+            1774,
+            463
+          ],
+          "tightCrop": [
+            1336,
+            110,
+            1746,
+            423
+          ],
+          "sourceFootX": 140,
+          "offset": [
+            109,
+            81
+          ],
+          "size": [
+            376,
+            287
+          ],
+          "visibleBounds": [
+            110,
+            81,
+            485,
+            367
+          ],
+          "rgbaSha256": "d75c4c21c6bb0b640dd27da4bb14ccf1936a36afddef822cf9936de34dc9d943"
+        },
+        {
+          "index": 4,
+          "sourceCrop": [
+            0,
+            462,
+            471,
+            887
+          ],
+          "tightCrop": [
+            72,
+            503,
+            460,
+            824
+          ],
+          "sourceFootX": 188,
+          "offset": [
+            65,
+            74
+          ],
+          "size": [
+            356,
+            294
+          ],
+          "visibleBounds": [
+            66,
+            74,
+            420,
+            368
+          ],
+          "rgbaSha256": "fdbf05957a94d7a06bab4bcf1e6c42ba3cd42bb3ad6c012d5e9666440967e0a6"
+        },
+        {
+          "index": 5,
+          "sourceCrop": [
+            470,
+            462,
+            887,
+            887
+          ],
+          "tightCrop": [
+            480,
+            492,
+            854,
+            837
+          ],
+          "sourceFootX": 184,
+          "offset": [
+            68,
+            52
+          ],
+          "size": [
+            343,
+            316
+          ],
+          "visibleBounds": [
+            69,
+            53,
+            410,
+            368
+          ],
+          "rgbaSha256": "e44ee523e6a5b2afb1ed2164240a18822eb1dd6d36470190ed66b52ca0e0d80f"
+        },
+        {
+          "index": 6,
+          "sourceCrop": [
+            886,
+            462,
+            1283,
+            887
+          ],
+          "tightCrop": [
+            919,
+            500,
+            1243,
+            824
+          ],
+          "sourceFootX": 176,
+          "offset": [
+            76,
+            71
+          ],
+          "size": [
+            297,
+            297
+          ],
+          "visibleBounds": [
+            76,
+            71,
+            373,
+            368
+          ],
+          "rgbaSha256": "21e52bcf52e05e8a1f18c596cc74710bd3faada36435b14e7ff0ce325e74fe82"
+        },
+        {
+          "index": 7,
+          "sourceCrop": [
+            1282,
+            462,
+            1774,
+            887
+          ],
+          "tightCrop": [
+            1322,
+            551,
+            1697,
+            824
+          ],
+          "sourceFootX": 228,
+          "offset": [
+            28,
+            118
+          ],
+          "size": [
+            344,
+            250
+          ],
+          "visibleBounds": [
+            28,
+            119,
+            372,
+            368
+          ],
+          "rgbaSha256": "c60f56f92894d3391d7a596609a3558a38e0ad62d32e18dd5ee30c47b8ed7c81"
+        }
+      ]
+    },
+    "algebra-knight-v1": {
+      "key": "algebra_knight",
+      "file": "algebra-knight-v1.webp",
+      "source": "algebra_knight.png",
+      "sourceSha256": "a94b01371e5f35c0277a453d6867cc89fff718132df134869b01c42d3b2e58ca",
+      "sha256": "9498f79b52c166faf370b288f9b0a81629560e52a880cab8463dec37b2192012",
+      "bytes": 395378,
+      "quality": 88,
+      "uniformScale": 0.9487870619946092,
+      "footX": 227,
+      "bounds": [
+        41,
+        16,
+        471,
+        368
+      ],
+      "frames": [
+        {
+          "index": 0,
+          "sourceCrop": [
+            0,
+            0,
+            442,
+            462
+          ],
+          "tightCrop": [
+            38,
+            103,
+            419,
+            432
+          ],
+          "sourceFootX": 192,
+          "offset": [
+            45,
+            56
+          ],
+          "size": [
+            361,
+            312
+          ],
+          "visibleBounds": [
+            45,
+            58,
+            406,
+            367
+          ],
+          "rgbaSha256": "b28a461114117a3b012f5ef2e7c89f52d854f5e205693cbcb0cb3a56e02a796e"
+        },
+        {
+          "index": 1,
+          "sourceCrop": [
+            441,
+            0,
+            895,
+            462
+          ],
+          "tightCrop": [
+            463,
+            65,
+            860,
+            436
+          ],
+          "sourceFootX": 197,
+          "offset": [
+            40,
+            16
+          ],
+          "size": [
+            377,
+            352
+          ],
+          "visibleBounds": [
+            41,
+            16,
+            417,
+            367
+          ],
+          "rgbaSha256": "ad106f67f0c1dff03ef5f5f9b1d79245ff76abacfa838c4433372af9b6e2ddd5"
+        },
+        {
+          "index": 2,
+          "sourceCrop": [
+            894,
+            0,
+            1310,
+            462
+          ],
+          "tightCrop": [
+            929,
+            68,
+            1272,
+            432
+          ],
+          "sourceFootX": 161,
+          "offset": [
+            74,
+            23
+          ],
+          "size": [
+            325,
+            345
+          ],
+          "visibleBounds": [
+            74,
+            24,
+            399,
+            368
+          ],
+          "rgbaSha256": "03533e933f122b4fd5d8a0d53c4d593aef0fec9bc0e6e3b1eb77f0a5cab520ae"
+        },
+        {
+          "index": 3,
+          "sourceCrop": [
+            1309,
+            0,
+            1774,
+            462
+          ],
+          "tightCrop": [
+            1346,
+            121,
+            1749,
+            432
+          ],
+          "sourceFootX": 144,
+          "offset": [
+            90,
+            73
+          ],
+          "size": [
+            382,
+            295
+          ],
+          "visibleBounds": [
+            91,
+            73,
+            471,
+            367
+          ],
+          "rgbaSha256": "ba06b5b1a513bd056f7479307784f739e001e67744c53c3833a1bad47cb5133f"
+        },
+        {
+          "index": 4,
+          "sourceCrop": [
+            0,
+            461,
+            451,
+            887
+          ],
+          "tightCrop": [
+            62,
+            535,
+            425,
+            829
+          ],
+          "sourceFootX": 163,
+          "offset": [
+            72,
+            89
+          ],
+          "size": [
+            344,
+            279
+          ],
+          "visibleBounds": [
+            72,
+            90,
+            414,
+            368
+          ],
+          "rgbaSha256": "38be9739a820bfcdbcd5b010183717c2946acd603f35514ada3dc9878072b954"
+        },
+        {
+          "index": 5,
+          "sourceCrop": [
+            450,
+            461,
+            901,
+            887
+          ],
+          "tightCrop": [
+            479,
+            516,
+            850,
+            837
+          ],
+          "sourceFootX": 183,
+          "offset": [
+            53,
+            63
+          ],
+          "size": [
+            352,
+            305
+          ],
+          "visibleBounds": [
+            53,
+            64,
+            405,
+            368
+          ],
+          "rgbaSha256": "ca0b2564d68fd77c6e8a6cf145a9f3b1ef7e27e2528de6d62f28e45fe6d970b2"
+        },
+        {
+          "index": 6,
+          "sourceCrop": [
+            900,
+            461,
+            1319,
+            887
+          ],
+          "tightCrop": [
+            950,
+            487,
+            1264,
+            840
+          ],
+          "sourceFootX": 150,
+          "offset": [
+            85,
+            33
+          ],
+          "size": [
+            298,
+            335
+          ],
+          "visibleBounds": [
+            85,
+            34,
+            383,
+            367
+          ],
+          "rgbaSha256": "65a6a30a01db68b195e4000cd70d06c71a4d1462a1ad37f13e76a1a731a17a56"
+        },
+        {
+          "index": 7,
+          "sourceCrop": [
+            1318,
+            461,
+            1774,
+            887
+          ],
+          "tightCrop": [
+            1373,
+            546,
+            1732,
+            826
+          ],
+          "sourceFootX": 177,
+          "offset": [
+            59,
+            102
+          ],
+          "size": [
+            341,
+            266
+          ],
+          "visibleBounds": [
+            60,
+            103,
+            398,
+            368
+          ],
+          "rgbaSha256": "151b147a2be71159c22d9152cba550ccd54b6f62da6eacbf771dd483f64efbd5"
+        }
+      ]
+    },
+    "blue-butterfly-v1": {
+      "key": "blue_butterfly",
+      "file": "blue-butterfly-v1.webp",
+      "source": "blue_butterfly.png",
+      "sourceSha256": "aac003d6954f66cded19efabedead39ea0a61596844f1da315be8dca06d5ad0f",
+      "sha256": "637f2709891d351a90d2150a55cb59845d775732ddb239ece26ce008f8064d08",
+      "bytes": 372430,
+      "quality": 92,
+      "uniformScale": 0.9287598944591029,
+      "footX": 322,
+      "bounds": [
+        16,
+        16,
+        493,
+        368
+      ],
+      "frames": [
+        {
+          "index": 0,
+          "sourceCrop": [
+            0,
+            0,
+            461,
+            443
+          ],
+          "tightCrop": [
+            35,
+            79,
+            434,
+            416
+          ],
+          "sourceFootX": 225,
+          "offset": [
+            113,
+            55
+          ],
+          "size": [
+            371,
+            313
+          ],
+          "visibleBounds": [
+            113,
+            55,
+            484,
+            367
+          ],
+          "rgbaSha256": "b521b9b0b232ca9be8ed494df2ab3156fcefb75fd6577708ba542934e6015518"
+        },
+        {
+          "index": 1,
+          "sourceCrop": [
+            460,
+            0,
+            865,
+            443
+          ],
+          "tightCrop": [
+            485,
+            33,
+            842,
+            412
+          ],
+          "sourceFootX": 220,
+          "offset": [
+            118,
+            16
+          ],
+          "size": [
+            332,
+            352
+          ],
+          "visibleBounds": [
+            119,
+            16,
+            449,
+            368
+          ],
+          "rgbaSha256": "ded9a3f9f39c852ecec3d69a84c5a563ec01a28f4bb2698195cf5e90e5eff23d"
+        },
+        {
+          "index": 2,
+          "sourceCrop": [
+            864,
+            0,
+            1301,
+            443
+          ],
+          "tightCrop": [
+            887,
+            131,
+            1256,
+            415
+          ],
+          "sourceFootX": 303,
+          "offset": [
+            41,
+            104
+          ],
+          "size": [
+            343,
+            264
+          ],
+          "visibleBounds": [
+            42,
+            104,
+            384,
+            368
+          ],
+          "rgbaSha256": "ab08bbd16422a998129e41f4ec432ad7e7fa82b322d5d7c5ce818d5933a2ed9f"
+        },
+        {
+          "index": 3,
+          "sourceCrop": [
+            1300,
+            0,
+            1774,
+            443
+          ],
+          "tightCrop": [
+            1346,
+            65,
+            1753,
+            413
+          ],
+          "sourceFootX": 219,
+          "offset": [
+            119,
+            45
+          ],
+          "size": [
+            378,
+            323
+          ],
+          "visibleBounds": [
+            119,
+            45,
+            493,
+            367
+          ],
+          "rgbaSha256": "d9e662e3be762ac11d85f7d45e7b24829906e9dd290a33298daf5330fe9c19f5"
+        },
+        {
+          "index": 4,
+          "sourceCrop": [
+            0,
+            442,
+            457,
+            887
+          ],
+          "tightCrop": [
+            35,
+            494,
+            433,
+            806
+          ],
+          "sourceFootX": 330,
+          "offset": [
+            16,
+            78
+          ],
+          "size": [
+            370,
+            290
+          ],
+          "visibleBounds": [
+            16,
+            78,
+            386,
+            368
+          ],
+          "rgbaSha256": "db149eca1fa706276abe5b563e07e960f3d10771df5ab66033b1a54d5a00ae82"
+        },
+        {
+          "index": 5,
+          "sourceCrop": [
+            456,
+            442,
+            923,
+            887
+          ],
+          "tightCrop": [
+            480,
+            468,
+            872,
+            832
+          ],
+          "sourceFootX": 255,
+          "offset": [
+            85,
+            30
+          ],
+          "size": [
+            364,
+            338
+          ],
+          "visibleBounds": [
+            85,
+            31,
+            449,
+            367
+          ],
+          "rgbaSha256": "136a74cdb4f938012145da49eb51bb1d0deec106b2c40225a5ca1a5d25570391"
+        },
+        {
+          "index": 6,
+          "sourceCrop": [
+            922,
+            442,
+            1287,
+            887
+          ],
+          "tightCrop": [
+            971,
+            479,
+            1242,
+            843
+          ],
+          "sourceFootX": 144,
+          "offset": [
+            188,
+            30
+          ],
+          "size": [
+            252,
+            338
+          ],
+          "visibleBounds": [
+            188,
+            30,
+            439,
+            367
+          ],
+          "rgbaSha256": "de780ad4bae2923cf51e82b0094eb9339fc8a06b9235b76097fe3bf30d5f6410"
+        },
+        {
+          "index": 7,
+          "sourceCrop": [
+            1286,
+            442,
+            1774,
+            887
+          ],
+          "tightCrop": [
+            1330,
+            584,
+            1744,
+            832
+          ],
+          "sourceFootX": 250,
+          "offset": [
+            90,
+            138
+          ],
+          "size": [
+            385,
+            230
+          ],
+          "visibleBounds": [
+            91,
+            139,
+            474,
+            367
+          ],
+          "rgbaSha256": "aaa6f43fba5aca38fbffe25a05c501d98b36d8b805bc3c72f7cdea5c73f5adca"
+        }
+      ]
+    }
+  }
+}

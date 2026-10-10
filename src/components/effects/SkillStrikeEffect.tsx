@@ -102,6 +102,21 @@ export const SkillStrikeEffect = memo(function SkillStrikeEffect({ effect, sourc
         <stop offset="1" stopColor="#fff" />
       </linearGradient>}
     </defs>
+    {recipe && !blocked && effect.skillId !== 'enemy:basic' && <g className="skill-ritual" data-style="etched-elemental">
+      {!hit ? <g transform={`translate(${source.cx} ${source.cy}) scale(${Math.min(radius, 52) / 52})`}>
+        <g className="skill-ritual-gather">
+          {!lowPerf && <circle className="skill-ritual-glow" r="44" fill={`url(#${uid})`} />}
+          <circle className="skill-ritual-ring" r="30" />
+          {!lowPerf && <path className="skill-ritual-runes" d="M-39-9A40 40 0 0 1-9-39M9-39A40 40 0 0 1 39-9M39 9A40 40 0 0 1 9 39M-9 39A40 40 0 0 1-39 9M0-47V-36M47 0H36M0 47V36M-47 0H-36" />}
+        </g>
+      </g> : <g transform={`translate(${target.cx} ${target.cy}) rotate(${angle}) scale(${radius / 65})`}>
+        <g className="skill-ritual-release">
+          {!lowPerf && <circle className="skill-ritual-glow" r="57" fill={`url(#${uid})`} />}
+          <path className="skill-ritual-shock" d="M-12-47C51-43 51 43-12 47M-25-38C23-27 23 27-25 38" />
+          {!lowPerf && <path className="skill-ritual-sparks" d="M16-24 44-40 34-23ZM24-3 62 0 24 4ZM16 24 44 40 34 23Z" />}
+        </g>
+      </g>}
+    </g>}
     {!recipe && !hit && <g transform={`translate(${source.cx} ${source.cy})`}>
       <g className="skill-charge">
         <circle r={22 + tier * 5} />

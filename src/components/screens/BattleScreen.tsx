@@ -5,6 +5,8 @@ import { useBattleParallax } from '../../hooks/useBattleParallax';
 import { useBattleArenaScale } from '../../hooks/useBattleArenaScale.ts';
 import { SCENES } from '../../data/scenes';
 import { BG_IMGS_LOW } from '../../data/sprites.ts';
+import { getGuardianBackground } from '../../data/guardianEncounters.ts';
+import { getPersonalityCue } from '../../data/enemyPersonalities.ts';
 import { PVP_BALANCE } from '../../data/pvpBalance';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
@@ -41,6 +43,7 @@ import { BOSS_DEFEAT_MS, resolveBattleSpriteAnimations, resolveEnemyDefeat } fro
 import {
   BATTLE_ARENA_HEIGHT_SHARE,
   getBossFrameRequest,
+  getWingKnightFrameRequest,
   resolveBattleSpritePlacement,
   resolveBattleLaneSnapshot,
 } from '../../utils/battleLayout.ts';
@@ -113,6 +116,8 @@ const BATTLE_STATE_RENDER_KEYS = [
   'burnStack',
   'tideStack',
   'enemyExposed',
+  'enemyBehavior',
+  'enemySkillState',
   'shattered',
   'frozen',
   'staticStack',
@@ -363,7 +368,8 @@ function BattleScreenComponent({
   const memoSceneStyles = useMemo(() => {
     if (!coreStatic) return null;
     const { scene, sceneKey, layout } = coreStatic;
-    const resolvedBg = resolveBattleSceneBg(sceneKey, UX.lowPerfMode) ?? scene.bgImg;
+    const resolvedBg = getGuardianBackground(coreStatic.enemy.id)
+      ?? resolveBattleSceneBg(sceneKey, UX.lowPerfMode) ?? scene.bgImg;
     const bgStyle: CSSProperties | undefined = resolvedBg
       ? { backgroundImage: `url(${resolvedBg})` }
       : undefined;
@@ -447,9 +453,11 @@ function BattleScreenComponent({
       avoid,
     });
     const enemyMain = fit('enemy', snapshot.enemyMainWidthPx * arenaScale, enemyComp, snapshot.enemyMainRightPct, snapshot.enemyTopPct, undefined,
-      isBossEnemy ? getBossFrameRequest(arenaWidth, false, hasDualUnits) : undefined);
+      isBossEnemy ? getBossFrameRequest(arenaWidth, false, hasDualUnits)
+        : getWingKnightFrameRequest(coreStatic.enemy.id, snapshot.enemyMainWidthPx * arenaScale));
     const enemySub = fit('enemy', snapshot.enemySubWidthPx * arenaScale, getCompensation(coreStatic.spriteProfiles.enemySub ?? ''), snapshot.enemySubRightPct, snapshot.enemySubTopPct, showEnemySub ? [enemyMain.bounds] : undefined,
-      enemySubIsBossVisual ? getBossFrameRequest(arenaWidth, true, hasDualUnits) : undefined);
+      enemySubIsBossVisual ? getBossFrameRequest(arenaWidth, true, hasDualUnits)
+        : getWingKnightFrameRequest(enemySubId, snapshot.enemySubWidthPx * arenaScale));
     const enemies = showEnemySub ? [enemyMain.bounds, enemySub.bounds] : [enemyMain.bounds];
     // The old horizontal lane budget can make the reserve tiny even when vertical room remains.
     const reserveWidth = (comp: number) => Math.min(arenaWidth * 0.34, 76 * Math.max(1, comp));
@@ -813,6 +821,8 @@ function BattleScreenComponent({
     pvpPlayerSpecDef,
   } = coreRuntime;
 
+  const personalityContext = { enemy: S.enemy, hp: S.eHp, state: S.enemyBehavior?.main, battleMode: S.battleMode };
+
   const pvpComboTrigger = PVP_BALANCE.passive.specDefComboTrigger || 4;
   const {
     mainPlayerSize: rawMainSize,
@@ -1005,6 +1015,9 @@ function BattleScreenComponent({
           staticStack={S.staticStack}
           bossPhase={S.bossPhase}
           bossCharging={S.bossCharging}
+          enemyBehavior={S.enemyBehavior}
+          enemySkillState={S.enemySkillState}
+          canVaryMoves={moveRuntime.filter((move) => !move.locked).length > 1}
         />
 
         <BattleArenaSprites
@@ -1035,6 +1048,7 @@ function BattleScreenComponent({
           playerSubSpriteStyle={playerSubSpriteStyle}
           playerMainShadowStyle={playerMainShadowStyle}
           enemyShatter={enemyShatter}
+          enemyPersonalityPose={!S.eAnim && !S.gamePaused && !enemyDefeatedFlag ? getPersonalityCue(personalityContext) : null}
           showEnemyShadow={!S.eAnim && !UX.lowPerfMode && !enemyDefeatedFlag}
           showPlayerShadow={!S.pAnim && !UX.lowPerfMode}
         />
@@ -1110,6 +1124,8 @@ function BattleScreenComponent({
             playerGrade={S.playerGrade}
             inventory={S.inventory}
             bossIntent={bossIntent}
+            personalityContext={personalityContext}
+            enemySkillContext={{ enemy, state: S.enemySkillState?.main ?? { turn: 0, disrupted: false } }}
             shadowWard={getShadowWard(S.enemy?.id, S.battleMode, S.shadowShieldCD, S.eHp, S.enemy?.maxHp ?? 0)}
             burnStack={S.burnStack}
             tideStack={S.tideStack}

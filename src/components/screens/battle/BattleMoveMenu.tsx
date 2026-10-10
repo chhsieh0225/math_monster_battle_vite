@@ -1,3 +1,4 @@
+import { getEnemySkill, enemySkillNameKey, canDisruptEnemySkill, type EnemySkillActor, type EnemySkillSlot } from '../../../data/enemySkills.ts';
 import { memo, useMemo, useCallback, useState } from 'react';
 import { alignOpsToGrade, type Grade } from '../../../data/gradeCurriculum.ts';
 import { opDisplayName } from '../../../data/opNames.ts';
@@ -11,6 +12,7 @@ import { getSkillMastery } from '../../../utils/skillPresentation.ts';
 import { getFireTactic, planFireTactic, planElementTactic, planNatureTactic } from '../../../utils/combatTactics.ts';
 import type { getShadowWard } from '../../../utils/combatTactics.ts';
 import { BALANCE_CONFIG } from '../../../data/balanceConfig.ts';
+import { personalityMoveKey, planPersonalityHit, type PersonalityContext } from '../../../data/enemyPersonalities.ts';
 import type { MoveRuntime } from './buildBattleCore';
 
 type TranslatorParams = Record<string, string | number>;
@@ -51,6 +53,8 @@ type BattleMoveMenuProps = {
   moveRuntime: MoveRuntime[];
   inventory: InventoryData;
   bossIntent?: BossIntent | null;
+  personalityContext?: PersonalityContext;
+  enemySkillContext?: { enemy: EnemySkillActor; state: EnemySkillSlot };
   shadowWard?: ReturnType<typeof getShadowWard>;
   burnStack?: number;
   tideStack?: number;
@@ -95,6 +99,8 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
   moveRuntime,
   inventory,
   bossIntent,
+  personalityContext,
+  enemySkillContext,
   shadowWard,
   burnStack = 0,
   tideStack = 0,
@@ -109,6 +115,8 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
   onQuitGame,
   playerGrade = null,
 }: BattleMoveMenuProps) {
+  const enemyAction = enemySkillContext && getEnemySkill(enemySkillContext.enemy, enemySkillContext.state.turn,
+    bossIntent?.charging || bossIntent?.event === 'start_charge');
   const [bossTactic, setBossTactic] = useState<BossTactic>('guarded');
   const specDefItemName = resolveSpecDefItemName(activeStarter.type, t);
   const resource = planElementTactic(activeStarter.id, battleMode, 0, tideStack, staticStack);
@@ -173,6 +181,11 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
         {enemyExposed && <strong>{t('battle.tactics.exposed', undefined, { bonus: Math.round((BALANCE_CONFIG.tactics.exposedScale - 1) * 100) })}</strong>}
         {shattered && <span>{t('battle.tactics.frost')}</span>}
       </div>}
+      {battleMode !== 'pvp' && !bossIntent && enemyAction && <section className="battle-enemy-skill-intent" data-disrupted={enemySkillContext?.state.disrupted || undefined} aria-live="polite">
+        <strong>{t('battle.enemySkill.next', 'Next: {move}', { move: t(enemySkillNameKey(enemyAction), enemyAction.name) })}</strong>
+        <span>{t(`battle.enemySkill.${enemyAction.kind}`, '', { power: enemyAction.power })}</span>
+        {enemyAction.kind !== 'basic' && <small>{t(enemySkillContext?.state.disrupted ? 'battle.enemySkill.weakened' : 'battle.enemySkill.counter')}</small>}
+      </section>}
       {isCoopBattle && (
         <div className="battle-menu-hint">
           🤝 {t('battle.coopTurn')} {activeStarter.typeIcon} {activeStarter.name}
@@ -194,6 +207,7 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
 
       {bossIntent && (
         <section className={`battle-intent ${bossIntent.charging ? 'is-charging' : ''}`} aria-label={t('battle.intent.title')}>
+          {enemyAction && <strong>{t('battle.enemySkill.next', 'Next: {move}', { move: t(enemySkillNameKey(enemyAction), enemyAction.name) })}</strong>}
           <div className="battle-intent-head" role="status">
             <span className="battle-intent-label">{t('battle.intent.title')}</span>
             <strong>{t(`battle.intent.${bossIntent.event}`, bossIntent.event)}</strong>
@@ -237,6 +251,10 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
           const tactic = planFireTactic(fireTactic, burnStack, enemyExposed);
           const element = planElementTactic(activeStarter.id, battleMode, i, tideStack, staticStack);
           const nature = planNatureTactic(activeStarter.id, battleMode, i, lv, enemyExposed, shattered);
+          const personalityHit = personalityContext && !locked ? planPersonalityHit({
+            ...personalityContext, battleMode, moveKey: personalityMoveKey(activeStarter, i), moveName: m.name,
+            canVary: moveRuntime.filter((entry) => !entry.locked).length > 1,
+          }) : null;
           return (
             <button
               className={`battle-menu-btn ${locked ? 'is-locked' : ''}`}
@@ -267,6 +285,12 @@ export const BattleMoveMenu = memo(function BattleMoveMenu({
                 <span className="move-icon">{m.icon}</span>
                 <span className="move-name">{m.name}</span>
               </div>
+              {personalityHit && personalityHit.damageScale !== 1 && <div className={`move-personality-hint ${personalityHit.damageScale < 1 ? 'is-guarded' : 'is-opening'}`}>
+                {t(`battle.personality.move.${personalityHit.feedback}`, '', {
+                  percent: Math.round(Math.abs(personalityHit.damageScale - 1) * 100),
+                })}
+              </div>}
+              {!locked && enemySkillContext && canDisruptEnemySkill(enemySkillContext.enemy, enemySkillContext.state, i, eff, battleMode) && <div className="move-personality-hint is-opening">{t('battle.enemySkill.breaker')}</div>}
               <div className="move-desc-row">
                 {describeMoveForGrade(m, playerGrade, battleMode, t)} · {t('battle.power')} <b className="move-power">{pw}</b>
                 {eff > 1 ? ' ×1.5' : eff < 1 ? ' ×0.6' : ''}

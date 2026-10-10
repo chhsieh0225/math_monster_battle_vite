@@ -8,7 +8,8 @@ export type SpriteBodyMotion = 'grounded' | 'soft' | 'hover' | 'wing' | 'heavy';
 export function getSpriteBodyMotion(key: SpriteKey): SpriteBodyMotion {
   if (key.startsWith('slime') || key === 'candy_monster' || key === 'mushroom') return 'soft';
   if (key.startsWith('ghost') || key === 'boss_sword_god') return 'hover';
-  if (key === 'colorful_butterfly') return 'wing';
+  if (key === 'colorful_butterfly' || key === 'blue_butterfly') return 'wing';
+  if (key === 'limit_knight' || key === 'topology_knight' || key === 'algebra_knight') return 'hover';
   if (key.startsWith('boss') || key.startsWith('golumn') || key.startsWith('dragon') || key === 'candy_knight') return 'heavy';
   return 'grounded';
 }
@@ -19,7 +20,7 @@ export function resolveBattleSpriteClip(animation: string): { clip: BattleSprite
   const parsed = /^(\d*\.?\d+)(ms|s)$/.exec(duration);
   const durationMs = parsed ? Math.max(1, Number(parsed[1]) * (parsed[2] === 's' ? 1000 : 1)) : 500;
   let clip: BattleSpriteClip = 'idle';
-  if (name === 'attackLunge' || name === 'enemyAttackLunge') clip = 'attack';
+  if (name === 'attackLunge' || name === 'enemyAttackLunge' || name === 'enemySkillCast') clip = 'attack';
   else if (/^(?:player|enemy)(?:Fire|Grass|Water|Elec|Dark|Light|Steel|Ice)?Hit$/.test(name)) clip = 'hurt';
   else if (name === 'dodgeSlide' || name === 'enemyShieldPulse') clip = 'brace';
   else if (name === 'bossShake') clip = 'charge';

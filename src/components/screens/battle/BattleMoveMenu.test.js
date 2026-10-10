@@ -115,3 +115,18 @@ test('nature previews share mastery healing, frost readiness and PvP exclusions 
     }
   }
 });
+
+test('ordinary skill telegraphs and counter buttons use the actual prepared action in both languages', () => {
+  const context = { enemy: { id: 'ghost', mType: 'dark' }, state: { turn: 1, disrupted: false } };
+  const chinese = renderMenu({ enemySkillContext: context });
+  const english = renderMenu({ enemySkillContext: context }, en);
+  assert.match(chinese, /下一招：幽魂汲取/);
+  assert.match(chinese, /傷害 ×0.85/);
+  assert.match(english, /Next: Soul Siphon/);
+  assert.equal((chinese.match(/可打亂技能/g) || []).length, 1);
+  assert.doesNotMatch(chinese + english, /undefined|NaN|\{power\}/);
+  const disrupted = renderMenu({ enemySkillContext: { ...context, state: { turn: 1, disrupted: true } } });
+  assert.match(disrupted, /已打亂：技能減傷 35%/);
+  assert.doesNotMatch(disrupted, /可打亂技能/);
+  assert.doesNotMatch(renderMenu({ enemySkillContext: context, battleMode: 'pvp' }), /battle-enemy-skill-intent|可打亂技能/);
+});

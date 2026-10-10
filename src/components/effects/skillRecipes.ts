@@ -4,7 +4,8 @@ export type SkillMotion = 'shot' | 'rush' | 'wave' | 'fall' | 'beam' | 'orbit' |
 export type SkillMotif = 'flame' | 'meteor' | 'bubble' | 'tide' | 'vortex' | 'leaf' | 'vine' | 'thorn'
   | 'spark' | 'bolt' | 'chain' | 'claw' | 'roar' | 'eclipse' | 'blade' | 'frost' | 'mirror'
   | 'storm' | 'breath' | 'fang' | 'venom' | 'serpent' | 'wing' | 'rift' | 'sword'
-  | 'slime' | 'wisp' | 'spore' | 'stone' | 'mud' | 'candy' | 'butterfly';
+  | 'slime' | 'wisp' | 'spore' | 'stone' | 'mud' | 'candy' | 'butterfly'
+  | 'calculus' | 'knot' | 'matrix' | 'crescent';
 export type SkillRecipe = {
   motif: SkillMotif;
   motion: SkillMotion;
@@ -92,6 +93,25 @@ export const CHARACTER_SKILL_RECIPES = {
 } satisfies Record<StarterId, readonly [SkillRecipe, SkillRecipe, SkillRecipe, SkillRecipe]>;
 
 const MONSTER_RECIPES: Record<string, SkillRecipe> = {
+  slime_canopy: r('field', 'vine', 'M-40 35Q-35-5-20-24L-10 5 0-40 10 5 20-24Q35-5 40 35Z', '#dcfce7', '#22c55e'),
+  slime_flare: r('shot', 'flame', 'M-30 20Q-42-12-12-22L0-38 12-16Q42-10 30 20Z', '#fde68a', '#f97316'),
+  slime_eruption: r('field', 'flame', 'M-42 34-28-15-14 10 0-44 14 10 28-15 42 34Z', '#fef08a', '#ef4444'),
+  slime_bubble: r('shot', 'bubble', ring, '#e0f2fe', '#38bdf8'),
+  slime_pressure: r('wave', 'tide', wave, '#e0f2fe', '#2563eb'),
+  slime_spark: r('shot', 'spark', bolt, '#fef9c3', '#facc15'),
+  slime_thunder: r('fall', 'bolt', bolt, '#ffffff', '#eab308'),
+  slime_shard: r('shot', 'stone', crystal, '#e2e8f0', '#94a3b8'),
+  slime_forge: r('fall', 'stone', 'M-30-30H30L40 20 0 38-40 20Z', '#f8fafc', '#64748b'),
+  slime_void: r('orbit', 'vortex', ring, '#e9d5ff', '#a78bfa'),
+  slime_abyss: r('field', 'rift', 'M0-42 10-12 40 0 10 12 0 42-10 12-40 0-10-12Z', '#e9d5ff', '#7c3aed'),
+  fire_rain: r('fall', 'meteor', 'M-24 28Q-42 0-12-16L42-40 22 16Q0 44-24 28Z', '#fef08a', '#f97316'),
+  ghost_reap: r('slash', 'blade', 'M-42 32Q-48-38 38-36Q-18-8-42 32ZM28-30-12 40', '#e9d5ff', '#a78bfa'),
+  mushroom_bloom: r('field', 'spore', ring, '#d9f99d', '#84cc16'),
+  dragon_cannon: r('beam', 'breath', 'M-42-12 0-25 42 0 0 25-42 12Z', '#e0f2fe', '#38bdf8'),
+  golumn_crash: r('fall', 'stone', 'M-34-30 8-40 38-10 28 30-10 40-40 10ZM8-40 0 0 28 30M0 0-40 10', '#fde68a', '#d6a268'),
+  mud_crash: r('wave', 'mud', 'M-44 30Q-40-18-20-28L-5-8 12-38Q38-20 44 30Z', '#fef3c7', '#a88a64'),
+  candy_rain: r('fall', 'sword', 'M0-42 8-20 4 24 0 36-4 24-8-20ZM-18 12H18', '#fce7f3', '#f472b6'),
+  butterfly_storm: r('field', 'butterfly', ring, '#fef08a', '#4ade80'),
   slime: r('shot', 'slime', 'M-38 12 Q-30 -20 -10 -8 Q0 -40 16 -12 Q38 -20 38 12 Q14 36 -14 26Z M-34 34 L-42 40 M32 28 L42 34'),
   fire: r('beam', 'flame', 'M-42 -18 Q-16 -34 6 -8 L-2 -30 L40 0 L-2 30 L6 8 Q-16 34 -42 18'),
   ghost: r('orbit', 'wisp', 'M10 -36 A38 38 0 1 0 10 36 A28 28 0 0 1 10 -36 M24 -12 L34 0 L24 12 M36 -20 L44 -8', '#ddd6fe', '#a78bfa'),
@@ -105,10 +125,35 @@ const MONSTER_RECIPES: Record<string, SkillRecipe> = {
   colorful_butterfly: r('orbit', 'butterfly', 'M0 0 Q-44 -48 -36 -6 Q-28 18 0 0 Q44 -48 36 -6 Q28 18 0 0 M0 0 Q-40 4 -22 30 Q-8 38 0 0 Q40 4 22 30 Q8 38 0 0', '#fef08a', '#4ade80'),
 };
 
+export const GUARDIAN_SKILL_RECIPES: Record<string, readonly [SkillRecipe, SkillRecipe, SkillRecipe]> = {
+  limit_knight: [
+    r('slash', 'calculus', 'M-48 28Q-15-50 44-34Q7-4-48 28ZM-24 32Q-7 24-4 0T20-30M-36 8 34 8', '#ffffff', '#facc15'),
+    r('fall', 'sword', 'M0-44 8-22 5 20 0 34-5 20-8-22ZM-17 12H17M0 34V44', '#e0f2fe', '#fbbf24'),
+    r('orbit', 'calculus', 'M-36 0C-36-34-3-28 0 0S36 34 36 0S3-34 0 0S-36 34-36 0ZM0-43V-33M0 33V43', '#ffffff', '#fde68a'),
+  ],
+  topology_knight: [
+    r('slash', 'knot', 'M-42 18C-28-32 7-38 36-18C12-8-5 25-42 18ZM-28 21C-7-13 12-19 30-20M-34-9Q-4 21 33 4', '#fef3c7', '#38bdf8'),
+    r('orbit', 'knot', 'M-32 0C-32-29-4-26 10 0S40 29 32 0S4-26-10 0S-40 29-32 0ZM-15-34Q34-20 16 32Q-34 20-15-34Z', '#fde68a', '#22d3ee'),
+    r('field', 'knot', 'M-34 0A34 23 0 1 1 34 0A34 23 0 1 1-34 0M0-38A22 38 0 1 1 0 38A22 38 0 1 1 0-38M-10-10H10V10H-10Z', '#ffffff', '#38bdf8'),
+  ],
+  algebra_knight: [
+    r('rush', 'matrix', 'M-42-6H12V-22L43 0 12 22V6H-42ZM-25-19H-8M-25 19H-8', '#fef08a', '#22d3ee'),
+    r('field', 'matrix', 'M-31-31H31V31H-31ZM-10-31V31M10-31V31M-31-10H31M-31 10H31M-42-38H-36V38H-42M42-38H36V38H42', '#fef08a', '#38bdf8'),
+    r('beam', 'rift', 'M-44-8H44V8H-44ZM0-43 9-9 36 0 9 9 0 43-9 9-36 0-9-9ZM-33-33 33 33M33-33-33 33', '#ffffff', '#0ea5e9'),
+  ],
+  blue_butterfly: [
+    r('shot', 'crescent', 'M-18-38Q46-26 38 6Q29 37-18 38Q17 16 16 0Q17-16-18-38ZM-30-25-39-7-23-14', '#e0f2fe', '#38bdf8'),
+    r('orbit', 'butterfly', 'M0 0Q-48-39-31-5Q-18 16 0 0Q48-39 31-5Q18 16 0 0M0 0Q-31 14-18 34Q-4 31 0 0Q31 14 18 34Q4 31 0 0', '#bae6fd', '#2563eb'),
+    r('fall', 'crescent', 'M-16-42Q34-32 35 0Q32 33-16 42Q11 12 8 0Q11-12-16-42ZM-26-10-34 6-18 5Z', '#ffffff', '#60a5fa'),
+  ],
+};
+
 export function getSkillRecipe(skillId?: string): SkillRecipe | undefined {
   if (!skillId) return undefined;
+  if (skillId === 'enemy:basic') return r('rush', 'claw', claw, '#f1f5f9', '#94a3b8');
   const [family, slot, extra] = skillId.split(':');
   if (extra !== undefined) return undefined;
+  if (/^[0-2]$/.test(slot) && Object.hasOwn(GUARDIAN_SKILL_RECIPES, family)) return GUARDIAN_SKILL_RECIPES[family][Number(slot)];
   if (family === 'monster') return Object.hasOwn(MONSTER_RECIPES, slot) ? MONSTER_RECIPES[slot] : undefined;
   if (!/^[0-3]$/.test(slot) || !Object.hasOwn(CHARACTER_SKILL_RECIPES, family)) return undefined;
   return CHARACTER_SKILL_RECIPES[family as StarterId][Number(slot)];

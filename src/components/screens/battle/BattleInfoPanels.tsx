@@ -1,3 +1,4 @@
+import { getEnemySkill, enemySkillNameKey, type EnemySkillState } from '../../../data/enemySkills.ts';
 import { memo } from 'react';
 import type { CSSProperties, RefObject } from 'react';
 import { hasSpecialTrait } from '../../../utils/traits';
@@ -5,11 +6,31 @@ import HPBar from '../../ui/HPBar';
 import XPBar from '../../ui/XPBar';
 import type { EnemyVm, StarterVm, UseBattleState } from '../../../types/battle';
 import { BALANCE_CONFIG } from '../../../data/balanceConfig.ts';
+import { getPersonalityCue, PERSONALITY_TACTICS, type PersonalityContext, type EnemyBehaviorState } from '../../../data/enemyPersonalities.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
 
 const hpFocusClass = (active: boolean): string => `battle-hp-focus ${active ? 'is-active' : 'is-dim'}`;
+
+function PersonalityIntent({ context, enemy, t, canVary, reserve = false }: {
+  context: PersonalityContext; enemy: EnemyVm; t: Translator; canVary: boolean; reserve?: boolean;
+}) {
+  const cue = getPersonalityCue(context);
+  if (!cue || !enemy.personality) return null;
+  const message = reserve ? 'reserve' : enemy.personality.id === 'crafty' && !canVary ? 'limited' : cue;
+  return <div className="battle-personality-intent" data-cue={reserve ? 'reserve' : cue} role="status">
+    <strong>{enemy.personality.icon} {enemy.personality.name}</strong>
+    <span>{t(`battle.personality.intent.${message}`, '', {
+      anger: context.state?.anger ?? 0, max: PERSONALITY_TACTICS.angerHits,
+      rage: Math.round((PERSONALITY_TACTICS.rageScale - 1) * 100),
+      bonus: Math.round((PERSONALITY_TACTICS.openingScale - 1) * 100),
+      hp: Math.round(PERSONALITY_TACTICS.timidHpRatio * 100),
+      guard: Math.round((1 - PERSONALITY_TACTICS.guardScale) * 100),
+      move: context.state?.watchedMoveName ?? '',
+    })}</span>
+  </div>;
+}
 
 type BattleEnemyInfoPanelProps = {
   panelRef?: RefObject<HTMLDivElement | null>;
@@ -34,6 +55,9 @@ type BattleEnemyInfoPanelProps = {
   staticStack: number;
   bossPhase: number;
   bossCharging: boolean;
+  enemyBehavior?: EnemyBehaviorState;
+  enemySkillState?: EnemySkillState;
+  canVaryMoves?: boolean;
 };
 
 export const BattleEnemyInfoPanel = memo(function BattleEnemyInfoPanel({
@@ -59,6 +83,9 @@ export const BattleEnemyInfoPanel = memo(function BattleEnemyInfoPanel({
   staticStack,
   bossPhase,
   bossCharging,
+  enemyBehavior,
+  enemySkillState,
+  canVaryMoves = false,
 }: BattleEnemyInfoPanelProps) {
   return (
     <div ref={panelRef} className="battle-info-enemy" style={style}>
@@ -71,6 +98,9 @@ export const BattleEnemyInfoPanel = memo(function BattleEnemyInfoPanel({
         />
       </div>
 
+      <PersonalityIntent context={{ enemy, hp: enemyHp, state: enemyBehavior?.main, battleMode }}
+        enemy={enemy} t={t} canVary={canVaryMoves} />
+
       {showEnemySub && enemySub && (
         <div className={`battle-hp-sub-row ${hpFocusClass(false)}`}>
           <HPBar
@@ -79,6 +109,11 @@ export const BattleEnemyInfoPanel = memo(function BattleEnemyInfoPanel({
             color={enemySub.c1}
             label={`${t('battle.subUnit', 'Sub')} ${enemySub.typeIcon}${enemySub.name} ${t('battle.level', 'Lv.{level}', { level: enemySub.lvl })}`}
           />
+          {battleMode !== 'pvp' && <div className="battle-enemy-reserve-skill">{t('battle.enemySkill.reserve', 'Assist ready: {move}', {
+            move: t(enemySkillNameKey(getEnemySkill(enemySub, enemySkillState?.sub.turn)), getEnemySkill(enemySub, enemySkillState?.sub.turn).name),
+          })}</div>}
+          <PersonalityIntent context={{ enemy: enemySub, hp: enemySubHp, state: enemyBehavior?.sub, battleMode }}
+            enemy={enemySub} t={t} canVary={canVaryMoves} reserve />
         </div>
       )}
 
@@ -98,8 +133,8 @@ export const BattleEnemyInfoPanel = memo(function BattleEnemyInfoPanel({
           </>
         ) : (
           <>
-            {enemy.personality?.name && (
-              <div className="battle-status-chip is-personality">
+            {enemy.personality?.name && !getPersonalityCue({ enemy, hp: enemyHp, state: enemyBehavior?.main, battleMode }) && (
+              <div className="battle-status-chip is-personality" title={enemy.personality.desc}>
                 {(enemy.personality.icon || '✨')} {enemy.personality.name}
               </div>
             )}

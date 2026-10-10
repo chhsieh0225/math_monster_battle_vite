@@ -1,4 +1,5 @@
 import type { EnemyPersonalityId } from '../types/game';
+import { BOSS_IDS } from './monsterConfigs.ts';
 
 export type EnemyPersonalityDef = {
   id: EnemyPersonalityId;
@@ -50,9 +51,8 @@ function clampCritBonus(value: number): number {
 /**
  * Wild encounter personalities (六個個性詞綴).
  *
- * Note: battle has no speed stat, so "tempo-like" identity is modeled through:
- * - crit pressure (chance / damage),
- * - incoming damage scale (fragile/tanky feel).
+ * Irritable, timid and crafty use the telegraphed tactics below instead of
+ * stacking large passive damage bonuses. The other three retain their stats.
  */
 export const ENEMY_PERSONALITIES: readonly EnemyPersonalityDef[] = [
   {
@@ -60,26 +60,26 @@ export const ENEMY_PERSONALITIES: readonly EnemyPersonalityDef[] = [
     icon: '😡',
     name: '易怒的',
     nameEn: 'Irascible',
-    desc: '攻擊慾望很強，但破綻也多。',
-    descEn: 'Aggressive and explosive, but leaves more openings.',
-    hpScale: 0.9,
-    atkScale: 1.16,
-    critChanceBonus: 0.04,
-    critDamageBonus: 0.08,
-    incomingDamageScale: 1.06,
+    desc: '被選招命中兩次後暴怒強攻，隨後露出一次重擊破綻。',
+    descEn: 'Two selected hits trigger a rage strike, then leave an opening for your next hit.',
+    hpScale: 0.95,
+    atkScale: 1,
+    critChanceBonus: 0,
+    critDamageBonus: 0,
+    incomingDamageScale: 1,
   },
   {
     id: 'timid',
     icon: '😰',
     name: '膽小的',
     nameEn: 'Timid',
-    desc: '保守應戰，火力偏低但更懂得保命。',
-    descEn: 'Plays safe with lower offense and better self-preservation.',
-    hpScale: 1.08,
+    desc: '生命不高於40%時架盾，減輕一次選招攻擊；每場只用一次。',
+    descEn: 'At 40% HP or below, guards one selected hit. Only once per encounter.',
+    hpScale: 1,
     atkScale: 0.9,
     critChanceBonus: -0.03,
     critDamageBonus: -0.06,
-    incomingDamageScale: 0.97,
+    incomingDamageScale: 1,
   },
   {
     id: 'impatient',
@@ -112,13 +112,13 @@ export const ENEMY_PERSONALITIES: readonly EnemyPersonalityDef[] = [
     icon: '🦊',
     name: '狡詐的',
     nameEn: 'Crafty',
-    desc: '擅長抓空檔，爆發角度刁鑽。',
-    descEn: 'Exploits openings with trickier burst windows.',
-    hpScale: 0.96,
-    atkScale: 1.04,
-    critChanceBonus: 0.06,
-    critDamageBonus: 0.04,
-    incomingDamageScale: 1.03,
+    desc: '招架上一個命中的招式；換招可繞過招架。只有一招可用時不招架。',
+    descEn: 'Parries the last landed move; change moves to outwit it. No parry with only one usable move.',
+    hpScale: 1,
+    atkScale: 1,
+    critChanceBonus: 0,
+    critDamageBonus: 0,
+    incomingDamageScale: 1,
   },
   {
     id: 'composed',
@@ -188,4 +188,84 @@ function normalizeEnemyPersonality(personalityDef: EnemyPersonalityDef): EnemyPe
 export function getEnemyPersonality(id: string): EnemyPersonality | undefined {
   const definition = ENEMY_PERSONALITIES.find((personality) => personality.id === id);
   return definition ? normalizeEnemyPersonality(definition) : undefined;
+}
+
+export const PERSONALITY_TACTICS = {
+  angerHits: 2, rageScale: 1.25, openingScale: 1.25,
+  timidHpRatio: 0.4, guardScale: 0.65, parryScale: 0.65, outwitScale: 1.1,
+} as const;
+
+export type PersonalityBattleState = {
+  anger: number;
+  opening: boolean;
+  guardSpent: boolean;
+  watchedMoveKey: string | null;
+  watchedMoveName: string;
+};
+export type EnemyBehaviorState = { main: PersonalityBattleState; sub: PersonalityBattleState };
+const EMPTY_TACTIC: Readonly<PersonalityBattleState> = Object.freeze({
+  anger: 0, opening: false, guardSpent: false, watchedMoveKey: null, watchedMoveName: '',
+});
+export function createEnemyBehaviorState(): EnemyBehaviorState {
+  return { main: { ...EMPTY_TACTIC }, sub: { ...EMPTY_TACTIC } };
+}
+
+export type PersonalityContext = {
+  enemy?: { id?: string; maxHp?: number; personality?: { id?: string } } | null;
+  hp: number;
+  state?: PersonalityBattleState;
+  battleMode?: string;
+};
+export type PersonalityCue = 'anger' | 'rage' | 'opening' | 'timid' | 'guard' | 'spent' | 'observe' | 'watch';
+
+/** The HUD and damage planners read the same encounter-local state. */
+export function getPersonalityCue({ enemy, hp, state = EMPTY_TACTIC, battleMode }: PersonalityContext): PersonalityCue | null {
+  if (!enemy || hp <= 0 || battleMode === 'pvp' || BOSS_IDS.has(enemy.id ?? '')) return null;
+  switch (enemy.personality?.id) {
+    case 'irritable': return state.opening ? 'opening' : state.anger >= PERSONALITY_TACTICS.angerHits ? 'rage' : 'anger';
+    case 'timid': return state.guardSpent ? 'spent' : hp <= (enemy.maxHp ?? 0) * PERSONALITY_TACTICS.timidHpRatio ? 'guard' : 'timid';
+    case 'crafty': return state.watchedMoveKey ? 'watch' : 'observe';
+    default: return null;
+  }
+}
+
+export function personalityMoveKey(starter: { id?: string; type?: string }, index: number): string {
+  return `${starter.id || starter.type || 'unknown'}:${index}`;
+}
+
+export function canVaryPersonalityMoves(moves: readonly { risky?: boolean }[] = [], sealedMove = -1, chargeReady = false): boolean {
+  return moves.filter((move, index) => index !== sealedMove && (!move.risky || chargeReady)).length > 1;
+}
+
+export type PersonalityHitFeedback = 'exploit' | 'guardBreak' | 'parried' | 'outwit' | 'rageReady';
+export function planPersonalityHit(context: PersonalityContext & {
+  moveKey: string; moveName: string; canVary: boolean;
+}): { damageScale: number; next: PersonalityBattleState; feedback?: PersonalityHitFeedback } | null {
+  const cue = getPersonalityCue(context);
+  if (!cue) return null;
+  const state = context.state ?? EMPTY_TACTIC;
+  const next = { ...state };
+  if (cue === 'opening') {
+    return { damageScale: PERSONALITY_TACTICS.openingScale, next: { ...next, opening: false, anger: 0 }, feedback: 'exploit' };
+  }
+  if (cue === 'anger' || cue === 'rage') {
+    next.anger = Math.min(PERSONALITY_TACTICS.angerHits, state.anger + 1);
+    return { damageScale: 1, next, feedback: cue !== 'rage' && next.anger === PERSONALITY_TACTICS.angerHits ? 'rageReady' : undefined };
+  }
+  if (cue === 'guard') return { damageScale: PERSONALITY_TACTICS.guardScale, next: { ...next, guardSpent: true }, feedback: 'guardBreak' };
+  if (cue === 'observe' || cue === 'watch') {
+    const repeat = context.canVary && state.watchedMoveKey === context.moveKey;
+    const outwit = context.canVary && !!state.watchedMoveKey && !repeat;
+    next.watchedMoveKey = context.canVary ? context.moveKey : null;
+    next.watchedMoveName = context.canVary ? context.moveName : '';
+    return { damageScale: repeat ? PERSONALITY_TACTICS.parryScale : outwit ? PERSONALITY_TACTICS.outwitScale : 1,
+      next, feedback: repeat ? 'parried' : outwit ? 'outwit' : undefined };
+  }
+  return { damageScale: 1, next };
+}
+
+/** Called once at attack contact, even when the player blocks the rage strike. */
+export function planPersonalityAttack(context: PersonalityContext): { damageScale: number; next: PersonalityBattleState } | null {
+  if (getPersonalityCue(context) !== 'rage') return null;
+  return { damageScale: PERSONALITY_TACTICS.rageScale, next: { ...(context.state ?? EMPTY_TACTIC), anger: 0, opening: true } };
 }

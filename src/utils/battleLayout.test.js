@@ -8,11 +8,73 @@ import {
   resolveBattleSpritePlacement,
   BATTLE_ARENA_HEIGHT_SHARE,
   getBossFrameRequest,
+  getWingKnightFrameRequest,
 } from './battleLayout.ts';
 import { BOSS_IDS } from '../data/monsterConfigs.ts';
+import { GUARDIAN_ENCOUNTERS } from '../data/guardianEncounters.ts';
+import { MONSTER_CONFIGS } from '../data/monsterConfigs.ts';
 
 const overlaps = (a, b) => a.left < b.right - 0.01 && a.right > b.left + 0.01
   && a.top < b.bottom - 0.01 && a.bottom > b.top + 0.01;
+
+test('wing knights request a modest 15% gain for both front and reserve frames, without resizing other monsters', () => {
+  for (const id of ['limit_knight', 'topology_knight', 'algebra_knight']) {
+    for (const frameWidth of [60, 140, 220]) {
+      assert.equal(getWingKnightFrameRequest(id, frameWidth), frameWidth * 1.15);
+    }
+  }
+  for (const id of ['blue_butterfly', 'candy_knight', 'slime', ...BOSS_IDS, '', undefined]) {
+    assert.equal(getWingKnightFrameRequest(id, 140), undefined);
+  }
+});
+
+test('larger wing knights still clear HUDs, companions and screen edges in phone and desktop lanes', () => {
+  for (const id of ['limit_knight', 'topology_knight', 'algebra_knight']) {
+    for (const [width, rootHeight] of [[320, 568], [390, 844], [720, 844], [1280, 720]]) {
+      for (const dual of [false, true]) {
+        const arena = { width, rootHeight, height: rootHeight * BATTLE_ARENA_HEIGHT_SHARE,
+          enemyHudRight: width * .54, enemyHudBottom: dual ? 158 : 105,
+          playerHudLeft: width * .46, playerHudInset: dual ? 110 : 80 };
+        const huds = [{ left: 0, top: 0, right: arena.enemyHudRight, bottom: arena.enemyHudBottom },
+          { left: arena.playerHudLeft, top: arena.height - arena.playerHudInset, right: width, bottom: arena.height }];
+        const occupied = [];
+        const frames = [['enemy', Math.min(width * .36, 190), width * .75, arena.height * .4]];
+        if (dual) frames.push(['enemy', Math.min(width * .18, 110), width * .77, arena.height * .18]);
+        frames.push(['player', Math.min(width * .4, 180), width * .25, arena.height * .72]);
+        if (dual) frames.push(['player', Math.min(width * .24, 100), width * .42, arena.height * .6]);
+        for (const [side, frameWidth, desiredCenterX, desiredCenterY] of frames) {
+          const placement = resolveBattleSpritePlacement({ arena, side, frameWidth, compensation: side === 'enemy' ? 1.2626 : 1,
+            minFrameWidth: side === 'enemy' ? getWingKnightFrameRequest(id, frameWidth) : undefined,
+            desiredCenterX, desiredCenterY, avoid: occupied });
+          assert.ok(placement.width > 0 && Number.isFinite(placement.scale));
+          assert.ok(placement.bounds.left >= 0 && placement.bounds.right <= width);
+          assert.ok(placement.bounds.top >= 0 && placement.bounds.bottom <= arena.height);
+          for (const rect of [...huds, ...occupied]) assert.equal(overlaps(placement.bounds, rect), false);
+          occupied.push(placement.bounds);
+        }
+      }
+    }
+  }
+});
+
+test('new guardian envelopes clear both HUDs on narrow phones and desktops', () => {
+  for (const id of Object.keys(GUARDIAN_ENCOUNTERS)) {
+    const monster = MONSTER_CONFIGS.find(entry => entry.id === id);
+    for (const [width, rootHeight] of [[320, 568], [390, 844], [1280, 720]]) {
+      const layout = resolveBattleLayout({ battleMode: 'single', hasDualUnits: false, compactUI: width < 500,
+        playerStageIdx: 0, playerStarterId: 'fire', enemyId: id, enemySceneType: monster.mType,
+        enemyIsEvolved: false, playerSpriteKey: 'playerfire0SVG', enemySpriteKey: monster.spriteKey });
+      const arena = { width, rootHeight, height: rootHeight * BATTLE_ARENA_HEIGHT_SHARE,
+        enemyHudRight: width * .56, enemyHudBottom: 90, playerHudLeft: width * .46, playerHudInset: 90 };
+      const placed = resolveBattleSpritePlacement({ arena, side: 'enemy', frameWidth: layout.enemySize,
+        compensation: layout.enemyComp, desiredCenterX: width * .75, desiredCenterY: arena.height * .35 });
+      assert.ok(placed.bounds.left >= 0 && placed.bounds.right <= width);
+      assert.ok(placed.bounds.top >= 0 && placed.bounds.bottom <= arena.height);
+      assert.equal(overlaps(placed.bounds, { left: 0, top: 0, right: arena.enemyHudRight, bottom: 90 }), false);
+      assert.equal(overlaps(placed.bounds, { left: arena.playerHudLeft, top: arena.height - 90, right: width, bottom: arena.height }), false);
+    }
+  }
+});
 
 test('boss presence requests exceed the old phone lane budget but remain capped', () => {
   assert.ok(getBossFrameRequest(390) > 260);

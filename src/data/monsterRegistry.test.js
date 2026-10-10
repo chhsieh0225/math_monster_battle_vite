@@ -381,7 +381,7 @@ describe('Monster registry — scene-type consistency', () => {
 
 const VALID_RACES = new Set([
   'slime', 'fire_lizard', 'ghost', 'mushroom', 'dragon',
-  'golumn', 'candy', 'butterfly', 'boss',
+  'golumn', 'candy', 'butterfly', 'guardian', 'boss',
   // starter races (我方角色種族)
   'dragon_kin', 'wolf', 'tiger', 'lion',
 ]);
@@ -472,7 +472,8 @@ describe('Monster registry — scene-based monster pool', () => {
     const monsterRaceById = Object.fromEntries(MONSTER_CONFIGS.map((c) => [c.id, c.race]));
     for (const [mType, ids] of MONSTERS_BY_MTYPE) {
       if (ids.length <= 1) continue;
-      const races = new Set(ids.map((id) => monsterRaceById[id]).filter(Boolean));
+      const races = new Set(ids.map((id) => monsterRaceById[id]
+        || (id.startsWith('starter_mirror:') ? id.slice('starter_mirror:'.length) : null)).filter(Boolean));
       assert.ok(
         races.size >= 2 || ids.length <= 2,
         `${mType} pool has ${ids.length} monsters but only ${races.size} race(s): ${[...races].join(', ')}`,

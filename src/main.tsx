@@ -18,10 +18,13 @@ if (window.location.protocol === 'https:' || window.location.protocol === 'http:
 const rootEl = document.getElementById('root');
 if (!rootEl) throw new Error('Missing #root element');
 const VisualPilot = import.meta.env.DEV ? lazy(() => import('./components/screens/VisualPilot')) : null;
+const GuardianPreview = import.meta.env.DEV ? lazy(() => import('./components/screens/GuardianPreview')) : null;
 const showVisualPilot = new URLSearchParams(window.location.search).get('visual') === 'pilot';
+const showGuardians = new URLSearchParams(window.location.search).get('visual') === 'guardians';
 
 createRoot(rootEl).render(
   <I18nProvider>
-    {VisualPilot && showVisualPilot ? <Suspense fallback={<div className="app-error-wrap" role="status">Loading visual trial…</div>}><VisualPilot /></Suspense> : <App />}
+    {GuardianPreview && showGuardians ? <Suspense fallback={<div role="status">Loading guardian art...</div>}><GuardianPreview /></Suspense>
+      : VisualPilot && showVisualPilot ? <Suspense fallback={<div className="app-error-wrap" role="status">Loading visual trial…</div>}><VisualPilot /></Suspense> : <App />}
   </I18nProvider>
 );

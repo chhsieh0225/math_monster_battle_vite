@@ -75,11 +75,18 @@ test('matchups tell the child whether a route favours their monster', () => {
   assert.equal(dual.verdict, 'neutral');
 });
 
-test('a region is skipped when its only wild monster is the player\'s own starter', () => {
+test('light routes remain available through guardians when the player chooses the lion', () => {
   const expedition = getExpedition('sword_god');
+  let sawLight = false;
   for (let seed = 1; seed <= 60; seed += 1) {
     const plan = buildExpeditionPlan(expedition, seeded(seed), ['lion']);
     const regions = plan.floors.flatMap((floor) => floor.options.map((option) => option.region));
-    assert.ok(!regions.includes('light'), `seed ${seed}`);
+    sawLight ||= regions.includes('light');
+    const lanes = buildExpeditionLanes(plan, expedition, seeded(seed), ['lion']);
+    for (const enemy of lanes.flat()) {
+      assert.notEqual(enemy.id, 'wild_starter_lion');
+      if (enemy.sceneMType === 'light') assert.ok(['limit_knight', 'algebra_knight'].includes(enemy.id));
+    }
   }
+  assert.ok(sawLight);
 });

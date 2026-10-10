@@ -1,5 +1,7 @@
 import { MAX_MOVE_LVL } from '../data/constants.ts';
 import { BOSS_IDS } from '../data/monsterConfigs.ts';
+import { getGuardianSkill } from '../data/guardianEncounters.ts';
+import type { EnemySkill } from '../data/enemySkills.ts';
 import type { AttackEffectVm } from '../types/battle.ts';
 
 export function getSkillMastery(level = 1) {
@@ -18,12 +20,18 @@ export function getCharacterSkillId(id: string | undefined, index: number): stri
   return id && Number.isInteger(index) && index >= 0 && index <= 3 ? `${id}:${index}` : undefined;
 }
 
-export function getEnemySkillEffect(enemy: { id?: string; mType?: string; lvl?: number }, phase = 1, ultimate = false): Pick<AttackEffectVm, 'type' | 'idx' | 'lvl' | 'signature' | 'skillId'> {
+export function getEnemySkillEffect(enemy: { id?: string; mType?: string; lvl?: number }, phase = 1, ultimate = false, turn = 0, action?: EnemySkill): Pick<AttackEffectVm, 'type' | 'idx' | 'lvl' | 'signature' | 'skillId'> {
   const boss = BOSS_IDS.has(enemy.id || '');
   const bossPhase = Number.isFinite(phase) ? Math.max(1, Math.min(3, Math.floor(phase))) : 1;
   const level = Number.isFinite(enemy.lvl) ? Math.max(1, enemy.lvl!) : 1;
   const lvl = getSkillMastery(boss ? 2 + bossPhase + (ultimate ? 1 : 0) : 1 + Math.floor((level - 1) / 3)).lvl;
   const idx = ultimate ? 3 : boss ? 2 : level >= 6 ? 1 : 0;
+  if (action) return {
+    type: enemy.id === 'boss_sword_god' ? 'steel' : enemy.mType || 'dark',
+    idx: action.idx, lvl, skillId: action.skillId, signature: boss ? enemy.id : undefined,
+  };
+  const guardian = getGuardianSkill(enemy.id, level, turn);
+  if (guardian) return { type: guardian.type, idx: guardian.slot, lvl, skillId: guardian.skillId };
   return {
     type: enemy.id === 'boss_sword_god' ? 'steel' : enemy.mType || 'dark',
     idx,

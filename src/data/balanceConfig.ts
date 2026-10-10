@@ -207,6 +207,10 @@ export const BALANCE_CONFIG = {
       candy_knight: { hp: 58, atk: 9 },
       candy_monster: { hp: 48, atk: 7 },
       colorful_butterfly: { hp: 35, atk: 5 },
+      limit_knight: { hp: 76, atk: 10 },
+      topology_knight: { hp: 72, atk: 9 },
+      algebra_knight: { hp: 68, atk: 11 },
+      blue_butterfly: { hp: 42, atk: 7 },
     },
     evolveLevelById: {
       slime: 5,

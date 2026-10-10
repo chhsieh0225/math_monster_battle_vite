@@ -14,6 +14,22 @@ export type SpriteAnimationAsset = {
 
 export const SPRITE_ATLAS = { width: 512, height: 384, columns: 4, rows: 2 } as const;
 export const SPRITE_ANIMATION_ASSETS = {
+  limit_knight: {
+    file: 'limit-knight-v1.webp', footX: 217, hit: { x: 217, y: 220 },
+    bounds: [14, 30, 497, 368],
+  },
+  topology_knight: {
+    file: 'topology-knight-v1.webp', footX: 237, hit: { x: 237, y: 220 },
+    bounds: [28, 16, 485, 368],
+  },
+  algebra_knight: {
+    file: 'algebra-knight-v1.webp', footX: 227, hit: { x: 227, y: 220 },
+    bounds: [41, 16, 471, 368],
+  },
+  blue_butterfly: {
+    file: 'blue-butterfly-v1.webp', footX: 322, hit: { x: 322, y: 225 },
+    bounds: [16, 16, 493, 368],
+  },
   player_fire0: {
     file: 'fire-hatchling-v2.webp', footX: 301, hit: { x: 255, y: 248 }, idleExpression: true,
     bounds: [14, 51, 499, 368],

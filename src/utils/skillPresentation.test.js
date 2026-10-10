@@ -4,7 +4,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { getSkillMastery, getSkillImpactSize, getEnemySkillEffect, getSkillActorKeys, getCharacterSkillId } from './skillPresentation.ts';
 import { SkillStrikeEffect } from '../components/effects/SkillStrikeEffect.tsx';
-import { CHARACTER_SKILL_RECIPES, getSkillRecipe } from '../components/effects/skillRecipes.ts';
+import { CHARACTER_SKILL_RECIPES, GUARDIAN_SKILL_RECIPES, getSkillRecipe } from '../components/effects/skillRecipes.ts';
 import { PVP_SELECTABLE_ROSTER } from '../data/pvpRoster.ts';
 import { MONSTER_CONFIGS, SLIME_VARIANT_CONFIGS, EVOLVED_SLIME_VARIANT_CONFIGS } from '../data/monsterConfigs.ts';
 
@@ -53,6 +53,20 @@ const render = (effect, lowPerf = false, props = {}) => renderToStaticMarkup(cre
   effect: { type: 'fire', idx: 0, lvl: 1, ...effect }, source: target(75, 300), target: target(290, 180),
   arena: { width: 390, height: 464 }, lowPerf, ...props,
 }));
+
+test('all twelve guardian skills keep their named mechanism in launch, contact and low-detail rendering', () => {
+  for (const [id, recipes] of Object.entries(GUARDIAN_SKILL_RECIPES)) {
+    recipes.forEach((recipe, index) => {
+      for (const low of [false, true]) for (const impact of [undefined, { outcome: 'hit', at: 1 }]) {
+        const html = render({ ...getEnemySkillEffect({ id, lvl: 13 }, 1, false, index), impact }, low);
+        assert.ok(html.includes(`data-choreography="${recipe.motion}:${recipe.motif}"`));
+        assert.ok(!html.includes('skill-stream-body'), 'never fall back to a generic line');
+        assert.ok(!html.includes('NaN'));
+        assert.ok((html.match(/<(?:svg|g|circle|path)\b/g) || []).length < 95, 'bounded geometry');
+      }
+    });
+  }
+});
 
 test('launch has no contact, miss has no explosion, and blocked is a shield only', () => {
   assert.ok(!render({}).includes('class="skill-contact"'));
@@ -112,7 +126,7 @@ test('every playable catalog slot has its own silhouette, including the four PvP
         assert.ok(html.includes(`data-skill-motion="${recipe.motion}"`));
         assert.ok(html.includes(`data-choreography="${recipe.motion}:${recipe.motif}"`), 'the named mechanism survives low quality');
         assert.equal((html.match(/class="skill-contact(?: |")/g) || []).length, 1);
-        assert.ok((html.match(/<[a-zA-Z]/g) || []).length <= (low ? 36 : 64), skillId);
+        assert.ok((html.match(/<[a-zA-Z]/g) || []).length <= (low ? 40 : 70), skillId);
         assert.equal(render({ ...effect, impact: { outcome: 'miss', at: 2 } }, low), '');
         assert.ok(!render({ ...effect, impact: { outcome: 'blocked', at: 2 } }, low).includes('data-choreography'));
       }
@@ -210,4 +224,16 @@ test('practice increases bounded geometry while PvP and low detail keep the esse
   const html = render({ skillId: 'water:2', idx: 2 }, true, { source, target: victim });
   assert.match(html, /--skill-dx:-170px;--skill-dy:180px/);
   assert.match(html, /data-source="310,170" data-target="140,350"/);
+});
+
+test('named skills share etched elemental staging without adding basic-attack clutter or heavy filters', () => {
+  for (const low of [false, true]) for (const impact of [undefined, { outcome: 'hit', at: 2 }]) {
+    const html = render({ skillId: 'monster:fire_rain', impact }, low);
+    assert.match(html, /data-style="etched-elemental"/);
+    assert.match(html, impact ? /skill-ritual-release/ : /skill-ritual-gather/);
+    assert.equal(html.includes('skill-ritual-glow'), !low);
+    assert.doesNotMatch(html, /feGaussianBlur|feTurbulence/);
+  }
+  assert.doesNotMatch(render({ skillId: 'enemy:basic' }), /skill-ritual/);
+  assert.doesNotMatch(render({ skillId: 'monster:fire', impact: { outcome: 'blocked', at: 2 } }), /skill-ritual/);
 });

@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import MonsterPortrait from '../ui/MonsterPortrait';
 import { getSpriteProfileKey } from '../../data/sprites.ts';
-import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES } from '../../data/encyclopedia.ts';
+import { ENC_ENTRIES, ENC_TOTAL, STARTER_ENTRIES, groupEncyclopediaEntries } from '../../data/encyclopedia.ts';
+import type { EncyclopediaRank } from '../../data/encyclopedia.ts';
 
 import { useI18n } from '../../i18n';
 import { hasSpecialTrait } from '../../utils/traits';
@@ -24,6 +25,10 @@ import type {
 
 const PAGE_BG = 'linear-gradient(180deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)';
 type EncyclopediaCssVars = CSSProperties & Record<`--${string}`, string | number | undefined>;
+
+const RANK_LABELS: Record<EncyclopediaRank, string> = {
+  normal: 'Normal', evolved: 'Evolved', elite: 'Elite', miniboss: 'Mini-Boss', boss: 'Boss',
+};
 
 // Sprite size is automatically compensated by the profile's height-compensation
 // factor.  No more hardcoded LARGE_MONSTER_IDS set — the formula handles all
@@ -182,8 +187,8 @@ function formatMilestoneReward(m: CollectionMilestoneDef, t: (key: string, fallb
 
 export default function EncyclopediaScreen({ encData = {}, onBack }: EncyclopediaScreenProps) {
   const { t, locale } = useI18n();
-  const enemyEntries = useMemo(
-    () => normalizeEnemyEntries(localizeEncyclopediaEnemyEntries(ENC_ENTRIES, locale)),
+  const enemyGroups = useMemo(
+    () => groupEncyclopediaEntries(normalizeEnemyEntries(localizeEncyclopediaEnemyEntries(ENC_ENTRIES, locale))),
     [locale],
   );
   const starterEntries = useMemo(
@@ -195,7 +200,7 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
   const enc: EncyclopediaCounts = encData.encountered || {};
   const def: EncyclopediaCounts = encData.defeated || {};
   const collection: CollectionData = useMemo(() => loadCollection(), []);
-  const encCount = Object.keys(enc).length;
+  const encCount = enemyGroups.reduce((count, group) => count + group.entries.filter((entry) => Boolean(enc[entry.key])).length, 0);
   const pct = ENC_TOTAL > 0 ? Math.round((encCount / ENC_TOTAL) * 100) : 0;
 
   const [selected, setSelected] = useState<SelectedEntry | null>(null);
@@ -246,42 +251,55 @@ export default function EncyclopediaScreen({ encData = {}, onBack }: Encyclopedi
             <div className="enc-subtitle">
               {t('encyclopedia.section.enemiesSub', '{count}/{total} discovered', { count: encCount, total: ENC_TOTAL })}
             </div>
-            <div className="enc-grid-three">
-              {enemyEntries.map((e) => {
-                const seen = Boolean(enc[e.key]);
-                const killed = Boolean(def[e.key]);
-                return (
-                  <div
-                    key={e.key}
-                    role={seen ? 'button' : undefined}
-                    tabIndex={seen ? 0 : -1}
-                    aria-label={seen
-                      ? t('encyclopedia.a11y.viewEnemy', 'View encyclopedia: {name}', { name: e.name })
-                      : t('encyclopedia.a11y.lockedEnemy', 'Locked monster')}
-                    onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => {
-                      if (!seen) return;
-                      handleKeyboardActivate(ev, () => setSelected({ entry: e, kind: 'enemy' }));
-                    }}
-                    onClick={() => seen && setSelected({ entry: e, kind: 'enemy' })}
-                    className={`enc-card ${seen ? 'is-seen' : 'is-hidden'} ${killed ? 'is-killed' : ''}`}
-                  >
-                    <div className={`enc-card-sprite-wrap ${seen ? '' : 'is-hidden'} ${getCompensation(e.spriteKey) > 1.1 ? 'is-large' : ''}`}>
-                      <MonsterPortrait profileKey={e.spriteKey} svgStr={e.svgFn(e.c1, e.c2)} size={encCardSpriteSize(e.spriteKey)} ariaLabel={seen
-                        ? t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: e.name })
-                        : t('encyclopedia.a11y.unknownEnemySprite', 'Unknown monster sprite')} />
-                    </div>
-                    <div className="enc-card-name">{seen ? e.name : t('encyclopedia.unknownName', '???')}</div>
-                    <div className="enc-card-meta">
-                      {seen ? `${e.typeIcon}${e.typeIcon2 ? e.typeIcon2 : ''} ${e.typeName}${e.typeName2 ? ' / ' + e.typeName2 : ''}` : t('encyclopedia.unknownType', '??')}
-                      {e.isEvolved && seen && <span className="enc-tag-evolved">{t('encyclopedia.tag.evolved', 'Evolved')}</span>}
-                    </div>
-                    {seen && <div className="enc-card-count-line">
-                      {t('encyclopedia.countLine', 'Encounter {enc} / Defeat {def}', { enc: enc[e.key] || 0, def: def[e.key] || 0 })}
-                    </div>}
-                  </div>
-                );
-              })}
-            </div>
+            {enemyGroups.map(({ rank, entries }) => (
+              <section key={rank} className={`enc-monster-section enc-rank-${rank}`} aria-labelledby={`enc-rank-${rank}`}>
+                <div className="enc-rank-heading">
+                  <h2 id={`enc-rank-${rank}`} className="enc-rank-title">{t(`encyclopedia.rank.${rank}`, RANK_LABELS[rank])}</h2>
+                  <span className="enc-rank-count">
+                    {t('encyclopedia.section.enemiesSub', '{count}/{total} discovered', {
+                      count: entries.filter((entry) => Boolean(enc[entry.key])).length,
+                      total: entries.length,
+                    })}
+                  </span>
+                </div>
+                <div className="enc-grid-three">
+                  {entries.map((e) => {
+                    const seen = Boolean(enc[e.key]);
+                    const killed = Boolean(def[e.key]);
+                    return (
+                      <div
+                        key={e.key}
+                        role={seen ? 'button' : undefined}
+                        tabIndex={seen ? 0 : -1}
+                        aria-label={seen
+                          ? t('encyclopedia.a11y.viewEnemy', 'View encyclopedia: {name}', { name: e.name })
+                          : t('encyclopedia.a11y.lockedEnemy', 'Locked monster')}
+                        onKeyDown={(ev: KeyboardEvent<HTMLDivElement>) => {
+                          if (!seen) return;
+                          handleKeyboardActivate(ev, () => setSelected({ entry: e, kind: 'enemy' }));
+                        }}
+                        onClick={() => seen && setSelected({ entry: e, kind: 'enemy' })}
+                        className={`enc-card ${seen ? 'is-seen' : 'is-hidden'} ${killed ? 'is-killed' : ''}`}
+                      >
+                        <div className={`enc-card-sprite-wrap ${seen ? '' : 'is-hidden'} ${getCompensation(e.spriteKey) > 1.1 ? 'is-large' : ''}`}>
+                          <MonsterPortrait profileKey={e.spriteKey} svgStr={e.svgFn(e.c1, e.c2)} size={encCardSpriteSize(e.spriteKey)} ariaLabel={seen
+                            ? t('encyclopedia.a11y.enemySprite', '{name} sprite', { name: e.name })
+                            : t('encyclopedia.a11y.unknownEnemySprite', 'Unknown monster sprite')} />
+                        </div>
+                        <div className="enc-card-name">{seen ? e.name : t('encyclopedia.unknownName', '???')}</div>
+                        <div className="enc-card-meta">
+                          {seen ? `${e.typeIcon}${e.typeIcon2 ? e.typeIcon2 : ''} ${e.typeName}${e.typeName2 ? ' / ' + e.typeName2 : ''}` : t('encyclopedia.unknownType', '??')}
+                          {e.isEvolved && seen && <span className="enc-tag-evolved">{t('encyclopedia.tag.evolved', 'Evolved')}</span>}
+                        </div>
+                        {seen && <div className="enc-card-count-line">
+                          {t('encyclopedia.countLine', 'Encounter {enc} / Defeat {def}', { enc: enc[e.key] || 0, def: def[e.key] || 0 })}
+                        </div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </>
         )}
 

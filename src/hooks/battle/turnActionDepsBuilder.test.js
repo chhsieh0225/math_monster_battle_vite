@@ -34,6 +34,9 @@ test('buildEnemyTurnArgs wires all deps correctly', () => {
       setDefAnim: noop,
       setEHp: noop,
       setCursed: noop,
+      setEnemyBehavior: noop,
+      setEnemySkillState: noop,
+      setEHpSub: noop,
     },
     ui: {
       setBText: noop,
@@ -54,6 +57,7 @@ test('buildEnemyTurnArgs wires all deps correctly', () => {
   assert.equal(args.sr, sr);
   assert.equal(args.safeTo, safeTo);
   assert.equal(createEnemyTurnHandlers(args).setAtkEffect, noop);
+  assert.equal(createEnemyTurnHandlers(args).setEnemyBehavior, noop);
   assert.equal(createEnemyTurnHandlers(args).pendingTextAdvanceActionRef, pendingTextAdvanceActionRef);
   assert.equal(createEnemyTurnHandlers(args).isGamePaused, isGamePaused);
 });

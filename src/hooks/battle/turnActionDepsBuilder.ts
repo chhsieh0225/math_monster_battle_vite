@@ -47,6 +47,9 @@ type BuildEnemyTurnArgsArgs = {
     | 'setSpecDef'
     | 'setDefAnim'
     | 'setEHp'
+    | 'setEnemyBehavior'
+    | 'setEnemySkillState'
+    | 'setEHpSub'
     | 'setCursed'
   >;
   ui: Pick<
@@ -123,6 +126,9 @@ export function buildEnemyTurnArgs({
     setSpecDef: battleFields.setSpecDef,
     setDefAnim: battleFields.setDefAnim,
     setEHp: battleFields.setEHp,
+    setEHpSub: battleFields.setEHpSub,
+    setEnemyBehavior: battleFields.setEnemyBehavior,
+    setEnemySkillState: battleFields.setEnemySkillState,
     setEffMsg: ui.setEffMsg,
     setCursed: battleFields.setCursed,
     addD: ui.addD,

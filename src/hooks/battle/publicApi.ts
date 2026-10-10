@@ -86,6 +86,8 @@ const REQUIRED_STATE_KEYS = [
   'burnStack',
   'tideStack',
   'enemyExposed',
+  'enemyBehavior',
+  'enemySkillState',
   'frozen',
   'shattered',
   'staticStack',

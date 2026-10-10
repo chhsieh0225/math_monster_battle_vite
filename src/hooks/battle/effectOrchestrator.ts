@@ -14,6 +14,7 @@ type EnemyLungeArgs = {
   setEAnim: TextSetter;
   onStrike?: () => void;
   strikeDelay?: number;
+  animation?: string;
 };
 
 type PlayerLungeArgs = {
@@ -48,9 +49,9 @@ export const effectOrchestrator = {
     }, 700);
   },
 
-  runEnemyLunge({ safeTo, setEAnim, onStrike, strikeDelay = 500 }: EnemyLungeArgs): void {
+  runEnemyLunge({ safeTo, setEAnim, onStrike, strikeDelay = 500, animation = 'enemyAttackLunge' }: EnemyLungeArgs): void {
     // Finish the visual recovery before the flow clears this slot's animation.
-    setEAnim(`enemyAttackLunge ${strikeDelay / 1000}s ease`);
+    setEAnim(`${animation} ${strikeDelay / 1000}s ease`);
     safeTo(() => {
       setEAnim('');
       if (onStrike) onStrike();

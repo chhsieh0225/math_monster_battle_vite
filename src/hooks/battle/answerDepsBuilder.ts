@@ -132,6 +132,8 @@ export function buildPlayerAnswerHandlerDeps({
     setBurnStack: battleFields.setBurnStack,
     setTideStack: battleFields.setTideStack,
     setEnemyExposed: battleFields.setEnemyExposed,
+    setEnemyBehavior: battleFields.setEnemyBehavior,
+    setEnemySkillState: battleFields.setEnemySkillState,
     setPHp: battleFields.setPHp,
     setPHpSub: battleFields.setPHpSub,
     setFrozen: battleFields.setFrozen,

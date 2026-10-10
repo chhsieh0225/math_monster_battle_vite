@@ -13,6 +13,7 @@ import { BattleMoveMenu } from './BattleMoveMenu.tsx';
 import { BattleQuestionPanel } from './BattleQuestionPanel.tsx';
 import { STARTERS } from '../../../data/starters.ts';
 import { getBossTacticProfile } from '../../../utils/turnFlow.ts';
+import { createEnemyBehaviorState, getEnemyPersonality, personalityMoveKey } from '../../../data/enemyPersonalities.ts';
 
 const translate = (dict) => (key, fallback, params = {}) =>
   (dict[key] ?? fallback).replace(/\{(\w+)\}/g, (_match, key) => String(params[key] ?? ''));
@@ -23,6 +24,44 @@ for (const [locale, dict] of [['zh-TW', zhTW], ['en-US', enUS]]) {
     t, activeStarter: STARTERS[0], battleMode: 'single', inventory: {}, moveRuntime: [],
     onSelectMove: () => {},
   };
+
+  test(`${locale}: personality intent explains every state and separates reserve behavior`, () => {
+    for (const [id, cue, patch, hp] of [
+      ['irritable', 'anger', {}, 100], ['irritable', 'rage', { anger: 2 }, 100],
+      ['irritable', 'opening', { opening: true }, 100], ['timid', 'timid', {}, 100],
+      ['timid', 'guard', {}, 40], ['timid', 'spent', { guardSpent: true }, 40],
+      ['crafty', 'observe', {}, 100], ['crafty', 'watch', { watchedMoveKey: 'fire:0', watchedMoveName: 'Fire' }, 100],
+    ]) {
+      const enemyBehavior = createEnemyBehaviorState();
+      Object.assign(enemyBehavior.main, patch);
+      const enemy = { id: 'slime', maxHp: 100, name: 'Primary', lvl: 3, personality: getEnemyPersonality(id) };
+      const html = renderToStaticMarkup(createElement(BattleEnemyInfoPanel, {
+        t, enemy, enemyHp: hp, enemyBehavior, canVaryMoves: true, battleMode: 'single',
+        showEnemySub: true, enemySub: { ...enemy, name: 'Reserve' }, enemySubHp: 100,
+      }));
+      assert.ok(html.includes(`data-cue="${cue}"`));
+      assert.ok(html.includes('data-cue="reserve"'));
+      assert.ok(html.includes(dict['battle.personality.intent.reserve']));
+      assert.ok(!/\{(anger|max|rage|bonus|hp|guard|move)\}/.test(html));
+    }
+  });
+
+  test(`${locale}: move buttons preview parry and outwit; single-choice and PvP disable them`, () => {
+    const starter = STARTERS[0];
+    const personalityContext = { enemy: { id: 'slime', maxHp: 100, personality: getEnemyPersonality('crafty') },
+      hp: 100, state: { ...createEnemyBehaviorState().main, watchedMoveKey: personalityMoveKey(starter, 0), watchedMoveName: starter.moves[0].name } };
+    const moveRuntime = starter.moves.map((m, i) => ({ m, i, sealed: false, locked: i > 1, lv: 1, pw: 10, atCap: false, eff: 1, moveProgressPct: 0 }));
+    const html = renderToStaticMarkup(createElement(BattleMoveMenu, { ...menuProps, personalityContext, moveRuntime }));
+    assert.ok(html.includes(t('battle.personality.move.parried', '', { percent: 35 })));
+    assert.ok(html.includes(t('battle.personality.move.outwit', '', { percent: 10 })));
+    for (const patch of [
+      { moveRuntime: moveRuntime.map(m => ({ ...m, locked: m.i !== 0 })) },
+      { personalityContext: { ...personalityContext, battleMode: 'pvp' }, battleMode: 'pvp' },
+    ]) {
+      const disabled = renderToStaticMarkup(createElement(BattleMoveMenu, { ...menuProps, personalityContext, moveRuntime, ...patch }));
+      assert.ok(!disabled.includes('move-personality-hint'));
+    }
+  });
 
   test(`${locale}: forecast labels cover every intent and only charging offers tactics`, () => {
     for (const event of ['attack', 'start_charge', 'release', 'seal_move', 'frozen']) {

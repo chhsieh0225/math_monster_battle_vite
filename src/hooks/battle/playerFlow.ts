@@ -1,3 +1,4 @@
+import { createEnemySkillState, getEnemySkill, enemySkillNameKey, canDisruptEnemySkill, type EnemySkillState } from '../../data/enemySkills.ts';
 import {
   HITS_PER_LVL,
   MAX_MOVE_LVL,
@@ -5,6 +6,7 @@ import {
 } from '../../data/constants.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
+import { canVaryPersonalityMoves, createEnemyBehaviorState, personalityMoveKey, planPersonalityHit, type EnemyBehaviorState } from '../../data/enemyPersonalities.ts';
 import { bestAttackType, freezeChance } from '../../utils/damageCalc.ts';
 import { getLevelMaxHp, getStarterLevelMaxHp, getStarterStageIdx } from '../../utils/playerHp.ts';
 import {
@@ -45,6 +47,7 @@ type BattleStarter = {
   id?: string;
   name?: string;
   type: string;
+  moves?: { risky?: boolean }[];
 };
 
 type BattleAlly = {
@@ -54,10 +57,13 @@ type BattleAlly = {
 
 type BattleEnemy = {
   id?: string;
+  lvl?: number;
+  isEvolved?: boolean;
   trait?: string;
   maxHp: number;
   mType?: string;
   personality?: {
+    id?: string;
     incomingDamageScale?: number;
     critChanceBonus?: number;
     critDamageBonus?: number;
@@ -97,6 +103,10 @@ type BattleRuntimeState = {
   burnStack: number;
   tideStack?: number;
   enemyExposed?: boolean;
+  enemyBehavior?: EnemyBehaviorState;
+  enemySkillState?: EnemySkillState;
+  charge?: number;
+  sealedMove?: number;
   shattered: boolean;
   staticStack: number;
   q: BattleQuestion | null;
@@ -171,6 +181,8 @@ type RunPlayerAnswerArgs = {
   setBurnStack: NumberSetter;
   setTideStack: NumberSetter;
   setEnemyExposed: BoolSetter;
+  setEnemyBehavior: (value: EnemyBehaviorState) => void;
+  setEnemySkillState: (value: EnemySkillState) => void;
   setPHp: NumberSetter;
   setPHpSub?: NumberSetter;
   setFrozen: BoolSetter;
@@ -363,6 +375,8 @@ export function runPlayerAnswer({
   setBurnStack,
   setTideStack,
   setEnemyExposed,
+  setEnemyBehavior,
+  setEnemySkillState,
   setPHp,
   setPHpSub,
   setFrozen,
@@ -395,6 +409,7 @@ export function runPlayerAnswer({
   if (!isBattleActiveState(s)) return;
   if (s.selIdx == null || !s.enemy) return;
   const moveIdx = s.selIdx;
+  const canVary = canVaryPersonalityMoves(starter.moves, s.sealedMove, (s.charge ?? 0) >= 3);
   const bossTactic = s.q?.bossTactic;
   const skillId = getCharacterSkillId(starter.id, moveIdx);
   const motion = getPlayerSkillMotion(skillId, s.battleMode);
@@ -710,7 +725,36 @@ export function runPlayerAnswer({
             finalDmg = Math.max(1, Math.round(finalDmg * personalityIncomingScale));
           }
 
+          // Only a landed, manually selected hit advances personality tactics.
+          // Wrong answers, phantom misses, DoT and automatic support never consume them.
+          const behavior = s3.enemyBehavior ?? createEnemyBehaviorState();
+          const personalityHit = planPersonalityHit({
+            enemy: s3.enemy, hp: s3.eHp, state: behavior.main, battleMode: s3.battleMode,
+            moveKey: personalityMoveKey(starter, moveIdx), moveName: move.name, canVary,
+          });
+          if (personalityHit) {
+            finalDmg = Math.max(1, Math.round(finalDmg * personalityHit.damageScale));
+            const next = { ...behavior, main: personalityHit.next };
+            sr.current = { ...sr.current, enemyBehavior: next };
+            setEnemyBehavior(next);
+            if (personalityHit.feedback) {
+              const feedback = personalityHit.feedback;
+              safeToIfBattleActive(() => addD(tr(t, `battle.personality.feedback.${feedback}`, feedback),
+                fxt().enemyAbove.x, fxt().enemyAbove.y, personalityHit.damageScale < 1 ? '#93c5fd' : '#fbbf24'), 280);
+            }
+          }
+
           const appliedHitDmg = applyBossDamageReduction(finalDmg, s3.enemy.id);
+          const skillState = s3.enemySkillState ?? createEnemySkillState();
+          if (appliedHitDmg > 0 && canDisruptEnemySkill(s3.enemy, skillState.main, moveIdx, eff, s3.battleMode)) {
+            const next = { ...skillState, main: { ...skillState.main, disrupted: true } };
+            sr.current = { ...sr.current, enemySkillState: next };
+            setEnemySkillState(next);
+            const prepared = getEnemySkill(s3.enemy, skillState.main.turn);
+            safeToIfBattleActive(() => addD(tr(t, 'battle.enemySkill.disrupted', '{move} disrupted!', {
+              move: tr(t, enemySkillNameKey(prepared), prepared.name),
+            }), fxt().enemyAbove.x, fxt().enemyAbove.y, '#67e8f9'), 340);
+          }
 
           // Mirror consumes frost for control instead of also receiving shatter damage.
           let shatterDmg = 0;

@@ -76,6 +76,16 @@ export function getBossFrameRequest(arenaWidth: number, secondary = false, dual 
   return Math.min(Math.max(0, arenaWidth) * (secondary ? 0.38 : dual ? 0.64 : 0.68), secondary ? 200 : 380);
 }
 
+/** Apply after lane caps so the size gain survives mobile scaling, but still fits around HUDs. */
+export function getWingKnightFrameRequest(enemyId: string | undefined, frameWidth: number): number | undefined {
+  switch (enemyId) {
+    case 'limit_knight':
+    case 'topology_knight':
+    case 'algebra_knight': return frameWidth * 1.15;
+    default: return undefined;
+  }
+}
+
 export function resolveBattleSpritePlacement({
   arena, side, frameWidth, minFrameWidth = frameWidth, compensation, desiredCenterX, desiredCenterY, avoid,
 }: SafeSpritePlacementInput) {

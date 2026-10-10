@@ -6,6 +6,7 @@ import type { BattleCoreStatic } from './buildBattleCore';
 import type { resolveBattleSpriteAnimations } from '../../../utils/battleAnimations';
 import AmbientParticles from '../../effects/AmbientParticles';
 import { BOSS_SHARDS } from './battleShatter.ts';
+import type { PersonalityCue } from '../../../data/enemyPersonalities.ts';
 
 type BattleArenaSpritesProps = {
   showHeavyFx: boolean;
@@ -38,6 +39,7 @@ type BattleArenaSpritesProps = {
   showPlayerShadow: boolean;
   /** A defeated boss: after two white flashes the sprite breaks into shards. */
   enemyShatter?: boolean;
+  enemyPersonalityPose?: PersonalityCue | null;
 };
 
 const FACING_MAIN_STYLE: CSSProperties = {
@@ -81,6 +83,7 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
   showEnemyShadow,
   showPlayerShadow,
   enemyShatter = false,
+  enemyPersonalityPose,
 }: BattleArenaSpritesProps) {
   // Safe padding is now baked into SVG via spriteProfiles.ts — no CSS scale hack needed.
   const enemyMainFacingStyle = FACING_MAIN_STYLE;
@@ -93,7 +96,7 @@ export const BattleArenaSprites = memo(function BattleArenaSprites({
       {/* Enemy sprite */}
       <div ref={enemySpriteRef} className="battle-sprite-anchor" style={enemyMainSpriteStyle}>
         <div className={`battle-sprite-enemy-main${enemyShatter ? ' is-shattering' : ''}`}>
-          <div className="battle-sprite-core battle-sprite-core-main battle-sprite-core-enemy">
+          <div className="battle-sprite-core battle-sprite-core-main battle-sprite-core-enemy" data-personality-pose={enemyPersonalityPose || undefined}>
             <BattleSprite profileKey={spriteProfiles.enemyMain} animation={spriteAnimations.enemyMain}
               svgStr={eSvg} size={eSize} style={enemyMainFacingStyle} />
           </div>

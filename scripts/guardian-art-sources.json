@@ -1,0 +1,277 @@
+{
+  "generator": "Built-in image_gen",
+  "sources": [
+    {
+      "key": "limit_knight",
+      "source": "limit_knight-separated.png",
+      "output": "limit-knight-v1",
+      "anchorMode": "center",
+      "normalizeOpaqueAlpha": true,
+      "prompt": "Use case: stylized-concept. Production 2D game animation sprite sheet, exactly FOUR columns by TWO rows, 8 isolated whole-body poses, transparent alpha background, landscape 2048x1024. Image 1 is identity reference: white silver and navy winged LIMIT/CALCULUS knight, golden halo, white gold shield inscribed with tiny mathematical glyphs, silver greatsword with a red helix, broad feather wings with navy inner feathers and looping infinity ornament. Image 2 is STYLE reference only, existing game's polished hand-painted chibi fantasy armor. Redraw Image 1 in that polished softly painted game style, NOT pixelated, not a human photograph. Keep the identity and distinctive sword/shield/wing ornament. Face and attack to the RIGHT in every pose (3/4 right-facing), helmet no exposed face. Exactly 8 poses left-to-right row-major: 1 neutral hovering guard, 2 breathing raised chest slight wing lift (very similar to pose1), 3 sword drawn back anticipation wings fold slightly, 4 decisive forward sword thrust to the right shield tucked, 5 low sweeping sword follow-through to right, 6 smoothly returning guard, 7 recoil from hit with torso back shield raised, 8 braced crouched recovery. Same proportions and body height all cells, no cropping, no touching other cells, generous transparent gutters, entire wings/sword/feet visible within each own equal cell. Modest foreshortened wings to fit, retain both wings. Hand-painted crisp gold rim detail, soft cel shading, readable silhouette. No ground shadows, no ground plane, no scenery, no labels, no frame lines, no watermark, no emblem in corner. Real transparent background, no baked checkerboard.",
+      "regions": [
+        [
+          0,
+          0,
+          449,
+          465
+        ],
+        [
+          448,
+          0,
+          895,
+          465
+        ],
+        [
+          894,
+          0,
+          1285,
+          465
+        ],
+        [
+          1284,
+          0,
+          1774,
+          465
+        ],
+        [
+          0,
+          464,
+          463,
+          887
+        ],
+        [
+          462,
+          464,
+          881,
+          887
+        ],
+        [
+          880,
+          464,
+          1326,
+          887
+        ],
+        [
+          1325,
+          464,
+          1774,
+          887
+        ]
+      ],
+      "anchors": [
+        189,
+        190,
+        161,
+        131,
+        174,
+        184,
+        205,
+        173
+      ]
+    },
+    {
+      "key": "topology_knight",
+      "source": "topology_knight.png",
+      "output": "topology-knight-v1",
+      "anchorMode": "center",
+      "normalizeOpaqueAlpha": true,
+      "prompt": "Use case: stylized-concept. Create ONE game sprite atlas of the SAME character in eight poses. IMAGE 1 is identity: blue and gold winged ring/topology knight, turquoise infinity chest ornament, intertwined curved double-edged sword, round blue/gold geometrical shield, four pale feather wings and three interlocking rings halo. IMAGE 2 provides polished hand-painted fantasy game STYLE only; do not copy its character. NOT pixelated. TRUE transparent background. STRICT LAYOUT: landscape 2048x1024, EXACTLY 4 columns x 2 rows of EQUAL 512x512 CELLS. All drawings must fit inside their cell's central 70 percent; leave at least 60px clear transparent padding on EVERY side of EVERY cell. Neither wings nor swords nor glows may cross these invisible cell boundaries. Use compact folded/foreshortened wings. No dividing lines or labels. Facing RIGHT, full body same body scale in each cell. Row-major poses: 1 calm floating sword-and-shield guard; 2 inhale slightly higher wings, very similar to1; 3 coiled sword windup; 4 forward lunge with twisting sword, RIGHTWARD; 5 sword sweep follow-through, weapon stays close to body; 6 return guard; 7 hit recoil shield raised torso leans back; 8 braced landing recovering. Accurate consistent gold blue armor, 4 wings visible, infinity braid, orbital halo. Poses anatomically consistent with actual joints changing, no pasted copies. No scenery, no cast shadow, no detached effects, no watermark, no decorative corner icons, no checkerboard texture. Keep ALL eight silhouettes well separated with generous empty space, including bottom row. Make the drawings smaller rather than letting any tip approach the cell edge.",
+      "regions": [
+        [
+          0,
+          0,
+          430,
+          463
+        ],
+        [
+          429,
+          0,
+          867,
+          463
+        ],
+        [
+          866,
+          0,
+          1285,
+          463
+        ],
+        [
+          1284,
+          0,
+          1774,
+          463
+        ],
+        [
+          0,
+          462,
+          471,
+          887
+        ],
+        [
+          470,
+          462,
+          887,
+          887
+        ],
+        [
+          886,
+          462,
+          1283,
+          887
+        ],
+        [
+          1282,
+          462,
+          1774,
+          887
+        ]
+      ],
+      "anchors": [
+        194,
+        194,
+        186,
+        140,
+        188,
+        184,
+        176,
+        228
+      ]
+    },
+    {
+      "key": "algebra_knight",
+      "source": "algebra_knight.png",
+      "output": "algebra-knight-v1",
+      "anchorMode": "center",
+      "normalizeOpaqueAlpha": true,
+      "prompt": "Use case: stylized-concept. Production RPG animation SPRITE SHEET, exactly 4 columns by 2 rows, 8 full body drawings of ONE algebra/matrix winged guardian. Image1 IDENTITY: gold armor, cyan inscriptions, silver feather wings interwoven by silver infinity loops, cyan ring halo, straight blue equation sword, rectangular kite shield with cyan matrix grids. Image2 only STYLE: polished hand-painted chibi fantasy game art, softly shaded fine golden highlights, NOT pixel art. Transparent alpha, landscape 2048x1024. Very important: each of 8 equal cells has a substantial 15 percent empty transparent gutter on ALL four sides. Entire body, sword, wings and halo must stay inside that cell, no overlapping other poses and no cropped tips. Draw the figures compact, wings foreshortened and partly folded. Same anatomy, same armor, same head and torso scale. Faces and attacks RIGHT, 3/4 right-facing. Pose order row-major: idle sword/shield ready; inhale wing raise (almost same pose); anticipatory sword over right shoulder; sweeping rightward diagonal slash shield tucked; sword lower-right followthrough; regaining idle guard; recoiling from impact behind matrix shield; braced low guard recovery. Specific movements of limbs and wings, not eight static copies. Blue luminous sword only, no detached particles/glow flecks, no ground shadow, no background pattern, no text labels, no frames, no watermarks. Clean alpha edges. Preserve recognizable original mathematical winged knight, not existing sword-god character.",
+      "regions": [
+        [
+          0,
+          0,
+          442,
+          462
+        ],
+        [
+          441,
+          0,
+          895,
+          462
+        ],
+        [
+          894,
+          0,
+          1310,
+          462
+        ],
+        [
+          1309,
+          0,
+          1774,
+          462
+        ],
+        [
+          0,
+          461,
+          451,
+          887
+        ],
+        [
+          450,
+          461,
+          901,
+          887
+        ],
+        [
+          900,
+          461,
+          1319,
+          887
+        ],
+        [
+          1318,
+          461,
+          1774,
+          887
+        ]
+      ],
+      "anchors": [
+        192,
+        197,
+        161,
+        144,
+        163,
+        183,
+        150,
+        177
+      ]
+    },
+    {
+      "key": "blue_butterfly",
+      "source": "blue_butterfly.png",
+      "output": "blue-butterfly-v1",
+      "anchorMode": "center",
+      "normalizeOpaqueAlpha": true,
+      "prompt": "Use case: stylized-concept. ONE 2D fantasy RPG sprite sheet, 4 columns x2 rows exactly EIGHT distinct whole-body animation poses. Image1 identity reference: adorable midnight-blue butterfly monster with smiling tiny blue face, spiral antennae, layered cyan/navy petal-feather wings, 2 large upper wings and scalloped small lower wings, blue rosebud-like wing tips. Translate pixelated reference into crisp POLISHED HAND-PAINTED chibi fantasy art to match Image2 style ONLY, soft cel-shading, blue/cyan luminous wing veins, no square pixels. True transparent alpha, no baked checkerboard. 2048x1024 landscape. STRICT layout: equal cells, each entire silhouette inside its central70%, 15% clear gutters on every side, no cropped tips, no overlap or loose effects, NO CAST SHADOW. Face/attack RIGHT 3/4 view in every pose; SAME body size and identity. Row-major eight poses: 1 gently hovering open wings;2 inhaling wings lifted, close to pose1;3 wings swept back body drawing back to charge;4 wings beating forcefully forwards releasing a small close-to-body cyan crescent RIGHTWARDS;5 aerodynamic forward swoop wings swept;6 slowing return to gentle hover;7 startled recoil tilted back, partly folded wing;8 regaining balance with low spread wings. Actual joint/wing changes, all 8 full creatures readable. Keep crisp navy outlines, rich cobalt/ice blue palette. No lettering, no watermark, no corner sparkle emblem, no dividers, no backdrop. More empty margins rather than big drawings.",
+      "regions": [
+        [
+          0,
+          0,
+          461,
+          443
+        ],
+        [
+          460,
+          0,
+          865,
+          443
+        ],
+        [
+          864,
+          0,
+          1301,
+          443
+        ],
+        [
+          1300,
+          0,
+          1774,
+          443
+        ],
+        [
+          0,
+          442,
+          457,
+          887
+        ],
+        [
+          456,
+          442,
+          923,
+          887
+        ],
+        [
+          922,
+          442,
+          1287,
+          887
+        ],
+        [
+          1286,
+          442,
+          1774,
+          887
+        ]
+      ],
+      "anchors": [
+        225,
+        220,
+        303,
+        219,
+        330,
+        255,
+        144,
+        250
+      ]
+    }
+  ]
+}

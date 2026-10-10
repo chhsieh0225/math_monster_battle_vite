@@ -1,0 +1,6 @@
+{
+  "generator": "Built-in image_gen",
+  "source": "limit_knight.png",
+  "output": "limit_knight-separated.png",
+  "prompt": "Edit this eight-pose silver/navy calculus winged knight sprite sheet. Preserve all EIGHT characters, poses, armor, colors, weapons and style exactly. FIX THE LAYOUT FOR GAME ASSET EXTRACTION: equal 4 columns x2 rows, each cell512x512 on2048x1024. Make every full figure about 25% SMALLER so generous EMPTY TRANSPARENT margins surround EVERY pose. A MINIMUM of 60 transparent pixels between ALL silhouettes, especially the sword of pose5 (bottom-left follow-through) and pose6 (bottom second idle), which currently collide. All sword and wing tips FULLY INSIDE their own cell. Also clean off detached flecks and glow noise outside silhouettes, subtle glow only immediately adjacent to halo. Do not crop anything. Keep same anatomy and body scale among poses, transparent alpha, no lines, no labels, no checkerboard, no scenery, no shadows. Exact4x2 grid. Priority is clearly-separated whole characters at consistent body scale, no touching across cells."
+}

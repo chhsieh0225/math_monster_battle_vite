@@ -40,7 +40,7 @@ export interface SpriteProfile {
    * 0.06 = wide-wing sprites (butterfly).
    */
   safePad: number;
-  /** Horizontally flip the image (boss_crazy_dragon). */
+  /** Normalize right-facing sources to the game's left-facing enemy convention. */
   flip?: boolean;
   /** CSS image-rendering. */
   rendering?: 'pixelated' | 'auto';
@@ -113,6 +113,10 @@ export const PROFILES: Record<string, SpriteProfile> = {
   ghostLanternSVG:             wide('ghost_lantern'),
   mushroomSVG:                 wide('mushroom'),
   colorfulButterflySVG:        wide('colorful_butterfly', 0.06),
+  limitKnightSVG:              { imgKey: 'limit_knight', natW: 512, natH: 384, safePad: 0.06, flip: true },
+  topologyKnightSVG:           { imgKey: 'topology_knight', natW: 512, natH: 384, safePad: 0.06, flip: true },
+  algebraKnightSVG:            { imgKey: 'algebra_knight', natW: 512, natH: 384, safePad: 0.06, flip: true },
+  blueButterflySVG:            { imgKey: 'blue_butterfly', natW: 512, natH: 384, safePad: 0.06, flip: true },
 
   // ── Boss sprites ──────────────────────────────────────────────────
   bossHydraSVG:                wide('boss_hydra', 0.04),

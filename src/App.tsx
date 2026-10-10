@@ -20,6 +20,7 @@ import { useAudioState } from './hooks/useAudioState';
 import { getScreenMusic, getEncounterMusic } from './utils/battleMusic.ts';
 import type { BgmTrack } from './utils/sfx/bgm.ts';
 import { BG_IMGS, BG_IMGS_LOW } from './data/sprites.ts';
+import { getGuardianBackground } from './data/guardianEncounters.ts';
 import { battleSpritePreloader, getBattleSpritePreloadSources } from './utils/battleSpritePreload.ts';
 
 // Screens
@@ -284,6 +285,12 @@ function App() {
     const nextEnemy = S.enemies?.[(S.round || 0) + nextEncounterStep] || null;
     const nextSceneType = nextEnemy?.sceneMType || nextEnemy?.mType;
 
+    const upcoming = conserveNetwork ? [] : [nextEnemy];
+    for (const unit of [S.enemy, S.enemySub, ...upcoming]) {
+      const src = getGuardianBackground(unit?.id);
+      if (src) preloadSceneBackground(src);
+    }
+
     if (currentSceneType) sceneTypes.add(currentSceneType);
     if (subSceneType) sceneTypes.add(subSceneType);
     if (nextSceneType) sceneTypes.add(nextSceneType);
@@ -297,6 +304,8 @@ function App() {
     S.battleMode,
     S.round,
     S.enemies,
+    S.enemy,
+    S.enemySub,
     S.enemy?.sceneMType,
     S.enemy?.mType,
     S.enemySub?.sceneMType,

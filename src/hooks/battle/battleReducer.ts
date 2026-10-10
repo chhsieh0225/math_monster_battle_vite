@@ -1,4 +1,6 @@
+import { createEnemySkillState, type EnemySkillState } from '../../data/enemySkills.ts';
 import { PLAYER_MAX_HP } from '../../data/constants.ts';
+import { createEnemyBehaviorState, type EnemyBehaviorState } from '../../data/enemyPersonalities.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { getShadowWardMax } from '../../utils/combatTactics.ts';
 import { getLevelMaxHp } from '../../utils/playerHp.ts';
@@ -39,6 +41,8 @@ export type BattleState = {
   burnStack: number;
   tideStack: number;
   enemyExposed: boolean;
+  enemyBehavior: EnemyBehaviorState;
+  enemySkillState: EnemySkillState;
   frozen: boolean;
   shattered: boolean;
   staticStack: number;
@@ -141,6 +145,8 @@ const BASE_STATE: BattleState = {
   // Status effects
   burnStack: 0, tideStack: 0,
   enemyExposed: false,
+  enemyBehavior: createEnemyBehaviorState(),
+  enemySkillState: createEnemySkillState(),
   frozen: false,
   shattered: false,
   staticStack: 0,
@@ -201,6 +207,8 @@ export function createInitialBattleState(): BattleState {
     ...BASE_STATE,
     mHits: [...BASE_STATE.mHits],
     mLvls: [...BASE_STATE.mLvls],
+    enemyBehavior: createEnemyBehaviorState(),
+    enemySkillState: createEnemySkillState(),
   };
 }
 
@@ -240,6 +248,8 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         round: action.round ?? state.round,
         burnStack: 0, tideStack: 0,
         enemyExposed: false,
+        enemyBehavior: createEnemyBehaviorState(),
+        enemySkillState: createEnemySkillState(),
         staticStack: 0,
         frozen: false,
         shattered: false,
@@ -268,6 +278,8 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         round: state.round + 1,
         burnStack: 0, tideStack: 0,
         enemyExposed: false,
+        enemyBehavior: { main: { ...state.enemyBehavior.sub }, sub: createEnemyBehaviorState().sub },
+        enemySkillState: { main: { ...state.enemySkillState.sub }, sub: createEnemySkillState().sub },
         staticStack: 0,
         frozen: false,
         shattered: false,

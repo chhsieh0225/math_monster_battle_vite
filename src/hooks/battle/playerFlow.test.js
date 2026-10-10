@@ -8,6 +8,7 @@ import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { POWER_CAPS } from '../../data/constants.ts';
 import { withRandomSource } from '../../utils/prng.ts';
 import { STARTERS } from '../../data/starters.ts';
+import { createEnemyBehaviorState } from '../../data/enemyPersonalities.ts';
 
 function createClock() {
   let now = 0;
@@ -326,6 +327,8 @@ function createTestContext(stateOverrides = {}) {
     setBurnStack: burn.setter,
     setTideStack: (value) => { state.tideStack = value; },
     setEnemyExposed: (value) => { state.enemyExposed = value; },
+    setEnemyBehavior: (value) => { state.enemyBehavior = value; },
+    setEnemySkillState: (value) => { state.enemySkillState = value; },
     setPHp: pHp.setter,
     setPHpSub: pHpSub.setter,
     setFrozen: frozen.setter,
@@ -1071,5 +1074,87 @@ test('nature contact captures sub actor; leaving during travel prevents all tact
     assert.equal(ctx.state.enemyExposed, !exit && id === 'grass');
     assert.equal(ctx.calls.handleFreeze, !exit && id === 'tiger' ? 1 : 0);
     assert.equal(ctx.calls.atkEffect.some(fx => fx?.impact), !exit);
+  }
+});
+
+function personalityStrike({ id, behavior = createEnemyBehaviorState(), idx = 0, slot = 'main', correct = true,
+  phantom = false, oneMove = false, hp = 500 } = {}) {
+  const ctx = createTestContext({ battleMode: slot === 'sub' ? 'coop' : 'single',
+    enemy: { id: 'slime', maxHp: 1000, mType: 'steel', trait: phantom ? 'phantom' : '', personality: { id } },
+    enemyBehavior: behavior, eHp: hp, selIdx: idx,
+    starter: { id: 'wolf', type: 'steel', moves: oneMove ? [{}] : [{}, {}, {}] },
+    allySub: slot === 'sub' ? { id: 'water', type: 'water', selectedStageIdx: 0 } : null,
+  });
+  const actor = { id: slot === 'sub' ? 'water' : 'wolf', type: 'steel', moves: oneMove ? [{}] : [{}, {}, {}] };
+  const clock = createClock();
+  withRandomSource(() => 0.5, () => {
+    runPlayerAnswer({ ...ctx.deps, safeTo: clock.schedule, chance: () => phantom, correct, attackerSlot: slot,
+      starter: actor, move: { name: `Move ${idx}`, basePower: 20, growth: 0, type: 'steel' } });
+    clock.advance(5000);
+  });
+  return { ...ctx, damage: hp - ctx.counters.eHp.getValue() };
+}
+
+for (const slot of ['main', 'sub']) {
+  test(`${slot}: personality hit modifiers and feedback apply at actual contact`, () => {
+    const plain = personalityStrike({ slot });
+    const opening = createEnemyBehaviorState();
+    opening.main.opening = true;
+    const exploit = personalityStrike({ slot, id: 'irritable', behavior: opening });
+    assert.equal(exploit.damage, Math.round(plain.damage * 1.25));
+    assert.equal(exploit.state.enemyBehavior.main.opening, false);
+    assert.ok(exploit.calls.damage.some(d => d.value === 'exploit'));
+    assert.equal(opening.main.opening, true, 'plans must not mutate prior state');
+
+    const guard = personalityStrike({ slot, id: 'timid', hp: 350 });
+    assert.equal(guard.damage, Math.round(plain.damage * 0.65));
+    assert.equal(guard.state.enemyBehavior.main.guardSpent, true);
+    assert.ok(guard.calls.damage.some(d => d.value === 'guardBreak'));
+
+    const watched = createEnemyBehaviorState();
+    watched.main.watchedMoveKey = `${slot === 'sub' ? 'water' : 'wolf'}:0`;
+    const parry = personalityStrike({ slot, id: 'crafty', behavior: watched });
+    assert.equal(parry.damage, Math.round(plain.damage * 0.65));
+    const outwit = personalityStrike({ slot, id: 'crafty', behavior: watched, idx: 1 });
+    const plainSecond = personalityStrike({ slot, idx: 1 });
+    assert.equal(outwit.damage, Math.round(plainSecond.damage * 1.1));
+    assert.equal(personalityStrike({ slot, id: 'crafty', behavior: watched, oneMove: true }).damage, plain.damage);
+  });
+}
+
+test('wrong answers and phantom misses do not consume personality tactics or learn a move', () => {
+  for (const id of ['timid', 'crafty', 'irritable']) {
+    for (const options of [{ correct: false }, { phantom: true }]) {
+      const behavior = createEnemyBehaviorState();
+      behavior.main.opening = id === 'irritable';
+      const result = personalityStrike({ id, behavior, hp: 350, ...options });
+      assert.deepEqual(result.state.enemyBehavior, behavior);
+    }
+  }
+});
+
+test('co-op partner using a different character is not punished for the same slot index', () => {
+  const behavior = createEnemyBehaviorState();
+  behavior.main.watchedMoveKey = 'wolf:0';
+  const plain = personalityStrike({ slot: 'sub' });
+  const changed = personalityStrike({ slot: 'sub', id: 'crafty', behavior });
+  assert.equal(changed.damage, Math.round(plain.damage * 1.1));
+  assert.equal(changed.state.enemyBehavior.main.watchedMoveKey, 'water:0');
+});
+
+test('prepared skills are disrupted only by landed selected basic/effective hits, including the co-op partner', () => {
+  for (const slot of ['main', 'sub']) for (const outcome of ['hit', 'wrong', 'dodge']) {
+    const skillState = { main: { turn: 1, disrupted: false }, sub: { turn: 3, disrupted: false } };
+    const ctx = createTestContext({ selIdx: 0, enemySkillState: skillState,
+      enemy: { id: 'ghost', mType: 'dark', maxHp: 1000, trait: outcome === 'dodge' ? 'phantom' : '' }, eHp: 1000 });
+    const clock = createClock();
+    runPlayerAnswer({ ...ctx.deps, safeTo: clock.schedule, correct: outcome !== 'wrong', chance: () => outcome === 'dodge',
+      attackerSlot: slot, starter: { id: 'water', type: 'water' },
+      move: { name: 'Bubble', type: 'water', basePower: 20, growth: 0 } });
+    assert.equal(ctx.state.enemySkillState.main.disrupted, false, 'never at windup');
+    clock.advance(5000);
+    assert.equal(ctx.state.enemySkillState.main.disrupted, outcome === 'hit');
+    assert.deepEqual(ctx.state.enemySkillState.sub, skillState.sub, 'not the reserve enemy');
+    assert.equal(skillState.main.disrupted, false, 'immutable previous state');
   }
 });

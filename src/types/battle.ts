@@ -1,3 +1,4 @@
+import { type EnemySkillState } from '../data/enemySkills.ts';
 import type {
   AchievementId,
   EncyclopediaData,
@@ -5,7 +6,7 @@ import type {
   ItemId,
   StarterId,
 } from './game';
-import type { EnemyPersonality } from '../data/enemyPersonalities';
+import type { EnemyPersonality, EnemyBehaviorState } from '../data/enemyPersonalities';
 import type { LearningQuestionMeta } from '../utils/learningProgress';
 import type { AttackImpactEvent } from '../utils/effectTiming';
 import type { ExpeditionRun } from '../utils/expeditionRun';
@@ -316,6 +317,8 @@ export type UseBattleState = {
   burnStack: number;
   tideStack: number;
   enemyExposed: boolean;
+  enemyBehavior: EnemyBehaviorState;
+  enemySkillState: EnemySkillState;
   frozen: boolean;
   shattered: boolean;
   staticStack: number;

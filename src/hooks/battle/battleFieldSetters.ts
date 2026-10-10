@@ -21,6 +21,9 @@ type FieldKey =
   | 'burnStack'
   | 'tideStack'
   | 'enemyExposed'
+  | 'enemyBehavior'
+  | 'enemySkillState'
+  | 'eHpSub'
   | 'frozen'
   | 'shattered'
   | 'staticStack'
@@ -71,6 +74,9 @@ type BattleFieldSetters = {
   setBurnStack: FieldSetter<'burnStack'>;
   setTideStack: FieldSetter<'tideStack'>;
   setEnemyExposed: FieldSetter<'enemyExposed'>;
+  setEnemyBehavior: FieldSetter<'enemyBehavior'>;
+  setEnemySkillState: FieldSetter<'enemySkillState'>;
+  setEHpSub: FieldSetter<'eHpSub'>;
   setFrozen: FieldSetter<'frozen'>;
   setShattered: FieldSetter<'shattered'>;
   setStaticStack: FieldSetter<'staticStack'>;
@@ -123,6 +129,9 @@ export function createBattleFieldSetters(dispatchBattle: DispatchBattle): Battle
     setBurnStack: createFieldSetter(setBattleField, 'burnStack'),
     setTideStack: createFieldSetter(setBattleField, 'tideStack'),
     setEnemyExposed: createFieldSetter(setBattleField, 'enemyExposed'),
+    setEnemyBehavior: createFieldSetter(setBattleField, 'enemyBehavior'),
+    setEnemySkillState: createFieldSetter(setBattleField, 'enemySkillState'),
+    setEHpSub: createFieldSetter(setBattleField, 'eHpSub'),
     setFrozen: createFieldSetter(setBattleField, 'frozen'),
     setShattered: createFieldSetter(setBattleField, 'shattered'),
     setStaticStack: createFieldSetter(setBattleField, 'staticStack'),

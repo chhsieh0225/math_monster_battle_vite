@@ -2,6 +2,39 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { battleReducer, createInitialBattleState } from './battleReducer.ts';
 
+test('skill cycles reset per encounter and a promoted reserve keeps its own action index', () => {
+  const state = createInitialBattleState();
+  state.enemySkillState.main = { turn: 3, disrupted: true };
+  state.enemySkillState.sub = { turn: 1, disrupted: false };
+  state.enemySub = { id: 'fire', maxHp: 80 };
+  const promoted = battleReducer(state, { type: 'promote_enemy_sub' });
+  assert.deepEqual(promoted.enemySkillState.main, { turn: 1, disrupted: false });
+  assert.notEqual(promoted.enemySkillState.main, state.enemySkillState.sub);
+  assert.deepEqual(promoted.enemySkillState.sub, { turn: 0, disrupted: false });
+  for (const type of ['start_battle', 'reset_run']) {
+    assert.deepEqual(battleReducer(state, { type }).enemySkillState, createInitialBattleState().enemySkillState);
+  }
+});
+
+test('personality tactics are per enemy, reset for a new battle, and promote with the reserve', () => {
+  const state = createInitialBattleState();
+  const other = createInitialBattleState();
+  assert.notEqual(state.enemyBehavior.main, state.enemyBehavior.sub);
+  assert.notEqual(state.enemyBehavior.main, other.enemyBehavior.main);
+  state.enemyBehavior.main.anger = 2;
+  state.enemyBehavior.sub.guardSpent = true;
+  state.enemySub = { id: 'slime', maxHp: 80 };
+  const promoted = battleReducer(state, { type: 'promote_enemy_sub' });
+  assert.equal(promoted.enemyBehavior.main.anger, 0);
+  assert.equal(promoted.enemyBehavior.main.guardSpent, true);
+  assert.equal(promoted.enemyBehavior.sub.guardSpent, false);
+  assert.notEqual(promoted.enemyBehavior.main, state.enemyBehavior.sub);
+  for (const type of ['start_battle', 'reset_run']) {
+    const reset = battleReducer(state, { type });
+    assert.deepEqual(reset.enemyBehavior, other.enemyBehavior);
+  }
+});
+
 test('battleReducer set_field supports value and updater function', () => {
   let state = createInitialBattleState();
   state = battleReducer(state, { type: "set_field", key: "pHp", value: 88 });

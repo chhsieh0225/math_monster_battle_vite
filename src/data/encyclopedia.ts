@@ -10,7 +10,33 @@
 import { MONSTERS, SLIME_VARIANTS, EVOLVED_SLIME_VARIANTS, TYPE_EFF } from './monsters.ts';
 import { getDualEff } from './typeEffectiveness.ts';
 import { STARTERS } from './starters.ts';
+import { BOSS_IDS } from './monsterConfigs.ts';
 import type { EncyclopediaEnemyEntry, EncyclopediaStarterEntry } from '../types/game';
+
+export const ENC_RANK_ORDER = ['normal', 'evolved', 'elite', 'miniboss', 'boss'] as const;
+export type EncyclopediaRank = typeof ENC_RANK_ORDER[number];
+
+const MINIBOSS_ENTRY_KEYS: ReadonlySet<string> = new Set(['limit_knight', 'topology_knight', 'algebra_knight']);
+const ELITE_ENTRY_KEYS: ReadonlySet<string> = new Set(['dragon', 'golumn', 'golumn_mud', 'candy_knight']);
+
+// Presentation ranks do not promote regional guardians to mechanical bosses.
+export function getEncyclopediaRank(entry: Pick<EncyclopediaEnemyEntry, 'key' | 'isEvolved'>): EncyclopediaRank {
+  if (BOSS_IDS.has(entry.key)) return 'boss';
+  if (MINIBOSS_ENTRY_KEYS.has(entry.key)) return 'miniboss';
+  if (entry.isEvolved) return 'evolved';
+  if (ELITE_ENTRY_KEYS.has(entry.key)) return 'elite';
+  return 'normal';
+}
+
+export function groupEncyclopediaEntries(entries: readonly EncyclopediaEnemyEntry[]): {
+  rank: EncyclopediaRank;
+  entries: EncyclopediaEnemyEntry[];
+}[] {
+  const groups = ENC_RANK_ORDER.map((rank) => ({ rank, entries: [] as EncyclopediaEnemyEntry[] }));
+  const byRank = new Map(groups.map((group) => [group.rank, group]));
+  for (const entry of entries) byRank.get(getEncyclopediaRank(entry))!.entries.push(entry);
+  return groups.filter((group) => group.entries.length > 0);
+}
 
 function weaknesses(mType: string, mType2?: string): string[] {
   const weak: string[] = [];
@@ -39,6 +65,10 @@ function resistances(mType: string, mType2?: string): string[] {
 
 // ── Monster descriptions ──
 const DESCS: Record<string, string> = {
+  limit_knight: '銀白羽翼纏繞無限紋樣，鎮守光城上方的雲上積分聖壇。以微分光刃、積分劍雨與極限聖環迎擊挑戰者。',
+  topology_knight: '四翼與環結光冠守護鋼鐵要塞的環軌庭院。莫比烏斯劍與反盾互相呼應，將每次衝擊折返。',
+  algebra_knight: '矩陣光城的金甲守衛。以向量穿刺、矩陣封陣和方程裂光壓迫對手，受創時核心會超載。',
+  blue_butterfly: '棲息在南方河谷的月瀑與藍花之間。花瓣狀藍翼能揮出月刃，灑下旋舞蝶鱗與月瀑蝶雨。',
   slime: '草原上最常見的怪獸。身體柔軟Q彈，看似無害卻意外地頑強。據說不同環境下會產生屬性突變。',
   slime_red: '在火山地帶附近突變的史萊姆。體溫極高，觸碰時會感到灼熱。性格比綠色同類更加暴躁。',
   slime_blue: '長期棲息在水域邊的史萊姆變種。身體含有大量水分，能在雨天快速移動。',
@@ -71,6 +101,10 @@ const DESCS: Record<string, string> = {
 };
 
 const HABITATS: Record<string, string> = {
+  limit_knight: '光域・雲上積分聖壇',
+  topology_knight: '鋼域・環軌機關庭院',
+  algebra_knight: '光域・矩陣光城',
+  blue_butterfly: '水域・月瀑藍花谷',
   slime: '🌿 綠意草原',
   slime_red: '🌿 綠意草原',
   slime_blue: '🌿 綠意草原',
@@ -103,6 +137,10 @@ const HABITATS: Record<string, string> = {
 };
 
 const RARITY: Record<string, string> = {
+  limit_knight: '★★★★',
+  topology_knight: '★★★',
+  algebra_knight: '★★★★',
+  blue_butterfly: '★★',
   slime: '★',
   slime_red: '★',
   slime_blue: '★',

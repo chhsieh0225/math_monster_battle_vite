@@ -356,6 +356,38 @@ export const MONSTER_CONFIGS: MonsterConfig[] = [
     descEn: "A divine sword sovereign guarding the celestial court. It blends holy authority with blade precision and punishes mistakes with relentless judgment.",
     habitatEn: "☁️ Celestial Sanctum",
   },
+  {
+    id: 'limit_knight', name: '極限翼騎士', ...MONSTER_STATS.limit_knight,
+    c1: '#e2e8f0', c2: '#c99a42', spriteKey: 'limitKnightSVG', dropTable: 'limit_knight',
+    race: 'guardian', mType: 'light', typeIcon: '✨', typeName: '光',
+    trait: 'fortify', traitName: '極限聖盾', traitDesc: '積分聖盾抵銷衝擊，受到的傷害減少25%。',
+    nameEn: 'Limit Wing Knight', descEn: 'A silver guardian of the cloud sanctum. Its helix sword draws luminous curves before a rain of integral blades.',
+    habitatEn: 'Cloud Integral Sanctum',
+  },
+  {
+    id: 'topology_knight', name: '環結翼騎士', ...MONSTER_STATS.topology_knight,
+    c1: '#67e8f9', c2: '#b98a35', spriteKey: 'topologyKnightSVG', dropTable: 'topology_knight',
+    race: 'guardian', mType: 'steel', typeIcon: '⚙️', typeName: '鋼',
+    trait: 'counter', traitName: '環結反盾', traitDesc: '環結盾將20%的受到傷害折返給攻擊者。',
+    nameEn: 'Knot Wing Knight', descEn: 'The orbital court guardian weaves a braided blade and interlocking rings into an endless counterattack.',
+    habitatEn: 'Orbital Mechanism Court',
+  },
+  {
+    id: 'algebra_knight', name: '代數翼騎士', ...MONSTER_STATS.algebra_knight,
+    c1: '#facc15', c2: '#38bdf8', spriteKey: 'algebraKnightSVG', dropTable: 'algebra_knight',
+    race: 'guardian', mType: 'light', typeIcon: '✨', typeName: '光',
+    trait: 'blaze', traitName: '矩陣超載', traitDesc: '生命低於50%時，矩陣核心超載，攻擊力提升50%。',
+    nameEn: 'Algebra Wing Knight', descEn: 'A golden sentinel of the light citadel. Vector thrusts unfold into luminous grids and intersecting equation rifts.',
+    habitatEn: 'Matrix Light Citadel',
+  },
+  {
+    id: 'blue_butterfly', name: '藍月花翼蝶', ...MONSTER_STATS.blue_butterfly,
+    c1: '#38bdf8', c2: '#1d4ed8', spriteKey: 'blueButterflySVG', dropTable: 'blue_butterfly',
+    race: 'butterfly', mType: 'water', typeIcon: '💧', typeName: '水',
+    trait: 'swift', traitName: '月瀑振翅', traitDesc: '借瀑布氣流振翅，有機率在同一回合連續攻擊兩次。',
+    nameEn: 'Blue Moon Petalwing', descEn: 'A cobalt butterfly from a secluded waterfall valley. Petal wings release moon crescents, orbiting scales and a shower of blue wings.',
+    habitatEn: 'Moonfall Blueflower Vale',
+  },
 ];
 
 export const SLIME_VARIANT_CONFIGS: SlimeVariantConfig[] = [

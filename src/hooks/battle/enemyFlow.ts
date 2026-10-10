@@ -1,9 +1,12 @@
+import { createEnemySkillState, getEnemySkill, enemySkillNameKey, resolveEnemySkillImpact, type EnemySkill, type EnemySkillState } from '../../data/enemySkills.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { getBossSealPool } from '../../utils/combatTactics.ts';
 import type { AttackEffectVm, BattleAnimationSetter } from '../../types/battle';
 import { createAttackImpact } from '../../utils/effectTiming.ts';
 import { getEnemySkillEffect } from '../../utils/skillPresentation.ts';
+import { getSkillRecipe } from '../../components/effects/skillRecipes.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
+import { createEnemyBehaviorState, getPersonalityCue, planPersonalityAttack, type EnemyBehaviorState } from '../../data/enemyPersonalities.ts';
 import { getEff } from '../../data/typeEffectiveness.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { calcEnemyDamage } from '../../utils/damageCalc.ts';
@@ -40,12 +43,14 @@ type BattleAlly = {
 type BattleEnemy = {
   id?: string;
   lvl?: number;
+  isEvolved?: boolean;
   name?: string;
   atk?: number;
   maxHp?: number;
   mType?: string;
   mType2?: string;
   trait?: string;
+  personality?: { id?: string; critChanceBonus?: number; critDamageBonus?: number };
 };
 
 type BattleRuntimeState = {
@@ -65,6 +70,9 @@ type BattleRuntimeState = {
   bossPhase: number;
   cursed: boolean;
   phase?: string;
+  battleMode?: string;
+  enemyBehavior?: EnemyBehaviorState;
+  enemySkillState?: EnemySkillState;
   screen?: string;
 };
 
@@ -124,6 +132,9 @@ type RunEnemyTurnArgs = {
   setSpecDef: BoolSetter;
   setDefAnim: DefAnimSetter;
   setEHp: NumberSetter;
+  setEHpSub: NumberSetter;
+  setEnemyBehavior: (value: EnemyBehaviorState) => void;
+  setEnemySkillState: (value: EnemySkillState) => void;
   setEffMsg: EffectMessageSetter;
   setCursed: BoolSetter;
   addD: DamagePopupAdder;
@@ -145,6 +156,7 @@ type ApplyDamageArgs = {
   sourceSlot?: TargetSlot;
   ultimate?: boolean;
   critical?: boolean;
+  action?: EnemySkill;
 };
 
 const TRAIT_BALANCE = BALANCE_CONFIG.traits;
@@ -189,6 +201,9 @@ export function runEnemyTurn({
   setSpecDef,
   setDefAnim,
   setEHp,
+  setEHpSub,
+  setEnemyBehavior,
+  setEnemySkillState,
   setEffMsg,
   setCursed,
   addD,
@@ -247,10 +262,65 @@ export function runEnemyTurn({
     return targets[randInt(0, targets.length - 1)];
   };
 
-  const applyDamageToTarget = ({ s, target, dmg, label = null, color = '#ef4444', attacker = s.enemy || {}, sourceSlot = 'main', ultimate = false, critical = false }: ApplyDamageArgs): number => {
+  const preparedSkill = (slot: TargetSlot) => {
+    const s = sr.current;
+    const state = (s.enemySkillState ?? createEnemySkillState())[slot];
+    return { action: getEnemySkill((slot === 'main' ? s.enemy : s.enemySub) ?? {}, state.turn), disrupted: state.disrupted };
+  };
+  const skillName = (action: EnemySkill): string => tr(t, enemySkillNameKey(action), action.name);
+  const consumeSkill = (slot: TargetSlot): void => {
+    const state = sr.current.enemySkillState ?? createEnemySkillState();
+    const next = { ...state, [slot]: { turn: state[slot].turn + 1, disrupted: false } };
+    sr.current = { ...sr.current, enemySkillState: next };
+    setEnemySkillState(next);
+  };
+  const launchSkill = (attacker: BattleEnemy, action: EnemySkill, sourceSlot: TargetSlot, targetSlot: TargetSlot, phase: number, flightMs: number) => {
+    setAtkEffect({ ...getEnemySkillEffect(attacker, phase, action.idx === 3 && BOSS_IDS.has(attacker.id ?? ''), 0, action), targetSide: 'player', sourceSlot, targetSlot, flightMs });
+    if (action.kind !== 'basic') sfx.play(attacker.mType || 'dark');
+  };
+  const recoverSkillHp = (slot: TargetSlot, heal: number): void => {
+    if (heal <= 0) return;
+    const hp = slot === 'main' ? sr.current.eHp : sr.current.eHpSub ?? 0;
+    if (hp <= 0) return;
+    if (slot === 'main') {
+      sr.current = { ...sr.current, eHp: hp + heal };
+      setEHp(hp + heal);
+      addD(`+${heal}`, fxt().enemyAbove.x, fxt().enemyAbove.y, '#4ade80');
+    } else {
+      sr.current = { ...sr.current, eHpSub: hp + heal };
+      setEHpSub(hp + heal);
+      setBText(tr(t, 'battle.enemySkill.recovery', '{enemy} recovered {hp} HP', { enemy: sr.current.enemySub?.name || 'Enemy', hp: heal }));
+    }
+  };
+  const attackMotion = (action: EnemySkill): string => {
+    const motion = getSkillRecipe(action.skillId)?.motion;
+    return !motion || motion === 'rush' || motion === 'slash' ? 'enemyAttackLunge' : 'enemySkillCast';
+  };
+
+  const consumePersonalityStrike = (slot: TargetSlot): number => {
+    const s = sr.current;
+    const behavior = s.enemyBehavior ?? createEnemyBehaviorState();
+    const plan = planPersonalityAttack({ enemy: slot === 'main' ? s.enemy : s.enemySub,
+      hp: slot === 'main' ? s.eHp : s.eHpSub ?? 0, state: behavior[slot], battleMode: s.battleMode });
+    if (!plan) return 1;
+    const next = { ...behavior, [slot]: plan.next };
+    sr.current = { ...sr.current, enemyBehavior: next };
+    setEnemyBehavior(next);
+    const feedback = tr(t, 'battle.personality.feedback.rageStrike', 'Rage strike! Opening exposed');
+    if (slot === 'main') {
+      const point = fxt().enemyAbove;
+      addD(feedback, point.x, point.y, '#fbbf24');
+    } else {
+      setBText(`${s.enemySub?.name ?? ''}: ${feedback}`);
+    }
+    return plan.damageScale;
+  };
+
+  const applyDamageToTarget = ({ s, target, dmg, label = null, color = '#ef4444', attacker = s.enemy || {}, sourceSlot = 'main', ultimate = false, critical = false, action = getEnemySkill(attacker, 0, ultimate) }: ApplyDamageArgs): number => {
     const isSub = target === 'sub';
     const prevHp = isSub ? (s.pHpSub || 0) : (s.pHp || 0);
     const nextHp = Math.max(0, prevHp - dmg);
+    sr.current = { ...sr.current, [isSub ? 'pHpSub' : 'pHp']: nextHp };
     if (isSub) {
       setPHpSub(nextHp);
     } else {
@@ -260,7 +330,7 @@ export function runEnemyTurn({
     safeToIfBattleActive(() => setPAnim('', target), 500);
     addD(label || `-${dmg}`, isSub ? fxt().playerSub.x : fxt().playerMain.x, isSub ? fxt().playerSub.y : fxt().playerMain.y, color);
     const effect: AttackEffectVm = {
-      ...getEnemySkillEffect(attacker, computeBossPhase(sourceSlot === 'sub' ? s.eHpSub ?? attacker.maxHp : s.eHp, attacker.maxHp), ultimate),
+      ...getEnemySkillEffect(attacker, computeBossPhase(sourceSlot === 'sub' ? s.eHpSub ?? attacker.maxHp : s.eHp, attacker.maxHp), ultimate, 0, action),
       targetSide: 'player', sourceSlot, targetSlot: target,
       impact: createAttackImpact(critical ? 'critical' : 'hit'),
     };
@@ -282,11 +352,16 @@ export function runEnemyTurn({
         tryReturnToBattleMenu();
         return;
       }
-      setBText(tr(t, 'battle.enemy.assistAttack', '⚔️ {enemy} launched an assist attack!', { enemy: s2.enemySub.name || 'Enemy' }));
+      const { action, disrupted } = preparedSkill('sub');
+      const skillTarget = resolvePlayerTarget(s2);
+      const assistText = tr(t, 'battle.enemy.assistAttack', '⚔️ {enemy} launched an assist attack!', { enemy: s2.enemySub.name || 'Enemy' });
+      setBText(`${assistText} ${skillName(action)}`);
       setPhase('enemyAtk');
+      launchSkill(s2.enemySub, action, 'sub', skillTarget, 1, 380);
       effectOrchestrator.runEnemyLunge({
-        safeTo,
+        safeTo: safeToIfBattleActive,
         setEAnim: (animation) => setEAnim(animation, 'sub'),
+        animation: attackMotion(action),
         strikeDelay: 380,
         onStrike: () => {
           if (!isBattleActive()) return;
@@ -295,22 +370,28 @@ export function runEnemyTurn({
             tryReturnToBattleMenu();
             return;
           }
-          const target = resolvePlayerTarget(s3);
+          const target = skillTarget;
+          consumeSkill('sub');
           const targetName = target === 'sub' ? (s3.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s3.starter.name || tr(t, 'battle.role.main', 'Main'));
           const defenderType = target === 'sub' ? (s3.allySub?.type || s3.starter.type) : s3.starter.type;
           const { dmg } = resolveEnemyAssistStrike({
             enemySub: s3.enemySub,
             starterType: defenderType,
           });
+          const impactPlan = resolveEnemySkillImpact(action, disrupted, dmg * consumePersonalityStrike('sub'),
+            target === 'sub' ? s3.pHpSub : s3.pHp, s3.eHpSub ?? 0, s3.enemySub.maxHp ?? 0);
+          const assistDmg = impactPlan.damage;
           const nh = applyDamageToTarget({
             s: s3,
             target,
-            dmg,
-            label: `✶-${dmg}`,
+            dmg: assistDmg,
+            label: `✶-${assistDmg}`,
             color: '#f97316',
             attacker: s3.enemySub,
             sourceSlot: 'sub',
+            action,
           });
+          recoverSkillHp('sub', impactPlan.heal);
           sfx.play('playerHit');
           const impact = target === 'sub' ? fxt().playerSub : fxt().playerMain;
           addP('enemy', impact.x + 24, impact.y + 16, 3);
@@ -341,18 +422,29 @@ export function runEnemyTurn({
   function doEnemyAttack(bp: number): void {
     const s = sr.current;
     if (!s.enemy || !s.starter) return;
-    setBText(tr(t, 'battle.enemy.attackStart', '{enemy} attacks!', { enemy: s.enemy.name || 'Enemy' }));
+    const { action, disrupted } = preparedSkill('main');
+    const skillTarget = resolvePlayerTarget(s);
+    const attackText = `${s.enemy.name || 'Enemy'} · ${skillName(action)}`;
+    setBText(disrupted ? `${attackText} · ${tr(t, 'battle.enemySkill.weakened', 'Disrupted: damage reduced')}` : attackText);
+    if (getPersonalityCue({ enemy: s.enemy, hp: s.eHp, state: s.enemyBehavior?.main, battleMode: s.battleMode }) === 'rage') {
+      setBText(`${attackText} · ${tr(t, 'battle.personality.rageAttack', '{enemy} unleashes rage, leaving an opening!', { enemy: s.enemy.name || 'Enemy' })}`);
+    }
     setPhase('enemyAtk');
+    launchSkill(s.enemy, action, 'main', skillTarget, bp, 500);
     effectOrchestrator.runEnemyLunge({
-      safeTo,
+      safeTo: safeToIfBattleActive,
       setEAnim,
+      animation: attackMotion(action),
       onStrike: () => {
         if (!isBattleActive()) return;
         const s2 = sr.current;
-        const target = resolvePlayerTarget(s2);
+        const target = skillTarget;
+        consumeSkill('main');
         const targetName = target === 'sub' ? (s2.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s2.starter?.name || tr(t, 'battle.role.main', 'Main'));
         const defenderType = target === 'sub' ? (s2.allySub?.type || s2.starter?.type) : s2.starter?.type;
+        const personalityStrikeScale = consumePersonalityStrike('main');
         if (target === 'main' && s2.specDef) {
+          setAtkEffect(null);
           const st = s2.starter?.type || 'grass';
           setSpecDef(false);
           setDefAnim(st);
@@ -472,16 +564,20 @@ export function runEnemyTurn({
           bossPhase: bp,
           chance,
         });
-        let finalDmg = dmg;
+        const personalityDmg = Math.max(0, Math.round(dmg * personalityStrikeScale));
+        let finalDmg = personalityDmg;
         if (defenderType === 'steel') {
           const steelWallScale = TRAIT_BALANCE.player.steelWallDamageScale;
-          const reducedDmg = Math.max(1, Math.round(dmg * steelWallScale));
-          if (reducedDmg < dmg) {
+          const reducedDmg = Math.max(1, Math.round(personalityDmg * steelWallScale));
+          if (reducedDmg < personalityDmg) {
             finalDmg = reducedDmg;
             setEffMsg({ text: tr(t, 'battle.effect.steelWall', '🛡️ Steel Wall reduced damage!'), color: '#94a3b8' });
             safeToIfBattleActive(() => setEffMsg(null), 1500);
           }
         }
+        const impactPlan = BOSS_IDS.has(s2.enemy?.id ?? '') ? { damage: finalDmg, heal: 0 }
+          : resolveEnemySkillImpact(action, disrupted, finalDmg, target === 'sub' ? s2.pHpSub : s2.pHp, s2.eHp, s2.enemy?.maxHp ?? 0);
+        finalDmg = impactPlan.damage;
         const nh = applyDamageToTarget({
           s: s2,
           target,
@@ -489,7 +585,9 @@ export function runEnemyTurn({
           label: isCrit ? `💥-${finalDmg}` : `-${finalDmg}`,
           color: isCrit ? '#ff6b00' : '#ef4444',
           critical: isCrit,
+          action,
         });
+        recoverSkillHp('main', impactPlan.heal);
         sfx.play('playerHit');
         const impact = target === 'sub' ? fxt().playerSub : fxt().playerMain;
         addP('enemy', impact.x + 20, impact.y + 20, 4);
@@ -527,7 +625,7 @@ export function runEnemyTurn({
           const rawCounterDmg = Math.max(0, Math.min(counterCap || counterRaw, counterRaw));
           const counterDmg = applyBossDamageReduction(rawCounterDmg, s2.enemy?.id);
           if (counterDmg > 0) {
-            const enemyHpAfterCounter = Math.max(0, (s2.eHp || 0) - counterDmg);
+            const enemyHpAfterCounter = Math.max(0, sr.current.eHp - counterDmg);
             setEHp(enemyHpAfterCounter);
             addD(`⚙️-${counterDmg}`, fxt().enemyMain.x, fxt().enemyMain.y, '#94a3b8');
             setEffMsg({ text: tr(t, 'battle.effect.steelCounter', '⚙️ Steel Counter!'), color: '#94a3b8' });
@@ -540,7 +638,7 @@ export function runEnemyTurn({
           }
         }
 
-        if (trait === 'tenacity') {
+        if (trait === 'tenacity' && action.kind !== 'mend' && action.kind !== 'drain') {
           const heal = Math.round((s2.enemy?.maxHp || 0) * TRAIT_BALANCE.enemy.tenacityHealRatio);
           const newEHp = Math.min(sr.current.eHp + heal, s2.enemy?.maxHp || sr.current.eHp + heal);
           safeToIfBattleActive(() => {
@@ -561,14 +659,16 @@ export function runEnemyTurn({
         if (trait === 'swift' && chance(TRAIT_BALANCE.enemy.swiftExtraAttackChance)) {
           safeToIfBattleActive(() => {
             if (!isBattleActive()) return;
-            setBText(tr(t, 'battle.enemy.swiftExtra', '⚡ {enemy} attacks again!', { enemy: s2.enemy?.name || 'Enemy' }));
+            const extra = getEnemySkill({}, 0);
+            const target2 = resolvePlayerTarget(sr.current);
+            setBText(`${tr(t, 'battle.enemy.swiftExtra', '⚡ {enemy} attacks again!', { enemy: s2.enemy?.name || 'Enemy' })} · ${skillName(extra)}`);
+            launchSkill(s2.enemy ?? {}, extra, 'main', target2, bp, 500);
             effectOrchestrator.runEnemyLunge({
-              safeTo,
+              safeTo: safeToIfBattleActive,
               setEAnim,
               onStrike: () => {
                 if (!isBattleActive()) return;
                 const s3 = sr.current;
-                const target2 = resolvePlayerTarget(s3);
                 const target2Name = target2 === 'sub' ? (s3.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s3.starter?.name || tr(t, 'battle.role.main', 'Main'));
                 const defenderType2 = target2 === 'sub' ? (s3.allySub?.type || s3.starter?.type) : s3.starter?.type;
                 const swiftEff1 = getEff(s3.enemy?.mType, defenderType2);
@@ -580,6 +680,7 @@ export function runEnemyTurn({
                   dmg: dmg2,
                   label: `⚡-${dmg2}`,
                   color: '#eab308',
+                  action: extra,
                 });
                 sfx.play('playerHit');
                 const impact2 = target2 === 'sub' ? fxt().playerSub : fxt().playerMain;
@@ -679,16 +780,20 @@ export function runEnemyTurn({
     if (bossEvent === 'release') {
       setBossCharging(false);
       const bossName = s.enemy?.name || tr(t, 'battle.word.boss', 'Boss');
-      setBText(tr(t, 'battle.boss.release', '💀 {name} unleashes dark breath!', { name: bossName }));
+      const action = getEnemySkill(s.enemy, 0, true);
+      const move = skillName(action);
+      const target = resolvePlayerTarget(s);
+      setBText(tr(t, 'battle.boss.release', '{name} unleashes {move}!', { name: bossName, move }));
       sfx.play('bossBoom');
       setPhase('enemyAtk');
+      launchSkill(s.enemy, action, 'main', target, bp, 500);
       effectOrchestrator.runEnemyLunge({
-        safeTo,
+        safeTo: safeToIfBattleActive,
         setEAnim,
+        animation: attackMotion(action),
         onStrike: () => {
           if (!isBattleActive()) return;
           const s2 = sr.current;
-          const target = resolvePlayerTarget(s2);
           const targetName = target === 'sub' ? (s2.allySub?.name || tr(t, 'battle.role.sub', 'Sub')) : (s2.starter?.name || tr(t, 'battle.role.main', 'Main'));
           const releaseScale = s2.enemy?.id === 'boss_sword_god'
             ? TRAIT_BALANCE.boss.swordGodReleaseScale
@@ -701,15 +806,16 @@ export function runEnemyTurn({
             label: `💀-${bigDmg}`,
             color: '#a855f7',
             ultimate: true,
+            action,
           });
           const impact = target === 'sub' ? fxt().playerSub : fxt().playerMain;
           addP('enemy', impact.x + 20, impact.y + 20, 6);
           if (nh <= 0) {
             safeToIfBattleActive(() => {
               if (handlePlayerPartyKo) {
-                handlePlayerPartyKo({ target, reason: tr(t, 'battle.ko.bossBreath', '{name} was knocked out by dark breath...', { name: targetName }) });
+                handlePlayerPartyKo({ target, reason: tr(t, 'battle.ko.bossBreath', '{name} was knocked out by {move}...', { name: targetName, move }) });
               } else {
-                loseToGameOver();
+                loseToGameOver(tr(t, 'battle.ko.bossBreath', '{name} was knocked out by {move}...', { name: targetName, move }));
               }
             }, 800);
           } else {
@@ -726,7 +832,7 @@ export function runEnemyTurn({
       setBossCharging(true);
       sfx.play('bossCharge');
       const bossName = s.enemy?.name || tr(t, 'battle.word.boss', 'Boss');
-      setBText(tr(t, 'battle.boss.charge', '⚠️ {name} is charging! It will unleash a big move next turn!', { name: bossName }));
+      setBText(tr(t, 'battle.boss.charge', '{name} is preparing {move} for next turn!', { name: bossName, move: skillName(getEnemySkill(s.enemy, 0, true)) }));
       setEAnim('bossShake 0.5s ease infinite');
       continueAfterText(2000, () => {
         tryReturnToBattleMenu();

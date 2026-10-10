@@ -44,6 +44,12 @@
   76%{transform:translate(calc(var(--battle-lunge-x,-60px) * .26),calc(var(--battle-lunge-y,40px) * .2)) var(--battle-sprite-base-transform,scale(1)) scaleY(1.02) rotate(-2deg)}
   100%{transform:translate(0,0) var(--battle-sprite-base-transform,scale(1))}
 }
+@keyframes enemySkillCast{
+  0%,100%{transform:translate(0,0) var(--battle-sprite-base-transform,scale(1))}
+  25%{transform:translate(5px,-5px) var(--battle-sprite-base-transform,scale(1)) rotate(3deg)}
+  50%{transform:translate(-6px,-2px) var(--battle-sprite-base-transform,scale(1)) rotate(-3deg)}
+  75%{transform:translate(-2px,0) var(--battle-sprite-base-transform,scale(1))}
+}
 @keyframes struggle{0%,100%{filter:brightness(1) saturate(1.3)}50%{filter:brightness(0.85) saturate(1.8) hue-rotate(-10deg)}}
 @keyframes enemyDissolve{0%{opacity:1;filter:brightness(1);transform:translateY(0) var(--battle-sprite-base-transform,scale(1))}30%{filter:brightness(2.5) saturate(0);transform:translateY(-6px) var(--battle-sprite-base-transform,scale(1)) scale(1.06)}60%{opacity:.5;filter:brightness(1.8) saturate(0) blur(2px);transform:translateY(-12px) var(--battle-sprite-base-transform,scale(1)) scale(1.02)}100%{opacity:0;filter:brightness(3) saturate(0) blur(6px);transform:translateY(-30px) var(--battle-sprite-base-transform,scale(1)) scale(0.7)}}
 /* ── Defeats by finishing element (the wrapper's origin is top-right, so scale/rotate are re-centred) ── */
@@ -928,6 +934,50 @@
   background:linear-gradient(135deg,rgba(8,145,178,.94),rgba(14,116,144,.92));
   border:1px solid rgba(34,211,238,.42);
 }
+.battle-personality-intent{
+  margin-top:4px;
+  padding:4px 6px;
+  border-left:2px solid #7dd3fc;
+  border-radius:3px;
+  background:rgba(8,25,45,.82);
+  color:#e0f2fe;
+  font-size:.625rem;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.battle-personality-intent strong{margin-right:5px;color:#7dd3fc}
+.battle-enemy-skill-intent{
+  display:grid;
+  gap:3px;
+  padding:8px 10px;
+  margin-bottom:7px;
+  border-left:3px solid #fbbf24;
+  border-radius:6px;
+  background:linear-gradient(110deg,#172536,#26333f);
+  color:#f8fafc;
+  font-size:.75rem;
+  line-height:1.4;
+  overflow-wrap:anywhere;
+}
+.battle-enemy-skill-intent strong{color:#fde68a}
+.battle-enemy-skill-intent small{color:#bae6fd;font-size:.6875rem}
+.battle-enemy-skill-intent[data-disrupted]{border-color:#67e8f9}
+.battle-enemy-reserve-skill{font-size:.625rem;color:#fde68a;margin-top:3px}
+.battle-personality-intent[data-cue="rage"]{border-color:#fb923c}
+.battle-personality-intent[data-cue="rage"] strong{color:#fdba74}
+.battle-personality-intent[data-cue="opening"]{border-color:#fcd34d}
+.battle-personality-intent[data-cue="opening"] strong{color:#fcd34d}
+.battle-personality-intent[data-cue="reserve"]{opacity:.8}
+.move-personality-hint{display:inline-block;font-size:.625rem;font-weight:700;margin:3px 0;padding:2px 4px;border-radius:4px;background:#142338;line-height:1.3}
+.move-personality-hint.is-guarded{color:#93c5fd}
+.move-personality-hint.is-opening{color:#fcd34d}
+/* Independent transforms leave atlas playback and outer attack trajectories intact. */
+.battle-sprite-core-enemy[data-personality-pose]{transition:translate .2s,rotate .2s,scale .2s}
+.battle-sprite-core-enemy[data-personality-pose="rage"]{translate:-2% 0;rotate:-4deg;scale:1.02}
+.battle-sprite-core-enemy[data-personality-pose="guard"]{translate:3% 0;rotate:4deg;scale:.96 .94}
+.battle-sprite-core-enemy[data-personality-pose="watch"]{rotate:-3deg;scale:1 .97}
+.battle-sprite-core-enemy[data-personality-pose="opening"]{rotate:3deg;scale:1 .96}
+@media (prefers-reduced-motion:reduce){.battle-sprite-core-enemy[data-personality-pose]{transition:none;translate:none;rotate:none;scale:none}}
 .battle-status-chip.is-trait{
   background:linear-gradient(135deg,rgba(124,58,237,.9),rgba(99,102,241,.86));
   border:1px solid rgba(196,181,253,.42);

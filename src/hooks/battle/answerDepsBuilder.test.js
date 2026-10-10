@@ -69,7 +69,7 @@ test('buildPlayerAnswerHandlerDeps maps battle/ui/runtime/callback sources corre
     'setSpecDef', 'setMLvls', 'setMLvlUp', 'setMHits', 'setBossCharging',
     'setBurnStack', 'setTideStack', 'setEnemyExposed', 'setPHp', 'setPHpSub', 'setFrozen', 'setShattered',
     'setStaticStack', 'setEHp', 'setCursed', 'setShadowShieldCD', 'setFuryRegenUsed',
-    'setConsecutiveWrong',
+    'setConsecutiveWrong', 'setEnemyBehavior', 'setEnemySkillState',
   ]);
   const callbacks = {
     ...makeFnMap([
@@ -92,6 +92,8 @@ test('buildPlayerAnswerHandlerDeps maps battle/ui/runtime/callback sources corre
   assert.equal(deps.setShattered, battleFields.setShattered);
   assert.equal(deps.setTideStack, battleFields.setTideStack);
   assert.equal(deps.setEnemyExposed, battleFields.setEnemyExposed);
+  assert.equal(deps.setEnemyBehavior, battleFields.setEnemyBehavior);
+  assert.equal(deps.setEnemySkillState, battleFields.setEnemySkillState);
   assert.equal(deps.setBText, ui.setBText);
   assert.equal(deps.tryUnlock, callbacks.tryUnlock);
   assert.equal(deps.runAllySupportTurn, callbacks.runAllySupportTurn);

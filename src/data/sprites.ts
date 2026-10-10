@@ -55,6 +55,10 @@ export const SPRITE_IMGS = {
   candy_knight: `${BASE}sprites/candy_knight.png`,
   candy_monster: `${BASE}sprites/candy_monster.png`,
   colorful_butterfly: `${BASE}sprites/colorful_butterfly.png`,
+  limit_knight: `${BASE}sprites/limit_knight.png`,
+  topology_knight: `${BASE}sprites/topology_knight.png`,
+  algebra_knight: `${BASE}sprites/algebra_knight.png`,
+  blue_butterfly: `${BASE}sprites/blue_butterfly.png`,
 } as const;
 
 export const BG_IMGS = {
@@ -186,3 +190,7 @@ export const golumnMudSVG = fromProfile('golumnMudSVG');
 export const candyKnightSVG = fromProfile('candyKnightSVG');
 export const candyMonsterSVG = fromProfile('candyMonsterSVG');
 export const colorfulButterflySVG = fromProfile('colorfulButterflySVG');
+export const limitKnightSVG = fromProfile('limitKnightSVG');
+export const topologyKnightSVG = fromProfile('topologyKnightSVG');
+export const algebraKnightSVG = fromProfile('algebraKnightSVG');
+export const blueButterflySVG = fromProfile('blueButterflySVG');

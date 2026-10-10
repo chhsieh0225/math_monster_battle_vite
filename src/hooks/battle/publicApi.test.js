@@ -98,6 +98,8 @@ function createValidPublicApi() {
       effMsg: null,
       burnStack: 0, tideStack: 0,
       enemyExposed: false,
+      enemyBehavior: { main: {}, sub: {} },
+      enemySkillState: { main: {}, sub: {} },
       frozen: false,
       shattered: false,
       staticStack: 0,

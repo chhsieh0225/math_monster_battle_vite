@@ -54,6 +54,26 @@
 .enc-grid-three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .enc-grid-drops{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
 
+.enc-monster-section{--enc-rank-color:#a3b8ce}
+.enc-monster-section + .enc-monster-section{margin-top:22px}
+.enc-rank-evolved{--enc-rank-color:#6ee7b7}
+.enc-rank-elite{--enc-rank-color:#7dd3fc}
+.enc-rank-miniboss{--enc-rank-color:#fcd34d}
+.enc-rank-boss{--enc-rank-color:#fda4af}
+.enc-rank-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:4px 12px;
+  padding:5px 8px;
+  margin-bottom:8px;
+  border-left:3px solid var(--enc-rank-color);
+  background:linear-gradient(90deg,rgba(255,255,255,.07),transparent);
+}
+.enc-rank-title{margin:0;font-size:.875rem;font-weight:800;letter-spacing:1px;color:var(--enc-rank-color)}
+.enc-rank-count{font-size:.625rem;color:#cbd5e1;font-variant-numeric:tabular-nums}
+
 .enc-card{
   border-radius:12px;
   padding:10px 6px 8px;

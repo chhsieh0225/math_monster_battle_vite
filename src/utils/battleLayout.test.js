@@ -6,6 +6,7 @@ import {
   resolveBattleLaneSnapshot,
   resolveBattleLayout,
   resolveBattleSpritePlacement,
+  resolveBattleFormation,
   BATTLE_ARENA_HEIGHT_SHARE,
   getBossFrameRequest,
   getWingKnightFrameRequest,
@@ -13,14 +14,19 @@ import {
 import { BOSS_IDS } from '../data/monsterConfigs.ts';
 import { GUARDIAN_ENCOUNTERS } from '../data/guardianEncounters.ts';
 import { MONSTER_CONFIGS } from '../data/monsterConfigs.ts';
+import { STARTERS } from '../data/starters.ts';
+import { MONSTERS } from '../data/monsters.ts';
+import { getCompensation } from '../data/spriteProfiles.ts';
+import { buildBattleStaticCore } from '../components/screens/battle/buildBattleCore.ts';
 
 const overlaps = (a, b) => a.left < b.right - 0.01 && a.right > b.left + 0.01
   && a.top < b.bottom - 0.01 && a.bottom > b.top + 0.01;
 
-test('wing knights request a modest 15% gain for both front and reserve frames, without resizing other monsters', () => {
+test('wing knights request another 15% gain over the previous 1.15 scale, including reserve frames', () => {
   for (const id of ['limit_knight', 'topology_knight', 'algebra_knight']) {
     for (const frameWidth of [60, 140, 220]) {
-      assert.equal(getWingKnightFrameRequest(id, frameWidth), frameWidth * 1.15);
+      assert.equal(getWingKnightFrameRequest(id, frameWidth), frameWidth * 1.32);
+      assert.ok(getWingKnightFrameRequest(id, frameWidth) / (frameWidth * 1.15) > 1.14);
     }
   }
   for (const id of ['blue_butterfly', 'candy_knight', 'slime', ...BOSS_IDS, '', undefined]) {
@@ -350,6 +356,9 @@ function buildLaneSnapshot({
   isCoopBattle,
   enemySubId,
   enemySubIsEvolved,
+  isBossEnemy = false,
+  starterSubRoleSize = layout.mainPlayerSize,
+  allyMainRoleSize = layout.subPlayerSize,
 }) {
   const resolvedEnemySubId = enemySubId || '';
   return resolveBattleLaneSnapshot({
@@ -369,8 +378,8 @@ function buildLaneSnapshot({
     rawSubBottomPct: layout.playerSubBottomPct,
     rawMainSize: layout.mainPlayerSize,
     rawSubSize: layout.subPlayerSize,
-    starterSubRoleSize: layout.mainPlayerSize,
-    allyMainRoleSize: layout.subPlayerSize,
+    starterSubRoleSize,
+    allyMainRoleSize,
     enemyMainRightPct: layout.enemyMainRightPct,
     enemySubRightPct: layout.enemySubRightPct,
     enemyTopPct: layout.enemyTopPct,
@@ -379,6 +388,7 @@ function buildLaneSnapshot({
     enemySubId: resolvedEnemySubId,
     enemySubIsBossVisual: BOSS_IDS.has(resolvedEnemySubId),
     enemySubIsEvolved,
+    isBossEnemy,
   });
 }
 
@@ -1797,3 +1807,104 @@ test('beast starter stages render progressively larger on phone single mode', ()
     );
   }
 });
+
+test('phone ally lane sizes no longer depend on whether the opponent is a boss', () => {
+  for (const width of [320, 390, 430]) for (const starter of STARTERS) for (const stage of [0, 1, 2]) {
+    for (const coop of [false, true]) for (const swap of [false, true]) {
+      const layout = resolveBattleLayout({ battleMode: coop ? 'coop' : 'single', hasDualUnits: coop,
+        compactUI: true, playerStageIdx: stage, playerStarterId: starter.id,
+        playerSpriteKey: `player${starter.id}${stage}SVG`, subStarterId: 'fire', subSpriteKey: 'playerfire2SVG',
+        enemyId: 'boss', enemySpriteKey: 'darkLordSVG' });
+      const options = { layout, arenaWidth: width, showAllySub: coop, showEnemySub: coop,
+        coopUsingSub: swap, isCoopBattle: coop, enemySubId: coop ? 'limit_knight' : '' };
+      const normal = buildLaneSnapshot({ ...options, isBossEnemy: false });
+      const boss = buildLaneSnapshot({ ...options, isBossEnemy: true });
+      assert.equal(boss.playerMainWidthPx, normal.playerMainWidthPx);
+      assert.equal(boss.playerSubWidthPx, normal.playerSubWidthPx);
+    }
+  }
+});
+
+test('formation negotiation restores player readability instead of letting a tall boss take the entire stage', () => {
+  const arena = { width: 390, height: 464, rootHeight: 844, enemyHudRight: 211,
+    enemyHudBottom: 65, playerHudLeft: 179, playerHudInset: 53 };
+  const enemyInput = { arena, side: 'enemy', frameWidth: 164, minFrameWidth: getBossFrameRequest(390),
+    compensation: 1.1, desiredCenterX: 280, desiredCenterY: 135 };
+  const playerInput = { arena, side: 'player', frameWidth: 260,
+    compensation: 1.7, desiredCenterX: 140, desiredCenterY: 322 };
+  const greedyEnemy = resolveBattleSpritePlacement(enemyInput);
+  const greedyPlayer = resolveBattleSpritePlacement({ ...playerInput, avoid: [greedyEnemy.bounds] });
+  const placed = resolveBattleFormation(enemyInput, playerInput);
+  assert.ok(placed.player.width > greedyPlayer.width * 1.2);
+  assert.ok(placed.enemy.width >= greedyEnemy.width * .7 - .01);
+  assert.equal(overlaps(placed.player.bounds, placed.enemy.bounds), false);
+  assert.ok(Math.abs(placed.enemy.width - enemyInput.frameWidth * placed.enemy.scale) < 1e-8, 'CSS does not apply enlargement twice');
+  assert.deepEqual(resolveBattleFormation(enemyInput, playerInput), placed, 'attack/hit rerenders do not alter placement');
+});
+
+function formationFixture({ width, rootHeight, starter, stage, enemyId, dual, swap, phase2 }) {
+  const monster = MONSTERS.find(m => m.id === enemyId);
+  const enemy = { ...monster, lvl: 13, maxHp: 200 };
+  const reserve = { ...MONSTERS.find(m => m.id === 'limit_knight'), lvl: 13, maxHp: 100 };
+  const core = buildBattleStaticCore({ compactUI: width <= 520, scenes: { grass: {} }, state: {
+    starter, enemy, pLvl: 13, pStg: stage, battleMode: dual ? 'coop' : 'single',
+    enemySub: dual ? reserve : null, eHp: phase2 ? 60 : 200, eHpSub: 100,
+    bossPhase: phase2 ? 2 : 1, allySub: dual ? { ...STARTERS[1], selectedStageIdx: 2 } : null,
+    pHpSub: 100, coopActiveSlot: swap ? 'sub' : 'main', pvpTurn: 'p1', pvpStarter2: null,
+  } });
+  const { layout } = core;
+  const snapshot = buildLaneSnapshot({ layout, arenaWidth: width, showAllySub: dual, showEnemySub: dual,
+    coopUsingSub: dual && swap, isCoopBattle: dual, enemySubId: dual ? reserve.id : '',
+    enemySubIsEvolved: false, isBossEnemy: BOSS_IDS.has(enemyId),
+    starterSubRoleSize: core.starterSubRoleSize, allyMainRoleSize: core.allyMainRoleSize });
+  const landscape = width > rootHeight;
+  const arena = { width, rootHeight, height: rootHeight * .55,
+    enemyHudRight: width * (landscape ? .32 : .54), enemyHudBottom: dual ? (landscape ? 100 : 126) : 65,
+    playerHudLeft: width * (landscape ? .68 : .46), playerHudInset: dual ? (landscape ? 76 : 88) : 53 };
+  const deviceScale = Math.round(Math.max(.9, Math.min(1.16, width / 430)) / .02) * .02;
+  const input = (side, frameWidth, compensation, x, y, minFrameWidth) => ({ arena, side, frameWidth, compensation, minFrameWidth,
+    desiredCenterX: side === 'enemy' ? width * (1 - x / 100) - frameWidth / 2 : width * x / 100 + frameWidth / 2,
+    desiredCenterY: side === 'enemy' ? arena.height * y / 100 + frameWidth * 100 / 240 : arena.height * (1 - y / 100) - frameWidth * 100 / 240 });
+  const enemyWidth = snapshot.enemyMainWidthPx * deviceScale;
+  const enemyInput = input('enemy', enemyWidth, layout.enemyComp, snapshot.enemyMainRightPct, snapshot.enemyTopPct,
+    BOSS_IDS.has(enemyId) ? getBossFrameRequest(width, false, dual) : getWingKnightFrameRequest(enemyId, enemyWidth));
+  const reserveWidth = comp => Math.min(width * .34, 76 * Math.max(1, comp));
+  const mainDim = dual && swap ? (layout.playerComp > 1.3 ? (layout.compactDual ? .58 : .68) : .84) : 1;
+  const subDim = dual && !swap ? (layout.subComp > 1.3 ? (layout.compactDual ? .82 : .88) : .88) : 1;
+  const main = input('player', snapshot.playerMainWidthPx * deviceScale * mainDim, layout.playerComp,
+    snapshot.playerMainLeftPct, snapshot.playerMainBottomPct, dual && swap ? reserveWidth(layout.playerComp) : undefined);
+  const sub = input('player', snapshot.playerSubWidthPx * deviceScale * subDim, layout.subComp,
+    snapshot.playerSubLeftPct, snapshot.playerSubBottomPct, dual && !swap ? reserveWidth(layout.subComp) : undefined);
+  const enemySubWidth = snapshot.enemySubWidthPx * deviceScale;
+  const formation = resolveBattleFormation(enemyInput, dual && swap ? sub : main, {
+    enemy: dual ? input('enemy', enemySubWidth, getCompensation(reserve.spriteKey), snapshot.enemySubRightPct,
+      snapshot.enemySubTopPct, getWingKnightFrameRequest(reserve.id, enemySubWidth)) : undefined,
+    player: dual ? (swap ? main : sub) : undefined,
+  });
+  return { formation, arena };
+}
+
+for (const [width, rootHeight] of [[320, 568], [390, 844], [430, 932], [768, 1024], [1280, 720], [667, 375]]) {
+  test(`${width}x${rootHeight} boss/knight formations preserve actor and HUD clearance through phases and co-op swaps`, () => {
+    for (const enemyId of [...BOSS_IDS, 'limit_knight', 'topology_knight', 'algebra_knight']) {
+      for (const starter of STARTERS) for (const stage of [0, 1, 2]) {
+        for (const [dual, swap] of [[false, false], [true, false], [true, true]]) for (const phase2 of [false, true]) {
+          const { formation, arena } = formationFixture({ width, rootHeight, starter, stage, enemyId, dual, swap, phase2 });
+          const occupied = [
+            { left: 0, top: 0, right: arena.enemyHudRight, bottom: arena.enemyHudBottom },
+            { left: arena.playerHudLeft, top: arena.height - arena.playerHudInset, right: width, bottom: arena.height },
+          ];
+          for (const [role, placed] of Object.entries(formation)) {
+            if (!placed) continue;
+            const label = `${enemyId} ${starter.id}:${stage} ${dual}/${swap}/${phase2} ${role}`;
+            assert.ok(Number.isFinite(placed.scale) && placed.width >= 24, `${label}: collapsed`);
+            assert.ok(placed.bounds.left >= -.01 && placed.bounds.right <= width + .01, `${label}: horizontal clipping`);
+            assert.ok(placed.bounds.top >= -.01 && placed.bounds.bottom <= arena.height + .01, `${label}: vertical clipping`);
+            for (const other of occupied) assert.equal(overlaps(placed.bounds, other), false, `${label}: overlap`);
+            occupied.push(placed.bounds);
+          }
+        }
+      }
+    }
+  });
+}

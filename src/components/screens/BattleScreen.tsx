@@ -44,6 +44,7 @@ import {
   getBossFrameRequest,
   getWingKnightFrameRequest,
   resolveBattleSpritePlacement,
+  resolveBattleFormation,
   resolveBattleLaneSnapshot,
 } from '../../utils/battleLayout.ts';
 import type { BattleArenaGeometry, BattleSpriteTarget } from '../../utils/battleLayout.ts';
@@ -435,29 +436,33 @@ function BattleScreenComponent({
     const mainDim = showAllySub && coopUsingSub ? (playerComp > 1.3 ? (compactDual ? 0.58 : 0.68) : 0.84) : 1;
     const subDim = showAllySub && !coopUsingSub ? (subComp > 1.3 ? (compactDual ? 0.82 : 0.88) : 0.88) : 1;
     type OccupiedBounds = Array<ReturnType<typeof resolveBattleSpritePlacement>['bounds']>;
-    const fit = (side: 'player' | 'enemy', frameWidth: number, compensation: number, xPct: number, yPct: number, avoid?: OccupiedBounds, minFrameWidth?: number) => resolveBattleSpritePlacement({
+    const placementInput = (side: 'player' | 'enemy', frameWidth: number, compensation: number, xPct: number, yPct: number, avoid?: OccupiedBounds, minFrameWidth?: number) => ({
       arena: arenaGeometry, side, frameWidth, minFrameWidth, compensation,
       desiredCenterX: side === 'enemy' ? arenaWidth * (1 - xPct / 100) - frameWidth / 2 : arenaWidth * xPct / 100 + frameWidth / 2,
       desiredCenterY: side === 'enemy' ? arenaGeometry.height * yPct / 100 + frameWidth * 100 / 120 / 2 : arenaGeometry.height * (1 - yPct / 100) - frameWidth * 100 / 120 / 2,
       avoid,
     });
-    const enemyMain = fit('enemy', snapshot.enemyMainWidthPx * arenaScale, enemyComp, snapshot.enemyMainRightPct, snapshot.enemyTopPct, undefined,
+    const enemyInput = placementInput('enemy', snapshot.enemyMainWidthPx * arenaScale, enemyComp, snapshot.enemyMainRightPct, snapshot.enemyTopPct, undefined,
       isBossEnemy ? getBossFrameRequest(arenaWidth, false, hasDualUnits)
         : getWingKnightFrameRequest(coreStatic.enemy.id, snapshot.enemyMainWidthPx * arenaScale));
-    const enemySub = fit('enemy', snapshot.enemySubWidthPx * arenaScale, getCompensation(coreStatic.spriteProfiles.enemySub ?? ''), snapshot.enemySubRightPct, snapshot.enemySubTopPct, showEnemySub ? [enemyMain.bounds] : undefined,
-      enemySubIsBossVisual ? getBossFrameRequest(arenaWidth, true, hasDualUnits)
-        : getWingKnightFrameRequest(enemySubId, snapshot.enemySubWidthPx * arenaScale));
-    const enemies = showEnemySub ? [enemyMain.bounds, enemySub.bounds] : [enemyMain.bounds];
     // The old horizontal lane budget can make the reserve tiny even when vertical room remains.
     const reserveWidth = (comp: number) => Math.min(arenaWidth * 0.34, 76 * Math.max(1, comp));
-    const placeMain = (avoid: OccupiedBounds) => fit('player', snapshot.playerMainWidthPx * arenaScale * mainDim, playerComp, snapshot.playerMainLeftPct, snapshot.playerMainBottomPct, avoid,
+    const mainInput = placementInput('player', snapshot.playerMainWidthPx * arenaScale * mainDim, playerComp, snapshot.playerMainLeftPct, snapshot.playerMainBottomPct, undefined,
       showAllySub && coopUsingSub ? reserveWidth(playerComp) : undefined);
-    const placeSub = (avoid: OccupiedBounds) => fit('player', snapshot.playerSubWidthPx * arenaScale * subDim, subComp, snapshot.playerSubLeftPct, snapshot.playerSubBottomPct, avoid,
+    const subInput = placementInput('player', snapshot.playerSubWidthPx * arenaScale * subDim, subComp, snapshot.playerSubLeftPct, snapshot.playerSubBottomPct, undefined,
       showAllySub && !coopUsingSub ? reserveWidth(subComp) : undefined);
     const subIsActive = coopUsingSub && showAllySub;
-    const activePlayer = subIsActive ? placeSub(enemies) : placeMain(enemies);
-    const playerMain = subIsActive ? placeMain([...enemies, activePlayer.bounds]) : activePlayer;
-    const playerSub = subIsActive ? activePlayer : placeSub(showAllySub ? [...enemies, activePlayer.bounds] : enemies);
+    const enemySubInput = placementInput('enemy', snapshot.enemySubWidthPx * arenaScale, getCompensation(coreStatic.spriteProfiles.enemySub ?? ''), snapshot.enemySubRightPct, snapshot.enemySubTopPct, undefined,
+      enemySubIsBossVisual ? getBossFrameRequest(arenaWidth, true, hasDualUnits)
+        : getWingKnightFrameRequest(enemySubId, snapshot.enemySubWidthPx * arenaScale));
+    const formation = resolveBattleFormation(enemyInput, subIsActive ? subInput : mainInput, {
+      enemy: showEnemySub ? enemySubInput : undefined,
+      player: showAllySub ? (subIsActive ? mainInput : subInput) : undefined,
+    });
+    const enemyMain = formation.enemy;
+    const enemySub = formation.enemySub ?? resolveBattleSpritePlacement(enemySubInput);
+    const playerMain = subIsActive ? formation.playerSub! : formation.player;
+    const playerSub = subIsActive ? formation.player : formation.playerSub ?? resolveBattleSpritePlacement(subInput);
     return {
       ...snapshot,
       safe: { enemyMain, enemySub, playerMain, playerSub },

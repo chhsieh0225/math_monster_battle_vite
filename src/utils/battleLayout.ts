@@ -65,6 +65,8 @@ type SafeSpritePlacementInput = {
   frameWidth: number;
   /** Optional readability request; HUD/actor clearance can still shrink it. */
   minFrameWidth?: number;
+  /** Negotiated ceiling when two large front-line actors share a small arena. */
+  maxFrameWidth?: number;
   compensation: number;
   desiredCenterX: number;
   desiredCenterY: number;
@@ -81,16 +83,16 @@ export function getWingKnightFrameRequest(enemyId: string | undefined, frameWidt
   switch (enemyId) {
     case 'limit_knight':
     case 'topology_knight':
-    case 'algebra_knight': return frameWidth * 1.15;
+    case 'algebra_knight': return frameWidth * 1.32;
     default: return undefined;
   }
 }
 
 export function resolveBattleSpritePlacement({
-  arena, side, frameWidth, minFrameWidth = frameWidth, compensation, desiredCenterX, desiredCenterY, avoid,
+  arena, side, frameWidth, minFrameWidth = frameWidth, maxFrameWidth = Infinity, compensation, desiredCenterX, desiredCenterY, avoid,
 }: SafeSpritePlacementInput) {
   const gap = 14;
-  const requestedWidth = Math.max(frameWidth, minFrameWidth);
+  const requestedWidth = Math.max(1, Math.min(maxFrameWidth, Math.max(frameWidth, minFrameWidth)));
   const frameHeight = requestedWidth * 100 / 120;
   // Bound the painted image, not the transparent SVG frame. Include tilt,
   // breathing and recoil room without measuring animated DOM rectangles.
@@ -150,6 +152,50 @@ export function resolveBattleSpritePlacement({
     dodgeX: -Math.min(60, Math.max(0, bounds.left - region.left + gap - 4)),
     dodgeY: -Math.min(20, Math.max(0, bounds.top - region.top + gap - 4)),
   };
+}
+
+/** Negotiate the formation together, rather than giving all remaining space to the player. */
+export function resolveBattleFormation(enemyInput: SafeSpritePlacementInput, playerInput: SafeSpritePlacementInput,
+  reserves: { enemy?: SafeSpritePlacementInput; player?: SafeSpritePlacementInput } = {}) {
+  const placeFormation = (enemy: ReturnType<typeof resolveBattleSpritePlacement>) => {
+    const occupied = [enemy.bounds];
+    const place = (input: SafeSpritePlacementInput) => {
+      const placed = resolveBattleSpritePlacement({ ...input, avoid: [...(input.avoid ?? []), ...occupied] });
+      occupied.push(placed.bounds);
+      return placed;
+    };
+    const enemySub = reserves.enemy ? place(reserves.enemy) : undefined;
+    const player = place(playerInput);
+    const playerSub = reserves.player ? place(reserves.player) : undefined;
+    return { enemy, player, enemySub, playerSub };
+  };
+  const fullEnemy = resolveBattleSpritePlacement(enemyInput);
+  const playerRequest = Math.max(playerInput.frameWidth, playerInput.minFrameWidth ?? 0);
+  // Wide final forms already exceed the old horizontal lane. Use a readable,
+  // attainable reference instead of letting that oversized request shrink bosses indefinitely.
+  const playerGoal = Math.min(playerRequest, playerInput.arena.width * 0.57);
+  let best = placeFormation(fullEnemy);
+  const score = (pair: typeof best) => {
+    const playerRatio = Math.min(1, pair.player.width / Math.max(1, playerGoal));
+    const enemyRatio = pair.enemy.width / Math.max(1, fullEnemy.width);
+    const reserveRatio = (placed: typeof pair.playerSub, input?: SafeSpritePlacementInput) => !placed || !input ? 1
+      : Math.min(1, placed.width / Math.max(1, Math.min(60, Math.max(input.frameWidth, input.minFrameWidth ?? 0))));
+    return Math.min(playerRatio, enemyRatio, reserveRatio(pair.enemySub, reserves.enemy), reserveRatio(pair.playerSub, reserves.player))
+      + (playerRatio + enemyRatio) * 0.001;
+  };
+  let bestScore = score(best);
+  // A bounded search runs on layout updates, never per animation frame.
+  for (const share of [0.95, 0.9, 0.85, 0.8, 0.75, 0.7]) {
+    if (bestScore >= 1) break;
+    const enemy = resolveBattleSpritePlacement({ ...enemyInput, maxFrameWidth: fullEnemy.width * share });
+    const candidate = placeFormation(enemy);
+    const candidateScore = score(candidate);
+    if (candidateScore > bestScore) {
+      best = candidate;
+      bestScore = candidateScore;
+    }
+  }
+  return best;
 }
 
 export const BATTLE_ARENA_VIEWPORT = {
@@ -821,7 +867,10 @@ export function resolveBattleLaneSnapshot({
   const safeGapPx = safeArenaWidthPx * laneTuning.safeGapPct / 100;
   const minPlayerLeftPx = safeArenaWidthPx * laneTuning.minPlayerLeftPct / 100;
   const minEnemyRightPx = safeArenaWidthPx * laneTuning.minEnemyRightPct / 100;
-  const playerLaneRightPx = sepPx - safeGapPx;
+  // Bosses keep their wider enemy lane, but no longer take width away from allies.
+  // Actual two-dimensional actor/HUD clearance is resolved after these requests.
+  const playerSepPct = deviceTier === 'phone' ? LANE_TUNING_CONFIG.phoneSepPctOverride[dualityKey(hasDualUnits)] : laneTuning.sepPct;
+  const playerLaneRightPx = safeArenaWidthPx * playerSepPct / 100 - safeGapPx;
   const enemyLaneLeftPx = sepPx + safeGapPx;
   const playerLaneWidthPx = Math.max(24, playerLaneRightPx - minPlayerLeftPx);
   const enemyLaneWidthPx = Math.max(24, safeArenaWidthPx - minEnemyRightPx - enemyLaneLeftPx);
@@ -851,13 +900,13 @@ export function resolveBattleLaneSnapshot({
     laneTuning.wideEnemySubScaleCap,
   );
 
-  // Wide-frame beast starters (wolf/tiger/lion) on phone single non-boss:
+  // Wide-frame beast starters (wolf/tiger/lion) on phone single battles:
   // stages 1 & 2 both cap to lane width, appearing identical to stage 0.
   // Apply a minimum scale floor so larger stages always render bigger.
   // Player (bottom-left) and enemy (top-right) have ample vertical separation,
   // so controlled horizontal overflow is safe.
   const phoneSingleBeastScaleFloor = (
-    deviceTier === 'phone' && !hasDualUnits && isWidePlayerMainSprite && !isBossEnemy
+    deviceTier === 'phone' && !hasDualUnits && isWidePlayerMainSprite
   ) ? 0.90 : 0;
 
   // Co-op readability scaling by device:

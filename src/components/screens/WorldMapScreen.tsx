@@ -1,7 +1,9 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
 
 import MonsterPortrait from '../ui/MonsterPortrait';
+import { battleSpritePreloader } from '../../utils/battleSpritePreload.ts';
+import { scenePreloader, getRoutePreloadPlan, WORLD_MAP_SRC, shouldConserveNetwork } from '../../utils/scenePreload.ts';
 import { getSpriteProfileKey } from '../../data/sprites.ts';
 import { useI18n } from '../../i18n';
 import { SCENE_NAMES } from '../../data/scenes';
@@ -42,7 +44,6 @@ import {
 import './WorldMapScreen.css';
 
 const BASE_URL = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL || '/';
-const MAP_SRC = `${BASE_URL}${WORLD_MAP_ART.src}`;
 const BOSS_REGIONS = new Set<RegionId>(EXPEDITIONS.map((expedition) => expedition.region));
 
 type WorldMapScreenProps = {
@@ -59,6 +60,7 @@ type WorldMapScreenProps = {
   onPause: () => void;
   grade?: Grade | null;
   onDiscoverSecret?: (id: SecretId) => void;
+  lowPerfMode?: boolean;
 };
 
 function regionEmoji(region: RegionId): string {
@@ -89,6 +91,7 @@ export default function WorldMapScreen({
   onPause,
   grade = null,
   onDiscoverSecret,
+  lowPerfMode = false,
 }: WorldMapScreenProps) {
   const { t, locale } = useI18n();
   const routeMode = Boolean(run?.atMap);
@@ -102,6 +105,12 @@ export default function WorldMapScreen({
   const activeExpedition = getExpedition(routeMode ? run?.expeditionId : selectedId);
   const selectedChoice = choices[selectedLane] ?? choices[0] ?? null;
   const selectedSideRoute = getSideRoute(selectedChoice?.option.sideRouteId);
+
+  useEffect(() => {
+    const plan = getRoutePreloadPlan(run, starter, stageIdx, selectedLane, lowPerfMode, lowPerfMode || shouldConserveNetwork());
+    scenePreloader.preload(plan.images);
+    battleSpritePreloader.preload(plan.sprites);
+  }, [run, starter, stageIdx, selectedLane, lowPerfMode]);
 
   const regionName = (region: RegionId) => localizeSceneName(
     WORLD_REGIONS[region].scene,
@@ -369,7 +378,7 @@ export default function WorldMapScreen({
           style={{ aspectRatio: `${WORLD_MAP_ART.width} / ${WORLD_MAP_ART.height}`, height: `${zoom * 100}%` }}
           onClick={onMapTap}
         >
-          <img className="wm-map-art" src={MAP_SRC} alt="" draggable={false} decoding="async" />
+          <img className="wm-map-art" src={WORLD_MAP_SRC} alt="" draggable={false} decoding="async" fetchPriority="high" />
           {sharp.tiles.map((tile) => (
             <img
               key={tile.key}

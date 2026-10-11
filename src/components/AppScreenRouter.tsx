@@ -3,6 +3,9 @@ import type { ComponentProps, ErrorInfo, ReactNode } from 'react';
 
 import TitleScreen from './screens/TitleScreen';
 import SelectionScreen from './screens/SelectionScreen';
+import VisualAssetGate from './ui/VisualAssetGate';
+import { getWorldMapImages } from '../utils/scenePreload.ts';
+import { loadWorldMapScreen } from '../utils/screenPreload.ts';
 import { hasSave as checkHasSave } from '../utils/savegame.ts';
 import { getLevelMaxHp } from '../utils/playerHp.ts';
 import { expeditionBattleCount } from '../utils/expeditionRun.ts';
@@ -24,7 +27,7 @@ const SettingsScreen = lazy(() => import('./screens/SettingsScreen'));
 const PvpResultScreen = lazy(() => import('./screens/PvpResultScreen'));
 const DailyChallengeScreen = lazy(() => import('./screens/DailyChallengeScreen'));
 const HowToPlayScreen = lazy(() => import('./screens/HowToPlayScreen'));
-const WorldMapScreen = lazy(() => import('./screens/WorldMapScreen'));
+const WorldMapScreen = lazy(loadWorldMapScreen);
 const PlacementScreen = lazy(() => import('./screens/PlacementScreen'));
 const ReviewSpringScreen = lazy(() => import('./screens/ReviewSpringScreen'));
 
@@ -363,6 +366,7 @@ export default function AppScreenRouter({
   if (S.screen === 'worldmap') {
     return wrapMain(
       withScreenSuspense(
+        <VisualAssetGate images={getWorldMapImages(S.expeditionRun, S.starter, S.pStg)}>
         <WorldMapScreen
           progress={S.worldProgress}
           run={S.expeditionRun}
@@ -380,7 +384,9 @@ export default function AppScreenRouter({
           onPause={A.pauseExpedition}
           grade={S.playerGrade}
           onDiscoverSecret={A.discoverSecret}
-        />,
+          lowPerfMode={mobile.lowPerfMode}
+        />
+        </VisualAssetGate>,
       ),
     );
   }

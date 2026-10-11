@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import MonsterPortrait from '../ui/MonsterPortrait';
+import VisualAssetGate from '../ui/VisualAssetGate';
+import { getSpriteAnimationAsset } from '../../data/spriteAnimationAssets.ts';
 import { getSpriteProfileKey } from '../../data/sprites.ts';
 import { STARTERS } from '../../data/starters.ts';
 import { VERSION } from '../../data/constants';
@@ -195,6 +197,7 @@ export default function TitleScreen({
   ];
 
   return (
+    <VisualAssetGate images={[titleBgImage, ...starters.map((s) => getSpriteAnimationAsset(getSpriteProfileKey(s.stages[0].svgFn))?.portrait || '')]}>
     <main className={`title-screen${lowPerfMode ? ' is-low-perf' : ''}${idle ? ' is-idle' : ''}`} style={titleStyle}>
       <div className="title-star title-star-main">✨</div>
 
@@ -284,5 +287,6 @@ export default function TitleScreen({
         <div className="title-version">{versionText}</div>
       </footer>
     </main>
+    </VisualAssetGate>
   );
 }

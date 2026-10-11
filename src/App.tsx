@@ -19,15 +19,16 @@ import { useMobileExperience } from './hooks/useMobileExperience';
 import { useAudioState } from './hooks/useAudioState';
 import { getScreenMusic, getEncounterMusic } from './utils/battleMusic.ts';
 import type { BgmTrack } from './utils/sfx/bgm.ts';
-import { BG_IMGS, BG_IMGS_LOW } from './data/sprites.ts';
-import { getEncounterBackground } from './data/encounterBackgrounds.ts';
+import { scenePreloader, getBattleBackground, getEnemyPortrait, shouldConserveNetwork } from './utils/scenePreload.ts';
+import { loadBattleScreen, loadWorldMapScreen } from './utils/screenPreload.ts';
+import VisualAssetGate from './components/ui/VisualAssetGate';
 import { battleSpritePreloader, getBattleSpritePreloadSources } from './utils/battleSpritePreload.ts';
 
 // Screens
 import AppScreenRouter from './components/AppScreenRouter';
 import type { ScreenName } from './types/battle';
 
-const BattleScreen = lazy(() => import('./components/screens/BattleScreen'));
+const BattleScreen = lazy(loadBattleScreen);
 
 /** Lightweight locale lookup for class components that cannot use hooks. */
 function staticT(_key: string, fallback: string): string {
@@ -44,39 +45,6 @@ function staticT(_key: string, fallback: string): string {
   } catch {
     return fallback;
   }
-}
-
-const preloadedSceneBackgrounds = new Set<string>();
-
-const TITLE_SCENE_KEYS = ['grass', 'fire', 'water', 'electric', 'ghost', 'steel', 'dark', 'rock'] as const;
-const LATE_SCENE_KEYS = ['poison', 'heaven', 'burnt_warplace'] as const;
-
-function shouldConserveNetwork(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  const connection = Reflect.get(navigator, 'connection') as { saveData?: boolean; effectiveType?: string } | undefined;
-  if (!connection) return false;
-  if (connection.saveData) return true;
-  const effectiveType = String(connection.effectiveType || '').toLowerCase();
-  return effectiveType.includes('2g') || effectiveType.includes('3g');
-}
-
-function preloadSceneBackground(src: string): void {
-  if (typeof window === "undefined" || !src || preloadedSceneBackgrounds.has(src)) return;
-  preloadedSceneBackgrounds.add(src);
-  const img = new Image();
-  img.decoding = "async";
-  img.src = src;
-  if (typeof img.decode === "function") {
-    void img.decode().catch(() => {});
-  }
-}
-
-function resolveSceneBackground(sceneType: string | null | undefined, preferLowQuality = false): string | null {
-  if (!sceneType) return null;
-  const key = sceneType as keyof typeof BG_IMGS;
-  const sourceMap = preferLowQuality ? BG_IMGS_LOW : BG_IMGS;
-  const src = sourceMap[key] || BG_IMGS[key];
-  return typeof src === 'string' ? src : null;
 }
 
 // ─── ErrorBoundary: catches render crashes to show error instead of black screen ───
@@ -254,65 +222,29 @@ function App() {
 
   useEffect(() => {
     // Selection owns its local picks; battle owns the rolling encounter window.
-    if (S.screen === 'selection') return;
+    if (S.screen === 'selection' || S.screen === 'worldmap') return;
     battleSpritePreloader.preload(spritePreloadKey ? spritePreloadKey.split('\n') : []);
+    if (S.screen !== 'battle') scenePreloader.preload([]);
   }, [S.screen, spritePreloadKey]);
 
-  // Tiered background preload:
-  // 1) title pool first, 2) non-critical scenes later on non-constrained devices.
+  // Warm code while choosing, not after the first battle has already started.
   useEffect(() => {
-    TITLE_SCENE_KEYS.forEach((sceneKey) => {
-      const src = resolveSceneBackground(sceneKey, conserveNetwork);
-      if (src) preloadSceneBackground(src);
-    });
-    if (conserveNetwork) return;
-    const timer = window.setTimeout(() => {
-      LATE_SCENE_KEYS.forEach((sceneKey) => {
-        const src = resolveSceneBackground(sceneKey, false);
-        if (src) preloadSceneBackground(src);
-      });
-    }, 1200);
-    return () => window.clearTimeout(timer);
-  }, [conserveNetwork]);
+    if (S.screen === 'selection' || S.screen === 'worldmap' || S.screen === 'evolve' || S.screen === 'battle') {
+      void loadBattleScreen().catch(() => {});
+    }
+    if ((S.screen === 'selection' && S.worldMapEnabled) || S.screen === 'worldmap') {
+      void loadWorldMapScreen().catch(() => {});
+    }
+  }, [S.screen, S.worldMapEnabled]);
 
-  // Explicitly preload current + next battle scene backgrounds to smooth transitions.
   useEffect(() => {
     if (S.screen !== 'battle') return;
-
-    const sceneTypes = new Set<string>();
-    const currentSceneType = S.enemy?.sceneMType || S.enemy?.mType;
-    const subSceneType = S.enemySub?.sceneMType || S.enemySub?.mType;
-    const nextEnemy = S.enemies?.[(S.round || 0) + nextEncounterStep] || null;
-    const nextSceneType = nextEnemy?.sceneMType || nextEnemy?.mType;
-
-    const upcoming = conserveNetwork ? [] : [nextEnemy];
-    for (const unit of [S.enemy, S.enemySub, ...upcoming]) {
-      const src = getEncounterBackground(unit?.id);
-      if (src) preloadSceneBackground(src);
-    }
-
-    if (currentSceneType) sceneTypes.add(currentSceneType);
-    if (subSceneType) sceneTypes.add(subSceneType);
-    if (nextSceneType) sceneTypes.add(nextSceneType);
-
-    sceneTypes.forEach((sceneType) => {
-      const src = resolveSceneBackground(sceneType, conserveNetwork);
-      if (src) preloadSceneBackground(src);
-    });
-  }, [
-    S.screen,
-    S.battleMode,
-    S.round,
-    S.enemies,
-    S.enemy,
-    S.enemySub,
-    S.enemy?.sceneMType,
-    S.enemy?.mType,
-    S.enemySub?.sceneMType,
-    S.enemySub?.mType,
-    nextEncounterStep,
-    conserveNetwork,
-  ]);
+    const next = S.enemies[S.round + nextEncounterStep];
+    // Current assets are high-priority gate requests. Only the next encounter is speculative.
+    scenePreloader.preload(conserveNetwork || !next ? [] : [
+      getBattleBackground(next, UX.lowPerfMode), getEnemyPortrait(next) || '',
+    ]);
+  }, [S.screen, S.enemies, S.round, nextEncounterStep, conserveNetwork, UX.lowPerfMode]);
 
   // Tiered BGM prefetch:
   // metadata on constrained devices, aggressive warmup on stable devices.
@@ -331,7 +263,7 @@ function App() {
     if (nextTracks.size > 0) {
       V.sfx.prefetchBgm(
         Array.from(nextTracks),
-        conserveNetwork ? 'metadata' : 'auto',
+        conserveNetwork || S.screen !== 'battle' ? 'metadata' : 'auto',
       );
     }
   }, [
@@ -439,6 +371,12 @@ function App() {
           </div>
         )}
       >
+        <VisualAssetGate
+          wait={S.phase === 'text' || S.phase === 'bossIntro'}
+          images={[getBattleBackground(S.enemy, UX.lowPerfMode), getEnemyPortrait(S.enemy) || '',
+            getEnemyPortrait(S.enemySub) || '']}
+          sprites={getBattleSpritePreloadSources(S, true)}
+        >
         <BattleScreen
           state={S}
           actions={A}
@@ -447,6 +385,7 @@ function App() {
           onOpenSettings={openSettings}
           t={t}
         />
+        </VisualAssetGate>
       </Suspense>
     </BattleErrorBoundary>
   );

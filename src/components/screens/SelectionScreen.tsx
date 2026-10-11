@@ -15,6 +15,8 @@ import { useI18n } from '../../i18n';
 import { localizeStarterList } from '../../utils/contentLocalization.ts';
 import { isPvpBossLockedForSelection } from './selectionBossUnlock.ts';
 import { battleSpritePreloader, getStarterSpriteSource } from '../../utils/battleSpritePreload.ts';
+import { scenePreloader, getWorldMapImages } from '../../utils/scenePreload.ts';
+import { getSpriteAnimationAsset } from '../../data/spriteAnimationAssets.ts';
 import './SelectionScreen.css';
 
 type StarterDesc = {
@@ -233,6 +235,14 @@ export default function SelectionScreen({
     const selected = isDual ? [picked1, picked2] : [picked];
     battleSpritePreloader.preload(selected.map((unit) => getStarterSpriteSource(unit)).filter((src) => src !== null));
   }, [isDual, picked, picked1, picked2]);
+
+  useEffect(() => {
+    // The map is the next screen in single play; start while the player reads their partner's moves.
+    const selected = isDual ? [picked1, picked2] : [picked];
+    const portraits = selected.flatMap((unit) => unit?.stages.map((stage) =>
+      getSpriteAnimationAsset(getSpriteProfileKey(stage.svgFn))?.portrait || '') || []);
+    scenePreloader.preload([...(mode === 'single' ? getWorldMapImages() : []), ...portraits]);
+  }, [mode, isDual, picked, picked1, picked2]);
 
   const handlePick = (starter: StarterSelectable) => {
     if (isPvpBossLockedForSelection(mode, starter.id, encData)) return;

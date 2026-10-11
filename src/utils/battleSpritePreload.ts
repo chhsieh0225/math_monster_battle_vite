@@ -1,3 +1,4 @@
+import { createImagePreloader, decodeImage, type ImageFactory } from './imagePreload.ts';
 import { getSpriteAnimationAsset } from '../data/spriteAnimationAssets.ts';
 import { getSpriteProfileKey } from '../data/sprites.ts';
 import { computeBossPhase } from './turnFlow.ts';
@@ -47,124 +48,15 @@ export function getBattleSpritePreloadSources(state: PreloadState, conserveNetwo
   return [...sources].slice(0, 8);
 }
 
-type ImageFactory = () => HTMLImageElement;
+const isAtlas = (img: HTMLImageElement) => img.naturalWidth === 2048 && img.naturalHeight === 768;
 
-export async function decodeBattleSprite(src: string, createImage: ImageFactory = () => new Image()): Promise<boolean> {
-  try {
-    const img = createImage();
-    img.decoding = 'async';
-    img.src = src;
-    await img.decode();
-    return img.naturalWidth === 2048 && img.naturalHeight === 768;
-  } catch {
-    return false;
-  }
+export function decodeBattleSprite(src: string, createImage: ImageFactory = () => new Image()): Promise<boolean> {
+  return decodeImage(src, createImage, isAtlas);
 }
 
-type PendingSprite = {
-  src: string;
-  visible: boolean;
-  started: boolean;
-  promise: Promise<boolean>;
-  resolve: (ready: boolean) => void;
-  image?: HTMLImageElement;
-  timer?: ReturnType<typeof setTimeout>;
-};
-
-/** Shared download/decode queue and bounded strong image references (8 RGBA atlases ~48 MiB). */
-export function createBattleSpritePreloader({
-  createImage = () => new Image(), maxReady = 8, maxConcurrent = 2, timeoutMs = 12000,
-}: { createImage?: ImageFactory; maxReady?: number; maxConcurrent?: number; timeoutMs?: number } = {}) {
-  const ready = new Map<string, HTMLImageElement>();
-  const pending = new Map<string, PendingSprite>();
-  const listeners = new Map<string, Set<() => void>>();
-  let active = 0;
-  let updatingPlan = false;
-  const capacity = Math.max(1, maxReady);
-  const concurrency = Math.max(1, maxConcurrent);
-
-  function finish(task: PendingSprite, decoded: boolean, abort = false) {
-    if (pending.get(task.src) !== task) return;
-    pending.delete(task.src);
-    clearTimeout(task.timer);
-    if (task.started) active--;
-    if (decoded && task.image) {
-      ready.delete(task.src);
-      ready.set(task.src, task.image);
-      while (ready.size > capacity) {
-        const oldest = [...ready.keys()].find((src) => !listeners.has(src)) ?? ready.keys().next().value!;
-        ready.delete(oldest);
-      }
-      listeners.get(task.src)?.forEach((notify) => notify());
-    }
-    if (abort && task.image) task.image.src = '';
-    task.image = undefined;
-    task.resolve(decoded);
-    pump();
-  }
-
-  function pump() {
-    if (updatingPlan) return;
-    while (active < concurrency) {
-      const queued = [...pending.values()].filter((task) => !task.started);
-      const task = queued.find((entry) => entry.visible) || queued[0];
-      if (!task) return;
-      task.started = true;
-      active++;
-      try {
-        const img = createImage();
-        task.image = img;
-        img.fetchPriority = task.visible ? 'high' : 'low';
-        task.timer = setTimeout(() => finish(task, false, true), timeoutMs);
-        void decodeBattleSprite(task.src, () => img).then((ok) => finish(task, ok));
-      } catch {
-        finish(task, false);
-      }
-    }
-  }
-
-  function load(src: string, visible = true): Promise<boolean> {
-    if (!src) return Promise.resolve(false);
-    const cached = ready.get(src);
-    if (cached) {
-      ready.delete(src);
-      ready.set(src, cached);
-      return Promise.resolve(true);
-    }
-    const existing = pending.get(src);
-    if (existing) {
-      existing.visible ||= visible;
-      if (visible && existing.image) existing.image.fetchPriority = 'high';
-      return existing.promise;
-    }
-    let resolve!: PendingSprite['resolve'];
-    const promise = new Promise<boolean>((done) => { resolve = done; });
-    pending.set(src, { src, visible, started: false, promise, resolve });
-    pump();
-    return promise;
-  }
-
-  return {
-    load,
-    isReady: (src: string) => ready.has(src),
-    subscribe(src: string, notify: () => void) {
-      const callbacks = listeners.get(src) || new Set<() => void>();
-      callbacks.add(notify);
-      listeners.set(src, callbacks);
-      return () => { callbacks.delete(notify); if (!callbacks.size) listeners.delete(src); };
-    },
-    preload(sources: readonly string[]) {
-      const desired = new Set([...new Set(sources.filter(Boolean))].slice(0, capacity));
-      updatingPlan = true;
-      // Cancel obsolete speculation, but never a request already needed by a mounted actor.
-      for (const task of pending.values()) {
-        if (!task.visible && !desired.has(task.src)) finish(task, false, true);
-      }
-      desired.forEach((src) => { void load(src, false); });
-      updatingPlan = false;
-      pump();
-    },
-  };
+/** Eight decoded RGBA atlases retain at most 48 MiB. */
+export function createBattleSpritePreloader(options: Parameters<typeof createImagePreloader>[0] = {}) {
+  return createImagePreloader({ ...options, validate: isAtlas });
 }
 
 export const battleSpritePreloader = createBattleSpritePreloader();

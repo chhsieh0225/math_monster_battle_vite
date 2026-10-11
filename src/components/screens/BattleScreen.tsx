@@ -4,8 +4,7 @@ import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { useBattleParallax } from '../../hooks/useBattleParallax';
 import { useBattleArenaScale } from '../../hooks/useBattleArenaScale.ts';
 import { SCENES } from '../../data/scenes';
-import { BG_IMGS_LOW } from '../../data/sprites.ts';
-import { getEncounterBackground } from '../../data/encounterBackgrounds.ts';
+import { getBattleBackground } from '../../utils/scenePreload.ts';
 import { getPersonalityCue } from '../../data/enemyPersonalities.ts';
 import { PVP_BALANCE } from '../../data/pvpBalance';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
@@ -58,15 +57,6 @@ type Translator = (key: string, fallback?: string, params?: TranslatorParams) =>
 function normalizeBossVisualId(id?: string | null): string {
   if (!id) return '';
   return id.startsWith('pvp_') ? id.slice(4) : id;
-}
-
-function resolveBattleSceneBg(sceneKey: string, lowPerfMode: boolean): string | null {
-  const scene = (SCENES as Record<string, { bgImg?: string } | undefined>)[sceneKey];
-  if (!scene?.bgImg) return null;
-  const lowBg = Object.prototype.hasOwnProperty.call(BG_IMGS_LOW, sceneKey)
-    ? BG_IMGS_LOW[sceneKey as keyof typeof BG_IMGS_LOW]
-    : null;
-  return lowPerfMode && lowBg ? lowBg : scene.bgImg;
 }
 
 type BattleScreenProps = {
@@ -367,9 +357,8 @@ function BattleScreenComponent({
 
   const memoSceneStyles = useMemo(() => {
     if (!coreStatic) return null;
-    const { scene, sceneKey, layout } = coreStatic;
-    const resolvedBg = getEncounterBackground(coreStatic.enemy.id)
-      ?? resolveBattleSceneBg(sceneKey, UX.lowPerfMode) ?? scene.bgImg;
+    const { scene, layout } = coreStatic;
+    const resolvedBg = getBattleBackground(coreStatic.enemy, UX.lowPerfMode);
     const bgStyle: CSSProperties | undefined = resolvedBg
       ? { backgroundImage: `url(${resolvedBg})` }
       : undefined;

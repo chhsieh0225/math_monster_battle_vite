@@ -19,7 +19,7 @@
  * • Achievements, Encyclopedia, and SessionLog are extracted into sub-hooks
  *   (useAchievements, useEncyclopedia, useSessionLog) to keep this file focused.
  */
-import { useState, useEffect, useCallback, useMemo, useReducer } from 'react';
+import { useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'react';
 import { useI18n } from '../i18n';
 import type {
   SpringResult,
@@ -567,15 +567,20 @@ export function useBattle() {
     setEAnim,
     setPAnim,
   });
-  const playBattleIntroImpl = useCallback(() => {
+  const battleIntroPending = useRef(false);
+  const playBattleIntroImpl = useCallback(() => { battleIntroPending.current = true; }, []);
+  const playBattleIntro = useStableCallback(playBattleIntroImpl);
+  const presentBattle = useStableCallback(() => {
+    if (!battleIntroPending.current) return;
+    battleIntroPending.current = false;
+    // Start the slide-in clock only after the prepared battlefield has mounted.
     const ctx = playBattleIntroContextRef.current;
     effectOrchestrator.playBattleIntro({
       safeTo: ctx.safeTo,
       setEAnim: ctx.setEAnim,
       setPAnim: ctx.setPAnim,
     });
-  }, [playBattleIntroContextRef]);
-  const playBattleIntro = useStableCallback(playBattleIntroImpl);
+  });
 
   // ── Finalize and persist session log ──
   const endSessionContextRef = useBattleStateRef({
@@ -1468,6 +1473,7 @@ export function useBattle() {
   });
 
   const actions = buildUseBattleActions({
+    presentBattle,
     dismissAch,
     dismissCollectionPopup,
     setTimedMode,

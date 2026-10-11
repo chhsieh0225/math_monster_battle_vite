@@ -27,6 +27,7 @@ export type BuildUseBattleActionsArgs = {
   requestHint: () => void;
   advance: () => void;
   continueAfterEvolve: () => void;
+  presentBattle: () => void;
   quitGame: () => void;
   togglePause: () => void;
   toggleCoopActive: () => void;
@@ -65,6 +66,7 @@ export function buildUseBattleActions(args: BuildUseBattleActionsArgs): UseBattl
     requestHint: args.requestHint,
     advance: args.advance,
     continueAfterEvolve: args.continueAfterEvolve,
+    presentBattle: args.presentBattle,
     quitGame: args.quitGame,
     togglePause: args.togglePause,
     toggleCoopActive: args.toggleCoopActive,

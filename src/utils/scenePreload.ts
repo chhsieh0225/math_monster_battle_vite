@@ -4,9 +4,9 @@ import { getEncounterBackground } from '../data/encounterBackgrounds.ts';
 import { WORLD_MAP_ART, EXPEDITIONS } from '../data/worldMap.ts';
 import { MONSTER_CONFIGS } from '../data/monsterConfigs.ts';
 import { nextExpeditionFloor, isSpringOption, type ExpeditionRun } from './expeditionRun.ts';
-import { getStarterSpriteSource } from './battleSpritePreload.ts';
+import { getStarterSpriteSource, getBattleSpriteRequiredSources } from './battleSpritePreload.ts';
 import { createImagePreloader } from './imagePreload.ts';
-import type { EnemyVm, StarterVm } from '../types/battle';
+import type { EnemyVm, StarterVm, UseBattleState } from '../types/battle';
 
 const BASE = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL || '/';
 export const WORLD_MAP_SRC = `${BASE}${WORLD_MAP_ART.src}`;
@@ -30,6 +30,32 @@ export function getBattleBackground(enemy: Pick<EnemyVm, 'id' | 'mType' | 'scene
 export function getEnemyPortrait(enemy: EnemyVm | null | undefined): string | null {
   const key = enemy?.activeSpriteKey || enemy?.spriteKey || getSpriteProfileKey(enemy?.svgFn);
   return getSpriteAnimationAsset(key)?.portrait ?? null;
+}
+
+export function getEvolutionPortrait(starter: StarterVm | null, stage: number): string | null {
+  return getSpriteAnimationAsset(getSpriteProfileKey(starter?.stages[stage]?.svgFn))?.portrait ?? null;
+}
+
+/** The handoff key ignores HP, attacks and boss transformations within an existing encounter. */
+export function getSceneKey(state: UseBattleState): string {
+  if (state.screen === 'battle') return `battle:${state.battleMode}:${state.round}:${state.enemy?.id}:${state.enemySub?.id}`;
+  if (state.screen === 'evolve') return `evolve:${state.starter?.id}:${state.pStg}`;
+  return state.screen;
+}
+
+export function getRequiredSceneArt(state: UseBattleState, lowPerfMode = false): { images: string[]; sprites: string[] } {
+  if (state.screen === 'worldmap') return { images: getWorldMapImages(state.expeditionRun, state.starter, state.pStg), sprites: [] };
+  if (state.screen === 'evolve') {
+    const portrait = getEvolutionPortrait(state.starter, state.pStg);
+    return { images: portrait ? [portrait] : [], sprites: [] };
+  }
+  // Returning from settings must never hold an already-running question or attack.
+  if (state.screen === 'battle' && (state.phase === 'text' || state.phase === 'bossIntro')) {
+    const portraits = state.phase === 'bossIntro' ? [getEnemyPortrait(state.enemy), getEnemyPortrait(state.enemySub)] : [];
+    return { images: [getBattleBackground(state.enemy, lowPerfMode), ...portraits.filter((src): src is string => Boolean(src))],
+      sprites: getBattleSpriteRequiredSources(state) };
+  }
+  return { images: [], sprites: [] };
 }
 
 export function getWorldMapImages(run: ExpeditionRun | null = null, starter: StarterVm | null = null, stage = 0): string[] {

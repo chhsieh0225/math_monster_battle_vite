@@ -377,6 +377,7 @@ export type UseBattleActions = {
   requestHint: () => void;
   advance: () => void;
   continueAfterEvolve: () => void;
+  presentBattle: () => void;
   quitGame: () => void;
   togglePause: () => void;
   toggleCoopActive: () => void;

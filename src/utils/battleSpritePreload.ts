@@ -12,6 +12,26 @@ export function getStarterSpriteSource(starter: StarterVm | null, stage = starte
 type PreloadState = Pick<UseBattleState, 'screen' | 'battleMode' | 'starter' | 'pStg' | 'allySub'
   | 'enemy' | 'enemySub' | 'enemies' | 'round' | 'bossPhase' | 'eHp' | 'eHpSub'>;
 
+/** Only actors visible on arrival. Future evolutions and boss forms must not delay entry. */
+export function getBattleSpriteRequiredSources(state: PreloadState): string[] {
+  const sources = new Set<string>();
+  const add = (src: string | null | undefined) => { if (src) sources.add(src); };
+  const enemy = (unit: EnemyVm | null | undefined, hp: number, phase = 1) => {
+    if (!unit) return;
+    const transformed = unit.id === 'boss' && state.battleMode !== 'pvp'
+      && (phase >= 2 || computeBossPhase(hp, unit.maxHp) >= 2);
+    const key = transformed ? 'bossDarkPhase2SVG' : unit.activeSpriteKey || unit.spriteKey || getSpriteProfileKey(unit.svgFn);
+    add(getSpriteAnimationAsset(key)?.src);
+  };
+  add(getStarterSpriteSource(state.starter, state.pStg));
+  enemy(state.enemy, state.eHp, state.bossPhase);
+  if (state.battleMode === 'coop' || state.battleMode === 'double') {
+    add(getStarterSpriteSource(state.allySub));
+    enemy(state.enemySub, state.eHpSub);
+  }
+  return [...sources];
+}
+
 /** A rolling window, not the full roster. Identity follows physical slots and active variants. */
 export function getBattleSpritePreloadSources(state: PreloadState, conserveNetwork = false): string[] {
   if (state.screen !== 'battle' && state.screen !== 'evolve') return [];

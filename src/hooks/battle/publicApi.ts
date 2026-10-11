@@ -141,6 +141,7 @@ const REQUIRED_ACTION_KEYS = [
   'onAns',
   'advance',
   'continueAfterEvolve',
+  'presentBattle',
   'quitGame',
   'togglePause',
   'toggleCoopActive',

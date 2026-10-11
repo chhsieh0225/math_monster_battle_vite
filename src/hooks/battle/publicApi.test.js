@@ -149,6 +149,7 @@ function createValidPublicApi() {
       onAns: noop,
       advance: noop,
       continueAfterEvolve: noop,
+      presentBattle: noop,
       quitGame: noop,
       togglePause: noop,
       toggleCoopActive: noop,

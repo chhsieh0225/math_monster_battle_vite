@@ -7,7 +7,7 @@
  *   2. Cross-screen settings entry / return flow
  *   3. Orientation-lock wrapper (GameShell)
  */
-import { Suspense, lazy, useState, useEffect, useRef, Component } from 'react';
+import { Suspense, useState, useEffect, useRef, Component } from 'react';
 import { notePlaytestLowPerf, savePlaytestReport, savePlaytestReportSync, startPlaytestRecorder, trackPlaytestScreen } from './utils/playtestLog.ts';
 import type { ReactNode } from 'react';
 import './App.css';
@@ -17,18 +17,19 @@ import { useI18n } from './i18n';
 import { useBattle } from './hooks/useBattle';
 import { useMobileExperience } from './hooks/useMobileExperience';
 import { useAudioState } from './hooks/useAudioState';
+import { arriveAtMap } from './utils/expeditionRun.ts';
 import { getScreenMusic, getEncounterMusic } from './utils/battleMusic.ts';
 import type { BgmTrack } from './utils/sfx/bgm.ts';
-import { scenePreloader, getBattleBackground, getEnemyPortrait, shouldConserveNetwork } from './utils/scenePreload.ts';
-import { loadBattleScreen, loadWorldMapScreen } from './utils/screenPreload.ts';
-import VisualAssetGate from './components/ui/VisualAssetGate';
+import { scenePreloader, getBattleBackground, getEnemyPortrait, getEvolutionPortrait, getWorldMapImages, getRequiredSceneArt, getSceneKey, shouldConserveNetwork } from './utils/scenePreload.ts';
+import { loadBattleScreen, loadWorldMapScreen, screenResources } from './utils/screenPreload.ts';
+import SceneHandoff from './components/ui/SceneHandoff';
 import { battleSpritePreloader, getBattleSpritePreloadSources } from './utils/battleSpritePreload.ts';
 
 // Screens
 import AppScreenRouter from './components/AppScreenRouter';
 import type { ScreenName } from './types/battle';
 
-const BattleScreen = lazy(loadBattleScreen);
+const BattleScreen = screenResources.battle.Screen;
 
 /** Lightweight locale lookup for class components that cannot use hooks. */
 function staticT(_key: string, fallback: string): string {
@@ -202,6 +203,8 @@ function App() {
   const resumeBattleAfterSettingsRef = useRef(false);
   const conserveNetwork = UX.lowPerfMode || shouldConserveNetwork();
   const desiredMusic = getScreenMusic(S);
+  const [presentedMusic, setPresentedMusic] = useState(desiredMusic);
+  const requiredArt = getRequiredSceneArt(S, UX.lowPerfMode);
   const nextEncounterStep = (S.battleMode === 'coop' || S.battleMode === 'double') && S.enemySub ? 2 : 1;
   const spritePreloadKey = getBattleSpritePreloadSources(S, conserveNetwork).join('\n');
 
@@ -224,7 +227,7 @@ function App() {
     // Selection owns its local picks; battle owns the rolling encounter window.
     if (S.screen === 'selection' || S.screen === 'worldmap') return;
     battleSpritePreloader.preload(spritePreloadKey ? spritePreloadKey.split('\n') : []);
-    if (S.screen !== 'battle') scenePreloader.preload([]);
+    if (S.screen !== 'battle' && S.screen !== 'evolve') scenePreloader.preload([]);
   }, [S.screen, spritePreloadKey]);
 
   // Warm code while choosing, not after the first battle has already started.
@@ -232,19 +235,27 @@ function App() {
     if (S.screen === 'selection' || S.screen === 'worldmap' || S.screen === 'evolve' || S.screen === 'battle') {
       void loadBattleScreen().catch(() => {});
     }
-    if ((S.screen === 'selection' && S.worldMapEnabled) || S.screen === 'worldmap') {
+    if (S.screen === 'battle') {
+      void screenResources.evolve.load().catch(() => {});
+      void screenResources.settings.load().catch(() => {});
+    }
+    if ((S.worldMapEnabled && (S.screen === 'selection' || S.screen === 'battle')) || S.screen === 'worldmap') {
       void loadWorldMapScreen().catch(() => {});
     }
   }, [S.screen, S.worldMapEnabled]);
 
   useEffect(() => {
-    if (S.screen !== 'battle') return;
+    if (S.screen !== 'battle' && S.screen !== 'evolve') return;
     const next = S.enemies[S.round + nextEncounterStep];
-    // Current assets are high-priority gate requests. Only the next encounter is speculative.
-    scenePreloader.preload(conserveNetwork || !next ? [] : [
-      getBattleBackground(next, UX.lowPerfMode), getEnemyPortrait(next) || '',
+    // Decode the next reveal during play, rather than when the victory button is pressed.
+    const nextStage = S.pStg + (S.screen === 'evolve' ? 0 : 1);
+    scenePreloader.preload(conserveNetwork ? [] : [
+      ...(next ? [getBattleBackground(next, UX.lowPerfMode), getEnemyPortrait(next) || ''] : []),
+      getEvolutionPortrait(S.starter, nextStage) || '',
+      ...(S.worldMapEnabled ? getWorldMapImages(S.expeditionRun && arriveAtMap(S.expeditionRun), S.starter, S.pStg) : []),
     ]);
-  }, [S.screen, S.enemies, S.round, nextEncounterStep, conserveNetwork, UX.lowPerfMode]);
+  }, [S.screen, S.enemies, S.round, S.pStg, S.starter, S.worldMapEnabled, S.expeditionRun,
+    nextEncounterStep, conserveNetwork, UX.lowPerfMode]);
 
   // Tiered BGM prefetch:
   // metadata on constrained devices, aggressive warmup on stable devices.
@@ -332,17 +343,16 @@ function App() {
 
   // ── BGM driver ──
   useEffect(() => {
-    if (desiredMusic) V.sfx.startBgm(desiredMusic);
+    if (presentedMusic) V.sfx.startBgm(presentedMusic);
     else V.sfx.stopBgm();
   }, [
-    desiredMusic,
+    presentedMusic,
     bgmMuted,
     V.sfx,
     sfxReady,
   ]);
 
-  if (S.screen !== "battle") {
-    return (
+  const content = S.screen !== "battle" ? (
       <AppScreenRouter
         state={S}
         actions={A}
@@ -358,25 +368,9 @@ function App() {
         onCloseSettings={closeSettings}
         t={t}
       />
-    );
-  }
-
-  return (
+  ) : (
     <BattleErrorBoundary onReset={() => A.setScreen('title')}>
-      <Suspense
-        fallback={(
-          <div className="battle-loading-wrap">
-            <div className="battle-loading-icon">⚔️</div>
-            <div className="battle-loading-text">{t("app.loading.battle", "Preparing battle...")}</div>
-          </div>
-        )}
-      >
-        <VisualAssetGate
-          wait={S.phase === 'text' || S.phase === 'bossIntro'}
-          images={[getBattleBackground(S.enemy, UX.lowPerfMode), getEnemyPortrait(S.enemy) || '',
-            getEnemyPortrait(S.enemySub) || '']}
-          sprites={getBattleSpritePreloadSources(S, true)}
-        >
+      <Suspense fallback={null}>
         <BattleScreen
           state={S}
           actions={A}
@@ -385,10 +379,17 @@ function App() {
           onOpenSettings={openSettings}
           t={t}
         />
-        </VisualAssetGate>
       </Suspense>
     </BattleErrorBoundary>
   );
+  const code = S.screen === 'title' || S.screen === 'selection' ? undefined : screenResources[S.screen];
+  return <SceneHandoff sceneKey={getSceneKey(S)} {...requiredArt} code={code}
+    music={desiredMusic} onPresented={(music, key) => {
+      setPresentedMusic(music);
+      if (key.startsWith('battle:')) A.presentBattle();
+    }} onCancel={() => A.setScreen('title')} t={t}>
+    {content}
+  </SceneHandoff>;
 }
 
 export default GameShell;

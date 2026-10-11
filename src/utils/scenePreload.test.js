@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createImagePreloader } from './imagePreload.ts';
-import { getBattleBackground, getRoutePreloadPlan, getEnemyPortrait, getWorldMapImages, WORLD_MAP_SRC } from './scenePreload.ts';
+import { getBattleBackground, getRequiredSceneArt, getSceneKey, getEvolutionPortrait, getRoutePreloadPlan, getEnemyPortrait, getWorldMapImages, WORLD_MAP_SRC } from './scenePreload.ts';
 import { BG_IMGS, BG_IMGS_LOW } from '../data/sprites.ts';
 import { STARTERS } from '../data/starters.ts';
 import { EXPEDITIONS } from '../data/worldMap.ts';
@@ -117,4 +117,20 @@ test('missing routes and preview-only maps do not warm unrelated enemies', () =>
   const plan = buildExpeditionPlan(EXPEDITIONS[0], () => 0);
   const run = createExpeditionRun(plan, buildExpeditionLanes(plan, EXPEDITIONS[0], () => 0));
   assert.deepEqual(getRoutePreloadPlan({ ...run, atMap: false }, null, 0, 0), { images: [], sprites: [] });
+});
+
+test('scene handoff separates essential art from later portraits and never gates active questions', () => {
+  const state = { screen: 'battle', phase: 'text', battleMode: 'single', enemy: { id: 'ghost', spriteKey: 'ghostSVG', maxHp: 100 },
+    enemySub: null, starter: STARTERS[0], pStg: 0, round: 1, eHp: 100, bossPhase: 1 };
+  const plan = getRequiredSceneArt(state);
+  assert.deepEqual(plan.images, [getBattleBackground(state.enemy)]);
+  assert.equal(plan.sprites.length, 2);
+  assert.ok(getRequiredSceneArt({ ...state, phase: 'bossIntro' }).images.includes(getEnemyPortrait(state.enemy)));
+  for (const phase of ['question', 'playerAtk', 'enemyAtk', 'menu']) {
+    assert.deepEqual(getRequiredSceneArt({ ...state, phase }), { images: [], sprites: [] });
+    assert.equal(getSceneKey({ ...state, phase, eHp: 10, bossPhase: 2 }), getSceneKey(state));
+  }
+  assert.notEqual(getSceneKey({ ...state, round: 2 }), getSceneKey(state));
+  assert.deepEqual(getRequiredSceneArt({ ...state, screen: 'evolve', pStg: 1 }).images, [getEvolutionPortrait(STARTERS[0], 1)]);
+  assert.equal(getRequiredSceneArt({ ...state, screen: 'worldmap' }).images[0], WORLD_MAP_SRC);
 });

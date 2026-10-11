@@ -192,3 +192,22 @@ input,select,textarea{font-size:max(16px,1rem)}
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{animation-duration:0.01ms!important}
 }
+
+/* The outgoing scene stays visible while the next scene is prepared offscreen. */
+.scene-handoff,
+.scene-handoff-content { height: 100%; min-height: 0; }
+.scene-handoff { position: relative; }
+.scene-handoff-content[inert] { cursor: wait; }
+.scene-handoff-error {
+  position: absolute;
+  z-index: 200;
+  inset: auto 16px 24px;
+  padding: 16px;
+  border: 1px solid #bba678;
+  border-radius: 12px;
+  background: #172536f5;
+  color: #fff4d8;
+  box-shadow: 0 8px 28px #0006;
+  text-align: center;
+}
+.scene-handoff-error p { margin: 0 0 12px; }

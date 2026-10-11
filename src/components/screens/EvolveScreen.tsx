@@ -8,6 +8,7 @@ import { useI18n } from '../../i18n';
 import './EvolveScreen.css';
 
 type EvolveScreenProps = {
+  prepared?: boolean;
   starter: StarterLite | null;
   stageIdx: number;
   onContinue: () => void;
@@ -33,7 +34,7 @@ type SparkCssVars = CSSProperties & {
   '--del': string;
 };
 
-export default function EvolveScreen({ starter, stageIdx, onContinue }: EvolveScreenProps) {
+export default function EvolveScreen({ starter, stageIdx, onContinue, prepared = false }: EvolveScreenProps) {
   const { t } = useI18n();
   const st = starter?.stages?.[stageIdx];
   const ECOLORS = ["#818cf8","#a855f7","#fbbf24","#22c55e","#60a5fa","#f472b6","#fb923c","#34d399","#c084fc","#facc15"];
@@ -54,7 +55,7 @@ export default function EvolveScreen({ starter, stageIdx, onContinue }: EvolveSc
   const portrait = getSpriteAnimationAsset(profileKey)?.portrait;
 
   return (
-    <VisualAssetGate images={portrait ? [portrait] : []}>
+    <VisualAssetGate wait={!prepared} images={portrait ? [portrait] : []}>
     <div className="evolve-screen" key={`${starter.id}:${stageIdx}`}>
       <div className="evolve-flash" aria-hidden="true" />
       {Array.from({ length: 8 }, (_, i) => {

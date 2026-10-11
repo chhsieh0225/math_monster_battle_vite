@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { setImmediate } from 'node:timers';
-import { createBattleSpritePreloader, getBattleSpritePreloadSources, getStarterSpriteSource } from './battleSpritePreload.ts';
+import { createBattleSpritePreloader, getBattleSpritePreloadSources, getBattleSpriteRequiredSources, getStarterSpriteSource } from './battleSpritePreload.ts';
 import { STARTERS } from '../data/starters.ts';
 import { PVP_SELECTABLE_ROSTER } from '../data/pvpRoster.ts';
 import { PROFILES } from '../data/spriteProfiles.ts';
@@ -202,4 +202,18 @@ test('offline, malformed and unsupported images fail safely and can be retried',
   const unsupported = createBattleSpritePreloader({ createImage: () => { throw new Error('unsupported'); } });
   assert.equal(await unsupported.load('/anything'), false);
   assert.equal(await loader.load(''), false);
+});
+
+ test('entry essentials exclude future boss forms and next evolutions, but saved phase two loads its actual form', () => {
+  const boss = enemy('darkLordSVG', 'boss');
+  const current = state({ enemy: boss });
+  assert.deepEqual(getBattleSpriteRequiredSources(current), [source('playerfire0SVG'), source('darkLordSVG')]);
+  assert.deepEqual(getBattleSpriteRequiredSources({ ...current, eHp: 40 }), [source('playerfire0SVG'), source('bossDarkPhase2SVG')]);
+  assert.deepEqual(getBattleSpriteRequiredSources({ ...current, battleMode: 'pvp', eHp: 40 }), [source('playerfire0SVG'), source('darkLordSVG')]);
+  const team = state({ battleMode: 'coop', allySub: starter('wolf'), enemySub: boss });
+  const required = getBattleSpriteRequiredSources(team);
+  assert.equal(required.length, 4);
+  assert.ok(required.includes(source('playerwolf0SVG')));
+  assert.ok(required.includes(source('darkLordSVG')));
+  assert.ok(!required.includes(source('bossDarkPhase2SVG')));
 });

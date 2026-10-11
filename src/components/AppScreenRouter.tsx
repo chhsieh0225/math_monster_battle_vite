@@ -1,11 +1,9 @@
-import { Component, Suspense, lazy, useRef } from 'react';
+import { Component, Suspense, useRef } from 'react';
 import type { ComponentProps, ErrorInfo, ReactNode } from 'react';
 
 import TitleScreen from './screens/TitleScreen';
 import SelectionScreen from './screens/SelectionScreen';
-import VisualAssetGate from './ui/VisualAssetGate';
-import { getWorldMapImages } from '../utils/scenePreload.ts';
-import { loadWorldMapScreen } from '../utils/screenPreload.ts';
+import { screenResources } from '../utils/screenPreload.ts';
 import { hasSave as checkHasSave } from '../utils/savegame.ts';
 import { getLevelMaxHp } from '../utils/playerHp.ts';
 import { expeditionBattleCount } from '../utils/expeditionRun.ts';
@@ -17,19 +15,19 @@ import type {
   UseMobileExperienceApi,
 } from '../types/battle';
 
-const LeaderboardScreen = lazy(() => import('./screens/LeaderboardScreen'));
-const EvolveScreen = lazy(() => import('./screens/EvolveScreen'));
-const GameOverScreen = lazy(() => import('./screens/GameOverScreen'));
-const AchievementScreen = lazy(() => import('./screens/AchievementScreen'));
-const EncyclopediaScreen = lazy(() => import('./screens/EncyclopediaScreen'));
-const DashboardScreen = lazy(() => import('./screens/DashboardScreen'));
-const SettingsScreen = lazy(() => import('./screens/SettingsScreen'));
-const PvpResultScreen = lazy(() => import('./screens/PvpResultScreen'));
-const DailyChallengeScreen = lazy(() => import('./screens/DailyChallengeScreen'));
-const HowToPlayScreen = lazy(() => import('./screens/HowToPlayScreen'));
-const WorldMapScreen = lazy(loadWorldMapScreen);
-const PlacementScreen = lazy(() => import('./screens/PlacementScreen'));
-const ReviewSpringScreen = lazy(() => import('./screens/ReviewSpringScreen'));
+const LeaderboardScreen = screenResources.leaderboard.Screen;
+const EvolveScreen = screenResources.evolve.Screen;
+const GameOverScreen = screenResources.gameover.Screen;
+const AchievementScreen = screenResources.achievements.Screen;
+const EncyclopediaScreen = screenResources.encyclopedia.Screen;
+const DashboardScreen = screenResources.dashboard.Screen;
+const SettingsScreen = screenResources.settings.Screen;
+const PvpResultScreen = screenResources.pvp_result.Screen;
+const DailyChallengeScreen = screenResources.daily_challenge.Screen;
+const HowToPlayScreen = screenResources.howto.Screen;
+const WorldMapScreen = screenResources.worldmap.Screen;
+const PlacementScreen = screenResources.placement.Screen;
+const ReviewSpringScreen = screenResources.spring.Screen;
 
 type SelectionPayload = Parameters<ComponentProps<typeof SelectionScreen>['onSelect']>[0];
 type DualSelectionPayload = Extract<SelectionPayload, { p1: unknown; p2: unknown }>;
@@ -366,7 +364,6 @@ export default function AppScreenRouter({
   if (S.screen === 'worldmap') {
     return wrapMain(
       withScreenSuspense(
-        <VisualAssetGate images={getWorldMapImages(S.expeditionRun, S.starter, S.pStg)}>
         <WorldMapScreen
           progress={S.worldProgress}
           run={S.expeditionRun}
@@ -385,8 +382,7 @@ export default function AppScreenRouter({
           grade={S.playerGrade}
           onDiscoverSecret={A.discoverSecret}
           lowPerfMode={mobile.lowPerfMode}
-        />
-        </VisualAssetGate>,
+        />,
       ),
     );
   }
@@ -410,7 +406,7 @@ export default function AppScreenRouter({
   if (S.screen === 'evolve') {
     return wrapMain(
       withScreenSuspense(
-        <EvolveScreen starter={S.starter} stageIdx={S.pStg} onContinue={A.continueAfterEvolve} />,
+        <EvolveScreen prepared starter={S.starter} stageIdx={S.pStg} onContinue={A.continueAfterEvolve} />,
       ),
     );
   }

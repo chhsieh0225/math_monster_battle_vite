@@ -178,6 +178,43 @@ type EnemySpriteResolveInput = {
   fallbackBossPhase?: number;
 };
 
+function resolveEnemyVisualPhase({ battleMode, enemy, currentHp, fallbackBossPhase = 1 }: EnemySpriteResolveInput): number {
+  if (battleMode === 'pvp' || normalizeEnemyVisualId(enemy.id) !== DARK_DRAGON_BOSS_ID) return 1;
+  const maxHp = Math.max(1, Number(enemy.maxHp) || 1);
+  const hp = Number.isFinite(currentHp) ? Math.max(0, Number(currentHp)) : maxHp;
+  return Math.max(computeBossPhase(hp, maxHp), fallbackBossPhase || 1) >= 2 ? 2 : 1;
+}
+
+/** One entry per mounted battlefield; HP changes only invalidate visual transitions. */
+export function createBattleStaticCoreSelector() {
+  let previous: {
+    key: Record<keyof BattleCoreStaticState, unknown>;
+    compactUI: boolean;
+    scenes: BuildBattleStaticCoreArgs['scenes'];
+    result: BattleCoreStatic | null;
+  } | undefined;
+  return (args: BuildBattleStaticCoreArgs): BattleCoreStatic | null => {
+    const s = args.state;
+    const key: Record<keyof BattleCoreStaticState, unknown> = {
+      starter: s.starter, enemy: s.enemy, pLvl: s.pLvl, pStg: s.pStg,
+      battleMode: s.battleMode, enemySub: s.enemySub, allySub: s.allySub,
+      coopActiveSlot: s.coopActiveSlot, pvpTurn: s.pvpTurn, pvpStarter2: s.pvpStarter2,
+      eHp: s.enemy ? resolveEnemyVisualPhase({ battleMode: s.battleMode, enemy: s.enemy, currentHp: s.eHp, fallbackBossPhase: s.bossPhase }) : 1,
+      eHpSub: s.enemySub ? resolveEnemyVisualPhase({ battleMode: s.battleMode, enemy: s.enemySub, currentHp: s.eHpSub }) : 1,
+      pHpSub: s.pHpSub > 0,
+      bossPhase: 1, // Already incorporated into the main enemy's visual phase.
+    };
+    const cached = previous;
+    if (cached && cached.compactUI === args.compactUI && cached.scenes === args.scenes
+      && (Object.keys(key) as (keyof BattleCoreStaticState)[]).every((field) => Object.is(cached.key[field], key[field]))) {
+      return cached.result;
+    }
+    const result = buildBattleStaticCore(args);
+    previous = { key, compactUI: args.compactUI, scenes: args.scenes, result };
+    return result;
+  };
+}
+
 function resolveSpriteCacheKey(prefix: string, fallbackId: string, spriteKey?: string): string {
   const safeKey = spriteKey && spriteKey.length > 0 ? spriteKey : fallbackId;
   return `${prefix}:${safeKey}`;
@@ -200,10 +237,7 @@ function resolveEnemySpriteForBattle({
     };
   }
 
-  const maxHp = Math.max(1, Number(enemy.maxHp) || 1);
-  const normalizedHp = Number.isFinite(currentHp) ? Math.max(0, Number(currentHp)) : maxHp;
-  const computedPhase = computeBossPhase(normalizedHp, maxHp);
-  const resolvedPhase = Math.max(computedPhase, fallbackBossPhase || 1);
+  const resolvedPhase = resolveEnemyVisualPhase({ battleMode, enemy, currentHp, fallbackBossPhase });
   if (resolvedPhase >= 2) {
     return {
       svg: getCachedSpriteSvg('battle-enemy:bossDarkPhase2SVG', () => bossDarkPhase2SVG()),

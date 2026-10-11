@@ -23,7 +23,7 @@ import type {
   UseBattleView,
   UseMobileExperienceApi,
 } from '../../types/battle';
-import { buildBattleRuntimeCore, buildBattleStaticCore } from './battle/buildBattleCore.ts';
+import { buildBattleRuntimeCore, createBattleStaticCoreSelector } from './battle/buildBattleCore.ts';
 import { useAttackImpactPhase } from './battle/useAttackImpactPhase.ts';
 import { BattleMoveMenu } from './battle/BattleMoveMenu.tsx';
 import { BattleQuestionPanel } from './battle/BattleQuestionPanel.tsx';
@@ -42,7 +42,7 @@ import { BOSS_DEFEAT_MS, resolveBattleSpriteAnimations, resolveEnemyDefeat } fro
 import {
   BATTLE_ARENA_HEIGHT_SHARE,
   getBossFrameRequest,
-  getWingKnightFrameRequest,
+  getEnemyFrameRequest,
   resolveBattleSpritePlacement,
   resolveBattleFormation,
   resolveBattleLaneSnapshot,
@@ -319,7 +319,8 @@ function BattleScreenComponent({
   } = S;
   const { getPow, dualEff } = V;
 
-  const coreStatic = useMemo(() => buildBattleStaticCore({
+  const selectStaticCore = useMemo(() => createBattleStaticCoreSelector(), []);
+  const coreStatic = selectStaticCore({
     state: {
       starter: stateStarter,
       enemy: stateEnemy,
@@ -338,23 +339,7 @@ function BattleScreenComponent({
     },
     compactUI: UX.compactUI,
     scenes: SCENES,
-  }), [
-    stateStarter,
-    stateEnemy,
-    pLvl,
-    pStg,
-    battleMode,
-    enemySub,
-    eHp,
-    eHpSub,
-    bossPhase,
-    allySub,
-    pHpSub,
-    coopActiveSlot,
-    pvpTurn,
-    pvpStarter2,
-    UX.compactUI,
-  ]);
+  });
 
   const memoSceneStyles = useMemo(() => {
     if (!coreStatic) return null;
@@ -444,7 +429,7 @@ function BattleScreenComponent({
     });
     const enemyInput = placementInput('enemy', snapshot.enemyMainWidthPx * arenaScale, enemyComp, snapshot.enemyMainRightPct, snapshot.enemyTopPct, undefined,
       isBossEnemy ? getBossFrameRequest(arenaWidth, false, hasDualUnits)
-        : getWingKnightFrameRequest(coreStatic.enemy.id, snapshot.enemyMainWidthPx * arenaScale));
+        : getEnemyFrameRequest(coreStatic.enemy.id, snapshot.enemyMainWidthPx * arenaScale));
     // The old horizontal lane budget can make the reserve tiny even when vertical room remains.
     const reserveWidth = (comp: number) => Math.min(arenaWidth * 0.34, 76 * Math.max(1, comp));
     const mainInput = placementInput('player', snapshot.playerMainWidthPx * arenaScale * mainDim, playerComp, snapshot.playerMainLeftPct, snapshot.playerMainBottomPct, undefined,
@@ -454,7 +439,7 @@ function BattleScreenComponent({
     const subIsActive = coopUsingSub && showAllySub;
     const enemySubInput = placementInput('enemy', snapshot.enemySubWidthPx * arenaScale, getCompensation(coreStatic.spriteProfiles.enemySub ?? ''), snapshot.enemySubRightPct, snapshot.enemySubTopPct, undefined,
       enemySubIsBossVisual ? getBossFrameRequest(arenaWidth, true, hasDualUnits)
-        : getWingKnightFrameRequest(enemySubId, snapshot.enemySubWidthPx * arenaScale));
+        : getEnemyFrameRequest(enemySubId, snapshot.enemySubWidthPx * arenaScale));
     const formation = resolveBattleFormation(enemyInput, subIsActive ? subInput : mainInput, {
       enemy: showEnemySub ? enemySubInput : undefined,
       player: showAllySub ? (subIsActive ? mainInput : subInput) : undefined,

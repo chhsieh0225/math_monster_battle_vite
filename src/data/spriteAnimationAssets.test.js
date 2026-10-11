@@ -157,3 +157,13 @@ test('atlas positions cannot select a nonexistent cell', () => {
   for (const index of [-1, 8, .5, NaN, Infinity]) assert.equal(getSpritePosePosition(index), '0% 0%');
   assert.equal(new Set(Array.from({ length: 8 }, (_, i) => getSpritePosePosition(i))).size, 8);
 });
+
+test('static atlas metadata and fitted frames are reused without changing registered geometry', () => {
+  for (const key of Object.keys(PROFILES)) {
+    const first = getSpriteAnimationAsset(key);
+    assert.strictEqual(getSpriteAnimationAsset(key), first);
+    assert.strictEqual(getSpriteAnimationAsset(key).frame, first.frame);
+    assert.deepEqual(first.frame, fitSpriteAtlas(first.profile, first.art));
+  }
+  for (const missing of [undefined, '', 'missing', 'not-an-asset']) assert.equal(getSpriteAnimationAsset(missing), null);
+});

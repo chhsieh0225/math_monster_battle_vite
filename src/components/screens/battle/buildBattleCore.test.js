@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildBattleCore, buildBattleStaticCore } from './buildBattleCore.ts';
+import { buildBattleCore, buildBattleStaticCore, createBattleStaticCoreSelector } from './buildBattleCore.ts';
 import { STARTERS } from '../../../data/starters.ts';
 import { PVP_SELECTABLE_ROSTER } from '../../../data/pvpRoster.ts';
 import { getSpriteProfileKey } from '../../../data/sprites.ts';
@@ -335,4 +335,79 @@ test('buildBattleCore switches dark dragon sub target in co-op when sub hp is lo
   assert.ok(core.eSubSvg);
   assert.equal(core.eSubSvg.includes('boss_2nd_phase.png'), true);
   assert.equal(getSpriteAnimationAsset(core.spriteProfiles.enemySub).art.file, 'boss-2nd-phase-refined-v2.webp');
+});
+
+test('visual core is reused for ordinary damage, healing and unrelated runtime updates', () => {
+  const select = createBattleStaticCoreSelector();
+  const state = makeState({ battleMode: 'coop', enemySub: makeEnemy('fire'), allySub: makeStarter('water'), pHpSub: 100 });
+  const args = { state, compactUI: true, scenes: TEST_SCENES };
+  const first = select(args);
+  for (let hp = 100; hp >= 0; hp--) {
+    const next = { ...args, state: { ...state, eHp: hp, eHpSub: hp, pHpSub: hp + 1,
+      charge: 10, bossPhase: 3 } };
+    assert.strictEqual(select(next), first, 'ordinary HP ticks do not invalidate layout or sprite props');
+    assert.deepEqual(select(next), buildBattleStaticCore(next), 'cached rendering matches uncached rendering');
+  }
+});
+
+test('visual cache tracks both boss phase transitions without rebuilding for every HP tick', () => {
+  const state = makeState({ battleMode: 'coop', enemy: { ...makeEnemy('boss'), maxHp: 100 },
+    enemySub: { ...makeEnemy('boss'), maxHp: 100 }, eHp: 100, eHpSub: 100 });
+  const select = createBattleStaticCoreSelector();
+  let previous;
+  let builds = 0;
+  for (const [eHp, eHpSub, bossPhase] of [[100,100,1],[90,90,1],[61,61,1],[60,61,1],[40,61,2],[30,61,3],[20,60,3],[10,30,3],[100,100,1],[100,100,2]]) {
+    const args = { state: { ...state, eHp, eHpSub, bossPhase }, compactUI: true, scenes: TEST_SCENES };
+    const current = select(args);
+    if (current !== previous) builds++;
+    assert.deepEqual(current, buildBattleStaticCore(args));
+    previous = current;
+  }
+  assert.equal(builds, 5, 'only initial, main transition, sub transition, reset and forced transition rebuild');
+});
+
+test('visual cache invalidates on ally KO/revival, role changes, evolution, roster and viewport changes', () => {
+  const state = makeState({ battleMode: 'coop', allySub: makeStarter('water'), pHpSub: 100, coopActiveSlot: 'sub' });
+  const base = { state, compactUI: true, scenes: TEST_SCENES };
+  const select = createBattleStaticCoreSelector();
+  for (const changed of [
+    { state: { ...state, pHpSub: 0 } },
+    { state: { ...state, coopActiveSlot: 'main' } },
+    { state: { ...state, pStg: 1 } },
+    { state: { ...state, pLvl: 2 } },
+    { state: { ...state, enemy: makeEnemy('dragon') } },
+    { state: { ...state, enemySub: makeEnemy() } },
+    { state: { ...state, allySub: makeStarter('grass') } },
+    { state: { ...state, starter: makeStarter('grass') } },
+    { state: { ...state, battleMode: 'pvp' } },
+    { state: { ...state, pvpTurn: 'p2' } },
+    { state: { ...state, pvpStarter2: makeStarter('grass') } },
+    { compactUI: false }, { scenes: { ...TEST_SCENES } },
+  ]) {
+    const before = select(base);
+    const args = { ...base, ...changed };
+    const after = select(args);
+    assert.notStrictEqual(after, before);
+    assert.deepEqual(after, buildBattleStaticCore(args));
+    assert.deepEqual(select(base), before, 'revival/reset restores the original rendering');
+  }
+});
+
+test('PvP HP and PvE phase flags never change a selected PvP boss form', () => {
+  const state = makeState({ battleMode: 'pvp', enemy: makeEnemy('pvp_boss'), eHp: 100 });
+  const select = createBattleStaticCoreSelector();
+  const args = { state, scenes: TEST_SCENES, compactUI: true };
+  const first = select(args);
+  assert.strictEqual(select({ ...args, state: { ...state, eHp: 1, bossPhase: 3 } }), first);
+  assert.equal(first.spriteProfiles.enemyMain, 'slimeSVG');
+});
+
+test('visual caches are bounded to one entry and isolated between battle screens', () => {
+  const select = createBattleStaticCoreSelector();
+  const other = createBattleStaticCoreSelector();
+  const args = { state: makeState(), scenes: TEST_SCENES, compactUI: true };
+  const first = select(args);
+  assert.notStrictEqual(other(args), first);
+  assert.equal(select({ ...args, state: { ...args.state, enemy: null } }), null);
+  assert.notStrictEqual(select(args), first, 'unmounted actors are not retained as a growing roster cache');
 });

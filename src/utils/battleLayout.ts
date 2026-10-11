@@ -79,11 +79,21 @@ export function getBossFrameRequest(arenaWidth: number, secondary = false, dual 
 }
 
 /** Apply after lane caps so the size gain survives mobile scaling, but still fits around HUDs. */
-export function getWingKnightFrameRequest(enemyId: string | undefined, frameWidth: number): number | undefined {
-  switch (enemyId) {
+export function getEnemyFrameRequest(enemyId: string | undefined, frameWidth: number): number | undefined {
+  // These new atlases reserve more room for full attack poses than their idle bodies.
+  // Enlarge the entire registered frame, never individual poses or the source texture.
+  switch (normalizeEnemyVisualId(enemyId)) {
     case 'limit_knight':
     case 'topology_knight':
     case 'algebra_knight': return frameWidth * 1.32;
+    case 'blue_butterfly': return frameWidth * 1.18;
+    case 'venom_mantis': return frameWidth * 1.25;
+    case 'mire_toad': return frameWidth * 1.4;
+    case 'night_bat': return frameWidth * 1.3;
+    case 'chain_wraith': return frameWidth * 1.45;
+    case 'thunder_raptor': return frameWidth * 1.28;
+    case 'crystal_crab': return frameWidth * 1.5;
+    case 'dream_weaver': return frameWidth * 1.35;
     default: return undefined;
   }
 }

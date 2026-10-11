@@ -9,7 +9,7 @@ import {
   resolveBattleFormation,
   BATTLE_ARENA_HEIGHT_SHARE,
   getBossFrameRequest,
-  getWingKnightFrameRequest,
+  getEnemyFrameRequest,
 } from './battleLayout.ts';
 import { BOSS_IDS } from '../data/monsterConfigs.ts';
 import { GUARDIAN_ENCOUNTERS } from '../data/guardianEncounters.ts';
@@ -25,13 +25,26 @@ const overlaps = (a, b) => a.left < b.right - 0.01 && a.right > b.left + 0.01
 test('wing knights request another 15% gain over the previous 1.15 scale, including reserve frames', () => {
   for (const id of ['limit_knight', 'topology_knight', 'algebra_knight']) {
     for (const frameWidth of [60, 140, 220]) {
-      assert.equal(getWingKnightFrameRequest(id, frameWidth), frameWidth * 1.32);
-      assert.ok(getWingKnightFrameRequest(id, frameWidth) / (frameWidth * 1.15) > 1.14);
+      assert.equal(getEnemyFrameRequest(id, frameWidth), frameWidth * 1.32);
+      assert.ok(getEnemyFrameRequest(id, frameWidth) / (frameWidth * 1.15) > 1.14);
     }
   }
-  for (const id of ['blue_butterfly', 'candy_knight', 'slime', ...BOSS_IDS, '', undefined]) {
-    assert.equal(getWingKnightFrameRequest(id, 140), undefined);
+  for (const id of ['candy_knight', 'slime', ...BOSS_IDS, '', undefined]) {
+    assert.equal(getEnemyFrameRequest(id, 140), undefined);
   }
+});
+
+const FRONTIER_IDS = ['venom_mantis', 'mire_toad', 'night_bat', 'chain_wraith', 'thunder_raptor', 'crystal_crab', 'dream_weaver'];
+
+test('new monster requests account for body shape without changing older monsters or bosses', () => {
+  for (const id of [...FRONTIER_IDS, 'blue_butterfly']) {
+    for (const width of [60, 120, 220]) {
+      const requested = getEnemyFrameRequest(id, width);
+      assert.ok(requested >= width * 1.18 && requested <= width * 1.5);
+      assert.equal(getEnemyFrameRequest(`pvp_${id}`, width), requested);
+    }
+  }
+  assert.ok(getEnemyFrameRequest('crystal_crab', 120) > getEnemyFrameRequest('venom_mantis', 120));
 });
 
 test('larger wing knights still clear HUDs, companions and screen edges in phone and desktop lanes', () => {
@@ -50,7 +63,7 @@ test('larger wing knights still clear HUDs, companions and screen edges in phone
         if (dual) frames.push(['player', Math.min(width * .24, 100), width * .42, arena.height * .6]);
         for (const [side, frameWidth, desiredCenterX, desiredCenterY] of frames) {
           const placement = resolveBattleSpritePlacement({ arena, side, frameWidth, compensation: side === 'enemy' ? 1.2626 : 1,
-            minFrameWidth: side === 'enemy' ? getWingKnightFrameRequest(id, frameWidth) : undefined,
+            minFrameWidth: side === 'enemy' ? getEnemyFrameRequest(id, frameWidth) : undefined,
             desiredCenterX, desiredCenterY, avoid: occupied });
           assert.ok(placement.width > 0 && Number.isFinite(placement.scale));
           assert.ok(placement.bounds.left >= 0 && placement.bounds.right <= width);
@@ -1842,7 +1855,7 @@ test('formation negotiation restores player readability instead of letting a tal
   assert.deepEqual(resolveBattleFormation(enemyInput, playerInput), placed, 'attack/hit rerenders do not alter placement');
 });
 
-function formationFixture({ width, rootHeight, starter, stage, enemyId, dual, swap, phase2 }) {
+function formationFixture({ width, rootHeight, starter, stage, enemyId, dual, swap, phase2, readability = true }) {
   const monster = MONSTERS.find(m => m.id === enemyId);
   const enemy = { ...monster, lvl: 13, maxHp: 200 };
   const reserve = { ...MONSTERS.find(m => m.id === 'limit_knight'), lvl: 13, maxHp: 100 };
@@ -1867,7 +1880,7 @@ function formationFixture({ width, rootHeight, starter, stage, enemyId, dual, sw
     desiredCenterY: side === 'enemy' ? arena.height * y / 100 + frameWidth * 100 / 240 : arena.height * (1 - y / 100) - frameWidth * 100 / 240 });
   const enemyWidth = snapshot.enemyMainWidthPx * deviceScale;
   const enemyInput = input('enemy', enemyWidth, layout.enemyComp, snapshot.enemyMainRightPct, snapshot.enemyTopPct,
-    BOSS_IDS.has(enemyId) ? getBossFrameRequest(width, false, dual) : getWingKnightFrameRequest(enemyId, enemyWidth));
+    BOSS_IDS.has(enemyId) ? getBossFrameRequest(width, false, dual) : readability ? getEnemyFrameRequest(enemyId, enemyWidth) : undefined);
   const reserveWidth = comp => Math.min(width * .34, 76 * Math.max(1, comp));
   const mainDim = dual && swap ? (layout.playerComp > 1.3 ? (layout.compactDual ? .58 : .68) : .84) : 1;
   const subDim = dual && !swap ? (layout.subComp > 1.3 ? (layout.compactDual ? .82 : .88) : .88) : 1;
@@ -1878,15 +1891,28 @@ function formationFixture({ width, rootHeight, starter, stage, enemyId, dual, sw
   const enemySubWidth = snapshot.enemySubWidthPx * deviceScale;
   const formation = resolveBattleFormation(enemyInput, dual && swap ? sub : main, {
     enemy: dual ? input('enemy', enemySubWidth, getCompensation(reserve.spriteKey), snapshot.enemySubRightPct,
-      snapshot.enemySubTopPct, getWingKnightFrameRequest(reserve.id, enemySubWidth)) : undefined,
+      snapshot.enemySubTopPct, getEnemyFrameRequest(reserve.id, enemySubWidth)) : undefined,
     player: dual ? (swap ? main : sub) : undefined,
   });
   return { formation, arena };
 }
 
+test('new monster enlargement survives the complete phone and desktop formation solver', () => {
+  for (const [width, rootHeight] of [[390, 844], [1280, 720]]) {
+    for (const enemyId of FRONTIER_IDS) for (const id of ['wolf', 'fire']) {
+      const args = { width, rootHeight, starter: STARTERS.find(s => s.id === id), stage: 2, enemyId,
+        dual: false, swap: false, phase2: false };
+      const before = formationFixture({ ...args, readability: false }).formation;
+      const after = formationFixture(args).formation;
+      assert.ok(after.enemy.width > before.enemy.width * 1.12, `${width}/${enemyId}/${id}: enlargement cancelled by lane caps`);
+      assert.ok(after.player.width >= before.player.width * .7, `${width}/${enemyId}/${id}: player readability lost`);
+    }
+  }
+});
+
 for (const [width, rootHeight] of [[320, 568], [390, 844], [430, 932], [768, 1024], [1280, 720], [667, 375]]) {
-  test(`${width}x${rootHeight} boss/knight formations preserve actor and HUD clearance through phases and co-op swaps`, () => {
-    for (const enemyId of [...BOSS_IDS, 'limit_knight', 'topology_knight', 'algebra_knight']) {
+  test(`${width}x${rootHeight} boss/knight/frontier formations preserve actor and HUD clearance through phases and co-op swaps`, () => {
+    for (const enemyId of [...BOSS_IDS, 'limit_knight', 'topology_knight', 'algebra_knight', 'blue_butterfly', ...FRONTIER_IDS]) {
       for (const starter of STARTERS) for (const stage of [0, 1, 2]) {
         for (const [dual, swap] of [[false, false], [true, false], [true, true]]) for (const phase2 of [false, true]) {
           const { formation, arena } = formationFixture({ width, rootHeight, starter, stage, enemyId, dual, swap, phase2 });

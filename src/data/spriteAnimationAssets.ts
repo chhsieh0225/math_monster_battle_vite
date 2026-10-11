@@ -245,17 +245,32 @@ export const SPRITE_ANIMATION_ASSETS = {
 
 const registry: Record<SpriteKey, SpriteAnimationAsset> = SPRITE_ANIMATION_ASSETS;
 const BASE = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL || '/';
+type ResolvedSpriteAsset = {
+  profile: SpriteProfile;
+  art: SpriteAnimationAsset;
+  src: string;
+  portrait: string;
+  frame: ReturnType<typeof fitSpriteAtlas>;
+};
+const resolvedAssets = new Map<string, ResolvedSpriteAsset>();
 
 export function getSpriteAnimationAsset(profileKey?: string) {
+  const cached = profileKey ? resolvedAssets.get(profileKey) : undefined;
+  if (cached) return cached;
   const profile = profileKey ? getProfile(profileKey) : undefined;
   const art = profile ? registry[profile.imgKey] : undefined;
-  return profile && art ? {
+  if (!profile || !art || !profileKey) return null;
+  const asset = {
     profile,
     art,
     src: `${BASE}sprites/visual-pilot/${art.file}`,
     /** Idle pose alone (cell 0), small: for menus, the encyclopedia and the map. */
     portrait: `${BASE}sprites/portraits/${art.file}`,
-  } : null;
+    frame: fitSpriteAtlas(profile, art),
+  };
+  // Static metadata only, bounded by the registry; no decoded images are retained here.
+  resolvedAssets.set(profileKey, asset);
+  return asset;
 }
 
 export function getSpriteAtlasEnvelope(profile: SpriteProfile) {

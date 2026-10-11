@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { fitSpriteAtlas, getSpriteAnimationAsset } from '../../../data/spriteAnimationAssets.ts';
+import { getSpriteAnimationAsset } from '../../../data/spriteAnimationAssets.ts';
 import MonsterSprite from '../../ui/MonsterSprite';
 import { getSpriteBodyMotion, resolveBattleSpriteClip } from './battleSpriteMotion.ts';
 import { battleSpritePreloader } from '../../../utils/battleSpritePreload.ts';
@@ -33,7 +33,7 @@ function AtlasSprite({ asset, svgStr, size, style, animation }: AtlasProps) {
 
   // Retain the same outer 120x100 frame through loading, attacks and hit reactions.
   if (!ready) return <MonsterSprite svgStr={svgStr} size={size} style={style} />;
-  const frame = fitSpriteAtlas(asset.profile, asset.art);
+  const { frame } = asset;
   const { clip, durationMs } = resolveBattleSpriteClip(animation);
   const duration = clip === 'idle' ? 'var(--art-idle-period)' : `${durationMs}ms`;
   return <div className="battle-art-sprite" role="img" aria-label="Monster sprite"

@@ -26,7 +26,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   background: linear-gradient(270deg, #0f0520, #1e1b4b, #312e81, #1e1b4b, #0f0520);
   background-size: 400% 400%;
   animation: bgShimmer 6s ease infinite;
@@ -34,7 +34,8 @@
   padding: 24px;
   text-align: center;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .evolve-flash {
@@ -49,7 +50,7 @@
 .evolve-burst {
   position: absolute;
   left: 50%;
-  top: 42%;
+  top: 50%;
   width: 60px;
   height: 60px;
   margin-left: -30px;
@@ -77,10 +78,10 @@
 .evolve-orbit {
   position: absolute;
   left: 50%;
-  top: 42%;
+  top: 50%;
   width: 0;
   height: 0;
-  z-index: 50;
+  pointer-events: none;
   animation: evolveSpin var(--spin-dur) linear var(--spin-del) infinite;
 }
 
@@ -91,6 +92,7 @@
   background: var(--dot-color);
   box-shadow: 0 0 var(--dot-glow) var(--dot-color);
   opacity: 0.85;
+  transform: translate(-50%, -50%);
 }
 
 .evolve-spark {
@@ -106,6 +108,13 @@
 .evolve-front {
   position: relative;
   z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 480px;
+  margin-block: auto;
 }
 
 .evolve-title {
@@ -124,12 +133,29 @@
   filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.5));
 }
 
-.evolve-sprite-wrap {
-  animation: growIn 1.2s ease 0.4s both;
+.evolve-stage {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  width: min(100%, 260px);
+  height: 200px;
+  flex-shrink: 0;
   margin-bottom: 16px;
 }
 
+.evolve-sprite-wrap {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  transform-origin: center;
+  animation: growIn 1.2s ease 0.4s both;
+}
+
 .evolve-sprite-glow {
+  display: grid;
+  place-items: center;
   animation: evolveGlow 2s ease 1.5s infinite;
 }
 

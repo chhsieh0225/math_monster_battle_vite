@@ -61,6 +61,13 @@ const wide = (imgKey: SpriteKey, safePad = 0.05): SpriteProfile =>
   ({ imgKey, natW: 677, natH: 369, safePad });
 
 export const PROFILES: Record<string, SpriteProfile> = {
+  venomMantisSVG: { imgKey: 'venom_mantis', natW: 512, natH: 384, safePad: 0, flip: true, rendering: 'auto' },
+  mireToadSVG: { imgKey: 'mire_toad', natW: 512, natH: 384, safePad: 0, flip: true, rendering: 'auto' },
+  nightBatSVG: { imgKey: 'night_bat', natW: 512, natH: 384, safePad: 0, flip: true, rendering: 'auto' },
+  chainWraithSVG: { imgKey: 'chain_wraith', natW: 512, natH: 384, safePad: 0, flip: true, rendering: 'auto' },
+  thunderRaptorSVG: { imgKey: 'thunder_raptor', natW: 512, natH: 384, safePad: 0, flip: true, rendering: 'auto' },
+  crystalCrabSVG: { imgKey: 'crystal_crab', natW: 512, natH: 384, safePad: 0, flip: true, rendering: 'auto' },
+  dreamWeaverSVG: { imgKey: 'dream_weaver', natW: 512, natH: 384, safePad: 0, flip: true, rendering: 'auto' },
   // ── Standard-fill sprites (120×100, safePad 0) ────────────────────
   slimeSVG:                    std('slime', 'pixelated'),
   slimeRedSVG:                 std('slime_fire', 'pixelated'),

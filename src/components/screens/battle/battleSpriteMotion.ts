@@ -6,6 +6,10 @@ export type SpriteBodyMotion = 'grounded' | 'soft' | 'hover' | 'wing' | 'heavy';
 
 /** Material and weight affect presentation only, never battle clocks or slot ownership. */
 export function getSpriteBodyMotion(key: SpriteKey): SpriteBodyMotion {
+  if (key === 'mire_toad') return 'soft';
+  if (key === 'chain_wraith') return 'hover';
+  if (key === 'night_bat' || key === 'thunder_raptor') return 'wing';
+  if (key === 'crystal_crab') return 'heavy';
   if (key.startsWith('slime') || key === 'candy_monster' || key === 'mushroom') return 'soft';
   if (key.startsWith('ghost') || key === 'boss_sword_god') return 'hover';
   if (key === 'colorful_butterfly' || key === 'blue_butterfly') return 'wing';

@@ -5,6 +5,7 @@
 import { EXPEDITIONS, REGION_IDS, type ExpeditionId, type RegionId } from '../data/worldMap.ts';
 import { readJson, writeJson } from './storage.ts';
 import { SECRET_IDS, type SecretId } from '../data/worldSecrets.ts';
+import { WORLD_SIDE_ROUTES, type SideRouteId } from '../data/worldSideRoutes.ts';
 
 const STORAGE_KEY = 'mathMonsterBattle_world_v1';
 
@@ -17,6 +18,7 @@ export type WorldProgress = {
   expeditions: Partial<Record<ExpeditionId, ExpeditionRecord>>;
   /** Hidden spots found on the map (added later; older saves have none). */
   secrets: SecretId[];
+  sideRoutes?: Partial<Record<SideRouteId, { clears: number }>>;
 };
 
 export function createWorldProgress(): WorldProgress {
@@ -49,7 +51,18 @@ export function normalizeWorldProgress(raw: unknown): WorldProgress {
   if (Array.isArray(raw.secrets)) {
     progress.secrets = SECRET_IDS.filter((id) => (raw.secrets as unknown[]).includes(id));
   }
+  if (isRecord(raw.sideRoutes)) {
+    progress.sideRoutes = {};
+    for (const { id } of WORLD_SIDE_ROUTES) {
+      const record = raw.sideRoutes[id];
+      if (isRecord(record)) progress.sideRoutes[id] = { clears: count(record.clears) };
+    }
+  }
   return progress;
+}
+
+export function recordSideRouteClear(progress: WorldProgress, id: SideRouteId): WorldProgress {
+  return { ...progress, sideRoutes: { ...progress.sideRoutes, [id]: { clears: (progress.sideRoutes?.[id]?.clears ?? 0) + 1 } } };
 }
 
 export function loadWorldProgress(): WorldProgress {

@@ -10,6 +10,7 @@ import {
 import { buildSaveSnapshot, loadSave, writeSave } from './savegame.ts';
 import { battleReducer, createInitialBattleState } from '../hooks/battle/battleReducer.ts';
 import { getLevelMaxHp } from './playerHp.ts';
+import { WORLD_SIDE_ROUTES } from '../data/worldSideRoutes.ts';
 
 function seeded(seed) {
   let state = seed >>> 0;
@@ -116,4 +117,23 @@ test('expedition saves resume on the map or mid-battle with every route intact',
   assert.equal(writeSave(broken), true);
   assert.equal(loadSave(), null, 'unknown lanes are rejected');
   assert.equal(isSerialExpeditionRun({ ...save(atMap, 2).expedition, expeditionId: 'moon' }), false);
+});
+
+test('the third lane and named side route survive full save serialization and sprite hydration', () => {
+  const expedition = getExpedition('hydra');
+  const plan = buildExpeditionPlan(expedition, seeded(71), ['fire'], WORLD_SIDE_ROUTES.map((route) => route.secret));
+  let run = createExpeditionRun(plan, buildExpeditionLanes(plan, expedition, seeded(81), ['fire']));
+  run = chooseExpeditionRoute(arriveAtMap(run), 0);
+  run = chooseExpeditionRoute(arriveAtMap(run), 2);
+  const snapshot = buildSaveSnapshot({
+    battleMode: 'single', timedMode: true, nextRound: 2, starter: STARTERS[0], allySub: null, coopActiveSlot: 'main',
+    battle: { ...createInitialBattleState(), pLvl: 3, pHp: 50 }, enemies: expeditionRoster(run), expedition: run,
+  });
+  assert.equal(writeSave(snapshot), true);
+  const restored = loadSave()?.expedition;
+  assert.ok(restored);
+  assert.equal(restored.lanes.length, 3);
+  assert.equal(chosenOption(restored, 2).sideRouteId, 'frost_cove');
+  assert.equal(expeditionRoster(restored)[2].id, 'wild_starter_tiger');
+  assert.equal(restored.lanes[2][2].svgFn(), run.lanes[2][2].svgFn());
 });

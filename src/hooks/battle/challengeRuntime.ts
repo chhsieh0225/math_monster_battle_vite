@@ -10,6 +10,7 @@ import type {
   TowerProgress,
 } from '../../types/challenges.ts';
 import { resolveModifiers } from '../../utils/challengeModifiers.ts';
+import { BOSS_IDS, MONSTER_CONFIGS } from '../../data/monsterConfigs.ts';
 
 type RosterEnemy = {
   lvl?: number;
@@ -181,10 +182,18 @@ export function buildTowerChallengeRoster<T extends RosterEnemy>(
   if (!activeFloor) return [...baseRoster];
 
   const slots = clampEnemyCount(activeFloor?.battle?.enemyCount);
+  const bossGate = activeFloor.battle.enemyTier === 'boss';
+  const pool = baseRoster.filter((enemy) => BOSS_IDS.has(String(enemy.id)) === bossGate);
+  if (pool.length === 0) throw new Error(`Tower floor ${activeFloor.floor} has no ${bossGate ? 'boss' : 'ordinary'} encounter`);
   const tuned: T[] = [];
   for (let slot = 0; slot < slots; slot += 1) {
-    const enemy = baseRoster[slot % baseRoster.length];
+    const index = (bossGate ? Math.floor(activeFloor.floor / 5) - 1 : activeFloor.floor - 1) + slot;
+    let enemy = pool[Math.max(0, index) % pool.length];
     if (!enemy) continue;
+    // Campaign bosses carry end-of-run scaling; the tower must apply its own
+    // floor scaling once, not stack it on top of a level-ten campaign boss.
+    const config = bossGate ? MONSTER_CONFIGS.find((item) => item.id === enemy.id) : undefined;
+    if (config) enemy = { ...enemy, hp: config.hp, maxHp: config.hp, atk: config.atk, lvl: 1 };
     tuned.push(tuneTowerEnemy(enemy, activeFloor, slot));
   }
   return tuned.length > 0 ? tuned : [...baseRoster];

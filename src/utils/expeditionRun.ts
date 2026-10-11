@@ -6,6 +6,8 @@
 import { EXPEDITION_FLOORS, REGION_IDS, getExpedition, type ExpeditionId, type RegionId } from '../data/worldMap.ts';
 import type { ExpeditionPlan, RouteEvent, RouteOption } from './expeditionPlanner.ts';
 import type { EnemyVm } from '../types/battle';
+import { getSideRoute } from '../data/worldSideRoutes.ts';
+import { addUnlockedSideRoutes, buildExpeditionLane } from './expeditionPlanner.ts';
 
 export type ExpeditionRun = {
   expeditionId: ExpeditionId;
@@ -29,6 +31,15 @@ export const ROUTE_TUNING = {
 
 export function createExpeditionRun(plan: ExpeditionPlan, lanes: EnemyVm[][]): ExpeditionRun {
   return { expeditionId: plan.expeditionId, plan, lanes, path: [0], atMap: false };
+}
+
+export function unlockExpeditionSideRoutes(run: ExpeditionRun, secrets: readonly string[], excluded: readonly string[], pickIndex: (length: number) => number): ExpeditionRun {
+  const plan = addUnlockedSideRoutes(run.plan, secrets, excluded, run.path.length);
+  const expedition = getExpedition(run.expeditionId);
+  if (plan === run.plan || !expedition) return run;
+  const generated = buildExpeditionLane(plan, expedition, pickIndex, excluded, 2);
+  const branchLane = generated.map((enemy, floor) => run.plan.floors[floor].options[2] ? run.lanes[2][floor] : enemy);
+  return { ...run, plan, lanes: [run.lanes[0], run.lanes[1], branchLane] };
 }
 
 /** The run's enemy list in floor order, following the chosen path (lane 0 for floors not reached yet). */
@@ -116,7 +127,8 @@ function isRouteOption(value: unknown): value is RouteOption {
     && REGION_IDS.includes(value.region as RegionId)
     && typeof value.tier === 'string' && TIERS.has(value.tier)
     && (value.event === null || (typeof value.event === 'string' && EVENTS.has(value.event)))
-    && (value.kind === undefined || (typeof value.kind === 'string' && KINDS.has(value.kind)));
+    && (value.kind === undefined || (typeof value.kind === 'string' && KINDS.has(value.kind)))
+    && (value.sideRouteId === undefined || Boolean(getSideRoute(value.sideRouteId)));
 }
 
 /** Structural check of a saved run; enemies are validated by the caller. */
@@ -125,12 +137,13 @@ export function isSerialExpeditionRun(value: unknown): value is SerialExpedition
   if (typeof value.atMap !== 'boolean' || !Array.isArray(value.path) || !Array.isArray(value.lanes)) return false;
   const plan = value.plan;
   if (!isRecord(plan) || plan.expeditionId !== value.expeditionId || !Array.isArray(plan.floors)) return false;
-  if (plan.floors.length !== EXPEDITION_FLOORS || value.lanes.length !== 2) return false;
+  if (plan.floors.length !== EXPEDITION_FLOORS || value.lanes.length < 2 || value.lanes.length > 3) return false;
   const floorsOk = plan.floors.every((floor, index) => isRecord(floor)
     && floor.floor === index
     && Array.isArray(floor.options)
-    && floor.options.length >= 1 && floor.options.length <= 2
-    && floor.options.every(isRouteOption));
+    && floor.options.length >= 1 && floor.options.length <= (value.lanes as unknown[]).length
+    && floor.options.every((option) => isRouteOption(option) && (!option.sideRouteId || (getSideRoute(option.sideRouteId)?.floors.includes(index)
+      && getSideRoute(option.sideRouteId)?.region === option.region && option.kind !== 'spring' && option.tier !== 'boss'))));
   if (!floorsOk) return false;
   if (!value.lanes.every((lane) => Array.isArray(lane) && lane.length === EXPEDITION_FLOORS)) return false;
   const path = value.path as unknown[];

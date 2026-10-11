@@ -421,6 +421,16 @@ button.wm-marker {
   grid-template-columns: 1fr;
 }
 
+.wm-choices.has-branch > :last-child { grid-column: 1 / -1; }
+.wm-side-journal { margin-top: 14px; color: #dbc9a7; font-size: 12px; }
+.wm-side-journal summary { cursor: pointer; font-weight: 700; }
+.wm-side-journal p { display: grid; gap: 4px; border-top: 1px solid #dbc9a733; padding-top: 8px; }
+
+@media (min-width: 760px) {
+  .wm-choices.has-branch { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .wm-choices.has-branch > :last-child { grid-column: auto; }
+}
+
 .wm-choice {
   display: flex;
   flex-direction: column;

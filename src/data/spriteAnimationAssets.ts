@@ -14,6 +14,13 @@ export type SpriteAnimationAsset = {
 
 export const SPRITE_ATLAS = { width: 512, height: 384, columns: 4, rows: 2 } as const;
 export const SPRITE_ANIMATION_ASSETS = {
+  venom_mantis: { file: 'venom-mantis-v1.webp', footX: 286, hit: { x: 256, y: 216 }, bounds: [70, 63, 441, 368] },
+  mire_toad: { file: 'mire-toad-v1.webp', footX: 264, hit: { x: 256, y: 229 }, bounds: [15, 90, 498, 368] },
+  night_bat: { file: 'night-bat-v1.webp', footX: 309, hit: { x: 256, y: 230 }, bounds: [14, 91, 497, 368] },
+  chain_wraith: { file: 'chain-wraith-v1.webp', footX: 209, hit: { x: 256, y: 214 }, bounds: [16, 59, 497, 368] },
+  thunder_raptor: { file: 'thunder-raptor-v1.webp', footX: 298, hit: { x: 256, y: 201 }, bounds: [52, 33, 460, 368] },
+  crystal_crab: { file: 'crystal-crab-v1.webp', footX: 226, hit: { x: 256, y: 252 }, bounds: [14, 136, 497, 368] },
+  dream_weaver: { file: 'dream-weaver-v1.webp', footX: 354, hit: { x: 256, y: 223 }, bounds: [15, 77, 497, 368] },
   limit_knight: {
     file: 'limit-knight-v1.webp', footX: 217, hit: { x: 217, y: 220 },
     bounds: [14, 30, 497, 368],

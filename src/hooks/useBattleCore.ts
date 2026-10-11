@@ -42,6 +42,7 @@ import {
 } from '../data/constants';
 import {
   localizeEnemy,
+  localizeEnemyRoster,
   localizeSceneName,
   localizeStarter,
 } from '../utils/contentLocalization.ts';
@@ -151,6 +152,7 @@ import {
   expeditionRoster,
   isExpeditionEnemy,
   isSpringOption,
+  unlockExpeditionSideRoutes,
 } from '../utils/expeditionRun.ts';
 import { springRewards } from '../utils/reviewSpring.ts';
 import {
@@ -160,6 +162,7 @@ import {
   recordExpeditionFloor,
   recordRegionVisit,
   recordRegionWin,
+  recordSideRouteClear,
   recordSecretFound,
   isSecretFound,
   saveWorldProgress,
@@ -259,6 +262,7 @@ export function useBattle() {
     pickIndex,
     locale,
     hasChallengeRun,
+    discoveredSecrets: worldProgress.secrets,
   });
   const pvpStore = usePvpState();
   const {
@@ -796,6 +800,7 @@ export function useBattle() {
   });
 
   const handleVictoryContextRef = useBattleStateRef({
+    expeditionRunRef,
     sr,
     randInt,
     getPlayerMaxHp,
@@ -816,7 +821,12 @@ export function useBattle() {
     const defeatedEnemy = ctx.sr.current.enemy;
     const region = defeatedEnemy?.campaignRegion as RegionId | undefined;
     if (ctx.sr.current.battleMode === 'single' && isExpeditionEnemy(defeatedEnemy) && region && REGION_IDS.includes(region)) {
-      ctx.updateWorldProgress((prev) => recordRegionWin(prev, region));
+      const run = ctx.expeditionRunRef.current;
+      const branch = run ? chosenOption(run, ctx.sr.current.round)?.sideRouteId : undefined;
+      ctx.updateWorldProgress((prev) => {
+        const next = recordRegionWin(prev, region);
+        return branch ? recordSideRouteClear(next, branch) : next;
+      });
     }
     runBattleVictory({
       victoryInput: {
@@ -1213,6 +1223,11 @@ export function useBattle() {
     const secret = getSecret(id);
     if (!secret || isSecretFound(worldProgressRef.current, secret.id)) return;
     updateWorldProgress((prev) => recordSecretFound(prev, secret.id));
+    const run = expeditionRunRef.current;
+    if (run) {
+      const next = unlockExpeditionSideRoutes(run, worldProgressRef.current.secrets, [sr.current.starter?.id ?? ''], pickIndex);
+      if (next !== run) setExpeditionRun({ ...next, lanes: next.lanes.map((lane) => localizeEnemyRoster(lane, locale)) });
+    }
     const result = applyItemGrants(loadInventory(), secret.reward, `secret:${secret.id}`);
     if (result.changed) saveInventory(result.inventory);
     setInventory(result.inventory);

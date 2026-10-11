@@ -380,6 +380,7 @@ describe('Monster registry — scene-type consistency', () => {
 // ─── 10. Race (種族) field completeness ─────────────────────────
 
 const VALID_RACES = new Set([
+  'insect', 'amphibian', 'bat', 'bird', 'crab', 'fox',
   'slime', 'fire_lizard', 'ghost', 'mushroom', 'dragon',
   'golumn', 'candy', 'butterfly', 'guardian', 'boss',
   // starter races (我方角色種族)

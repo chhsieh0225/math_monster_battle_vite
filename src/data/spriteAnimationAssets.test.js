@@ -14,19 +14,21 @@ const refinedRegistration = JSON.parse(readFileSync(new URL('../../public/sprite
 const unifiedRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-unified-v2.json', import.meta.url), 'utf8'));
 const guardianRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-guardians-v1.json', import.meta.url), 'utf8'));
 const guardianKeys = Object.values(guardianRegistration.assets).map((record) => record.key);
-const records = { ...registration.assets, ...wolfRegistration.assets, ...fireRegistration.assets, ...rosterRegistration.assets, ...refinedRegistration.assets, ...unifiedRegistration.assets, ...guardianRegistration.assets };
+const frontierRegistration = JSON.parse(readFileSync(new URL('../../public/sprites/visual-pilot/registration-frontier-v1.json', import.meta.url), 'utf8'));
+const frontierKeys = Object.values(frontierRegistration.assets).map((record) => record.key);
+const records = { ...registration.assets, ...wolfRegistration.assets, ...fireRegistration.assets, ...rosterRegistration.assets, ...refinedRegistration.assets, ...unifiedRegistration.assets, ...guardianRegistration.assets, ...frontierRegistration.assets };
 
-test('all 55 forms have explicit factory identities and complete eight-pose art', () => {
-  assert.equal(Object.keys(sprites.SPRITE_IMGS).length, 55);
-  assert.equal(Object.keys(PROFILES).length, 55);
+test('all 62 forms have explicit factory identities and complete eight-pose art', () => {
+  assert.equal(Object.keys(sprites.SPRITE_IMGS).length, 62);
+  assert.equal(Object.keys(PROFILES).length, 62);
   for (const [key, profile] of Object.entries(PROFILES)) {
     assert.equal(sprites.getSpriteProfileKey(sprites[key]), key);
     assert.ok(profile.imgKey in sprites.SPRITE_IMGS);
     assert.ok(getSpriteAnimationAsset(key), `${key} must not silently fall back to original art`);
   }
   assert.deepEqual(Object.keys(SPRITE_ANIMATION_ASSETS).sort(), Object.keys(sprites.SPRITE_IMGS).sort());
-  assert.equal(new Set(Object.values(SPRITE_ANIMATION_ASSETS).map((art) => art.file)).size, 55);
-  assert.equal(Object.keys(records).length, 106, 'previous drawings retained for comparison and rollback');
+  assert.equal(new Set(Object.values(SPRITE_ANIMATION_ASSETS).map((art) => art.file)).size, 62);
+  assert.equal(Object.keys(records).length, 113, 'previous drawings retained for comparison and rollback');
   assert.equal(getSpriteAnimationAsset('missing'), null);
   assert.equal(getSpriteAnimationAsset(), null);
   assert.equal(sprites.getSpriteProfileKey(() => ''), undefined);
@@ -55,7 +57,7 @@ test('unified painted art completes the remaining 49 forms with unique sources a
   assert.equal(sources.length, 49);
   assert.equal(new Set(sources.map((source) => source.source)).size, 49);
   assert.deepEqual(sources.map((source) => source.key).sort(), Object.keys(SPRITE_ANIMATION_ASSETS)
-    .filter((key) => key !== 'ghost' && key !== 'player_fire0' && !guardianKeys.includes(key)).sort());
+    .filter((key) => key !== 'ghost' && key !== 'player_fire0' && !guardianKeys.includes(key) && !frontierKeys.includes(key)).sort());
   assert.equal(Object.keys(unifiedRegistration.assets).length, 49);
   for (const source of sources) {
     const record = unifiedRegistration.assets[source.output];

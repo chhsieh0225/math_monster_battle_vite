@@ -13,7 +13,7 @@ test('body weight follows physical artwork, including variants and the second bo
     (groups[family] ||= []).push(key);
   }
   assert.deepEqual(Object.fromEntries(Object.entries(groups).map(([key, values]) => [key, values.length])), {
-    grounded: 23, heavy: 9, soft: 14, hover: 7, wing: 2,
+    grounded: 25, heavy: 10, soft: 15, hover: 8, wing: 4,
   });
   for (const key of ['boss', 'boss_2nd_phase', 'boss_hydra', 'boss_crazy_dragon', 'candy_knight']) {
     assert.equal(getSpriteBodyMotion(key), 'heavy');

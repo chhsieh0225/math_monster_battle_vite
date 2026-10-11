@@ -1,7 +1,7 @@
 /**
  * Expedition planning: a 10-floor journey across the world map.
- * Floor 1 is the grassland start, floors 2-9 offer two routes, floor 10 is the boss.
- * Both routes are generated up front so the player can see what each choice means.
+ * Floor 1 is the grassland start, floors 2-9 offer two routes plus unlocked side
+ * routes, and floor 10 is the boss. Enemies are generated before choosing.
  */
 import { BALANCE_CONFIG } from '../data/balanceConfig.ts';
 import { getDualEff, getEff } from '../data/typeEffectiveness.ts';
@@ -16,6 +16,7 @@ import {
 import type { StageWave } from '../data/stageConfigs.ts';
 import type { EnemyVm } from '../types/battle';
 import { buildRoster, sceneHasWildMonster } from './rosterBuilder.ts';
+import { WORLD_SIDE_ROUTES, getSideRoute, type SideRouteId } from '../data/worldSideRoutes.ts';
 
 export type RouteEvent = 'healing_spring' | 'focus_surge' | 'hazard_ambush';
 export type RouteTier = 'normal' | 'elite' | 'boss';
@@ -23,6 +24,7 @@ export type RouteTier = 'normal' | 'elite' | 'boss';
 export type RouteKind = 'battle' | 'spring';
 
 export type RouteOption = {
+  sideRouteId?: SideRouteId;
   region: RegionId;
   tier: RouteTier;
   event: RouteEvent | null;
@@ -83,6 +85,7 @@ export function buildExpeditionPlan(
   expedition: Expedition,
   pickIndex: PickIndex,
   excludedStarterIds: readonly string[] = [],
+  secrets: readonly string[] = [],
 ): ExpeditionPlan {
   const floors: ExpeditionFloor[] = [];
   let previous: RegionId[] = [START_REGION];
@@ -109,10 +112,28 @@ export function buildExpeditionPlan(
     floors.push({ floor, options });
     previous = [a, b];
   }
-  return { expeditionId: expedition.id, floors };
+  return addUnlockedSideRoutes({ expeditionId: expedition.id, floors }, secrets, excludedStarterIds);
+}
+
+/** Never replace existing options or add a branch behind the player's current floor. */
+export function addUnlockedSideRoutes(plan: ExpeditionPlan, secrets: readonly string[], excluded: readonly string[] = [], fromFloor = 1): ExpeditionPlan {
+  let changed = false;
+  const floors = plan.floors.map((floor) => {
+    if (floor.floor < fromFloor || floor.options.length >= 3) return floor;
+    const branch = WORLD_SIDE_ROUTES.find((route) => route.floors.includes(floor.floor)
+      && secrets.includes(route.secret)
+      && !(route.id === 'frost_cove' && excluded.includes('tiger')));
+    if (!branch || floor.options.some((option) => option.sideRouteId === branch.id)) return floor;
+    changed = true;
+    const option: RouteOption = { region: branch.region, tier: branch.id === 'frost_cove' ? 'normal' : 'elite', event: null, sideRouteId: branch.id };
+    return { ...floor, options: [...floor.options, option] };
+  });
+  return changed ? { ...plan, floors } : plan;
 }
 
 function waveFor(option: RouteOption, floor: number, expedition: Expedition): StageWave {
+  const branch = getSideRoute(option.sideRouteId);
+  if (branch) return { monsterId: branch.monsterId, sceneType: WORLD_REGIONS[branch.region].scene };
   if (floor === 0) return { monsterId: 'slime', slimeType: 'grass', sceneType: 'grass' };
   if (option.tier === 'boss') return { monsterId: expedition.bossId, sceneType: WORLD_REGIONS[expedition.region].scene };
   return { sceneType: WORLD_REGIONS[option.region].scene };
@@ -153,24 +174,26 @@ export function buildExpeditionLanes(
   pickIndex: PickIndex,
   excludedStarterIds: readonly string[] = [],
 ): EnemyVm[][] {
-  const lanes = [0, 1].map((lane) => {
-    const waves = plan.floors.map((floor) => waveFor(floor.options[lane] ?? floor.options[0], floor.floor, expedition));
-    const roster = buildRoster(pickIndex, 'single', {
-      singleWaves: waves,
-      disableRandomSwap: true,
-      enableStarterEncounters: false,
-      excludedStarterIds,
-      fixedBossIds: true,
-    }) as EnemyVm[];
-    return roster.map((enemy, floor) => {
-      const option = plan.floors[floor].options[lane] ?? plan.floors[floor].options[0];
-      return tuneEnemy(enemy, option, floor, lane, expedition);
-    });
-  });
+  const lanes = Array.from({ length: Math.max(2, ...plan.floors.map((floor) => floor.options.length)) }, (_, lane) => buildExpeditionLane(plan, expedition, pickIndex, excludedStarterIds, lane));
   plan.floors.forEach((floor, index) => {
-    if (floor.options.length < 2) lanes[1][index] = lanes[0][index];
+    if (floor.options.length < 2) lanes.slice(1).forEach((lane) => { lane[index] = lanes[0][index]; });
   });
   return lanes;
+}
+
+export function buildExpeditionLane(plan: ExpeditionPlan, expedition: Expedition, pickIndex: PickIndex, excludedStarterIds: readonly string[], lane: number): EnemyVm[] {
+  const waves = plan.floors.map((floor) => waveFor(floor.options[lane] ?? floor.options[0], floor.floor, expedition));
+  const roster = buildRoster(pickIndex, 'single', {
+    singleWaves: waves,
+    disableRandomSwap: true,
+    enableStarterEncounters: false,
+    excludedStarterIds,
+    fixedBossIds: true,
+  }) as EnemyVm[];
+  return roster.map((enemy, floor) => {
+    const option = plan.floors[floor].options[lane] ?? plan.floors[floor].options[0];
+    return tuneEnemy(enemy, option, floor, lane, expedition);
+  });
 }
 
 export type Matchup = 'advantage' | 'disadvantage' | 'neutral';

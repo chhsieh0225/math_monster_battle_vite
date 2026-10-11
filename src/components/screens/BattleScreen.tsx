@@ -5,7 +5,7 @@ import { useBattleParallax } from '../../hooks/useBattleParallax';
 import { useBattleArenaScale } from '../../hooks/useBattleArenaScale.ts';
 import { SCENES } from '../../data/scenes';
 import { BG_IMGS_LOW } from '../../data/sprites.ts';
-import { getGuardianBackground } from '../../data/guardianEncounters.ts';
+import { getEncounterBackground } from '../../data/encounterBackgrounds.ts';
 import { getPersonalityCue } from '../../data/enemyPersonalities.ts';
 import { PVP_BALANCE } from '../../data/pvpBalance';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
@@ -368,7 +368,7 @@ function BattleScreenComponent({
   const memoSceneStyles = useMemo(() => {
     if (!coreStatic) return null;
     const { scene, sceneKey, layout } = coreStatic;
-    const resolvedBg = getGuardianBackground(coreStatic.enemy.id)
+    const resolvedBg = getEncounterBackground(coreStatic.enemy.id)
       ?? resolveBattleSceneBg(sceneKey, UX.lowPerfMode) ?? scene.bgImg;
     const bgStyle: CSSProperties | undefined = resolvedBg
       ? { backgroundImage: `url(${resolvedBg})` }

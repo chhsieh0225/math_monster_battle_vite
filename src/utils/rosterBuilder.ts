@@ -489,7 +489,11 @@ export function buildRoster(
     }
     // When the wave has an explicit sceneType, constrain variants to matching mType.
     const sceneRequiredMType = wave.sceneType ? SCENE_MTYPE_MAP[wave.sceneType] : undefined;
-    const resolvedId = resolveVariantMonsterId(baseMonsterId, pickIndex, sceneRequiredMType);
+    // Scene pools already contain every variant. Drawing variants again biases
+    // lanterns/mud golems to 75% and defeats the previous-race diversity filter.
+    const resolvedId = wave.monsterId
+      ? resolveVariantMonsterId(baseMonsterId, pickIndex, sceneRequiredMType)
+      : baseMonsterId;
     const b = MONSTER_BY_ID.get(resolvedId);
     if (!b) throw new Error(`[rosterBuilder] unknown monsterId: ${resolvedId}`);
     const sc = STAGE_SCALE_BASE + i * STAGE_SCALE_STEP;

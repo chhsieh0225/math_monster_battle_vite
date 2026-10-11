@@ -194,6 +194,13 @@ export const BALANCE_CONFIG = {
       slime: ['slime', 'colorful_butterfly'],
     },
     baseStatsById: {
+      venom_mantis: { hp: 46, atk: 9 },
+      mire_toad: { hp: 62, atk: 7 },
+      night_bat: { hp: 43, atk: 8 },
+      chain_wraith: { hp: 58, atk: 8 },
+      thunder_raptor: { hp: 45, atk: 10 },
+      crystal_crab: { hp: 65, atk: 7 },
+      dream_weaver: { hp: 47, atk: 7 },
       slime: { hp: 40, atk: 6 },
       fire: { hp: 55, atk: 9 },
       ghost: { hp: 50, atk: 8 },

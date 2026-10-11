@@ -22,6 +22,13 @@ const skill = (skillId: string, name: string, nameEn: string, kind: EnemySkill['
 
 // Stable IDs bind the announcement, telegraph, choreography and damage plan.
 export const ENEMY_SKILLS: Record<string, readonly [EnemySkill, EnemySkill]> = {
+  venom_mantis: [skill('monster:venom_scythe', '碧毒雙鐮', 'Jade Venom Scythes'), skill('monster:venom_cross', '螳影交錯', 'Mantis Crosscut', 'heavy', 1)],
+  mire_toad: [skill('monster:lotus_breath', '沼燈蓮息', 'Lantern Lotus Breath', 'mend'), skill('monster:mire_tide', '毒蓮翻潮', 'Toxic Lotus Tide', 'heavy', 1)],
+  night_bat: [skill('monster:moon_siphon', '蝕月汲取', 'Eclipse Siphon', 'drain'), skill('monster:eclipse_wings', '月蝠連翼', 'Moonbat Wingfall', 'heavy', 1)],
+  chain_wraith: [skill('monster:shackle_lash', '鎖魂鏈擊', 'Soulshackle Lash'), skill('monster:prison_seal', '幽獄封印', 'Spectral Prison', 'heavy', 1)],
+  thunder_raptor: [skill('monster:thunder_dive', '霆羽俯衝', 'Thundercrest Dive'), skill('monster:storm_feathers', '天雷落羽', 'Thunderfeather Rain', 'heavy', 1)],
+  crystal_crab: [skill('monster:crystal_clamp', '晶鉗重擊', 'Crystal Clamp'), skill('monster:crystal_bastion', '晶盾崩陣', 'Crystal Bastion', 'heavy', 1)],
+  dream_weaver: [skill('monster:dream_silk', '夢絲織補', 'Dreamsilk Weave', 'mend'), skill('monster:star_shuttle', '星梭穿夢', 'Starshuttle Pierce', 'heavy', 1)],
   slime_grass: [skill('monster:slime', '黏液彈', 'Goo Shot'), skill('monster:slime_canopy', '巨木震波', 'Canopy Quake', 'heavy', 1)],
   slime_fire: [skill('monster:slime_flare', '熔漿彈', 'Magma Glob'), skill('monster:slime_eruption', '熔核噴發', 'Core Eruption', 'heavy', 1)],
   slime_water: [skill('monster:slime_bubble', '汲水泡', 'Siphon Bubble', 'drain'), skill('monster:slime_pressure', '深海重壓', 'Abyss Pressure', 'heavy', 1)],
@@ -57,6 +64,7 @@ const WILD_SKILLS: Record<string, readonly [EnemySkill, EnemySkill]> = {
   tiger: [skill('tiger:0', '冰晶彈', 'Ice Crystal'), skill('tiger:1', '霜鏡轉換', 'Frost Mirror', 'heavy', 1)],
 };
 const ELITES = new Set(['dragon', 'golumn', 'golumn_mud', 'candy_knight']);
+const TRAINED_WILDLIFE = new Set(['venom_mantis', 'mire_toad', 'night_bat', 'chain_wraith', 'thunder_raptor', 'crystal_crab', 'dream_weaver']);
 const BASIC = skill('enemy:basic', '基本攻擊', 'Basic Attack', 'basic');
 export const ENEMY_SKILL_DISRUPT_SCALE = .65;
 
@@ -74,7 +82,8 @@ export function getEnemySkill(enemy: EnemySkillActor, turn = 0, ultimate = false
   const family = id.startsWith('slime') ? `slime_${enemy.mType || 'grass'}` : id.replace(/Evolved$/, '');
   const repertoire = id.startsWith('wild_starter_') ? WILD_SKILLS[id.slice(13)] : ENEMY_SKILLS[family];
   if (!repertoire) return BASIC;
-  const expanded = enemy.isEvolved || id.endsWith('Evolved') || ELITES.has(id);
+  const expanded = enemy.isEvolved || id.endsWith('Evolved') || ELITES.has(id)
+    || (TRAINED_WILDLIFE.has(id) && (enemy.lvl ?? 1) >= 5);
   return repertoire[expanded && tick % 4 === 3 ? 1 : 0];
 }
 

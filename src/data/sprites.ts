@@ -4,6 +4,13 @@ const BASE = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL || '
 
 // Sprite image paths — loaded as static assets from public/
 export const SPRITE_IMGS = {
+  venom_mantis: `${BASE}sprites/venom_mantis.png`,
+  mire_toad: `${BASE}sprites/mire_toad.png`,
+  night_bat: `${BASE}sprites/night_bat.png`,
+  chain_wraith: `${BASE}sprites/chain_wraith.png`,
+  thunder_raptor: `${BASE}sprites/thunder_raptor.png`,
+  crystal_crab: `${BASE}sprites/crystal_crab.png`,
+  dream_weaver: `${BASE}sprites/dream_weaver.png`,
   slime: `${BASE}sprites/slime.png`,
   fire: `${BASE}sprites/fire.png`,
   ghost: `${BASE}sprites/ghost.png`,
@@ -137,6 +144,13 @@ function fromProfile(name: string): SvgFactory {
 // ─── Exports — one per sprite ────────────────────────────────────────
 
 export const slimeSVG = fromProfile('slimeSVG');
+export const venomMantisSVG = fromProfile('venomMantisSVG');
+export const mireToadSVG = fromProfile('mireToadSVG');
+export const nightBatSVG = fromProfile('nightBatSVG');
+export const chainWraithSVG = fromProfile('chainWraithSVG');
+export const thunderRaptorSVG = fromProfile('thunderRaptorSVG');
+export const crystalCrabSVG = fromProfile('crystalCrabSVG');
+export const dreamWeaverSVG = fromProfile('dreamWeaverSVG');
 
 // ── Slime variant PNGs (dedicated sprites with white eyes) ──
 export const slimeRedSVG    = fromProfile('slimeRedSVG');

@@ -1,4 +1,11 @@
 import {
+  venomMantisSVG,
+  mireToadSVG,
+  nightBatSVG,
+  chainWraithSVG,
+  thunderRaptorSVG,
+  crystalCrabSVG,
+  dreamWeaverSVG,
   slimeSVG, fireLizardSVG, ghostSVG, ghostLanternSVG, mushroomSVG, dragonSVG, darkLordSVG, bossHydraSVG, bossCrazyDragonSVG, bossSwordGodSVG, golumnSVG, golumnMudSVG,
   slimeEvolvedSVG, slimeElectricEvolvedSVG, slimeFireEvolvedSVG, slimeWaterEvolvedSVG, slimeSteelEvolvedSVG, slimeDarkEvolvedSVG,
   fireEvolvedSVG, ghostEvolvedSVG, dragonEvolvedSVG,
@@ -23,6 +30,13 @@ import {
 export { TYPE_EFF, getEff } from './typeEffectiveness.ts';
 
 export const SPRITE_MAP: Record<string, SpriteFn> = {
+  venomMantisSVG,
+  mireToadSVG,
+  nightBatSVG,
+  chainWraithSVG,
+  thunderRaptorSVG,
+  crystalCrabSVG,
+  dreamWeaverSVG,
   slimeSVG,
   fireLizardSVG,
   ghostSVG,

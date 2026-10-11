@@ -1,0 +1,20 @@
+{
+  "generator": "Built-in image_gen",
+  "sources": [
+    {
+      "key": "frost_cove",
+      "source": "frost_cove.png",
+      "prompt": "Use case: stylized-concept. Production side-view battle background for a polished hand-painted anime RPG. A hidden FROST TIDE COVE beneath the warm southern coast of a fantasy world map: pale turquoise frozen tidal pools, a distant sea arch with hanging blue icicles, frosty white reeds, old coral stone stairs leading into a sheltered sea cave. Dawn sun glints amber on the distant ocean beyond, visually connects to the coast rather than a separate polar continent. Landscape 16:9, 1536x864 or higher. No creatures, people, lettering, UI or logo. Both left and right battle staging areas, at 25% and 75% width and lower-middle 65% height, are open unobstructed broad flat icy sand; spacious muted middle ground. Details mostly above horizon and on far outer edges, foreground plants only bottom 8%; do not hide standing characters. Soft richly painted atmospheric depth, precise icy textures, crisp anime painted finish, not pixel art, not 3D. Calm scene with an adventurous sense of mystery."
+    },
+    {
+      "key": "lantern_mire",
+      "source": "lantern_mire.png",
+      "prompt": "Use case: stylized-concept. Single production 16:9 side-view battle background for a polished HAND-PAINTED ANIME fantasy RPG, consistent with a hand-painted fantasy world map. A jade lantern reed marsh bordering a poisonous forest: gigantic curling lotus leaves at the far sides, pale green still water behind the arena, tiny amber luminous pods hanging from distant reeds, an ancient mossy stone lantern and fallen root bridge in the far background. Distinct rich emerald, teal, warm gold palette; welcoming adventure with a hint of poison, no horror. Deep layered painted atmosphere and finely drawn plant textures. Leave a very broad open muted moss-and-mud staging floor across the lower-middle half, particularly 25% and 75% width at 65% height, unobstructed; no foreground object hiding fighters. No characters, monsters, words, labels, logo, border or UI. Not pixel art, not 3D, not a photograph. Landscape 1536x864 or larger."
+    },
+    {
+      "key": "moonseal_court",
+      "source": "moonseal_court.png",
+      "prompt": "Use case: stylized-concept. Single polished HAND-PAINTED ANIME RPG battle background, landscape 16:9 1536x864 or larger. A moonseal courtyard on the approach to the dark king's fortress shown in a fantasy world map. Elegant half-ruined charcoal slate arcades and old bronze gate chains in the distant background, a thin crescent moon above broken spires, gentle teal lights in small ancient lanterns. Muted indigo sky, warm bronze accents, soft violet-blue atmospheric fog in the distance only. Beautiful adventurous fantasy, not horror. The middle and foreground are a broad clear matte blue-gray stone arena, empty uninterrupted staging areas at 25% and 75% width and 65% height; broken slabs only at bottommost 8% and outer edges. No foreground chains, pillars, foliage or mist obscuring fighters. Depth and coherent painted materials, restrained highlights so bright characters stand out. No characters, monsters, inscriptions, text, UI, logo or borders. Not pixel art, not 3D render, no photorealism."
+    }
+  ]
+}

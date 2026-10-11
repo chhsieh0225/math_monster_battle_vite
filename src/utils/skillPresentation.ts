@@ -1,7 +1,7 @@
 import { MAX_MOVE_LVL } from '../data/constants.ts';
 import { BOSS_IDS } from '../data/monsterConfigs.ts';
 import { getGuardianSkill } from '../data/guardianEncounters.ts';
-import type { EnemySkill } from '../data/enemySkills.ts';
+import { ENEMY_SKILLS, type EnemySkill } from '../data/enemySkills.ts';
 import type { AttackEffectVm } from '../types/battle.ts';
 
 export function getSkillMastery(level = 1) {
@@ -39,7 +39,7 @@ export function getEnemySkillEffect(enemy: { id?: string; mType?: string; lvl?: 
     signature: boss ? enemy.id : undefined,
     skillId: boss ? getCharacterSkillId(enemy.id, idx)
       : enemy.id?.startsWith('wild_starter_') ? getCharacterSkillId(enemy.id.slice('wild_starter_'.length), idx)
-      : enemy.id ? `monster:${enemy.id.startsWith('slime') ? 'slime' : enemy.id}` : undefined,
+      : enemy.id ? ENEMY_SKILLS[enemy.id]?.[0]?.skillId ?? `monster:${enemy.id.startsWith('slime') ? 'slime' : enemy.id}` : undefined,
   };
 }
 

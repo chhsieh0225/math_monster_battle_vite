@@ -93,6 +93,20 @@ export const CHARACTER_SKILL_RECIPES = {
 } satisfies Record<StarterId, readonly [SkillRecipe, SkillRecipe, SkillRecipe, SkillRecipe]>;
 
 const MONSTER_RECIPES: Record<string, SkillRecipe> = {
+  venom_scythe: r('slash', 'blade', 'M-44 28Q-36-34 34-36Q-3-18-44 28ZM-28 40Q-10-14 44-16Q20 14-28 40Z', '#d9f99d', '#34d399'),
+  venom_cross: r('slash', 'venom', `${blade} M-38-34Q12-16 36 38Q4 12-38-34Z`, '#fde68a', '#10b981'),
+  lotus_breath: r('wave', 'venom', 'M-40 16Q-22-20 0 16Q22-20 40 16Q0 46-40 16ZM0 16Q-26-18 0-38Q26-18 0 16Z', '#fde68a', '#2dd4bf'),
+  mire_tide: r('field', 'venom', `${wave} M0-40Q-16-12 0-4Q16-12 0-40Z`, '#fef08a', '#22c55e'),
+  moon_siphon: r('orbit', 'crescent', 'M6-38A39 39 0 1 0 6 38Q-28 0 6-38ZM22-18 32 2 16-4ZM32 12 38 28 20 20Z', '#e0e7ff', '#a78bfa'),
+  eclipse_wings: r('fall', 'wing', 'M0-22Q-26-48-44-10L-28-14-24 8-8 0 0 30 8 0 24 8 28-14 44-10Q26-48 0-22Z', '#c7d2fe', '#be718a'),
+  shackle_lash: r('lash', 'chain', 'M-40-8Q-28-30-16-8T8-8T32-8M-40 8Q-28 30-16 8T8 8T32 8M30-18 44 0 30 18 16 0Z', '#67e8f9', '#b48a55'),
+  prison_seal: r('field', 'chain', 'M-32-36H32V36H-32ZM-16-36V36M0-36V36M16-36V36M-40-18H40M-40 18H40', '#a5f3fc', '#475569'),
+  thunder_dive: r('rush', 'wing', `${bolt} M-40-30-18 4-34 12-8 18M40-30 18 4 34 12 8 18`, '#fef08a', '#38bdf8'),
+  storm_feathers: r('fall', 'bolt', `${bolt} M-32-32-40-2-24-10-30 24M34-20 22 6 40-2 26 32`, '#ffffff', '#facc15'),
+  crystal_clamp: r('slash', 'stone', 'M-44-22-22-36-4-8-18 6-4 32-32 18ZM44-22 22-36 4-8 18 6 4 32 32 18Z', '#fef3c7', '#d6a268'),
+  crystal_bastion: r('field', 'stone', `${crystal} M-38 30-42-8-26-24-18 30ZM38 30 42-8 26-24 18 30Z`, '#fde68a', '#a88a64'),
+  dream_silk: r('lash', 'mirror', 'M-44-20Q-16 36 12-20T44 20M-44 0Q-16-36 12 20T44-20M-28-30 28 30M28-30-28 30', '#fce7f3', '#f9a8d4'),
+  star_shuttle: r('shot', 'blade', 'M-44 0 0-14 44 0 0 14ZM-26 0H26M0-38 5-23 20-18 5-13 0 2-5-13-20-18-5-23Z', '#fef3c7', '#f9a8d4'),
   slime_canopy: r('field', 'vine', 'M-40 35Q-35-5-20-24L-10 5 0-40 10 5 20-24Q35-5 40 35Z', '#dcfce7', '#22c55e'),
   slime_flare: r('shot', 'flame', 'M-30 20Q-42-12-12-22L0-38 12-16Q42-10 30 20Z', '#fde68a', '#f97316'),
   slime_eruption: r('field', 'flame', 'M-42 34-28-15-14 10 0-44 14 10 28-15 42 34Z', '#fef08a', '#ef4444'),

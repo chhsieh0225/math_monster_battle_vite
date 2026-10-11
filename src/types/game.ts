@@ -194,6 +194,7 @@ export type EnemyPersonalityId =
 
 /** 種族（species grouping）— 與屬性 (mType) 正交。 */
 export type MonsterRace =
+  | 'insect' | 'amphibian' | 'bat' | 'bird' | 'crab' | 'fox'
   | "slime"
   | "fire_lizard"
   | "ghost"

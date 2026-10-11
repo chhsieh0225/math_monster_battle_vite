@@ -104,8 +104,8 @@ export function runBattleStartGame({
       ? getTowerChallengeSeedFn(challengeContext.plan)
       : null;
 
-  const buildRosterForRun: BuildNewRoster = (mode) => {
-    const baseRoster: EnemyVm[] = buildNewRoster(mode);
+  const buildRosterForRun: BuildNewRoster = (mode, options) => {
+    const baseRoster: EnemyVm[] = buildNewRoster(mode, options);
     if (challengeContext?.kind === 'daily') {
       return buildDailyChallengeRosterFn(baseRoster, challengeContext.plan);
     }

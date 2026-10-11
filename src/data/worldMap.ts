@@ -70,19 +70,19 @@ export type Expedition = {
 export const EXPEDITIONS: readonly Expedition[] = [
   {
     id: 'hydra', order: 1, bossId: 'boss_hydra', region: 'poison', power: 1,
-    stages: { early: ['water', 'candy', 'rock'], mid: ['candy', 'ghost', 'steel'], late: ['ghost', 'steel', 'poison'] },
+    stages: { early: ['water', 'grass', 'candy', 'rock', 'ghost'], mid: ['grass', 'water', 'candy', 'ghost', 'poison'], late: ['grass', 'water', 'ghost', 'steel', 'poison'] },
   },
   {
     id: 'sword_god', order: 2, bossId: 'boss_sword_god', region: 'heaven', power: 1.05,
-    stages: { early: ['rock', 'water', 'candy'], mid: ['steel', 'electric', 'rock'], late: ['electric', 'light', 'steel'] },
+    stages: { early: ['rock', 'water', 'candy', 'electric', 'steel'], mid: ['steel', 'electric', 'rock', 'light', 'grass'], late: ['electric', 'light', 'steel', 'water'] },
   },
   {
     id: 'crazy_dragon', order: 3, bossId: 'boss_crazy_dragon', region: 'burnt_warplace', power: 1.1,
-    stages: { early: ['rock', 'fire', 'candy'], mid: ['steel', 'ghost', 'fire'], late: ['light', 'ghost', 'burnt_warplace'] },
+    stages: { early: ['rock', 'fire', 'candy', 'dark'], mid: ['steel', 'ghost', 'fire', 'water', 'grass'], late: ['light', 'ghost', 'burnt_warplace', 'dark', 'water'] },
   },
   {
     id: 'dark_king', order: 4, bossId: 'boss', region: 'dark', power: 1.15,
-    stages: { early: ['fire', 'water', 'candy', 'rock'], mid: ['steel', 'electric', 'ghost', 'poison'], late: ['light', 'burnt_warplace', 'ghost', 'poison'] },
+    stages: { early: ['fire', 'water', 'candy', 'rock', 'dark'], mid: ['steel', 'electric', 'ghost', 'poison', 'dark', 'grass'], late: ['light', 'burnt_warplace', 'ghost', 'poison', 'dark', 'water'] },
   },
 ];
 

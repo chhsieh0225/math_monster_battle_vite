@@ -22,6 +22,7 @@ type UseBattleRosterStateArgs = {
   pickIndex: PickIndex;
   locale: string;
   hasChallengeRun: boolean;
+  discoveredSecrets?: readonly string[];
 };
 
 type CampaignNodeMeta = {
@@ -36,6 +37,7 @@ export function useBattleRosterState({
   pickIndex,
   locale,
   hasChallengeRun,
+  discoveredSecrets = [],
 }: UseBattleRosterStateArgs) {
   const campaignPlanRef = useRef<ReturnType<typeof buildCampaignRunPlan> | null>(null);
   // World-map expedition: queued by the map screen, consumed by the next single-mode roster build.
@@ -78,7 +80,7 @@ export function useBattleRosterState({
       if (pendingExpedition && !hasChallengeRun) {
         campaignPlanRef.current = null;
         const excluded = options.excludeStarterIds || [];
-        const plan = buildExpeditionPlan(pendingExpedition, pickIndex, excluded);
+        const plan = buildExpeditionPlan(pendingExpedition, pickIndex, excluded, discoveredSecrets);
         const lanes = buildExpeditionLanes(plan, pendingExpedition, pickIndex, excluded)
           .map((lane) => localizeEnemyRoster(lane, locale));
         const run = createExpeditionRun(plan, lanes);
@@ -103,7 +105,7 @@ export function useBattleRosterState({
 
       return localizeEnemyRoster(applyCampaignPlanToRoster(roster, campaignPlan), locale);
     },
-    [pickIndex, locale, hasChallengeRun, setExpeditionRun],
+    [pickIndex, locale, hasChallengeRun, setExpeditionRun, discoveredSecrets],
   );
 
   const getCampaignNodeMeta = useCallback((roundIndex: number): CampaignNodeMeta | null => {

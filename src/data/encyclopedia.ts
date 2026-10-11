@@ -65,6 +65,13 @@ function resistances(mType: string, mType2?: string): string[] {
 
 // ── Monster descriptions ──
 const DESCS: Record<string, string> = {
+  venom_mantis: '雙鐮附帶弱化詛咒；用基本攻擊打斷蓄力，可削弱毒斬。',
+  mire_toad: '低血量時減傷，沼燈蓮息命中還會回血；趁蓄力打斷牠。',
+  night_bat: '身形靈巧，偶爾閃避；蝕月汲取會吸收生命，先打斷再輸出。',
+  chain_wraith: '重甲鎖鏈反震近身攻擊；適合用特殊招式消耗，再打斷鏈擊。',
+  thunder_raptor: '雷羽讓牠動作迅速；看到蓄力時用基本攻擊削弱俯衝。',
+  crystal_crab: '岩盾削減傷害；屬性克制命中能打斷牠的晶鉗重擊。',
+  dream_weaver: '三尾織出幻象，夢絲命中能回復生命；打斷織夢可阻止回復。',
   limit_knight: '銀白羽翼纏繞無限紋樣，鎮守光城上方的雲上積分聖壇。以微分光刃、積分劍雨與極限聖環迎擊挑戰者。',
   topology_knight: '四翼與環結光冠守護鋼鐵要塞的環軌庭院。莫比烏斯劍與反盾互相呼應，將每次衝擊折返。',
   algebra_knight: '矩陣光城的金甲守衛。以向量穿刺、矩陣封陣和方程裂光壓迫對手，受創時核心會超載。',
@@ -101,6 +108,13 @@ const DESCS: Record<string, string> = {
 };
 
 const HABITATS: Record<string, string> = {
+  venom_mantis: '沼燈蘆澤',
+  mire_toad: '沼燈蘆澤',
+  night_bat: '黯月封印庭',
+  chain_wraith: '黯月封印庭',
+  thunder_raptor: '雷霆高原',
+  crystal_crab: '晶脈峽谷',
+  dream_weaver: '甜夢林緣',
   limit_knight: '光域・雲上積分聖壇',
   topology_knight: '鋼域・環軌機關庭院',
   algebra_knight: '光域・矩陣光城',
@@ -137,6 +151,13 @@ const HABITATS: Record<string, string> = {
 };
 
 const RARITY: Record<string, string> = {
+  venom_mantis: '★★',
+  mire_toad: '★★',
+  night_bat: '★★',
+  chain_wraith: '★★',
+  thunder_raptor: '★★',
+  crystal_crab: '★★',
+  dream_weaver: '★★',
   limit_knight: '★★★★',
   topology_knight: '★★★',
   algebra_knight: '★★★★',

@@ -9,11 +9,11 @@ import { activeAtlasFiles, pruneRetiredAtlases, retiredAtlasFiles } from './prun
 const registry = readFileSync(new URL('../src/data/spriteAnimationAssets.ts', import.meta.url), 'utf8');
 const publicAtlases = readdirSync(new URL('../public/sprites/visual-pilot/', import.meta.url));
 
-test('builds keep exactly the 55 atlases the battle registry loads', () => {
+test('builds keep exactly the 62 atlases the battle registry loads', () => {
   const active = activeAtlasFiles(registry);
-  assert.equal(active.size, 55);
+  assert.equal(active.size, 62);
   const retired = retiredAtlasFiles(publicAtlases, active);
-  assert.equal(publicAtlases.filter((file) => !retired.includes(file)).length, 55);
+  assert.equal(publicAtlases.filter((file) => !retired.includes(file)).length, 62);
   assert.ok(retired.some((file) => file.endsWith('-v1.webp')));
   assert.ok(retired.some((file) => file.startsWith('registration-')));
   assert.ok(!retired.some((file) => active.has(file)));

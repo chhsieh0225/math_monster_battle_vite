@@ -22,6 +22,7 @@ import { isSpringOption, nextExpeditionFloor, type ExpeditionRun } from '../../u
 import { isRegionDiscovered, isSecretFound, type WorldProgress } from '../../utils/worldProgress.ts';
 import { SECRET_REVEAL_ZOOM, WORLD_SECRETS, findSecretNear, getSecret, type SecretId } from '../../data/worldSecrets.ts';
 import { ITEM_CATALOG } from '../../data/itemCatalog.ts';
+import { WORLD_SIDE_ROUTES, getSideRoute } from '../../data/worldSideRoutes.ts';
 import type { Grade } from '../../data/gradeCurriculum.ts';
 import type { ItemId } from '../../types/game';
 import { createSecretQuestion } from '../../utils/secretLock.ts';
@@ -100,6 +101,7 @@ export default function WorldMapScreen({
   const floorNumber = run ? nextExpeditionFloor(run) + 1 : 1;
   const activeExpedition = getExpedition(routeMode ? run?.expeditionId : selectedId);
   const selectedChoice = choices[selectedLane] ?? choices[0] ?? null;
+  const selectedSideRoute = getSideRoute(selectedChoice?.option.sideRouteId);
 
   const regionName = (region: RegionId) => localizeSceneName(
     WORLD_REGIONS[region].scene,
@@ -145,6 +147,7 @@ export default function WorldMapScreen({
   const hpPct = Math.max(0, Math.min(100, (pHp / Math.max(1, maxHp)) * 100));
 
   const optionLaneByRegion = new Map<RegionId, number>(choices.map((choice) => [choice.option.region, choice.lane]));
+  if (selectedChoice) optionLaneByRegion.set(selectedChoice.option.region, selectedChoice.lane);
   const springRegions = new Set<RegionId>(choices.filter((choice) => isSpringOption(choice.option)).map((choice) => choice.option.region));
   const point = (region: RegionId) => `${WORLD_REGIONS[region].x},${WORLD_REGIONS[region].y}`;
 
@@ -206,6 +209,7 @@ export default function WorldMapScreen({
 
   const renderChoice = (choice: RouteChoiceVm) => {
     const { option, enemy, matchup, lane } = choice;
+    const branch = getSideRoute(option.sideRouteId);
     const selected = lane === selectedChoice?.lane;
     if (isSpringOption(option)) {
       return (
@@ -240,7 +244,7 @@ export default function WorldMapScreen({
       >
         <span className="wm-choice-head">
           {choices.length > 1 && <span className="wm-choice-lane">{String.fromCharCode(65 + lane)}</span>}
-          <span className="wm-choice-region">{regionName(option.region)}</span>
+          <span className="wm-choice-region">{branch ? (isEnglishLocale(locale) ? branch.nameEn : branch.name) : regionName(option.region)}</span>
         </span>
         {enemy && (
           <span className="wm-choice-enemy">
@@ -443,7 +447,7 @@ export default function WorldMapScreen({
       <section className="wm-panel">
         {routeMode ? (
           <>
-            <div className={`wm-choices${choices.length === 1 ? ' is-single' : ''}`}>
+            <div className={`wm-choices${choices.length === 1 ? ' is-single' : choices.length === 3 ? ' has-branch' : ''}`}>
               {choices.map(renderChoice)}
             </div>
             <button
@@ -456,7 +460,9 @@ export default function WorldMapScreen({
                 ? '…'
                 : isSpringOption(selectedChoice.option)
                   ? t('world.spring.go', 'Go to the Review Spring')
-                  : t('world.route.go', 'Go to {region}', { region: regionName(selectedChoice.option.region) })}
+                  : t('world.route.go', 'Go to {region}', { region: selectedSideRoute
+                    ? (isEnglishLocale(locale) ? selectedSideRoute.nameEn : selectedSideRoute.name)
+                    : regionName(selectedChoice.option.region) })}
             </button>
           </>
         ) : (
@@ -508,6 +514,18 @@ export default function WorldMapScreen({
             </button>
           </>
         )}
+        <details className="wm-side-journal">
+          <summary>{isEnglishLocale(locale) ? 'Side-route journal' : '支線探索紀錄'}</summary>
+          {WORLD_SIDE_ROUTES.map((branch) => (
+            <p key={branch.id}>
+              <strong>{isEnglishLocale(locale) ? branch.nameEn : branch.name}</strong>
+              <span>{progress.secrets.includes(branch.secret)
+                ? (isEnglishLocale(locale) ? `Unlocked · floors ${branch.floors.map((floor) => floor + 1).join('/')} · clears ${progress.sideRoutes?.[branch.id]?.clears ?? 0}` : `已解鎖 · 第 ${branch.floors.map((floor) => floor + 1).join('/')} 層 · 完成 ${progress.sideRoutes?.[branch.id]?.clears ?? 0} 次`)
+                : (isEnglishLocale(locale) ? 'Find: ' : '尋找祕境：') + t(`world.secret.${branch.secret}.name`, branch.secret)}</span>
+              {branch.id === 'frost_cove' && starter?.id === 'tiger' && <span>{isEnglishLocale(locale) ? 'Choose another partner to meet a wild ice tiger.' : '帶其他夥伴出發，才能遇見野生冰虎。'}</span>}
+            </p>
+          ))}
+        </details>
       </section>
       )}
 
@@ -516,6 +534,9 @@ export default function WorldMapScreen({
           <div className="wm-secret-card">
             <div className="wm-secret-title">{unlocked ? secret.icon : '🔐'} {t(`world.secret.${secret.id}.name`, secret.id)}</div>
             <p className="wm-secret-text">{t(`world.secret.${secret.id}.story`, '')}</p>
+            {WORLD_SIDE_ROUTES.filter((route) => route.secret === secret.id).map((route) => (
+              <p className="wm-secret-text" key={route.id}>{isEnglishLocale(locale) ? 'Unlocks: ' : '解鎖支線：'}{isEnglishLocale(locale) ? route.nameEn : route.name}</p>
+            ))}
             {!unlocked && lockQuestion && (
               <>
                 <p className="wm-secret-lock">{t('world.secret.lock', 'A number lock guards it. Solve it to open!')}</p>

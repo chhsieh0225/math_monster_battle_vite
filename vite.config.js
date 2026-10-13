@@ -15,10 +15,21 @@ export default defineConfig({
         // 這可大幅降低首次安裝與更新下載量。
         globPatterns: ['**/*.{js,css,html,json,svg,ico,webmanifest}'],
         // Offline art QA metadata is not used by the game runtime.
-        globIgnores: ['sprites/visual-pilot/registration-*.json'],
+        globIgnores: ['sprites/visual-pilot/registration-*.json', 'assets/tidal-pixi-*.js',
+          'assets/tidalRenderer-*.js', 'assets/painted-skills-*.js', 'assets/TidalPilot-*.*'],
         maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
         // Google Fonts：runtime cache，避免 precache 外部資源失敗阻擋安裝
         runtimeCaching: [
+          {
+            // Warm GPU effects in battle, not during the title's first load.
+            urlPattern: /\/assets\/(?:tidal-pixi|tidalRenderer|painted-skills|TidalPilot)-.*\.(?:js|css)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'game-optional-vfx',
+              expiration: { maxEntries: 12, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             // 場景圖、精靈圖與世界地圖：首次請求後快取，之後離線可用。
             urlPattern: /\/(?:backgrounds|sprites|maps)\/.*\.(?:png|jpg|jpeg|webp|svg)$/i,
@@ -86,7 +97,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+          if (/\/src\/components\/effects\/(?:paintedSkill(?:Renderer|Art)|signatureSkill(?:Art|Motion)|skillPigment(?:Art|Motion))\.ts$/.test(id)) return 'painted-skills'
+          if (id.endsWith('/src/components/effects/tidalRenderer.ts')) return 'tidalRenderer'
+          if (id.includes('node_modules/pixi.js') || id.includes('node_modules/@pixi/')) {
+            return 'tidal-pixi'
+          }
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/scheduler')) {
             return 'vendor-react'
           }
           if (id.includes('node_modules')) {

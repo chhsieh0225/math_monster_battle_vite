@@ -126,7 +126,168 @@
 .battle-root[data-paused=true] .battle-arena *,
 .battle-root[data-paused=true] .battle-arena *::before,
 .battle-root[data-paused=true] .battle-arena *::after{animation-play-state:paused!important}
+/* Slot-owned cast names keep the drawing on the same early/late/support clock. */
+[data-cast=signatureEruption] .battle-art-body{animation-name:battleBodyEruption}
+[data-cast=signatureWolf] .battle-art-body{animation-name:battleBodyWolfCut}
+[data-cast=signatureSweep] .battle-art-body{animation-name:battleBodyWolfCut}
+[data-cast=signatureSummon] .battle-art-body{animation-name:battleBodyEruption}
+[data-cast=signatureChannel] .battle-art-body{animation-name:battleBodyChannel}
+[data-cast] .battle-art-atlas{animation-name:battleArtCastEarly}
+[data-cast$=Finish] .battle-art-atlas{animation-name:battleArtCastLate}
+[data-cast$=Finish] .battle-art-body{animation-name:battleBodyCastLate}
+[data-cast$=Follow] .battle-art-atlas{animation-name:battleArtFollowThrough}
+[data-cast$=Follow] .battle-art-body{animation-name:battleBodyFollowThrough}
+/* CSS may start one paint after the battle timer. Freeze the strike, not its prior pose. */
+.battle-impact-freeze [data-cast] .battle-art-atlas{background-position:100% 0!important}
+/* Ready the contact drawing slightly before the 36% body beat, covering CSS startup latency. */
+@keyframes battleArtCastEarly{
+  0%{background-position:0 0}
+  6%{background-position:33.333333% 0}
+  14%{background-position:66.666667% 0}
+  30%{background-position:100% 0}
+  60%{background-position:0 100%}
+  78%{background-position:33.333333% 100%}
+  96%,100%{background-position:0 0}
+}
+@keyframes battleBodyEruption{
+  0%,100%{transform:scale(1)}
+  20%{transform:scale(1,.925) rotate(-1.5deg)}
+  36%{transform:scale(.965,1) rotate(1deg)}
+  53%{transform:scale(.98,.97)}
+  78%{transform:scale(.99,.99)}
+}
+@keyframes battleBodyWolfCut{
+  0%,100%{transform:scale(1)}
+  22%{transform:scale(.98,.94) rotate(-2deg)}
+  36%{transform:scale(.965,1) rotate(2deg)}
+  44%{transform:scale(.99,.955) rotate(-1deg)}
+  60%{transform:scale(.98,.98)}
+}
+@keyframes battleBodyChannel{
+  0%,100%{transform:scale(1)}
+  19%{transform:scale(.97,.955) rotate(-1deg)}
+  36%{transform:scale(1,.982) rotate(1deg)}
+  52%{transform:scale(.99,.98)}
+  76%{transform:scale(.995,.99)}
+}
+@keyframes battleBodyCastLate{
+  0%{transform:scale(1)}
+  45%{transform:scale(.978,.95)}
+  80%{transform:translateY(-1%) scale(.975,.99)}
+  100%{transform:scale(1)}
+}
+@keyframes battleArtCastLate{
+  0%{background-position:0 0}
+  9%{background-position:33.333333% 0}
+  24%{background-position:66.666667% 0}
+  92%,100%{background-position:100% 0}
+}
+@keyframes battleArtFollowThrough{
+  0%{background-position:100% 0}
+  32%{background-position:0 100%}
+  66%{background-position:33.333333% 100%}
+  96%,100%{background-position:0 0}
+}
+@keyframes battleBodyFollowThrough{
+  0%{transform:scale(.97,1) rotate(2deg)}
+  35%{transform:scale(.99,.96) rotate(-1deg)}
+  100%{transform:scale(1)}
+}
+/* All outer casts preserve the registered size and facing transform. */
+@keyframes signatureEruption{
+  0%,100%{transform:var(--battle-sprite-base-transform,scale(1))}
+  22%{transform:translateY(4px) var(--battle-sprite-base-transform,scale(1))}
+  36%{transform:translateY(-6px) var(--battle-sprite-base-transform,scale(1))}
+  50%{transform:translateY(2px) var(--battle-sprite-base-transform,scale(1))}
+  72%{transform:translateY(-1px) var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureWolf{
+  0%,100%{transform:var(--battle-sprite-base-transform,scale(1))}
+  22%{transform:translate(calc(var(--battle-lunge-x,62px) * -.08),3px) var(--battle-sprite-base-transform,scale(1))}
+  36%,43%{transform:translate(calc(var(--battle-lunge-x,62px) * .48),calc(var(--battle-lunge-y,-42px) * .48)) var(--battle-sprite-base-transform,scale(1))}
+  62%{transform:translate(calc(var(--battle-lunge-x,62px) * .15),calc(var(--battle-lunge-y,-42px) * .15)) var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureEruptionFinish{
+  0%,100%{transform:var(--battle-sprite-base-transform,scale(1))}
+  58%{transform:translateY(4px) var(--battle-sprite-base-transform,scale(1))}
+  90%{transform:translateY(-5px) var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureHeavenfall{
+  0%,100%{transform:var(--battle-sprite-base-transform,scale(1))}
+  20%{transform:translateY(-8px) var(--battle-sprite-base-transform,scale(1))}
+  36%{transform:translateY(-1px) var(--battle-sprite-base-transform,scale(1))}
+  60%{transform:translateY(-3px) var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureWolfFinish{
+  0%,100%{transform:var(--battle-sprite-base-transform,scale(1))}
+  42%{transform:translate(calc(var(--battle-lunge-x,62px) * -.06),2px) var(--battle-sprite-base-transform,scale(1))}
+  92%{transform:translate(calc(var(--battle-lunge-x,62px) * .28),calc(var(--battle-lunge-y,-42px) * .28)) var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureHeavenfallFinish{
+  0%,100%{transform:var(--battle-sprite-base-transform,scale(1))}
+  35%,64%{transform:translateY(-8px) var(--battle-sprite-base-transform,scale(1))}
+  90%{transform:translateY(-2px) var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureWolfFollow{
+  0%{transform:translate(calc(var(--battle-lunge-x,62px) * .26),calc(var(--battle-lunge-y,-42px) * .26)) var(--battle-sprite-base-transform,scale(1))}
+  42%{transform:translate(calc(var(--battle-lunge-x,62px) * .1),calc(var(--battle-lunge-y,-42px) * .1)) var(--battle-sprite-base-transform,scale(1))}
+  100%{transform:var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureSweep{
+  0%,100%{transform:var(--battle-sprite-base-transform,scale(1))}
+  20%{transform:translate(calc(var(--battle-lunge-x,62px) * -.07),2px) var(--battle-sprite-base-transform,scale(1))}
+  36%,42%{transform:translate(calc(var(--battle-lunge-x,62px) * .34),calc(var(--battle-lunge-y,-42px) * .34)) var(--battle-sprite-base-transform,scale(1))}
+  67%{transform:translate(calc(var(--battle-lunge-x,62px) * .08),0) var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureChannel{
+  0%,100%{transform:var(--battle-sprite-base-transform,scale(1))}
+  22%{transform:translateY(3px) var(--battle-sprite-base-transform,scale(1))}
+  36%{transform:translate(calc(var(--battle-lunge-x,62px) * .07),-2px) var(--battle-sprite-base-transform,scale(1))}
+  56%{transform:translateY(1px) var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureSummon{
+  0%,100%{transform:var(--battle-sprite-base-transform,scale(1))}
+  23%{transform:translateY(-7px) var(--battle-sprite-base-transform,scale(1))}
+  36%{transform:translateY(2px) var(--battle-sprite-base-transform,scale(1))}
+  55%{transform:translateY(-2px) var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureSweepFinish{
+  0%,100%{transform:var(--battle-sprite-base-transform,scale(1))}
+  48%{transform:translate(calc(var(--battle-lunge-x,62px) * -.05),2px) var(--battle-sprite-base-transform,scale(1))}
+  92%{transform:translate(calc(var(--battle-lunge-x,62px) * .25),calc(var(--battle-lunge-y,-42px) * .25)) var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureChannelFinish{
+  0%,100%{transform:var(--battle-sprite-base-transform,scale(1))}
+  48%{transform:translateY(3px) var(--battle-sprite-base-transform,scale(1))}
+  92%{transform:translateY(-2px) var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureSummonFinish{
+  0%,100%{transform:var(--battle-sprite-base-transform,scale(1))}
+  38%,68%{transform:translateY(-7px) var(--battle-sprite-base-transform,scale(1))}
+  92%{transform:translateY(2px) var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureSweepFollow{
+  0%{transform:translate(calc(var(--battle-lunge-x,62px) * .25),calc(var(--battle-lunge-y,-42px) * .25)) var(--battle-sprite-base-transform,scale(1))}
+  100%{transform:var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureChannelFollow{
+  0%{transform:translateY(-2px) var(--battle-sprite-base-transform,scale(1))}
+  100%{transform:var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureSummonFollow{
+  0%{transform:translateY(2px) var(--battle-sprite-base-transform,scale(1))}
+  100%{transform:var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureEruptionFollow{
+  0%{transform:translateY(-4px) var(--battle-sprite-base-transform,scale(1))}
+  100%{transform:var(--battle-sprite-base-transform,scale(1))}
+}
+@keyframes signatureHeavenfallFollow{
+  0%{transform:translateY(-2px) var(--battle-sprite-base-transform,scale(1))}
+  100%{transform:var(--battle-sprite-base-transform,scale(1))}
+}
 @media(prefers-reduced-motion:reduce){
+  .battle-sprite-anchor:has([data-cast]){animation:none!important}
   .battle-art-atlas,.battle-art-body{animation:none!important}
   [data-clip=attack] .battle-art-atlas{background-position:100% 0}
   [data-clip=hurt] .battle-art-atlas{background-position:66.666667% 100%}

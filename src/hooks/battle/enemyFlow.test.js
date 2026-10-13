@@ -240,7 +240,7 @@ test('enemy assist lunges with the sub enemy and places impact on the damaged al
   args.chance = () => true;
   runEnemyTurn(args);
   assert.ok(calls.animations.some((event) => event.side === 'enemy'
-    && event.slot === 'sub' && event.value === 'enemyAttackLunge 0.38s ease'));
+    && event.slot === 'sub' && event.value === 'signatureSweepFinish 0.38s ease'));
   assert.deepEqual(calls.particles.at(-1), {
     emoji: 'enemy', x: fxt().playerSub.x + 24, y: fxt().playerSub.y + 16, count: 3,
   });
@@ -475,7 +475,7 @@ for (const scenario of ['phase', 'seal', 'venom']) {
     advance('text'); // A repeated event carrying the previous render's phase.
     assert.equal(args.sr.current.phase, 'enemyAtk');
     tick(4000);
-    assert.equal(calls.eAnim.filter(a => /^enemy(?:AttackLunge|SkillCast)/.test(a)).length, 1);
+    assert.equal(calls.eAnim.filter(a => /^(?:enemy(?:AttackLunge|SkillCast)|signature\w+Finish)/.test(a)).length, 1);
     assert.equal(args.sr.current.phase, 'menu');
     assert.equal(args.pendingTextAdvanceActionRef.current, null);
   });
@@ -488,7 +488,7 @@ for (const scenario of ['charge', 'phase', 'seal', 'venom']) {
     tick(5000);
     assert.equal(args.sr.current.phase, 'menu');
     assert.equal(args.pendingTextAdvanceActionRef.current, null);
-    assert.equal(calls.eAnim.filter(a => /^enemy(?:AttackLunge|SkillCast)/.test(a)).length, scenario === 'charge' ? 0 : 1);
+    assert.equal(calls.eAnim.filter(a => /^(?:enemy(?:AttackLunge|SkillCast)|signature\w+Finish)/.test(a)).length, scenario === 'charge' ? 0 : 1);
   });
 }
 
@@ -727,6 +727,7 @@ test('each boss announces its own ultimate and keeps launch, hit, and KO names c
     assert.equal(effects[0].skillId, `${id}:3`);
     assert.equal(effects[1].skillId, `${id}:3`);
     assert.equal(effects[0].lvl, effects[1].lvl);
+    if (id === 'boss_sword_god') assert.ok(calls.eAnim.includes('signatureHeavenfallFinish 0.5s ease'));
     assert.ok(calls.text.at(-1).includes(name));
   }
 });

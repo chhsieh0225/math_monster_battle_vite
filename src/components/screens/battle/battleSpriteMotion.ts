@@ -24,7 +24,8 @@ export function resolveBattleSpriteClip(animation: string): { clip: BattleSprite
   const parsed = /^(\d*\.?\d+)(ms|s)$/.exec(duration);
   const durationMs = parsed ? Math.max(1, Number(parsed[1]) * (parsed[2] === 's' ? 1000 : 1)) : 500;
   let clip: BattleSpriteClip = 'idle';
-  if (name === 'attackLunge' || name === 'enemyAttackLunge' || name === 'enemySkillCast') clip = 'attack';
+  if (name === 'attackLunge' || name === 'enemyAttackLunge' || name === 'enemySkillCast'
+    || /^signature(?:Eruption|Wolf|Heavenfall|Sweep|Channel|Summon)(?:Finish|Follow)?$/.test(name)) clip = 'attack';
   else if (/^(?:player|enemy)(?:Fire|Grass|Water|Elec|Dark|Light|Steel|Ice)?Hit$/.test(name)) clip = 'hurt';
   else if (name === 'dodgeSlide' || name === 'enemyShieldPulse') clip = 'brace';
   else if (name === 'bossShake') clip = 'charge';

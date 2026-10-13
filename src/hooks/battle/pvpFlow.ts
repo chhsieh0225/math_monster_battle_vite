@@ -400,6 +400,7 @@ export function handlePvpAnswer({
   };
 
   runPvpAttackAnimation({
+    skillId: `${attacker.id}:${state.selIdx}`,
     turn: currentTurn,
     safeTo,
     setPhase,

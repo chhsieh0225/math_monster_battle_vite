@@ -3,7 +3,7 @@ import test from 'node:test';
 import {
   createAttackImpact, getAttackEffectHitDelay, getAttackEffectClearDelay,
   getAttackEffectNextStepDelay, getAttackImpactProfile, getAttackImpactPhase,
-  getPlayerSkillMotion,
+  getPlayerSkillMotion, getSignatureCastAnimation,
 } from './effectTiming.ts';
 
 test('tactical starter contact matches the atlas strike pose and recovers before the next turn', () => {
@@ -17,8 +17,20 @@ test('tactical starter contact matches the atlas strike pose and recovers before
     }
   }
   assert.equal(getPlayerSkillMotion('fire:1', 'pvp'), null);
-  assert.equal(getPlayerSkillMotion('wolf:1', 'coop'), null);
+  for (const skill of ['wolf:0', 'wolf:1', 'wolf:2', 'boss_sword_god:3']) {
+    const motion = getPlayerSkillMotion(skill, 'coop');
+    assert.equal(motion.releaseMs + motion.flightMs, Math.round(motion.durationMs * .36));
+    assert.equal(getPlayerSkillMotion(skill, 'pvp'), null);
+  }
   assert.equal(getPlayerSkillMotion(undefined), null);
+});
+
+test('signature casts preserve early, late and immediate actor clocks', () => {
+  assert.equal(getSignatureCastAnimation('fire:2'), 'signatureEruption');
+  assert.equal(getSignatureCastAnimation('wolf:2'), 'signatureWolf');
+  assert.equal(getSignatureCastAnimation('wolf:1', 'immediate'), 'signatureWolfFollow');
+  assert.equal(getSignatureCastAnimation('boss_sword_god:3', 'late'), 'signatureHeavenfallFinish');
+  assert.equal(getSignatureCastAnimation('water:2'), undefined);
 });
 
 test('all eight element contact times precede effect cleanup', () => {

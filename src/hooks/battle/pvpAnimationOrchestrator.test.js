@@ -65,3 +65,18 @@ test('runPvpAttackAnimation dispatches correct lunge pipeline by turn', () => {
   assert.equal(typeof onStrikeP1, 'function');
   assert.equal(typeof onStrikeP2, 'function');
 });
+
+test('signature PvP casts preserve the original strike time and actor ownership', () => {
+  for (const turn of ['p1', 'p2']) {
+    const queue = [], animations = [];
+    let now = 0, hitAt = -1;
+    runPvpAttackAnimation({ turn, skillId: 'boss_sword_god:3',
+      safeTo: (fn, ms) => queue.push({ fn, at: now + ms }), setPhase: () => {},
+      setPAnim: (value) => animations.push(['p1', value]),
+      setEAnim: (value) => animations.push(['p2', value]), onStrike: () => { hitAt = now; } });
+    while (queue.length) { queue.sort((a, b) => a.at - b.at); const task = queue.shift(); now = task.at; task.fn(); }
+    assert.equal(hitAt, turn === 'p1' ? 400 : 320);
+    assert.equal(animations[0][0], turn);
+    assert.match(animations[0][1], /signatureHeavenfallFinish/);
+  }
+});

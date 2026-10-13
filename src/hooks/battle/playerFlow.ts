@@ -15,6 +15,7 @@ import {
   getAttackEffectHitDelay,
   getAttackEffectNextStepDelay,
   getPlayerSkillMotion,
+  getSignatureCastAnimation,
 } from '../../utils/effectTiming.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { canChooseBossTactic, getBossTacticProfile } from '../../utils/turnFlow.ts';
@@ -545,6 +546,7 @@ export function runPlayerAnswer({
     effectOrchestrator.runPlayerLunge({
       safeTo: safeToIfBattleActive,
       setPAnim,
+      animation: getSignatureCastAnimation(skillId),
       settleDelay: motion?.durationMs,
       releaseDelay: motion?.releaseMs,
       onReady: () => {

@@ -4,7 +4,7 @@ import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { fxt } from './battleFxTargets.ts';
 import { isBattleActiveState, scheduleIfBattleActive, tryReturnToMenu } from './menuResetGuard.ts';
 import type { AttackEffectVm, BattleAnimationSetter, StarterVm } from '../../types/battle';
-import { createAttackImpact } from '../../utils/effectTiming.ts';
+import { createAttackImpact, getSignatureCastAnimation } from '../../utils/effectTiming.ts';
 import { getCharacterSkillId, getSkillMastery } from '../../utils/skillPresentation.ts';
 import { getShadowWard } from '../../utils/combatTactics.ts';
 
@@ -272,7 +272,7 @@ function applyCoopSupportTurnEffects({
       case 'support_strike': {
         // Support already resolves damage at this beat; do not add a second damage timer.
         const attack = { ...effect.attack, impact: createAttackImpact('hit') };
-        setPAnim('attackLunge 0.4s ease', 'sub');
+        setPAnim(`${getSignatureCastAnimation(attack.skillId, 'immediate') || 'attackLunge'} 0.4s ease`, 'sub');
         setAtkEffect(attack);
         safeToIfBattleActive(() => setPAnim('', 'sub'), 450);
         safeToIfBattleActive(() => setAtkEffect((current) => current === attack ? null : current), 540);

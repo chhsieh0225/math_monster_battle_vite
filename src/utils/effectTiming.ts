@@ -1,3 +1,5 @@
+import { getChoreographyCast } from '../components/effects/skillChoreography.ts';
+
 /**
  * effectTiming.ts — single source of truth for attack effect timeline.
  *
@@ -26,7 +28,22 @@ const PLAYER_SKILL_BEATS: Record<string, [number, number]> = {
   'grass:2': [1100, 300], 'grass:3': [1400, 390],
   'tiger:0': [800, 220], 'tiger:1': [950, 260],
   'tiger:2': [1000, 130], 'tiger:3': [1400, 400],
+  'wolf:0': [850, 140], 'wolf:1': [950, 150], 'wolf:2': [1100, 150],
+  'wolf:3': [1400, 360],
+  'lion:0': [850, 150], 'lion:1': [950, 260], 'lion:2': [1100, 190], 'lion:3': [1400, 380],
+  'boss:0': [850, 150], 'boss:1': [950, 260], 'boss:2': [1100, 300], 'boss:3': [1400, 380],
+  'boss_hydra:0': [850, 150], 'boss_hydra:1': [950, 260], 'boss_hydra:2': [1100, 290], 'boss_hydra:3': [1400, 380],
+  'boss_crazy_dragon:0': [850, 150], 'boss_crazy_dragon:1': [950, 170], 'boss_crazy_dragon:2': [1100, 300], 'boss_crazy_dragon:3': [1400, 380],
+  'boss_sword_god:0': [850, 150], 'boss_sword_god:1': [950, 260], 'boss_sword_god:2': [1100, 260],
+  'boss_sword_god:3': [1400, 350],
 };
+
+/** Early is the single-player 36% contact; late and immediate preserve PvP/support clocks. */
+export function getSignatureCastAnimation(skillId?: string, timing: 'early' | 'late' | 'immediate' = 'early') {
+  const kind = skillId === 'fire:2' ? 'Eruption' : /^wolf:[012]$/.test(skillId || '') ? 'Wolf'
+    : skillId === 'boss_sword_god:3' ? 'Heavenfall' : getChoreographyCast(skillId);
+  return kind ? `signature${kind}${timing === 'late' ? 'Finish' : timing === 'immediate' ? 'Follow' : ''}` : undefined;
+}
 
 /** Keep the atlas strike pose (36%) and projectile contact on the same clock. */
 export function getPlayerSkillMotion(skillId: string | undefined, mode?: string) {

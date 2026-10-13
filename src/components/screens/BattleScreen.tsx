@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { BattleSkillEffect } from '../effects/BattleSkillEffect.tsx';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { useSpriteTargets } from '../../hooks/useSpriteTargets';
 import { useBattleParallax } from '../../hooks/useBattleParallax';
@@ -6,13 +7,14 @@ import { useBattleArenaScale } from '../../hooks/useBattleArenaScale.ts';
 import { SCENES } from '../../data/scenes';
 import { getBattleBackground } from '../../utils/scenePreload.ts';
 import { getPersonalityCue } from '../../data/enemyPersonalities.ts';
+import { getEnemySkill } from '../../data/enemySkills.ts';
 import { PVP_BALANCE } from '../../data/pvpBalance';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { getCompensation } from '../../data/spriteProfiles.ts';
 import { getLearningHintSteps, getLearningHintCost } from '../../utils/learningProgress.ts';
 import { getAttackImpactProfile } from '../../utils/effectTiming.ts';
-import { getSkillActorKeys } from '../../utils/skillPresentation.ts';
+import { getCharacterSkillId, getSkillActorKeys } from '../../utils/skillPresentation.ts';
 import { getBossIntent } from '../../utils/turnFlow.ts';
 import { getShadowWard } from '../../utils/combatTactics.ts';
 import TextBox from '../ui/TextBox';
@@ -549,13 +551,15 @@ function BattleScreenComponent({
       pAnim: S.pAnim,
       eSubAnim: S.eSubAnim,
       pSubAnim: S.pSubAnim,
+      attackEffect: S.atkEffect,
+      battleMode: S.battleMode,
       enemyIsBoss: enemyIsBossFlag,
       enemyDefeated: enemyDefeatedFlag,
       enemyLowHp: enemyLowHpFlag,
       enemyFinisherType: S.enemyFinisherType,
       lowPerfMode: UX.lowPerfMode,
     });
-  }, [coreStatic, S.eAnim, S.pAnim, S.eSubAnim, S.pSubAnim, enemyDefeatedFlag, UX.lowPerfMode, enemyLowHpFlag, enemyIsBossFlag, S.enemyFinisherType]);
+  }, [coreStatic, S.eAnim, S.pAnim, S.eSubAnim, S.pSubAnim, S.atkEffect, S.battleMode, enemyDefeatedFlag, UX.lowPerfMode, enemyLowHpFlag, enemyIsBossFlag, S.enemyFinisherType]);
 
   // ── Sprite layout styles (position, size, filter — no animation strings) ──
   const memoSpriteStyles = useMemo(() => {
@@ -968,6 +972,20 @@ function BattleScreenComponent({
           seed={weatherSeed}
           enabled={showHeavyFx && !S.gamePaused}
           reduced={UX.compactUI || UX.autoLowEnd}
+        />
+
+        <BattleSkillEffect
+          effect={S.atkEffect}
+          source={memoEffectRoute!.source}
+          target={effectTarget}
+          arena={arenaGeometry}
+          scene={sceneKey}
+          paused={S.gamePaused}
+          lowPerf={!showHeavyFx || UX.lowPerfMode}
+            warmSkillId={getCharacterSkillId((activeStarter || starter).id, S.selIdx ?? 0)}
+            warmType={(activeStarter || starter).moves[S.selIdx ?? 0]?.type || starter.type}
+            warmEnemySkillId={S.battleMode === 'pvp' ? undefined : getEnemySkill(enemy, S.enemySkillState?.main.turn).skillId}
+            warmEnemyType={enemy.id === 'boss_sword_god' ? 'steel' : enemy.mType}
         />
 
         {/* Enemy info */}

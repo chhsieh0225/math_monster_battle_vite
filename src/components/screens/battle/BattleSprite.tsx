@@ -38,6 +38,7 @@ function AtlasSprite({ asset, svgStr, size, style, animation }: AtlasProps) {
   const duration = clip === 'idle' ? 'var(--art-idle-period)' : `${durationMs}ms`;
   return <div className="battle-art-sprite" role="img" aria-label="Monster sprite"
     data-sprite-art={asset.profile.imgKey} data-clip={clip}
+    data-cast={animation.startsWith('signature') ? animation.split(' ')[0] : undefined}
     data-body-motion={getSpriteBodyMotion(asset.profile.imgKey)}
     data-expression={asset.art.idleExpression || undefined} data-still={animation === 'none' || undefined}
     style={{ ...style, width: size, height: size * 100 / 120 }}>

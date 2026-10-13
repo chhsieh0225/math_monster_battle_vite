@@ -1,4 +1,5 @@
 import { effectOrchestrator } from './effectOrchestrator.ts';
+import { getSignatureCastAnimation } from '../../utils/effectTiming.ts';
 
 type TranslatorParams = Record<string, string | number>;
 type Translator = (key: string, fallback?: string, params?: TranslatorParams) => string;
@@ -30,6 +31,7 @@ type ShowPvpEffectivenessMessageArgs = {
 };
 
 type RunPvpAttackAnimationArgs = {
+  skillId?: string;
   turn: PvpTurn;
   safeTo: SafeTo;
   setPhase: (value: string) => void;
@@ -80,6 +82,7 @@ export function showPvpEffectivenessMessage({
 }
 
 export function runPvpAttackAnimation({
+  skillId,
   turn,
   safeTo,
   setPhase,
@@ -95,6 +98,7 @@ export function runPvpAttackAnimation({
       setPAnim,
       startDelay: 120,
       settleDelay: 280,
+      animation: getSignatureCastAnimation(skillId, 'late'),
       onReady: onStrike,
     });
     return;
@@ -103,6 +107,7 @@ export function runPvpAttackAnimation({
     safeTo,
     setEAnim,
     strikeDelay: 320,
+    animation: getSignatureCastAnimation(skillId, 'late'),
     onStrike,
   });
 }

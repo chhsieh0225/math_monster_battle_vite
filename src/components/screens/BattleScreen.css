@@ -266,6 +266,10 @@
   background:#111;
   transition:background 1s ease;
 }
+/* Pigment effects stay below every actor, including reserves, even during arena shake. */
+.battle-painted-canvas{position:absolute;left:0;top:0;z-index:3;pointer-events:none;overflow:hidden;contain:strict}
+.battle-painted-canvas canvas{display:block;width:100%;height:100%}
+.battle-painted-canvas[data-painted-light=true]{mix-blend-mode:screen}
 .battle-scene-sky{
   position:absolute;
   inset:0;

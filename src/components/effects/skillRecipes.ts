@@ -172,3 +172,11 @@ export function getSkillRecipe(skillId?: string): SkillRecipe | undefined {
   if (!/^[0-3]$/.test(slot) || !Object.hasOwn(CHARACTER_SKILL_RECIPES, family)) return undefined;
   return CHARACTER_SKILL_RECIPES[family as StarterId][Number(slot)];
 }
+
+/** Stable identities for catalog checks and tooling; never inferred from translated names. */
+export const SKILL_RECIPE_IDS = [
+  'enemy:basic',
+  ...Object.keys(CHARACTER_SKILL_RECIPES).flatMap((id) => [0, 1, 2, 3].map((slot) => `${id}:${slot}`)),
+  ...Object.keys(GUARDIAN_SKILL_RECIPES).flatMap((id) => [0, 1, 2].map((slot) => `${id}:${slot}`)),
+  ...Object.keys(MONSTER_RECIPES).map((id) => `monster:${id}`),
+];

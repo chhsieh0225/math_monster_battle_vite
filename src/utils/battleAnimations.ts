@@ -1,4 +1,5 @@
-import type { UseBattleState } from '../types/battle';
+import type { AttackEffectVm, UseBattleState } from '../types/battle';
+import { getSignatureCastAnimation } from './effectTiming.ts';
 
 type BattleSpriteAnimationArgs = Pick<UseBattleState, 'eAnim' | 'pAnim' | 'eSubAnim' | 'pSubAnim'> & {
   lowPerfMode: boolean;
@@ -7,6 +8,8 @@ type BattleSpriteAnimationArgs = Pick<UseBattleState, 'eAnim' | 'pAnim' | 'eSubA
   enemyDefeated: boolean;
   /** Element of the finishing hit; picks the defeat animation. */
   enemyFinisherType?: string | null;
+  attackEffect?: AttackEffectVm | null;
+  battleMode?: string;
 };
 
 /** Seconds into the boss defeat when the white flashes end and the shards break away. */
@@ -48,20 +51,28 @@ export function resolveEnemyDefeat({ isBoss, finisherType, lowPerfMode }: {
 // Animation ownership is independent of turn selection and sprite layout.
 export function resolveBattleSpriteAnimations({
   eAnim, pAnim, eSubAnim, pSubAnim,
-  lowPerfMode, enemyIsBoss, enemyLowHp, enemyDefeated, enemyFinisherType,
+  lowPerfMode, enemyIsBoss, enemyLowHp, enemyDefeated, enemyFinisherType, attackEffect, battleMode,
 }: BattleSpriteAnimationArgs) {
   const enemyIdle = enemyIsBoss
     ? 'battleBossFloat 2.5s ease-in-out infinite, bossPulse 4s ease infinite'
     : enemyLowHp
       ? 'battleFloat 1.4s ease-in-out infinite, struggle .8s ease-in-out infinite'
       : 'battleFloat 3s ease-in-out infinite';
+  // Late enemy/PvP lunges end on contact. Recover visually without adding battle timers
+  // or overwriting a newer hurt/defeat animation. Early player clips already recover.
+  const landed = attackEffect?.impact?.outcome === 'hit' || attackEffect?.impact?.outcome === 'critical';
+  const incoming = attackEffect?.targetSide === 'player';
+  const followName = landed && !lowPerfMode && (incoming || battleMode === 'pvp')
+    ? getSignatureCastAnimation(attackEffect?.skillId, 'immediate') : undefined;
+  const source = `${incoming ? 'enemy' : 'player'}${attackEffect?.sourceSlot === 'sub' ? 'Sub' : 'Main'}`;
+  const follow = (slot: string) => followName && source === slot ? `${followName} .4s ease both` : '';
   return {
     enemyMain: enemyDefeated
       ? resolveEnemyDefeat({ isBoss: enemyIsBoss, finisherType: enemyFinisherType, lowPerfMode }).animation
-      : eAnim || (lowPerfMode ? 'none' : enemyIdle),
-    enemySub: eSubAnim || (lowPerfMode ? 'none' : 'battleFloat 3.8s ease-in-out infinite'),
+      : eAnim || follow('enemyMain') || (lowPerfMode ? 'none' : enemyIdle),
+    enemySub: eSubAnim || follow('enemySub') || (lowPerfMode ? 'none' : 'battleFloat 3.8s ease-in-out infinite'),
     enemyShadow: enemyIsBoss ? 'bossShadowPulse 2.5s ease-in-out infinite' : 'shadowPulse 3s ease-in-out infinite',
-    playerMain: pAnim || (lowPerfMode ? 'none' : 'floatFlip 3s ease-in-out infinite'),
-    playerSub: pSubAnim || (lowPerfMode ? 'none' : 'floatFlip 3.8s ease-in-out infinite'),
+    playerMain: pAnim || follow('playerMain') || (lowPerfMode ? 'none' : 'floatFlip 3s ease-in-out infinite'),
+    playerSub: pSubAnim || follow('playerSub') || (lowPerfMode ? 'none' : 'floatFlip 3.8s ease-in-out infinite'),
   };
 }

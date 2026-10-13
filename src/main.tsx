@@ -29,10 +29,13 @@ const VisualPilot = import.meta.env.DEV ? lazy(() => import('./components/screen
 const GuardianPreview = import.meta.env.DEV ? lazy(() => import('./components/screens/GuardianPreview')) : null;
 const showVisualPilot = new URLSearchParams(window.location.search).get('visual') === 'pilot';
 const showGuardians = new URLSearchParams(window.location.search).get('visual') === 'guardians';
+const TidalPilot = import.meta.env.DEV ? lazy(() => import('./components/screens/TidalPilot')) : null;
+const showTidalPilot = new URLSearchParams(window.location.search).get('visual') === 'tidal';
 
 createRoot(rootEl).render(
   <I18nProvider>
-    {GuardianPreview && showGuardians ? <Suspense fallback={<div role="status">Loading guardian art...</div>}><GuardianPreview /></Suspense>
+    {TidalPilot && showTidalPilot ? <Suspense fallback={<div className="visual-loading" role="status">海嘯衝擊 / Tidal Impact</div>}><TidalPilot /></Suspense>
+      : GuardianPreview && showGuardians ? <Suspense fallback={<div role="status">Loading guardian art...</div>}><GuardianPreview /></Suspense>
       : VisualPilot && showVisualPilot ? <Suspense fallback={<div className="app-error-wrap" role="status">Loading visual trial…</div>}><VisualPilot /></Suspense> : <App />}
   </I18nProvider>
 );

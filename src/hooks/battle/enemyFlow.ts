@@ -2,7 +2,7 @@ import { createEnemySkillState, getEnemySkill, enemySkillNameKey, resolveEnemySk
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
 import { getBossSealPool } from '../../utils/combatTactics.ts';
 import type { AttackEffectVm, BattleAnimationSetter } from '../../types/battle';
-import { createAttackImpact } from '../../utils/effectTiming.ts';
+import { createAttackImpact, getSignatureCastAnimation } from '../../utils/effectTiming.ts';
 import { getEnemySkillEffect } from '../../utils/skillPresentation.ts';
 import { getSkillRecipe } from '../../components/effects/skillRecipes.ts';
 import { BOSS_IDS } from '../../data/monsterConfigs.ts';
@@ -293,6 +293,8 @@ export function runEnemyTurn({
     }
   };
   const attackMotion = (action: EnemySkill): string => {
+    const signature = getSignatureCastAnimation(action.skillId, 'late');
+    if (signature) return signature;
     const motion = getSkillRecipe(action.skillId)?.motion;
     return !motion || motion === 'rush' || motion === 'slash' ? 'enemyAttackLunge' : 'enemySkillCast';
   };

@@ -9,6 +9,7 @@ import DamagePopup from '../../ui/DamagePopup';
 import Particle from '../../ui/Particle';
 import AttackEffect from '../../effects/AttackEffect';
 import { SkillStrikeEffect } from '../../effects/SkillStrikeEffect.tsx';
+import { getEffectLighting, hasPaintedEffect } from '../../effects/skillEffectModel.ts';
 import type { SkillEffectArena } from '../../effects/SkillStrikeEffect.tsx';
 import { getSkillMastery } from '../../../utils/skillPresentation.ts';
 import AchievementPopup from '../../ui/AchievementPopup';
@@ -47,8 +48,6 @@ type BattleFxLayerProps = {
   onDismissCollectionPopup: () => void;
 };
 
-/** Scenes whose backgrounds are bright enough to wash out warm-coloured FX. */
-const BRIGHT_SCENES = new Set(['grass', 'fire', 'rock', 'light', 'heaven', 'burnt_warplace']);
 const IMPACT_TONES: Record<string, string> = {
   fire: '#fdba74', electric: '#fde047', water: '#7dd3fc', grass: '#86efac',
   dark: '#c4b5fd', light: '#fef08a', steel: '#e2e8f0', ice: '#a5f3fc',
@@ -172,10 +171,10 @@ export const BattleFxLayer = memo(function BattleFxLayer({
       )}
 
       {/* Attack effects */}
-      {atkEffect && effectSource && arenaSize && <SkillStrikeEffect effect={atkEffect}
+      {atkEffect && !hasPaintedEffect(atkEffect) && effectSource && arenaSize && <SkillStrikeEffect effect={atkEffect}
         source={effectSource} target={effectTarget} arena={arenaSize} lowPerf={!showHeavyFx || lowPerfMode} />}
       {showHeavyFx && !spatialFx && (isUltimateEffect || atkEffect) && (
-        <div className={`battle-attack-fx-layer${BRIGHT_SCENES.has(sceneType) ? ' fx-bright-scene' : ''}`} aria-hidden="true">
+        <div className={`battle-attack-fx-layer${getEffectLighting(sceneType) === 'sunlit' ? ' fx-bright-scene' : ''}`} aria-hidden="true">
           {isUltimateEffect && hasContact && impact?.outcome !== 'blocked' && (
             <div className={`battle-ult-sync ${ultimateToneClass}`} style={ultimateSyncStyle}>
               <div className="battle-ult-sync-flash" />

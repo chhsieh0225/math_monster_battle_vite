@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildPostHitResolutionPlan, runPlayerAnswer } from './playerFlow.ts';
-import { getAttackEffectHitDelay, getPlayerSkillMotion } from '../../utils/effectTiming.ts';
+import { getAttackEffectHitDelay, getPlayerSkillMotion, getSignatureCastAnimation } from '../../utils/effectTiming.ts';
 import { resolvePlayerStrike } from './turnResolver.ts';
 import { applyBossDamageReduction } from '../../utils/bossDamage.ts';
 import { BALANCE_CONFIG } from '../../data/balanceConfig.ts';
@@ -791,7 +791,7 @@ test('ward and burn spending resolve at the same contact, not during windup', ()
   assert.equal(ctx.state.shadowShieldCD, 0);
   assert.equal(ctx.state.burnStack, 3);
   assert.equal(ctx.state.enemyExposed, true);
-  assert.match(ctx.calls.pAnim.at(-1), /attackLunge/);
+  assert.equal(ctx.calls.pAnim.at(-1), 'signatureSweep 0.9s ease');
   assert.equal(ctx.calls.atkEffect.at(-1).flightMs, motion.flightMs);
   clock.advance(180 + motion.durationMs);
   assert.equal(ctx.calls.pAnim.at(-1), '');
@@ -815,6 +815,31 @@ test('leaving battle after an early fire release cancels damage, resources and a
   assert.equal(ctx.state.shadowShieldCD, 0);
   assert.ok(ctx.calls.atkEffect.every(fx => !fx?.impact));
   assert.equal(ctx.calls.doEnemyTurn, 0);
+});
+
+test('signature fire/wolf casts retain the physical actor through windup, contact and recovery', () => {
+  for (const [id, idx, type] of [['fire', 2, 'fire'], ['wolf', 0, 'steel'], ['wolf', 1, 'steel'], ['wolf', 2, 'steel']]) {
+    const clock = createClock();
+    const animations = [];
+    const ctx = createTestContext({ battleMode: 'coop', starter: { id, type }, selIdx: idx,
+      enemy: { id: 'slime', mType: 'grass', maxHp: 500 }, eHp: 500, shadowShieldCD: 0 });
+    runPlayerAnswer({ ...ctx.deps, safeTo: clock.schedule, correct: true, starter: ctx.state.starter,
+      attackerSlot: 'sub', setPAnim: (value, slot) => animations.push({ value, slot }),
+      move: { name: 'Signature', type, basePower: 20, growth: 0 } });
+    const motion = getPlayerSkillMotion(`${id}:${idx}`);
+    ctx.state.coopActiveSlot = 'main';
+    const hitAt = 180 + motion.releaseMs + motion.flightMs;
+    clock.advance(hitAt - 1);
+    assert.equal(ctx.state.eHp, 500);
+    assert.equal(ctx.calls.atkEffect.at(-1).sourceSlot, 'sub');
+    assert.equal(animations.at(-1).slot, 'sub');
+    assert.match(animations.at(-1).value, id === 'fire' ? /signatureEruption/ : /signatureWolf/);
+    clock.advance(hitAt);
+    assert.ok(ctx.state.eHp < 500);
+    assert.ok(ctx.calls.atkEffect.at(-1).impact);
+    clock.advance(180 + motion.durationMs);
+    assert.deepEqual(animations.at(-1), { value: '', slot: 'sub' });
+  }
 });
 
 test('basic moves open the boss ward on schedule and never randomly lose all damage', () => {
@@ -934,7 +959,7 @@ test('new element contact uses the captured physical sub actor and never spends 
     assert.equal(ctx.state[field], 0);
     assert.ok(ctx.state.eHp < 2000);
     assert.equal(animations.at(-1).slot, 'sub');
-    assert.match(animations.at(-1).value, /attackLunge/);
+    assert.equal(animations.at(-1).value, `${getSignatureCastAnimation(`${id}:${idx}`)} ${motion.durationMs / 1000}s ease`);
   }
 });
 

@@ -63,7 +63,7 @@ test('support impact animates the physical sub and cannot clear a newer attack e
   assert.equal(effect.skillId, 'wolf:1');
   assert.equal(effect.impact.outcome, 'hit');
   assert.equal(sr.current.eHp, 84);
-  assert.deepEqual(animations[0], { value: 'attackLunge 0.4s ease', slot: 'sub' });
+  assert.deepEqual(animations[0], { value: 'signatureWolfFollow 0.4s ease', slot: 'sub' });
   const newer = { type: 'fire', idx: 0, lvl: 1 };
   effect = newer;
   queue.find(task => task.ms === 540).fn();

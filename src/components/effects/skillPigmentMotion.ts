@@ -2,9 +2,148 @@ import { getSkillChoreography } from './skillChoreography.ts';
 import { clamp01, getPaintedFrame, tidalSeed } from './skillEffectModel.ts';
 import type { BattleEffectClock, TidalLayout } from './skillEffectModel.ts';
 import type { PlacePigment } from './signatureSkillMotion.ts';
+import { drawSolarSkill } from './solarSkill.ts';
 
 const TAU = Math.PI * 2;
 const out = (v: number) => 1 - (1 - clamp01(v)) ** 3;
+
+function drawIceSkill(clock: BattleEffectClock, layout: TidalLayout, put: PlacePigment, action: string) {
+  const f = getPaintedFrame(clock);
+  const { source: a, target: b, width, height, direction: dir } = layout;
+  const size = Math.min(width * .42, height * .4, b.size * 1.18, 218);
+  const { contact, contactAge: age, flight: p, tier, fade } = f;
+  const floor = Math.min(height - 14, b.cy + b.size * .29);
+  const sx = a.cx + dir * a.size * .17, sy = a.cy - a.size * .09;
+  const travel = p * p * (3 - 2 * p);
+  const phase = (contact ? age : f.age) / 520;
+  const form = (x: number, y: number, w: number, h: number, rotation: number, alpha: number, offset = 0) => {
+    const frame = ((phase + offset) % 1) * 4, index = Math.floor(frame), mix = frame - index;
+    // Geometry is stable between frames; only the baked reflection moves over clear facets.
+    put(index, x, y, w, h, rotation, alpha * (1 - mix), dir);
+    put((index + 1) % 4, x, y, w, h, rotation, alpha * mix, dir);
+  };
+  const aimX = b.cx - dir * size * .16;
+  if (action === 'orb') {
+    const x = sx + (b.cx - sx) * (contact ? 1 : travel);
+    const y = sy + (b.cy - sy) * (contact ? 1 : travel) - (contact ? 0 : Math.sin(p * Math.PI) * size * .1);
+    const intact = contact ? (1 - clamp01(age / 85)) * fade : 1;
+    if (intact > 0) {
+      put(7, x - dir * size * .13, y, size * .94, size * .58, -.2 * dir, intact * .64);
+      form(x, y, size * .79, size * .93, dir * (.16 + p * .5), intact);
+      for (let i = 0; i < tier - 1; i++) {
+        form(x - dir * size * (.29 + i * .15), y + (i ? -.2 : .16) * size,
+          size * .25, size * .37, dir * (-.3 + phase), intact * .75, i * .2);
+      }
+    }
+  } else if (action === 'mirror') {
+    const count = tier === 1 ? 2 : 3;
+    const settle = contact ? 1 : out(p);
+    const intact = contact ? (1 - clamp01((age - 50) / 160)) * fade : clamp01(p * 5);
+    for (let i = 0; i < count; i++) {
+      const side = i - (count - 1) / 2;
+      const x = sx + (aimX - sx) * settle + dir * side * size * .45 * settle;
+      const y = sy + (b.cy - size * .22 - sy) * settle + Math.abs(side) * size * .15;
+      const turn = p * .8 + i * .65 + (contact ? age / 150 : 0);
+      const perspective = .32 + Math.abs(Math.cos(turn)) * .68;
+      if (intact > 0) form(Math.max(size * .22, Math.min(width - size * .22, x)), y,
+        size * .74 * perspective, size * 1.05, dir * (.12 + side * .2), intact, i * .23);
+    }
+  } else if (action === 'claws') {
+    if (!contact) {
+      form(sx + (aimX - sx) * travel * .63, sy + (b.cy - sy) * travel * .63,
+        size * .38, size * .5, -.45 * dir, Math.sin(p * Math.PI) * .6);
+    } else for (let i = 0; i < 3; i++) {
+      const local = age - i * 29;
+      if (local < 0) continue;
+      const sweep = out((local + 18) / 145);
+      const alpha = (1 - clamp01((local - 100) / 230)) * fade;
+      form(aimX + dir * (sweep - .65) * size * .13,
+        b.cy - size * .16 + (i - 1) * size * .2, size * 1.4, size * .94,
+        dir * (-.27 + sweep * .37), alpha, i * .17);
+    }
+  } else {
+    for (let i = 0; i < 2 + tier; i++) {
+      const side = i - (1 + tier) / 2;
+      const drop = contact ? 1 : clamp01((p - i * .045) / (1 - i * .045)) ** 2;
+      const h = size * (1.1 - Math.abs(side) * .12);
+      const end = floor - h * .39;
+      const start = Math.max(h * .52 + 6, end - size * .8);
+      const alpha = contact ? fade * (1 - clamp01((age - 70) / 190)) : clamp01(p * 5);
+      form(Math.max(h * .3, Math.min(width - h * .3, aimX + side * size * .26)),
+        start + (end - start) * drop, h * .7, h, side * .14, alpha, i * .19);
+    }
+  }
+  if (!contact) return;
+  const spread = out((age + 10) / 185);
+  const extent = action === 'orb' ? .85 : 1.15;
+  put(5, aimX, floor, size * extent * (.65 + spread * .55), size * .22, 0, fade * .69);
+  put(7, aimX, b.cy + size * .17, size * extent, size * .64, 0, fade * Math.exp(-age / 180) * .5);
+  put(6, aimX, b.cy, size * extent * spread, size * extent * spread, -.15 * dir, fade * .9);
+  for (let i = 0; i < 4 + tier * 2; i++) {
+    const local = (age - i * 9) / 365;
+    if (local <= 0 || local >= 1) continue;
+    const seed = tidalSeed(i + 317), turn = i * 2.4 + .2;
+    const distance = size * (.13 + out(local) * (.3 + seed * .18));
+    const s = size * (.12 + seed * .09);
+    put(4, aimX + Math.cos(turn) * distance,
+      b.cy + Math.sin(turn) * distance * .65 + local * local * size * .25,
+      s * (.42 + Math.abs(Math.cos(local * 5 + i)) * .58), s * 1.2,
+      turn + local * 1.3, Math.sin(local * Math.PI) * fade * .95);
+  }
+}
+
+function drawFireMeteors(clock: BattleEffectClock, layout: TidalLayout, put: PlacePigment) {
+  const f = getPaintedFrame(clock);
+  const { target: b, width, height, direction: dir } = layout;
+  const size = Math.min(width * .4, height * .4, b.size * 1.15, 210);
+  const floor = Math.min(height - 15, b.cy + b.size * .29);
+  const count = 2 + f.tier;
+  // The first landing follows the real hit. Later landings are visual beats, not damage events.
+  const time = f.contact ? f.contactAge : (f.flight - 1) * 300;
+  const finish = f.contact ? clamp01((500 - time) / 40) : 1;
+  for (let i = 0; i < count; i++) {
+    const landing = i * 92;
+    const local = time - landing;
+    const fallMs = i === 0 ? 300 : 166;
+    if (local < -fallMs || local >= 180) continue;
+    const side = [0, -.28, .24, -.14, .11][i];
+    const x = Math.max(size * .32, Math.min(width - size * .32, b.cx + side * size));
+    const y = floor + (i % 2 ? -1 : 1) * size * .025;
+    const scale = i === count - 1 ? 1.06 : i === 0 ? .94 : .73 + (i % 2) * .09;
+    const s = size * scale;
+    if (local < 0) {
+      const progress = clamp01(1 + local / fallMs);
+      const drop = progress ** 1.7;
+      const turn = -dir * (.18 + (i % 2) * .06);
+      const startY = Math.max(s * .8 + 10, y - size * (1.35 + (i % 2) * .15));
+      const headX = x - dir * (1 - drop) * size * .32;
+      const headY = startY + (y - startY) * drop;
+      const opacity = clamp01(progress * 6) * finish;
+      // The leading edge is at author-space y=74. Anchor it, rather than the texture centre.
+      const pivot = s * (74 * 2.26 / 512);
+      const cx = headX + Math.sin(turn) * pivot, cy = headY - Math.cos(turn) * pivot;
+      put(7, headX, headY - s * .1, s * .93, s * .93, 0, opacity * .62);
+      const frame = ((time + 300) / 230 + i * .27) % 1 * 4;
+      const index = Math.floor(frame), mix = frame - index;
+      put(index, cx, cy, s, s, turn, opacity * (1 - mix) / Math.max(.001, 1 - opacity * mix));
+      put((index + 1) % 4, cx, cy, s, s, turn, opacity * mix);
+      put(7, x, y, s * .85, s * .16, 0, opacity * drop ** 3 * .43);
+    } else if (f.contact) {
+      const fade = (1 - clamp01(local / 180)) ** 1.3 * finish;
+      const spread = .55 + out(local / 130) * .62;
+      put(7, x, y - s * .08, s * spread, s * spread * .58, 0, Math.exp(-local / 63) * finish * .85);
+      put(5, x, y, s * spread, s * spread * .25, 0, fade * .76);
+      const burst = s * (.55 + out(local / 85) * .34);
+      put(6, x, y - burst * (65 * 2.26 / 512), burst, burst, 0, fade * .92);
+      for (let j = 0; j < 3; j++) {
+        const t = clamp01(local / 180), turn = (j - 1) * .78;
+        const reach = out(t) * s * (.23 + tidalSeed(i * 3 + j + 30) * .18);
+        put(4, x + Math.sin(turn) * reach, y - Math.cos(turn) * reach + t * t * s * .27,
+          s * .065, s * .15, turn, Math.sin(t * Math.PI) * fade * .84);
+      }
+    }
+  }
+}
 
 function drawElectricSkill(clock: BattleEffectClock, layout: TidalLayout, put: PlacePigment, action: string) {
   const f = getPaintedFrame(clock);
@@ -122,8 +261,20 @@ export function drawChoreographedSkill(clock: BattleEffectClock, layout: TidalLa
   if (!f.visible) return true;
   const { source: a, target: b, direction: dir, width, height } = layout;
   const { action, pigment, density } = plan;
+  if (pigment === 'solar') {
+    drawSolarSkill(clock, layout, put, action);
+    return true;
+  }
+  if (pigment === 'ice') {
+    drawIceSkill(clock, layout, put, action);
+    return true;
+  }
   if (pigment === 'lightning' && action !== 'vortex') {
     drawElectricSkill(clock, layout, put, action);
+    return true;
+  }
+  if (pigment === 'ember' && action === 'meteor') {
+    drawFireMeteors(clock, layout, put);
     return true;
   }
   const size = Math.min(width * .43, height * .4, b.size * 1.22, 224);
@@ -171,11 +322,12 @@ export function drawChoreographedSkill(clock: BattleEffectClock, layout: TidalLa
       } else mark(.65 + out(age / 170) * .3, .6);
     }
   } else if (action === 'cut' || action === 'cross' || action === 'claws' || action === 'clamp') {
+    const metalClaw = pigment === 'claw' && Boolean(plan.finish);
     if (!f.contact) {
       form(phase, a.cx + dx * p * .44, a.cy + dy * p * .44, size * .4, size * .3,
         -.45 * dir, Math.sin(p * Math.PI) * .4, dir);
     } else {
-      const count = action === 'cross' || action === 'clamp' ? 2 : action === 'claws' ? (pigment === 'ice' ? 3 : 1) : density;
+      const count = action === 'cross' || action === 'clamp' ? 2 : action === 'claws' ? 1 : density;
       for (let i = 0; i < count; i++) {
         const local = age - i * (action === 'clamp' ? 0 : 32);
         if (local < 0) continue;
@@ -183,8 +335,9 @@ export function drawChoreographedSkill(clock: BattleEffectClock, layout: TidalLa
         const turn = action === 'cross' ? -.65 + i * 1.5 : -.8 + sweep * .9;
         const offset = action === 'clamp' ? (i ? 1 : -1) * size * (.5 - sweep * .25) : 0;
         const parallel = action === 'claws' || action === 'cut' ? (i - (count - 1) / 2) * size * .22 : 0;
-        form(Math.min(.74, sweep * .74), b.cx + offset, b.cy + parallel, size * (action === 'clamp' ? .66 : 1.15),
-          size * (action === 'claws' ? .66 : .98), turn * dir, fade * tail * .95, i && action === 'clamp' ? -dir : dir);
+        form(Math.min(.74, sweep * .74), b.cx + offset - (metalClaw ? dir * size * .2 : 0), b.cy + parallel - (metalClaw ? size * .12 : 0),
+          size * (action === 'clamp' ? .66 : metalClaw ? 1.3 : 1.15),
+          size * (metalClaw ? 1.25 : action === 'claws' ? .66 : .98), turn * dir, fade * tail * .95, i && action === 'clamp' ? -dir : dir);
       }
       ground(1.08, .25); burst(.52, .48);
     }
@@ -207,7 +360,7 @@ export function drawChoreographedSkill(clock: BattleEffectClock, layout: TidalLa
         const offset = f.contact ? out(local / 150) * size * .07 : (1 - drop) * size * .27 * dir;
         const alpha = f.contact ? fade * (1 - clamp01((local - 80) / 250)) : clamp01(p * 4);
         form(phase + i * .17, gx + spread + offset, apex + (end - apex) * drop,
-          h * (pigment === 'sword' || pigment === 'ice' ? .55 : .85), h,
+          h * (pigment === 'sword' ? .55 : .85), h,
           (pigment === 'sword' ? Math.PI : pigment === 'ember' ? 1.5 : -.18 * dir) + side * .1, alpha * (i ? .8 : 1));
       }
     }
@@ -236,13 +389,23 @@ export function drawChoreographedSkill(clock: BattleEffectClock, layout: TidalLa
     if (f.contact) { ground(1.3, .6); burst(1.1, .48); }
   } else if (action === 'vortex' || action === 'halo' || action === 'knot' || action === 'mirror' || action === 'swarm') {
     const swirl = action === 'vortex', mirror = action === 'mirror', knot = action === 'knot';
-    const count = swirl || knot ? 3 : Math.min(8, density + tier * 2);
+    const metalOrbit = action === 'halo' && pigment === 'knot' && Boolean(plan.finish);
+    const bladeOrbit = action === 'halo' && pigment === 'sword' && Boolean(plan.finish);
+    const count = bladeOrbit ? 3 + tier : swirl || knot || metalOrbit ? 3 : Math.min(8, density + tier * 2);
     const collapse = f.contact ? out(age / (mirror ? 200 : 380)) : 0;
     const radius = size * (.17 + p * .38) * (1 - collapse * (action === 'swarm' ? .6 : .8));
     for (let i = 0; i < count; i++) {
       const turn = i / count * TAU + phase * (swirl ? 1.7 : .7);
       const cx = b.cx + Math.cos(turn) * radius, cy = b.cy + Math.sin(turn) * radius * .65;
-      if (swirl || knot) {
+      if (bladeOrbit) {
+        const outer = size * (.45 + p * .16) * (1 - collapse * .3);
+        const sx = Math.max(size * .2, Math.min(width - size * .2, b.cx + Math.cos(turn) * outer));
+        form(phase + i * .16, sx, b.cy + Math.sin(turn) * outer * .72, size * .42, size * .76,
+          turn + Math.PI / 2, fade * (.88 + Math.sin(turn) * .08));
+      } else if (metalOrbit) {
+        form(phase + i * .22, b.cx, b.cy, size * (1.15 - i * .09), size * .78,
+          i * Math.PI / 3 + phase * .32, fade * (.9 - i * .09));
+      } else if (swirl || knot) {
         form(phase + i * .2, b.cx, b.cy, size * (1.1 - i * .17) * (1 - collapse * .35),
           size * (knot ? .85 : .55), turn, fade * (.75 - i * .16));
       } else {

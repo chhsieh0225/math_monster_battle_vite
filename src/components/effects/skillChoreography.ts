@@ -1,18 +1,32 @@
 export type SkillPigment = 'ember' | 'tide' | 'leaf' | 'root' | 'lightning' | 'ice' | 'stone' | 'mud'
   | 'venom' | 'spore' | 'wisp' | 'chain' | 'serpent' | 'feather' | 'sword' | 'claw' | 'moon'
-  | 'butterfly' | 'candy' | 'calculus' | 'knot' | 'matrix' | 'rift' | 'slime' | 'engine';
+  | 'butterfly' | 'candy' | 'calculus' | 'knot' | 'matrix' | 'rift' | 'slime' | 'engine' | 'solar';
 export type SkillAction = 'orb' | 'surge' | 'meteor' | 'ripple' | 'vortex' | 'cut' | 'cross' | 'claws'
   | 'sprout' | 'vine' | 'swarm' | 'bolt' | 'thunder' | 'chain' | 'serpents' | 'cage' | 'breath'
   | 'rift' | 'mirror' | 'rain' | 'blades' | 'halo' | 'knot' | 'matrix' | 'vector' | 'drain'
   | 'weave' | 'clamp' | 'bloom';
-export type SkillChoreography = { pigment: SkillPigment; action: SkillAction; density: number };
+export type MetalFinish = 'steel' | 'gilded';
+export type SkillChoreography = { pigment: SkillPigment; action: SkillAction; density: number; finish?: MetalFinish };
+
+// Material identity is move-specific: crystal swords and dream ribbons are not metal.
+const METAL_FINISHES: Readonly<Record<string, MetalFinish>> = {
+  'wolf:0': 'steel', 'wolf:1': 'steel', 'wolf:2': 'steel', 'wolf:3': 'steel',
+  'monster:slime_shard': 'steel', 'monster:slime_forge': 'steel',
+  'monster:dragon': 'steel', 'monster:dragon_cannon': 'steel',
+  'topology_knight:0': 'steel', 'topology_knight:1': 'steel', 'topology_knight:2': 'steel',
+  'boss_sword_god:0': 'gilded', 'boss_sword_god:1': 'gilded', 'boss_sword_god:3': 'gilded',
+};
+export const METAL_SKILL_IDS = Object.keys(METAL_FINISHES);
+export function getMetalFinish(id?: string): MetalFinish | undefined {
+  return id && Object.hasOwn(METAL_FINISHES, id) ? METAL_FINISHES[id] : undefined;
+}
 
 // Named recipes share material work, not a universal projectile with a different color.
 // The five signature recipes and water:2 deliberately keep their dedicated renderers.
 const GROUPS: readonly [SkillPigment, SkillAction, number, string][] = [
-  ['claw', 'claws', 1, 'enemy:basic lion:0 boss:0 monster:dragon'],
+  ['claw', 'claws', 1, 'enemy:basic boss:0 monster:dragon'],
   ['ember', 'orb', 1, 'fire:0 monster:slime_flare'],
-  ['ember', 'surge', 1, 'fire:1 lion:2'],
+  ['ember', 'surge', 1, 'fire:1'],
   ['ember', 'meteor', 3, 'fire:3 monster:fire_rain'],
   ['ember', 'sprout', 3, 'monster:slime_eruption'],
   ['ember', 'breath', 3, 'boss_crazy_dragon:2 monster:fire'],
@@ -27,8 +41,10 @@ const GROUPS: readonly [SkillPigment, SkillAction, number, string][] = [
   ['lightning', 'bolt', 1, 'electric:1 monster:slime_thunder'],
   ['lightning', 'thunder', 3, 'electric:2 boss:3'],
   ['lightning', 'chain', 3, 'electric:3'],
-  ['moon', 'ripple', 2, 'lion:1'],
-  ['moon', 'vortex', 3, 'lion:3'],
+  ['solar', 'claws', 1, 'lion:0'],
+  ['solar', 'ripple', 2, 'lion:1'],
+  ['solar', 'surge', 2, 'lion:2'],
+  ['solar', 'vortex', 3, 'lion:3'],
   ['sword', 'blades', 3, 'wolf:3'],
   ['ice', 'orb', 1, 'tiger:0'],
   ['ice', 'mirror', 2, 'tiger:1'],
@@ -88,7 +104,8 @@ const GROUPS: readonly [SkillPigment, SkillAction, number, string][] = [
 const CATALOG = new Map<string, SkillChoreography>();
 for (const [pigment, action, density, ids] of GROUPS) for (const id of ids.split(' ')) {
   if (CATALOG.has(id)) throw new Error(`Duplicate choreography: ${id}`);
-  CATALOG.set(id, { pigment, action, density });
+  const finish = getMetalFinish(id);
+  CATALOG.set(id, { pigment, action, density, ...(finish ? { finish } : {}) });
 }
 export const CHOREOGRAPHED_SKILL_IDS = [...CATALOG.keys()];
 export function getSkillChoreography(id?: string): SkillChoreography | undefined {

@@ -1,12 +1,63 @@
-import { wash, line, fireFrame } from './signatureSkillArt.ts';
+import { wash, line, fireFrame, metalWash, metalEdge, metalFloorLight, metalImpact, metalChip } from './signatureSkillArt.ts';
 import type { Paint } from './signatureSkillArt.ts';
 import { paintedPalette } from './paintedSkillArt.ts';
 import type { SkillRecipe } from './skillRecipes.ts';
 import type { SkillPigment, SkillChoreography } from './skillChoreography.ts';
 import type { getEffectLighting } from './skillEffectModel.ts';
+import { paintIceTile } from './iceSkillArt.ts';
+import { paintSolarTile } from './solarSkill.ts';
 
-type Brush = { paint: Paint; ink: string; light: string };
+type Brush = { paint: Paint; ink: string; light: string; finish?: SkillChoreography['finish'] };
 const TAU = Math.PI * 2;
+
+function meteorGlow(ctx: CanvasRenderingContext2D, x = 0, y = 0, radius = 105) {
+  const glow = ctx.createRadialGradient(x, y, 2, x, y, radius);
+  glow.addColorStop(0, '#fff9dfed'); glow.addColorStop(.14, '#ffe9a7c7');
+  glow.addColorStop(.36, '#ffc4597d'); glow.addColorStop(.63, '#ff78282b');
+  glow.addColorStop(1, '#e9481600');
+  ctx.fillStyle = glow; ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+}
+
+function moltenLine(ctx: CanvasRenderingContext2D, path: string, width = 1.4) {
+  ctx.save(); ctx.shadowColor = '#ff8e32'; ctx.shadowBlur = 18;
+  line(ctx, path, '#ffb94e', width * 3, .85); ctx.restore();
+  line(ctx, path, '#fff4cf', width);
+}
+
+/** The rock keeps its weight; only lava and flame glow. No runtime blur or screen-wide wash. */
+function meteorTile(ctx: CanvasRenderingContext2D, tile: number) {
+  const fire: Paint = ['#a43529', '#f07829', '#ffd17a'];
+  if (tile < 4) {
+    const bend = [-9, 8, -3, 12][tile];
+    meteorGlow(ctx, 0, 35, 73);
+    wash(ctx, `M-27 58C-60 25-34-14-45-51Q-20-33-24-8C-1-24-27-60 ${bend}-99C${bend - 8}-55 26-42 16-17Q43-42 39-67C68-17 30 7 43 31Q47 61 15 76Z`, fire, 13 + tile, false);
+    wash(ctx, `M-21 53Q-40 20-23-10Q-27 13-12 17C4 5-12-24 ${bend + 2}-51Q-2-14 20 0Q30 15 20 39L31 53 11 70Z`,
+      ['#f58c31', '#ffcb68', '#fff6d3'], tile + 28, false);
+    // Four flame contours flow around the same stable, faceted rock silhouette.
+    wash(ctx, 'M-23 32-7 20 15 23 29 39 25 60 8 74-15 69-29 51Z', ['#332d30', '#654039', '#ab6541'], 41);
+    wash(ctx, 'M-23 32-7 20-1 42-15 52-29 51Z M15 23 29 39 11 44-1 42Z', ['#6e4034', '#b36b44', '#de9c58'], 47);
+    wash(ctx, 'M-15 52-1 42 11 44 8 74-15 69Z', ['#35292c', '#694037', '#a85936'], 52);
+    moltenLine(ctx, 'M-7 21-2 39-13 51-8 69M-2 39 13 43 25 59M13 43 16 26', 1.15);
+    moltenLine(ctx, 'M-28 44Q-36 63-15 74Q9 86 28 62', 2.1);
+    moltenLine(ctx, `M-28 22Q-37-4-34-19M24 14Q39-9 35-27M-7 8Q-15-10 ${bend}-29`, 1.2);
+    line(ctx, 'M-18 29-12 26M20 33 24 42M-20 63-15 67', '#ffe9b5', 1.3, .8);
+  } else if (tile === 4) {
+    meteorGlow(ctx, 0, 6, 65);
+    wash(ctx, 'M0-62Q-37-10-17 30Q-1 48 17 24Q25 6 0-62Z', fire, 7, false);
+    moltenLine(ctx, 'M0-24Q-12 3 0 22', 4);
+  } else if (tile === 5) {
+    meteorGlow(ctx);
+    wash(ctx, 'M-88 8Q-44-62 20-51Q62-44 88-7L65 23 14 45-49 31Z', ['#492c2f', '#9b4630', '#d78a43'], 32, false);
+    moltenLine(ctx, 'M-74 6-43-6-27 4-5-10 18 3 40-5 70 7M-27 4-37 27M18 3 29 30M-5-10 6-34', 1.8);
+    moltenLine(ctx, 'M-77 20Q-42 57 21 47M39-40Q76-29 86-7', 1.5);
+  } else if (tile === 6) {
+    meteorGlow(ctx, 0, 28, 82);
+    wash(ctx, 'M-85 54C-102 23-74-1-91-26Q-46-16-52 17Q-28 30-32-14L-14 17Q4 3-6-45C30-20 10 24 34 22Q61 9 51-22C83-13 56 26 90 20Q83 58 44 64L-10 71Z', fire, 22, false);
+    wash(ctx, 'M-65 54Q-77 26-62 14Q-62 43-35 41L-38 18Q-9 52 0 22Q9 49 34 43L55 24Q50 48 70 46Q39 71-1 64Z',
+      ['#ffad49', '#ffe293', '#fffbe0'], 34, false);
+    moltenLine(ctx, 'M-67 21Q-73 41-42 52M-10 45Q13 55 24 37M63 35 71 18', 1.8);
+  } else meteorGlow(ctx);
+}
 
 /** Uneven ink, a warm wash and a narrow ivory core, not a filled lightning icon. */
 function electricStroke(ctx: CanvasRenderingContext2D, path: string, b: Brush, width = 1) {
@@ -62,8 +113,9 @@ function electricFilament(ctx: CanvasRenderingContext2D, frame: number, b: Brush
 function drawMaterial(ctx: CanvasRenderingContext2D, material: SkillPigment, frame: number, b: Brush) {
   const { paint: p, ink, light } = b;
   const t = frame / 3, bend = [-9, 7, 13, -4][frame];
-  const fill = (path: string, seed = 0) => wash(ctx, path, p, seed);
-  const edge = (path: string, width = 1.2, alpha = .85) => line(ctx, path, light, width, alpha);
+  const fill = (path: string, seed = 0) => b.finish ? metalWash(ctx, path, frame, seed) : wash(ctx, path, p, seed);
+  const edge = (path: string, width = 1.2, alpha = .85) => b.finish
+    ? metalEdge(ctx, path, width, alpha, b.finish === 'gilded') : line(ctx, path, light, width, alpha);
   if (material === 'engine') {
     fill(`M-93-15Q-30-46 9-31L-2-54 38-33Q80-40 91-7L84 19 60 17 42 45 9 28-32 38-18 12-77 22Z`, frame);
     wash(ctx, `M-82-2Q-17-${19 + bend} 70-1L47 15 9 10-11 22-2 3Z`, [p[1], p[2], light], 8);
@@ -72,6 +124,7 @@ function drawMaterial(ctx: CanvasRenderingContext2D, material: SkillPigment, fra
       edge(`M${x}-24q-12 24 0 46M${x + 7}-26q-12 24 0 51`, 1.8, .85);
     }
     edge('M-80-9Q-24-31 17-20M29 24 53 28 71 14', 1.2);
+    if (b.finish) edge('M-73-3C-43-16-14 10 15 1S57-12 79-1', 2.4, .95);
   } else if (material === 'ember') {
     fill(`M84 0C79-39 30-49 0-24Q-30-51-88-${23 + bend}Q-62-4-43-2L-97 17Q-45 7-27 32C22 66 78 49 84 0Z`, frame);
     wash(ctx, `M70 1C51-29 14-26-8-10L-51-${14 + bend}Q-26 7-52 20C-3 8 13 43 49 26Z`, [p[1], '#fac06c', '#fff2c9'], 19);
@@ -99,14 +152,13 @@ function drawMaterial(ctx: CanvasRenderingContext2D, material: SkillPigment, fra
     }
   } else if (material === 'lightning') {
     electricFilament(ctx, frame, b);
-  } else if (material === 'ice' || material === 'stone' || material === 'matrix') {
-    const ice = material === 'ice', matrix = material === 'matrix';
-    const path = ice ? 'M0-91 28-52 35 42 2 94-37 38-29-54Z'
-      : matrix ? 'M-61-52 21-73 68-31 61 55-18 79-69 28Z' : 'M-69-42-15-78 55-56 79 12 30 73-43 65-81 11Z';
+  } else if (material === 'stone' || material === 'matrix') {
+    const matrix = material === 'matrix';
+    const path = matrix ? 'M-61-52 21-73 68-31 61 55-18 79-69 28Z' : 'M-69-42-15-78 55-56 79 12 30 73-43 65-81 11Z';
     fill(path, 24);
-    wash(ctx, ice ? 'M0-91-8 23 2 94 35 42 28-52Z' : 'M-15-78-8-3 79 12 55-56Z', [p[1], p[2], light], 27);
-    line(ctx, ice ? 'M0-91-8 23 2 94M-8 23-37 38M-8 23 35 42' : 'M-15-78-8-3-43 65M-8-3 79 12M-81 11-8-3 30 73', ink, 1.5, .7);
-    edge(ice ? 'M-23-49-27 33-5 72M5-72 23-48 28 20' : 'M-69-39-16-73 48-54M-72 12-43 57', 1.3);
+    wash(ctx, 'M-15-78-8-3 79 12 55-56Z', [p[1], p[2], light], 27);
+    line(ctx, 'M-15-78-8-3-43 65M-8-3 79 12M-81 11-8-3 30 73', ink, 1.5, .7);
+    edge('M-69-39-16-73 48-54M-72 12-43 57', 1.3);
     if (matrix) {
       for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) {
         const x = -41 + i * 28, y = -35 + j * 28;
@@ -180,6 +232,10 @@ function drawMaterial(ctx: CanvasRenderingContext2D, material: SkillPigment, fra
     }
     const y = -72 + t * 97;
     edge(`M-9 ${y}l17-13`, 2, .9);
+    if (b.finish) {
+      edge('M0-96-13-73-8 37M0-93 12-72 7 35', 1.25);
+      line(ctx, 'M-22 43-25 48-7 46M9 46 24 48', '#d5b176', 1.7);
+    }
     wash(ctx, 'M0 35 6 41 0 48-6 41Z', [p[0], p[1], light], 3);
   } else if (material === 'claw') {
     for (let i = 0; i < 3; i++) {
@@ -206,6 +262,22 @@ function drawMaterial(ctx: CanvasRenderingContext2D, material: SkillPigment, fra
   } else {
     const drift = bend * .65;
     const knot = `M-83 0C-85-77-25-71 10 0S91 74 85 0S25-71-10 0S-83 77-83 0`;
+    if (b.finish) {
+      const ribbon = (path: string, width: number) => {
+        line(ctx, path, '#243a4a', width + 3);
+        ctx.save();
+        const sheen = ctx.createLinearGradient(-83 + frame * 11, -66, 69 + frame * 11, 60);
+        sheen.addColorStop(0, '#446674'); sheen.addColorStop(.27, '#b8d2d4'); sheen.addColorStop(.4, '#fff9df');
+        sheen.addColorStop(.48, '#4c7081'); sheen.addColorStop(.7, '#9ab8bc'); sheen.addColorStop(1, '#2c4557');
+        ctx.strokeStyle = sheen; ctx.lineWidth = width; ctx.stroke(new Path2D(path)); ctx.restore();
+      };
+      ribbon(knot, 12);
+      const orbit = `M${-16 + drift}-78C81-38 43 55 11 77C-81 44-46-56 ${-16 + drift}-78Z`;
+      ribbon(orbit, 8);
+      edge('M-81-7C-82-44-51-48-31-35M27 31Q58 55 77 27M-13-75Q18-68 37-47M-40 31Q-30 60 8 73', 1.9);
+      line(ctx, 'M-14-17 8 9M16-11 29 7M-29 25-15 39', '#263d4b', 3, .8);
+      return;
+    }
     line(ctx, knot, p[0], 14); line(ctx, knot, p[1], 9); line(ctx, knot, light, 1.4);
     line(ctx, `M${-16 + drift}-78C81-38 43 55 11 77C-81 44-46-56 ${-16 + drift}-78Z`, p[0], 9);
     line(ctx, `M${-16 + drift}-78C81-38 43 55 11 77C-81 44-46-56 ${-16 + drift}-78Z`, p[2], 4);
@@ -215,7 +287,31 @@ function drawMaterial(ctx: CanvasRenderingContext2D, material: SkillPigment, fra
 
 function drawActionForm(ctx: CanvasRenderingContext2D, plan: SkillChoreography, frame: number, b: Brush) {
   const { pigment, action } = plan;
-  if (action === 'sprout' && pigment === 'ember') {
+  if (b.finish && pigment === 'stone') {
+    if (action === 'orb') {
+      for (let i = 0; i < 3; i++) {
+        ctx.save(); ctx.translate((i - 1) * 39, i === 1 ? -17 : 14); ctx.rotate((i - 1) * .36);
+        metalWash(ctx, 'M-18 48-27-22-4-72 20-48 28 26 2 63Z', frame, 21 + i);
+        metalEdge(ctx, 'M-4-71-7-22 2 59M-7-22 25 26', 1.6); ctx.restore();
+      }
+    } else {
+      metalWash(ctx, 'M-53-58 34-65 71-25 64 47 5 77-63 48-78-13Z', frame, 38);
+      metalWash(ctx, 'M-53-58-29-12 71-25 34-65Z', (frame + 2) % 4, 42);
+      line(ctx, 'M-53-58-29-12-63 48M-29-12 5 77M-29-12 71-25', '#253b4a', 3);
+      metalEdge(ctx, 'M-50-56 33-63 67-24M-74-10-60 46 3 74 61 44M-26-10 4 69', 1.8);
+      line(ctx, 'M-44 12-29 31M20-47 36-31M27 13 42 8', '#dae8dc', 1, .5);
+    }
+  } else if (b.finish && pigment === 'knot' && action === 'halo') {
+    // Opposite winding leaves a real aperture between the forged inner/outer rims.
+    metalWash(ctx, 'M-94 0C-94-42 94-42 94 0S-94 42-94 0Z M-81 0C-81 24 81 24 81 0S-81-24-81 0Z', frame, 31);
+    metalEdge(ctx, 'M-91-2C-91-37 74-38 90-6M-76 13Q-28 38 64 18', 1.8);
+    line(ctx, 'M-79-1C-72-22 61-24 78-3M-60 21-49 23M17-29 29-28', '#2b495a', 1.5);
+  } else if (b.finish && pigment === 'knot' && action === 'cut') {
+    const tip = [[-10,-71],[36,-83],[87,-24],[86,52]][frame];
+    metalWash(ctx, `M-94 72C-84-20-28-100 ${tip[0]} ${tip[1]}Q-32-46-46 0C-15 45 44 48 83 18Q25 86-51 27Z`, frame, 28);
+    metalEdge(ctx, `M-92 68C-60-25-11-79 ${tip[0]} ${tip[1]}M-45 4Q8 60 79 23`, 1.9);
+    line(ctx, 'M-56 17-44-4-29-13M-51 25-39 2', '#293c49', 2.1);
+  } else if (action === 'sprout' && pigment === 'ember') {
     fireFrame(ctx, frame);
   } else if (action === 'sprout' && pigment === 'stone') {
     wash(ctx, 'M-36 90-45-39-18-90 17-96 44-46 37 91Z', b.paint, frame);
@@ -232,11 +328,6 @@ function drawActionForm(ctx: CanvasRenderingContext2D, plan: SkillChoreography, 
     line(ctx, `M${-radius} 0a${radius} ${radius} 0 1 0 ${radius * 2} 0a${radius} ${radius} 0 1 0 -${radius * 2} 0`, b.paint[0], 4);
     line(ctx, `M-${radius - 8}-5Q-${radius - 11}-${radius - 13}-4-${radius - 7}M8 ${radius - 8}Q${radius - 9} ${radius - 12} ${radius - 8} 6`, b.light, 3);
     line(ctx, 'M-30-31Q-12-52 6-45', b.light, 6, .6);
-  } else if (action === 'meteor' && pigment === 'ember') {
-    drawMaterial(ctx, 'ember', frame, b);
-    ctx.save(); ctx.translate(37, 5); ctx.scale(.5, .5);
-    drawMaterial(ctx, 'stone', frame, { paint: ['#322e32', '#745042', '#ce8450'], ink: '#211f29', light: '#ffd193' }); ctx.restore();
-    line(ctx, 'M20-19 39-11 34 12 55 17M26 5 14 16', '#ffc771', 2.6);
   } else if (action === 'mirror') {
     wash(ctx, 'M-51-77 49-74 72-4 47 78-49 79-73 5Z', b.paint, frame);
     wash(ctx, 'M-40-60 37-58 55-4 34 58-36 62-54 4Z', [b.ink, b.paint[1], b.light], 14);
@@ -272,12 +363,17 @@ function drawActionForm(ctx: CanvasRenderingContext2D, plan: SkillChoreography, 
   } else if (action === 'claws' && pigment === 'serpent') {
     wash(ctx, 'M-66-78Q-20-52 0-61L-24 76Q-43 29-66-78Z M15-67Q41-49 70-78L44 64Z', b.paint, frame);
     line(ctx, 'M-56-62-27 62M25-53 43 46', b.light, 2.2);
-  } else if ((action === 'claws' && pigment === 'ice') || ((action === 'cut' || action === 'cross') && ['venom', 'sword', 'candy', 'wisp'].includes(pigment))) {
+  } else if ((action === 'cut' || action === 'cross') && ['venom', 'sword', 'candy', 'wisp'].includes(pigment)) {
     const tip = [[-15,-71],[39,-85],[89,-25],[90,56]][frame];
-    wash(ctx, `M-97 78C-94-18-23-111 ${tip[0]} ${tip[1]}Q-42-53-97 78Z`, b.paint, frame);
-    line(ctx, `M-94 72C-58-35-12-91 ${tip[0]} ${tip[1]}`, b.light, 2);
+    const path = `M-97 78C-94-18-23-111 ${tip[0]} ${tip[1]}Q-42-53-97 78Z`;
+    if (b.finish) {
+      metalWash(ctx, path, frame, 23);
+      metalEdge(ctx, `M-94 72C-58-35-12-91 ${tip[0]} ${tip[1]}`, 2, 1, b.finish === 'gilded');
+    } else {
+      wash(ctx, path, b.paint, frame);
+      line(ctx, `M-94 72C-58-35-12-91 ${tip[0]} ${tip[1]}`, b.light, 2);
+    }
     for (let i = 0; i < 4; i++) line(ctx, `M${-75 + i * 6} ${40 - i * 11}Q-23-53 ${tip[0] - i * 9} ${tip[1] + i * 4}`, b.paint[1], .8, .8);
-    if (pigment === 'ice') wash(ctx, 'M-48-40-49-67-32-46Z M-6-70 11-95 9-66Z M38-57 66-66 48-40Z', b.paint, 9);
     if (pigment === 'wisp') {
       line(ctx, 'M17-69-21 91', b.ink, 6);
       line(ctx, 'M17-69-21 91', b.paint[1], 3);
@@ -294,7 +390,11 @@ export function paintChoreographyAtlas(plan: SkillChoreography, recipe: SkillRec
   const c = paintedPalette(recipe, type);
   const material = plan.pigment;
   const b: Brush = { paint: [c.shade, c.pigment, c.light], ink: c.ink,
-    light: lighting === 'night' ? '#f4efda' : c.highlight };
+    light: lighting === 'night' ? '#f4efda' : c.highlight, finish: plan.finish };
+  if (b.finish) {
+    b.paint = ['#2d4352', '#86a6b1', '#d6e7e4']; b.ink = '#203442';
+    b.light = b.finish === 'gilded' ? '#fff0c1' : '#f7fcf1';
+  }
   if (material === 'lightning') {
     b.paint = plan.action === 'chain' ? ['#433e56', '#9e8aaf', '#e7c979'] : ['#71674e', '#c2a256', '#f2d587'];
     b.ink = plan.action === 'chain' ? '#36334f' : '#655e47';
@@ -305,7 +405,13 @@ export function paintChoreographyAtlas(plan: SkillChoreography, recipe: SkillRec
     ctx.save(); ctx.beginPath(); ctx.rect(tile % 4 * 512, Math.floor(tile / 4) * 512, 512, 512); ctx.clip();
     ctx.translate(tile % 4 * 512 + 256, Math.floor(tile / 4) * 512 + 256);
     ctx.scale(2.26, 2.26); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    if (material === 'lightning') {
+    if (material === 'solar') {
+      paintSolarTile(ctx, tile, plan.action);
+    } else if (material === 'ice') {
+      paintIceTile(ctx, tile, plan.action);
+    } else if (material === 'ember' && plan.action === 'meteor') {
+      meteorTile(ctx, tile);
+    } else if (material === 'lightning') {
       if (tile < 4) electricFilament(ctx, tile, b);
       else if (tile === 4) electricStroke(ctx, 'M-25-56-11-33-19-11 6 2-1 23 21 49M-19-11-39 1-34 18', b, 3);
       else if (tile === 5) {
@@ -317,12 +423,15 @@ export function paintChoreographyAtlas(plan: SkillChoreography, recipe: SkillRec
         line(ctx, 'M-64 50Q-31 64-8 52M29-48Q51-47 64-37', b.paint[1], 2, .3);
       } else electricCorona(ctx, b, tile === 6);
     } else if (tile < 4) drawActionForm(ctx, plan, tile, b);
+    else if (b.finish && tile === 4) metalChip(ctx);
+    else if (b.finish && tile === 6) metalImpact(ctx, b.finish === 'gilded');
     else if (tile === 4) {
       if (['leaf', 'butterfly', 'feather', 'spore'].includes(material)) drawMaterial(ctx, material, 1, b);
       else wash(ctx, soft ? 'M-4-68C-28-17-45 3-28 35C-11 64 32 53 32 23Q27-6-4-68Z'
         : 'M-24-62 28-29 15 11-21 68-38 4Z', b.paint, 18);
       line(ctx, 'M-15-31-22 8', b.light, 2);
     } else if (tile === 5) {
+      if (b.finish) metalFloorLight(ctx, b.finish === 'gilded');
       wash(ctx, 'M-95 21C-117-31-55-86 19-76Q-58-65-86-12Z M-65 54Q8 98 79 31L90 17Q39 98-26 83Z M35-75Q90-64 93-19L85-26Q80-58 35-75Z', b.paint, 3, false);
       line(ctx, 'M-82 36Q-61 73-25 74M51-66Q92-43 92-11M-43-3-17 7 9-7 31 5 52-5', b.light, 1.2, .7);
     } else if (tile === 6) {
@@ -338,7 +447,8 @@ export function paintChoreographyAtlas(plan: SkillChoreography, recipe: SkillRec
       ctx.scale(1.82, 1.82);
       // Preserve each named move's symbol as fine ink, never an opaque badge.
       line(ctx, recipe.mark, b.ink, 2.1, .8);
-      line(ctx, recipe.mark, b.light, .8, .92);
+      if (b.finish) metalEdge(ctx, recipe.mark, .8, .7, b.finish === 'gilded');
+      else line(ctx, recipe.mark, b.light, .8, .92);
     }
     ctx.restore();
   }

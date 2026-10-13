@@ -192,3 +192,124 @@ disabled painted contact, and idle/paused samples each recorded zero GPU draws
 over one second. Warm draw submission p95 was 0.30ms for each electric move on
 Mac; preparation measured 0.5-0.9ms. These CPU measurements exclude GPU completion
 and compositor work, and are not physical iPhone performance measurements.
+
+## Sequential Fire Meteors
+
+`fire:3` and `monster:fire_rain` now have independent falling, contact and ember
+phases. The first impact follows the real battle hit; subsequent visual impacts
+arrive 92ms apart. Mastery tiers show three, four or five meteors. Each impact
+has its own fade, so the final meteor is not dimmed by the first impact's age.
+All recovery ends by 500ms without changing damage, actor motion or battle timers.
+Other fire moves, stone meteors, lightning, water and grass remain unchanged.
+
+Four flame contours surround a stable charred rock with molten seams. Warm
+halos, ivory cracks, small impact flames and local floor light are baked into
+the existing eight-cell atlas. Normal blending preserves the dark rock; no
+full-canvas screen blend, runtime blur, extra texture download or new canvas.
+The leading edge is anchored to each landing point, with bounded lateral spread
+and top clearance. Actors and HUDs retain their higher drawing layers.
+
+Verification: typecheck, zero-warning lint, 1,170 tests and production build.
+Dense timeline checks stay at or below 20 placements within the existing pool
+of 48. Browser inspection covered 320px/390px CSS viewports, outgoing/incoming
+casts, light/rock and dark/boss scenes, miss/block and low-FX fallback. Idle and
+paused samples each recorded zero GPU draws over one second. Two Mac warm-render
+samples (90 frames, 390x464 arena) measured CPU submit p95 of 0.40-0.50ms and
+atlas preparation of 2.0-5.9ms. These exclude GPU completion/compositing and do
+not establish physical iPhone FPS or thermal performance.
+
+## Steel And Blade Material Audit
+
+Eleven steel-family moves and three physical sword-god presentations now have
+explicit metal finishes, independent of the shared pigment or damage type:
+
+| Family | Recipe IDs | Refinement |
+| --- | --- | --- |
+| Steel wolf, all forms | `wolf:0/1/2/3` | Reflective single, parallel and crossing cuts; bright sword-field edges |
+| Steel slime and evolved form | `monster:slime_shard`, `monster:slime_forge` | Metal splinters and forged facets instead of ordinary rock surfaces |
+| Iron dragon and evolved form | `monster:dragon`, `monster:dragon_cannon` | Titanium claw rims, mechanical pressure rings and a flowing bright core |
+| Topology knight | `topology_knight:0/1/2` | Twisted metal slash, open linked bands and three interlocking orbital rings |
+| Sword god | `boss_sword_god:0/1/3` | Silver blade faces, warm gilded edge light and metal contact sparks |
+
+Dark steel planes, moving reflection bands, brushed grain and narrow ivory edge
+light are baked into the existing atlases. Contact sparks replace solid star
+bursts. Normal-alpha compositing retains the dark metal; no screen-wide white
+wash, runtime blur/filter, new texture download or extra canvas. Actor art and
+background files are unchanged. Candy crystal, ice, dream threads, ordinary
+stone and the sword god's light rift deliberately keep their own materials.
+
+Titanium claws extend slightly toward the attacking side so they remain visible
+outside a large target silhouette. Cloud Sword Orbit uses four to six swords
+around the target rather than immediately shrinking behind its centre. Infinite
+Orbit uses three open metal rings instead of eight small repeated knot clusters.
+Physical target slots, damage, hit clocks and the 500ms recovery limit are unchanged.
+
+Verification: typecheck, zero-warning lint, 1,172 tests and production build.
+Four-millisecond timeline sampling across all 14 moves, four arenas, both
+directions and three mastery tiers peaked at 30 placements in the existing
+48-sprite pool. The 2048x1024 atlas size and 24 MiB pigment cache remain unchanged.
+All 14 presentations were inspected in the actual BattleScreen QA fixture,
+including 320px/390px CSS viewports, steel/rock/heaven and dark-boss backgrounds.
+Warm CPU draw-submit p95 measured 0.20-0.50ms over 90 frames per move on Mac;
+uncached atlas preparation measured 1.1-5.3ms (wolf slashes reuse their atlas).
+These measurements exclude GPU completion/compositing and physical phone thermal
+behavior. This is authored 2D material compositing, not dynamic 3D metal lighting.
+
+## Clear Ice Material Refinement
+
+The ice tiger's three standard moves now use a dedicated clear-ice atlas painter:
+
+- `tiger:0`: a thick faceted ice projectile, small mastery satellites, trapped
+  fractures and bright edge reflections. The solid projectile breaks on the real hit.
+- `tiger:1`: two or three beveled ice mirrors that travel from the caster, fan out,
+  turn edge-on and shatter. No eight-badge orbit or opaque central face.
+- `tiger:2`: three broad, chipped ice claws with 29ms staggered contacts, moving
+  edge glints, fine fracture lines and tumbling translucent debris.
+- `tiger:3`: the advanced icefall reuses the same clear-ice material on long prisms.
+
+The broad face has low-alpha blue/cyan facets, while bevels carry stronger tint,
+thin shadow/refraction lines, frost at chipped corners and cold-white highlights.
+Four stable contour frames move the reflection rather than morphing the ice's
+outline. This is authored 2D translucency, not a screen-reading refraction shader.
+The background shows through; there is no full-screen white or blue veil. Atlas
+glow is baked once, with normal-alpha compositing and no runtime blur/filter.
+Existing actor clips, physical source/target anchors, hit timing, damage, layer
+order, full DPR and the 500ms recovery limit are unchanged.
+
+Verification: typecheck, zero-warning lint, 1,174 tests and production build passed.
+Dense 4ms sampling across four arenas, both directions and all three mastery tiers
+peaked at 23 placements in the existing 48-sprite pool. The eight-tile atlas and
+24 MiB texture cache are unchanged. Mac warm CPU draw-submit p95 was 0.30-0.70ms
+over 90 frames per move; uncached atlas preparation was 1.0-3.8ms. These are not
+GPU completion times or physical iPhone frame-rate/thermal measurements.
+
+## Lion Solar Material Refinement
+
+The four lion moves now have a scoped `solar` pigment rather than borrowing
+ordinary claws, moon crescents and fireballs. A single family module contains the
+eight-tile atlas art and its matching choreography; other light/dark families
+retain their own materials.
+
+- `lion:0`: three staggered pearl-white pounce cuts with champagne edges and
+  translucent trailing pigment. Mastery increases their breadth, not screen flash.
+- `lion:1`: expanding open pressure fronts leave the physical caster's mouth.
+  Their planes follow the attack direction, including reverse and diagonal casts.
+- `lion:2`: a lion-profile solar-flame hunt with ivory core, translucent streaming
+  mane and a brief crowned-lion impression on contact; no orange fireball.
+- `lion:3`: a dark-edged eclipse corona and radiant mane, with a clear centre and
+  viewport-safe bounds. The move retains its dark/light gameplay identity.
+
+Uneven light bands, sparse rays, cool pearl accents, fine brush lines and baked
+local glow distinguish this material from electric arcs and ice facets. Damage,
+actor animation clocks and render-layer order are unchanged. Misses and blocks
+do not emit contact rays. All effects expire within the existing 500ms recovery.
+No new image downloads, canvas, runtime bloom or lower-resolution rendering.
+
+Verification: typecheck, zero-warning lint, 1,177 tests and production build passed.
+Dense 4ms timeline sampling of all four moves, four arenas, both directions and
+all mastery tiers peaked at 21 placements out of the existing 48-sprite pool.
+The eight-tile atlas and 24 MiB texture cache are unchanged. Mac CPU draw-submit
+p95 was 0.30ms over 90 warm frames per move; preparation took 0.6-1.9ms. These
+measurements exclude GPU completion and are not physical iPhone FPS measurements.
+Visual checks include all four moves, small/final lion forms, dark and bright
+heaven scenes, narrow 320px and normal layouts, outgoing and incoming attacks.
